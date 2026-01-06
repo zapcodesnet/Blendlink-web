@@ -32,7 +32,7 @@ import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import AppOpenPrompt from "./components/AppOpenPrompt";
 
 // API base URL - connected to mobile app backend
-export const API_BASE_URL = 'https://mobile-games-hub-11.preview.emergentagent.com/api';
+export const API_BASE_URL = 'https://blendlink-web.preview.emergentagent.com/api';
 
 // Auth context
 export const AuthContext = createContext(null);

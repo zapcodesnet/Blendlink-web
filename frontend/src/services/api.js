@@ -1,5 +1,5 @@
 // API Service - Connects to the shared Blendlink Mobile API
-const API_BASE_URL = 'https://mobile-games-hub-11.preview.emergentagent.com/api';
+const API_BASE_URL = 'https://blendlink-web.preview.emergentagent.com/api';
 
 // Token management
 const TOKEN_KEY = 'blendlink_token';

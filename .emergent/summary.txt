@@ -1,0 +1,148 @@
+<analysis>**original_problem_statement:**
+The user wants to build a fully responsive Progressive Web App (PWA) version of their mobile app, Blendlink. The PWA should be installable, support offline mode, and have push notifications.
+
+**PRODUCT REQUIREMENTS:**
+-   **Core Features:** Social media (profiles, feed, posts, etc.), Marketplace (buy/sell), Property Rentals, Professional Services directory, in-app Games, Raffle draws.
+-   **Virtual Currency:** A built-in BL Coin system for rewards and transactions.
+-   **Referral System:** A 2-level unilevel referral system for earning commissions.
+-   **Authentication:** JWT-based custom auth (email/password) and Emergent-managed Google social login.
+-   **Tech Stack:** React/Next.js for the frontend.
+-   **LATEST UPDATE:** The user has requested to discard the self-contained backend and connect the PWA to the existing backend API of their native mobile app. The API base URL is .
+-   **LATEST UPDATE 2:** On mobile devices, the PWA should prompt the user to open the native Blendlink app via a deep link () if it's installed, with a fallback to the app store.
+
+**User's preferred language**: English
+
+**what currently exists?**
+The agent has built a comprehensive React frontend with pages and components for all requested features (Social, Marketplace, Games, Wallet, etc.). An initial FastAPI/MongoDB backend was also created but is now being deprecated.
+
+The agent has started the process of refactoring the entire frontend to connect to the user's external API. A new service file, , was created to manage all external API calls. All page components have been modified to use this new service, but this has resulted in build-breaking compilation errors. A new component  has been created for the native app deep-linking feature, but the logic to use it has not been fully implemented.
+
+**Last working item**:
+-   **Last item agent was working**: The agent was refactoring all frontend pages to replace the original internal API calls with calls to the new external API service located at . This involved overwriting nearly every page component.
+-   **Status**: BLOCKED
+-   **Agent Testing Done**: N
+-   **Which testing method agent to use?**: Frontend testing agent
+-   **User Testing Done**: N
+
+**All Pending/In progress Issue list**:
+-   Issue 1: Frontend Compilation Failure (P0)
+
+**Issues Detail**:
+-   **Issue 1: Frontend Compilation Failure**
+    -   **Description:** After refactoring the frontend to use the new  service for an external backend, the application no longer compiles. The build process fails with 25 errors, including a critical one: . This indicates a systemic issue with how components are importing the new API service.
+    -   **Attempted fixes**: The agent continued to update more files after the errors first appeared, instead of stopping to fix them. The root cause is likely that components are still trying to import API logic from  instead of the new, dedicated  file.
+    -   **Next debug checklist**:
+        1.  Run yarn run v1.22.22
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command. and review the full, non-truncated list of compilation errors.
+        2.  Inspect  to confirm its exports.
+        3.  Inspect  to see how it's structured and what it exports now.
+        4.  Correct the import statements in all page components under  to import API functions directly from  instead of .
+    -   **Why fix this issue and what will be achieved with the fix?**: The application is currently broken and cannot be run or tested. Fixing this is the top priority to make the app build successfully and unblock all further development and testing of the external API integration.
+    -   **Status**: IN PROGRESS
+    -   **Is recurring issue?**: N
+    -   **Should Test frontend/backend/both after fix?**: Frontend
+    -   **Blocked on other issue**: None. This is the primary blocker.
+
+**In progress Task List**:
+-   **Task 1: Connect Frontend to External API**
+    -   **Where to resume**: The immediate priority is resolving the Frontend Compilation Failure (Issue 1). Once the app builds, the agent must proceed with testing the integration.
+    -   **What will be achieved with this?**: The PWA's frontend will be fully connected to the user's existing mobile app backend, ensuring data is synchronized between the two platforms.
+    -   **Status**: IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?**: Frontend
+    -   **Blocked on something**: Frontend Compilation Failure (Issue 1).
+
+**Upcoming and Future Tasks**
+
+-   **Upcoming Tasks:**
+    -   **(P0) Full Integration Testing**: After fixing the build, systematically test every feature to confirm it works with the external API. This includes auth, wallet, profile, and creating graceful fallbacks (e.g., Coming Soon messages) for features where the API endpoints are missing.
+    -   **(P1) Implement Deep Linking Logic**: Integrate the  component into  with logic to detect mobile devices, attempt to open , and provide fallback links to app stores.
+    -   **(P2) Verify PWA Functionality**: Ensure the service worker provides basic offline support and the app is installable.
+
+-   **Future Tasks:**
+    -   **Implement Missing Features**: The agent's exploration revealed that the external API lacks endpoints for social, marketplace, games, and other key features. The agent will need to inform the user and plan to either build these endpoints or adjust the PWA's scope.
+    -   **Implement Push Notifications**: Add support for push notifications using the Web Push API.
+
+**Completed work in this session**
+-   A complete PWA was initially built using an internal FastAPI/MongoDB backend.
+-   All UI pages and components for Blendlink's features were created.
+-   PWA configuration files (, ) were set up.
+-   The initial version was tested and key bugs (like MongoDB  serialization) were fixed.
+-   The user's external API was explored to identify available and missing endpoints.
+
+**Earlier issues found/mentioned but not fixed**
+-   **Issue 1: N+1 Query Issues**
+    -   A deployment health check on the *original internal backend* identified significant performance problems due to N+1 queries in the feed, comments, and marketplace endpoints.
+    -   This issue is not currently relevant as that backend has been deprecated, but the learning should be applied if the agent is tasked with building new backend services in the future.
+    -   **Status**: NOT STARTED (and de-prioritized).
+
+**Known issue recurrence from previous fork**
+-   None.
+
+**Code Architecture**
+
+
+**Key Technical Concepts**
+-   **Frontend**: React, Tailwind CSS, Shadcn UI
+-   **Backend**: Shifted from an internal FastAPI/MongoDB stack to consuming an **External REST API**.
+-   **PWA**: Using a  and a  for installability and offline support.
+-   **Authentication**: JWT-based, handled by the external API.
+
+**key DB schema**
+-   N/A. The database is opaque and managed by the external API.
+
+**changes in tech stack**
+-   The application's backend has pivoted from an agent-built internal FastAPI/MongoDB solution to consuming a pre-existing external FastAPI API. All data logic is now handled on the frontend via API calls.
+
+**All files of reference**
+-   **/app/frontend/src/services/api.js**: **Critical new file.** Centralizes all logic for communicating with the external backend. This is the source of the current integration effort.
+-   **/app/frontend/src/pages/**: All files in this directory were **updated** to use , but these changes introduced the blocking compilation errors.
+-   **/app/frontend/src/App.js**: **Updated** to integrate the new API service and app prompt, but may be part of the import/export issue.
+-   **/app/frontend/src/components/AppOpenPrompt.jsx**: **New file** created to house the UI for the deep-linking feature.
+-   **/app/backend/server.py**: **Deprecated**. This file contains the original internal backend code and should no longer be modified.
+
+**Areas that need refactoring**:
+-   The API integration logic across all frontend components is broken. A systematic refactor is required to fix the import/export errors. All components must import API functions from , not from  or elsewhere.
+
+**key api endpoints**
+-   **External API Base URL**: 
+-   **Working Endpoints**: , , , , , .
+-   **Missing Endpoints**: The agent found that endpoints for Social, Marketplace, Rentals, Services, Games, and Raffles returned Not Found.
+
+**Critical Info for New Agent**
+-   **Primary Goal**: Fix the frontend compilation errors. The application is currently unusable. The errors started after refactoring all pages to use the new service at .
+-   **Discard Internal Backend**: Do not work on . The project has pivoted to using an external API exclusively.
+-   **Handle Missing Features**: The external API is incomplete. The frontend must be designed to handle this gracefully (e.g., show Coming Soon messages for social, marketplace, etc.).
+-   **Implement Deep Linking**: A component for the native app prompt exists (), but the logic to detect mobile devices and trigger it from  is missing and needs to be implemented.
+
+**documents and test reports created in this job**
+-    (Note: This report is for the old, internal backend version)
+-   
+
+**Last 10 User Messages and any pending HUMAN messages**
+1.  **User**: Connect the PWA to my existing mobile app's backend API and add a deep-link prompt for mobile users. (COMPLETED - Request Received)
+2.  **Agent**: Acknowledged and began exploring the external API. (COMPLETED)
+3.  **Agent**: Sent a series of  commands to probe the external API, confirming some endpoints work (, ) while many others do not (, , etc.). (COMPLETED)
+4.  **Agent**: Concluded exploration, summarized findings, and began refactoring the frontend. (IN PROGRESS)
+5.  **Agent**: Updated all page components, which resulted in fatal compilation errors. (IN PROGRESS - BLOCKED)
+
+There are no pending messages from the user. The agent is currently blocked on fixing the self-inflicted compilation issues.
+
+**Project Health Check:**
+-   **Broken**: The frontend fails to compile and is non-functional.
+-   **Mocked**: N/A
+
+**3rd Party Integrations**
+-   **External Blendlink API**: The primary integration, located at . This is not a standard third-party service but a user-provided one.
+
+**Testing status**
+-   **Testing agent used after significant changes**: YES, but only on the initial version with the internal backend. It has not been run since the refactoring began.
+-   **Troubleshoot agent used after agent stuck in loop**: NO
+-   **Test files created**: []
+-   **Known regressions**: The entire application went from a working state (with an internal backend) to a non-compiling state.
+
+**Credentials to test flow:**
+-   Use the external API's  endpoint to create a new test user. The agent previously created , which can be used for logging in and testing authenticated routes once the app compiles.
+
+**What agent forgot to execute**
+-   The agent failed to stop and debug when compilation errors first appeared. Instead, it continued executing its plan to overwrite more files, which likely made the problem harder to diagnose.
+-   The agent created the  component but did not implement the necessary logic in  to conditionally render it based on the user's device (mobile vs. desktop) as requested.</analysis>
