@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { AuthContext, API } from "../App";
-import axios from "axios";
+import { AuthContext } from "../App";
+import api from "../services/api";
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { ArrowLeft, Heart, Share2, MessageCircle, MapPin, Package } from "lucide-react";
@@ -19,8 +19,8 @@ export default function ListingDetail() {
 
   const fetchListing = async () => {
     try {
-      const response = await axios.get(`${API}/marketplace/listings/${id}`);
-      setListing(response.data);
+      const data = await api.marketplace.getListing(id);
+      setListing(data);
     } catch (error) {
       console.error("Listing error:", error);
     } finally {
@@ -38,8 +38,12 @@ export default function ListingDetail() {
 
   if (!listing) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Listing not found</p>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+        <Package className="w-16 h-16 text-muted-foreground mb-4" />
+        <p className="text-muted-foreground text-center">Listing not found or marketplace coming soon</p>
+        <Button variant="outline" className="mt-4" onClick={() => navigate(-1)}>
+          Go Back
+        </Button>
       </div>
     );
   }
@@ -79,7 +83,7 @@ export default function ListingDetail() {
           {/* Price & Title */}
           <h1 className="text-2xl font-bold">{listing.title}</h1>
           <p className="text-3xl font-bold text-primary mt-2">
-            ${listing.price.toLocaleString()}
+            ${listing.price?.toLocaleString()}
           </p>
 
           {/* Details */}
@@ -106,7 +110,7 @@ export default function ListingDetail() {
                 className="w-12 h-12 cursor-pointer"
                 onClick={() => navigate(`/profile/${listing.seller?.user_id}`)}
               >
-                <AvatarImage src={listing.seller?.avatar} />
+                <AvatarImage src={listing.seller?.avatar || listing.seller?.picture} />
                 <AvatarFallback>{listing.seller?.name?.[0]}</AvatarFallback>
               </Avatar>
               <div className="flex-1">

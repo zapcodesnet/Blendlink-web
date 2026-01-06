@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { AuthContext, API } from "../App";
-import axios from "axios";
+import { AuthContext } from "../App";
+import api from "../services/api";
 import { toast } from "sonner";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
-import { ArrowLeft, Send, Image, Paperclip, MoreVertical } from "lucide-react";
+import { ArrowLeft, Send, Image, MoreVertical } from "lucide-react";
 
 export default function Chat() {
   const { user } = useContext(AuthContext);
@@ -17,17 +17,12 @@ export default function Chat() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
-  const typingTimeoutRef = useRef(null);
 
   useEffect(() => {
     fetchOtherUser();
     fetchMessages();
-    const interval = setInterval(() => {
-      fetchMessages();
-      checkTypingStatus();
-    }, 2000);
+    const interval = setInterval(fetchMessages, 2000);
     return () => clearInterval(interval);
   }, [id]);
 
@@ -37,8 +32,8 @@ export default function Chat() {
 
   const fetchOtherUser = async () => {
     try {
-      const response = await axios.get(`${API}/users/${id}`);
-      setOtherUser(response.data);
+      const userData = await api.users.getUser(id);
+      setOtherUser(userData);
     } catch (error) {
       console.error("User error:", error);
     }
@@ -46,34 +41,12 @@ export default function Chat() {
 
   const fetchMessages = async () => {
     try {
-      const response = await axios.get(`${API}/messages/${id}`, { withCredentials: true });
-      setMessages(response.data);
+      const data = await api.messages.getMessages(id);
+      setMessages(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Messages error:", error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const checkTypingStatus = async () => {
-    try {
-      const response = await axios.get(`${API}/messages/${id}/typing`, { withCredentials: true });
-      setIsTyping(response.data.typing);
-    } catch (error) {
-      // Ignore
-    }
-  };
-
-  const sendTypingIndicator = async () => {
-    try {
-      await axios.post(`${API}/messages/${id}/typing`, {}, { withCredentials: true });
-      
-      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-      typingTimeoutRef.current = setTimeout(async () => {
-        await axios.delete(`${API}/messages/${id}/typing`, { withCredentials: true });
-      }, 3000);
-    } catch (error) {
-      // Ignore
     }
   };
 
@@ -82,14 +55,11 @@ export default function Chat() {
 
     setSending(true);
     try {
-      await axios.post(`${API}/messages/${id}`, { content: input }, { withCredentials: true });
+      await api.messages.sendMessage(id, input);
       setInput("");
       fetchMessages();
-      
-      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-      await axios.delete(`${API}/messages/${id}/typing`, { withCredentials: true });
     } catch (error) {
-      toast.error("Failed to send message");
+      toast.error(error.message || "Messaging coming soon");
     } finally {
       setSending(false);
     }
@@ -112,14 +82,11 @@ export default function Chat() {
             onClick={() => navigate(`/profile/${id}`)}
           >
             <Avatar className="w-10 h-10">
-              <AvatarImage src={otherUser?.avatar} />
+              <AvatarImage src={otherUser?.avatar || otherUser?.picture} />
               <AvatarFallback>{otherUser?.name?.[0]}</AvatarFallback>
             </Avatar>
             <div className="text-left">
-              <p className="font-semibold">{otherUser?.name}</p>
-              {isTyping && (
-                <p className="text-xs text-primary">typing...</p>
-              )}
+              <p className="font-semibold">{otherUser?.name || "User"}</p>
             </div>
           </button>
           <Button variant="ghost" size="icon">
@@ -136,8 +103,8 @@ export default function Chat() {
           </div>
         ) : messages.length === 0 ? (
           <div className="text-center text-muted-foreground py-8">
-            <p>No messages yet</p>
-            <p className="text-sm">Say hello!</p>
+            <p>Messaging coming soon</p>
+            <p className="text-sm">This feature is being added to the mobile API</p>
           </div>
         ) : (
           messages.map((msg) => {
@@ -169,17 +136,6 @@ export default function Chat() {
           })
         )}
 
-        {/* Typing Indicator */}
-        {isTyping && (
-          <div className="flex justify-start">
-            <div className="message-received px-4 py-2 flex items-center gap-1">
-              <div className="typing-dot w-2 h-2 bg-muted-foreground rounded-full"></div>
-              <div className="typing-dot w-2 h-2 bg-muted-foreground rounded-full"></div>
-              <div className="typing-dot w-2 h-2 bg-muted-foreground rounded-full"></div>
-            </div>
-          </div>
-        )}
-
         <div ref={messagesEndRef} />
       </main>
 
@@ -192,10 +148,7 @@ export default function Chat() {
           <Input
             placeholder="Type a message..."
             value={input}
-            onChange={(e) => {
-              setInput(e.target.value);
-              sendTypingIndicator();
-            }}
+            onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleSend()}
             className="rounded-full"
             data-testid="message-input"

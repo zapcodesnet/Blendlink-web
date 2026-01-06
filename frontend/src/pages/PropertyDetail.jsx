@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { AuthContext, API } from "../App";
-import axios from "axios";
+import { AuthContext } from "../App";
+import api from "../services/api";
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { ArrowLeft, Share2, MessageCircle, MapPin, Bed, Bath, Home, Check } from "lucide-react";
@@ -19,8 +19,8 @@ export default function PropertyDetail() {
 
   const fetchProperty = async () => {
     try {
-      const response = await axios.get(`${API}/rentals/properties/${id}`);
-      setProperty(response.data);
+      const data = await api.rentals.getProperty(id);
+      setProperty(data);
     } catch (error) {
       console.error("Property error:", error);
     } finally {
@@ -38,8 +38,12 @@ export default function PropertyDetail() {
 
   if (!property) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Property not found</p>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+        <Home className="w-16 h-16 text-muted-foreground mb-4" />
+        <p className="text-muted-foreground text-center">Property not found or rentals coming soon</p>
+        <Button variant="outline" className="mt-4" onClick={() => navigate(-1)}>
+          Go Back
+        </Button>
       </div>
     );
   }
@@ -82,7 +86,7 @@ export default function PropertyDetail() {
           </span>
           <h1 className="text-2xl font-bold mt-2">{property.title}</h1>
           <p className="text-3xl font-bold text-primary mt-2">
-            ${property.price.toLocaleString()}<span className="text-lg font-normal text-muted-foreground">/mo</span>
+            ${property.price?.toLocaleString()}<span className="text-lg font-normal text-muted-foreground">/mo</span>
           </p>
 
           {/* Location */}
@@ -135,7 +139,7 @@ export default function PropertyDetail() {
                 className="w-12 h-12 cursor-pointer"
                 onClick={() => navigate(`/profile/${property.owner?.user_id}`)}
               >
-                <AvatarImage src={property.owner?.avatar} />
+                <AvatarImage src={property.owner?.avatar || property.owner?.picture} />
                 <AvatarFallback>{property.owner?.name?.[0]}</AvatarFallback>
               </Avatar>
               <div className="flex-1">

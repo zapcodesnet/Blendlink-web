@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext, API } from "../App";
-import axios from "axios";
+import { AuthContext } from "../App";
+import api from "../services/api";
 import { toast } from "sonner";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -39,8 +39,8 @@ export default function CreateListing() {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get(`${API}/marketplace/categories`);
-      setCategories(response.data);
+      const cats = await api.marketplace.getCategories();
+      setCategories(cats);
     } catch (error) {
       console.error("Categories error:", error);
     }
@@ -56,15 +56,14 @@ export default function CreateListing() {
 
     setLoading(true);
     try {
-      await axios.post(
-        `${API}/marketplace/listings`,
-        { ...form, price: parseFloat(form.price) },
-        { withCredentials: true }
-      );
+      await api.marketplace.createListing({ 
+        ...form, 
+        price: parseFloat(form.price) 
+      });
       toast.success("Listing created!");
       navigate("/marketplace");
     } catch (error) {
-      toast.error("Failed to create listing");
+      toast.error(error.message || "Marketplace coming soon to mobile API");
     } finally {
       setLoading(false);
     }
@@ -206,6 +205,11 @@ export default function CreateListing() {
           >
             {loading ? "Creating..." : "Create Listing - Free!"}
           </Button>
+
+          {/* Note */}
+          <p className="text-xs text-muted-foreground text-center">
+            Note: Marketplace is being added to the mobile API
+          </p>
         </form>
       </main>
     </div>

@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { AuthContext, API } from "../App";
-import axios from "axios";
+import { AuthContext } from "../App";
+import api from "../services/api";
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
-import { ArrowLeft, Share2, MessageCircle, MapPin, Star, Globe } from "lucide-react";
+import { ArrowLeft, Share2, MessageCircle, MapPin, Star, Globe, Laptop } from "lucide-react";
 
 export default function ServiceDetail() {
   const { user } = useContext(AuthContext);
@@ -19,8 +19,8 @@ export default function ServiceDetail() {
 
   const fetchService = async () => {
     try {
-      const response = await axios.get(`${API}/services/${id}`);
-      setService(response.data);
+      const data = await api.services.getService(id);
+      setService(data);
     } catch (error) {
       console.error("Service error:", error);
     } finally {
@@ -38,8 +38,12 @@ export default function ServiceDetail() {
 
   if (!service) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Service not found</p>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+        <Laptop className="w-16 h-16 text-muted-foreground mb-4" />
+        <p className="text-muted-foreground text-center">Service not found or services coming soon</p>
+        <Button variant="outline" className="mt-4" onClick={() => navigate(-1)}>
+          Go Back
+        </Button>
       </div>
     );
   }
@@ -66,7 +70,7 @@ export default function ServiceDetail() {
             className="w-20 h-20 cursor-pointer"
             onClick={() => navigate(`/profile/${service.provider?.user_id}`)}
           >
-            <AvatarImage src={service.provider?.avatar} />
+            <AvatarImage src={service.provider?.avatar || service.provider?.picture} />
             <AvatarFallback className="text-2xl">{service.provider?.name?.[0]}</AvatarFallback>
           </Avatar>
           <div>

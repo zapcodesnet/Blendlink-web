@@ -1,7 +1,7 @@
 import React, { useState, useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { AuthContext, API } from "../App";
-import axios from "axios";
+import { AuthContext } from "../App";
+import api from "../services/api";
 import { toast } from "sonner";
 import { Button } from "../components/ui/button";
 import { Textarea } from "../components/ui/textarea";
@@ -25,15 +25,11 @@ export default function CreatePost() {
 
     setLoading(true);
     try {
-      await axios.post(
-        `${API}/posts`,
-        { content, images, is_story: isStory },
-        { withCredentials: true }
-      );
+      await api.posts.createPost({ content, images, is_story: isStory });
       toast.success(isStory ? "Story posted!" : "Post created!");
       navigate("/feed");
     } catch (error) {
-      toast.error("Failed to create post");
+      toast.error(error.message || "Social features coming soon to mobile API");
     } finally {
       setLoading(false);
     }
@@ -113,6 +109,11 @@ export default function CreatePost() {
             Stories disappear after 24 hours
           </p>
         )}
+
+        {/* Note */}
+        <p className="text-xs text-muted-foreground mt-4 text-center">
+          Note: Social features are being added to the mobile API
+        </p>
       </main>
     </div>
   );
