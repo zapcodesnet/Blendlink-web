@@ -6,6 +6,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { ArrowLeft, MessageCircle, Search } from "lucide-react";
 import { Input } from "../components/ui/input";
+import ComingSoonPlaceholder from "../components/ComingSoonPlaceholder";
 
 export default function Messages() {
   const { user } = useContext(AuthContext);
@@ -74,13 +75,11 @@ export default function Messages() {
             ))}
           </div>
         ) : filteredConversations.length === 0 ? (
-          <div className="p-8 text-center">
-            <MessageCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="font-semibold mb-2">Messaging Coming Soon</h3>
-            <p className="text-muted-foreground text-sm">
-              This feature is being added to the mobile API
-            </p>
-          </div>
+          <ComingSoonPlaceholder
+            icon={MessageCircle}
+            title="Messaging Coming Soon"
+            description="Chat and connect with other Blendlink users"
+          />
         ) : (
           <div className="divide-y divide-border/50">
             {filteredConversations.map((conv) => (
