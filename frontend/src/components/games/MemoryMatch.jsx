@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { API } from "../../App";
-import axios from "axios";
+import api from "../../services/api";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { ArrowLeft, Coins, Trophy, RotateCcw } from "lucide-react";

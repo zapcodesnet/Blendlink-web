@@ -1,7 +1,6 @@
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { API } from "../../App";
-import axios from "axios";
+import api from "../../services/api";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { ArrowLeft, Coins, RotateCcw } from "lucide-react";

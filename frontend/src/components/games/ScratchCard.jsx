@@ -1,6 +1,5 @@
 import React, { useState, useContext } from "react";
-import { API } from "../../App";
-import axios from "axios";
+import api from "../../services/api";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { ArrowLeft, Coins, Sparkles } from "lucide-react";
