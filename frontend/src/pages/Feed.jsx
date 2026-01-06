@@ -5,10 +5,11 @@ import api from "../services/api";
 import { toast } from "sonner";
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
+import ComingSoonPlaceholder from "../components/ComingSoonPlaceholder";
 import { 
   Heart, MessageCircle, Share2, Plus, MoreHorizontal,
   Home as HomeIcon, Building, Briefcase, Settings, Bell, Search,
-  RefreshCw, Coins
+  RefreshCw, Coins, Users
 } from "lucide-react";
 
 export default function Feed() {
@@ -194,16 +195,11 @@ export default function Feed() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
             </div>
           ) : posts.length === 0 ? (
-            <div className="p-8 text-center">
-              <p className="text-muted-foreground mb-4">
-                Social feed coming soon to mobile API!<br />
-                For now, explore other features.
-              </p>
-              <Button onClick={() => navigate("/create-post")} data-testid="create-first-post">
-                <Plus className="w-4 h-4 mr-2" />
-                Create Post
-              </Button>
-            </div>
+            <ComingSoonPlaceholder
+              icon={Users}
+              title="Social Feed Coming Soon"
+              description="Connect with friends, share posts and stories"
+            />
           ) : (
             posts.map((post) => (
               <article key={post.post_id} className="p-4" data-testid={`post-${post.post_id}`}>
