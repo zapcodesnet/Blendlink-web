@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { AuthContext, API } from "../App";
-import axios from "axios";
+import { AuthContext } from "../App";
+import api from "../services/api";
 import { toast } from "sonner";
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { 
   Settings, Grid3X3, Heart, Bookmark, Share2, 
-  Users, MessageCircle, Coins, ArrowLeft, Edit
+  Users, MessageCircle, Coins, ArrowLeft, Edit, Copy
 } from "lucide-react";
 
 export default function Profile() {
@@ -29,14 +29,24 @@ export default function Profile() {
   const fetchProfile = async () => {
     try {
       if (isOwnProfile) {
-        setProfile(currentUser);
+        // Fetch fresh profile data
+        const freshProfile = await api.auth.getProfile();
+        const balance = await api.wallet.getBalance();
+        const profileData = {
+          ...freshProfile,
+          bl_coins: balance.balance,
+        };
+        setProfile(profileData);
+        setUser(profileData);
       } else {
-        const response = await axios.get(`${API}/users/${id}`);
-        setProfile(response.data);
+        const userData = await api.users.getUser(id);
+        setProfile(userData);
         checkFollowStatus();
       }
     } catch (error) {
       console.error("Profile error:", error);
+      // Fallback to stored user
+      setProfile(currentUser);
     } finally {
       setLoading(false);
     }
@@ -45,19 +55,18 @@ export default function Profile() {
   const fetchPosts = async () => {
     try {
       const userId = id || currentUser?.user_id;
-      const response = await axios.get(`${API}/users/${userId}/posts`);
-      setPosts(response.data);
+      const userPosts = await api.users.getUserPosts(userId);
+      setPosts(Array.isArray(userPosts) ? userPosts : []);
     } catch (error) {
       console.error("Posts error:", error);
+      setPosts([]);
     }
   };
 
   const checkFollowStatus = async () => {
     try {
-      const response = await axios.get(`${API}/users/${currentUser?.user_id}/following`, { 
-        withCredentials: true 
-      });
-      setIsFollowing(response.data.includes(id));
+      const following = await api.users.getFollowing(currentUser?.user_id);
+      setIsFollowing(following.includes(id));
     } catch (error) {
       console.error("Follow status error:", error);
     }
@@ -65,16 +74,21 @@ export default function Profile() {
 
   const handleFollow = async () => {
     try {
-      const response = await axios.post(`${API}/users/${id}/follow`, {}, { withCredentials: true });
-      setIsFollowing(response.data.following);
+      const response = await api.users.followUser(id);
+      setIsFollowing(response.following);
       setProfile(prev => ({
         ...prev,
-        followers_count: prev.followers_count + (response.data.following ? 1 : -1)
+        followers_count: prev.followers_count + (response.following ? 1 : -1)
       }));
-      toast.success(response.data.following ? "Following!" : "Unfollowed");
+      toast.success(response.following ? "Following!" : "Unfollowed");
     } catch (error) {
-      toast.error("Failed to follow");
+      toast.error(error.message || "Failed to follow");
     }
+  };
+
+  const copyReferralCode = () => {
+    navigator.clipboard.writeText(profile?.referral_code || "");
+    toast.success("Referral code copied!");
   };
 
   if (loading) {
@@ -108,7 +122,7 @@ export default function Profile() {
         {/* Profile Header */}
         <div className="flex items-start gap-6 mb-6">
           <Avatar className="w-20 h-20 md:w-24 md:h-24">
-            <AvatarImage src={profile?.avatar} />
+            <AvatarImage src={profile?.avatar || profile?.picture} />
             <AvatarFallback className="text-2xl">{profile?.name?.[0]}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
@@ -123,7 +137,7 @@ export default function Profile() {
                 <p className="text-xs text-muted-foreground">Posts</p>
               </div>
               <div className="text-center">
-                <p className="font-bold">{profile?.followers_count || 0}</p>
+                <p className="font-bold">{profile?.followers_count || profile?.direct_recruits_count || 0}</p>
                 <p className="text-xs text-muted-foreground">Followers</p>
               </div>
               <div className="text-center">
@@ -177,27 +191,49 @@ export default function Profile() {
           )}
         </div>
 
-        {/* BL Coins (own profile only) */}
+        {/* BL Coins & Referral (own profile only) */}
         {isOwnProfile && (
-          <div className="bl-coin-gradient rounded-xl p-4 text-white mb-6 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-                <Coins className="w-6 h-6" />
+          <>
+            <div className="bl-coin-gradient rounded-xl p-4 text-white mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
+                  <Coins className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-white/80 text-sm">BL Coins</p>
+                  <p className="text-2xl font-bold">{(profile?.bl_coins || 0).toLocaleString()}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-white/80 text-sm">BL Coins</p>
-                <p className="text-2xl font-bold">{Math.floor(profile?.bl_coins || 0)}</p>
-              </div>
+              <Button 
+                variant="secondary" 
+                size="sm"
+                onClick={() => navigate("/wallet")}
+                className="bg-white/20 text-white hover:bg-white/30"
+              >
+                View Wallet
+              </Button>
             </div>
-            <Button 
-              variant="secondary" 
-              size="sm"
-              onClick={() => navigate("/wallet")}
-              className="bg-white/20 text-white hover:bg-white/30"
-            >
-              View Wallet
-            </Button>
-          </div>
+
+            {/* Referral Code */}
+            {profile?.referral_code && (
+              <div className="bg-muted/50 rounded-xl p-4 mb-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Your Referral Code</p>
+                    <p className="font-mono text-lg font-bold">{profile.referral_code}</p>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={copyReferralCode}
+                  >
+                    <Copy className="w-4 h-4 mr-1" />
+                    Copy
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* Posts Grid */}
@@ -209,7 +245,8 @@ export default function Profile() {
           
           {posts.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
-              No posts yet
+              <p>No posts yet</p>
+              <p className="text-xs mt-1">Social features coming soon to mobile API</p>
             </div>
           ) : (
             <div className="grid grid-cols-3 gap-1">
@@ -234,6 +271,11 @@ export default function Profile() {
             </div>
           )}
         </div>
+
+        {/* Sync Notice */}
+        <p className="text-center text-xs text-muted-foreground mt-6">
+          🔄 Synced with Blendlink mobile app
+        </p>
       </main>
     </div>
   );
