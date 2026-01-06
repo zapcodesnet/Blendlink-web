@@ -1,20 +1,18 @@
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext, API } from "../App";
-import axios from "axios";
+import { AuthContext } from "../App";
+import api from "../services/api";
 import { toast } from "sonner";
 import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
 import { Switch } from "../components/ui/switch";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { 
   ArrowLeft, User, Bell, Moon, Shield, HelpCircle, 
-  LogOut, ChevronRight, Camera
+  LogOut, ChevronRight, Camera, Smartphone
 } from "lucide-react";
 
 export default function Settings() {
-  const { user, setUser } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const [darkMode, setDarkMode] = useState(document.documentElement.classList.contains("dark"));
   const [notifications, setNotifications] = useState(true);
@@ -31,15 +29,17 @@ export default function Settings() {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await axios.post(`${API}/auth/logout`, {}, { withCredentials: true });
-      toast.success("Logged out successfully");
-      navigate("/login");
-    } catch (error) {
-      // Still logout on frontend
-      navigate("/login");
-    }
+  const handleLogout = () => {
+    api.auth.logout();
+    toast.success("Logged out successfully");
+  };
+
+  const openMobileApp = () => {
+    window.location.href = "blendlink://";
+    setTimeout(() => {
+      // If still here, app not installed
+      toast.info("Download the Blendlink app for the best experience!");
+    }, 2000);
   };
 
   const settingsGroups = [
@@ -61,6 +61,7 @@ export default function Settings() {
       title: "Support",
       items: [
         { icon: HelpCircle, label: "Help Center", onClick: () => {} },
+        { icon: Smartphone, label: "Open Mobile App", onClick: openMobileApp },
       ]
     }
   ];
@@ -82,7 +83,7 @@ export default function Settings() {
         <div className="flex items-center gap-4 mb-8">
           <div className="relative">
             <Avatar className="w-20 h-20">
-              <AvatarImage src={user?.avatar} />
+              <AvatarImage src={user?.avatar || user?.picture} />
               <AvatarFallback className="text-2xl">{user?.name?.[0]}</AvatarFallback>
             </Avatar>
             <button className="absolute bottom-0 right-0 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center">
@@ -92,6 +93,18 @@ export default function Settings() {
           <div>
             <h2 className="text-xl font-bold">{user?.name}</h2>
             <p className="text-muted-foreground">@{user?.username}</p>
+            <p className="text-xs text-muted-foreground mt-1">{user?.email}</p>
+          </div>
+        </div>
+
+        {/* Sync Status */}
+        <div className="bg-green-500/10 rounded-xl p-4 mb-6 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+            <span className="text-green-500">✓</span>
+          </div>
+          <div>
+            <p className="font-medium text-green-700 dark:text-green-400">Synced with Mobile App</p>
+            <p className="text-sm text-muted-foreground">Your data syncs across all devices</p>
           </div>
         </div>
 
@@ -143,7 +156,10 @@ export default function Settings() {
 
         {/* Version */}
         <p className="text-center text-sm text-muted-foreground mt-8">
-          Blendlink v1.0.0
+          Blendlink PWA v1.0.0
+        </p>
+        <p className="text-center text-xs text-muted-foreground mt-1">
+          Connected to mobile-games-hub API
         </p>
       </main>
     </div>
