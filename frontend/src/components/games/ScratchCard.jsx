@@ -31,11 +31,11 @@ export default function ScratchCard({ onComplete, user }) {
     setResult(null);
 
     try {
-      const response = await axios.post(`${API}/games/scratch-card`, {}, { withCredentials: true });
-      setResult(response.data);
+      const response = await api.games.scratchCard();
+      setResult(response);
     } catch (error) {
       setPlaying(false);
-      toast.error(error.response?.data?.detail || "Failed to get scratch card");
+      toast.error(error.message || "Failed to get scratch card");
     }
   };
 

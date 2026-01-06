@@ -79,14 +79,10 @@ export default function MemoryMatch({ onComplete, user }) {
     const finalTime = Math.floor((Date.now() - startTime) / 1000);
     
     try {
-      const response = await axios.post(
-        `${API}/games/memory-match`,
-        { moves: moves + 1, time_seconds: finalTime },
-        { withCredentials: true }
-      );
+      const response = await api.games.memoryMatch(moves + 1, finalTime);
       
-      toast.success(`Completed! You earned ${response.data.reward} BL Coins!`);
-      setTimeout(() => onComplete(response.data), 2000);
+      toast.success(`Completed! You earned ${response.reward} BL Coins!`);
+      setTimeout(() => onComplete(response), 2000);
     } catch (error) {
       toast.error("Failed to save game result");
     }

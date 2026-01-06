@@ -33,8 +33,8 @@ export default function SpinWheel({ onComplete, user }) {
     setResult(null);
 
     try {
-      const response = await axios.post(`${API}/games/spin-wheel`, {}, { withCredentials: true });
-      const { result: gameResult, winnings, new_balance } = response.data;
+      const response = await api.games.spinWheel();
+      const { result: gameResult, winnings, new_balance } = response;
 
       // Find segment index
       const segmentIndex = SEGMENTS.findIndex(s => s.multiplier === gameResult.multiplier);
@@ -57,7 +57,7 @@ export default function SpinWheel({ onComplete, user }) {
       }, 4000);
     } catch (error) {
       setSpinning(false);
-      toast.error(error.response?.data?.detail || "Failed to spin");
+      toast.error(error.message || "Failed to spin");
     }
   };
 
