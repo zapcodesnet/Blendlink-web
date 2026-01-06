@@ -494,7 +494,7 @@ async def create_post(data: CreatePost, current_user: dict = Depends(get_current
     if post_dict["expires_at"]:
         post_dict["expires_at"] = post_dict["expires_at"].isoformat()
     
-    await db.posts.insert_one(post_dict)
+    await db.posts.insert_one(post_dict.copy())
     
     # Daily login reward
     today = datetime.now(timezone.utc).date().isoformat()
@@ -729,7 +729,7 @@ async def create_listing(data: CreateListing, current_user: dict = Depends(get_c
     listing_dict = listing.model_dump()
     listing_dict["created_at"] = listing_dict["created_at"].isoformat()
     
-    await db.listings.insert_one(listing_dict)
+    await db.listings.insert_one(listing_dict.copy())
     return listing_dict
 
 @marketplace_router.get("/categories")
@@ -806,7 +806,7 @@ async def create_property(data: CreateProperty, current_user: dict = Depends(get
     prop_dict = prop.model_dump()
     prop_dict["created_at"] = prop_dict["created_at"].isoformat()
     
-    await db.properties.insert_one(prop_dict)
+    await db.properties.insert_one(prop_dict.copy())
     return prop_dict
 
 # ============== SERVICES ROUTES ==============
@@ -862,7 +862,7 @@ async def create_service(data: CreateService, current_user: dict = Depends(get_c
     svc_dict = svc.model_dump()
     svc_dict["created_at"] = svc_dict["created_at"].isoformat()
     
-    await db.services.insert_one(svc_dict)
+    await db.services.insert_one(svc_dict.copy())
     return svc_dict
 
 @services_router.get("/categories/list")
