@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext, API } from "../App";
-import axios from "axios";
+import { AuthContext } from "../App";
+import api from "../services/api";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { ArrowLeft, MessageCircle, Search } from "lucide-react";
@@ -22,10 +22,11 @@ export default function Messages() {
 
   const fetchConversations = async () => {
     try {
-      const response = await axios.get(`${API}/messages/conversations`, { withCredentials: true });
-      setConversations(response.data);
+      const data = await api.messages.getConversations();
+      setConversations(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Conversations error:", error);
+      setConversations([]);
     } finally {
       setLoading(false);
     }
@@ -75,9 +76,9 @@ export default function Messages() {
         ) : filteredConversations.length === 0 ? (
           <div className="p-8 text-center">
             <MessageCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="font-semibold mb-2">No messages yet</h3>
+            <h3 className="font-semibold mb-2">Messaging Coming Soon</h3>
             <p className="text-muted-foreground text-sm">
-              Start a conversation by visiting someone's profile
+              This feature is being added to the mobile API
             </p>
           </div>
         ) : (
@@ -116,6 +117,11 @@ export default function Messages() {
             ))}
           </div>
         )}
+
+        {/* Sync Notice */}
+        <p className="text-center text-xs text-muted-foreground mt-8 pb-4">
+          🔄 Synced with Blendlink mobile app
+        </p>
       </main>
     </div>
   );

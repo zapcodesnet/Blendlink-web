@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext, API } from "../App";
-import axios from "axios";
+import { AuthContext } from "../App";
+import api from "../services/api";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { 
@@ -36,8 +36,8 @@ export default function Marketplace() {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get(`${API}/marketplace/categories`);
-      setCategories(response.data);
+      const cats = await api.marketplace.getCategories();
+      setCategories(cats);
     } catch (error) {
       console.error("Categories error:", error);
     }
@@ -46,14 +46,11 @@ export default function Marketplace() {
   const fetchListings = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (selectedCategory) params.append("category", selectedCategory);
-      if (search) params.append("search", search);
-      
-      const response = await axios.get(`${API}/marketplace/listings?${params}`);
-      setListings(response.data);
+      const data = await api.marketplace.getListings(selectedCategory, search);
+      setListings(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Listings error:", error);
+      setListings([]);
     } finally {
       setLoading(false);
     }
@@ -140,8 +137,8 @@ export default function Marketplace() {
         ) : listings.length === 0 ? (
           <div className="text-center py-12">
             <Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="font-semibold text-lg mb-2">No listings found</h3>
-            <p className="text-muted-foreground mb-4">Be the first to sell something!</p>
+            <h3 className="font-semibold text-lg mb-2">Marketplace Coming Soon</h3>
+            <p className="text-muted-foreground mb-4">This feature is being added to the mobile API</p>
             <Button onClick={() => navigate("/marketplace/create")}>
               <Plus className="w-4 h-4 mr-2" />
               Create Listing
@@ -172,7 +169,7 @@ export default function Marketplace() {
                 <div className="p-3">
                   <h3 className="font-medium text-sm truncate">{listing.title}</h3>
                   <p className="text-lg font-bold text-primary mt-1">
-                    ${listing.price.toLocaleString()}
+                    ${listing.price?.toLocaleString()}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1 truncate">
                     {listing.seller?.name}
@@ -182,6 +179,11 @@ export default function Marketplace() {
             ))}
           </div>
         )}
+
+        {/* Sync Notice */}
+        <p className="text-center text-xs text-muted-foreground mt-8">
+          🔄 Synced with Blendlink mobile app
+        </p>
       </main>
     </div>
   );

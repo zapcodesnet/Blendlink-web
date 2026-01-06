@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext, API } from "../App";
-import axios from "axios";
+import { AuthContext } from "../App";
+import api from "../services/api";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { 
@@ -29,15 +29,11 @@ export default function Rentals() {
   const fetchProperties = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) params.append(key, value);
-      });
-      
-      const response = await axios.get(`${API}/rentals/properties?${params}`);
-      setProperties(response.data);
+      const data = await api.rentals.getProperties(filters);
+      setProperties(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Properties error:", error);
+      setProperties([]);
     } finally {
       setLoading(false);
     }
@@ -118,8 +114,8 @@ export default function Rentals() {
         ) : properties.length === 0 ? (
           <div className="text-center py-12">
             <Home className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="font-semibold text-lg mb-2">No properties found</h3>
-            <p className="text-muted-foreground">Try adjusting your search filters</p>
+            <h3 className="font-semibold text-lg mb-2">Rentals Coming Soon</h3>
+            <p className="text-muted-foreground">This feature is being added to the mobile API</p>
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -149,7 +145,7 @@ export default function Rentals() {
                 <div className="p-4">
                   <h3 className="font-semibold truncate">{property.title}</h3>
                   <p className="text-2xl font-bold text-primary mt-1">
-                    ${property.price.toLocaleString()}<span className="text-sm font-normal text-muted-foreground">/mo</span>
+                    ${property.price?.toLocaleString()}<span className="text-sm font-normal text-muted-foreground">/mo</span>
                   </p>
                   <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1">
@@ -170,6 +166,11 @@ export default function Rentals() {
             ))}
           </div>
         )}
+
+        {/* Sync Notice */}
+        <p className="text-center text-xs text-muted-foreground mt-8">
+          🔄 Synced with Blendlink mobile app
+        </p>
       </main>
     </div>
   );

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext, API } from "../App";
-import axios from "axios";
+import { AuthContext } from "../App";
+import api from "../services/api";
 import { toast } from "sonner";
 import { Button } from "../components/ui/button";
 import { 
@@ -20,10 +20,11 @@ export default function Raffles() {
 
   const fetchRaffles = async () => {
     try {
-      const response = await axios.get(`${API}/raffles`);
-      setRaffles(response.data);
+      const data = await api.raffles.getRaffles();
+      setRaffles(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Raffles error:", error);
+      setRaffles([]);
     } finally {
       setLoading(false);
     }
@@ -31,16 +32,14 @@ export default function Raffles() {
 
   const enterRaffle = async (raffleId) => {
     try {
-      const response = await axios.post(
-        `${API}/raffles/${raffleId}/enter`,
-        {},
-        { withCredentials: true }
-      );
+      const response = await api.raffles.enterRaffle(raffleId);
       toast.success("Entered raffle successfully!");
-      setUser({ ...user, bl_coins: response.data.new_balance });
+      if (response.new_balance !== undefined) {
+        setUser({ ...user, bl_coins: response.new_balance });
+      }
       fetchRaffles();
     } catch (error) {
-      toast.error(error.response?.data?.detail || "Failed to enter raffle");
+      toast.error(error.message || "Failed to enter raffle");
     }
   };
 
@@ -69,7 +68,7 @@ export default function Raffles() {
           <h1 className="font-bold">Raffles & Contests</h1>
           <div className="ml-auto flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10">
             <Coins className="w-4 h-4 text-amber-500" />
-            <span className="font-semibold text-amber-600">{Math.floor(user?.bl_coins || 0)}</span>
+            <span className="font-semibold text-amber-600">{Math.floor(user?.bl_coins || 0).toLocaleString()}</span>
           </div>
         </div>
       </header>
@@ -88,8 +87,8 @@ export default function Raffles() {
         ) : raffles.length === 0 ? (
           <div className="text-center py-12">
             <Trophy className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="font-semibold text-lg mb-2">No Active Raffles</h3>
-            <p className="text-muted-foreground">Check back soon for exciting contests!</p>
+            <h3 className="font-semibold text-lg mb-2">Raffles Coming Soon</h3>
+            <p className="text-muted-foreground">This feature is being added to the mobile API</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -149,6 +148,11 @@ export default function Raffles() {
             ))}
           </div>
         )}
+
+        {/* Sync Notice */}
+        <p className="text-center text-xs text-muted-foreground mt-8">
+          🔄 Synced with Blendlink mobile app
+        </p>
       </main>
     </div>
   );

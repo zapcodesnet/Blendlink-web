@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext, API } from "../App";
-import axios from "axios";
+import { AuthContext } from "../App";
+import api from "../services/api";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { 
   Search, Star, Heart, GraduationCap, Laptop, Sparkles, 
-  Car, Scale, Palette, Plus, MapPin
+  Car, Scale, Palette, Plus, MapPin, Home
 } from "lucide-react";
 
 const categoryIcons = {
@@ -20,8 +20,6 @@ const categoryIcons = {
   legal: Scale,
   creative: Palette
 };
-
-import { Home } from "lucide-react";
 
 export default function Services() {
   const { user } = useContext(AuthContext);
@@ -39,8 +37,8 @@ export default function Services() {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get(`${API}/services/categories/list`);
-      setCategories(response.data);
+      const cats = await api.services.getCategories();
+      setCategories(cats);
     } catch (error) {
       console.error("Categories error:", error);
     }
@@ -49,14 +47,14 @@ export default function Services() {
   const fetchServices = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (selectedCategory) params.append("category", selectedCategory);
-      if (search) params.append("location", search);
-      
-      const response = await axios.get(`${API}/services?${params}`);
-      setServices(response.data);
+      const data = await api.services.getServices({ 
+        category: selectedCategory, 
+        location: search 
+      });
+      setServices(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Services error:", error);
+      setServices([]);
     } finally {
       setLoading(false);
     }
@@ -136,8 +134,8 @@ export default function Services() {
         ) : services.length === 0 ? (
           <div className="text-center py-12">
             <Laptop className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="font-semibold text-lg mb-2">No services found</h3>
-            <p className="text-muted-foreground">Be the first to offer a service!</p>
+            <h3 className="font-semibold text-lg mb-2">Services Coming Soon</h3>
+            <p className="text-muted-foreground">This feature is being added to the mobile API</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -179,6 +177,11 @@ export default function Services() {
             ))}
           </div>
         )}
+
+        {/* Sync Notice */}
+        <p className="text-center text-xs text-muted-foreground mt-8">
+          🔄 Synced with Blendlink mobile app
+        </p>
       </main>
     </div>
   );
