@@ -11,12 +11,11 @@ Build a fully responsive Progressive Web App (PWA) version of Blendlink - an all
 - Virtual currency (BL Coin system)
 - 2-level unilevel referral system
 
-## User Choices
-- Auth: Both JWT + Google OAuth
-- Games: Simple casual games (spin wheel, scratch cards, memory match)
-- Chat: Real-time messaging with typing indicators, media support
-- Push Notifications: Web Push API
-- Theme: Light default with dark mode toggle
+## Architecture Change (January 2026)
+**IMPORTANT**: The PWA now connects to an external mobile app backend API instead of the internal backend.
+- External API: `https://mobile-games-hub-11.preview.emergentagent.com/api`
+- Internal backend (`/app/backend/server.py`) is **DEPRECATED**
+- All data now syncs with the native Blendlink mobile app
 
 ## User Personas
 1. **Social Users**: Want to connect, share posts/stories, follow friends
@@ -29,90 +28,93 @@ Build a fully responsive Progressive Web App (PWA) version of Blendlink - an all
 ## Core Requirements (Static)
 - PWA installable on mobile devices
 - Offline support via service worker
-- Push notification capability
 - Mobile-first responsive design
 - Bottom navigation for easy access
 - BL Coin virtual currency system
 - 2-level referral commission system
+- **Deep linking to native app** (blendlink://)
+- **App store redirects** for iOS/Android
 
-## What's Been Implemented (January 2026)
-### Backend (FastAPI + MongoDB)
-- [x] User authentication (JWT + Google OAuth via Emergent)
-- [x] User profiles with avatars, bio, followers/following
-- [x] Posts system with likes, comments
-- [x] Stories (24-hour expiry)
-- [x] Real-time messaging with typing indicators
-- [x] Marketplace listings with categories
-- [x] Property rentals with filters
-- [x] Professional services directory
-- [x] Games: Spin Wheel, Scratch Card, Memory Match
-- [x] Raffles/contests system
-- [x] BL Coin wallet with transactions
-- [x] 2-level referral system (50 BL level 1, 25 BL level 2)
-- [x] Daily activity rewards (5 BL)
+## What's Been Implemented
+
+### External API Integration (January 6, 2026)
+- [x] Connected to external Blendlink mobile app API
+- [x] Auth endpoints working: /auth/register, /auth/login, /auth/me
+- [x] Wallet endpoints working: /bl-coins/balance, /bl-coins/transactions, /bl-coins/claim-daily
+- [x] Fixed game component imports (MemoryMatch, SpinWheel, ScratchCard)
+
+### "Coming Soon" Features
+The following features are NOT available in the external API and show "Coming Soon" placeholders:
+- [ ] Social Feed (/posts/feed)
+- [ ] Marketplace (/marketplace/listings)
+- [ ] Property Rentals (/rentals/properties)
+- [ ] Professional Services (/services)
+- [ ] Games - Spin Wheel, Scratch Card (/games/*)
+- [ ] Raffles (/raffles/*)
+- [ ] Messaging (/messages/*)
+
+### Deep Linking & Mobile Detection
+- [x] Created AppOpenPrompt component for mobile users
+- [x] Full-screen prompt on first mobile visit
+- [x] "Open in Blendlink App" button (attempts blendlink:// deep link)
+- [x] App Store / Play Store download buttons
+- [x] "Continue to web version" option
+- [x] Session-based prompt dismissal
 
 ### Frontend (React + Tailwind + Shadcn)
 - [x] PWA manifest and service worker
 - [x] Landing page with features showcase
 - [x] Login/Register with Google OAuth
-- [x] Social feed with stories carousel
-- [x] Create post functionality
-- [x] Marketplace with category filters
-- [x] Create listing form
-- [x] Property rentals browser
-- [x] Services directory
-- [x] Games hub with 3 mini-games
-- [x] Wallet with balance and transactions
-- [x] Profile page with posts grid
-- [x] Messages/chat interface
+- [x] ComingSoonPlaceholder component (reusable)
+- [x] Wallet with balance and transactions (working with API)
+- [x] Daily claim functionality (working with API)
+- [x] Profile page 
 - [x] Referrals page with share functionality
 - [x] Settings with dark mode toggle
-- [x] Bottom navigation
-
-## Prioritized Backlog
-### P0 (Critical - Next)
-- [ ] Shopping cart functionality
-- [ ] Payment integration for marketplace
-- [ ] Image upload for posts/listings
-
-### P1 (High Priority)
-- [ ] Push notification implementation
-- [ ] Property inquiry/booking form
-- [ ] Service booking/scheduling
-- [ ] User search functionality
-- [ ] Notifications center
-
-### P2 (Medium Priority)
-- [ ] Admin moderation dashboard
-- [ ] Report content feature
-- [ ] User verification badges
-- [ ] Premium listing options
-- [ ] Saved items/wishlist
+- [x] Bottom/sidebar navigation
 
 ## Tech Stack
-- Backend: FastAPI + Motor (async MongoDB)
 - Frontend: React 18 + Tailwind CSS + Shadcn UI
-- Database: MongoDB
-- Auth: JWT + Emergent Google OAuth
-- PWA: Service Worker + Web Push API
+- Backend: External API (https://mobile-games-hub-11.preview.emergentagent.com/api)
+- Auth: JWT-based (external API)
+- PWA: Service Worker + manifest.json
 
-## API Endpoints
-All endpoints prefixed with `/api`
-- Auth: /auth/register, /auth/login, /auth/google-session, /auth/me
-- Users: /users/{id}, /users/{id}/posts, /users/{id}/follow
-- Posts: /posts/feed, /posts/explore, /posts/stories, /posts, /posts/{id}/like
-- Messages: /messages/conversations, /messages/{id}
-- Marketplace: /marketplace/listings, /marketplace/categories
-- Rentals: /rentals/properties
-- Services: /services, /services/categories/list
-- Games: /games/spin-wheel, /games/scratch-card, /games/memory-match
-- Raffles: /raffles, /raffles/{id}/enter
-- Wallet: /wallet/balance, /wallet/transactions, /wallet/stats
-- Referrals: /referrals/stats
+## Key Files
+- `/app/frontend/src/services/api.js` - All API calls to external backend
+- `/app/frontend/src/components/AppOpenPrompt.jsx` - Mobile deep linking prompt
+- `/app/frontend/src/components/ComingSoonPlaceholder.jsx` - Feature placeholder
+
+## API Endpoints (External)
+Working:
+- POST /auth/register - Register new user
+- POST /auth/login - Login user
+- GET /auth/me - Get current user profile
+- GET /bl-coins/balance - Get BL coin balance
+- GET /bl-coins/transactions - Get transaction history
+- POST /bl-coins/claim-daily - Claim daily reward
+
+Not Available (404):
+- /posts/* - Social features
+- /marketplace/* - Marketplace features
+- /rentals/* - Rental features
+- /services/* - Services features
+- /games/* - Games features
+- /raffles/* - Raffle features
+
+## App Store URLs (To be updated)
+- iOS: https://apps.apple.com/app/id[YOUR_APP_ID]
+- Android: https://play.google.com/store/apps/details?id=com.yourcompany.blendlink
 
 ## Next Tasks
-1. Implement image upload for posts and listings
-2. Add shopping cart and checkout flow
-3. Implement push notifications
-4. Add user search and discovery
-5. Build notifications center
+1. **P0**: Confirm external API is back online and test all features
+2. **P1**: Complete deep linking logic with proper fallback timing
+3. **P1**: Verify PWA installability and offline support
+4. **P2**: Implement push notifications when API supports them
+
+## Test Credentials
+- Email: blendlinktest1767726161@test.com
+- Password: Test123456
+
+## Known Issues
+- External API may be temporarily down - all features degrade gracefully to "Coming Soon"
+- Deep link timeout (2 seconds) may need tuning for different devices
