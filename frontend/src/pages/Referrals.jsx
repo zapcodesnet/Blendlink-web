@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext, API } from "../App";
-import axios from "axios";
+import { AuthContext } from "../App";
+import api from "../services/api";
 import { toast } from "sonner";
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
@@ -23,27 +23,35 @@ export default function Referrals() {
 
   const fetchReferralStats = async () => {
     try {
-      const response = await axios.get(`${API}/referrals/stats`, { withCredentials: true });
-      setStats(response.data);
+      const statsData = await api.referrals.getStats();
+      setStats(statsData);
     } catch (error) {
       console.error("Referral stats error:", error);
+      // Use user data as fallback
+      setStats({
+        referral_code: user?.referral_code,
+        level1_count: user?.direct_recruits_count || 0,
+        level2_count: user?.total_downline_count || 0,
+        total_earned: user?.downline_commissions_total || 0,
+      });
     } finally {
       setLoading(false);
     }
   };
 
   const copyReferralCode = () => {
-    navigator.clipboard.writeText(stats?.referral_code || "");
+    navigator.clipboard.writeText(stats?.referral_code || user?.referral_code || "");
     setCopied(true);
     toast.success("Copied to clipboard!");
     setTimeout(() => setCopied(false), 2000);
   };
 
   const shareReferral = async () => {
+    const code = stats?.referral_code || user?.referral_code;
     const shareData = {
       title: "Join Blendlink!",
-      text: `Join Blendlink using my referral code: ${stats?.referral_code} and get 100 BL Coins!`,
-      url: `${window.location.origin}/register?ref=${stats?.referral_code}`
+      text: `Join Blendlink using my referral code: ${code} and get 50,000 BL Coins!`,
+      url: `https://blendlink.app/register?ref=${code}`
     };
 
     if (navigator.share) {
@@ -75,7 +83,7 @@ export default function Referrals() {
           <h2 className="text-lg font-medium mb-4">Your Referral Code</h2>
           <div className="flex items-center gap-3">
             <div className="flex-1 bg-white/20 rounded-xl px-4 py-3 font-mono text-xl tracking-wider">
-              {loading ? "..." : stats?.referral_code}
+              {loading ? "..." : (stats?.referral_code || user?.referral_code || "N/A")}
             </div>
             <Button
               variant="secondary"
@@ -100,14 +108,14 @@ export default function Referrals() {
         <div className="grid grid-cols-3 gap-4 mb-6">
           <div className="bg-card rounded-xl p-4 border border-border/50 text-center">
             <p className="text-2xl font-bold">{stats?.level1_count || 0}</p>
-            <p className="text-xs text-muted-foreground">Level 1</p>
+            <p className="text-xs text-muted-foreground">Direct Referrals</p>
           </div>
           <div className="bg-card rounded-xl p-4 border border-border/50 text-center">
             <p className="text-2xl font-bold">{stats?.level2_count || 0}</p>
-            <p className="text-xs text-muted-foreground">Level 2</p>
+            <p className="text-xs text-muted-foreground">Total Network</p>
           </div>
           <div className="bg-card rounded-xl p-4 border border-border/50 text-center">
-            <p className="text-2xl font-bold bl-coin-text">{stats?.total_earned || 0}</p>
+            <p className="text-2xl font-bold bl-coin-text">{(stats?.total_earned || 0).toLocaleString()}</p>
             <p className="text-xs text-muted-foreground">BL Earned</p>
           </div>
         </div>
@@ -145,62 +153,36 @@ export default function Referrals() {
               <div>
                 <p className="font-medium">You Both Earn!</p>
                 <p className="text-sm text-muted-foreground">
-                  You get 50 BL Coins, they get 100 BL welcome bonus
+                  Earn commissions from your network's activity
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Level 1 Referrals */}
-        {stats?.level1_referrals?.length > 0 && (
-          <div className="bg-card rounded-xl border border-border/50 overflow-hidden">
-            <div className="p-4 border-b border-border/50">
-              <h3 className="font-semibold">Level 1 Referrals</h3>
-              <p className="text-sm text-muted-foreground">Direct referrals - 50 BL each</p>
+        {/* Commission Info */}
+        <div className="bg-muted/50 rounded-xl p-4">
+          <h3 className="font-semibold mb-3">Commission Structure</h3>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Level 1 (Direct)</span>
+              <span className="font-medium">10% commission</span>
             </div>
-            <div className="divide-y divide-border/50">
-              {stats.level1_referrals.map((ref) => (
-                <div key={ref.user_id} className="p-4 flex items-center gap-3">
-                  <Avatar className="w-10 h-10">
-                    <AvatarImage src={ref.avatar} />
-                    <AvatarFallback>{ref.name?.[0]}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <p className="font-medium">{ref.name}</p>
-                    <p className="text-xs text-muted-foreground">@{ref.username}</p>
-                  </div>
-                  <span className="text-green-500 font-medium">+50 BL</span>
-                </div>
-              ))}
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Level 2</span>
+              <span className="font-medium">5% commission</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Level 3+</span>
+              <span className="font-medium">2% commission</span>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Level 2 Referrals */}
-        {stats?.level2_referrals?.length > 0 && (
-          <div className="bg-card rounded-xl border border-border/50 overflow-hidden mt-4">
-            <div className="p-4 border-b border-border/50">
-              <h3 className="font-semibold">Level 2 Referrals</h3>
-              <p className="text-sm text-muted-foreground">Indirect referrals - 25 BL each</p>
-            </div>
-            <div className="divide-y divide-border/50">
-              {stats.level2_referrals.map((ref) => (
-                <div key={ref.user_id} className="p-4 flex items-center gap-3">
-                  <Avatar className="w-10 h-10">
-                    <AvatarImage src={ref.avatar} />
-                    <AvatarFallback>{ref.name?.[0]}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <p className="font-medium">{ref.name}</p>
-                    <p className="text-xs text-muted-foreground">@{ref.username}</p>
-                  </div>
-                  <span className="text-green-500 font-medium">+25 BL</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Sync Notice */}
+        <p className="text-center text-xs text-muted-foreground mt-6">
+          🔄 Synced with Blendlink mobile app
+        </p>
       </main>
     </div>
   );
