@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { AuthContext, API } from "../../App";
+import { API } from "../../App";
 import axios from "axios";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
