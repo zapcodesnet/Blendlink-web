@@ -4,8 +4,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { toast } from "sonner";
-import axios from "axios";
-import { API } from "../App";
+import api from "../services/api";
 import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Gift } from "lucide-react";
 
 export default function Register() {
@@ -34,22 +33,26 @@ export default function Register() {
     
     setLoading(true);
     try {
-      const response = await axios.post(`${API}/auth/register`, form, {
-        withCredentials: true
+      const response = await api.auth.register({
+        email: form.email,
+        password: form.password,
+        name: form.name,
+        username: form.username,
+        referral_code: form.referral_code || undefined,
       });
-      toast.success("Account created! Welcome to Blendlink!");
-      navigate("/feed", { state: { user: response.data } });
+      
+      const bonus = response.bl_coins_bonus || 50000;
+      toast.success(`Account created! You earned ${bonus.toLocaleString()} BL Coins!`);
+      navigate("/feed");
     } catch (error) {
-      toast.error(error.response?.data?.detail || "Registration failed");
+      toast.error(error.message || "Registration failed");
     } finally {
       setLoading(false);
     }
   };
 
-  // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
   const handleGoogleSignup = () => {
-    const redirectUrl = window.location.origin + "/feed";
-    window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
+    api.auth.googleAuth();
   };
 
   return (
@@ -74,7 +77,7 @@ export default function Register() {
               <span className="text-white font-bold text-2xl">BL</span>
             </div>
             <h1 className="text-2xl font-bold">Create Account</h1>
-            <p className="text-muted-foreground mt-1">Get 100 BL Coins welcome bonus!</p>
+            <p className="text-muted-foreground mt-1">Get 50,000 BL Coins welcome bonus!</p>
           </div>
 
           {/* Google Signup */}
@@ -206,6 +209,11 @@ export default function Register() {
             <Link to="/login" className="text-primary font-medium hover:underline">
               Sign in
             </Link>
+          </p>
+
+          {/* Sync info */}
+          <p className="text-center mt-4 text-xs text-muted-foreground">
+            🔄 Your account syncs with the Blendlink mobile app
           </p>
         </div>
       </div>
