@@ -267,7 +267,7 @@ async def register(data: UserCreate, response: Response):
             txn_dict["created_at"] = txn_dict["created_at"].isoformat()
             await db.transactions.insert_one(txn_dict)
     
-    await db.users.insert_one(user_dict)
+    await db.users.insert_one(user_dict.copy())
     
     token = create_token(user.user_id)
     response.set_cookie(
