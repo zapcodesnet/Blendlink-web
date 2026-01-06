@@ -5,9 +5,10 @@ import api from "../services/api";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
+import ComingSoonPlaceholder from "../components/ComingSoonPlaceholder";
 import { 
   Search, Star, Heart, GraduationCap, Laptop, Sparkles, 
-  Car, Scale, Palette, Plus, MapPin, Home
+  Car, Scale, Palette, Plus, MapPin, Home, Briefcase
 } from "lucide-react";
 
 const categoryIcons = {
@@ -132,11 +133,11 @@ export default function Services() {
             ))}
           </div>
         ) : services.length === 0 ? (
-          <div className="text-center py-12">
-            <Laptop className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="font-semibold text-lg mb-2">Services Coming Soon</h3>
-            <p className="text-muted-foreground">This feature is being added to the mobile API</p>
-          </div>
+          <ComingSoonPlaceholder
+            icon={Briefcase}
+            title="Professional Services Coming Soon"
+            description="Find local professionals and service providers"
+          />
         ) : (
           <div className="space-y-4">
             {services.map((service) => (

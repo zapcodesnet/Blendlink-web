@@ -4,9 +4,10 @@ import { AuthContext } from "../App";
 import api from "../services/api";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
+import ComingSoonPlaceholder from "../components/ComingSoonPlaceholder";
 import { 
   Search, Plus, Filter, Smartphone, Shirt, Home, Car, 
-  Dumbbell, Download, Wrench, Package, ChevronRight
+  Dumbbell, Download, Wrench, Package, ChevronRight, ShoppingBag
 } from "lucide-react";
 
 const categoryIcons = {
@@ -135,15 +136,11 @@ export default function Marketplace() {
             ))}
           </div>
         ) : listings.length === 0 ? (
-          <div className="text-center py-12">
-            <Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="font-semibold text-lg mb-2">Marketplace Coming Soon</h3>
-            <p className="text-muted-foreground mb-4">This feature is being added to the mobile API</p>
-            <Button onClick={() => navigate("/marketplace/create")}>
-              <Plus className="w-4 h-4 mr-2" />
-              Create Listing
-            </Button>
-          </div>
+          <ComingSoonPlaceholder
+            icon={ShoppingBag}
+            title="Marketplace Coming Soon"
+            description="Buy and sell items on the marketplace"
+          />
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {listings.map((listing) => (

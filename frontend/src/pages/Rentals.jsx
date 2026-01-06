@@ -4,6 +4,7 @@ import { AuthContext } from "../App";
 import api from "../services/api";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
+import ComingSoonPlaceholder from "../components/ComingSoonPlaceholder";
 import { 
   Search, MapPin, Bed, Bath, Home, Building2, Hotel,
   Filter, ChevronRight
@@ -112,11 +113,11 @@ export default function Rentals() {
             ))}
           </div>
         ) : properties.length === 0 ? (
-          <div className="text-center py-12">
-            <Home className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="font-semibold text-lg mb-2">Rentals Coming Soon</h3>
-            <p className="text-muted-foreground">This feature is being added to the mobile API</p>
-          </div>
+          <ComingSoonPlaceholder
+            icon={Building2}
+            title="Property Rentals Coming Soon"
+            description="Find apartments, houses, and rooms to rent"
+          />
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {properties.map((property) => (
