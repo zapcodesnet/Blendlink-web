@@ -4,8 +4,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { toast } from "sonner";
-import axios from "axios";
-import { API } from "../App";
+import api from "../services/api";
 import { Eye, EyeOff, Mail, Lock, ArrowLeft } from "lucide-react";
 
 export default function Login() {
@@ -23,22 +22,18 @@ export default function Login() {
     
     setLoading(true);
     try {
-      const response = await axios.post(`${API}/auth/login`, form, {
-        withCredentials: true
-      });
+      await api.auth.login(form.email, form.password);
       toast.success("Welcome back!");
-      navigate("/feed", { state: { user: response.data.user } });
+      navigate("/feed");
     } catch (error) {
-      toast.error(error.response?.data?.detail || "Login failed");
+      toast.error(error.message || "Login failed");
     } finally {
       setLoading(false);
     }
   };
 
-  // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
   const handleGoogleLogin = () => {
-    const redirectUrl = window.location.origin + "/feed";
-    window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
+    api.auth.googleAuth();
   };
 
   return (
@@ -147,6 +142,11 @@ export default function Login() {
             <Link to="/register" className="text-primary font-medium hover:underline">
               Sign up
             </Link>
+          </p>
+
+          {/* Sync info */}
+          <p className="text-center mt-4 text-xs text-muted-foreground">
+            🔄 Your account syncs with the Blendlink mobile app
           </p>
         </div>
       </div>
