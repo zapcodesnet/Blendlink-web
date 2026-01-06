@@ -1,19 +1,21 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext, API } from "../App";
-import axios from "axios";
+import { AuthContext } from "../App";
+import api from "../services/api";
 import { Button } from "../components/ui/button";
 import { 
   Coins, TrendingUp, ArrowUpRight, ArrowDownRight, 
-  Gift, Gamepad2, Trophy, Share2, ChevronRight
+  Gift, Gamepad2, Trophy, Share2, ChevronRight, RefreshCw
 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function Wallet() {
   const { user, setUser } = useContext(AuthContext);
   const navigate = useNavigate();
-  const [stats, setStats] = useState(null);
+  const [balance, setBalance] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [claiming, setClaiming] = useState(false);
 
   useEffect(() => {
     fetchWalletData();
@@ -21,13 +23,13 @@ export default function Wallet() {
 
   const fetchWalletData = async () => {
     try {
-      const [statsRes, txnRes] = await Promise.all([
-        axios.get(`${API}/wallet/stats`, { withCredentials: true }),
-        axios.get(`${API}/wallet/transactions`, { withCredentials: true })
+      const [balanceData, txnData] = await Promise.all([
+        api.wallet.getBalance(),
+        api.wallet.getTransactions()
       ]);
-      setStats(statsRes.data);
-      setTransactions(txnRes.data);
-      setUser({ ...user, bl_coins: statsRes.data.balance });
+      setBalance(balanceData);
+      setTransactions(txnData.transactions || []);
+      setUser({ ...user, bl_coins: balanceData.balance });
     } catch (error) {
       console.error("Wallet error:", error);
     } finally {
@@ -35,14 +37,31 @@ export default function Wallet() {
     }
   };
 
-  const getTransactionIcon = (type) => {
-    switch (type) {
-      case "referral": return Share2;
-      case "game": return Gamepad2;
-      case "raffle": return Trophy;
-      case "earn": return Gift;
-      default: return Coins;
+  const handleClaimDaily = async () => {
+    setClaiming(true);
+    try {
+      const result = await api.wallet.claimDaily();
+      toast.success(`Claimed ${result.coins_earned?.toLocaleString()} BL Coins!`);
+      setBalance(prev => ({ ...prev, balance: result.new_balance }));
+      setUser({ ...user, bl_coins: result.new_balance });
+      fetchWalletData(); // Refresh transactions
+    } catch (error) {
+      toast.error(error.message || "Already claimed today");
+    } finally {
+      setClaiming(false);
     }
+  };
+
+  const getTransactionIcon = (type) => {
+    if (type?.includes('referral')) return Share2;
+    if (type?.includes('game')) return Gamepad2;
+    if (type?.includes('raffle')) return Trophy;
+    if (type?.includes('daily') || type?.includes('login') || type?.includes('bonus')) return Gift;
+    return Coins;
+  };
+
+  const getTransactionColor = (amount) => {
+    return amount >= 0 ? "text-green-500" : "text-red-500";
   };
 
   return (
@@ -61,7 +80,7 @@ export default function Wallet() {
             <div>
               <p className="text-white/80 text-sm">Total Balance</p>
               <p className="text-4xl font-bold mt-1">
-                {loading ? "..." : Math.floor(stats?.balance || 0)}
+                {loading ? "..." : (balance?.balance || 0).toLocaleString()}
               </p>
               <p className="text-white/80 text-sm mt-1">BL Coins</p>
             </div>
@@ -69,7 +88,51 @@ export default function Wallet() {
               <Coins className="w-8 h-8" />
             </div>
           </div>
+          
+          {/* Daily Claim */}
+          <Button 
+            className="w-full mt-4 bg-white/20 hover:bg-white/30 text-white"
+            onClick={handleClaimDaily}
+            disabled={claiming}
+            data-testid="claim-daily"
+          >
+            {claiming ? (
+              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Gift className="w-4 h-4 mr-2" />
+            )}
+            Claim Daily 10,000 BL
+          </Button>
         </div>
+
+        {/* Stats */}
+        {balance && (
+          <div className="bg-card rounded-xl border border-border/50 p-4 mb-6">
+            <h2 className="font-semibold mb-4">Account Stats</h2>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Total Earned</span>
+                <span className="font-medium text-green-500">
+                  +{(balance.total_earned || 0).toLocaleString()} BL
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Total Spent</span>
+                <span className="font-medium text-red-500">
+                  -{(balance.total_spent || 0).toLocaleString()} BL
+                </span>
+              </div>
+              {balance.has_subscription && (
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Subscription</span>
+                  <span className="font-medium text-primary">
+                    {balance.subscription_tier || 'Active'}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Quick Actions */}
         <div className="grid grid-cols-2 gap-3 mb-6">
@@ -93,41 +156,14 @@ export default function Wallet() {
               <Share2 className="w-5 h-5 text-blue-500" />
             </div>
             <p className="font-semibold">Invite Friends</p>
-            <p className="text-xs text-muted-foreground">Earn 50 BL each</p>
+            <p className="text-xs text-muted-foreground">Earn referral bonus</p>
           </button>
         </div>
-
-        {/* Stats */}
-        {stats && (
-          <div className="bg-card rounded-xl border border-border/50 p-4 mb-6">
-            <h2 className="font-semibold mb-4">Earnings Breakdown</h2>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Referrals</span>
-                <span className="font-medium text-green-500">
-                  +{stats.earnings?.referrals || 0} BL
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Games</span>
-                <span className="font-medium text-green-500">
-                  +{stats.earnings?.games || 0} BL
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Daily Rewards</span>
-                <span className="font-medium text-green-500">
-                  +{stats.earnings?.daily || 0} BL
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Transactions */}
         <div className="bg-card rounded-xl border border-border/50 overflow-hidden">
           <div className="p-4 border-b border-border/50">
-            <h2 className="font-semibold">Recent Activity</h2>
+            <h2 className="font-semibold">Transaction History</h2>
           </div>
           <div className="divide-y divide-border/50">
             {loading ? (
@@ -145,9 +181,9 @@ export default function Wallet() {
                 No transactions yet
               </div>
             ) : (
-              transactions.slice(0, 10).map((txn) => {
-                const Icon = getTransactionIcon(txn.type);
-                const isPositive = txn.amount > 0;
+              transactions.slice(0, 20).map((txn) => {
+                const Icon = getTransactionIcon(txn.transaction_type);
+                const isPositive = txn.amount >= 0;
                 return (
                   <div key={txn.transaction_id} className="p-4 flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
@@ -161,8 +197,8 @@ export default function Wallet() {
                         {new Date(txn.created_at).toLocaleDateString()}
                       </p>
                     </div>
-                    <span className={`font-semibold ${isPositive ? "text-green-500" : "text-red-500"}`}>
-                      {isPositive ? "+" : ""}{txn.amount} BL
+                    <span className={`font-semibold ${getTransactionColor(txn.amount)}`}>
+                      {isPositive ? "+" : ""}{txn.amount?.toLocaleString()} BL
                     </span>
                   </div>
                 );
@@ -170,6 +206,11 @@ export default function Wallet() {
             )}
           </div>
         </div>
+
+        {/* Sync Notice */}
+        <p className="text-center text-xs text-muted-foreground mt-6">
+          🔄 Synced with Blendlink mobile app
+        </p>
       </main>
     </div>
   );
