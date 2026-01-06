@@ -4,8 +4,8 @@ import { X, Smartphone, Download, ExternalLink } from "lucide-react";
 
 // Deep link schemes
 const BLENDLINK_DEEP_LINK = "blendlink://";
-const APP_STORE_URL = "https://apps.apple.com/app/blendlink/id123456789"; // Replace with actual App Store URL
-const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.blendlink.app"; // Replace with actual Play Store URL
+const APP_STORE_URL = "https://apps.apple.com/app/id[YOUR_APP_ID]";
+const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.yourcompany.blendlink";
 
 // Detect mobile device
 const isMobile = () => {
