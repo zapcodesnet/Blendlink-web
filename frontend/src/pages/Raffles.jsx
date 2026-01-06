@@ -4,6 +4,7 @@ import { AuthContext } from "../App";
 import api from "../services/api";
 import { toast } from "sonner";
 import { Button } from "../components/ui/button";
+import ComingSoonPlaceholder from "../components/ComingSoonPlaceholder";
 import { 
   ArrowLeft, Trophy, Clock, Users, Coins, Ticket
 } from "lucide-react";
@@ -85,11 +86,11 @@ export default function Raffles() {
             ))}
           </div>
         ) : raffles.length === 0 ? (
-          <div className="text-center py-12">
-            <Trophy className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="font-semibold text-lg mb-2">Raffles Coming Soon</h3>
-            <p className="text-muted-foreground">This feature is being added to the mobile API</p>
-          </div>
+          <ComingSoonPlaceholder
+            icon={Trophy}
+            title="Raffles & Contests Coming Soon"
+            description="Enter raffles and contests to win amazing prizes"
+          />
         ) : (
           <div className="space-y-4">
             {raffles.map((raffle) => (
