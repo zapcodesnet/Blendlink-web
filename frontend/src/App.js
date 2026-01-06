@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, createContext } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
-import axios from "axios";
 import { Toaster } from "./components/ui/sonner";
+import api, { getToken, getStoredUser, setStoredUser } from "./services/api";
 
 // Pages
 import Landing from "./pages/Landing";
@@ -29,41 +29,66 @@ import Raffles from "./pages/Raffles";
 // Components
 import BottomNav from "./components/BottomNav";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
+import AppOpenPrompt from "./components/AppOpenPrompt";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-export const API = `${BACKEND_URL}/api`;
+// API base URL - connected to mobile app backend
+export const API_BASE_URL = 'https://mobile-games-hub-11.preview.emergentagent.com/api';
 
 // Auth context
-export const AuthContext = React.createContext(null);
+export const AuthContext = createContext(null);
 
-// Import React
-import React from "react";
+// Re-export api for backward compatibility
+export { api };
 
 // Protected Route wrapper
 const ProtectedRoute = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [isAuthenticated, setIsAuthenticated] = useState(location.state?.user ? true : null);
-  const [user, setUser] = useState(location.state?.user || null);
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    if (location.state?.user) return;
-    
     const checkAuth = async () => {
-      try {
-        const response = await axios.get(`${API}/auth/me`, {
-          withCredentials: true
-        });
-        setUser(response.data);
-        setIsAuthenticated(true);
-      } catch (error) {
+      const token = getToken();
+      const storedUser = getStoredUser();
+      
+      if (!token) {
         setIsAuthenticated(false);
         navigate("/login", { replace: true });
+        return;
+      }
+
+      // Try to get fresh user data
+      try {
+        const profile = await api.auth.getProfile();
+        const balance = await api.wallet.getBalance();
+        const userData = {
+          ...profile,
+          bl_coins: balance.balance,
+        };
+        setStoredUser(userData);
+        setUser(userData);
+        setIsAuthenticated(true);
+      } catch (error) {
+        // If API fails but we have stored user, use that
+        if (storedUser) {
+          setUser(storedUser);
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
+          navigate("/login", { replace: true });
+        }
       }
     };
     
     checkAuth();
-  }, [navigate, location.state]);
+  }, [navigate]);
+
+  const updateUser = (updates) => {
+    const updatedUser = { ...user, ...updates };
+    setUser(updatedUser);
+    setStoredUser(updatedUser);
+  };
 
   if (isAuthenticated === null) {
     return (
@@ -78,7 +103,7 @@ const ProtectedRoute = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, setUser }}>
+    <AuthContext.Provider value={{ user, setUser: updateUser }}>
       <div className="pb-20 md:pb-0 md:pl-20">
         {children}
         <BottomNav />
@@ -91,7 +116,6 @@ const ProtectedRoute = ({ children }) => {
 function AppRouter() {
   const location = useLocation();
   
-  // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
   // Check for session_id in URL fragment (for Google OAuth callback)
   if (location.hash?.includes("session_id=")) {
     return <AuthCallback />;
@@ -128,6 +152,7 @@ function AppRouter() {
 function App() {
   return (
     <BrowserRouter>
+      <AppOpenPrompt />
       <AppRouter />
       <Toaster position="top-center" richColors />
       <PWAInstallPrompt />
