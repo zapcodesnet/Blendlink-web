@@ -1,0 +1,54 @@
+{
+  "total_tests": 25,
+  "passed_tests": 21,
+  "failed_tests": [
+    {
+      "test": "Create Post",
+      "status_code": 520,
+      "error": "Internal Server Error"
+    },
+    {
+      "test": "Create Marketplace Listing",
+      "status_code": 520,
+      "error": "Internal Server Error"
+    },
+    {
+      "test": "Create Rental Property",
+      "status_code": 520,
+      "error": "Internal Server Error"
+    },
+    {
+      "test": "Create Service",
+      "status_code": 520,
+      "error": "Internal Server Error"
+    }
+  ],
+  "critical_failures": [],
+  "api_endpoints_tested": [
+    "API Root Health",
+    "Health Check",
+    "User Registration",
+    "Auth Me",
+    "Create Post",
+    "Get Feed",
+    "Explore Posts",
+    "Get Stories",
+    "Get Marketplace Listings",
+    "Get Marketplace Categories",
+    "Create Marketplace Listing",
+    "Spin Wheel Game",
+    "Scratch Card Game",
+    "Memory Match Game",
+    "Get Wallet Balance",
+    "Get Wallet Transactions",
+    "Get Wallet Stats",
+    "Get Referral Stats",
+    "Get Raffles",
+    "Get Rental Properties",
+    "Create Rental Property",
+    "Get Services",
+    "Get Service Categories",
+    "Create Service",
+    "Get Message Conversations"
+  ]
+}
