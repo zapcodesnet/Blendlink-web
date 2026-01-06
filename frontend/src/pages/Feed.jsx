@@ -1,21 +1,23 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext, API } from "../App";
-import axios from "axios";
+import { AuthContext } from "../App";
+import api from "../services/api";
 import { toast } from "sonner";
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { 
   Heart, MessageCircle, Share2, Plus, MoreHorizontal,
-  Home as HomeIcon, Building, Briefcase, Settings, Bell, Search
+  Home as HomeIcon, Building, Briefcase, Settings, Bell, Search,
+  RefreshCw, Coins
 } from "lucide-react";
 
 export default function Feed() {
-  const { user } = useContext(AuthContext);
+  const { user, setUser } = useContext(AuthContext);
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [claiming, setClaiming] = useState(false);
 
   useEffect(() => {
     fetchFeed();
@@ -24,16 +26,17 @@ export default function Feed() {
 
   const fetchFeed = async () => {
     try {
-      const response = await axios.get(`${API}/posts/feed`, { withCredentials: true });
-      setPosts(response.data);
-    } catch (error) {
-      // Fallback to explore for new users
-      try {
-        const exploreRes = await axios.get(`${API}/posts/explore`);
-        setPosts(exploreRes.data);
-      } catch (e) {
-        console.error("Feed error:", e);
+      const feedPosts = await api.posts.getFeed();
+      if (Array.isArray(feedPosts)) {
+        setPosts(feedPosts);
+      } else {
+        // If feed is empty or not available, try explore
+        const explorePosts = await api.posts.getExplore();
+        setPosts(Array.isArray(explorePosts) ? explorePosts : []);
       }
+    } catch (error) {
+      console.error("Feed error:", error);
+      setPosts([]);
     } finally {
       setLoading(false);
     }
@@ -41,28 +44,42 @@ export default function Feed() {
 
   const fetchStories = async () => {
     try {
-      const response = await axios.get(`${API}/posts/stories`, { withCredentials: true });
-      setStories(response.data);
+      const storiesData = await api.posts.getStories();
+      setStories(Array.isArray(storiesData) ? storiesData : []);
     } catch (error) {
       console.error("Stories error:", error);
+      setStories([]);
     }
   };
 
   const handleLike = async (postId) => {
     try {
-      const response = await axios.post(`${API}/posts/${postId}/like`, {}, { withCredentials: true });
+      const response = await api.posts.likePost(postId);
       setPosts(posts.map(p => {
         if (p.post_id === postId) {
           return {
             ...p,
-            liked: response.data.liked,
-            likes_count: response.data.liked ? p.likes_count + 1 : p.likes_count - 1
+            liked: response.liked,
+            likes_count: response.liked ? p.likes_count + 1 : p.likes_count - 1
           };
         }
         return p;
       }));
     } catch (error) {
-      toast.error("Failed to like post");
+      toast.error(error.message || "Failed to like post");
+    }
+  };
+
+  const handleClaimDaily = async () => {
+    setClaiming(true);
+    try {
+      const result = await api.wallet.claimDaily();
+      toast.success(`Claimed ${result.coins_earned?.toLocaleString()} BL Coins!`);
+      setUser({ ...user, bl_coins: result.new_balance });
+    } catch (error) {
+      toast.error(error.message || "Already claimed today");
+    } finally {
+      setClaiming(false);
     }
   };
 
@@ -95,6 +112,30 @@ export default function Feed() {
       </header>
 
       <main className="max-w-2xl mx-auto">
+        {/* Daily Claim Banner */}
+        <div className="px-4 py-3 border-b border-border/50">
+          <div className="bl-coin-gradient rounded-xl p-4 text-white flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                <Coins className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm text-white/80">Daily Reward</p>
+                <p className="font-bold">Claim 10,000 BL Coins</p>
+              </div>
+            </div>
+            <Button 
+              size="sm" 
+              className="bg-white text-amber-600 hover:bg-white/90"
+              onClick={handleClaimDaily}
+              disabled={claiming}
+              data-testid="claim-daily-btn"
+            >
+              {claiming ? <RefreshCw className="w-4 h-4 animate-spin" /> : "Claim"}
+            </Button>
+          </div>
+        </div>
+
         {/* Stories */}
         <div className="px-4 py-4 border-b border-border/50">
           <div className="flex gap-4 overflow-x-auto hide-scrollbar">
@@ -116,7 +157,7 @@ export default function Feed() {
                 <div className="story-ring">
                   <div className="story-ring-inner">
                     <Avatar className="w-14 h-14">
-                      <AvatarImage src={story.user?.avatar} />
+                      <AvatarImage src={story.user?.avatar || story.user?.picture} />
                       <AvatarFallback>{story.user?.name?.[0]}</AvatarFallback>
                     </Avatar>
                   </div>
@@ -154,7 +195,10 @@ export default function Feed() {
             </div>
           ) : posts.length === 0 ? (
             <div className="p-8 text-center">
-              <p className="text-muted-foreground mb-4">No posts yet. Be the first!</p>
+              <p className="text-muted-foreground mb-4">
+                Social feed coming soon to mobile API!<br />
+                For now, explore other features.
+              </p>
               <Button onClick={() => navigate("/create-post")} data-testid="create-first-post">
                 <Plus className="w-4 h-4 mr-2" />
                 Create Post
@@ -169,7 +213,7 @@ export default function Feed() {
                     className="w-10 h-10 cursor-pointer" 
                     onClick={() => navigate(`/profile/${post.user?.user_id}`)}
                   >
-                    <AvatarImage src={post.user?.avatar} />
+                    <AvatarImage src={post.user?.avatar || post.user?.picture} />
                     <AvatarFallback>{post.user?.name?.[0]}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
@@ -205,11 +249,11 @@ export default function Feed() {
                     data-testid={`like-${post.post_id}`}
                   >
                     <Heart className={`w-5 h-5 ${post.liked ? 'fill-red-500 text-red-500' : ''}`} />
-                    <span className="text-sm">{post.likes_count}</span>
+                    <span className="text-sm">{post.likes_count || 0}</span>
                   </button>
                   <button className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors">
                     <MessageCircle className="w-5 h-5" />
-                    <span className="text-sm">{post.comments_count}</span>
+                    <span className="text-sm">{post.comments_count || 0}</span>
                   </button>
                   <button className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors">
                     <Share2 className="w-5 h-5" />
