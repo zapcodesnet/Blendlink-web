@@ -110,17 +110,15 @@ export const authAPI = {
     window.location.href = '/login';
   },
 
-  // Google OAuth - redirect to mobile app OAuth flow
+  // Google OAuth - REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
   googleAuth: () => {
-    // For now, redirect to standard OAuth
     const redirectUrl = window.location.origin + '/feed';
     window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
   },
 
   // Handle Google OAuth callback
   handleGoogleCallback: async (sessionId) => {
-    // This would need backend support to convert Google session to JWT
-    // For now, we'll handle it through the existing flow
+    // Get user data from Emergent Auth service
     const response = await fetch(
       'https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data',
       { headers: { 'X-Session-ID': sessionId } }
@@ -128,17 +126,28 @@ export const authAPI = {
     if (!response.ok) throw new Error('Google auth failed');
     const googleData = await response.json();
     
-    // Try to login or register with Google email
+    // Try to login with Google email first
     try {
-      return await authAPI.login(googleData.email, 'google_oauth_user');
-    } catch {
-      // If login fails, try to register
-      return await authAPI.register({
-        email: googleData.email,
-        password: 'google_oauth_user',
-        name: googleData.name,
-        username: googleData.email.split('@')[0] + '_' + Date.now(),
+      const loginResult = await apiRequest('/auth/google', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: googleData.email,
+          name: googleData.name,
+          picture: googleData.picture,
+          google_id: googleData.id,
+        }),
       });
+      
+      const authToken = loginResult.token || loginResult.access_token;
+      if (authToken) {
+        setToken(authToken);
+        if (loginResult.user) {
+          setStoredUser(loginResult.user);
+        }
+      }
+      return loginResult;
+    } catch (error) {
+      throw new Error('Google authentication failed: ' + error.message);
     }
   },
 };
