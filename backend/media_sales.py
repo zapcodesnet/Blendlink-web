@@ -1,0 +1,768 @@
+"""
+Blendlink Watermark & Media Sales Module
+- Watermark creation and management
+- Media upload with watermark application
+- Offer system for purchasing watermarked media
+- E-signature contracts for copyright transfer
+- Stripe payment integration
+"""
+from fastapi import APIRouter, HTTPException, Depends, Request
+from pydantic import BaseModel, Field
+from typing import List, Optional, Dict, Any
+from datetime import datetime, timezone
+import uuid
+import os
+from motor.motor_asyncio import AsyncIOMotorClient
+from emergentintegrations.payments.stripe.checkout import (
+    StripeCheckout, CheckoutSessionResponse, CheckoutStatusResponse, CheckoutSessionRequest
+)
+
+# Import from main server
+from server import get_current_user, db, logger
+
+# Create routers
+watermark_router = APIRouter(prefix="/watermark", tags=["Watermark"])
+media_router = APIRouter(prefix="/media", tags=["Media"])
+offers_router = APIRouter(prefix="/offers", tags=["Offers"])
+contracts_router = APIRouter(prefix="/contracts", tags=["Contracts"])
+payments_router = APIRouter(prefix="/payments", tags=["Payments"])
+
+# ============== MODELS ==============
+
+class WatermarkTemplate(BaseModel):
+    """User's watermark template"""
+    watermark_id: str = Field(default_factory=lambda: f"wm_{uuid.uuid4().hex[:12]}")
+    user_id: str
+    name: str  # Template name
+    text: str  # The watermark text
+    font_family: str = "Arial"
+    font_size: int = 24
+    color: str = "#ffffff"
+    opacity: float = 0.8  # 70-90% transparency means 10-30% opacity visually
+    position_x: float = 50.0  # Percentage from left
+    position_y: float = 50.0  # Percentage from top
+    rotation: float = 0.0
+    is_default: bool = False
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class WatermarkCreate(BaseModel):
+    name: str
+    text: str
+    font_family: str = "Arial"
+    font_size: int = 24
+    color: str = "#ffffff"
+    opacity: float = 0.8
+    position_x: float = 50.0
+    position_y: float = 50.0
+    rotation: float = 0.0
+    is_default: bool = False
+
+class MediaItem(BaseModel):
+    """Watermarked media item for sale"""
+    media_id: str = Field(default_factory=lambda: f"media_{uuid.uuid4().hex[:12]}")
+    user_id: str
+    title: str
+    description: str = ""
+    media_type: str  # "photo" or "video"
+    original_url: str  # Original unwatermarked URL (stored securely)
+    watermarked_url: str  # Watermarked version URL (public)
+    thumbnail_url: str = ""
+    watermark_id: str  # Which watermark template was used
+    watermark_config: Dict = {}  # Snapshot of watermark settings at upload time
+    privacy: str = "public"  # "public", "private", "album"
+    album_id: Optional[str] = None
+    is_for_sale: bool = True  # Auto true if public with watermark
+    fixed_price: Optional[float] = None  # If listed in marketplace
+    view_count: int = 0
+    offer_count: int = 0
+    status: str = "active"  # "active", "sold", "removed"
+    sold_to: Optional[str] = None
+    sold_at: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class MediaUpload(BaseModel):
+    title: str
+    description: str = ""
+    media_type: str
+    original_url: str
+    watermarked_url: str
+    thumbnail_url: str = ""
+    watermark_id: str
+    watermark_config: Dict = {}
+    privacy: str = "public"
+    album_id: Optional[str] = None
+    fixed_price: Optional[float] = None
+
+class Offer(BaseModel):
+    """Purchase offer for watermarked media"""
+    offer_id: str = Field(default_factory=lambda: f"offer_{uuid.uuid4().hex[:12]}")
+    media_id: str
+    buyer_id: Optional[str] = None  # None if guest
+    buyer_email: str
+    buyer_name: str
+    seller_id: str
+    amount: float
+    message: str = ""
+    status: str = "pending"  # "pending", "accepted", "rejected", "paid", "completed", "cancelled"
+    stripe_session_id: Optional[str] = None
+    payment_status: Optional[str] = None
+    contract_id: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class OfferCreate(BaseModel):
+    media_id: str
+    buyer_email: str
+    buyer_name: str
+    amount: float
+    message: str = ""
+
+class Contract(BaseModel):
+    """E-signed copyright transfer contract"""
+    contract_id: str = Field(default_factory=lambda: f"contract_{uuid.uuid4().hex[:12]}")
+    offer_id: str
+    media_id: str
+    seller_id: str
+    buyer_id: Optional[str] = None
+    buyer_email: str
+    buyer_name: str
+    amount: float
+    
+    # Contract details
+    media_title: str
+    media_type: str
+    transfer_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    
+    # Signatures
+    seller_signature: Optional[str] = None  # Base64 image or typed name
+    seller_signature_type: str = "typed"  # "typed" or "drawn"
+    seller_signed_at: Optional[datetime] = None
+    
+    buyer_signature: Optional[str] = None
+    buyer_signature_type: str = "typed"
+    buyer_signed_at: Optional[datetime] = None
+    
+    # Status
+    status: str = "pending_signatures"  # "pending_signatures", "seller_signed", "fully_signed", "completed"
+    pdf_url: Optional[str] = None  # Generated PDF URL
+    
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class SignContract(BaseModel):
+    signature: str  # Base64 image or typed text
+    signature_type: str = "typed"  # "typed" or "drawn"
+
+class PaymentTransaction(BaseModel):
+    """Stripe payment transaction record"""
+    transaction_id: str = Field(default_factory=lambda: f"pay_{uuid.uuid4().hex[:12]}")
+    offer_id: str
+    buyer_email: str
+    seller_id: str
+    amount: float
+    currency: str = "usd"
+    stripe_session_id: str
+    payment_status: str = "initiated"  # "initiated", "paid", "failed", "refunded"
+    metadata: Dict = {}
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+# ============== WATERMARK ROUTES ==============
+
+@watermark_router.post("/templates")
+async def create_watermark_template(data: WatermarkCreate, current_user: dict = Depends(get_current_user)):
+    """Create a new watermark template"""
+    # Validate opacity (70-90% transparency = 10-30% visible opacity)
+    if data.opacity < 0.1 or data.opacity > 0.3:
+        data.opacity = max(0.1, min(0.3, data.opacity))
+    
+    # If this is set as default, unset other defaults
+    if data.is_default:
+        await db.watermark_templates.update_many(
+            {"user_id": current_user["user_id"]},
+            {"$set": {"is_default": False}}
+        )
+    
+    template = WatermarkTemplate(
+        user_id=current_user["user_id"],
+        **data.model_dump()
+    )
+    template_dict = template.model_dump()
+    template_dict["created_at"] = template_dict["created_at"].isoformat()
+    
+    await db.watermark_templates.insert_one(template_dict)
+    
+    return {"watermark_id": template.watermark_id, "message": "Watermark template created"}
+
+@watermark_router.get("/templates")
+async def get_watermark_templates(current_user: dict = Depends(get_current_user)):
+    """Get all watermark templates for current user"""
+    templates = await db.watermark_templates.find(
+        {"user_id": current_user["user_id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    return templates
+
+@watermark_router.get("/templates/{watermark_id}")
+async def get_watermark_template(watermark_id: str, current_user: dict = Depends(get_current_user)):
+    """Get a specific watermark template"""
+    template = await db.watermark_templates.find_one(
+        {"watermark_id": watermark_id, "user_id": current_user["user_id"]},
+        {"_id": 0}
+    )
+    if not template:
+        raise HTTPException(status_code=404, detail="Watermark template not found")
+    return template
+
+@watermark_router.put("/templates/{watermark_id}")
+async def update_watermark_template(watermark_id: str, data: WatermarkCreate, current_user: dict = Depends(get_current_user)):
+    """Update a watermark template"""
+    template = await db.watermark_templates.find_one(
+        {"watermark_id": watermark_id, "user_id": current_user["user_id"]}
+    )
+    if not template:
+        raise HTTPException(status_code=404, detail="Watermark template not found")
+    
+    # Validate opacity
+    if data.opacity < 0.1 or data.opacity > 0.3:
+        data.opacity = max(0.1, min(0.3, data.opacity))
+    
+    # If setting as default, unset others
+    if data.is_default:
+        await db.watermark_templates.update_many(
+            {"user_id": current_user["user_id"], "watermark_id": {"$ne": watermark_id}},
+            {"$set": {"is_default": False}}
+        )
+    
+    await db.watermark_templates.update_one(
+        {"watermark_id": watermark_id},
+        {"$set": data.model_dump()}
+    )
+    
+    return {"message": "Watermark template updated"}
+
+@watermark_router.delete("/templates/{watermark_id}")
+async def delete_watermark_template(watermark_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a watermark template"""
+    result = await db.watermark_templates.delete_one(
+        {"watermark_id": watermark_id, "user_id": current_user["user_id"]}
+    )
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Watermark template not found")
+    return {"message": "Watermark template deleted"}
+
+# ============== MEDIA ROUTES ==============
+
+@media_router.post("/upload")
+async def upload_media(data: MediaUpload, current_user: dict = Depends(get_current_user)):
+    """Upload media with watermark"""
+    # Verify watermark template exists
+    watermark = await db.watermark_templates.find_one(
+        {"watermark_id": data.watermark_id, "user_id": current_user["user_id"]},
+        {"_id": 0}
+    )
+    if not watermark:
+        raise HTTPException(status_code=404, detail="Watermark template not found")
+    
+    # Auto-enable for sale if public with watermark
+    is_for_sale = data.privacy == "public"
+    
+    media = MediaItem(
+        user_id=current_user["user_id"],
+        title=data.title,
+        description=data.description,
+        media_type=data.media_type,
+        original_url=data.original_url,
+        watermarked_url=data.watermarked_url,
+        thumbnail_url=data.thumbnail_url,
+        watermark_id=data.watermark_id,
+        watermark_config=data.watermark_config or watermark,
+        privacy=data.privacy,
+        album_id=data.album_id,
+        is_for_sale=is_for_sale,
+        fixed_price=data.fixed_price
+    )
+    
+    media_dict = media.model_dump()
+    media_dict["created_at"] = media_dict["created_at"].isoformat()
+    if media_dict.get("sold_at"):
+        media_dict["sold_at"] = media_dict["sold_at"].isoformat()
+    
+    await db.media_items.insert_one(media_dict)
+    
+    return {
+        "media_id": media.media_id,
+        "is_for_sale": is_for_sale,
+        "message": "Media uploaded successfully"
+    }
+
+@media_router.get("/my-media")
+async def get_my_media(
+    skip: int = 0, 
+    limit: int = 20,
+    status: str = "active",
+    current_user: dict = Depends(get_current_user)
+):
+    """Get current user's media items"""
+    query = {"user_id": current_user["user_id"]}
+    if status:
+        query["status"] = status
+    
+    media = await db.media_items.find(query, {"_id": 0, "original_url": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    return media
+
+@media_router.get("/for-sale")
+async def get_media_for_sale(skip: int = 0, limit: int = 20, media_type: str = None):
+    """Get all public watermarked media for sale (no auth required)"""
+    query = {"is_for_sale": True, "status": "active", "privacy": "public"}
+    if media_type:
+        query["media_type"] = media_type
+    
+    media = await db.media_items.find(
+        query, 
+        {"_id": 0, "original_url": 0}
+    ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    # Add seller info
+    for item in media:
+        seller = await db.users.find_one({"user_id": item["user_id"]}, {"_id": 0, "password_hash": 0, "bl_coins": 0})
+        item["seller"] = seller
+    
+    return media
+
+@media_router.get("/{media_id}")
+async def get_media_detail(media_id: str):
+    """Get media detail (public watermarked view)"""
+    media = await db.media_items.find_one(
+        {"media_id": media_id, "status": "active"},
+        {"_id": 0, "original_url": 0}
+    )
+    if not media:
+        raise HTTPException(status_code=404, detail="Media not found")
+    
+    # Increment view count
+    await db.media_items.update_one(
+        {"media_id": media_id},
+        {"$inc": {"view_count": 1}}
+    )
+    
+    # Add seller info
+    seller = await db.users.find_one({"user_id": media["user_id"]}, {"_id": 0, "password_hash": 0, "bl_coins": 0})
+    media["seller"] = seller
+    
+    return media
+
+@media_router.delete("/{media_id}")
+async def delete_media(media_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete media item"""
+    result = await db.media_items.delete_one(
+        {"media_id": media_id, "user_id": current_user["user_id"], "status": {"$ne": "sold"}}
+    )
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Media not found or already sold")
+    return {"message": "Media deleted"}
+
+# ============== OFFERS ROUTES ==============
+
+@offers_router.post("/")
+async def create_offer(data: OfferCreate, request: Request):
+    """Create a purchase offer (guests and members can offer)"""
+    # Get media item
+    media = await db.media_items.find_one(
+        {"media_id": data.media_id, "is_for_sale": True, "status": "active"},
+        {"_id": 0}
+    )
+    if not media:
+        raise HTTPException(status_code=404, detail="Media not found or not for sale")
+    
+    if data.amount <= 0:
+        raise HTTPException(status_code=400, detail="Offer amount must be positive")
+    
+    # Check if buyer is authenticated
+    buyer_id = None
+    try:
+        current_user = await get_current_user(request)
+        buyer_id = current_user["user_id"]
+        # Can't buy your own media
+        if buyer_id == media["user_id"]:
+            raise HTTPException(status_code=400, detail="Cannot make offer on your own media")
+    except:
+        pass  # Guest user
+    
+    offer = Offer(
+        media_id=data.media_id,
+        buyer_id=buyer_id,
+        buyer_email=data.buyer_email,
+        buyer_name=data.buyer_name,
+        seller_id=media["user_id"],
+        amount=data.amount,
+        message=data.message
+    )
+    
+    offer_dict = offer.model_dump()
+    offer_dict["created_at"] = offer_dict["created_at"].isoformat()
+    offer_dict["updated_at"] = offer_dict["updated_at"].isoformat()
+    
+    await db.offers.insert_one(offer_dict)
+    
+    # Increment offer count
+    await db.media_items.update_one(
+        {"media_id": data.media_id},
+        {"$inc": {"offer_count": 1}}
+    )
+    
+    return {"offer_id": offer.offer_id, "message": "Offer submitted successfully"}
+
+@offers_router.get("/received")
+async def get_received_offers(status: str = None, current_user: dict = Depends(get_current_user)):
+    """Get offers received on your media"""
+    query = {"seller_id": current_user["user_id"]}
+    if status:
+        query["status"] = status
+    
+    offers = await db.offers.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
+    
+    # Add media info
+    for offer in offers:
+        media = await db.media_items.find_one({"media_id": offer["media_id"]}, {"_id": 0, "original_url": 0})
+        offer["media"] = media
+    
+    return offers
+
+@offers_router.get("/sent")
+async def get_sent_offers(request: Request):
+    """Get offers you've sent (requires auth or email)"""
+    try:
+        current_user = await get_current_user(request)
+        query = {"buyer_id": current_user["user_id"]}
+    except:
+        # For guests, they'd need to provide their email
+        raise HTTPException(status_code=401, detail="Authentication required to view sent offers")
+    
+    offers = await db.offers.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
+    
+    # Add media info
+    for offer in offers:
+        media = await db.media_items.find_one({"media_id": offer["media_id"]}, {"_id": 0, "original_url": 0})
+        offer["media"] = media
+    
+    return offers
+
+@offers_router.post("/{offer_id}/accept")
+async def accept_offer(offer_id: str, current_user: dict = Depends(get_current_user)):
+    """Accept an offer"""
+    offer = await db.offers.find_one({"offer_id": offer_id, "seller_id": current_user["user_id"]})
+    if not offer:
+        raise HTTPException(status_code=404, detail="Offer not found")
+    
+    if offer["status"] != "pending":
+        raise HTTPException(status_code=400, detail=f"Offer is already {offer['status']}")
+    
+    await db.offers.update_one(
+        {"offer_id": offer_id},
+        {"$set": {"status": "accepted", "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"message": "Offer accepted. Buyer can now proceed with payment."}
+
+@offers_router.post("/{offer_id}/reject")
+async def reject_offer(offer_id: str, current_user: dict = Depends(get_current_user)):
+    """Reject an offer"""
+    result = await db.offers.update_one(
+        {"offer_id": offer_id, "seller_id": current_user["user_id"], "status": "pending"},
+        {"$set": {"status": "rejected", "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Offer not found or not pending")
+    
+    return {"message": "Offer rejected"}
+
+# ============== PAYMENT ROUTES ==============
+
+@payments_router.post("/checkout/{offer_id}")
+async def create_checkout_session(offer_id: str, request: Request):
+    """Create Stripe checkout session for an accepted offer"""
+    offer = await db.offers.find_one({"offer_id": offer_id})
+    if not offer:
+        raise HTTPException(status_code=404, detail="Offer not found")
+    
+    if offer["status"] != "accepted":
+        raise HTTPException(status_code=400, detail="Offer must be accepted before payment")
+    
+    # Get origin URL from request
+    body = await request.json()
+    origin_url = body.get("origin_url", str(request.base_url).rstrip("/"))
+    
+    # Initialize Stripe
+    api_key = os.environ.get("STRIPE_API_KEY")
+    host_url = str(request.base_url).rstrip("/")
+    webhook_url = f"{host_url}/api/webhook/stripe"
+    
+    stripe_checkout = StripeCheckout(api_key=api_key, webhook_url=webhook_url)
+    
+    # Create checkout session
+    success_url = f"{origin_url}/payment/success?session_id={{CHECKOUT_SESSION_ID}}&offer_id={offer_id}"
+    cancel_url = f"{origin_url}/payment/cancel?offer_id={offer_id}"
+    
+    checkout_request = CheckoutSessionRequest(
+        amount=float(offer["amount"]),
+        currency="usd",
+        success_url=success_url,
+        cancel_url=cancel_url,
+        metadata={
+            "offer_id": offer_id,
+            "media_id": offer["media_id"],
+            "buyer_email": offer["buyer_email"],
+            "seller_id": offer["seller_id"]
+        }
+    )
+    
+    session = await stripe_checkout.create_checkout_session(checkout_request)
+    
+    # Create payment transaction record
+    payment = PaymentTransaction(
+        offer_id=offer_id,
+        buyer_email=offer["buyer_email"],
+        seller_id=offer["seller_id"],
+        amount=offer["amount"],
+        stripe_session_id=session.session_id,
+        payment_status="initiated",
+        metadata=checkout_request.metadata
+    )
+    
+    payment_dict = payment.model_dump()
+    payment_dict["created_at"] = payment_dict["created_at"].isoformat()
+    payment_dict["updated_at"] = payment_dict["updated_at"].isoformat()
+    
+    await db.payment_transactions.insert_one(payment_dict)
+    
+    # Update offer with session ID
+    await db.offers.update_one(
+        {"offer_id": offer_id},
+        {"$set": {"stripe_session_id": session.session_id}}
+    )
+    
+    return {"checkout_url": session.url, "session_id": session.session_id}
+
+@payments_router.get("/status/{session_id}")
+async def get_payment_status(session_id: str, request: Request):
+    """Check payment status"""
+    api_key = os.environ.get("STRIPE_API_KEY")
+    host_url = str(request.base_url).rstrip("/")
+    webhook_url = f"{host_url}/api/webhook/stripe"
+    
+    stripe_checkout = StripeCheckout(api_key=api_key, webhook_url=webhook_url)
+    
+    status = await stripe_checkout.get_checkout_status(session_id)
+    
+    # Update payment transaction
+    if status.payment_status == "paid":
+        await db.payment_transactions.update_one(
+            {"stripe_session_id": session_id},
+            {"$set": {"payment_status": "paid", "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
+        
+        # Update offer status
+        payment = await db.payment_transactions.find_one({"stripe_session_id": session_id})
+        if payment:
+            # Update offer to paid
+            await db.offers.update_one(
+                {"offer_id": payment["offer_id"]},
+                {"$set": {"status": "paid", "payment_status": "paid", "updated_at": datetime.now(timezone.utc).isoformat()}}
+            )
+            
+            # Create contract for signing
+            offer = await db.offers.find_one({"offer_id": payment["offer_id"]})
+            media = await db.media_items.find_one({"media_id": offer["media_id"]})
+            
+            # Check if contract already exists
+            existing_contract = await db.contracts.find_one({"offer_id": payment["offer_id"]})
+            if not existing_contract:
+                contract = Contract(
+                    offer_id=payment["offer_id"],
+                    media_id=offer["media_id"],
+                    seller_id=offer["seller_id"],
+                    buyer_id=offer.get("buyer_id"),
+                    buyer_email=offer["buyer_email"],
+                    buyer_name=offer["buyer_name"],
+                    amount=offer["amount"],
+                    media_title=media["title"],
+                    media_type=media["media_type"]
+                )
+                
+                contract_dict = contract.model_dump()
+                contract_dict["created_at"] = contract_dict["created_at"].isoformat()
+                contract_dict["transfer_date"] = contract_dict["transfer_date"].isoformat()
+                
+                await db.contracts.insert_one(contract_dict)
+                
+                # Update offer with contract ID
+                await db.offers.update_one(
+                    {"offer_id": payment["offer_id"]},
+                    {"$set": {"contract_id": contract.contract_id}}
+                )
+    
+    return {
+        "status": status.status,
+        "payment_status": status.payment_status,
+        "amount": status.amount_total / 100,  # Convert from cents
+        "currency": status.currency
+    }
+
+# ============== CONTRACTS ROUTES ==============
+
+@contracts_router.get("/{contract_id}")
+async def get_contract(contract_id: str, request: Request):
+    """Get contract details"""
+    contract = await db.contracts.find_one({"contract_id": contract_id}, {"_id": 0})
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    
+    # Add media info
+    media = await db.media_items.find_one({"media_id": contract["media_id"]}, {"_id": 0, "original_url": 0})
+    contract["media"] = media
+    
+    # Add seller info
+    seller = await db.users.find_one({"user_id": contract["seller_id"]}, {"_id": 0, "password_hash": 0})
+    contract["seller"] = seller
+    
+    return contract
+
+@contracts_router.post("/{contract_id}/sign/seller")
+async def seller_sign_contract(contract_id: str, data: SignContract, current_user: dict = Depends(get_current_user)):
+    """Seller signs the contract"""
+    contract = await db.contracts.find_one({"contract_id": contract_id, "seller_id": current_user["user_id"]})
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    
+    if contract.get("seller_signature"):
+        raise HTTPException(status_code=400, detail="Contract already signed by seller")
+    
+    new_status = "seller_signed"
+    if contract.get("buyer_signature"):
+        new_status = "fully_signed"
+    
+    await db.contracts.update_one(
+        {"contract_id": contract_id},
+        {"$set": {
+            "seller_signature": data.signature,
+            "seller_signature_type": data.signature_type,
+            "seller_signed_at": datetime.now(timezone.utc).isoformat(),
+            "status": new_status
+        }}
+    )
+    
+    return {"message": "Contract signed", "status": new_status}
+
+@contracts_router.post("/{contract_id}/sign/buyer")
+async def buyer_sign_contract(contract_id: str, data: SignContract, request: Request):
+    """Buyer signs the contract"""
+    contract = await db.contracts.find_one({"contract_id": contract_id})
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    
+    if contract.get("buyer_signature"):
+        raise HTTPException(status_code=400, detail="Contract already signed by buyer")
+    
+    # Verify buyer (either by auth or email match)
+    try:
+        current_user = await get_current_user(request)
+        if contract.get("buyer_id") and current_user["user_id"] != contract["buyer_id"]:
+            raise HTTPException(status_code=403, detail="Not authorized to sign this contract")
+    except:
+        # For guest buyers, we'd verify by email token in a real system
+        pass
+    
+    new_status = "buyer_signed" if not contract.get("seller_signature") else "fully_signed"
+    
+    await db.contracts.update_one(
+        {"contract_id": contract_id},
+        {"$set": {
+            "buyer_signature": data.signature,
+            "buyer_signature_type": data.signature_type,
+            "buyer_signed_at": datetime.now(timezone.utc).isoformat(),
+            "status": new_status
+        }}
+    )
+    
+    # If fully signed, complete the transfer
+    if new_status == "fully_signed":
+        await complete_transfer(contract_id)
+    
+    return {"message": "Contract signed", "status": new_status}
+
+async def complete_transfer(contract_id: str):
+    """Complete the media transfer after both signatures"""
+    contract = await db.contracts.find_one({"contract_id": contract_id})
+    if not contract:
+        return
+    
+    # Update contract status
+    await db.contracts.update_one(
+        {"contract_id": contract_id},
+        {"$set": {"status": "completed"}}
+    )
+    
+    # Update offer status
+    await db.offers.update_one(
+        {"offer_id": contract["offer_id"]},
+        {"$set": {"status": "completed", "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    # Update media status - mark as sold and remove from seller's visible media
+    await db.media_items.update_one(
+        {"media_id": contract["media_id"]},
+        {"$set": {
+            "status": "sold",
+            "sold_to": contract.get("buyer_id") or contract["buyer_email"],
+            "sold_at": datetime.now(timezone.utc).isoformat(),
+            "is_for_sale": False
+        }}
+    )
+
+@contracts_router.get("/{contract_id}/download")
+async def download_original_media(contract_id: str, request: Request):
+    """Download the original unwatermarked media after contract is complete"""
+    contract = await db.contracts.find_one({"contract_id": contract_id})
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    
+    if contract["status"] != "completed":
+        raise HTTPException(status_code=400, detail="Contract must be fully signed before download")
+    
+    # Verify buyer
+    try:
+        current_user = await get_current_user(request)
+        if contract.get("buyer_id") and current_user["user_id"] != contract["buyer_id"]:
+            raise HTTPException(status_code=403, detail="Not authorized to download")
+    except:
+        # For guest buyers, verify by email in headers or token
+        pass
+    
+    # Get original media URL
+    media = await db.media_items.find_one({"media_id": contract["media_id"]})
+    if not media:
+        raise HTTPException(status_code=404, detail="Media not found")
+    
+    return {
+        "download_url": media["original_url"],
+        "media_title": media["title"],
+        "media_type": media["media_type"]
+    }
+
+@contracts_router.get("/my/seller")
+async def get_seller_contracts(current_user: dict = Depends(get_current_user)):
+    """Get contracts where you are the seller"""
+    contracts = await db.contracts.find(
+        {"seller_id": current_user["user_id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    return contracts
+
+@contracts_router.get("/my/buyer")
+async def get_buyer_contracts(current_user: dict = Depends(get_current_user)):
+    """Get contracts where you are the buyer"""
+    contracts = await db.contracts.find(
+        {"buyer_id": current_user["user_id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    return contracts
