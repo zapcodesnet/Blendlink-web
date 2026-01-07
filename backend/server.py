@@ -1234,6 +1234,45 @@ api_router.include_router(raffles_router)
 api_router.include_router(wallet_router)
 api_router.include_router(referrals_router)
 
+# Import and include media sales routers
+from media_sales import watermark_router, media_router, offers_router, contracts_router, payments_router
+api_router.include_router(watermark_router)
+api_router.include_router(media_router)
+api_router.include_router(offers_router)
+api_router.include_router(contracts_router)
+api_router.include_router(payments_router)
+
+# Stripe webhook endpoint (must be at app level, not api_router)
+@app.post("/api/webhook/stripe")
+async def stripe_webhook(request: Request):
+    """Handle Stripe webhook events"""
+    from emergentintegrations.payments.stripe.checkout import StripeCheckout
+    import os
+    
+    api_key = os.environ.get("STRIPE_API_KEY")
+    host_url = str(request.base_url).rstrip("/")
+    webhook_url = f"{host_url}/api/webhook/stripe"
+    
+    stripe_checkout = StripeCheckout(api_key=api_key, webhook_url=webhook_url)
+    
+    body = await request.body()
+    signature = request.headers.get("Stripe-Signature")
+    
+    try:
+        webhook_response = await stripe_checkout.handle_webhook(body, signature)
+        
+        # Update payment status based on webhook event
+        if webhook_response.payment_status == "paid":
+            await db.payment_transactions.update_one(
+                {"stripe_session_id": webhook_response.session_id},
+                {"$set": {"payment_status": "paid", "updated_at": datetime.now(timezone.utc).isoformat()}}
+            )
+        
+        return {"status": "success"}
+    except Exception as e:
+        logger.error(f"Webhook error: {e}")
+        return {"status": "error", "message": str(e)}
+
 app.include_router(api_router)
 
 app.add_middleware(
