@@ -301,7 +301,7 @@ export default function Profile() {
               <Button 
                 variant="outline" 
                 className="h-auto py-4 flex-col gap-2"
-                onClick={() => navigate("/media-for-sale")}}
+                onClick={() => navigate("/media-for-sale")}
                 data-testid="browse-media-btn"
               >
                 <Bookmark className="w-6 h-6" />
