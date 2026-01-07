@@ -793,19 +793,65 @@ async def join_orphan_queue(current_user: dict = Depends(get_current_user)):
     return {"message": "Successfully joined the orphan assignment queue"}
 
 async def assign_orphan_to_queue(orphan_user_id: str):
-    """Assign an orphan (user without referrer) to next eligible queue member"""
-    # Get next eligible member from queue
+    """
+    Assign an orphan (user without referrer) to next eligible queue member.
+    Priority 1: Verified members with zero recruits
+    Priority 2: Non-verified members with zero recruits (fallback)
+    Uses round-robin based on join_date.
+    """
+    # Priority 1: Get next verified eligible member from queue
     next_member = await db.orphan_queue.find_one(
         {
             "is_eligible": True,
-            "has_received_orphan": False
+            "has_received_orphan": False,
+            "id_verified": True
         },
         sort=[("join_date", 1)]
     )
     
+    # Priority 2: Fallback to non-verified members if no verified members available
     if not next_member:
-        logger.info(f"No eligible queue members for orphan {orphan_user_id}")
-        return None
+        logger.info(f"No verified queue members, checking non-verified for orphan {orphan_user_id}")
+        next_member = await db.orphan_queue.find_one(
+            {
+                "is_eligible": True,
+                "has_received_orphan": False,
+                "id_verified": False
+            },
+            sort=[("join_date", 1)]
+        )
+    
+    if not next_member:
+        # Last resort: Find any active user with zero direct referrals who hasn't received an orphan
+        logger.info(f"No queue members found, searching all eligible users for orphan {orphan_user_id}")
+        
+        # First try verified users
+        eligible_user = await db.users.find_one(
+            {
+                "direct_referrals": {"$in": [0, None]},
+                "has_violations": {"$ne": True},
+                "id_verified": True,
+                "user_id": {"$ne": orphan_user_id}  # Can't refer yourself
+            },
+            sort=[("created_at", 1)]
+        )
+        
+        # Then try non-verified users
+        if not eligible_user:
+            eligible_user = await db.users.find_one(
+                {
+                    "direct_referrals": {"$in": [0, None]},
+                    "has_violations": {"$ne": True},
+                    "user_id": {"$ne": orphan_user_id}
+                },
+                sort=[("created_at", 1)]
+            )
+        
+        if eligible_user:
+            next_member = {"user_id": eligible_user["user_id"]}
+        else:
+            logger.info(f"No eligible members for orphan {orphan_user_id}")
+            return None
     
     # Create referral relationship
     relationship = ReferralRelationship(
@@ -820,7 +866,7 @@ async def assign_orphan_to_queue(orphan_user_id: str):
     
     await db.referral_relationships.insert_one(rel_dict)
     
-    # Mark queue member as having received orphan
+    # Mark queue member as having received orphan (if in queue)
     await db.orphan_queue.update_one(
         {"user_id": next_member["user_id"]},
         {"$set": {"has_received_orphan": True}}
