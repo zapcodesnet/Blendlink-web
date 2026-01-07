@@ -718,6 +718,36 @@ async def complete_transfer(contract_id: str):
             "is_for_sale": False
         }}
     )
+    
+    # Process commissions for the sale (8% total fee)
+    try:
+        from referral_system import process_sale_commissions
+        
+        # Create a marketplace sale record for tracking
+        sale_id = f"sale_{uuid.uuid4().hex[:12]}"
+        sale_record = {
+            "sale_id": sale_id,
+            "contract_id": contract_id,
+            "media_id": contract["media_id"],
+            "seller_id": contract["seller_id"],
+            "buyer_id": contract.get("buyer_id"),
+            "buyer_email": contract["buyer_email"],
+            "amount": contract["amount"],
+            "status": "completed",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.marketplace_sales.insert_one(sale_record)
+        
+        # Process and distribute commissions
+        commission_result = await process_sale_commissions(
+            seller_id=contract["seller_id"],
+            sale_amount=contract["amount"],
+            transaction_id=sale_id,
+            commission_type="media_sale"
+        )
+        logger.info(f"Commissions processed for sale {sale_id}: {commission_result}")
+    except Exception as e:
+        logger.error(f"Failed to process commissions for contract {contract_id}: {e}")
 
 @contracts_router.get("/{contract_id}/download")
 async def download_original_media(contract_id: str, request: Request):
