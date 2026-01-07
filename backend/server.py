@@ -438,6 +438,8 @@ async def google_session(request: Request, response: Response):
         google_data = resp.json()
     
     existing = await db.users.find_one({"email": google_data["email"]}, {"_id": 0})
+    is_new_user = False
+    
     if existing:
         user_id = existing["user_id"]
         await db.users.update_one(
@@ -445,6 +447,7 @@ async def google_session(request: Request, response: Response):
             {"$set": {"name": google_data["name"], "avatar": google_data.get("picture", existing.get("avatar"))}}
         )
     else:
+        is_new_user = True
         user = UserBase(
             email=google_data["email"],
             name=google_data["name"],
@@ -455,6 +458,19 @@ async def google_session(request: Request, response: Response):
         user_dict["created_at"] = user_dict["created_at"].isoformat()
         await db.users.insert_one(user_dict)
         user_id = user.user_id
+        
+        # Try to assign from orphan queue since no referral code
+        try:
+            from referral_system import assign_orphan_to_queue
+            assigned_to = await assign_orphan_to_queue(user_id)
+            if assigned_to:
+                await db.users.update_one(
+                    {"user_id": user_id},
+                    {"$set": {"referred_by": assigned_to}}
+                )
+                logger.info(f"Google-session orphan user {user_id} assigned to {assigned_to}")
+        except Exception as e:
+            logger.error(f"Failed to assign google-session orphan: {e}")
     
     token = create_token(user_id)
     response.set_cookie(
