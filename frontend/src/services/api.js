@@ -60,15 +60,21 @@ export const authAPI = {
       method: 'POST',
       body: JSON.stringify(data),
     });
-    if (response.access_token) {
-      setToken(response.access_token);
-      setStoredUser({
-        user_id: response.user_id,
-        email: response.email,
-        name: response.name,
-        referral_code: response.referral_code,
-        bl_coins: response.bl_coins_bonus || 50000,
-      });
+    // Handle both token formats
+    const authToken = response.token || response.access_token;
+    if (authToken) {
+      setToken(authToken);
+      if (response.user) {
+        setStoredUser(response.user);
+      } else {
+        setStoredUser({
+          user_id: response.user_id,
+          email: response.email,
+          name: response.name,
+          referral_code: response.referral_code,
+          bl_coins: response.bl_coins_bonus || 50000,
+        });
+      }
     }
     return response;
   },
@@ -78,11 +84,17 @@ export const authAPI = {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
-    if (response.access_token) {
-      setToken(response.access_token);
-      // Fetch full user profile after login
-      const profile = await authAPI.getProfile();
-      setStoredUser(profile);
+    // Handle both token formats (token or access_token)
+    const authToken = response.token || response.access_token;
+    if (authToken) {
+      setToken(authToken);
+      // Store user from response or fetch profile
+      if (response.user) {
+        setStoredUser(response.user);
+      } else {
+        const profile = await authAPI.getProfile();
+        setStoredUser(profile);
+      }
     }
     return response;
   },
