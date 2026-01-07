@@ -35,6 +35,11 @@ import Contract from "./pages/Contract";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancel from "./pages/PaymentCancel";
 
+// Referral/Earnings Pages
+import EarningsDashboard from "./pages/EarningsDashboard";
+import Withdraw from "./pages/Withdraw";
+import AdminDashboard from "./pages/AdminDashboard";
+
 // Components
 import BottomNav from "./components/BottomNav";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
