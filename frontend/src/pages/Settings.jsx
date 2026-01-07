@@ -8,7 +8,7 @@ import { Switch } from "../components/ui/switch";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { 
   ArrowLeft, User, Bell, Moon, Shield, HelpCircle, 
-  LogOut, ChevronRight, Camera, Smartphone
+  LogOut, ChevronRight, Camera
 } from "lucide-react";
 
 export default function Settings() {
@@ -34,14 +34,6 @@ export default function Settings() {
     toast.success("Logged out successfully");
   };
 
-  const openMobileApp = () => {
-    window.location.href = "blendlink://";
-    setTimeout(() => {
-      // If still here, app not installed
-      toast.info("Download the Blendlink app for the best experience!");
-    }, 2000);
-  };
-
   const settingsGroups = [
     {
       title: "Account",
@@ -61,7 +53,6 @@ export default function Settings() {
       title: "Support",
       items: [
         { icon: HelpCircle, label: "Help Center", onClick: () => {} },
-        { icon: Smartphone, label: "Open Mobile App", onClick: openMobileApp },
       ]
     }
   ];
