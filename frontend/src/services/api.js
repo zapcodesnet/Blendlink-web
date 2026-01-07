@@ -1,5 +1,6 @@
 // API Service - Connects to the internal Blendlink backend
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+const API_PREFIX = '/api';
 
 // Token management
 const TOKEN_KEY = 'blendlink_token';
@@ -32,7 +33,7 @@ const apiRequest = async (endpoint, options = {}) => {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+  const response = await fetch(`${API_BASE_URL}${API_PREFIX}${endpoint}`, {
     ...options,
     headers,
   });
