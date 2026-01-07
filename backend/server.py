@@ -302,6 +302,72 @@ async def login(data: UserLogin, response: Response):
     user.pop("password_hash", None)
     return {"token": token, "user": user}
 
+class GoogleAuthData(BaseModel):
+    email: str
+    name: str
+    picture: Optional[str] = None
+    google_id: Optional[str] = None
+
+# REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
+@auth_router.post("/google")
+async def google_auth(data: GoogleAuthData, response: Response):
+    """Handle Google OAuth - create or login user"""
+    existing = await db.users.find_one({"email": data.email}, {"_id": 0})
+    
+    if existing:
+        user_id = existing["user_id"]
+        # Update user info from Google
+        await db.users.update_one(
+            {"user_id": user_id},
+            {"$set": {
+                "name": data.name,
+                "avatar": data.picture or existing.get("avatar"),
+                "google_id": data.google_id
+            }}
+        )
+        user = await db.users.find_one({"user_id": user_id}, {"_id": 0, "password_hash": 0})
+    else:
+        # Create new user
+        user = UserBase(
+            email=data.email,
+            name=data.name,
+            username=data.email.split("@")[0] + "_" + str(int(datetime.now(timezone.utc).timestamp()))[-6:],
+            avatar=data.picture or f"https://ui-avatars.com/api/?name={data.name.replace(' ', '+')}&background=2563eb&color=fff"
+        )
+        user_dict = user.model_dump()
+        user_dict["created_at"] = user_dict["created_at"].isoformat()
+        user_dict["google_id"] = data.google_id
+        user_dict["password_hash"] = ""  # No password for Google users
+        await db.users.insert_one(user_dict)
+        user_id = user.user_id
+        
+        # Create welcome transaction
+        welcome_tx = {
+            "transaction_id": f"tx_{uuid.uuid4().hex[:12]}",
+            "user_id": user_id,
+            "type": "welcome",
+            "amount": 50000,
+            "description": "Welcome bonus!",
+            "balance_after": 50000,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.transactions.insert_one(welcome_tx)
+        
+        user = await db.users.find_one({"user_id": user_id}, {"_id": 0, "password_hash": 0})
+    
+    token = create_token(user_id)
+    response.set_cookie(
+        key="session_token",
+        value=token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        path="/",
+        max_age=JWT_EXPIRY_HOURS * 3600
+    )
+    
+    return {"token": token, "user": user}
+
 # REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
 @auth_router.post("/google-session")
 async def google_session(request: Request, response: Response):
