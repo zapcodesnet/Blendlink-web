@@ -249,15 +249,18 @@ async def register(data: UserCreate, response: Response):
     user_dict["password_hash"] = hash_password(data.password)
     user_dict["created_at"] = user_dict["created_at"].isoformat()
     
+    has_referrer = False
+    
     # Handle referral
     if data.referral_code:
         referrer = await db.users.find_one({"referral_code": data.referral_code}, {"_id": 0})
         if referrer:
+            has_referrer = True
             user_dict["referred_by"] = referrer["user_id"]
             # Update referrer's level 1 count and give bonus
             await db.users.update_one(
                 {"user_id": referrer["user_id"]},
-                {"$inc": {"level1_referrals": 1, "bl_coins": 50}}
+                {"$inc": {"level1_referrals": 1, "bl_coins": 50, "direct_referrals": 1}}
             )
             # Check for level 2 referrer
             if referrer.get("referred_by"):
@@ -275,8 +278,35 @@ async def register(data: UserCreate, response: Response):
             txn_dict = txn.model_dump()
             txn_dict["created_at"] = txn_dict["created_at"].isoformat()
             await db.transactions.insert_one(txn_dict)
+            
+            # Also create referral relationship record for new commission system
+            from referral_system import ReferralRelationship
+            relationship = ReferralRelationship(
+                referrer_id=referrer["user_id"],
+                referred_id=user.user_id,
+                level=1
+            )
+            rel_dict = relationship.model_dump()
+            rel_dict["created_at"] = rel_dict["created_at"].isoformat()
+            rel_dict["last_activity"] = rel_dict["last_activity"].isoformat()
+            await db.referral_relationships.insert_one(rel_dict)
     
     await db.users.insert_one(user_dict.copy())
+    
+    # If no referrer was provided or found, try to assign from orphan queue
+    if not has_referrer:
+        try:
+            from referral_system import assign_orphan_to_queue
+            assigned_to = await assign_orphan_to_queue(user.user_id)
+            if assigned_to:
+                user_dict["referred_by"] = assigned_to
+                await db.users.update_one(
+                    {"user_id": user.user_id},
+                    {"$set": {"referred_by": assigned_to}}
+                )
+                logger.info(f"Orphan user {user.user_id} assigned to {assigned_to}")
+        except Exception as e:
+            logger.error(f"Failed to assign orphan: {e}")
     
     token = create_token(user.user_id)
     response.set_cookie(
