@@ -64,6 +64,15 @@ class UserBase(BaseModel):
     referred_by: Optional[str] = None
     level1_referrals: int = 0
     level2_referrals: int = 0
+    # New fields for referral/commission system
+    direct_referrals: int = 0
+    total_earnings: float = 0.0
+    pending_earnings: float = 0.0
+    available_balance: float = 0.0
+    is_admin: bool = False
+    has_violations: bool = False
+    last_activity: Optional[datetime] = None
+    id_verified: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class UserCreate(BaseModel):
