@@ -1362,6 +1362,18 @@ api_router.include_router(offers_router)
 api_router.include_router(contracts_router)
 api_router.include_router(payments_router)
 
+# Import and include referral system routers
+from referral_system import (
+    referral_system_router, commission_router, diamond_router, 
+    orphan_router, withdrawal_router, admin_router
+)
+api_router.include_router(referral_system_router)
+api_router.include_router(commission_router)
+api_router.include_router(diamond_router)
+api_router.include_router(orphan_router)
+api_router.include_router(withdrawal_router)
+api_router.include_router(admin_router)
+
 # Stripe webhook endpoint (must be at app level, not api_router)
 @app.post("/api/webhook/stripe")
 async def stripe_webhook(request: Request):
