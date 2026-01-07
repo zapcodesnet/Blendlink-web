@@ -707,7 +707,6 @@ async def get_orphan_queue_status(current_user: dict = Depends(get_current_user)
         
         is_eligible = (
             direct_count == 0 and
-            id_verified is not None and
             not user.get("has_violations", False)
         )
         
@@ -718,21 +717,43 @@ async def get_orphan_queue_status(current_user: dict = Depends(get_current_user)
                 "zero_direct_recruits": direct_count == 0,
                 "id_verified": id_verified is not None,
                 "no_violations": not user.get("has_violations", False)
-            }
+            },
+            "note": "ID verification is optional but gives priority in orphan assignments"
         }
     
-    # Get position in queue
-    position = await db.orphan_queue.count_documents({
-        "is_eligible": True,
-        "has_received_orphan": False,
-        "join_date": {"$lt": queue_entry["join_date"]}
-    })
+    # Get position in queue - verified users have priority
+    is_user_verified = queue_entry.get("id_verified", False)
+    
+    if is_user_verified:
+        # Count only verified users ahead
+        position = await db.orphan_queue.count_documents({
+            "is_eligible": True,
+            "has_received_orphan": False,
+            "id_verified": True,
+            "join_date": {"$lt": queue_entry["join_date"]}
+        })
+    else:
+        # Count all verified users plus non-verified users ahead
+        verified_count = await db.orphan_queue.count_documents({
+            "is_eligible": True,
+            "has_received_orphan": False,
+            "id_verified": True
+        })
+        non_verified_ahead = await db.orphan_queue.count_documents({
+            "is_eligible": True,
+            "has_received_orphan": False,
+            "id_verified": False,
+            "join_date": {"$lt": queue_entry["join_date"]}
+        })
+        position = verified_count + non_verified_ahead
     
     return {
         "in_queue": True,
         "position": position + 1,
         "is_eligible": queue_entry["is_eligible"],
-        "has_received_orphan": queue_entry["has_received_orphan"]
+        "has_received_orphan": queue_entry["has_received_orphan"],
+        "id_verified": is_user_verified,
+        "priority_note": "ID-verified members receive priority" if not is_user_verified else "You have priority status"
     }
 
 @orphan_router.post("/join-queue")
