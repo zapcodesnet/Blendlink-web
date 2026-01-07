@@ -737,10 +737,10 @@ async def get_orphan_queue_status(current_user: dict = Depends(get_current_user)
 
 @orphan_router.post("/join-queue")
 async def join_orphan_queue(current_user: dict = Depends(get_current_user)):
-    """Join the orphan assignment queue"""
+    """Join the orphan assignment queue. ID-verified members get priority."""
     user_id = current_user["user_id"]
     
-    # Check eligibility
+    # Check eligibility - must have zero direct recruits
     direct_count = await db.referral_relationships.count_documents({
         "referrer_id": user_id,
         "level": 1
@@ -750,17 +750,6 @@ async def join_orphan_queue(current_user: dict = Depends(get_current_user)):
         raise HTTPException(
             status_code=400,
             detail="You must have zero direct recruits to join the orphan queue"
-        )
-    
-    id_verified = await db.id_verifications.find_one({
-        "user_id": user_id,
-        "status": "verified"
-    })
-    
-    if not id_verified:
-        raise HTTPException(
-            status_code=400,
-            detail="You must have a verified ID to join the orphan queue"
         )
     
     user = await get_user_by_id(user_id)
@@ -775,12 +764,18 @@ async def join_orphan_queue(current_user: dict = Depends(get_current_user)):
     if existing:
         raise HTTPException(status_code=400, detail="You are already in the queue")
     
-    # Add to queue
+    # Check ID verification status
+    id_verified = await db.id_verifications.find_one({
+        "user_id": user_id,
+        "status": "verified"
+    })
+    
+    # Add to queue (verified users get priority in assignment)
     queue_entry = OrphanQueueEntry(
         user_id=user_id,
         join_date=datetime.fromisoformat(current_user.get("created_at", datetime.now(timezone.utc).isoformat())),
         is_eligible=True,
-        id_verified=True,
+        id_verified=id_verified is not None,
         direct_recruits_count=0
     )
     
@@ -790,7 +785,11 @@ async def join_orphan_queue(current_user: dict = Depends(get_current_user)):
     
     await db.orphan_queue.insert_one(entry_dict)
     
-    return {"message": "Successfully joined the orphan assignment queue"}
+    message = "Successfully joined the orphan assignment queue"
+    if not id_verified:
+        message += ". Note: ID-verified members receive priority in orphan assignments."
+    
+    return {"message": message, "id_verified": id_verified is not None}
 
 async def assign_orphan_to_queue(orphan_user_id: str):
     """
