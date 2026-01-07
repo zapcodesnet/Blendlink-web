@@ -10,111 +10,131 @@ Build a fully responsive Progressive Web App (PWA) version of Blendlink - an all
 - Raffle draws
 - Virtual currency (BL Coin system)
 - 2-level unilevel referral system
+- **NEW: Watermark & Media Sales System**
 
-## Architecture Change (January 2026)
-**IMPORTANT**: The PWA now connects to an external mobile app backend API instead of the internal backend.
-- External API: `https://mobile-games-hub-11.preview.emergentagent.com/api`
-- Internal backend (`/app/backend/server.py`) is **DEPRECATED**
-- All data now syncs with the native Blendlink mobile app
+## Latest Feature: Watermark & Media Sales (January 7, 2026)
+Users can create customizable watermarks and upload photos/videos with watermarks. Public watermarked media is automatically listed for sale. Anyone can make purchase offers, and sales are completed with Stripe payments and e-signed copyright transfer contracts.
 
-## User Personas
-1. **Social Users**: Want to connect, share posts/stories, follow friends
-2. **Buyers/Sellers**: Looking to buy/sell items in marketplace
-3. **Renters**: Seeking rental properties or listing their properties
-4. **Service Providers**: Offering professional services
-5. **Gamers**: Play games to earn BL Coins
-6. **Earners**: Focus on referrals and earning rewards
+### Watermark Features
+- Text-based watermarks only
+- 70-90% transparency (0.1-0.3 opacity)
+- Customizable: font family, size, color, rotation
+- Drag-and-drop positioning on canvas preview
+- Multiple watermark templates per user
+- Set default watermark option
 
-## Core Requirements (Static)
-- PWA installable on mobile devices
-- Offline support via service worker
-- Mobile-first responsive design
-- Bottom navigation for easy access
-- BL Coin virtual currency system
-- 2-level referral commission system
-- **Deep linking to native app** (blendlink://)
-- **App store redirects** for iOS/Android
+### Media Upload
+- Upload photos and videos
+- Apply watermark before publishing
+- Privacy settings: Public (auto-listed for sale) or Private
+- Optional fixed price for marketplace listing
 
-## What's Been Implemented
+### Offer System
+- Guests and members can make offers on watermarked media
+- Offers include: amount, name, email, optional message
+- Sellers receive/accept/reject offers
+- No price tag required - accept any offer
 
-### External API Integration (January 6, 2026)
-- [x] Connected to external Blendlink mobile app API
-- [x] Auth endpoints working: /auth/register, /auth/login, /auth/me
-- [x] Wallet endpoints working: /bl-coins/balance, /bl-coins/transactions, /bl-coins/claim-daily
-- [x] Fixed game component imports (MemoryMatch, SpinWheel, ScratchCard)
-
-### "Coming Soon" Features
-The following features are NOT available in the external API and show "Coming Soon" placeholders:
-- [ ] Social Feed (/posts/feed)
-- [ ] Marketplace (/marketplace/listings)
-- [ ] Property Rentals (/rentals/properties)
-- [ ] Professional Services (/services)
-- [ ] Games - Spin Wheel, Scratch Card (/games/*)
-- [ ] Raffles (/raffles/*)
-- [ ] Messaging (/messages/*)
-
-### Deep Linking & Mobile Detection
-- [x] Created AppOpenPrompt component for mobile users
-- [x] Full-screen prompt on first mobile visit
-- [x] "Open in Blendlink App" button (attempts blendlink:// deep link)
-- [x] App Store / Play Store download buttons
-- [x] "Continue to web version" option
-- [x] Session-based prompt dismissal
-
-### Frontend (React + Tailwind + Shadcn)
-- [x] PWA manifest and service worker
-- [x] Landing page with features showcase
-- [x] Login/Register with Google OAuth
-- [x] ComingSoonPlaceholder component (reusable)
-- [x] Wallet with balance and transactions (working with API)
-- [x] Daily claim functionality (working with API)
-- [x] Profile page 
-- [x] Referrals page with share functionality
-- [x] Settings with dark mode toggle
-- [x] Bottom/sidebar navigation
+### Payment & Contract
+- Stripe integration for credit/debit card payments
+- E-signature contract system:
+  - Both seller and buyer must sign
+  - Typed or drawn signature options
+  - PDF contract generation (planned)
+- After both signatures: buyer downloads original unwatermarked media
+- Media removed from seller's profile after sale
 
 ## Tech Stack
-- Frontend: React 18 + Tailwind CSS + Shadcn UI
-- Backend: External API (https://mobile-games-hub-11.preview.emergentagent.com/api)
-- Auth: JWT-based (external API)
-- PWA: Service Worker + manifest.json
+- **Frontend**: React 18 + Tailwind CSS + Shadcn UI
+- **Backend**: FastAPI + MongoDB
+- **Payments**: Stripe via emergentintegrations library
+- **PWA**: Service Worker + manifest.json
 
 ## Key Files
-- `/app/frontend/src/services/api.js` - All API calls to external backend
-- `/app/frontend/src/components/AppOpenPrompt.jsx` - Mobile deep linking prompt
-- `/app/frontend/src/components/ComingSoonPlaceholder.jsx` - Feature placeholder
 
-## API Endpoints (External)
-Working:
-- POST /auth/register - Register new user
-- POST /auth/login - Login user
-- GET /auth/me - Get current user profile
-- GET /bl-coins/balance - Get BL coin balance
-- GET /bl-coins/transactions - Get transaction history
-- POST /bl-coins/claim-daily - Claim daily reward
+### Backend
+- `/app/backend/server.py` - Main backend with auth, wallet, social routes
+- `/app/backend/media_sales.py` - Watermark, media, offers, contracts, payments routes
 
-Not Available (404):
-- /posts/* - Social features
-- /marketplace/* - Marketplace features
-- /rentals/* - Rental features
-- /services/* - Services features
-- /games/* - Games features
-- /raffles/* - Raffle features
+### Frontend - Pages
+- `/app/frontend/src/pages/MediaUpload.jsx` - 3-step media upload with watermark
+- `/app/frontend/src/pages/MyMedia.jsx` - User's uploaded media gallery
+- `/app/frontend/src/pages/MediaForSale.jsx` - Browse all watermarked media
+- `/app/frontend/src/pages/Offers.jsx` - Received/Sent offers management
+- `/app/frontend/src/pages/Contract.jsx` - E-signature contract page
+- `/app/frontend/src/pages/PaymentSuccess.jsx` - Payment confirmation
+- `/app/frontend/src/pages/PaymentCancel.jsx` - Payment cancelled
 
-## App Store URLs (To be updated)
-- iOS: https://apps.apple.com/app/id[YOUR_APP_ID]
-- Android: https://play.google.com/store/apps/details?id=com.yourcompany.blendlink
+### Frontend - Components
+- `/app/frontend/src/components/WatermarkCreator.jsx` - Watermark template creator with preview
+- `/app/frontend/src/components/OfferModal.jsx` - Make offer modal
 
-## Next Tasks
-1. **P0**: Confirm external API is back online and test all features
-2. **P1**: Complete deep linking logic with proper fallback timing
-3. **P1**: Verify PWA installability and offline support
-4. **P2**: Implement push notifications when API supports them
+### Frontend - Services
+- `/app/frontend/src/services/api.js` - Main API service
+- `/app/frontend/src/services/mediaSalesApi.js` - Media sales API service
+
+## API Endpoints
+
+### Watermarks
+- `POST /api/watermark/templates` - Create watermark template
+- `GET /api/watermark/templates` - Get all templates
+- `GET /api/watermark/templates/{id}` - Get specific template
+- `PUT /api/watermark/templates/{id}` - Update template
+- `DELETE /api/watermark/templates/{id}` - Delete template
+
+### Media
+- `POST /api/media/upload` - Upload media with watermark
+- `GET /api/media/my-media` - Get user's media
+- `GET /api/media/for-sale` - Get all public media for sale
+- `GET /api/media/{id}` - Get media detail
+- `DELETE /api/media/{id}` - Delete media
+
+### Offers
+- `POST /api/offers/` - Create offer
+- `GET /api/offers/received` - Get received offers
+- `GET /api/offers/sent` - Get sent offers
+- `POST /api/offers/{id}/accept` - Accept offer
+- `POST /api/offers/{id}/reject` - Reject offer
+
+### Payments
+- `POST /api/payments/checkout/{offer_id}` - Create Stripe checkout
+- `GET /api/payments/status/{session_id}` - Check payment status
+
+### Contracts
+- `GET /api/contracts/{id}` - Get contract details
+- `POST /api/contracts/{id}/sign/seller` - Seller signs
+- `POST /api/contracts/{id}/sign/buyer` - Buyer signs
+- `GET /api/contracts/{id}/download` - Download original media
+- `GET /api/contracts/my/seller` - Get seller's contracts
+- `GET /api/contracts/my/buyer` - Get buyer's contracts
+
+### Wallet
+- `GET /api/wallet/balance` - Get BL coin balance
+- `GET /api/wallet/transactions` - Get transaction history
+- `POST /api/wallet/claim-daily` - Claim daily login reward
+- `GET /api/wallet/stats` - Get wallet statistics
 
 ## Test Credentials
-- Email: blendlinktest1767726161@test.com
+- Email: test@test.com
 - Password: Test123456
 
-## Known Issues
-- External API may be temporarily down - all features degrade gracefully to "Coming Soon"
-- Deep link timeout (2 seconds) may need tuning for different devices
+## Testing Status
+- Backend: 24/24 tests passed ✅
+- Frontend: All pages load correctly ✅
+- Test file: `/app/tests/test_media_sales.py`
+
+## Known Limitations
+- PDF contract generation not yet implemented (contracts displayed inline)
+- Cloud storage integration needed for media files (currently using data URLs)
+- Deep linking to native app not fully integrated yet
+
+## Next Tasks
+1. Add cloud storage for media files (S3/GCS)
+2. Generate downloadable PDF contracts
+3. Implement native app deep linking
+4. Add push notifications for offers
+5. Implement actual watermark overlay for videos
+
+## App Store URLs (Placeholder)
+- iOS: https://apps.apple.com/app/id[YOUR_APP_ID]
+- Android: https://play.google.com/store/apps/details?id=com.yourcompany.blendlink
