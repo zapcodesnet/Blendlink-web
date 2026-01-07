@@ -240,6 +240,24 @@ export default function Profile() {
               <Button 
                 variant="outline" 
                 className="h-auto py-4 flex-col gap-2"
+                onClick={() => navigate("/earnings")}
+                data-testid="earnings-btn"
+              >
+                <TrendingUp className="w-6 h-6 text-green-500" />
+                <span>Earnings</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-auto py-4 flex-col gap-2"
+                onClick={() => navigate("/withdraw")}
+                data-testid="withdraw-btn"
+              >
+                <Wallet className="w-6 h-6 text-blue-500" />
+                <span>Withdraw</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-auto py-4 flex-col gap-2"
                 onClick={() => navigate("/upload-media")}
                 data-testid="upload-media-btn"
               >
@@ -255,6 +273,22 @@ export default function Profile() {
                 <Heart className="w-6 h-6" />
                 <span>My Media</span>
               </Button>
+            </div>
+
+            {/* Admin Button (only for admins) */}
+            {profile?.is_admin && (
+              <Button 
+                className="w-full mb-6 bg-gradient-to-r from-purple-500 to-indigo-600"
+                onClick={() => navigate("/admin")}
+                data-testid="admin-btn"
+              >
+                <Shield className="w-5 h-5 mr-2" />
+                Admin Dashboard
+              </Button>
+            )}
+
+            {/* Offers & Browse */}
+            <div className="grid grid-cols-2 gap-3 mb-6">
               <Button 
                 variant="outline" 
                 className="h-auto py-4 flex-col gap-2"
@@ -267,7 +301,7 @@ export default function Profile() {
               <Button 
                 variant="outline" 
                 className="h-auto py-4 flex-col gap-2"
-                onClick={() => navigate("/media-for-sale")}
+                onClick={() => navigate("/media-for-sale")}}
                 data-testid="browse-media-btn"
               >
                 <Bookmark className="w-6 h-6" />
