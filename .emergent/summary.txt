@@ -1,148 +1,149 @@
 <analysis>**original_problem_statement:**
-The user wants to build a fully responsive Progressive Web App (PWA) version of their mobile app, Blendlink. The PWA should be installable, support offline mode, and have push notifications.
+The user wants to extend the existing Blendlink PWA to include a comprehensive platform for managing earnings through a referral system.
 
 **PRODUCT REQUIREMENTS:**
--   **Core Features:** Social media (profiles, feed, posts, etc.), Marketplace (buy/sell), Property Rentals, Professional Services directory, in-app Games, Raffle draws.
--   **Virtual Currency:** A built-in BL Coin system for rewards and transactions.
--   **Referral System:** A 2-level unilevel referral system for earning commissions.
--   **Authentication:** JWT-based custom auth (email/password) and Emergent-managed Google social login.
--   **Tech Stack:** React/Next.js for the frontend.
--   **LATEST UPDATE:** The user has requested to discard the self-contained backend and connect the PWA to the existing backend API of their native mobile app. The API base URL is .
--   **LATEST UPDATE 2:** On mobile devices, the PWA should prompt the user to open the native Blendlink app via a deep link () if it's installed, with a fallback to the app store.
+-   **Platform Type:** A responsive PWA with a shared FastAPI/MongoDB backend.
+-   **User Authentication:** Keep the existing secure login system (email/password, Emergent-managed Google OAuth) with JWT-based sessions.
+-   **Referral System:**
+    -   A 2-level unilevel compensation plan (Level 1: direct, Level 2: indirect).
+    -   Referral relationships are permanent unless a user is inactive for 5 years, at which point their downline rolls up.
+-   **Commissions & Fees:**
+    -   An 8% fee on all marketplace sales/auctions, distributed as: 3% to Level 1 upline, 1% to Level 2 upline, 4% to the platform owner.
+    -   A 1% processing fee on all withdrawals, allocated to the platform owner.
+-   **Diamond Leader Promotion:**
+    -   Achieved by recruiting 100+ direct members and earning 000+ from both downline and personal sales within a 30-day period.
+    -   Benefits: 00 bonus, enhanced commission rates (4% on L1, 2% on L2), and reduced platform fee (2%).
+-   **Orphan Assignment:** An AI system should fairly assign users who sign up without a referrer to active, verified members with zero recruits.
+-   **Transactions & Payments:** Use the existing Stripe integration for withdrawals.
+-   **ID Verification:** Use a third-party service (like Stripe Identity) for automated ID verification, required for withdrawals.
+-   **Real-Time Syncing:** Use Firebase Realtime Database to ensure data consistency across all user sessions.
+-   **Admin Panel:** A dashboard for managing users, payouts, and viewing analytics.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The agent has built a comprehensive React frontend with pages and components for all requested features (Social, Marketplace, Games, Wallet, etc.). An initial FastAPI/MongoDB backend was also created but is now being deprecated.
+The application is a React PWA with a FastAPI/MongoDB backend. The codebase has evolved significantly, starting with an internal backend, pivoting to an external API, and now returning to an expanded internal backend.
 
-The agent has started the process of refactoring the entire frontend to connect to the user's external API. A new service file, , was created to manage all external API calls. All page components have been modified to use this new service, but this has resulted in build-breaking compilation errors. A new component  has been created for the native app deep-linking feature, but the logic to use it has not been fully implemented.
+Key implemented features include:
+-   **Authentication:** JWT-based email/password and Emergent-managed Google OAuth are functional.
+-   **Media Sales:** A full-stack feature for users to upload media, apply watermarks, and sell them. This includes backend endpoints, Stripe integration for payments, and frontend components for the entire flow.
+-   **Coming Soon Placeholders:** Pages for features that are not yet built (like Social Feed) display a placeholder.
+-   **Referral System (In Progress):** The backend foundation (new models, API module ) and frontend pages (, , ) have been created.
 
 **Last working item**:
--   **Last item agent was working**: The agent was refactoring all frontend pages to replace the original internal API calls with calls to the new external API service located at . This involved overwriting nearly every page component.
--   **Status**: BLOCKED
--   **Agent Testing Done**: N
--   **Which testing method agent to use?**: Frontend testing agent
+-   **Last item agent was working**: The agent was implementing the new referral and commission system. It created the necessary backend modules (), updated the user model, and built the initial frontend pages (, , ). The agent successfully integrated the new pages into the app's navigation and verified that the Earnings Dashboard page renders correctly with initial data after a user logs in.
+-   **Status**: IN PROGRESS
+-   **Agent Testing Done**: Y (A test suite of 16 tests passed via  after the initial pages were created).
+-   **Which testing method agent to use?**: both (This is a large feature; once the core logic is implemented, both the backend and frontend testing agents should be used to ensure full functionality and integration).
 -   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   Issue 1: Frontend Compilation Failure (P0)
-
-**Issues Detail**:
--   **Issue 1: Frontend Compilation Failure**
-    -   **Description:** After refactoring the frontend to use the new  service for an external backend, the application no longer compiles. The build process fails with 25 errors, including a critical one: . This indicates a systemic issue with how components are importing the new API service.
-    -   **Attempted fixes**: The agent continued to update more files after the errors first appeared, instead of stopping to fix them. The root cause is likely that components are still trying to import API logic from  instead of the new, dedicated  file.
-    -   **Next debug checklist**:
-        1.  Run yarn run v1.22.22
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command. and review the full, non-truncated list of compilation errors.
-        2.  Inspect  to confirm its exports.
-        3.  Inspect  to see how it's structured and what it exports now.
-        4.  Correct the import statements in all page components under  to import API functions directly from  instead of .
-    -   **Why fix this issue and what will be achieved with the fix?**: The application is currently broken and cannot be run or tested. Fixing this is the top priority to make the app build successfully and unblock all further development and testing of the external API integration.
-    -   **Status**: IN PROGRESS
-    -   **Is recurring issue?**: N
-    -   **Should Test frontend/backend/both after fix?**: Frontend
-    -   **Blocked on other issue**: None. This is the primary blocker.
+There are no high-priority blocking issues. A  message appears in the backend logs on startup but has been identified as a transient error related to previous invalid login attempts and does not affect current functionality.
 
 **In progress Task List**:
--   **Task 1: Connect Frontend to External API**
-    -   **Where to resume**: The immediate priority is resolving the Frontend Compilation Failure (Issue 1). Once the app builds, the agent must proceed with testing the integration.
-    -   **What will be achieved with this?**: The PWA's frontend will be fully connected to the user's existing mobile app backend, ensuring data is synchronized between the two platforms.
+-   **Task 1: Complete Referral & Commission System** (P0)
+    -   **Where to resume**: The basic backend models and frontend pages have been created. The next step is to implement the core logic within . This includes:
+        1.  Calculating and distributing the 8% commission on sales.
+        2.  Tracking progress towards Diamond Leader status.
+        3.  Implementing the logic for assigning orphan users.
+        4.  Creating the backend endpoints for withdrawal requests.
+    -   **What will be achieved with this?**: A fully functional referral, commission, and earnings management system as per the user's detailed requirements.
     -   **Status**: IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?**: Frontend
-    -   **Blocked on something**: Frontend Compilation Failure (Issue 1).
+    -   **Should Test frontend/backend/both after fix?**: Both
+    -   **Blocked on something**: None
 
 **Upcoming and Future Tasks**
 
 -   **Upcoming Tasks:**
-    -   **(P0) Full Integration Testing**: After fixing the build, systematically test every feature to confirm it works with the external API. This includes auth, wallet, profile, and creating graceful fallbacks (e.g., Coming Soon messages) for features where the API endpoints are missing.
-    -   **(P1) Implement Deep Linking Logic**: Integrate the  component into  with logic to detect mobile devices, attempt to open , and provide fallback links to app stores.
-    -   **(P2) Verify PWA Functionality**: Ensure the service worker provides basic offline support and the app is installable.
+    -   **(P1) Implement Withdrawal and ID Verification**:
+        -   Connect the  page to the backend.
+        -   Integrate Stripe Identity for automated user ID verification, making it a prerequisite for withdrawals.
+    -   **(P2) Implement Real-Time Syncing**:
+        -   Integrate Firebase Realtime Database to provide live updates for earnings, commissions, and referral network changes on the dashboard.
+    -   **(P3) Build Admin Panel Functionality**:
+        -   Implement the backend logic and frontend UI for the  to allow admins to manage users and approve payouts.
 
 -   **Future Tasks:**
-    -   **Implement Missing Features**: The agent's exploration revealed that the external API lacks endpoints for social, marketplace, games, and other key features. The agent will need to inform the user and plan to either build these endpoints or adjust the PWA's scope.
-    -   **Implement Push Notifications**: Add support for push notifications using the Web Push API.
+    -   Build out full functionality for features currently showing Coming Soon (e.g., Social Feed with posts, comments, likes).
+    -   Implement the activity feed.
+    -   Complete the video watermarking process.
+    -   Add a shopping cart for the marketplace.
 
 **Completed work in this session**
--   A complete PWA was initially built using an internal FastAPI/MongoDB backend.
--   All UI pages and components for Blendlink's features were created.
--   PWA configuration files (, ) were set up.
--   The initial version was tested and key bugs (like MongoDB  serialization) were fixed.
--   The user's external API was explored to identify available and missing endpoints.
-
-**Earlier issues found/mentioned but not fixed**
--   **Issue 1: N+1 Query Issues**
-    -   A deployment health check on the *original internal backend* identified significant performance problems due to N+1 queries in the feed, comments, and marketplace endpoints.
-    -   This issue is not currently relevant as that backend has been deprecated, but the learning should be applied if the agent is tasked with building new backend services in the future.
-    -   **Status**: NOT STARTED (and de-prioritized).
-
-**Known issue recurrence from previous fork**
--   None.
+-   Fixed initial application state by correctly identifying that the previously reported compilation errors were resolved.
+-   Implemented a full-stack media sales feature, including watermarking concepts, offers, Stripe payments, and e-contracts, built on the internal backend.
+-   Removed all native app deep-linking code from the PWA as requested.
+-   Fixed the Google OAuth login flow by integrating it correctly with the Emergent-managed auth service and the internal backend.
+-   Began implementation of the comprehensive referral and commission system by creating the required backend modules and frontend pages.
+-   Successfully verified that the new Earnings Dashboard page is accessible and displays initial data.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
 -   **Frontend**: React, Tailwind CSS, Shadcn UI
--   **Backend**: Shifted from an internal FastAPI/MongoDB stack to consuming an **External REST API**.
--   **PWA**: Using a  and a  for installability and offline support.
--   **Authentication**: JWT-based, handled by the external API.
+-   **Backend**: FastAPI, MongoDB
+-   **Authentication**: JWT (email/password), Emergent-managed Google OAuth
+-   **Payments**: Stripe (for media sales and withdrawals)
+-   **ID Verification**: Stripe Identity (planned)
+-   **Real-time**: Firebase Realtime Database (planned)
+-   **Architecture**: Modular backend with features separated into  and .
 
 **key DB schema**
--   N/A. The database is opaque and managed by the external API.
+-   **users**: Extended with fields like , , , , , .
 
 **changes in tech stack**
--   The application's backend has pivoted from an agent-built internal FastAPI/MongoDB solution to consuming a pre-existing external FastAPI API. All data logic is now handled on the frontend via API calls.
+-   The project has solidified its architecture around the internal FastAPI/MongoDB backend, moving away from the temporary external API pivot.
+-   New integrations with Firebase Realtime Database and Stripe Identity are planned.
 
 **All files of reference**
--   **/app/frontend/src/services/api.js**: **Critical new file.** Centralizes all logic for communicating with the external backend. This is the source of the current integration effort.
--   **/app/frontend/src/pages/**: All files in this directory were **updated** to use , but these changes introduced the blocking compilation errors.
--   **/app/frontend/src/App.js**: **Updated** to integrate the new API service and app prompt, but may be part of the import/export issue.
--   **/app/frontend/src/components/AppOpenPrompt.jsx**: **New file** created to house the UI for the deep-linking feature.
--   **/app/backend/server.py**: **Deprecated**. This file contains the original internal backend code and should no longer be modified.
-
-**Areas that need refactoring**:
--   The API integration logic across all frontend components is broken. A systematic refactor is required to fix the import/export errors. All components must import API functions from , not from  or elsewhere.
-
-**key api endpoints**
--   **External API Base URL**: 
--   **Working Endpoints**: , , , , , .
--   **Missing Endpoints**: The agent found that endpoints for Social, Marketplace, Rentals, Services, Games, and Raffles returned Not Found.
+-   **/app/backend/referral_system.py**: Core new module for all referral and commission logic.
+-   **/app/backend/server.py**: Updated to include the referral system router and new user model fields.
+-   **/app/frontend/src/pages/EarningsDashboard.jsx**: The main UI for the referral system.
+-   **/app/frontend/src/pages/Withdraw.jsx**: Page for handling withdrawals and ID verification.
+-   **/app/frontend/src/services/referralApi.js**: Frontend service for interacting with the referral system backend.
 
 **Critical Info for New Agent**
--   **Primary Goal**: Fix the frontend compilation errors. The application is currently unusable. The errors started after refactoring all pages to use the new service at .
--   **Discard Internal Backend**: Do not work on . The project has pivoted to using an external API exclusively.
--   **Handle Missing Features**: The external API is incomplete. The frontend must be designed to handle this gracefully (e.g., show Coming Soon messages for social, marketplace, etc.).
--   **Implement Deep Linking**: A component for the native app prompt exists (), but the logic to detect mobile devices and trigger it from  is missing and needs to be implemented.
+-   The project's primary focus is now the implementation of the complex referral and commission system on the **internal backend**. Do not refer to or use the old external API.
+-   The user has provided very specific business logic for commissions, Diamond Leader status, and orphan assignment. This logic needs to be implemented in .
+-   The next major steps involve integrating Stripe Identity for verification before allowing withdrawals and using Firebase for real-time updates on the earnings dashboard. Use the provided integration playbooks for these tasks.
 
 **documents and test reports created in this job**
--    (Note: This report is for the old, internal backend version)
--   
+-   /app/memory/PRD.md
+-   /app/test_reports/iteration_2.json
+-   /app/test_reports/iteration_3.json
+-   /app/test_reports/iteration_4.json
+-   /app/test_reports/iteration_5.json
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Connect the PWA to my existing mobile app's backend API and add a deep-link prompt for mobile users. (COMPLETED - Request Received)
-2.  **Agent**: Acknowledged and began exploring the external API. (COMPLETED)
-3.  **Agent**: Sent a series of  commands to probe the external API, confirming some endpoints work (, ) while many others do not (, , etc.). (COMPLETED)
-4.  **Agent**: Concluded exploration, summarized findings, and began refactoring the frontend. (IN PROGRESS)
-5.  **Agent**: Updated all page components, which resulted in fatal compilation errors. (IN PROGRESS - BLOCKED)
+1.  **User**: Remove all deep linking code and fix all login issues, including Google login. (COMPLETED)
+2.  **Agent**: Implemented the removal of deep links and fixed the Google OAuth flow. (COMPLETED)
+3.  **User**: Provided a new, comprehensive set of requirements for a referral, commission, and earnings platform. (COMPLETED - Request Received)
+4.  **Agent**: Asked clarifying questions about the new requirements using . (COMPLETED)
+5.  **User**: Confirmed the new features should extend the existing PWA, use Stripe, use a third-party service for ID verification, and Firebase for real-time sync. (COMPLETED - Request Received)
+6.  **Agent**: Acknowledged the choices and began planning the implementation. (IN PROGRESS)
 
-There are no pending messages from the user. The agent is currently blocked on fixing the self-inflicted compilation issues.
+There are no pending messages from the user.
 
 **Project Health Check:**
--   **Broken**: The frontend fails to compile and is non-functional.
--   **Mocked**: N/A
+-   **Broken**: None. The app is stable and running.
+-   **Mocked**: The earnings dashboard currently uses static or zero-value data as the backend commission logic is not yet implemented.
 
 **3rd Party Integrations**
--   **External Blendlink API**: The primary integration, located at . This is not a standard third-party service but a user-provided one.
+-   **Stripe (Payments)**: Integrated and functional for media sales. Used for withdrawals. Requires User API Key (already configured).
+-   **Emergent-managed Google Auth**: Integrated and functional for user login.
+-   **Stripe Identity (ID Verification)**: **PLANNED**. Integration playbook has been retrieved.
+-   **Firebase Realtime Database**: **PLANNED**. Integration playbook has been retrieved.
 
 **Testing status**
--   **Testing agent used after significant changes**: YES, but only on the initial version with the internal backend. It has not been run since the refactoring began.
+-   **Testing agent used after significant changes**: YES. The agent has been run multiple times, with the latest run () showing 16 passed tests after the initial referral system pages were created.
 -   **Troubleshoot agent used after agent stuck in loop**: NO
--   **Test files created**: []
--   **Known regressions**: The entire application went from a working state (with an internal backend) to a non-compiling state.
+-   **Test files created**: Test reports are available up to .
+-   **Known regressions**: None.
 
 **Credentials to test flow:**
--   Use the external API's  endpoint to create a new test user. The agent previously created , which can be used for logging in and testing authenticated routes once the app compiles.
+-   Register a new user via the UI.
+-   Use the credentials  with password  for testing login functionality, as this user has been used in previous tests.
 
 **What agent forgot to execute**
--   The agent failed to stop and debug when compilation errors first appeared. Instead, it continued executing its plan to overwrite more files, which likely made the problem harder to diagnose.
--   The agent created the  component but did not implement the necessary logic in  to conditionally render it based on the user's device (mobile vs. desktop) as requested.</analysis>
+-   The agent made a minor syntax error () in  during development, which temporarily broke the frontend. However, it was quickly identified via console logs and resolved. No other significant omissions have been noted.</analysis>
