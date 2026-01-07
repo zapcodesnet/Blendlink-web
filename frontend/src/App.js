@@ -26,6 +26,15 @@ import ServiceDetail from "./pages/ServiceDetail";
 import Referrals from "./pages/Referrals";
 import Raffles from "./pages/Raffles";
 
+// Media Sales Pages
+import MediaUpload from "./pages/MediaUpload";
+import MyMedia from "./pages/MyMedia";
+import MediaForSale from "./pages/MediaForSale";
+import Offers from "./pages/Offers";
+import Contract from "./pages/Contract";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentCancel from "./pages/PaymentCancel";
+
 // Components
 import BottomNav from "./components/BottomNav";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
@@ -144,6 +153,16 @@ function AppRouter() {
       <Route path="/create-post" element={<ProtectedRoute><CreatePost /></ProtectedRoute>} />
       <Route path="/referrals" element={<ProtectedRoute><Referrals /></ProtectedRoute>} />
       <Route path="/raffles" element={<ProtectedRoute><Raffles /></ProtectedRoute>} />
+      
+      {/* Media Sales Routes */}
+      <Route path="/upload-media" element={<ProtectedRoute><MediaUpload /></ProtectedRoute>} />
+      <Route path="/my-media" element={<ProtectedRoute><MyMedia /></ProtectedRoute>} />
+      <Route path="/media-for-sale" element={<MediaForSale />} />
+      <Route path="/offers" element={<ProtectedRoute><Offers /></ProtectedRoute>} />
+      <Route path="/contract/:contractId" element={<Contract />} />
+      <Route path="/payment/success" element={<PaymentSuccess />} />
+      <Route path="/payment/cancel" element={<PaymentCancel />} />
+      
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
