@@ -146,15 +146,15 @@ export const authAPI = {
 // ============== BL COINS / WALLET API ==============
 export const walletAPI = {
   getBalance: async () => {
-    return apiRequest('/bl-coins/balance');
+    return apiRequest('/wallet/balance');
   },
 
   getTransactions: async (skip = 0, limit = 50) => {
-    return apiRequest(`/bl-coins/transactions?skip=${skip}&limit=${limit}`);
+    return apiRequest(`/wallet/transactions?skip=${skip}&limit=${limit}`);
   },
 
   claimDaily: async () => {
-    return apiRequest('/bl-coins/claim-daily', { method: 'POST' });
+    return apiRequest('/wallet/claim-daily', { method: 'POST' });
   },
 
   getStats: async () => {
