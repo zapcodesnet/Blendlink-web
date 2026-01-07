@@ -4,6 +4,22 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Force hide any Emergent badge */
+#emergent-badge,
+[id*="emergent"],
+a[href*="emergent.sh"],
+div[class*="emergent"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  position: absolute !important;
+  left: -9999px !important;
+}
+
 :root {
   --background: 210 40% 98%;
   --foreground: 222.2 47.4% 11.2%;
