@@ -38,7 +38,6 @@ import PaymentCancel from "./pages/PaymentCancel";
 // Components
 import BottomNav from "./components/BottomNav";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
-import AppOpenPrompt from "./components/AppOpenPrompt";
 
 // API base URL - connected to internal backend
 export const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
@@ -171,7 +170,6 @@ function AppRouter() {
 function App() {
   return (
     <BrowserRouter>
-      <AppOpenPrompt />
       <AppRouter />
       <Toaster position="top-center" richColors />
       <PWAInstallPrompt />
