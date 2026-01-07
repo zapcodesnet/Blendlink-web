@@ -40,8 +40,8 @@ import BottomNav from "./components/BottomNav";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import AppOpenPrompt from "./components/AppOpenPrompt";
 
-// API base URL - connected to mobile app backend
-export const API_BASE_URL = 'https://mobile-games-hub-11.preview.emergentagent.com/api';
+// API base URL - connected to internal backend
+export const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
 // Auth context
 export const AuthContext = createContext(null);
