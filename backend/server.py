@@ -392,6 +392,19 @@ async def google_auth(data: GoogleAuthData, response: Response):
         }
         await db.transactions.insert_one(welcome_tx)
         
+        # Try to assign from orphan queue since no referral code
+        try:
+            from referral_system import assign_orphan_to_queue
+            assigned_to = await assign_orphan_to_queue(user_id)
+            if assigned_to:
+                await db.users.update_one(
+                    {"user_id": user_id},
+                    {"$set": {"referred_by": assigned_to}}
+                )
+                logger.info(f"Google orphan user {user_id} assigned to {assigned_to}")
+        except Exception as e:
+            logger.error(f"Failed to assign Google orphan: {e}")
+        
         user = await db.users.find_one({"user_id": user_id}, {"_id": 0, "password_hash": 0})
     
     token = create_token(user_id)
