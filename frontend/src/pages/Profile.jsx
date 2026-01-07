@@ -233,6 +233,46 @@ export default function Profile() {
                 </div>
               </div>
             )}
+
+            {/* Media Sales Shortcuts */}
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              <Button 
+                variant="outline" 
+                className="h-auto py-4 flex-col gap-2"
+                onClick={() => navigate("/upload-media")}
+                data-testid="upload-media-btn"
+              >
+                <Grid3X3 className="w-6 h-6" />
+                <span>Upload Media</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-auto py-4 flex-col gap-2"
+                onClick={() => navigate("/my-media")}
+                data-testid="my-media-btn"
+              >
+                <Heart className="w-6 h-6" />
+                <span>My Media</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-auto py-4 flex-col gap-2"
+                onClick={() => navigate("/offers")}
+                data-testid="offers-btn"
+              >
+                <Coins className="w-6 h-6" />
+                <span>Offers</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-auto py-4 flex-col gap-2"
+                onClick={() => navigate("/media-for-sale")}
+                data-testid="browse-media-btn"
+              >
+                <Bookmark className="w-6 h-6" />
+                <span>Browse Media</span>
+              </Button>
+            </div>
           </>
         )}
 
