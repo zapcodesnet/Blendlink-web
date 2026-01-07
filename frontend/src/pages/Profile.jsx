@@ -7,7 +7,8 @@ import { Button } from "../components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { 
   Settings, Grid3X3, Heart, Bookmark, Share2, 
-  Users, MessageCircle, Coins, ArrowLeft, Edit, Copy
+  Users, MessageCircle, Coins, ArrowLeft, Edit, Copy,
+  TrendingUp, Wallet, Crown, Shield
 } from "lucide-react";
 
 export default function Profile() {
