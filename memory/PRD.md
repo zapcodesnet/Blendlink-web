@@ -13,8 +13,64 @@ Build a fully responsive Progressive Web App (PWA) version of Blendlink - an all
 - Watermark & Media Sales System
 - Comprehensive Earnings & Commission Management System
 - **AI Media Generation** (images via OpenAI GPT Image 1.5, videos via Sora 2)
+- **React Native Mobile App** (iOS & Android)
 
-## Latest Update: Social Feed Feature (January 8, 2026)
+## Latest Update: React Native Mobile App (January 8, 2026)
+
+### Mobile App Setup ✅
+Created React Native/Expo mobile app at `/app/mobile/` that shares the same backend as PWA:
+
+- **Framework**: React Native with Expo SDK
+- **Navigation**: React Navigation (stack + bottom tabs)
+- **Auth**: Expo SecureStore for token storage
+- **API**: Axios client connecting to same FastAPI backend
+
+### Mobile App Features
+1. **Login/Register** - Email authentication with referral code support
+2. **Social Feed** - Full Facebook-style feed with posts, reactions, comments
+3. **Profile** - User info, BL coins balance, referral code, stats
+4. **Bottom Tab Navigation** - Home, Market, Games, Wallet, Profile
+5. **AI Create FAB** - Floating button for AI media generation
+
+### Mobile App Structure
+```
+/app/mobile/
+├── App.js                    # Entry point
+├── app.json                  # Expo config (iOS/Android settings)
+├── assets/                   # Icons, splash screens
+├── src/
+│   ├── context/AuthContext.js
+│   ├── navigation/index.js
+│   ├── screens/
+│   │   ├── LoginScreen.js
+│   │   ├── RegisterScreen.js
+│   │   ├── SocialFeedScreen.js
+│   │   └── ProfileScreen.js
+│   └── services/api.js       # Same API as PWA
+```
+
+### How to Run Mobile App
+```bash
+cd /app/mobile
+npm install
+npx expo start
+# Scan QR with Expo Go app on your phone
+```
+
+### Building for App Stores
+```bash
+# iOS
+npx eas build --platform ios
+npx eas submit --platform ios
+
+# Android
+npx eas build --platform android
+npx eas submit --platform android
+```
+
+---
+
+## Previous Update: Social Feed Feature (January 8, 2026)
 Implemented comprehensive Facebook-style social feed with all core features:
 
 ### Social Feed Features ✅
