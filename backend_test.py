@@ -428,6 +428,9 @@ class BlendlinkAPITester:
             self.test_rentals_functionality()
             self.test_services_functionality()
             self.test_messages_functionality()
+            self.test_notifications_functionality()
+            self.test_analytics_functionality()
+            self.test_ai_media_functionality()
         
         return self.generate_report()
 
