@@ -18,12 +18,12 @@ class BlendlinkAPITester:
         self.session = requests.Session()
         self.session.headers.update({'Content-Type': 'application/json'})
         
-        # Test data
+        # Test data - using provided test credentials
         self.test_user_data = {
-            "email": f"test.user.{int(time.time())}@example.com",
-            "password": "TestPass123!",
+            "email": "test@test.com",
+            "password": "Test123456",
             "name": "Test User",
-            "username": f"testuser{int(time.time())}"
+            "username": "testuser"
         }
         self.token = None
         self.user_id = None
