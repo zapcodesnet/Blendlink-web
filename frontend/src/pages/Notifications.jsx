@@ -275,10 +275,11 @@ export default function Notifications() {
   };
 
   // Group notifications by date (Facebook-style)
-  const groupNotificationsByDate = (notifications) => {
+  const groupNotificationsByDate = useCallback((notifications) => {
     const groups = {};
-    const today = new Date().toDateString();
-    const yesterday = new Date(Date.now() - 86400000).toDateString();
+    const now = new Date();
+    const today = now.toDateString();
+    const yesterday = new Date(now.getTime() - 86400000).toDateString();
 
     notifications.forEach(notification => {
       const date = new Date(notification.created_at).toDateString();
@@ -303,7 +304,7 @@ export default function Notifications() {
     });
 
     return groups;
-  };
+  }, []);
 
   const groupedNotifications = groupNotificationsByDate(notifications);
 
