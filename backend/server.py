@@ -1433,6 +1433,19 @@ api_router.include_router(orphan_router)
 api_router.include_router(withdrawal_router)
 api_router.include_router(admin_router)
 
+# Import and include social system routers
+from social_system import (
+    social_router, friends_router, stories_router,
+    groups_router, pages_router, events_router, ai_media_router
+)
+api_router.include_router(social_router)
+api_router.include_router(friends_router)
+api_router.include_router(stories_router)
+api_router.include_router(groups_router)
+api_router.include_router(pages_router)
+api_router.include_router(events_router)
+api_router.include_router(ai_media_router)
+
 # Stripe webhook endpoint (must be at app level, not api_router)
 @app.post("/api/webhook/stripe")
 async def stripe_webhook(request: Request):
