@@ -41,6 +41,10 @@ import EarningsDashboard from "./pages/EarningsDashboard";
 import Withdraw from "./pages/Withdraw";
 import AdminDashboard from "./pages/AdminDashboard";
 
+// Social Analytics & Notifications
+import Notifications from "./pages/Notifications";
+import AnalyticsDashboard from "./pages/AnalyticsDashboard";
+
 // Components
 import BottomNav from "./components/BottomNav";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
