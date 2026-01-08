@@ -436,12 +436,19 @@ async def create_post(
     post_dict["created_at"] = post_dict["created_at"].isoformat()
     post_dict["updated_at"] = post_dict["updated_at"].isoformat()
     
-    await db.social_posts.insert_one(post_dict)
+    await db.social_posts.insert_one(post_dict.copy())
     
     # Award BL coins
     new_balance = current_user.get("bl_coins", 0)
     if reward > 0:
         new_balance = await award_bl_coins(user_id, reward, reward_reason)
+    
+    # Add user info to response
+    post_dict["user"] = {
+        "user_id": user_id,
+        "name": current_user.get("name", "Unknown"),
+        "avatar": current_user.get("avatar", "")
+    }
     
     return {
         "post": post_dict,
