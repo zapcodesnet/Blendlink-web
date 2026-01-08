@@ -1446,6 +1446,11 @@ api_router.include_router(pages_router)
 api_router.include_router(events_router)
 api_router.include_router(ai_media_router)
 
+# Import and include notifications & analytics routers
+from notifications_analytics import notifications_router, analytics_router
+api_router.include_router(notifications_router)
+api_router.include_router(analytics_router)
+
 # Stripe webhook endpoint (must be at app level, not api_router)
 @app.post("/api/webhook/stripe")
 async def stripe_webhook(request: Request):
