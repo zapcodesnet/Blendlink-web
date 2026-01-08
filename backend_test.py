@@ -307,6 +307,96 @@ class BlendlinkAPITester:
         except Exception as e:
             self.log_test("Messages Functionality", False, None, str(e))
 
+    def test_notifications_functionality(self):
+        """Test notifications system"""
+        try:
+            # Test get notifications
+            response = self.session.get(f"{self.api_url}/notifications/")
+            success = response.status_code == 200
+            self.log_test("Get Notifications", success, response.status_code, response.text if not success else None)
+            
+            if success:
+                data = response.json()
+                # Check response structure
+                if "notifications" in data and "unread_count" in data:
+                    self.log_test("Notifications Response Structure", True, response.status_code)
+                else:
+                    self.log_test("Notifications Response Structure", False, response.status_code, "Missing required fields")
+            
+            # Test mark all notifications as read
+            response = self.session.post(f"{self.api_url}/notifications/mark-all-read")
+            self.log_test("Mark All Notifications Read", response.status_code == 200, response.status_code, response.text if response.status_code != 200 else None)
+            
+            # Test mark specific notifications as read
+            mark_read_data = {"notification_ids": []}
+            response = self.session.post(f"{self.api_url}/notifications/mark-read", json=mark_read_data)
+            self.log_test("Mark Specific Notifications Read", response.status_code == 200, response.status_code, response.text if response.status_code != 200 else None)
+            
+        except Exception as e:
+            self.log_test("Notifications Functionality", False, None, str(e))
+
+    def test_analytics_functionality(self):
+        """Test analytics system"""
+        try:
+            # Test analytics summary
+            response = self.session.get(f"{self.api_url}/analytics/summary")
+            success = response.status_code == 200
+            self.log_test("Analytics Summary", success, response.status_code, response.text if not success else None)
+            
+            if success:
+                data = response.json()
+                # Check for required fields
+                required_fields = ["bl_coins_balance", "today_earned", "unread_notifications"]
+                missing_fields = [field for field in required_fields if field not in data]
+                if not missing_fields:
+                    self.log_test("Analytics Summary Structure", True, response.status_code)
+                else:
+                    self.log_test("Analytics Summary Structure", False, response.status_code, f"Missing fields: {missing_fields}")
+            
+            # Test my stats
+            response = self.session.get(f"{self.api_url}/analytics/my-stats?days=30")
+            self.log_test("Analytics My Stats", response.status_code == 200, response.status_code, response.text if response.status_code != 200 else None)
+            
+            # Test trends
+            response = self.session.get(f"{self.api_url}/analytics/trends?days=30")
+            self.log_test("Analytics Trends", response.status_code == 200, response.status_code, response.text if response.status_code != 200 else None)
+            
+            # Test leaderboard
+            response = self.session.get(f"{self.api_url}/analytics/leaderboard?metric=bl_coins_earned&days=7&limit=10")
+            self.log_test("Analytics Leaderboard", response.status_code == 200, response.status_code, response.text if response.status_code != 200 else None)
+            
+        except Exception as e:
+            self.log_test("Analytics Functionality", False, None, str(e))
+
+    def test_ai_media_functionality(self):
+        """Test AI media generation"""
+        try:
+            # Test estimate cost
+            estimate_data = {
+                "prompt": "A beautiful sunset over mountains",
+                "media_type": "image"
+            }
+            response = self.session.post(f"{self.api_url}/ai-media/estimate-cost", json=estimate_data)
+            success = response.status_code == 200
+            self.log_test("AI Media Estimate Cost", success, response.status_code, response.text if not success else None)
+            
+            if success:
+                data = response.json()
+                # Check response structure
+                required_fields = ["estimated_cost", "current_balance", "can_afford", "media_type"]
+                missing_fields = [field for field in required_fields if field not in data]
+                if not missing_fields:
+                    self.log_test("AI Media Estimate Structure", True, response.status_code)
+                else:
+                    self.log_test("AI Media Estimate Structure", False, response.status_code, f"Missing fields: {missing_fields}")
+            
+            # Test get my generations
+            response = self.session.get(f"{self.api_url}/ai-media/my-generations")
+            self.log_test("AI Media My Generations", response.status_code == 200, response.status_code, response.text if response.status_code != 200 else None)
+            
+        except Exception as e:
+            self.log_test("AI Media Functionality", False, None, str(e))
+
     def run_all_tests(self):
         """Run all backend API tests"""
         print("🚀 Starting Blendlink Backend API Tests...")
