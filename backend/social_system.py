@@ -1138,23 +1138,6 @@ async def accept_friend_request(
         logger.error(f"Failed to send friend accepted notification: {e}")
     
     return {"message": "Friend request accepted"}
-        user_id_2=user_id
-    )
-    friend_dict = friendship.model_dump()
-    friend_dict["created_at"] = friend_dict["created_at"].isoformat()
-    await db.friendships.insert_one(friend_dict)
-    
-    # Update request status
-    await db.friend_requests.update_one(
-        {"request_id": request_id},
-        {"$set": {"status": "accepted"}}
-    )
-    
-    # Update friend counts
-    await db.users.update_one({"user_id": request["from_user_id"]}, {"$inc": {"followers_count": 1}})
-    await db.users.update_one({"user_id": user_id}, {"$inc": {"followers_count": 1}})
-    
-    return {"message": "Friend request accepted"}
 
 @friends_router.post("/decline/{request_id}")
 async def decline_friend_request(request_id: str, current_user: dict = Depends(get_current_user)):
