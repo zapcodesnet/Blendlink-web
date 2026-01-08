@@ -189,8 +189,8 @@ function AppStack() {
     >
       <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
       <Stack.Screen name="CreatePost" component={CreatePostScreen} options={{ title: 'Create Post' }} />
-      <Stack.Screen name="AICreate" component={AICreateScreen} options={{ title: 'AI Generator' }} />
-      <Stack.Screen name="Earnings" component={EarningsScreen} options={{ title: 'Earnings' }} />
+      <Stack.Screen name="AICreate" component={AICreateScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Analytics" component={AnalyticsDashboardScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Friends" component={FriendsScreen} options={{ title: 'Friends' }} />
       <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
     </Stack.Navigator>
