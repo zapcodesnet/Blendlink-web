@@ -1262,11 +1262,14 @@ async def create_page(
     
     page_dict = page.model_dump()
     page_dict["created_at"] = page_dict["created_at"].isoformat()
-    await db.pages.insert_one(page_dict)
+    await db.pages.insert_one(page_dict.copy())
     
     # Award BL coins
     bl_earned = BL_REWARDS["create_page"]
     await award_bl_coins(user_id, bl_earned, f"Created page: {request.name}")
+    
+    # Remove _id if present (MongoDB adds it)
+    page_dict.pop("_id", None)
     
     return {
         "page": page_dict,
