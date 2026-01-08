@@ -639,7 +639,7 @@ async def create_comment(
     )
     comment_dict = comment.model_dump()
     comment_dict["created_at"] = comment_dict["created_at"].isoformat()
-    await db.comments.insert_one(comment_dict)
+    await db.comments.insert_one(comment_dict.copy())
     
     # Update post comment count
     await db.social_posts.update_one(
@@ -652,6 +652,9 @@ async def create_comment(
     if post["privacy"] == PostPrivacy.PUBLIC and not existing_comment and user_id != post["user_id"]:
         bl_earned = BL_REWARDS["comment"]
         await award_bl_coins(user_id, bl_earned, f"First comment on post")
+    
+    # Remove _id if present (MongoDB adds it)
+    comment_dict.pop("_id", None)
     
     # Enrich with user info
     comment_dict["user"] = {
