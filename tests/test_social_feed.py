@@ -324,11 +324,13 @@ class TestComments:
     @pytest.fixture(scope="class")
     def second_user_headers(self):
         """Create second user for comment tests"""
-        unique_email = f"test_commenter_{uuid.uuid4().hex[:8]}@test.com"
+        unique_id = uuid.uuid4().hex[:8]
+        unique_email = f"test_commenter_{unique_id}@test.com"
         register_response = requests.post(f"{BASE_URL}/api/auth/register", json={
             "email": unique_email,
             "password": "Test123456",
-            "name": "Test Commenter"
+            "name": "Test Commenter",
+            "username": f"commenter_{unique_id}"
         })
         
         if register_response.status_code != 200:
