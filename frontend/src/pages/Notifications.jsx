@@ -306,7 +306,7 @@ export default function Notifications() {
     return groups;
   }, []);
 
-  const groupedNotifications = groupNotificationsByDate(notifications);
+  const groupedNotifications = useMemo(() => groupNotificationsByDate(notifications), [notifications, groupNotificationsByDate]);
 
   if (isLoading) {
     return (
