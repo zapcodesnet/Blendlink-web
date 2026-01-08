@@ -140,7 +140,8 @@ function AppRouter() {
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
+      <Route path="/feed" element={<ProtectedRoute><SocialFeed /></ProtectedRoute>} />
+      <Route path="/social" element={<ProtectedRoute><SocialFeed /></ProtectedRoute>} />
       <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
       <Route path="/marketplace/:id" element={<ProtectedRoute><ListingDetail /></ProtectedRoute>} />
       <Route path="/marketplace/create" element={<ProtectedRoute><CreateListing /></ProtectedRoute>} />
@@ -158,6 +159,7 @@ function AppRouter() {
       <Route path="/create-post" element={<ProtectedRoute><CreatePost /></ProtectedRoute>} />
       <Route path="/referrals" element={<ProtectedRoute><Referrals /></ProtectedRoute>} />
       <Route path="/raffles" element={<ProtectedRoute><Raffles /></ProtectedRoute>} />
+      <Route path="/friends" element={<ProtectedRoute><SocialFeed /></ProtectedRoute>} />
       
       {/* Media Sales Routes */}
       <Route path="/upload-media" element={<ProtectedRoute><MediaUpload /></ProtectedRoute>} />
