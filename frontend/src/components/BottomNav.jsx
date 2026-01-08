@@ -1,16 +1,44 @@
-import React, { useContext } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { Home, ShoppingBag, Gamepad2, Coins, User } from "lucide-react";
+import { Home, ShoppingBag, Bell, Coins, User } from "lucide-react";
 import { AuthContext } from "../App";
+
+const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
 export const BottomNav = () => {
   const location = useLocation();
   const { user } = useContext(AuthContext);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Fetch unread notification count
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const token = localStorage.getItem('blendlink_token');
+        if (!token) return;
+        
+        const response = await fetch(`${API_BASE_URL}/api/notifications/?limit=1`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setUnreadCount(data.unread_count || 0);
+        }
+      } catch (error) {
+        console.error('Failed to fetch notification count:', error);
+      }
+    };
+
+    fetchUnreadCount();
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const navItems = [
     { path: "/feed", icon: Home, label: "Home" },
     { path: "/marketplace", icon: ShoppingBag, label: "Market" },
-    { path: "/games", icon: Gamepad2, label: "Games" },
+    { path: "/notifications", icon: Bell, label: "Alerts", badge: unreadCount },
     { path: "/wallet", icon: Coins, label: "Wallet" },
     { path: "/profile", icon: User, label: "Profile" },
   ];
