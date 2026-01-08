@@ -1370,11 +1370,14 @@ async def create_event(
     event_dict["start_time"] = event_dict["start_time"].isoformat()
     if event_dict["end_time"]:
         event_dict["end_time"] = event_dict["end_time"].isoformat()
-    await db.events.insert_one(event_dict)
+    await db.events.insert_one(event_dict.copy())
     
     # Award BL coins
     bl_earned = BL_REWARDS["create_event"]
     await award_bl_coins(user_id, bl_earned, f"Created event: {request.name}")
+    
+    # Remove _id if present (MongoDB adds it)
+    event_dict.pop("_id", None)
     
     return {
         "event": event_dict,
