@@ -1022,7 +1022,11 @@ async def get_friend_requests(current_user: dict = Depends(get_current_user)):
     }
 
 @friends_router.post("/request/{to_user_id}")
-async def send_friend_request(to_user_id: str, current_user: dict = Depends(get_current_user)):
+async def send_friend_request(
+    to_user_id: str,
+    background_tasks: BackgroundTasks,
+    current_user: dict = Depends(get_current_user)
+):
     """Send a friend request"""
     from_user_id = current_user["user_id"]
     
@@ -1044,30 +1048,96 @@ async def send_friend_request(to_user_id: str, current_user: dict = Depends(get_
         raise HTTPException(status_code=400, detail="Friend request already pending")
     
     # Create request
-    request = FriendRequest(from_user_id=from_user_id, to_user_id=to_user_id)
-    req_dict = request.model_dump()
+    friend_request = FriendRequest(from_user_id=from_user_id, to_user_id=to_user_id)
+    req_dict = friend_request.model_dump()
     req_dict["created_at"] = req_dict["created_at"].isoformat()
     await db.friend_requests.insert_one(req_dict)
     
-    return {"message": "Friend request sent", "request_id": request.request_id}
+    # Send push notification
+    try:
+        from notifications_analytics import send_notification_to_user, track_analytics_event, NotificationType
+        
+        await send_notification_to_user(
+            user_id=to_user_id,
+            notification_type=NotificationType.FRIEND_REQUEST,
+            title="New Friend Request",
+            body=f"👥 {current_user.get('name', 'Someone')} wants to be your friend!",
+            data={
+                "request_id": friend_request.request_id,
+                "from_user_id": from_user_id,
+                "from_user_name": current_user.get("name", "Unknown")
+            },
+            background_tasks=background_tasks
+        )
+        
+        # Track analytics
+        await track_analytics_event(from_user_id, "friend_request_sent", 1)
+        await track_analytics_event(to_user_id, "friend_request_received", 1)
+    except Exception as e:
+        logger.error(f"Failed to send friend request notification: {e}")
+    
+    return {"message": "Friend request sent", "request_id": friend_request.request_id}
 
 @friends_router.post("/accept/{request_id}")
-async def accept_friend_request(request_id: str, current_user: dict = Depends(get_current_user)):
+async def accept_friend_request(
+    request_id: str,
+    background_tasks: BackgroundTasks,
+    current_user: dict = Depends(get_current_user)
+):
     """Accept a friend request"""
     user_id = current_user["user_id"]
     
-    request = await db.friend_requests.find_one({
+    friend_req = await db.friend_requests.find_one({
         "request_id": request_id,
         "to_user_id": user_id,
         "status": "pending"
     })
     
-    if not request:
+    if not friend_req:
         raise HTTPException(status_code=404, detail="Friend request not found")
     
     # Create friendship
     friendship = Friendship(
-        user_id_1=request["from_user_id"],
+        user_id_1=friend_req["from_user_id"],
+        user_id_2=user_id
+    )
+    friend_dict = friendship.model_dump()
+    friend_dict["created_at"] = friend_dict["created_at"].isoformat()
+    await db.friendships.insert_one(friend_dict)
+    
+    # Update request status
+    await db.friend_requests.update_one(
+        {"request_id": request_id},
+        {"$set": {"status": "accepted"}}
+    )
+    
+    # Update friend counts
+    await db.users.update_one({"user_id": friend_req["from_user_id"]}, {"$inc": {"followers_count": 1}})
+    await db.users.update_one({"user_id": user_id}, {"$inc": {"followers_count": 1}})
+    
+    # Send push notification to the requester
+    try:
+        from notifications_analytics import send_notification_to_user, track_analytics_event, NotificationType
+        
+        await send_notification_to_user(
+            user_id=friend_req["from_user_id"],
+            notification_type=NotificationType.FRIEND_ACCEPTED,
+            title="Friend Request Accepted!",
+            body=f"🎉 {current_user.get('name', 'Someone')} accepted your friend request!",
+            data={
+                "user_id": user_id,
+                "user_name": current_user.get("name", "Unknown")
+            },
+            background_tasks=background_tasks
+        )
+        
+        # Track analytics
+        await track_analytics_event(friend_req["from_user_id"], "friend_added", 1)
+        await track_analytics_event(user_id, "friend_added", 1)
+    except Exception as e:
+        logger.error(f"Failed to send friend accepted notification: {e}")
+    
+    return {"message": "Friend request accepted"}
         user_id_2=user_id
     )
     friend_dict = friendship.model_dump()
