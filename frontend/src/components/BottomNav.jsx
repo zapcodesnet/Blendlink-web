@@ -103,14 +103,21 @@ export const BottomNav = () => {
               <NavLink
                 key={item.path}
                 to={item.path}
-                className={`flex flex-col items-center justify-center w-14 h-14 rounded-xl transition-colors ${
+                className={`flex flex-col items-center justify-center w-14 h-14 rounded-xl transition-colors relative ${
                   isActive 
                     ? "bg-primary/10 text-primary" 
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
                 data-testid={`sidebar-${item.label.toLowerCase()}`}
               >
-                <item.icon className="w-5 h-5" />
+                <div className="relative">
+                  <item.icon className="w-5 h-5" />
+                  {item.badge > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold min-w-[16px] h-4 flex items-center justify-center rounded-full px-1">
+                      {item.badge > 99 ? '99+' : item.badge}
+                    </span>
+                  )}
+                </div>
                 <span className="text-xs mt-1">{item.label}</span>
               </NavLink>
             );
