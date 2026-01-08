@@ -2,7 +2,7 @@
  * Navigation Configuration for Blendlink Mobile
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -14,20 +14,18 @@ import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import SocialFeedScreen from '../screens/SocialFeedScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import NotificationsScreen from '../screens/NotificationsScreen';
+import AnalyticsDashboardScreen from '../screens/AnalyticsDashboardScreen';
+import AICreateScreen from '../screens/AICreateScreen';
+
+// API for notification count
+import { notificationsAPI } from '../services/api';
 
 // Placeholder screens (to be implemented)
 const MarketplaceScreen = () => (
   <View style={styles.placeholder}>
     <Text style={styles.placeholderIcon}>🛒</Text>
     <Text style={styles.placeholderTitle}>Marketplace</Text>
-    <Text style={styles.placeholderText}>Coming Soon</Text>
-  </View>
-);
-
-const GamesScreen = () => (
-  <View style={styles.placeholder}>
-    <Text style={styles.placeholderIcon}>🎮</Text>
-    <Text style={styles.placeholderTitle}>Games</Text>
     <Text style={styles.placeholderText}>Coming Soon</Text>
   </View>
 );
@@ -44,22 +42,6 @@ const CreatePostScreen = () => (
   <View style={styles.placeholder}>
     <Text style={styles.placeholderIcon}>✍️</Text>
     <Text style={styles.placeholderTitle}>Create Post</Text>
-    <Text style={styles.placeholderText}>Coming Soon</Text>
-  </View>
-);
-
-const AICreateScreen = () => (
-  <View style={styles.placeholder}>
-    <Text style={styles.placeholderIcon}>✨</Text>
-    <Text style={styles.placeholderTitle}>AI Media Generator</Text>
-    <Text style={styles.placeholderText}>Coming Soon</Text>
-  </View>
-);
-
-const EarningsScreen = () => (
-  <View style={styles.placeholder}>
-    <Text style={styles.placeholderIcon}>📊</Text>
-    <Text style={styles.placeholderTitle}>Earnings Dashboard</Text>
     <Text style={styles.placeholderText}>Coming Soon</Text>
   </View>
 );
