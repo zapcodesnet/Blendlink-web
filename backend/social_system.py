@@ -240,10 +240,8 @@ class AIMediaRequest(BaseModel):
 
 # ============== HELPER FUNCTIONS ==============
 
-async def get_current_user(request):
-    """Get current user from request - imported from main server"""
-    from server import get_current_user as server_get_user
-    return await server_get_user(request)
+# Import get_current_user from server module
+from server import get_current_user
 
 async def get_user_by_id(user_id: str):
     """Get user by ID"""
