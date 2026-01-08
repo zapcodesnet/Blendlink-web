@@ -766,7 +766,7 @@ async def share_post(
     post_dict = shared_post.model_dump()
     post_dict["created_at"] = post_dict["created_at"].isoformat()
     post_dict["updated_at"] = post_dict["updated_at"].isoformat()
-    await db.social_posts.insert_one(post_dict)
+    await db.social_posts.insert_one(post_dict.copy())
     
     # Update original post share count
     await db.social_posts.update_one(
@@ -779,6 +779,9 @@ async def share_post(
     if privacy == PostPrivacy.PUBLIC:
         bl_earned = BL_REWARDS["share_post"]
         await award_bl_coins(user_id, bl_earned, "Shared a post")
+    
+    # Remove _id if present (MongoDB adds it)
+    post_dict.pop("_id", None)
     
     return {
         "post": post_dict,
