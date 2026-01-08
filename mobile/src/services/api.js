@@ -387,4 +387,80 @@ export const referralAPI = {
   },
 };
 
+// ============== NOTIFICATIONS API ==============
+
+export const notificationsAPI = {
+  getNotifications: async (skip = 0, limit = 50, unreadOnly = false) => {
+    const response = await api.get(`/notifications/?skip=${skip}&limit=${limit}&unread_only=${unreadOnly}`);
+    return response.data;
+  },
+
+  markAsRead: async (notificationIds) => {
+    const response = await api.post('/notifications/mark-read', { notification_ids: notificationIds });
+    return response.data;
+  },
+
+  markAllAsRead: async () => {
+    const response = await api.post('/notifications/mark-all-read');
+    return response.data;
+  },
+
+  deleteNotification: async (notificationId) => {
+    const response = await api.delete(`/notifications/${notificationId}`);
+    return response.data;
+  },
+
+  registerPushToken: async (expoPushToken, deviceType = 'unknown') => {
+    const response = await api.post('/notifications/register-token', { 
+      expo_push_token: expoPushToken, 
+      device_type: deviceType 
+    });
+    return response.data;
+  },
+
+  getSettings: async () => {
+    const response = await api.get('/notifications/settings');
+    return response.data;
+  },
+
+  updateSettings: async (settings) => {
+    const response = await api.put('/notifications/settings', settings);
+    return response.data;
+  },
+};
+
+// ============== ANALYTICS API ==============
+
+export const analyticsAPI = {
+  getSummary: async () => {
+    const response = await api.get('/analytics/summary');
+    return response.data;
+  },
+
+  getMyStats: async (days = 30) => {
+    const response = await api.get(`/analytics/my-stats?days=${days}`);
+    return response.data;
+  },
+
+  getTrends: async (days = 30) => {
+    const response = await api.get(`/analytics/trends?days=${days}`);
+    return response.data;
+  },
+
+  getLeaderboard: async (metric = 'bl_coins_earned', days = 7, limit = 20) => {
+    const response = await api.get(`/analytics/leaderboard?metric=${metric}&days=${days}&limit=${limit}`);
+    return response.data;
+  },
+
+  trackSession: async () => {
+    const response = await api.post('/analytics/track-session');
+    return response.data;
+  },
+
+  trackTime: async (minutes) => {
+    const response = await api.post(`/analytics/track-time?minutes=${minutes}`);
+    return response.data;
+  },
+};
+
 export default api;
