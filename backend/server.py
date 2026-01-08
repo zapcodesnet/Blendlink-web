@@ -591,9 +591,17 @@ async def explore_posts(skip: int = 0, limit: int = 20):
         {"_id": 0}
     ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
     
-    for post in posts:
-        user = await db.users.find_one({"user_id": post["user_id"]}, {"_id": 0, "password_hash": 0})
-        post["user"] = user
+    # Batch fetch user data to avoid N+1 queries
+    if posts:
+        user_ids = list(set(post["user_id"] for post in posts))
+        users = await db.users.find(
+            {"user_id": {"$in": user_ids}}, 
+            {"_id": 0, "password_hash": 0}
+        ).to_list(len(user_ids))
+        users_map = {u["user_id"]: u for u in users}
+        
+        for post in posts:
+            post["user"] = users_map.get(post["user_id"])
     
     return posts
 
