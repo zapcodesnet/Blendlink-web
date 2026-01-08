@@ -65,9 +65,16 @@ const SettingsScreen = () => (
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// Tab Icon Component
-const TabIcon = ({ icon, focused }) => (
-  <Text style={[styles.tabIcon, focused && styles.tabIconFocused]}>{icon}</Text>
+// Tab Icon Component with Badge
+const TabIcon = ({ icon, focused, badge }) => (
+  <View style={styles.tabIconContainer}>
+    <Text style={[styles.tabIcon, focused && styles.tabIconFocused]}>{icon}</Text>
+    {badge > 0 && (
+      <View style={styles.badge}>
+        <Text style={styles.badgeText}>{badge > 99 ? '99+' : badge}</Text>
+      </View>
+    )}
+  </View>
 );
 
 // Tab Bar Options
@@ -90,6 +97,24 @@ const tabBarOptions = {
 
 // Main Tab Navigator
 function MainTabs() {
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Fetch unread notification count
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const data = await notificationsAPI.getNotifications(0, 1, false);
+        setUnreadCount(data.unread_count || 0);
+      } catch (error) {
+        console.error('Failed to fetch notification count:', error);
+      }
+    };
+
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <Tab.Navigator screenOptions={tabBarOptions}>
       <Tab.Screen
@@ -109,11 +134,11 @@ function MainTabs() {
         }}
       />
       <Tab.Screen
-        name="Games"
-        component={GamesScreen}
+        name="Notifications"
+        component={NotificationsScreen}
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon icon="🎮" focused={focused} />,
-          tabBarLabel: 'Games',
+          tabBarIcon: ({ focused }) => <TabIcon icon="🔔" focused={focused} badge={unreadCount} />,
+          tabBarLabel: 'Alerts',
         }}
       />
       <Tab.Screen
