@@ -1031,13 +1031,14 @@ export default function SocialFeed() {
       </div>
       
       {/* Floating AI Create Button */}
-      <button
-        onClick={() => setShowAIModal(true)}
-        className="fixed bottom-24 right-4 md:bottom-8 md:right-8 bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition transform hover:scale-105"
-        data-testid="ai-create-fab"
-      >
-        <Sparkles className="w-6 h-6" />
-      </button>
+      <Link to="/ai-create">
+        <button
+          className="fixed bottom-24 right-4 md:bottom-8 md:right-8 bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition transform hover:scale-105"
+          data-testid="ai-create-fab"
+        >
+          <Sparkles className="w-6 h-6" />
+        </button>
+      </Link>
       
       {/* AI Create Modal */}
       <AICreateModal 
