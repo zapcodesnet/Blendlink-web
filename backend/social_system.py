@@ -500,6 +500,7 @@ async def delete_post(post_id: str, current_user: dict = Depends(get_current_use
 async def react_to_post(
     post_id: str,
     request: ReactToPostRequest,
+    background_tasks: BackgroundTasks,
     current_user: dict = Depends(get_current_user)
 ):
     """
@@ -562,6 +563,32 @@ async def react_to_post(
         if request.reaction_type == ReactionType.GOLDEN_THUMBS_UP:
             owner_reward = BL_REWARDS["reaction_received"]
             await award_bl_coins(post["user_id"], owner_reward, "Received golden thumbs up reaction")
+    
+    # Send push notification to post owner
+    try:
+        from notifications_analytics import send_notification_to_user, track_analytics_event, NotificationType
+        
+        reaction_emoji = "⭐" if request.reaction_type == ReactionType.GOLDEN_THUMBS_UP else "👎"
+        reaction_text = "liked" if request.reaction_type == ReactionType.GOLDEN_THUMBS_UP else "disliked"
+        
+        await send_notification_to_user(
+            user_id=post["user_id"],
+            notification_type=NotificationType.REACTION,
+            title=f"{current_user.get('name', 'Someone')} {reaction_text} your post",
+            body=f"{reaction_emoji} {current_user.get('name', 'Someone')} reacted to your post" + (f" (+{owner_reward} BL coins)" if owner_reward > 0 else ""),
+            data={
+                "post_id": post_id,
+                "reactor_id": user_id,
+                "reaction_type": request.reaction_type
+            },
+            background_tasks=background_tasks
+        )
+        
+        # Track analytics
+        await track_analytics_event(user_id, "reaction_given", 1)
+        await track_analytics_event(post["user_id"], "reaction_received", 1)
+    except Exception as e:
+        logger.error(f"Failed to send reaction notification: {e}")
     
     # Get updated counts
     updated_post = await db.social_posts.find_one({"post_id": post_id}, {"_id": 0})
