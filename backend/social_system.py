@@ -633,6 +633,7 @@ async def get_post_reactions(
 async def create_comment(
     post_id: str,
     request: CreateCommentRequest,
+    background_tasks: BackgroundTasks,
     current_user: dict = Depends(get_current_user)
 ):
     """
@@ -679,6 +680,32 @@ async def create_comment(
     if post["privacy"] == PostPrivacy.PUBLIC and not existing_comment and user_id != post["user_id"]:
         bl_earned = BL_REWARDS["comment"]
         await award_bl_coins(user_id, bl_earned, f"First comment on post")
+    
+    # Send push notification to post owner (if commenter is not the owner)
+    if user_id != post["user_id"]:
+        try:
+            from notifications_analytics import send_notification_to_user, track_analytics_event, NotificationType
+            
+            comment_preview = request.content[:50] + "..." if len(request.content) > 50 else request.content
+            
+            await send_notification_to_user(
+                user_id=post["user_id"],
+                notification_type=NotificationType.COMMENT,
+                title=f"{current_user.get('name', 'Someone')} commented on your post",
+                body=f'💬 "{comment_preview}"',
+                data={
+                    "post_id": post_id,
+                    "comment_id": comment.comment_id,
+                    "commenter_id": user_id
+                },
+                background_tasks=background_tasks
+            )
+            
+            # Track analytics
+            await track_analytics_event(user_id, "comment_made", 1)
+            await track_analytics_event(post["user_id"], "comment_received", 1)
+        except Exception as e:
+            logger.error(f"Failed to send comment notification: {e}")
     
     # Remove _id if present (MongoDB adds it)
     comment_dict.pop("_id", None)
