@@ -562,15 +562,25 @@ async def get_feed(skip: int = 0, limit: int = 20, current_user: dict = Depends(
         {"_id": 0}
     ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
     
-    # Enrich with user data and like status
-    for post in posts:
-        user = await db.users.find_one({"user_id": post["user_id"]}, {"_id": 0, "password_hash": 0})
-        post["user"] = user
-        like = await db.likes.find_one({
-            "post_id": post["post_id"],
+    # Batch fetch user data and likes to avoid N+1 queries
+    if posts:
+        user_ids = list(set(post["user_id"] for post in posts))
+        users = await db.users.find(
+            {"user_id": {"$in": user_ids}}, 
+            {"_id": 0, "password_hash": 0}
+        ).to_list(len(user_ids))
+        users_map = {u["user_id"]: u for u in users}
+        
+        post_ids = [post["post_id"] for post in posts]
+        likes = await db.likes.find({
+            "post_id": {"$in": post_ids},
             "user_id": current_user["user_id"]
-        }, {"_id": 0})
-        post["liked"] = like is not None
+        }, {"_id": 0}).to_list(len(post_ids))
+        liked_posts = {like["post_id"] for like in likes}
+        
+        for post in posts:
+            post["user"] = users_map.get(post["user_id"])
+            post["liked"] = post["post_id"] in liked_posts
     
     return posts
 
