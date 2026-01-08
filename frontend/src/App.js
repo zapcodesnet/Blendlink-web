@@ -182,6 +182,7 @@ function AppRouter() {
       {/* Notifications & Analytics Routes */}
       <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
       <Route path="/analytics" element={<ProtectedRoute><AnalyticsDashboard /></ProtectedRoute>} />
+      <Route path="/ai-create" element={<ProtectedRoute><AICreate /></ProtectedRoute>} />
       
       {/* Admin Routes */}
       <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
