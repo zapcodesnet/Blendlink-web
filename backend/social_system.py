@@ -853,13 +853,16 @@ async def create_story(
     story_dict = story.model_dump()
     story_dict["created_at"] = story_dict["created_at"].isoformat()
     story_dict["expires_at"] = story_dict["expires_at"].isoformat()
-    await db.stories.insert_one(story_dict)
+    await db.stories.insert_one(story_dict.copy())
     
     # Award BL coins for public stories
     bl_earned = 0
     if request.privacy == PostPrivacy.PUBLIC:
         bl_earned = BL_REWARDS["post_story"]
         await award_bl_coins(user_id, bl_earned, "Posted a story")
+    
+    # Remove _id if present (MongoDB adds it)
+    story_dict.pop("_id", None)
     
     return {
         "story": story_dict,
@@ -1144,7 +1147,7 @@ async def create_group(
     
     group_dict = group.model_dump()
     group_dict["created_at"] = group_dict["created_at"].isoformat()
-    await db.groups.insert_one(group_dict)
+    await db.groups.insert_one(group_dict.copy())
     
     # Add creator as member
     await db.group_members.insert_one({
@@ -1157,6 +1160,9 @@ async def create_group(
     # Award BL coins
     bl_earned = BL_REWARDS["create_group"]
     await award_bl_coins(user_id, bl_earned, f"Created group: {request.name}")
+    
+    # Remove _id if present (MongoDB adds it)
+    group_dict.pop("_id", None)
     
     return {
         "group": group_dict,
