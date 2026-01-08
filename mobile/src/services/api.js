@@ -8,7 +8,7 @@ import * as SecureStore from 'expo-secure-store';
 
 // API Base URL - Same backend as PWA
 // In production, this would be your deployed backend URL
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://commissionflow-1.preview.emergentagent.com';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://blendlink.preview.emergentagent.com';
 
 // Create axios instance
 const api = axios.create({

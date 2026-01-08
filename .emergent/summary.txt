@@ -1,149 +1,167 @@
 <analysis>**original_problem_statement:**
-The user wants to extend the existing Blendlink PWA to include a comprehensive platform for managing earnings through a referral system.
+The user wants to build a comprehensive, full-stack, cross-platform social media application modeled exactly like Facebook, featuring a responsive PWA and native mobile apps (iOS/Android). The application, Blendlink, should include a detailed social feed, friend/group/page systems, a unique reactions and rewards system using a virtual currency (BL Coins), and an advanced AI media generation feature. This expands upon the existing PWA which already had user authentication, media sales, and a referral/commission system.
 
 **PRODUCT REQUIREMENTS:**
--   **Platform Type:** A responsive PWA with a shared FastAPI/MongoDB backend.
--   **User Authentication:** Keep the existing secure login system (email/password, Emergent-managed Google OAuth) with JWT-based sessions.
--   **Referral System:**
-    -   A 2-level unilevel compensation plan (Level 1: direct, Level 2: indirect).
-    -   Referral relationships are permanent unless a user is inactive for 5 years, at which point their downline rolls up.
--   **Commissions & Fees:**
-    -   An 8% fee on all marketplace sales/auctions, distributed as: 3% to Level 1 upline, 1% to Level 2 upline, 4% to the platform owner.
-    -   A 1% processing fee on all withdrawals, allocated to the platform owner.
--   **Diamond Leader Promotion:**
-    -   Achieved by recruiting 100+ direct members and earning 000+ from both downline and personal sales within a 30-day period.
-    -   Benefits: 00 bonus, enhanced commission rates (4% on L1, 2% on L2), and reduced platform fee (2%).
--   **Orphan Assignment:** An AI system should fairly assign users who sign up without a referrer to active, verified members with zero recruits.
--   **Transactions & Payments:** Use the existing Stripe integration for withdrawals.
--   **ID Verification:** Use a third-party service (like Stripe Identity) for automated ID verification, required for withdrawals.
--   **Real-Time Syncing:** Use Firebase Realtime Database to ensure data consistency across all user sessions.
--   **Admin Panel:** A dashboard for managing users, payouts, and viewing analytics.
+-   **Platform:** Responsive PWA and React Native/Expo mobile apps sharing a single FastAPI/MongoDB backend.
+-   **Social Features (Facebook Clone):**
+    -   Profiles with static/video profile pictures, cover photos, bios.
+    -   Friends, Groups, Pages, Events functionality.
+    -   Infinite-scrolling social feed with posts (text, image, video, audio) and 24-hour stories.
+-   **Custom Reactions & Rewards:**
+    -   Reactions limited to a permanent golden thumbs up (10 BL coins for reactor and owner) or silver thumbs down (10 BL coins for reactor).
+    -   BL coins awarded for various activities: posting, commenting, creating groups/pages, etc. on public content.
+-   **AI Media Generation:**
+    -   A feature to create/edit images, videos, and audio using text prompts.
+    -   Utilizes top 2026 APIs (OpenAI GPT Image 1.5, Sora 2).
+    -   Cost is deducted from the user's BL Coin wallet.
+-   **Technical:**
+    -   Real-time data synchronization across all platforms.
+    -   Push notifications for key social interactions (reactions, comments, friend requests).
+    -   Detailed analytics dashboard for admins/users.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application is a React PWA with a FastAPI/MongoDB backend. The codebase has evolved significantly, starting with an internal backend, pivoting to an external API, and now returning to an expanded internal backend.
+The application is a full-stack PWA with a FastAPI/MongoDB backend and a newly scaffolded React Native/Expo mobile app in the  directory.
 
-Key implemented features include:
--   **Authentication:** JWT-based email/password and Emergent-managed Google OAuth are functional.
--   **Media Sales:** A full-stack feature for users to upload media, apply watermarks, and sell them. This includes backend endpoints, Stripe integration for payments, and frontend components for the entire flow.
--   **Coming Soon Placeholders:** Pages for features that are not yet built (like Social Feed) display a placeholder.
--   **Referral System (In Progress):** The backend foundation (new models, API module ) and frontend pages (, , ) have been created.
+-   **Backend:** Features are modularized.  orchestrates routers for authentication, media sales (), a complete referral/commission system (), a new Facebook-style social system (), and a new notifications/analytics module ().
+-   **Frontend (PWA):** A responsive React app with pages for authentication, media marketplace, earnings/referral dashboard, and a fully functional  page that replaced the old placeholder.
+-   **Mobile App:** A React Native/Expo project has been initialized at  with basic screen structure (Login, Register, SocialFeed, Profile), navigation, and an API service configured to connect to the existing backend. It is not yet feature-complete.
 
 **Last working item**:
--   **Last item agent was working**: The agent was implementing the new referral and commission system. It created the necessary backend modules (), updated the user model, and built the initial frontend pages (, , ). The agent successfully integrated the new pages into the app's navigation and verified that the Earnings Dashboard page renders correctly with initial data after a user logs in.
+-   **Last item agent was working**: Implementing push notifications and a detailed analytics dashboard. The agent created the backend module  and integrated notification triggers into  for reactions, comments, and friend requests. On the frontend, it created the  page. The agent was about to create the corresponding  page to display notifications to the user.
 -   **Status**: IN PROGRESS
--   **Agent Testing Done**: Y (A test suite of 16 tests passed via  after the initial pages were created).
--   **Which testing method agent to use?**: both (This is a large feature; once the core logic is implemented, both the backend and frontend testing agents should be used to ensure full functionality and integration).
+-   **Agent Testing Done**: N (Testing was not performed after adding the notification/analytics backend module).
+-   **Which testing method agent to use?**: both (Backend logic for notifications and analytics should be tested with curl/python, then the frontend pages should be tested with the testing agent).
 -   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
-There are no high-priority blocking issues. A  message appears in the backend logs on startup but has been identified as a transient error related to previous invalid login attempts and does not affect current functionality.
+-   **Issue 1: Backend Restart Required After Initial Edit**
+    -   **Description**: When  was first edited to include new routers, the server did not hot-reload correctly and required a manual backend: stopped
+backend: started. This might indicate a dependency or import order issue that could resurface.
+    -   **Attempted fixes**: The agent restarted the service, which worked.
+    -   **Next debug checklist**: If this happens again, check ==> /var/log/supervisor/backend.err.log <==
+INFO:     Will watch for changes in these directories: ['/app/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [165] using WatchFiles
+
+==> /var/log/supervisor/backend.out.log <== immediately after editing  to see the initial failure reason before hot-reload kicks in.
+    -   **Why fix this issue and what will be achieved with the fix?**: Ensures a smooth development experience without manual restarts.
+    -   **Status**: RESOLVED (by manual restart, but root cause might persist).
+    -   **Is recurring issue?**: Y (Potentially)
+    -   **Should Test frontend/backend/both after fix?**: Backend
 
 **In progress Task List**:
--   **Task 1: Complete Referral & Commission System** (P0)
-    -   **Where to resume**: The basic backend models and frontend pages have been created. The next step is to implement the core logic within . This includes:
-        1.  Calculating and distributing the 8% commission on sales.
-        2.  Tracking progress towards Diamond Leader status.
-        3.  Implementing the logic for assigning orphan users.
-        4.  Creating the backend endpoints for withdrawal requests.
-    -   **What will be achieved with this?**: A fully functional referral, commission, and earnings management system as per the user's detailed requirements.
+-   **Task 1: Complete Push Notifications & Analytics Feature (P0)**
+    -   **Where to resume**: The backend logic has been added. The next steps are:
+        1.  Create the frontend page  to display notifications fetched from the new backend endpoints.
+        2.  Integrate the  with the backend to display user analytics.
+        3.  Implement Expo push notification logic in the React Native app ().
+        4.  Update the bottom navigation () and mobile navigation to include links to the new Notifications and Analytics pages.
+    -   **What will be achieved with this?**: Users will receive real-time alerts for social interactions, and detailed analytics will be available, fulfilling a core user request.
     -   **Status**: IN PROGRESS
     -   **Should Test frontend/backend/both after fix?**: Both
-    -   **Blocked on something**: None
+    -   **Blocked on something**: No
 
 **Upcoming and Future Tasks**
-
 -   **Upcoming Tasks:**
-    -   **(P1) Implement Withdrawal and ID Verification**:
-        -   Connect the  page to the backend.
-        -   Integrate Stripe Identity for automated user ID verification, making it a prerequisite for withdrawals.
-    -   **(P2) Implement Real-Time Syncing**:
-        -   Integrate Firebase Realtime Database to provide live updates for earnings, commissions, and referral network changes on the dashboard.
-    -   **(P3) Build Admin Panel Functionality**:
-        -   Implement the backend logic and frontend UI for the  to allow admins to manage users and approve payouts.
-
+    -   **(P0) AI Media Generation:** Implement the AI creation/editing feature for images and videos using the retrieved OpenAI playbooks. This involves creating the UI modal, connecting it to the backend , and handling the BL Coin deduction.
+    -   **(P1) Finalize React Native Mobile App:** Build out all remaining screens (Profile, Wallet, etc.) in the mobile app to match the PWA's functionality. Implement the social feed UI, reactions, and comments.
+    -   **(P2) Complete Friends, Groups, Pages, Events:** The backend has endpoints for these, but the frontend UI/UX needs to be built out to allow users to search, create, join, and manage them.
 -   **Future Tasks:**
-    -   Build out full functionality for features currently showing Coming Soon (e.g., Social Feed with posts, comments, likes).
     -   Implement the activity feed.
     -   Complete the video watermarking process.
     -   Add a shopping cart for the marketplace.
+    -   Provide Expo configuration and guides for App/Play Store submission.
 
 **Completed work in this session**
--   Fixed initial application state by correctly identifying that the previously reported compilation errors were resolved.
--   Implemented a full-stack media sales feature, including watermarking concepts, offers, Stripe payments, and e-contracts, built on the internal backend.
--   Removed all native app deep-linking code from the PWA as requested.
--   Fixed the Google OAuth login flow by integrating it correctly with the Emergent-managed auth service and the internal backend.
--   Began implementation of the comprehensive referral and commission system by creating the required backend modules and frontend pages.
--   Successfully verified that the new Earnings Dashboard page is accessible and displays initial data.
+-   **Referral System Complete**: Integrated commission processing on media sales and implemented the orphan user assignment logic on registration.
+-   **Facebook-Style Social Feed**: Implemented a full-stack social media feed ( and ) with posts, stories bar, custom reactions (golden thumbs up/silver thumbs down), comments, and the BL coin reward system.
+-   **React Native App Scaffolding**: Created a new React Native/Expo project () with a basic file structure, navigation, and API services ready for development.
+-   **Made with Emergent Badge Removal**: Successfully located and removed the platform-injected branding badge from the PWA.
+-   **Started Notifications & Analytics**: Created backend modules and initial frontend pages for push notifications and user analytics.
+-   **Testing**: Performed comprehensive backend and frontend testing after implementing the Social Feed, achieving 100% pass rates across 29 tests ().
+
+**Earlier issues found/mentioned but not fixed**
+-   **Issue 1: Transient  in logs**
+    -   **Description**: The initial handoff mentioned this error appearing in backend logs on startup. It was deemed a non-blocking issue related to past invalid login attempts. While it hasn't caused problems, it hasn't been explicitly fixed.
+    -   **Debug checklist**: Investigate the  hashing and verification logic in  to see if any flow attempts to verify a password with an invalid or empty salt.
+    -   **Why to solve this issue and what will be achieved with this?**: To clean up logs and prevent potential future authentication issues.
+    -   **Should Test frontend/backend/both after fix**: Backend
+    -   **Is recurring issue?**: Y
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
 -   **Frontend**: React, Tailwind CSS, Shadcn UI
--   **Backend**: FastAPI, MongoDB
+-   **Mobile**: React Native, Expo
+-   **Backend**: FastAPI, MongoDB, WebSockets (for notifications)
 -   **Authentication**: JWT (email/password), Emergent-managed Google OAuth
--   **Payments**: Stripe (for media sales and withdrawals)
--   **ID Verification**: Stripe Identity (planned)
--   **Real-time**: Firebase Realtime Database (planned)
--   **Architecture**: Modular backend with features separated into  and .
+-   **Payments/ID**: Stripe, Stripe Identity
+-   **AI**: OpenAI GPT Image 1.5 (planned), Sora 2 (planned)
 
 **key DB schema**
--   **users**: Extended with fields like , , , , , .
+-   **users**: Extended with fields like , , .
+-   **posts**: {post_id, user_id, content, media_url, privacy, created_at, reactions, comment_count}
+-   **comments**: {comment_id, post_id, user_id, content, created_at}
+-   **reactions**: {reaction_id, post_id, user_id, type}
+-   **friendships**: {user_id_1, user_id_2, status}
+-   **notifications**: {notification_id, user_id, type, content, read, created_at}
+-   **analytics_events**: {event_id, user_id, event_type, details, timestamp}
 
 **changes in tech stack**
--   The project has solidified its architecture around the internal FastAPI/MongoDB backend, moving away from the temporary external API pivot.
--   New integrations with Firebase Realtime Database and Stripe Identity are planned.
+-   Addition of React Native with Expo for the mobile application.
 
 **All files of reference**
--   **/app/backend/referral_system.py**: Core new module for all referral and commission logic.
--   **/app/backend/server.py**: Updated to include the referral system router and new user model fields.
--   **/app/frontend/src/pages/EarningsDashboard.jsx**: The main UI for the referral system.
--   **/app/frontend/src/pages/Withdraw.jsx**: Page for handling withdrawals and ID verification.
--   **/app/frontend/src/services/referralApi.js**: Frontend service for interacting with the referral system backend.
+-   **/app/backend/social_system.py**: Core logic for all new social features.
+-   **/app/backend/notifications_analytics.py**: Backend for notifications and analytics.
+-   **/app/frontend/src/pages/SocialFeed.jsx**: The new main feed page for the PWA.
+-   **/app/frontend/src/pages/AnalyticsDashboard.jsx**: New page for viewing user analytics.
+-   **/app/mobile/**: The entire directory for the new React Native application.
 
 **Critical Info for New Agent**
--   The project's primary focus is now the implementation of the complex referral and commission system on the **internal backend**. Do not refer to or use the old external API.
--   The user has provided very specific business logic for commissions, Diamond Leader status, and orphan assignment. This logic needs to be implemented in .
--   The next major steps involve integrating Stripe Identity for verification before allowing withdrawals and using Firebase for real-time updates on the earnings dashboard. Use the provided integration playbooks for these tasks.
+-   The project has now expanded to include a React Native mobile app () that shares the same backend as the PWA.
+-   The immediate priority is to finish the **Notifications & Analytics** feature, which involves creating the frontend  page and connecting the .
+-   The next major task is implementing the **AI Media Generation** feature using the already-retrieved playbooks for OpenAI services.
+-   Always ensure new features are implemented for both the PWA and the React Native app to maintain data and feature parity.
 
 **documents and test reports created in this job**
--   /app/memory/PRD.md
--   /app/test_reports/iteration_2.json
--   /app/test_reports/iteration_3.json
--   /app/test_reports/iteration_4.json
--   /app/test_reports/iteration_5.json
+-   /app/memory/PRD.md (updated)
+-   /app/test_reports/iteration_6.json
+-   /app/test_reports/iteration_7.json
+-   /app/test_reports/iteration_8.json
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Remove all deep linking code and fix all login issues, including Google login. (COMPLETED)
-2.  **Agent**: Implemented the removal of deep links and fixed the Google OAuth flow. (COMPLETED)
-3.  **User**: Provided a new, comprehensive set of requirements for a referral, commission, and earnings platform. (COMPLETED - Request Received)
-4.  **Agent**: Asked clarifying questions about the new requirements using . (COMPLETED)
-5.  **User**: Confirmed the new features should extend the existing PWA, use Stripe, use a third-party service for ID verification, and Firebase for real-time sync. (COMPLETED - Request Received)
-6.  **Agent**: Acknowledged the choices and began planning the implementation. (IN PROGRESS)
-
-There are no pending messages from the user.
+1.  **User**: Continue with the next steps. (COMPLETED)
+2.  **Agent**: Proposed plan to build the React Native app. (COMPLETED)
+3.  **User**: Confirmed plan to proceed. (COMPLETED)
+4.  **Agent**: Completed scaffolding the React Native mobile app. (COMPLETED)
+5.  **User**: Add push notifications and detailed user analytics. (IN PROGRESS)
+6.  **Agent**: Acknowledged and began implementation of notifications and analytics. (IN PROGRESS)
+    (No more user messages, agent continued implementation until the end of the session).
 
 **Project Health Check:**
--   **Broken**: None. The app is stable and running.
--   **Mocked**: The earnings dashboard currently uses static or zero-value data as the backend commission logic is not yet implemented.
+-   **Broken**: None. The PWA is stable and the backend is running.
+-   **Mocked**:
+    -   : The entire React Native app is a functional skeleton but lacks the UI/UX and full feature set of the PWA.
+    -   : The frontend page exists but is not yet wired up to fetch and display data from the backend.
 
 **3rd Party Integrations**
--   **Stripe (Payments)**: Integrated and functional for media sales. Used for withdrawals. Requires User API Key (already configured).
--   **Emergent-managed Google Auth**: Integrated and functional for user login.
--   **Stripe Identity (ID Verification)**: **PLANNED**. Integration playbook has been retrieved.
--   **Firebase Realtime Database**: **PLANNED**. Integration playbook has been retrieved.
+-   **Stripe (Payments)**: Integrated and functional.
+-   **Emergent-managed Google Auth**: Integrated and functional.
+-   **OpenAI GPT Image 1.5 (Image Generation)**: **PLANNED**. Uses Emergent LLM Key. Playbook retrieved.
+-   **Sora 2 (Video Generation)**: **PLANNED**. Uses Emergent LLM Key. Playbook retrieved.
+-   **Firebase**: **PLANNED** for potential real-time features. Playbook available.
+-   **Expo (Push Notifications)**: **PLANNED** for the mobile app.
 
 **Testing status**
--   **Testing agent used after significant changes**: YES. The agent has been run multiple times, with the latest run () showing 16 passed tests after the initial referral system pages were created.
--   **Troubleshoot agent used after agent stuck in loop**: NO
--   **Test files created**: Test reports are available up to .
--   **Known regressions**: None.
+-   **Testing agent used after significant changes**: YES. The  was last run after the social feed implementation, with all 29 tests passing (). The agent also fixed several  serialization issues.
+-   **Test files created**: Test reports up to .
 
 **Credentials to test flow:**
 -   Register a new user via the UI.
--   Use the credentials  with password  for testing login functionality, as this user has been used in previous tests.
+-   Use existing credentials  with password  for testing.
 
 **What agent forgot to execute**
--   The agent made a minor syntax error () in  during development, which temporarily broke the frontend. However, it was quickly identified via console logs and resolved. No other significant omissions have been noted.</analysis>
+-   The agent created the backend logic and the analytics dashboard frontend, but it did not create the corresponding  page to display the new notifications to the user before the session ended.</analysis>
