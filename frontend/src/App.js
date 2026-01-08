@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import AuthCallback from "./pages/AuthCallback";
 import Feed from "./pages/Feed";
+import SocialFeed from "./pages/SocialFeed";
 import Marketplace from "./pages/Marketplace";
 import Rentals from "./pages/Rentals";
 import Services from "./pages/Services";
