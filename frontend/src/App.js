@@ -44,6 +44,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 // Social Analytics & Notifications
 import Notifications from "./pages/Notifications";
 import AnalyticsDashboard from "./pages/AnalyticsDashboard";
+import AICreate from "./pages/AICreate";
 
 // Components
 import BottomNav from "./components/BottomNav";
