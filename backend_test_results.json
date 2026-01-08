@@ -1,37 +1,16 @@
 {
-  "total_tests": 25,
-  "passed_tests": 21,
-  "failed_tests": [
-    {
-      "test": "Create Post",
-      "status_code": 520,
-      "error": "Internal Server Error"
-    },
-    {
-      "test": "Create Marketplace Listing",
-      "status_code": 520,
-      "error": "Internal Server Error"
-    },
-    {
-      "test": "Create Rental Property",
-      "status_code": 520,
-      "error": "Internal Server Error"
-    },
-    {
-      "test": "Create Service",
-      "status_code": 520,
-      "error": "Internal Server Error"
-    }
-  ],
+  "total_tests": 37,
+  "passed_tests": 37,
+  "failed_tests": [],
   "critical_failures": [],
   "api_endpoints_tested": [
     "API Root Health",
     "Health Check",
-    "User Registration",
-    "Auth Me",
+    "User Login",
     "Create Post",
     "Get Feed",
     "Explore Posts",
+    "Like Post",
     "Get Stories",
     "Get Marketplace Listings",
     "Get Marketplace Categories",
@@ -49,6 +28,18 @@
     "Get Services",
     "Get Service Categories",
     "Create Service",
-    "Get Message Conversations"
+    "Get Message Conversations",
+    "Get Notifications",
+    "Notifications Response Structure",
+    "Mark All Notifications Read",
+    "Mark Specific Notifications Read",
+    "Analytics Summary",
+    "Analytics Summary Structure",
+    "Analytics My Stats",
+    "Analytics Trends",
+    "Analytics Leaderboard",
+    "AI Media Estimate Cost",
+    "AI Media Estimate Structure",
+    "AI Media My Generations"
   ]
 }
