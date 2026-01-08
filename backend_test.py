@@ -407,11 +407,9 @@ class BlendlinkAPITester:
         self.test_health_check()
         
         # Test authentication flow
-        if self.test_user_registration():
-            self.test_auth_me()
-        else:
-            # Try login if registration failed (user might already exist)
-            if self.test_user_login():
+        if not self.test_user_login():
+            # If login fails, try registration (user might not exist)
+            if self.test_user_registration():
                 self.test_auth_me()
             else:
                 print("❌ Critical: Cannot authenticate user - stopping tests")
