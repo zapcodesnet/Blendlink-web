@@ -6,13 +6,20 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
-// API Base URL - Same backend as PWA
-// In production, this would be your deployed backend URL
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://blendlink.preview.emergentagent.com';
+// API Base URL - Uses environment variable (required for deployment)
+// Set EXPO_PUBLIC_API_URL in your .env or app.config.js
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+
+if (!API_BASE_URL) {
+  console.warn('EXPO_PUBLIC_API_URL not set, using default preview URL');
+}
+
+// Fallback for development only
+const BASE_URL = API_BASE_URL || 'https://blendlink.preview.emergentagent.com';
 
 // Create axios instance
 const api = axios.create({
-  baseURL: `${API_BASE_URL}/api`,
+  baseURL: `${BASE_URL}/api`,
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
