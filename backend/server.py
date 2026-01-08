@@ -621,9 +621,17 @@ async def get_stories(current_user: dict = Depends(get_current_user)):
         {"_id": 0}
     ).sort("created_at", -1).to_list(100)
     
-    for story in stories:
-        user = await db.users.find_one({"user_id": story["user_id"]}, {"_id": 0, "password_hash": 0})
-        story["user"] = user
+    # Batch fetch user data to avoid N+1 queries
+    if stories:
+        user_ids = list(set(story["user_id"] for story in stories))
+        users = await db.users.find(
+            {"user_id": {"$in": user_ids}}, 
+            {"_id": 0, "password_hash": 0}
+        ).to_list(len(user_ids))
+        users_map = {u["user_id"]: u for u in users}
+        
+        for story in stories:
+            story["user"] = users_map.get(story["user_id"])
     
     return stories
 
