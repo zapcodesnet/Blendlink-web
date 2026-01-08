@@ -218,11 +218,31 @@ export default function Navigation() {
 }
 
 const styles = StyleSheet.create({
+  tabIconContainer: {
+    position: 'relative',
+  },
   tabIcon: {
     fontSize: 22,
   },
   tabIconFocused: {
     transform: [{ scale: 1.1 }],
+  },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -8,
+    backgroundColor: '#EF4444',
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   placeholder: {
     flex: 1,
