@@ -381,9 +381,6 @@ export default function Landing() {
           </div>
         </div>
       </section>
-      
-      {/* Featured Listings Carousel */}
-      <FeaturedListingsCarousel onViewDetails={handleViewDetails} />
 
       {/* BL Coins Section */}
       <section className="py-20 px-4 bg-gradient-to-b from-transparent via-primary/5 to-transparent">
