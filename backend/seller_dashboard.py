@@ -145,7 +145,7 @@ async def get_current_user(request: Request):
 async def analyze_images_with_ai(images: List[str], condition: str, system_prompt: str) -> Dict[str, Any]:
     """Analyze product images using GPT-4o vision"""
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
+        from emergentintegrations.llm.chat import LlmChat, UserMessage, FileContent
         
         chat = LlmChat(
             api_key=EMERGENT_LLM_KEY,
@@ -153,13 +153,13 @@ async def analyze_images_with_ai(images: List[str], condition: str, system_promp
             system_message=system_prompt
         ).with_model("openai", "gpt-4o")
         
-        # Create image contents from base64
-        image_contents = []
+        # Create file contents from base64 images
+        file_contents = []
         for i, img_base64 in enumerate(images[:20]):  # Max 20 images
             # Clean base64 string if it has data URL prefix
             if ',' in img_base64:
                 img_base64 = img_base64.split(',')[1]
-            image_contents.append(ImageContent(image_base64=img_base64))
+            file_contents.append(FileContent(content_type="image/png", file_content_base64=img_base64))
         
         # Build the analysis prompt
         condition_context = ""
@@ -209,7 +209,7 @@ Please provide a JSON response with these fields:
 }}
 
 Respond ONLY with valid JSON, no other text.""",
-            image_contents=image_contents
+            file_contents=file_contents
         )
         
         response = await chat.send_message(user_message)
