@@ -1434,6 +1434,108 @@ async def get_referral_stats(current_user: dict = Depends(get_current_user)):
         "total_earned": total_earned
     }
 
+# ============== FILE UPLOAD ROUTES ==============
+# Ensure uploads directory exists
+UPLOAD_DIR = Path("/app/uploads")
+UPLOAD_DIR.mkdir(exist_ok=True)
+
+@upload_router.post("/file")
+async def upload_file(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Upload a single file (image, video, audio)"""
+    # Validate file type
+    allowed_types = {
+        "image": ["image/jpeg", "image/png", "image/gif", "image/webp"],
+        "video": ["video/mp4", "video/webm", "video/quicktime", "video/x-msvideo"],
+        "audio": ["audio/mpeg", "audio/wav", "audio/ogg", "audio/mp3"]
+    }
+    
+    content_type = file.content_type or ""
+    media_type = None
+    for mtype, types in allowed_types.items():
+        if content_type in types:
+            media_type = mtype
+            break
+    
+    if not media_type:
+        raise HTTPException(status_code=400, detail=f"Unsupported file type: {content_type}")
+    
+    # Read file content
+    content = await file.read()
+    
+    # Check file size (max 50MB)
+    if len(content) > 50 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File too large. Maximum size is 50MB.")
+    
+    # Generate unique filename
+    ext = Path(file.filename or "file").suffix or ".bin"
+    unique_id = uuid.uuid4().hex[:12]
+    filename = f"{media_type}_{unique_id}{ext}"
+    file_path = UPLOAD_DIR / filename
+    
+    # Save file
+    with open(file_path, "wb") as f:
+        f.write(content)
+    
+    # Generate data URL for immediate use
+    data_url = f"data:{content_type};base64,{base64.b64encode(content).decode('utf-8')}"
+    
+    # Store in database for tracking
+    upload_record = {
+        "upload_id": f"upload_{unique_id}",
+        "user_id": current_user["user_id"],
+        "filename": filename,
+        "original_filename": file.filename,
+        "content_type": content_type,
+        "media_type": media_type,
+        "size": len(content),
+        "file_path": str(file_path),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.uploads.insert_one(upload_record)
+    
+    return {
+        "upload_id": upload_record["upload_id"],
+        "filename": filename,
+        "media_type": media_type,
+        "content_type": content_type,
+        "size": len(content),
+        "data_url": data_url,
+        "file_url": f"/api/upload/files/{filename}"
+    }
+
+@upload_router.post("/files")
+async def upload_multiple_files(
+    files: List[UploadFile] = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Upload multiple files at once"""
+    if len(files) > 10:
+        raise HTTPException(status_code=400, detail="Maximum 10 files allowed per upload")
+    
+    results = []
+    for file in files:
+        try:
+            result = await upload_file(file, current_user)
+            results.append(result)
+        except HTTPException as e:
+            results.append({"error": e.detail, "filename": file.filename})
+    
+    return {"uploads": results}
+
+@upload_router.get("/files/{filename}")
+async def get_uploaded_file(filename: str):
+    """Serve uploaded files"""
+    from fastapi.responses import FileResponse
+    
+    file_path = UPLOAD_DIR / filename
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    return FileResponse(file_path)
+
 # ============== ROOT ROUTES ==============
 @api_router.get("/")
 async def root():
