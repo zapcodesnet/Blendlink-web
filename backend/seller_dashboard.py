@@ -401,7 +401,7 @@ async def ai_remove_background(request: AIBackgroundRemovalRequest, current_user
     """AI removes background from product photo"""
     
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
+        from emergentintegrations.llm.chat import LlmChat, UserMessage, FileContent
         
         # Clean base64 string
         img_base64 = request.image_base64
@@ -438,7 +438,7 @@ Return JSON:
     "processing_status": "For actual background removal, please use our web editor tool",
     "tip": "Product photography tip for this item"
 }}""",
-            image_contents=[ImageContent(image_base64=img_base64)]
+            file_contents=[FileContent(content_type="image/png", file_content_base64=img_base64)]
         )
         
         response = await chat.send_message(user_message)
