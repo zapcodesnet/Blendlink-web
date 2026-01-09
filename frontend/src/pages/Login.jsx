@@ -54,9 +54,11 @@ export default function Login() {
         <div className="w-full max-w-md animate-slide-up">
           {/* Logo */}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 rounded-2xl bl-coin-gradient flex items-center justify-center mx-auto mb-4">
-              <span className="text-white font-bold text-2xl">BL</span>
-            </div>
+            <img 
+              src="/blendlink-logo.png" 
+              alt="Blendlink" 
+              className="w-20 h-20 object-contain mx-auto mb-4"
+            />
             <h1 className="text-2xl font-bold">Welcome Back</h1>
             <p className="text-muted-foreground mt-1">Sign in to continue</p>
           </div>
