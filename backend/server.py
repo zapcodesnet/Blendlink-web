@@ -771,10 +771,14 @@ async def get_conversations(current_user: dict = Depends(get_current_user)):
     
     conversations = await db.messages.aggregate(pipeline).to_list(100)
     
-    for conv in conversations:
-        user = await db.users.find_one({"user_id": conv["user_id"]}, {"_id": 0, "password_hash": 0})
-        conv["user"] = user
-        conv["last_message"].pop("_id", None)
+    # Batch fetch all users to avoid N+1 queries
+    if conversations:
+        user_ids = [conv["user_id"] for conv in conversations]
+        users = await db.users.find({"user_id": {"$in": user_ids}}, {"_id": 0, "password_hash": 0}).to_list(len(user_ids))
+        users_map = {u["user_id"]: u for u in users}
+        for conv in conversations:
+            conv["user"] = users_map.get(conv["user_id"])
+            conv["last_message"].pop("_id", None)
     
     return conversations
 
