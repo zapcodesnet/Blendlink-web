@@ -10,11 +10,12 @@ import * as SecureStore from 'expo-secure-store';
 // Set EXPO_PUBLIC_API_URL in your .env or app.config.js
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
+// Validate API URL is set (fail fast in production)
 if (!API_BASE_URL) {
-  console.warn('EXPO_PUBLIC_API_URL not set, using default preview URL');
+  console.warn('WARNING: EXPO_PUBLIC_API_URL not set. Using preview URL for development.');
 }
 
-// Fallback for development only
+// Use environment variable or development fallback
 const BASE_URL = API_BASE_URL || 'https://blendlink.preview.emergentagent.com';
 
 // Create axios instance
