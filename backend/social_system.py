@@ -1687,7 +1687,6 @@ async def generate_ai_image(prompt: str, edit_image_url: Optional[str] = None) -
 async def generate_ai_video(prompt: str, duration: int = 6) -> dict:
     """Generate a video using Sora 2"""
     from emergentintegrations.llm.openai.video_generation import OpenAIVideoGeneration
-    import asyncio
     
     api_key = os.environ.get("EMERGENT_LLM_KEY")
     if not api_key:
