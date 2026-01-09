@@ -65,8 +65,12 @@ export const PWAInstallPrompt = () => {
     <div className="fixed bottom-20 md:bottom-4 left-4 right-4 md:left-auto md:right-4 md:max-w-sm z-50 animate-slide-up">
       <div className="pwa-install-banner rounded-2xl p-4 text-white shadow-2xl">
         <div className="flex items-start gap-3">
-          <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-            <Download className="w-6 h-6" />
+          <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0 p-1">
+            <img 
+              src="/blendlink-logo.png" 
+              alt="Blendlink" 
+              className="w-full h-full object-contain"
+            />
           </div>
           <div className="flex-1">
             <h3 className="font-semibold mb-1">Install Blendlink</h3>
