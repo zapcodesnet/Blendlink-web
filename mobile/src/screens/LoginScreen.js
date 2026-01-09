@@ -136,9 +136,9 @@ const styles = StyleSheet.create({
     marginBottom: 48,
   },
   logoImage: {
-    width: 100,
-    height: 100,
-    marginBottom: 16,
+    width: 140,
+    height: 140,
+    marginBottom: 20,
   },
   logoCircle: {
     width: 80,
