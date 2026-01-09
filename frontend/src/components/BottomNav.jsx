@@ -86,11 +86,11 @@ export const BottomNav = () => {
 
       {/* Desktop Sidebar */}
       <nav 
-        className="fixed left-0 top-0 bottom-0 w-20 glass border-r border-border/50 hidden md:flex flex-col items-center py-6 z-50"
+        className="fixed left-0 top-0 bottom-0 w-24 glass border-r border-border/50 hidden md:flex flex-col items-center py-6 z-50"
         data-testid="desktop-sidebar"
       >
         {/* Logo */}
-        <div className="w-12 h-12 flex items-center justify-center mb-8">
+        <div className="w-16 h-16 flex items-center justify-center mb-8">
           <img 
             src="/blendlink-logo.png" 
             alt="Blendlink" 
