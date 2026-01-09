@@ -15,10 +15,11 @@ import base64
 import asyncio
 from datetime import datetime, timezone, timedelta
 from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Header
 from pydantic import BaseModel, Field
 from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
+from jose import jwt, JWTError
 
 load_dotenv()
 
@@ -31,6 +32,10 @@ MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 DB_NAME = os.environ.get('DB_NAME', 'blendlink')
 client = AsyncIOMotorClient(MONGO_URL)
 db = client[DB_NAME]
+
+# JWT Config
+JWT_SECRET = os.environ.get('JWT_SECRET', 'blendlink-jwt-secret-key-2024')
+JWT_ALGORITHM = 'HS256'
 
 # Emergent LLM Key
 EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY', '')
