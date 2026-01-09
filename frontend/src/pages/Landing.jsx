@@ -1,10 +1,238 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { 
   Users, ShoppingBag, Home, Briefcase, Gamepad2, Gift, 
-  Coins, Share2, ChevronRight, Smartphone, Bell, Zap
+  Coins, Share2, ChevronRight, Smartphone, Bell, Zap,
+  ChevronLeft, Eye, ShoppingCart
 } from "lucide-react";
+
+const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+
+// Featured Item Card Component
+const FeaturedItemCard = ({ item, type, onViewDetails }) => {
+  const typeColors = {
+    product: 'from-blue-500 to-cyan-500',
+    rental: 'from-green-500 to-emerald-500',
+    service: 'from-purple-500 to-pink-500'
+  };
+  
+  const typeLabels = {
+    product: 'Product',
+    rental: 'Rental',
+    service: 'Service'
+  };
+  
+  return (
+    <div 
+      className="flex-shrink-0 w-64 md:w-72 bg-card rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
+      onClick={() => onViewDetails(item, type)}
+      data-testid={`featured-${type}-${item.id}`}
+    >
+      <div className="relative h-40 overflow-hidden">
+        <img 
+          src={item.image || `https://ui-avatars.com/api/?name=${item.title.replace(/\s/g, '+')}&background=random&size=256`}
+          alt={item.title}
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+        />
+        <div className={`absolute top-2 left-2 px-2 py-1 rounded-full text-xs text-white bg-gradient-to-r ${typeColors[type]}`}>
+          {typeLabels[type]}
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
+          <p className="text-white font-bold text-lg">${item.price}</p>
+        </div>
+      </div>
+      <div className="p-4">
+        <h3 className="font-semibold truncate">{item.title}</h3>
+        <p className="text-sm text-muted-foreground truncate">{item.description}</p>
+        <div className="flex items-center justify-between mt-3">
+          <span className="text-xs text-muted-foreground">{item.location || 'Online'}</span>
+          <Button size="sm" variant="ghost" className="text-primary">
+            <Eye className="w-4 h-4 mr-1" /> View
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Featured Listings Carousel
+const FeaturedListingsCarousel = ({ onViewDetails }) => {
+  const [items, setItems] = useState([]);
+  const [currentCategory, setCurrentCategory] = useState(0);
+  const scrollRef = useRef(null);
+  const categories = ['all', 'products', 'rentals', 'services'];
+  
+  useEffect(() => {
+    // Fetch featured listings
+    const fetchFeaturedItems = async () => {
+      try {
+        const [productsRes, rentalsRes, servicesRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/api/marketplace/listings?limit=6`).then(r => r.ok ? r.json() : []),
+          fetch(`${API_BASE_URL}/api/rentals?limit=6`).then(r => r.ok ? r.json() : []),
+          fetch(`${API_BASE_URL}/api/services?limit=6`).then(r => r.ok ? r.json() : [])
+        ]);
+        
+        const products = (productsRes.listings || productsRes || []).map(p => ({
+          id: p.listing_id || p.id,
+          title: p.title,
+          description: p.description,
+          price: p.price,
+          image: p.images?.[0] || p.image,
+          location: p.location,
+          type: 'product'
+        }));
+        
+        const rentals = (rentalsRes.rentals || rentalsRes || []).map(r => ({
+          id: r.rental_id || r.id,
+          title: r.title,
+          description: r.description,
+          price: r.price_per_month || r.price,
+          image: r.images?.[0] || r.image,
+          location: r.location || r.address,
+          type: 'rental'
+        }));
+        
+        const services = (servicesRes.services || servicesRes || []).map(s => ({
+          id: s.service_id || s.id,
+          title: s.title,
+          description: s.description,
+          price: s.price_per_hour || s.hourly_rate || s.price,
+          image: s.images?.[0] || s.image,
+          location: s.location,
+          type: 'service'
+        }));
+        
+        // Interleave items for alternating display
+        const maxLen = Math.max(products.length, rentals.length, services.length);
+        const interleaved = [];
+        for (let i = 0; i < maxLen; i++) {
+          if (products[i]) interleaved.push(products[i]);
+          if (rentals[i]) interleaved.push(rentals[i]);
+          if (services[i]) interleaved.push(services[i]);
+        }
+        
+        setItems(interleaved.length > 0 ? interleaved : generateSampleItems());
+      } catch (err) {
+        console.log('Using sample data:', err);
+        setItems(generateSampleItems());
+      }
+    };
+    
+    fetchFeaturedItems();
+  }, []);
+  
+  // Generate sample items if no real data
+  const generateSampleItems = () => {
+    return [
+      { id: 1, title: 'iPhone 15 Pro', description: 'Latest Apple smartphone', price: 999, type: 'product', location: 'New York' },
+      { id: 2, title: 'Downtown Apartment', description: '2BR modern apartment', price: 2500, type: 'rental', location: 'Los Angeles' },
+      { id: 3, title: 'Web Development', description: 'Full stack developer', price: 75, type: 'service', location: 'Remote' },
+      { id: 4, title: 'MacBook Pro M3', description: 'Powerful laptop', price: 1999, type: 'product', location: 'Chicago' },
+      { id: 5, title: 'Beach House', description: '3BR vacation rental', price: 350, type: 'rental', location: 'Miami' },
+      { id: 6, title: 'Logo Design', description: 'Professional branding', price: 150, type: 'service', location: 'Remote' },
+      { id: 7, title: 'Gaming Console', description: 'PS5 with games', price: 450, type: 'product', location: 'Seattle' },
+      { id: 8, title: 'Studio Apartment', description: 'Cozy studio', price: 1200, type: 'rental', location: 'Austin' },
+      { id: 9, title: 'Photography', description: 'Event photographer', price: 200, type: 'service', location: 'Denver' },
+    ];
+  };
+  
+  const filteredItems = currentCategory === 0 ? items : 
+    items.filter(item => {
+      if (currentCategory === 1) return item.type === 'product';
+      if (currentCategory === 2) return item.type === 'rental';
+      if (currentCategory === 3) return item.type === 'service';
+      return true;
+    });
+  
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const scrollAmount = direction === 'left' ? -300 : 300;
+      scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+  
+  // Auto-rotate categories
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentCategory(prev => (prev + 1) % categories.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+  
+  return (
+    <section className="py-12 px-4 bg-gradient-to-b from-transparent via-muted/30 to-transparent">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold mb-2">Explore What&apos;s Available</h2>
+            <p className="text-muted-foreground">Products, rentals, and services from our community</p>
+          </div>
+          <div className="flex items-center gap-2 mt-4 md:mt-0">
+            {categories.map((cat, i) => (
+              <Button
+                key={cat}
+                variant={currentCategory === i ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setCurrentCategory(i)}
+                className="capitalize"
+                data-testid={`filter-${cat}`}
+              >
+                {cat === 'all' ? 'All' : cat}
+              </Button>
+            ))}
+          </div>
+        </div>
+        
+        <div className="relative">
+          <div 
+            ref={scrollRef}
+            className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 snap-x snap-mandatory"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {filteredItems.map((item, i) => (
+              <FeaturedItemCard 
+                key={`${item.type}-${item.id}-${i}`} 
+                item={item} 
+                type={item.type}
+                onViewDetails={onViewDetails}
+              />
+            ))}
+          </div>
+          
+          {filteredItems.length > 3 && (
+            <>
+              <button 
+                onClick={() => scroll('left')}
+                className="absolute left-0 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-background transition hidden md:block"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button 
+                onClick={() => scroll('right')}
+                className="absolute right-0 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-background transition hidden md:block"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </>
+          )}
+        </div>
+        
+        <div className="text-center mt-6">
+          <Button 
+            variant="outline" 
+            onClick={() => onViewDetails(null, 'browse')}
+            className="rounded-full"
+            data-testid="browse-all-btn"
+          >
+            <ShoppingCart className="w-4 h-4 mr-2" />
+            Browse All as Guest
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+};
 
 export default function Landing() {
   const navigate = useNavigate();
