@@ -147,6 +147,7 @@ function AppRouter() {
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/marketplace/guest" element={<GuestMarketplace />} />
       <Route path="/feed" element={<ProtectedRoute><SocialFeed /></ProtectedRoute>} />
       <Route path="/social" element={<ProtectedRoute><SocialFeed /></ProtectedRoute>} />
       <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
