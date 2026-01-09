@@ -859,9 +859,13 @@ async def get_listings(category: Optional[str] = None, search: Optional[str] = N
     
     listings = await db.listings.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
     
-    for listing in listings:
-        user = await db.users.find_one({"user_id": listing["user_id"]}, {"_id": 0, "password_hash": 0})
-        listing["seller"] = user
+    # Batch fetch all users to avoid N+1 queries
+    if listings:
+        user_ids = list(set(l["user_id"] for l in listings))
+        users = await db.users.find({"user_id": {"$in": user_ids}}, {"_id": 0, "password_hash": 0}).to_list(len(user_ids))
+        users_map = {u["user_id"]: u for u in users}
+        for listing in listings:
+            listing["seller"] = users_map.get(listing["user_id"])
     
     return listings
 
