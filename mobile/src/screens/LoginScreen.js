@@ -53,9 +53,11 @@ export default function LoginScreen({ navigation }) {
         <View style={styles.content}>
           {/* Logo */}
           <View style={styles.logoContainer}>
-            <View style={styles.logoCircle}>
-              <Text style={styles.logoText}>BL</Text>
-            </View>
+            <Image 
+              source={require('../../assets/icon.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
             <Text style={styles.appName}>Blendlink</Text>
             <Text style={styles.tagline}>Connect, Share, Earn</Text>
           </View>
