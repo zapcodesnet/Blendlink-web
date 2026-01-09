@@ -922,6 +922,87 @@ async def get_categories():
         {"id": "other", "name": "Other", "icon": "Package"}
     ]
 
+class GuestCheckoutRequest(BaseModel):
+    items: List[dict]
+    customer: dict
+    total: float
+
+@marketplace_router.post("/guest-checkout")
+async def guest_checkout(data: GuestCheckoutRequest):
+    """Process a guest checkout without requiring login"""
+    # Validate customer info
+    if not data.customer.get("name") or not data.customer.get("email"):
+        raise HTTPException(status_code=400, detail="Name and email are required")
+    
+    # Create guest order
+    order_id = f"order_{uuid.uuid4().hex[:12]}"
+    
+    order = {
+        "order_id": order_id,
+        "customer_email": data.customer.get("email"),
+        "customer_name": data.customer.get("name"),
+        "customer_phone": data.customer.get("phone"),
+        "shipping_address": {
+            "address": data.customer.get("address"),
+            "city": data.customer.get("city"),
+            "zip_code": data.customer.get("zipCode"),
+            "country": data.customer.get("country", "US")
+        },
+        "items": data.items,
+        "total": data.total,
+        "status": "pending",
+        "is_guest_order": True,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.guest_orders.insert_one(order.copy())
+    
+    # Try to create Stripe checkout session
+    try:
+        import stripe
+        stripe.api_key = os.environ.get("STRIPE_API_KEY")
+        
+        if stripe.api_key:
+            line_items = [
+                {
+                    "price_data": {
+                        "currency": "usd",
+                        "product_data": {
+                            "name": item.get("title", "Item"),
+                            "description": f"{item.get('type', 'product').title()}"
+                        },
+                        "unit_amount": int(item.get("price", 0) * 100),
+                    },
+                    "quantity": item.get("quantity", 1)
+                }
+                for item in data.items
+            ]
+            
+            checkout_session = stripe.checkout.Session.create(
+                payment_method_types=["card"],
+                line_items=line_items,
+                mode="payment",
+                customer_email=data.customer.get("email"),
+                success_url=f"{os.environ.get('FRONTEND_URL', 'http://localhost:3000')}/payment/success?order_id={order_id}",
+                cancel_url=f"{os.environ.get('FRONTEND_URL', 'http://localhost:3000')}/payment/cancel?order_id={order_id}",
+                metadata={"order_id": order_id, "is_guest": "true"}
+            )
+            
+            return {
+                "order_id": order_id,
+                "payment_url": checkout_session.url,
+                "message": "Redirecting to payment"
+            }
+    except Exception as e:
+        logger.error(f"Stripe checkout error: {e}")
+    
+    # Fallback: return success without payment
+    return {
+        "order_id": order_id,
+        "message": "Order placed successfully. Payment will be processed offline.",
+        "status": "pending_payment"
+    }
+
 # ============== RENTALS ROUTES ==============
 @rentals_router.get("/properties")
 async def get_properties(
