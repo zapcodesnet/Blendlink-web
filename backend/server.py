@@ -45,6 +45,7 @@ games_router = APIRouter(prefix="/games", tags=["Games"])
 raffles_router = APIRouter(prefix="/raffles", tags=["Raffles"])
 wallet_router = APIRouter(prefix="/wallet", tags=["Wallet"])
 referrals_router = APIRouter(prefix="/referrals", tags=["Referrals"])
+upload_router = APIRouter(prefix="/upload", tags=["Upload"])
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
