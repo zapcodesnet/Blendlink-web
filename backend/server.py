@@ -709,9 +709,15 @@ async def like_post(post_id: str, current_user: dict = Depends(get_current_user)
 @posts_router.get("/{post_id}/comments")
 async def get_comments(post_id: str):
     comments = await db.comments.find({"post_id": post_id}, {"_id": 0}).sort("created_at", -1).to_list(100)
-    for comment in comments:
-        user = await db.users.find_one({"user_id": comment["user_id"]}, {"_id": 0, "password_hash": 0})
-        comment["user"] = user
+    
+    # Batch fetch all users to avoid N+1 queries
+    if comments:
+        user_ids = list(set(c["user_id"] for c in comments))
+        users = await db.users.find({"user_id": {"$in": user_ids}}, {"_id": 0, "password_hash": 0}).to_list(len(user_ids))
+        users_map = {u["user_id"]: u for u in users}
+        for comment in comments:
+            comment["user"] = users_map.get(comment["user_id"])
+    
     return comments
 
 class CreateComment(BaseModel):
