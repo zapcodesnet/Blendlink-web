@@ -1557,6 +1557,7 @@ api_router.include_router(games_router)
 api_router.include_router(raffles_router)
 api_router.include_router(wallet_router)
 api_router.include_router(referrals_router)
+api_router.include_router(upload_router)
 
 # Import and include media sales routers
 from media_sales import watermark_router, media_router, offers_router, contracts_router, payments_router
