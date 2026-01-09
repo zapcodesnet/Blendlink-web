@@ -472,7 +472,7 @@ async def ai_shipping_estimate(request: AIShippingRequest, current_user: dict = 
     # If images provided, try to estimate dimensions
     if request.images and not request.manual_dimensions:
         try:
-            from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
+            from emergentintegrations.llm.chat import LlmChat, UserMessage, FileContent
             
             chat = LlmChat(
                 api_key=EMERGENT_LLM_KEY,
@@ -497,7 +497,7 @@ Return JSON only:
     "fragile": true/false,
     "notes": "any special shipping considerations"
 }""",
-                image_contents=[ImageContent(image_base64=img_base64)]
+                file_contents=[FileContent(content_type="image/png", file_content_base64=img_base64)]
             )
             
             response = await chat.send_message(user_message)
