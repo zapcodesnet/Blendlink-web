@@ -1687,6 +1687,7 @@ async def generate_ai_image(prompt: str, edit_image_url: Optional[str] = None) -
 async def generate_ai_video(prompt: str, duration: int = 6) -> dict:
     """Generate a video using Sora 2"""
     from emergentintegrations.llm.openai.video_generation import OpenAIVideoGeneration
+    import asyncio
     
     api_key = os.environ.get("EMERGENT_LLM_KEY")
     if not api_key:
@@ -1696,16 +1697,20 @@ async def generate_ai_video(prompt: str, duration: int = 6) -> dict:
     valid_durations = [4, 8, 12]
     duration = min(valid_durations, key=lambda x: abs(x - duration))
     
-    video_gen = OpenAIVideoGeneration(api_key=api_key)
+    # Run synchronous video generation in a thread pool to avoid blocking
+    def _generate_video():
+        video_gen = OpenAIVideoGeneration(api_key=api_key)
+        video_bytes = video_gen.text_to_video(
+            prompt=prompt,
+            model="sora-2",
+            size="1280x720",
+            duration=duration,
+            max_wait_time=600
+        )
+        return video_bytes, video_gen
     
-    # Generate video
-    video_bytes = video_gen.text_to_video(
-        prompt=prompt,
-        model="sora-2",
-        size="1280x720",
-        duration=duration,
-        max_wait_time=600
-    )
+    loop = asyncio.get_event_loop()
+    video_bytes, video_gen = await loop.run_in_executor(None, _generate_video)
     
     if video_bytes:
         # Save to temp file and return path
