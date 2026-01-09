@@ -95,13 +95,13 @@ export default function Feed() {
       {/* Header */}
       <header className="glass sticky top-0 z-40 border-b border-border/50 safe-top">
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <img 
               src="/blendlink-logo.png" 
               alt="Blendlink" 
-              className="h-8 w-auto object-contain"
+              className="h-12 w-auto object-contain"
             />
-            <span className="font-bold text-lg">Blendlink</span>
+            <span className="font-bold text-xl">Blendlink</span>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={() => navigate("/messages")}>
