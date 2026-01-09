@@ -17,6 +17,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
 import AnalyticsDashboardScreen from '../screens/AnalyticsDashboardScreen';
 import AICreateScreen from '../screens/AICreateScreen';
+import SellerDashboardScreen from '../screens/SellerDashboardScreen';
 
 // API for notification count
 import { notificationsAPI } from '../services/api';
