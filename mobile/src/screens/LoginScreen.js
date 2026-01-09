@@ -135,6 +135,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 48,
   },
+  logoImage: {
+    width: 100,
+    height: 100,
+    marginBottom: 16,
+  },
   logoCircle: {
     width: 80,
     height: 80,
