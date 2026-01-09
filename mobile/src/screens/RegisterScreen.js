@@ -190,18 +190,26 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   header: {
+    alignItems: 'center',
     marginBottom: 32,
     marginTop: 16,
+  },
+  logoImage: {
+    width: 80,
+    height: 80,
+    marginBottom: 16,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
     color: '#9CA3AF',
+    textAlign: 'center',
   },
   form: {
     marginBottom: 24,
