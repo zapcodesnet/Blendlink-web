@@ -223,7 +223,7 @@ Implemented comprehensive Facebook-style social feed with all core features:
 - **Is Admin**: Yes
 - **BL Coins**: 11,362+ (accumulated from testing)
 
-## Latest Update: Bug Fixes & Guest Features (January 9, 2026)
+## Latest Update: Seller Dashboard, Watermarking & Mobile Enhancements (January 9, 2026)
 
 ### Bug Fixes Completed ✅
 1. **AI Listing Creator** - Fixed FileContent API signature in seller_dashboard.py
@@ -232,37 +232,44 @@ Implemented comprehensive Facebook-style social feed with all core features:
 4. **File Upload** - Added new `/api/upload/file` endpoint for image/video/audio uploads
 5. **Post Sharing** - Verified working correctly with +10 BL coins reward
 6. **Referral Links** - Verified network endpoint working correctly
+7. **Seller Dashboard Accessibility** - Added "AI Seller Tools" button to Marketplace header
 
 ### New Features Implemented ✅
 1. **Landing Page Featured Carousel** - Alternating display of products, rentals, and services
 2. **Guest Marketplace** - Non-members can browse, view details, add to cart, and checkout
 3. **Guest Checkout** - Process orders without requiring login/registration
 4. **File Upload in Posts** - Users can now upload images, videos, and audio to posts
+5. **Image Watermarking** - `/api/watermark/apply-to-image` applies text watermarks with configurable opacity and position
+6. **Video Watermarking** - `/api/watermark/apply-to-video` (requires FFmpeg)
 
 ### Code Changes
 - `/app/backend/server.py` - Added upload_router with file upload endpoints, guest checkout endpoint
-- `/app/backend/seller_dashboard.py` - Fixed FileContent API signature
+- `/app/backend/seller_dashboard.py` - Fixed FileContent API signature for all AI functions
 - `/app/backend/social_system.py` - Fixed video generation async issue
-- `/app/frontend/src/pages/Landing.jsx` - Added FeaturedListingsCarousel component
-- `/app/frontend/src/pages/GuestMarketplace.jsx` - New guest marketplace page
+- `/app/backend/media_sales.py` - Added apply_image_watermark and apply_video_watermark functions
+- `/app/frontend/src/pages/Landing.jsx` - Added FeaturedListingsCarousel component, "Browse as Guest" link
+- `/app/frontend/src/pages/GuestMarketplace.jsx` - New guest marketplace page with cart and checkout
 - `/app/frontend/src/pages/SocialFeed.jsx` - Added file upload to post creation
+- `/app/frontend/src/pages/Marketplace.jsx` - Added "AI Seller Tools" button in header
 - `/app/frontend/src/App.js` - Added guest marketplace route
 
 ### Test Results
-- 18/18 backend tests passed (100%)
+- Iteration 9: 18/18 backend tests passed (100%)
+- Iteration 10: 24/24 backend tests passed (100%)
 - All frontend features verified working
 
 ## Upcoming Tasks
 
-### P0 - Remaining Bug Fixes
-- AI Create Video/Image/Music - Need to verify with actual AI generation
-- Video watermarking - Implementation needed
-- Photo watermarking - Implementation needed
+### P0 - AI Media Generation (Partially Complete)
+- ✅ AI Image Generation with GPT Image 1.5 (endpoint ready)
+- ✅ AI Video Generation with Sora 2 (endpoint ready)
+- ⏳ Music generation - Not available in emergentintegrations (returns 501)
 
 ### P1 - React Native Mobile App
 - Finalize UI/UX to match PWA
 - Implement native features (camera, push notifications)
 - Build for iOS and Android
+- Complete SellerDashboardScreen functionality
 
 ### P2 - Complete Social Features
 - Friends system UI
@@ -276,9 +283,14 @@ Implemented comprehensive Facebook-style social feed with all core features:
 - Order history
 - Seller ratings and reviews
 
+## MOCKED Features
+- **Guest checkout Stripe payment** - Falls back to order placement without payment if Stripe not configured
+- **Video watermarking** - Requires FFmpeg installation
+- **Music generation** - Not available in emergentintegrations library (returns 501)
+
 ## Future Tasks
 - Real-time sync with Firebase/WebSockets
 - Push notifications
 - ID verification (Stripe Identity)
-- Full video watermarking
-- Music generation integration
+- Full video watermarking with FFmpeg
+- Shopping cart persistence
