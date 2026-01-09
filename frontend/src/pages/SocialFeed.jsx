@@ -166,6 +166,64 @@ const CreatePostCard = ({ user, onPostCreated }) => {
   const [mediaUrls, setMediaUrls] = useState([]);
   const [privacy, setPrivacy] = useState('public');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef(null);
+  
+  const handleFileUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    
+    // Limit to 4 files
+    if (mediaUrls.length + files.length > 4) {
+      toast.error('Maximum 4 media files per post');
+      return;
+    }
+    
+    setIsUploading(true);
+    const token = localStorage.getItem('blendlink_token');
+    
+    for (const file of files) {
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const response = await fetch(`${API_BASE_URL}/api/upload/file`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        });
+        
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.detail || 'Upload failed');
+        }
+        
+        const result = await response.json();
+        setMediaUrls(prev => [...prev, result.data_url]);
+        
+        // Auto-detect media type
+        if (result.media_type === 'video') {
+          setMediaType('video');
+        } else if (result.media_type === 'audio') {
+          setMediaType('audio');
+        } else if (result.media_type === 'image' && mediaType === 'text') {
+          setMediaType('image');
+        }
+        
+        toast.success(`${file.name} uploaded!`);
+      } catch (err) {
+        toast.error(`Failed to upload ${file.name}: ${err.message}`);
+      }
+    }
+    
+    setIsUploading(false);
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
   
   const handleSubmit = async () => {
     if (!content.trim() && mediaUrls.length === 0) {
@@ -183,6 +241,7 @@ const CreatePostCard = ({ user, onPostCreated }) => {
       toast.success(`Post created! ${result.bl_coins_earned > 0 ? `+${result.bl_coins_earned} BL coins` : ''}`);
       setContent('');
       setMediaUrls([]);
+      setMediaType('text');
       setIsOpen(false);
       onPostCreated?.(result.post);
     } catch (error) {
