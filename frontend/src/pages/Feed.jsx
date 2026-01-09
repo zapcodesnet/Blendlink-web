@@ -96,9 +96,11 @@ export default function Feed() {
       <header className="glass sticky top-0 z-40 border-b border-border/50 safe-top">
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bl-coin-gradient flex items-center justify-center">
-              <span className="text-white font-bold text-sm">BL</span>
-            </div>
+            <img 
+              src="/blendlink-logo.png" 
+              alt="Blendlink" 
+              className="h-8 w-auto object-contain"
+            />
             <span className="font-bold text-lg">Blendlink</span>
           </div>
           <div className="flex items-center gap-2">
