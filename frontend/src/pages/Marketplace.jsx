@@ -7,7 +7,8 @@ import { Input } from "../components/ui/input";
 import ComingSoonPlaceholder from "../components/ComingSoonPlaceholder";
 import { 
   Search, Plus, Filter, Smartphone, Shirt, Home, Car, 
-  Dumbbell, Download, Wrench, Package, ChevronRight, ShoppingBag
+  Dumbbell, Download, Wrench, Package, ChevronRight, ShoppingBag,
+  Sparkles, Store
 } from "lucide-react";
 
 const categoryIcons = {
