@@ -90,8 +90,12 @@ export const BottomNav = () => {
         data-testid="desktop-sidebar"
       >
         {/* Logo */}
-        <div className="w-12 h-12 rounded-xl bl-coin-gradient flex items-center justify-center mb-8">
-          <span className="text-white font-bold text-lg">BL</span>
+        <div className="w-12 h-12 flex items-center justify-center mb-8">
+          <img 
+            src="/blendlink-logo.png" 
+            alt="Blendlink" 
+            className="w-full h-full object-contain"
+          />
         </div>
 
         {/* Nav Items */}
