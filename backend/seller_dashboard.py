@@ -737,7 +737,7 @@ async def get_listing_performance(
             "status": listing.get("status", "active"),
             "performance_score": round(score, 1),
             "ai_recommendations": recommendations,
-            "image": listing.get("images", [None])[0]
+            "image": listing.get("images", [None])[0] if listing.get("images") else None
         }
         
         performance_data.append(perf)
