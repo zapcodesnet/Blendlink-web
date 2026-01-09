@@ -45,6 +45,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Notifications from "./pages/Notifications";
 import AnalyticsDashboard from "./pages/AnalyticsDashboard";
 import AICreate from "./pages/AICreate";
+import SellerDashboard from "./pages/SellerDashboard";
 
 // Components
 import BottomNav from "./components/BottomNav";
