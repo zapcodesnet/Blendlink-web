@@ -247,6 +247,25 @@ export default function Landing() {
     { icon: Coins, title: "BL Coins", desc: "Earn rewards for every activity" },
     { icon: Share2, title: "Referrals", desc: "Invite friends & earn together" },
   ];
+  
+  // Handle viewing item details or browsing as guest
+  const handleViewDetails = (item, type) => {
+    if (type === 'browse') {
+      // Navigate to guest marketplace
+      navigate('/marketplace/guest');
+      return;
+    }
+    
+    // Navigate to item detail page based on type
+    if (item) {
+      const routes = {
+        product: `/marketplace/item/${item.id}`,
+        rental: `/rentals/${item.id}`,
+        service: `/services/${item.id}`
+      };
+      navigate(routes[type] || '/marketplace/guest');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
