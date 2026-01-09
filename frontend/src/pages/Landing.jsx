@@ -337,9 +337,25 @@ export default function Landing() {
                 I Have an Account
               </Button>
             </div>
+            
+            {/* Browse as Guest Link */}
+            <div className="mt-6">
+              <Button 
+                variant="link" 
+                className="text-muted-foreground hover:text-primary"
+                onClick={() => navigate('/marketplace/guest')}
+                data-testid="browse-guest-link"
+              >
+                <ShoppingCart className="w-4 h-4 mr-2" />
+                Or browse as guest without an account
+              </Button>
+            </div>
           </div>
         </div>
       </section>
+      
+      {/* Featured Listings Carousel - Right after Hero */}
+      <FeaturedListingsCarousel onViewDetails={handleViewDetails} />
 
       {/* Features Grid */}
       <section className="py-20 px-4">
