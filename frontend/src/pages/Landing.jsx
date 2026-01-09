@@ -63,6 +63,21 @@ const FeaturedListingsCarousel = ({ onViewDetails }) => {
   const scrollRef = useRef(null);
   const categories = ['all', 'products', 'rentals', 'services'];
   
+  // Generate sample items if no real data (moved before useEffect)
+  const generateSampleItems = () => {
+    return [
+      { id: 1, title: 'iPhone 15 Pro', description: 'Latest Apple smartphone', price: 999, type: 'product', location: 'New York' },
+      { id: 2, title: 'Downtown Apartment', description: '2BR modern apartment', price: 2500, type: 'rental', location: 'Los Angeles' },
+      { id: 3, title: 'Web Development', description: 'Full stack developer', price: 75, type: 'service', location: 'Remote' },
+      { id: 4, title: 'MacBook Pro M3', description: 'Powerful laptop', price: 1999, type: 'product', location: 'Chicago' },
+      { id: 5, title: 'Beach House', description: '3BR vacation rental', price: 350, type: 'rental', location: 'Miami' },
+      { id: 6, title: 'Logo Design', description: 'Professional branding', price: 150, type: 'service', location: 'Remote' },
+      { id: 7, title: 'Gaming Console', description: 'PS5 with games', price: 450, type: 'product', location: 'Seattle' },
+      { id: 8, title: 'Studio Apartment', description: 'Cozy studio', price: 1200, type: 'rental', location: 'Austin' },
+      { id: 9, title: 'Photography', description: 'Event photographer', price: 200, type: 'service', location: 'Denver' },
+    ];
+  };
+  
   useEffect(() => {
     // Fetch featured listings
     const fetchFeaturedItems = async () => {
@@ -121,21 +136,6 @@ const FeaturedListingsCarousel = ({ onViewDetails }) => {
     
     fetchFeaturedItems();
   }, []);
-  
-  // Generate sample items if no real data
-  const generateSampleItems = () => {
-    return [
-      { id: 1, title: 'iPhone 15 Pro', description: 'Latest Apple smartphone', price: 999, type: 'product', location: 'New York' },
-      { id: 2, title: 'Downtown Apartment', description: '2BR modern apartment', price: 2500, type: 'rental', location: 'Los Angeles' },
-      { id: 3, title: 'Web Development', description: 'Full stack developer', price: 75, type: 'service', location: 'Remote' },
-      { id: 4, title: 'MacBook Pro M3', description: 'Powerful laptop', price: 1999, type: 'product', location: 'Chicago' },
-      { id: 5, title: 'Beach House', description: '3BR vacation rental', price: 350, type: 'rental', location: 'Miami' },
-      { id: 6, title: 'Logo Design', description: 'Professional branding', price: 150, type: 'service', location: 'Remote' },
-      { id: 7, title: 'Gaming Console', description: 'PS5 with games', price: 450, type: 'product', location: 'Seattle' },
-      { id: 8, title: 'Studio Apartment', description: 'Cozy studio', price: 1200, type: 'rental', location: 'Austin' },
-      { id: 9, title: 'Photography', description: 'Event photographer', price: 200, type: 'service', location: 'Denver' },
-    ];
-  };
   
   const filteredItems = currentCategory === 0 ? items : 
     items.filter(item => {
