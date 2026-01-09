@@ -301,6 +301,96 @@ async def create_watermark_template(data: WatermarkCreate, current_user: dict = 
     
     return {"watermark_id": template.watermark_id, "message": "Watermark template created"}
 
+class ApplyWatermarkRequest(BaseModel):
+    image_base64: str
+    watermark_text: str = "Blendlink"
+    opacity: float = 0.2
+    position: str = "diagonal"  # "diagonal" or "center"
+
+@watermark_router.post("/apply-to-image")
+async def apply_watermark_to_image(request: ApplyWatermarkRequest, current_user: dict = Depends(get_current_user)):
+    """Apply watermark to an image and return watermarked version"""
+    try:
+        # Decode base64 image
+        image_data = request.image_base64
+        if ',' in image_data:
+            image_data = image_data.split(',')[1]
+        
+        image_bytes = base64.b64decode(image_data)
+        
+        # Apply watermark
+        watermarked_bytes = apply_image_watermark(
+            image_bytes=image_bytes,
+            watermark_text=request.watermark_text,
+            opacity=request.opacity,
+            position=request.position
+        )
+        
+        # Encode back to base64
+        watermarked_base64 = base64.b64encode(watermarked_bytes).decode('utf-8')
+        
+        return {
+            "watermarked_image": f"data:image/png;base64,{watermarked_base64}",
+            "watermark_text": request.watermark_text,
+            "message": "Watermark applied successfully"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to apply watermark: {str(e)}")
+
+@watermark_router.post("/apply-to-video")
+async def apply_watermark_to_video(
+    video_base64: str,
+    watermark_text: str = "Blendlink",
+    opacity: float = 0.3,
+    current_user: dict = Depends(get_current_user)
+):
+    """Apply watermark to a video (requires FFmpeg)"""
+    import tempfile
+    
+    try:
+        # Decode base64 video
+        video_data = video_base64
+        if ',' in video_data:
+            video_data = video_data.split(',')[1]
+        
+        video_bytes = base64.b64decode(video_data)
+        
+        # Save to temp file
+        with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as input_file:
+            input_file.write(video_bytes)
+            input_path = input_file.name
+        
+        # Output path
+        output_path = input_path.replace('.mp4', '_watermarked.mp4')
+        
+        # Apply watermark
+        result_path = apply_video_watermark(
+            video_path=input_path,
+            watermark_text=watermark_text,
+            output_path=output_path,
+            opacity=opacity
+        )
+        
+        # Read watermarked video
+        with open(result_path, 'rb') as f:
+            watermarked_bytes = f.read()
+        
+        # Clean up temp files
+        os.unlink(input_path)
+        if os.path.exists(output_path):
+            os.unlink(output_path)
+        
+        # Encode to base64
+        watermarked_base64 = base64.b64encode(watermarked_bytes).decode('utf-8')
+        
+        return {
+            "watermarked_video": f"data:video/mp4;base64,{watermarked_base64}",
+            "watermark_text": watermark_text,
+            "message": "Video watermark applied successfully"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to apply video watermark: {str(e)}")
+
 @watermark_router.get("/templates")
 async def get_watermark_templates(current_user: dict = Depends(get_current_user)):
     """Get all watermark templates for current user"""
