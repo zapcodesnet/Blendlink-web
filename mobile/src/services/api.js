@@ -16,7 +16,7 @@ if (!API_BASE_URL) {
 }
 
 // Use environment variable or development fallback
-const BASE_URL = API_BASE_URL || 'https://blendlink.preview.emergentagent.com';
+const BASE_URL = API_BASE_URL || 'https://aimarket-app.preview.emergentagent.com';
 
 // Create axios instance
 const api = axios.create({

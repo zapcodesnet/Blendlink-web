@@ -7,7 +7,7 @@ import requests
 import os
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://blendlink.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://aimarket-app.preview.emergentagent.com')
 
 class TestHealthCheck:
     """Health check endpoint tests"""
