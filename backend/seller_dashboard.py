@@ -118,31 +118,29 @@ class ListingPerformance(BaseModel):
 
 # ============== HELPER FUNCTIONS ==============
 
-async def get_current_user(authorization: str = Header(None)):
+from fastapi import Request
+
+async def get_current_user(request: Request):
     """Get current user from JWT token"""
-    if not authorization:
+    token = request.cookies.get("session_token")
+    if not token:
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header[7:]
+    if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
     try:
-        scheme, token = authorization.split()
-        if scheme.lower() != "bearer":
-            raise HTTPException(status_code=401, detail="Invalid authentication scheme")
-    except ValueError:
-        raise HTTPException(status_code=401, detail="Invalid authorization header")
-    
-    try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        user_id = payload.get("sub")
+        user_id = payload.get("user_id")
         if not user_id:
             raise HTTPException(status_code=401, detail="Invalid token")
+        user = await db.users.find_one({"user_id": user_id}, {"_id": 0, "password_hash": 0})
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+        return user
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
-    
-    user = await db.users.find_one({"user_id": user_id}, {"_id": 0, "password_hash": 0})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    return user
 
 async def analyze_images_with_ai(images: List[str], condition: str, system_prompt: str) -> Dict[str, Any]:
     """Analyze product images using GPT-4o vision"""
