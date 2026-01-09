@@ -65,14 +65,26 @@ export default function Marketplace() {
         <div className="max-w-6xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between mb-3">
             <h1 className="text-xl font-bold">Marketplace</h1>
-            <Button 
-              onClick={() => navigate("/marketplace/create")}
-              className="rounded-full"
-              data-testid="create-listing-btn"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Sell
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline"
+                onClick={() => navigate("/seller-dashboard")}
+                className="rounded-full"
+                data-testid="seller-tools-btn"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">AI Seller Tools</span>
+                <span className="sm:hidden">AI Tools</span>
+              </Button>
+              <Button 
+                onClick={() => navigate("/marketplace/create")}
+                className="rounded-full"
+                data-testid="create-listing-btn"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Sell
+              </Button>
+            </div>
           </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
