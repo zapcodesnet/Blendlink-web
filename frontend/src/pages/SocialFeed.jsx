@@ -267,7 +267,7 @@ const CreatePostCard = ({ user, onPostCreated }) => {
               className="flex-1 bg-muted rounded-full px-4 py-2.5 text-left text-muted-foreground hover:bg-muted/80 transition"
               data-testid="create-post-trigger"
             >
-              What's on your mind, {user?.name?.split(' ')[0]}?
+              What&apos;s on your mind, {user?.name?.split(' ')[0]}?
             </button>
           </DialogTrigger>
           
