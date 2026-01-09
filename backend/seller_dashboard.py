@@ -118,17 +118,7 @@ class ListingPerformance(BaseModel):
 
 # ============== HELPER FUNCTIONS ==============
 
-# Import get_current_user from server module
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent))
-
-# We need to import this after adding to path
-def get_auth_header():
-    from fastapi import Header
-    return Header(None, alias="Authorization")
-
-async def get_current_user_from_token(authorization: str = None):
+async def get_current_user(authorization: str = Header(None)):
     """Get current user from JWT token"""
     if not authorization:
         raise HTTPException(status_code=401, detail="Not authenticated")
@@ -141,9 +131,7 @@ async def get_current_user_from_token(authorization: str = None):
         raise HTTPException(status_code=401, detail="Invalid authorization header")
     
     try:
-        from jose import jwt, JWTError
-        JWT_SECRET = os.environ.get('JWT_SECRET', 'blendlink-jwt-secret-key-2024')
-        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         user_id = payload.get("sub")
         if not user_id:
             raise HTTPException(status_code=401, detail="Invalid token")
@@ -155,12 +143,6 @@ async def get_current_user_from_token(authorization: str = None):
         raise HTTPException(status_code=404, detail="User not found")
     
     return user
-
-# Dependency for protected routes
-from fastapi import Header
-
-async def get_current_user(authorization: str = Header(None)):
-    return await get_current_user_from_token(authorization)
 
 async def analyze_images_with_ai(images: List[str], condition: str, system_prompt: str) -> Dict[str, Any]:
     """Analyze product images using GPT-4o vision"""
