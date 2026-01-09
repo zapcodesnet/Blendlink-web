@@ -217,17 +217,10 @@ const FeaturedListingsCarousel = ({ onViewDetails }) => {
             </>
           )}
         </div>
-        
-        <div className="text-center mt-6">
-          <Button 
-            variant="outline" 
-            onClick={() => onViewDetails(null, 'browse')}
-            className="rounded-full"
-            data-testid="browse-all-btn"
-          >
-            <ShoppingCart className="w-4 h-4 mr-2" />
-            Browse All as Guest
-          </Button>
+      </div>
+    </section>
+  );
+};
         </div>
       </div>
     </section>
