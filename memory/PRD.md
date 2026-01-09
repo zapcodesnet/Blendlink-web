@@ -221,29 +221,64 @@ Implemented comprehensive Facebook-style social feed with all core features:
 - **Email**: test@test.com
 - **Password**: Test123456
 - **Is Admin**: Yes
-- **BL Coins**: 11,310+ (accumulated from testing)
+- **BL Coins**: 11,362+ (accumulated from testing)
+
+## Latest Update: Bug Fixes & Guest Features (January 9, 2026)
+
+### Bug Fixes Completed ✅
+1. **AI Listing Creator** - Fixed FileContent API signature in seller_dashboard.py
+2. **Shipping Estimation** - Fixed ImageContent → FileContent in shipping estimate function
+3. **Video Generation** - Fixed async/sync issue in Sora 2 integration (run_in_executor)
+4. **File Upload** - Added new `/api/upload/file` endpoint for image/video/audio uploads
+5. **Post Sharing** - Verified working correctly with +10 BL coins reward
+6. **Referral Links** - Verified network endpoint working correctly
+
+### New Features Implemented ✅
+1. **Landing Page Featured Carousel** - Alternating display of products, rentals, and services
+2. **Guest Marketplace** - Non-members can browse, view details, add to cart, and checkout
+3. **Guest Checkout** - Process orders without requiring login/registration
+4. **File Upload in Posts** - Users can now upload images, videos, and audio to posts
+
+### Code Changes
+- `/app/backend/server.py` - Added upload_router with file upload endpoints, guest checkout endpoint
+- `/app/backend/seller_dashboard.py` - Fixed FileContent API signature
+- `/app/backend/social_system.py` - Fixed video generation async issue
+- `/app/frontend/src/pages/Landing.jsx` - Added FeaturedListingsCarousel component
+- `/app/frontend/src/pages/GuestMarketplace.jsx` - New guest marketplace page
+- `/app/frontend/src/pages/SocialFeed.jsx` - Added file upload to post creation
+- `/app/frontend/src/App.js` - Added guest marketplace route
+
+### Test Results
+- 18/18 backend tests passed (100%)
+- All frontend features verified working
 
 ## Upcoming Tasks
 
+### P0 - Remaining Bug Fixes
+- AI Create Video/Image/Music - Need to verify with actual AI generation
+- Video watermarking - Implementation needed
+- Photo watermarking - Implementation needed
+
 ### P1 - React Native Mobile App
-- Set up React Native/Expo project
-- Share backend with PWA
+- Finalize UI/UX to match PWA
 - Implement native features (camera, push notifications)
 - Build for iOS and Android
 
-### P2 - Music Generation
-- Integrate music generation API (Suno/Udio alternative)
-- Add to AI Media Generator
+### P2 - Complete Social Features
+- Friends system UI
+- Groups system UI  
+- Pages system UI
+- Events system UI
+- Activity feed implementation
 
-### P3 - Enhanced Social Features
-- Private messaging with media
-- Video looping profile pictures
-- Photo/video/music albums
-- Advanced privacy settings
+### P3 - Marketplace Enhancements
+- Shopping cart for authenticated users
+- Order history
+- Seller ratings and reviews
 
 ## Future Tasks
 - Real-time sync with Firebase/WebSockets
 - Push notifications
 - ID verification (Stripe Identity)
-- Shopping cart for marketplace
 - Full video watermarking
+- Music generation integration
