@@ -701,7 +701,7 @@ const AIShippingEstimator = () => {
                 <Box className="w-4 h-4" /> Package Details
               </h4>
               <div className="text-sm text-muted-foreground">
-                <p>Dimensions: {result.estimated_dimensions.length}" × {result.estimated_dimensions.width}" × {result.estimated_dimensions.height}"</p>
+                <p>Dimensions: {result.estimated_dimensions.length}&quot; × {result.estimated_dimensions.width}&quot; × {result.estimated_dimensions.height}&quot;</p>
                 <p>Weight: {result.estimated_weight} lbs</p>
                 <p className="text-primary mt-2">📦 {result.packaging_advice}</p>
               </div>
