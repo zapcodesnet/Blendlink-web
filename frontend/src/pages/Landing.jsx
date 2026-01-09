@@ -221,11 +221,6 @@ const FeaturedListingsCarousel = ({ onViewDetails }) => {
     </section>
   );
 };
-        </div>
-      </div>
-    </section>
-  );
-};
 
 export default function Landing() {
   const navigate = useNavigate();
