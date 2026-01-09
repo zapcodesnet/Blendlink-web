@@ -1477,6 +1477,11 @@ from notifications_analytics import notifications_router, analytics_router
 api_router.include_router(notifications_router)
 api_router.include_router(analytics_router)
 
+# Import and include seller dashboard routers
+from seller_dashboard import get_seller_routers
+for router in get_seller_routers():
+    api_router.include_router(router)
+
 # Stripe webhook endpoint (must be at app level, not api_router)
 @app.post("/api/webhook/stripe")
 async def stripe_webhook(request: Request):
