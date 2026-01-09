@@ -76,7 +76,7 @@ export default function Register() {
             <img 
               src="/blendlink-logo.png" 
               alt="Blendlink" 
-              className="w-20 h-20 object-contain mx-auto mb-4"
+              className="w-32 h-32 object-contain mx-auto mb-4"
             />
             <h1 className="text-2xl font-bold">Create Account</h1>
             <p className="text-muted-foreground mt-1">Get 50,000 BL Coins welcome bonus!</p>

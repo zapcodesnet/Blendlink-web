@@ -57,7 +57,7 @@ export default function Login() {
             <img 
               src="/blendlink-logo.png" 
               alt="Blendlink" 
-              className="w-20 h-20 object-contain mx-auto mb-4"
+              className="w-32 h-32 object-contain mx-auto mb-4"
             />
             <h1 className="text-2xl font-bold">Welcome Back</h1>
             <p className="text-muted-foreground mt-1">Sign in to continue</p>

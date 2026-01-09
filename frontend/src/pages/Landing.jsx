@@ -217,13 +217,13 @@ export default function Landing() {
       {/* Footer */}
       <footer className="border-t border-border py-8 px-4">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <img 
               src="/blendlink-logo.png" 
               alt="Blendlink" 
-              className="h-8 w-auto object-contain"
+              className="h-12 w-auto object-contain"
             />
-            <span className="font-semibold">Blendlink</span>
+            <span className="font-semibold text-lg">Blendlink</span>
           </div>
           <p className="text-sm text-muted-foreground">
             © 2024 Blendlink. All rights reserved.
