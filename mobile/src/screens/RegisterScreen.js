@@ -195,9 +195,9 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   logoImage: {
-    width: 80,
-    height: 80,
-    marginBottom: 16,
+    width: 120,
+    height: 120,
+    marginBottom: 20,
   },
   title: {
     fontSize: 28,
