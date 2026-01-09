@@ -6,12 +6,14 @@ Blendlink Watermark & Media Sales Module
 - E-signature contracts for copyright transfer
 - Stripe payment integration
 """
-from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi import APIRouter, HTTPException, Depends, Request, UploadFile, File
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone
 import uuid
 import os
+import base64
+from io import BytesIO
 from motor.motor_asyncio import AsyncIOMotorClient
 from emergentintegrations.payments.stripe.checkout import (
     StripeCheckout, CheckoutSessionResponse, CheckoutStatusResponse, CheckoutSessionRequest
@@ -26,6 +28,112 @@ media_router = APIRouter(prefix="/media", tags=["Media"])
 offers_router = APIRouter(prefix="/offers", tags=["Offers"])
 contracts_router = APIRouter(prefix="/contracts", tags=["Contracts"])
 payments_router = APIRouter(prefix="/payments", tags=["Payments"])
+
+# ============== WATERMARKING FUNCTIONS ==============
+
+def apply_image_watermark(image_bytes: bytes, watermark_text: str, opacity: float = 0.2, position: str = "diagonal") -> bytes:
+    """
+    Apply a text watermark to an image.
+    Returns watermarked image as bytes.
+    """
+    try:
+        from PIL import Image, ImageDraw, ImageFont, ImageEnhance
+        
+        # Open the image
+        img = Image.open(BytesIO(image_bytes))
+        
+        # Convert to RGBA for transparency
+        if img.mode != 'RGBA':
+            img = img.convert('RGBA')
+        
+        # Create a transparent overlay
+        overlay = Image.new('RGBA', img.size, (255, 255, 255, 0))
+        draw = ImageDraw.Draw(overlay)
+        
+        # Calculate font size based on image dimensions
+        min_dim = min(img.size)
+        font_size = max(20, min_dim // 15)
+        
+        try:
+            font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_size)
+        except:
+            font = ImageFont.load_default()
+        
+        # Calculate text size
+        bbox = draw.textbbox((0, 0), watermark_text, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+        
+        # Watermark color with opacity
+        alpha = int(255 * opacity)
+        watermark_color = (128, 128, 128, alpha)
+        
+        if position == "diagonal":
+            # Draw diagonal repeating watermark
+            for y in range(0, img.size[1], text_height * 3):
+                for x in range(-img.size[0], img.size[0] * 2, text_width + 50):
+                    # Create rotated text
+                    txt_img = Image.new('RGBA', (text_width + 20, text_height + 20), (255, 255, 255, 0))
+                    txt_draw = ImageDraw.Draw(txt_img)
+                    txt_draw.text((10, 10), watermark_text, font=font, fill=watermark_color)
+                    txt_img = txt_img.rotate(30, expand=True)
+                    overlay.paste(txt_img, (x + (y % 3) * 100, y), txt_img)
+        else:
+            # Center position
+            x = (img.size[0] - text_width) // 2
+            y = (img.size[1] - text_height) // 2
+            draw.text((x, y), watermark_text, font=font, fill=watermark_color)
+        
+        # Composite the overlay onto the original image
+        watermarked = Image.alpha_composite(img, overlay)
+        
+        # Convert back to RGB for JPEG compatibility
+        if watermarked.mode == 'RGBA':
+            watermarked = watermarked.convert('RGB')
+        
+        # Save to bytes
+        output = BytesIO()
+        watermarked.save(output, format='PNG', quality=95)
+        output.seek(0)
+        return output.read()
+        
+    except ImportError:
+        logger.warning("PIL not installed, returning original image")
+        return image_bytes
+    except Exception as e:
+        logger.error(f"Watermarking failed: {e}")
+        return image_bytes
+
+def apply_video_watermark(video_path: str, watermark_text: str, output_path: str, opacity: float = 0.2) -> str:
+    """
+    Apply a text watermark to a video using FFmpeg.
+    Returns path to watermarked video.
+    """
+    import subprocess
+    
+    try:
+        # FFmpeg command to add text watermark
+        # Using drawtext filter
+        filter_string = f"drawtext=text='{watermark_text}':fontsize=36:fontcolor=white@{opacity}:x=(w-text_w)/2:y=(h-text_h)/2"
+        
+        cmd = [
+            'ffmpeg', '-y',
+            '-i', video_path,
+            '-vf', filter_string,
+            '-codec:a', 'copy',
+            output_path
+        ]
+        
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+        
+        if result.returncode != 0:
+            logger.error(f"FFmpeg error: {result.stderr}")
+            return video_path  # Return original if watermarking fails
+        
+        return output_path
+    except Exception as e:
+        logger.error(f"Video watermarking failed: {e}")
+        return video_path
 
 # ============== MODELS ==============
 
