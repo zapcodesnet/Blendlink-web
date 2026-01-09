@@ -319,19 +319,43 @@ const CreatePostCard = ({ user, onPostCreated }) => {
                 data-testid="post-content-input"
               />
               
+              {/* Hidden File Input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,video/*,audio/*"
+                multiple
+                onChange={handleFileUpload}
+                className="hidden"
+                data-testid="file-upload-input"
+              />
+              
+              {/* Upload Progress */}
+              {isUploading && (
+                <div className="flex items-center justify-center py-4 text-muted-foreground">
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                  <span>Uploading media...</span>
+                </div>
+              )}
+              
               {/* Media Preview */}
               {mediaUrls.length > 0 && (
                 <div className="grid grid-cols-2 gap-2">
                   {mediaUrls.map((url, i) => (
                     <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-muted">
                       {mediaType === 'video' ? (
-                        <video src={url} className="w-full h-full object-cover" />
+                        <video src={url} className="w-full h-full object-cover" controls />
+                      ) : mediaType === 'audio' ? (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-500 to-pink-500">
+                          <Music className="w-12 h-12 text-white" />
+                          <audio src={url} controls className="absolute bottom-2 left-2 right-2" />
+                        </div>
                       ) : (
                         <img src={url} alt="" className="w-full h-full object-cover" />
                       )}
                       <button 
                         onClick={() => setMediaUrls(mediaUrls.filter((_, idx) => idx !== i))}
-                        className="absolute top-2 right-2 bg-black/50 rounded-full p-1"
+                        className="absolute top-2 right-2 bg-black/50 rounded-full p-1 hover:bg-black/70"
                       >
                         <X className="w-4 h-4 text-white" />
                       </button>
@@ -345,20 +369,38 @@ const CreatePostCard = ({ user, onPostCreated }) => {
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-muted-foreground">Add to post:</span>
                   <button 
-                    onClick={() => setMediaType('image')}
+                    onClick={() => {
+                      fileInputRef.current.accept = 'image/*';
+                      fileInputRef.current.click();
+                    }}
+                    disabled={isUploading}
                     className={`p-2 rounded-full hover:bg-muted ${mediaType === 'image' ? 'bg-green-100 text-green-600' : ''}`}
+                    title="Add Photo"
+                    data-testid="add-image-btn"
                   >
                     <ImageIcon className="w-5 h-5" />
                   </button>
                   <button 
-                    onClick={() => setMediaType('video')}
+                    onClick={() => {
+                      fileInputRef.current.accept = 'video/*';
+                      fileInputRef.current.click();
+                    }}
+                    disabled={isUploading}
                     className={`p-2 rounded-full hover:bg-muted ${mediaType === 'video' ? 'bg-red-100 text-red-600' : ''}`}
+                    title="Add Video"
+                    data-testid="add-video-btn"
                   >
                     <Video className="w-5 h-5" />
                   </button>
                   <button 
-                    onClick={() => setMediaType('audio')}
+                    onClick={() => {
+                      fileInputRef.current.accept = 'audio/*';
+                      fileInputRef.current.click();
+                    }}
+                    disabled={isUploading}
                     className={`p-2 rounded-full hover:bg-muted ${mediaType === 'audio' ? 'bg-purple-100 text-purple-600' : ''}`}
+                    title="Add Audio"
+                    data-testid="add-audio-btn"
                   >
                     <Music className="w-5 h-5" />
                   </button>
@@ -378,7 +420,7 @@ const CreatePostCard = ({ user, onPostCreated }) => {
               {/* Submit */}
               <Button 
                 onClick={handleSubmit}
-                disabled={isSubmitting || (!content.trim() && mediaUrls.length === 0)}
+                disabled={isSubmitting || isUploading || (!content.trim() && mediaUrls.length === 0)}
                 className="w-full"
                 data-testid="submit-post-btn"
               >
