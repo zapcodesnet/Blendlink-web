@@ -635,6 +635,15 @@ export const casinoAPI = {
     if (gameType) params.append('game_type', gameType);
     return await apiRequest(`/casino/leaderboard?${params}`);
   },
+
+  // Daily Spin
+  getDailySpinStatus: async () => {
+    return await apiRequest('/casino/daily-spin/status');
+  },
+
+  claimDailySpin: async () => {
+    return await apiRequest('/casino/daily-spin/claim', { method: 'POST' });
+  },
 };
 
 export default {
