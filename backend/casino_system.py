@@ -572,8 +572,10 @@ async def deal_poker(request: PokerBetRequest, current_user: dict = Depends(get_
         "instruction": "Select cards to hold (0-4), then draw"
     }
 
+from fastapi import Query
+
 @casino_router.post("/poker/draw")
-async def draw_poker(game_id: str, hold: List[int], current_user: dict = Depends(get_current_user)):
+async def draw_poker(game_id: str = Query(...), hold: List[int] = Query(default=[]), current_user: dict = Depends(get_current_user)):
     """Draw new cards for non-held positions"""
     game = poker_games.get(game_id)
     
