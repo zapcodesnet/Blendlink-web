@@ -544,6 +544,99 @@ export const rafflesAPI = {
   },
 };
 
+// ============== CASINO API ==============
+export const casinoAPI = {
+  // Slots
+  spinSlots: async (amount, lines = 1) => {
+    return await apiRequest('/casino/slots/spin', {
+      method: 'POST',
+      body: JSON.stringify({ amount, lines }),
+    });
+  },
+
+  // Blackjack
+  startBlackjack: async (amount) => {
+    return await apiRequest('/casino/blackjack/start', {
+      method: 'POST',
+      body: JSON.stringify({ amount, game_type: 'blackjack' }),
+    });
+  },
+
+  blackjackAction: async (gameId, action) => {
+    return await apiRequest('/casino/blackjack/action', {
+      method: 'POST',
+      body: JSON.stringify({ game_id: gameId, action }),
+    });
+  },
+
+  // Roulette
+  spinRoulette: async (bets) => {
+    return await apiRequest('/casino/roulette/spin', {
+      method: 'POST',
+      body: JSON.stringify(bets),
+    });
+  },
+
+  // Video Poker
+  dealPoker: async (amount) => {
+    return await apiRequest('/casino/poker/deal', {
+      method: 'POST',
+      body: JSON.stringify({ amount }),
+    });
+  },
+
+  drawPoker: async (gameId, hold) => {
+    const params = new URLSearchParams();
+    params.append('game_id', gameId);
+    hold.forEach(h => params.append('hold', h));
+    return await apiRequest(`/casino/poker/draw?${params}`, {
+      method: 'POST',
+    });
+  },
+
+  // Baccarat
+  playBaccarat: async (amount, betOn) => {
+    return await apiRequest('/casino/baccarat/play', {
+      method: 'POST',
+      body: JSON.stringify({ amount, bet_on: betOn }),
+    });
+  },
+
+  // Craps
+  rollCraps: async (amount, betType) => {
+    return await apiRequest('/casino/craps/roll', {
+      method: 'POST',
+      body: JSON.stringify({ amount, bet_type: betType }),
+    });
+  },
+
+  // Wheel of Fortune
+  spinWheel: async (amount) => {
+    return await apiRequest('/casino/wheel/spin', {
+      method: 'POST',
+      body: JSON.stringify({ amount }),
+    });
+  },
+
+  // History & Stats
+  getHistory: async (limit = 50, gameType = null) => {
+    const params = new URLSearchParams();
+    params.append('limit', limit);
+    if (gameType) params.append('game_type', gameType);
+    return await apiRequest(`/casino/history?${params}`);
+  },
+
+  getStats: async () => {
+    return await apiRequest('/casino/stats');
+  },
+
+  getLeaderboard: async (gameType = null) => {
+    const params = new URLSearchParams();
+    if (gameType) params.append('game_type', gameType);
+    return await apiRequest(`/casino/leaderboard?${params}`);
+  },
+};
+
 export default {
   auth: authAPI,
   wallet: walletAPI,
@@ -556,6 +649,7 @@ export default {
   services: servicesAPI,
   games: gamesAPI,
   raffles: rafflesAPI,
+  casino: casinoAPI,
   getToken,
   setToken,
   removeToken,
