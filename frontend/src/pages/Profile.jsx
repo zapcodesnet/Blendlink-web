@@ -240,6 +240,33 @@ export default function Profile() {
               <Button 
                 variant="outline" 
                 className="h-auto py-4 flex-col gap-2"
+                onClick={() => navigate("/albums")}
+                data-testid="albums-btn"
+              >
+                <FolderOpen className="w-6 h-6 text-purple-500" />
+                <span>My Albums</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-auto py-4 flex-col gap-2"
+                onClick={() => navigate("/ai-listing-creator")}
+                data-testid="ai-listing-btn"
+              >
+                <Sparkles className="w-6 h-6 text-amber-500" />
+                <span>AI Listing</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-auto py-4 flex-col gap-2"
+                onClick={() => navigate("/seller-dashboard")}
+                data-testid="seller-dashboard-btn"
+              >
+                <ShoppingBag className="w-6 h-6 text-green-500" />
+                <span>Seller Tools</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-auto py-4 flex-col gap-2"
                 onClick={() => navigate("/earnings")}
                 data-testid="earnings-btn"
               >
@@ -263,15 +290,6 @@ export default function Profile() {
               >
                 <Grid3X3 className="w-6 h-6" />
                 <span>Upload Media</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                className="h-auto py-4 flex-col gap-2"
-                onClick={() => navigate("/my-media")}
-                data-testid="my-media-btn"
-              >
-                <Heart className="w-6 h-6" />
-                <span>My Media</span>
               </Button>
             </div>
 
