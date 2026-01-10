@@ -18,19 +18,12 @@ import NotificationsScreen from '../screens/NotificationsScreen';
 import AnalyticsDashboardScreen from '../screens/AnalyticsDashboardScreen';
 import AICreateScreen from '../screens/AICreateScreen';
 import SellerDashboardScreen from '../screens/SellerDashboardScreen';
+import MarketplaceScreen from '../screens/MarketplaceScreen';
 
 // API for notification count
 import { notificationsAPI } from '../services/api';
 
 // Placeholder screens (to be implemented)
-const MarketplaceScreen = () => (
-  <View style={styles.placeholder}>
-    <Text style={styles.placeholderIcon}>🛒</Text>
-    <Text style={styles.placeholderTitle}>Marketplace</Text>
-    <Text style={styles.placeholderText}>Coming Soon</Text>
-  </View>
-);
-
 const WalletScreen = () => (
   <View style={styles.placeholder}>
     <Text style={styles.placeholderIcon}>💰</Text>
