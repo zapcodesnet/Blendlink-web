@@ -327,6 +327,49 @@ export default function Profile() {
                 <span>Browse Media</span>
               </Button>
             </div>
+
+            {/* Social Features */}
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-muted-foreground mb-3 px-1">SOCIAL</h3>
+              <div className="grid grid-cols-4 gap-2">
+                <Button 
+                  variant="outline" 
+                  className="h-auto py-3 flex-col gap-1"
+                  onClick={() => navigate("/friends")}
+                  data-testid="friends-btn"
+                >
+                  <Users className="w-5 h-5 text-blue-500" />
+                  <span className="text-xs">Friends</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-auto py-3 flex-col gap-1"
+                  onClick={() => navigate("/groups")}
+                  data-testid="groups-btn"
+                >
+                  <Users2 className="w-5 h-5 text-purple-500" />
+                  <span className="text-xs">Groups</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-auto py-3 flex-col gap-1"
+                  onClick={() => navigate("/events")}
+                  data-testid="events-btn"
+                >
+                  <Calendar className="w-5 h-5 text-pink-500" />
+                  <span className="text-xs">Events</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-auto py-3 flex-col gap-1"
+                  onClick={() => navigate("/pages")}
+                  data-testid="pages-btn"
+                >
+                  <FileText className="w-5 h-5 text-emerald-500" />
+                  <span className="text-xs">Pages</span>
+                </Button>
+              </div>
+            </div>
           </>
         )}
 
