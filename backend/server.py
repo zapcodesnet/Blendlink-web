@@ -459,7 +459,6 @@ async def google_session(request: Request, response: Response):
             {"$set": {"name": google_data["name"], "avatar": google_data.get("picture", existing.get("avatar"))}}
         )
     else:
-        is_new_user = True
         user = UserBase(
             email=google_data["email"],
             name=google_data["name"],
@@ -873,7 +872,7 @@ async def get_listings(category: Optional[str] = None, search: Optional[str] = N
     
     # Batch fetch all users to avoid N+1 queries
     if listings:
-        user_ids = list(set(l["user_id"] for l in listings))
+        user_ids = list(set(listing["user_id"] for listing in listings))
         users = await db.users.find({"user_id": {"$in": user_ids}}, {"_id": 0, "password_hash": 0}).to_list(len(user_ids))
         users_map = {u["user_id"]: u for u in users}
         for listing in listings:
