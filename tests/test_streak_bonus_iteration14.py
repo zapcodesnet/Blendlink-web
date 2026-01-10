@@ -52,7 +52,8 @@ class TestStreakMultiplierCalculation:
             else:
                 calculated = min(1.0 + (streak_days - 1) * 0.2, 3.0)
             
-            assert calculated == expected, f"Day {streak_days}: expected {expected}x, got {calculated}x"
+            # Use round to handle floating point precision
+            assert round(calculated, 1) == expected, f"Day {streak_days}: expected {expected}x, got {calculated}x"
             print(f"✓ Day {streak_days} streak = {expected}x multiplier")
 
 
