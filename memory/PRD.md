@@ -7,7 +7,7 @@ Build a fully responsive Progressive Web App (PWA) version of Blendlink - an all
 - Property rentals (listing and browsing rental properties)
 - Professional services directory
 - Gaming (mini-games like spin wheel, scratch cards, memory match)
-- **Casino Games** (Slots, Blackjack, Roulette, Video Poker, Baccarat, Craps, Wheel of Fortune)
+- **Casino Games** (Slots, Blackjack, Roulette, Video Poker, Baccarat, Craps, Wheel of Fortune, Daily Spin)
 - Raffle draws
 - Virtual currency (BL Coin system)
 - 2-level unilevel referral system with commissions
@@ -16,19 +16,65 @@ Build a fully responsive Progressive Web App (PWA) version of Blendlink - an all
 - **AI Media Generation** (images via OpenAI GPT Image 1.5, videos via Sora 2)
 - **React Native Mobile App** (iOS & Android)
 
-## Latest Update: Casino Games System (January 10, 2026)
+## Latest Update: Daily Spin Bonus + Mobile Casino (January 10, 2026)
+
+### Daily Spin Bonus Feature ✅ COMPLETE
+Added daily free spin bonus wheel to Casino:
+
+**Rewards (User-Specified):**
+| Reward | Probability |
+|--------|-------------|
+| 1,000 BL | 40% |
+| 5,000 BL | 30% |
+| 15,000 BL | 15% |
+| 35,000 BL | 10% |
+| 80,000 BL | 4% |
+| 200,000 BL | 1% |
+
+**Features:**
+- One FREE spin per day (resets at midnight UTC)
+- Provably fair RNG with server seed hash
+- Animated wheel with 6 colorful segments
+- Balance synced 100% between website and mobile app
+- Recorded in casino history
+
+**API Endpoints:**
+- `GET /api/casino/daily-spin/status` - Check if user can spin today
+- `POST /api/casino/daily-spin/claim` - Claim daily spin reward
+
+### Mobile Casino Integration ✅ COMPLETE
+Added full casino to React Native mobile app:
+
+**New Mobile Screens:**
+- `CasinoScreen.js` - Casino lobby with all 8 games
+- `CasinoGameScreen.js` - Individual game implementations
+- `CasinoStatsScreen.js` - Player statistics and history
+- `GamesScreen.js` - Games section with Casino CTA (poker cards thumbnail)
+
+**Features:**
+- All 8 games: Daily Spin, Slots, Blackjack, Roulette, Wheel, Video Poker, Baccarat, Craps
+- Same design and colors as website (amber/orange theme)
+- Balance synced via same API endpoints
+- Navigation from Games tab → Casino → Individual games
+
+**Testing:** 13/13 tests passed (100%) - `/app/test_reports/iteration_13.json`
+
+---
+
+## Previous Update: Casino Games System (January 10, 2026)
 
 ### Casino Games Feature ✅ COMPLETE
 Implemented comprehensive casino gambling system using BL Coins:
 
-**Games Available:**
-1. **Slot Machine** - 3x3 reel slots with various symbols and payouts up to 500x
-2. **Blackjack** - Classic 21 card game with hit/stand/double actions
-3. **Roulette** - European roulette with red/black/odd/even/number bets
-4. **Wheel of Fortune** - Spin wheel with multipliers from 0x to 50x (jackpot)
-5. **Video Poker** - Jacks or Better with hold and draw mechanics
-6. **Baccarat** - Player/Banker/Tie betting
-7. **Craps** - Dice game with pass/don't pass/field/any seven/any craps bets
+**Games Available (8 Total):**
+1. **Daily Spin** - FREE daily bonus wheel with rewards up to 200K BL
+2. **Slot Machine** - 3x3 reel slots with various symbols and payouts up to 500x
+3. **Blackjack** - Classic 21 card game with hit/stand/double actions
+4. **Roulette** - European roulette with red/black/odd/even/number bets
+5. **Wheel of Fortune** - Spin wheel with multipliers from 0x to 50x (jackpot)
+6. **Video Poker** - Jacks or Better with hold and draw mechanics
+7. **Baccarat** - Player/Banker/Tie betting
+8. **Craps** - Dice game with pass/don't pass/field/any seven/any craps bets
 
 **Features:**
 - Bet limits: Min 10 BL, Max 10,000 BL per game
