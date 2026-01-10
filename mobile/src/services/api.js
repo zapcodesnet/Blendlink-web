@@ -476,4 +476,95 @@ export const analyticsAPI = {
   },
 };
 
+// ============== CASINO API ==============
+
+export const casinoAPI = {
+  // Slots
+  spinSlots: async (amount, lines = 1) => {
+    const response = await api.post('/casino/slots/spin', { amount, lines });
+    return response.data;
+  },
+
+  // Blackjack
+  startBlackjack: async (amount) => {
+    const response = await api.post('/casino/blackjack/start', { amount, game_type: 'blackjack' });
+    return response.data;
+  },
+
+  blackjackAction: async (gameId, action) => {
+    const response = await api.post('/casino/blackjack/action', { game_id: gameId, action });
+    return response.data;
+  },
+
+  // Roulette
+  spinRoulette: async (bets) => {
+    const response = await api.post('/casino/roulette/spin', bets);
+    return response.data;
+  },
+
+  // Video Poker
+  dealPoker: async (amount) => {
+    const response = await api.post('/casino/poker/deal', { amount });
+    return response.data;
+  },
+
+  drawPoker: async (gameId, hold) => {
+    const params = new URLSearchParams();
+    params.append('game_id', gameId);
+    hold.forEach(h => params.append('hold', h));
+    const response = await api.post(`/casino/poker/draw?${params}`);
+    return response.data;
+  },
+
+  // Baccarat
+  playBaccarat: async (amount, betOn) => {
+    const response = await api.post('/casino/baccarat/play', { amount, bet_on: betOn });
+    return response.data;
+  },
+
+  // Craps
+  rollCraps: async (amount, betType) => {
+    const response = await api.post('/casino/craps/roll', { amount, bet_type: betType });
+    return response.data;
+  },
+
+  // Wheel of Fortune
+  spinWheel: async (amount) => {
+    const response = await api.post('/casino/wheel/spin', { amount });
+    return response.data;
+  },
+
+  // Daily Spin
+  getDailySpinStatus: async () => {
+    const response = await api.get('/casino/daily-spin/status');
+    return response.data;
+  },
+
+  claimDailySpin: async () => {
+    const response = await api.post('/casino/daily-spin/claim');
+    return response.data;
+  },
+
+  // History & Stats
+  getHistory: async (limit = 50, gameType = null) => {
+    const params = new URLSearchParams();
+    params.append('limit', limit);
+    if (gameType) params.append('game_type', gameType);
+    const response = await api.get(`/casino/history?${params}`);
+    return response.data;
+  },
+
+  getStats: async () => {
+    const response = await api.get('/casino/stats');
+    return response.data;
+  },
+
+  getLeaderboard: async (gameType = null) => {
+    const params = new URLSearchParams();
+    if (gameType) params.append('game_type', gameType);
+    const response = await api.get(`/casino/leaderboard?${params}`);
+    return response.data;
+  },
+};
+
 export default api;
