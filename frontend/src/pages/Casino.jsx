@@ -1249,6 +1249,7 @@ export default function Casino() {
   }, [user, setUser]);
 
   const games = [
+    { id: "daily", name: "Daily Spin", icon: "🎁", color: "from-yellow-500 to-amber-600", desc: "FREE spin every day!" },
     { id: "slots", name: "Slots", icon: "🎰", color: "from-purple-600 to-pink-600", desc: "Spin to win up to 500x!" },
     { id: "blackjack", name: "Blackjack", icon: "🃏", color: "from-green-600 to-emerald-600", desc: "Beat the dealer to 21" },
     { id: "roulette", name: "Roulette", icon: "🎡", color: "from-amber-600 to-orange-600", desc: "Red, black, or lucky number" },
