@@ -938,6 +938,113 @@ async def get_leaderboard(game_type: Optional[str] = None):
     
     return {"leaderboard": leaders}
 
+# ============== DAILY SPIN BONUS ==============
+
+DAILY_SPIN_REWARDS = [1000, 5000, 15000, 35000, 80000, 200000]
+DAILY_SPIN_PROBABILITIES = [0.40, 0.30, 0.15, 0.10, 0.04, 0.01]  # 40%, 30%, 15%, 10%, 4%, 1%
+
+@casino_router.get("/daily-spin/status")
+async def get_daily_spin_status(current_user: dict = Depends(get_current_user)):
+    """Check if user can claim daily spin"""
+    user = await db.users.find_one({"user_id": current_user["user_id"]})
+    last_spin = user.get("last_daily_spin")
+    
+    can_spin = True
+    next_spin_time = None
+    
+    if last_spin:
+        if isinstance(last_spin, str):
+            last_spin_date = datetime.fromisoformat(last_spin.replace("Z", "+00:00")).date()
+        else:
+            last_spin_date = last_spin.date()
+        
+        today = datetime.now(timezone.utc).date()
+        can_spin = last_spin_date < today
+        
+        if not can_spin:
+            # Calculate next available spin time (midnight UTC)
+            tomorrow = today + timedelta(days=1)
+            next_spin_time = datetime(tomorrow.year, tomorrow.month, tomorrow.day, 0, 0, 0, tzinfo=timezone.utc).isoformat()
+    
+    return {
+        "can_spin": can_spin,
+        "next_spin_time": next_spin_time,
+        "rewards": DAILY_SPIN_REWARDS,
+        "current_balance": user.get("bl_coins", 0)
+    }
+
+@casino_router.post("/daily-spin/claim")
+async def claim_daily_spin(current_user: dict = Depends(get_current_user)):
+    """Claim daily free spin - one per day"""
+    user = await db.users.find_one({"user_id": current_user["user_id"]})
+    last_spin = user.get("last_daily_spin")
+    
+    # Check if already spun today
+    if last_spin:
+        if isinstance(last_spin, str):
+            last_spin_date = datetime.fromisoformat(last_spin.replace("Z", "+00:00")).date()
+        else:
+            last_spin_date = last_spin.date()
+        
+        today = datetime.now(timezone.utc).date()
+        if last_spin_date >= today:
+            raise HTTPException(status_code=400, detail="Daily spin already claimed today. Come back tomorrow!")
+    
+    # Generate provably fair result
+    server_seed = generate_server_seed()
+    client_seed = generate_client_seed()
+    random_value = get_random_float(server_seed, client_seed, 0)
+    
+    # Select reward based on probabilities
+    cumulative = 0
+    reward_index = 0
+    for i, prob in enumerate(DAILY_SPIN_PROBABILITIES):
+        cumulative += prob
+        if random_value <= cumulative:
+            reward_index = i
+            break
+    
+    reward = DAILY_SPIN_REWARDS[reward_index]
+    
+    # Update user balance and last spin time
+    await db.users.update_one(
+        {"user_id": current_user["user_id"]},
+        {
+            "$inc": {"bl_coins": reward},
+            "$set": {"last_daily_spin": datetime.now(timezone.utc).isoformat()}
+        }
+    )
+    
+    # Get updated balance
+    updated_user = await db.users.find_one({"user_id": current_user["user_id"]})
+    
+    # Record in history
+    record = {
+        "record_id": f"daily_{uuid.uuid4().hex[:12]}",
+        "user_id": current_user["user_id"],
+        "game_type": "daily_spin",
+        "bet_amount": 0,
+        "won_amount": reward,
+        "profit": reward,
+        "details": {
+            "reward_index": reward_index,
+            "reward": reward,
+            "server_seed_hash": hashlib.sha256(server_seed.encode()).hexdigest()
+        },
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    await db.casino_history.insert_one(record)
+    
+    return {
+        "success": True,
+        "reward": reward,
+        "reward_index": reward_index,
+        "all_rewards": DAILY_SPIN_REWARDS,
+        "new_balance": updated_user.get("bl_coins", 0),
+        "message": f"Congratulations! You won {reward:,} BL Coins!",
+        "server_seed_hash": hashlib.sha256(server_seed.encode()).hexdigest()
+    }
+
 # Export router
 def get_casino_router():
     return casino_router
