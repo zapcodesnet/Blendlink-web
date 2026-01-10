@@ -26,7 +26,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 const groupsAPI = {
   getGroups: async () => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/groups`, {
+    const res = await fetch(`${API_URL}/api/groups/`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) throw new Error("Failed to load groups");
@@ -35,7 +35,7 @@ const groupsAPI = {
   
   getMyGroups: async () => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/groups/my-groups`, {
+    const res = await fetch(`${API_URL}/api/groups/my-groups/`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) throw new Error("Failed to load my groups");
@@ -44,7 +44,7 @@ const groupsAPI = {
   
   createGroup: async (data) => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/groups`, {
+    const res = await fetch(`${API_URL}/api/groups/`, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
