@@ -1703,6 +1703,10 @@ for router in get_seller_routers():
 from album_system import get_album_router
 api_router.include_router(get_album_router())
 
+# Import and include casino system router
+from casino_system import get_casino_router
+api_router.include_router(get_casino_router())
+
 # Stripe webhook endpoint (must be at app level, not api_router)
 @app.post("/api/webhook/stripe")
 async def stripe_webhook(request: Request):
