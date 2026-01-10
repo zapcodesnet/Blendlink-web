@@ -985,8 +985,8 @@ async def guest_checkout(data: GuestCheckoutRequest):
                 line_items=line_items,
                 mode="payment",
                 customer_email=data.customer.get("email"),
-                success_url=f"{os.environ.get('FRONTEND_URL', 'http://localhost:3000')}/payment/success?order_id={order_id}",
-                cancel_url=f"{os.environ.get('FRONTEND_URL', 'http://localhost:3000')}/payment/cancel?order_id={order_id}",
+                success_url=f"{os.environ.get('FRONTEND_URL')}/payment/success?order_id={order_id}",
+                cancel_url=f"{os.environ.get('FRONTEND_URL')}/payment/cancel?order_id={order_id}",
                 metadata={"order_id": order_id, "is_guest": "true"}
             )
             
@@ -1030,9 +1030,13 @@ async def get_properties(
     
     properties = await db.properties.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
     
-    for prop in properties:
-        user = await db.users.find_one({"user_id": prop["user_id"]}, {"_id": 0, "password_hash": 0})
-        prop["owner"] = user
+    # Batch fetch users to avoid N+1 query problem
+    user_ids = list(set(prop["user_id"] for prop in properties if prop.get("user_id")))
+    if user_ids:
+        users = await db.users.find({"user_id": {"$in": user_ids}}, {"_id": 0, "password_hash": 0}).to_list(len(user_ids))
+        user_map = {u["user_id"]: u for u in users}
+        for prop in properties:
+            prop["owner"] = user_map.get(prop.get("user_id"))
     
     return properties
 
@@ -1088,9 +1092,13 @@ async def get_services(
     
     services = await db.services.find(query, {"_id": 0}).sort("rating", -1).skip(skip).limit(limit).to_list(limit)
     
-    for svc in services:
-        user = await db.users.find_one({"user_id": svc["user_id"]}, {"_id": 0, "password_hash": 0})
-        svc["provider"] = user
+    # Batch fetch users to avoid N+1 query problem
+    user_ids = list(set(svc["user_id"] for svc in services if svc.get("user_id")))
+    if user_ids:
+        users = await db.users.find({"user_id": {"$in": user_ids}}, {"_id": 0, "password_hash": 0}).to_list(len(user_ids))
+        user_map = {u["user_id"]: u for u in users}
+        for svc in services:
+            svc["provider"] = user_map.get(svc.get("user_id"))
     
     return services
 
