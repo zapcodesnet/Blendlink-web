@@ -47,6 +47,7 @@ import AnalyticsDashboard from "./pages/AnalyticsDashboard";
 import AICreate from "./pages/AICreate";
 import SellerDashboard from "./pages/SellerDashboard";
 import GuestMarketplace from "./pages/GuestMarketplace";
+import Albums from "./pages/Albums";
 
 // Components
 import BottomNav from "./components/BottomNav";
