@@ -49,6 +49,7 @@ import SellerDashboard from "./pages/SellerDashboard";
 import GuestMarketplace from "./pages/GuestMarketplace";
 import Albums from "./pages/Albums";
 import AIListingCreator from "./pages/AIListingCreator";
+import Casino from "./pages/Casino";
 
 // Components
 import BottomNav from "./components/BottomNav";
@@ -194,6 +195,9 @@ function AppRouter() {
       
       {/* AI Listing Creator Route */}
       <Route path="/ai-listing-creator" element={<ProtectedRoute><AIListingCreator /></ProtectedRoute>} />
+      
+      {/* Casino Routes */}
+      <Route path="/casino" element={<ProtectedRoute><Casino /></ProtectedRoute>} />
       
       {/* Seller Dashboard Routes */}
       <Route path="/seller-dashboard" element={<ProtectedRoute><SellerDashboard /></ProtectedRoute>} />
