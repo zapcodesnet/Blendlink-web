@@ -4,7 +4,7 @@ import { AuthContext } from "../App";
 import api from "../services/api";
 import { toast } from "sonner";
 import { Button } from "../components/ui/button";
-import { Coins, Gamepad2, Trophy, Sparkles, Play, CircleDot, AlertCircle } from "lucide-react";
+import { Coins, Gamepad2, Trophy, Sparkles, Play, CircleDot, AlertCircle, Spade } from "lucide-react";
 
 // Games Components
 import SpinWheel from "../components/games/SpinWheel";
@@ -85,6 +85,28 @@ export default function Games() {
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-6">
+        {/* Casino CTA Banner */}
+        <button
+          onClick={() => navigate("/casino")}
+          className="w-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 rounded-2xl p-6 text-white mb-6 text-left hover:scale-[1.02] transition-transform shadow-lg"
+          data-testid="casino-cta"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-white/80 text-sm font-medium">🎰 NEW!</p>
+              <p className="text-2xl font-bold mt-1">Casino Games</p>
+              <p className="text-sm text-white/90 mt-1">Blackjack • Slots • Roulette • Poker & More!</p>
+            </div>
+            <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
+              <Spade className="w-8 h-8" />
+            </div>
+          </div>
+          <div className="mt-4 flex items-center gap-2 text-sm">
+            <span className="px-3 py-1 bg-white/20 rounded-full">Bet 10-10,000 BL</span>
+            <span className="px-3 py-1 bg-white/20 rounded-full">Provably Fair</span>
+          </div>
+        </button>
+
         {/* Balance Card */}
         <div className="bl-coin-gradient rounded-2xl p-6 text-white mb-6">
           <div className="flex items-center justify-between">
@@ -98,19 +120,8 @@ export default function Games() {
           </div>
         </div>
 
-        {/* Coming Soon Notice */}
-        <div className="bg-amber-500/10 rounded-xl p-4 mb-6 flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="font-medium text-amber-700 dark:text-amber-400">Games Coming to Mobile API</p>
-            <p className="text-sm text-muted-foreground">
-              Spin Wheel and Scratch Card are being added. Memory Match works offline!
-            </p>
-          </div>
-        </div>
-
-        {/* Games List */}
-        <h2 className="font-semibold text-lg mb-4">Play & Win</h2>
+        {/* Mini Games List */}
+        <h2 className="font-semibold text-lg mb-4">Mini Games</h2>
         <div className="space-y-4">
           {games.map((game) => (
             <div
