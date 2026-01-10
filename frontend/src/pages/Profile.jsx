@@ -8,7 +8,8 @@ import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { 
   Settings, Grid3X3, Heart, Bookmark, Share2, 
   Users, MessageCircle, Coins, ArrowLeft, Edit, Copy,
-  TrendingUp, Wallet, Crown, Shield, FolderOpen, Sparkles, ShoppingBag
+  TrendingUp, Wallet, Crown, Shield, FolderOpen, Sparkles, ShoppingBag,
+  Users2, Calendar, FileText
 } from "lucide-react";
 
 export default function Profile() {
