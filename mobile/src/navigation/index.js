@@ -19,6 +19,10 @@ import AnalyticsDashboardScreen from '../screens/AnalyticsDashboardScreen';
 import AICreateScreen from '../screens/AICreateScreen';
 import SellerDashboardScreen from '../screens/SellerDashboardScreen';
 import MarketplaceScreen from '../screens/MarketplaceScreen';
+import GamesScreen from '../screens/GamesScreen';
+import CasinoScreen from '../screens/CasinoScreen';
+import CasinoGameScreen from '../screens/CasinoGameScreen';
+import CasinoStatsScreen from '../screens/CasinoStatsScreen';
 
 // API for notification count
 import { notificationsAPI } from '../services/api';
