@@ -190,6 +190,9 @@ function AppStack() {
       <Stack.Screen name="AICreate" component={AICreateScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Analytics" component={AnalyticsDashboardScreen} options={{ headerShown: false }} />
       <Stack.Screen name="SellerDashboard" component={SellerDashboardScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Casino" component={CasinoScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="CasinoGame" component={CasinoGameScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="CasinoStats" component={CasinoStatsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Friends" component={FriendsScreen} options={{ title: 'Friends' }} />
       <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
     </Stack.Navigator>
