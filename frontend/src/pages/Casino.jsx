@@ -944,7 +944,7 @@ const Craps = ({ user, onBalanceUpdate }) => {
   );
 };
 
-// ============== DAILY SPIN COMPONENT ==============
+// ============== DAILY SPIN COMPONENT WITH STREAK ==============
 const DailySpin = ({ user, onBalanceUpdate }) => {
   const [status, setStatus] = useState(null);
   const [spinning, setSpinning] = useState(false);
@@ -990,13 +990,20 @@ const DailySpin = ({ user, onBalanceUpdate }) => {
         setResult(response);
         onBalanceUpdate(response.new_balance);
         toast.success(`🎉 ${response.message}`);
-        setStatus({ ...status, can_spin: false });
+        setStatus({ ...status, can_spin: false, streak: response.streak });
         setSpinning(false);
       }, 4000);
     } catch (error) {
       toast.error(error.message || "Failed to spin");
       setSpinning(false);
     }
+  };
+
+  const getStreakEmoji = (streak) => {
+    if (streak >= 10) return "🔥🔥🔥";
+    if (streak >= 7) return "🔥🔥";
+    if (streak >= 3) return "🔥";
+    return "⭐";
   };
 
   if (loading) {
@@ -1007,10 +1014,56 @@ const DailySpin = ({ user, onBalanceUpdate }) => {
     );
   }
 
+  const streak = status?.streak || { current: 0, multiplier: 1.0, next_multiplier: 1.2, max_multiplier: 3.0 };
+
   return (
     <div className="bg-gradient-to-br from-yellow-900/40 to-amber-900/40 rounded-2xl p-6 border border-yellow-500/30">
       <h3 className="text-xl font-bold text-center mb-2 text-yellow-300">🎁 Daily Bonus Spin</h3>
-      <p className="text-center text-sm text-yellow-200/70 mb-4">One FREE spin every day!</p>
+      <p className="text-center text-sm text-yellow-200/70 mb-2">One FREE spin every day!</p>
+
+      {/* Streak Display */}
+      <div className="bg-gradient-to-r from-orange-600/30 to-red-600/30 rounded-xl p-4 mb-4 border border-orange-500/30">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">{getStreakEmoji(streak.current)}</span>
+              <div>
+                <p className="text-sm text-orange-200">Current Streak</p>
+                <p className="text-xl font-bold text-white">{streak.current} Day{streak.current !== 1 ? 's' : ''}</p>
+              </div>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-sm text-orange-200">Multiplier</p>
+            <p className="text-2xl font-bold text-yellow-400">{streak.multiplier?.toFixed(1)}x</p>
+            {streak.multiplier < streak.max_multiplier && (
+              <p className="text-xs text-orange-300">Next: {streak.next_multiplier?.toFixed(1)}x</p>
+            )}
+            {streak.multiplier >= streak.max_multiplier && (
+              <p className="text-xs text-green-400">MAX!</p>
+            )}
+          </div>
+        </div>
+        {streak.current > 0 && (
+          <div className="mt-3">
+            <div className="flex justify-between text-xs text-orange-300 mb-1">
+              <span>Progress to 3.0x</span>
+              <span>{Math.min(100, ((streak.multiplier - 1) / 2) * 100).toFixed(0)}%</span>
+            </div>
+            <div className="h-2 bg-black/30 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-yellow-500 to-orange-500 transition-all duration-500"
+                style={{ width: `${Math.min(100, ((streak.multiplier - 1) / 2) * 100)}%` }}
+              />
+            </div>
+          </div>
+        )}
+        {!status?.can_spin && streak.current > 0 && (
+          <p className="text-center text-xs text-orange-300 mt-2">
+            🔥 Don't break your streak! Come back tomorrow.
+          </p>
+        )}
+      </div>
 
       {/* Wheel */}
       <div className="relative w-64 h-64 mx-auto mb-6">
@@ -1093,6 +1146,9 @@ const DailySpin = ({ user, onBalanceUpdate }) => {
       {result && (
         <div className="text-center mb-4 p-4 rounded-xl bg-green-500/20 border border-green-500/50">
           <p className="text-2xl font-bold text-green-400">🎉 {result.reward.toLocaleString()} BL!</p>
+          {result.streak?.bonus && (
+            <p className="text-sm text-yellow-400 mt-1">Streak Bonus: {result.streak.bonus}</p>
+          )}
           <p className="text-sm text-green-300 mt-1">Added to your balance</p>
         </div>
       )}
@@ -1113,7 +1169,7 @@ const DailySpin = ({ user, onBalanceUpdate }) => {
             <RotateCcw className="w-5 h-5 animate-spin" /> Spinning...
           </span>
         ) : status?.can_spin ? (
-          "🎁 Claim Free Spin!"
+          <span>🎁 Claim Free Spin! {streak.multiplier > 1 ? `(${streak.multiplier.toFixed(1)}x)` : ''}</span>
         ) : (
           "Come Back Tomorrow!"
         )}
@@ -1125,19 +1181,32 @@ const DailySpin = ({ user, onBalanceUpdate }) => {
         </p>
       )}
 
-      {/* Rewards Preview */}
-      <div className="mt-6 grid grid-cols-3 gap-2">
-        {REWARDS.map((reward, i) => (
-          <div 
-            key={i} 
-            className="text-center p-2 rounded-lg"
-            style={{ backgroundColor: `${COLORS[i]}30` }}
-          >
-            <span className="text-xs font-bold" style={{ color: COLORS[i] }}>
-              {reward.toLocaleString()}
-            </span>
-          </div>
-        ))}
+      {/* Rewards Preview with Multiplier */}
+      <div className="mt-6">
+        <p className="text-xs text-center text-yellow-300 mb-2">
+          Base Rewards {streak.multiplier > 1 ? `× ${streak.multiplier.toFixed(1)} streak bonus` : ''}
+        </p>
+        <div className="grid grid-cols-3 gap-2">
+          {REWARDS.map((reward, i) => (
+            <div 
+              key={i} 
+              className="text-center p-2 rounded-lg"
+              style={{ backgroundColor: `${COLORS[i]}30` }}
+            >
+              <span className="text-xs font-bold" style={{ color: COLORS[i] }}>
+                {streak.multiplier > 1 
+                  ? Math.floor(reward * streak.multiplier).toLocaleString()
+                  : reward.toLocaleString()
+                }
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Streak Info */}
+      <div className="mt-4 text-center text-xs text-yellow-200/60">
+        <p>🔥 Spin daily to build your streak! Max 3.0x at Day 11+</p>
       </div>
     </div>
   );
