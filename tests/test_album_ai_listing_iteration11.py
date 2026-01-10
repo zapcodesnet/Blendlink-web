@@ -384,14 +384,14 @@ class TestAIListingCreator:
         assert response.status_code == 401
         print("✓ AI analyze listing requires authentication (401)")
     
-    def test_ai_suggest_price_requires_auth(self):
+    def test_ai_price_suggestions_requires_auth(self):
         """Test that AI price suggestion requires authentication"""
         response = requests.post(
-            f"{BASE_URL}/api/ai-tools/suggest-price",
+            f"{BASE_URL}/api/ai-tools/price-suggestions",
             json={"title": "Test", "category": "electronics"}
         )
         assert response.status_code == 401
-        print("✓ AI suggest price requires authentication (401)")
+        print("✓ AI price suggestions requires authentication (401)")
     
     def test_ai_analyze_listing_endpoint_exists(self):
         """Test that AI analyze listing endpoint exists"""
@@ -408,22 +408,22 @@ class TestAIListingCreator:
         assert response.status_code in [200, 400, 422, 500], f"Unexpected status: {response.status_code}"
         print(f"✓ AI analyze listing endpoint exists (status: {response.status_code})")
     
-    def test_ai_suggest_price_endpoint_exists(self):
+    def test_ai_price_suggestions_endpoint_exists(self):
         """Test that AI price suggestion endpoint exists"""
         response = requests.post(
-            f"{BASE_URL}/api/ai-tools/suggest-price",
+            f"{BASE_URL}/api/ai-tools/price-suggestions",
             headers=self.headers,
             json={
                 "title": "Test Product",
                 "description": "A test product",
                 "category": "electronics",
                 "condition": "used",
-                "target_country": "US"
+                "target_countries": ["US"]
             }
         )
         # Should return 200 or error, not 404
         assert response.status_code in [200, 400, 422, 500], f"Unexpected status: {response.status_code}"
-        print(f"✓ AI suggest price endpoint exists (status: {response.status_code})")
+        print(f"✓ AI price suggestions endpoint exists (status: {response.status_code})")
 
 
 class TestExistingAlbum:
