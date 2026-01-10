@@ -631,7 +631,7 @@ async def get_seller_stats(current_user: dict = Depends(get_current_user)):
     
     # Calculate revenue from sold items
     sold_listings = await db.listings.find({"user_id": user_id, "status": "sold"}, {"_id": 0, "price": 1}).to_list(1000)
-    total_revenue = sum(l.get("price", 0) for l in sold_listings)
+    total_revenue = sum(item.get("price", 0) for item in sold_listings)
     
     # Get views
     total_views = await db.listing_views.count_documents({"seller_id": user_id})
@@ -697,7 +697,6 @@ async def get_listing_performance(
     """Get performance analytics for all listings"""
     
     user_id = current_user["user_id"]
-    cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
     
     listings = await db.listings.find({"user_id": user_id}, {"_id": 0}).to_list(100)
     
@@ -771,7 +770,6 @@ async def get_seller_analytics(
     """Get detailed seller analytics"""
     
     user_id = current_user["user_id"]
-    cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
     
     # Views over time (mock daily data)
     views_trend = []

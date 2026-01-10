@@ -450,7 +450,6 @@ async def google_session(request: Request, response: Response):
         google_data = resp.json()
     
     existing = await db.users.find_one({"email": google_data["email"]}, {"_id": 0})
-    is_new_user = False
     
     if existing:
         user_id = existing["user_id"]
