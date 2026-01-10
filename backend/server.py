@@ -1683,6 +1683,10 @@ from seller_dashboard import get_seller_routers
 for router in get_seller_routers():
     api_router.include_router(router)
 
+# Import and include album system router
+from album_system import get_album_router
+api_router.include_router(get_album_router())
+
 # Stripe webhook endpoint (must be at app level, not api_router)
 @app.post("/api/webhook/stripe")
 async def stripe_webhook(request: Request):
