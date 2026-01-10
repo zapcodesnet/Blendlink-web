@@ -50,6 +50,10 @@ import GuestMarketplace from "./pages/GuestMarketplace";
 import Albums from "./pages/Albums";
 import AIListingCreator from "./pages/AIListingCreator";
 import Casino from "./pages/Casino";
+import Friends from "./pages/Friends";
+import Groups from "./pages/Groups";
+import Events from "./pages/Events";
+import Pages from "./pages/Pages";
 
 // Components
 import BottomNav from "./components/BottomNav";
