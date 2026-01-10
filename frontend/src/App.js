@@ -192,6 +192,9 @@ function AppRouter() {
       {/* Albums Routes */}
       <Route path="/albums" element={<ProtectedRoute><Albums /></ProtectedRoute>} />
       
+      {/* AI Listing Creator Route */}
+      <Route path="/ai-listing-creator" element={<ProtectedRoute><AIListingCreator /></ProtectedRoute>} />
+      
       {/* Seller Dashboard Routes */}
       <Route path="/seller-dashboard" element={<ProtectedRoute><SellerDashboard /></ProtectedRoute>} />
       
