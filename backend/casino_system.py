@@ -4,7 +4,7 @@ Blendlink Casino System
 - Slots, Blackjack, Roulette, Poker, Baccarat, Craps, Wheel of Fortune
 - Min bet: 10 BL, Max bet: 10,000 BL
 """
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone
