@@ -132,19 +132,19 @@ function MainTabs() {
         }}
       />
       <Tab.Screen
+        name="Games"
+        component={GamesScreen}
+        options={{
+          tabBarIcon: ({ focused }) => <TabIcon icon="🎮" focused={focused} />,
+          tabBarLabel: 'Games',
+        }}
+      />
+      <Tab.Screen
         name="Notifications"
         component={NotificationsScreen}
         options={{
           tabBarIcon: ({ focused }) => <TabIcon icon="🔔" focused={focused} badge={unreadCount} />,
           tabBarLabel: 'Alerts',
-        }}
-      />
-      <Tab.Screen
-        name="Wallet"
-        component={WalletScreen}
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon icon="💰" focused={focused} />,
-          tabBarLabel: 'Wallet',
         }}
       />
       <Tab.Screen
