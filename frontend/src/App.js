@@ -174,7 +174,6 @@ function AppRouter() {
       <Route path="/create-post" element={<ProtectedRoute><CreatePost /></ProtectedRoute>} />
       <Route path="/referrals" element={<ProtectedRoute><Referrals /></ProtectedRoute>} />
       <Route path="/raffles" element={<ProtectedRoute><Raffles /></ProtectedRoute>} />
-      <Route path="/friends" element={<ProtectedRoute><SocialFeed /></ProtectedRoute>} />
       
       {/* Media Sales Routes */}
       <Route path="/upload-media" element={<ProtectedRoute><MediaUpload /></ProtectedRoute>} />
