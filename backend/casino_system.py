@@ -938,19 +938,47 @@ async def get_leaderboard(game_type: Optional[str] = None):
     
     return {"leaderboard": leaders}
 
-# ============== DAILY SPIN BONUS ==============
+# ============== DAILY SPIN BONUS WITH STREAK ==============
 
 DAILY_SPIN_REWARDS = [1000, 5000, 15000, 35000, 80000, 200000]
 DAILY_SPIN_PROBABILITIES = [0.40, 0.30, 0.15, 0.10, 0.04, 0.01]  # 40%, 30%, 15%, 10%, 4%, 1%
 
+# Streak multipliers: starts at 1.0x, increases 0.2x per day, max 3.0x at day 11+
+def get_streak_multiplier(streak_days: int) -> float:
+    """Calculate multiplier based on streak days (max 3.0x at day 11+)"""
+    if streak_days <= 1:
+        return 1.0
+    # Each additional day adds 0.2x, capped at 3.0x
+    multiplier = 1.0 + (streak_days - 1) * 0.2
+    return min(multiplier, 3.0)
+
+def calculate_streak(last_spin_date, today) -> int:
+    """Calculate current streak based on last spin date"""
+    if not last_spin_date:
+        return 0
+    
+    diff = (today - last_spin_date).days
+    if diff == 0:
+        # Same day - return current streak (will be updated after spin)
+        return -1  # Already spun today
+    elif diff == 1:
+        # Consecutive day - streak continues
+        return 1  # Will be incremented
+    else:
+        # Streak broken
+        return 0
+
 @casino_router.get("/daily-spin/status")
 async def get_daily_spin_status(current_user: dict = Depends(get_current_user)):
-    """Check if user can claim daily spin"""
+    """Check if user can claim daily spin and get streak info"""
     user = await db.users.find_one({"user_id": current_user["user_id"]})
     last_spin = user.get("last_daily_spin")
+    current_streak = user.get("daily_spin_streak", 0)
     
     can_spin = True
     next_spin_time = None
+    streak_status = "start"  # start, continue, broken
+    today = datetime.now(timezone.utc).date()
     
     if last_spin:
         if isinstance(last_spin, str):
@@ -958,26 +986,48 @@ async def get_daily_spin_status(current_user: dict = Depends(get_current_user)):
         else:
             last_spin_date = last_spin.date()
         
-        today = datetime.now(timezone.utc).date()
-        can_spin = last_spin_date < today
+        diff = (today - last_spin_date).days
         
-        if not can_spin:
-            # Calculate next available spin time (midnight UTC)
+        if diff == 0:
+            # Already spun today
+            can_spin = False
             tomorrow = today + timedelta(days=1)
             next_spin_time = datetime(tomorrow.year, tomorrow.month, tomorrow.day, 0, 0, 0, tzinfo=timezone.utc).isoformat()
+            streak_status = "active"
+        elif diff == 1:
+            # Consecutive day - streak continues
+            streak_status = "continue"
+        else:
+            # Streak broken (missed a day)
+            current_streak = 0
+            streak_status = "broken"
+    
+    # Calculate next multiplier
+    next_streak = current_streak + 1 if can_spin else current_streak
+    next_multiplier = get_streak_multiplier(next_streak)
     
     return {
         "can_spin": can_spin,
         "next_spin_time": next_spin_time,
         "rewards": DAILY_SPIN_REWARDS,
-        "current_balance": user.get("bl_coins", 0)
+        "current_balance": user.get("bl_coins", 0),
+        "streak": {
+            "current": current_streak,
+            "next": next_streak if can_spin else current_streak,
+            "multiplier": get_streak_multiplier(current_streak) if not can_spin else next_multiplier,
+            "next_multiplier": get_streak_multiplier(next_streak + 1) if can_spin else get_streak_multiplier(current_streak + 1),
+            "max_multiplier": 3.0,
+            "status": streak_status
+        }
     }
 
 @casino_router.post("/daily-spin/claim")
 async def claim_daily_spin(current_user: dict = Depends(get_current_user)):
-    """Claim daily free spin - one per day"""
+    """Claim daily free spin with streak bonus - one per day"""
     user = await db.users.find_one({"user_id": current_user["user_id"]})
     last_spin = user.get("last_daily_spin")
+    current_streak = user.get("daily_spin_streak", 0)
+    today = datetime.now(timezone.utc).date()
     
     # Check if already spun today
     if last_spin:
@@ -986,9 +1036,23 @@ async def claim_daily_spin(current_user: dict = Depends(get_current_user)):
         else:
             last_spin_date = last_spin.date()
         
-        today = datetime.now(timezone.utc).date()
         if last_spin_date >= today:
             raise HTTPException(status_code=400, detail="Daily spin already claimed today. Come back tomorrow!")
+        
+        # Check if streak continues or breaks
+        diff = (today - last_spin_date).days
+        if diff == 1:
+            # Consecutive day - increment streak
+            new_streak = current_streak + 1
+        else:
+            # Streak broken - reset to 1
+            new_streak = 1
+    else:
+        # First ever spin
+        new_streak = 1
+    
+    # Calculate multiplier based on NEW streak
+    multiplier = get_streak_multiplier(new_streak)
     
     # Generate provably fair result
     server_seed = generate_server_seed()
@@ -1004,14 +1068,18 @@ async def claim_daily_spin(current_user: dict = Depends(get_current_user)):
             reward_index = i
             break
     
-    reward = DAILY_SPIN_REWARDS[reward_index]
+    base_reward = DAILY_SPIN_REWARDS[reward_index]
+    final_reward = int(base_reward * multiplier)
     
-    # Update user balance and last spin time
+    # Update user balance, last spin time, and streak
     await db.users.update_one(
         {"user_id": current_user["user_id"]},
         {
-            "$inc": {"bl_coins": reward},
-            "$set": {"last_daily_spin": datetime.now(timezone.utc).isoformat()}
+            "$inc": {"bl_coins": final_reward},
+            "$set": {
+                "last_daily_spin": datetime.now(timezone.utc).isoformat(),
+                "daily_spin_streak": new_streak
+            }
         }
     )
     
@@ -1024,24 +1092,38 @@ async def claim_daily_spin(current_user: dict = Depends(get_current_user)):
         "user_id": current_user["user_id"],
         "game_type": "daily_spin",
         "bet_amount": 0,
-        "won_amount": reward,
-        "profit": reward,
+        "won_amount": final_reward,
+        "profit": final_reward,
         "details": {
             "reward_index": reward_index,
-            "reward": reward,
+            "base_reward": base_reward,
+            "streak": new_streak,
+            "multiplier": multiplier,
+            "final_reward": final_reward,
             "server_seed_hash": hashlib.sha256(server_seed.encode()).hexdigest()
         },
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
     await db.casino_history.insert_one(record)
     
+    # Calculate next multiplier preview
+    next_multiplier = get_streak_multiplier(new_streak + 1)
+    
     return {
         "success": True,
-        "reward": reward,
+        "base_reward": base_reward,
+        "reward": final_reward,
         "reward_index": reward_index,
         "all_rewards": DAILY_SPIN_REWARDS,
         "new_balance": updated_user.get("bl_coins", 0),
-        "message": f"Congratulations! You won {reward:,} BL Coins!",
+        "message": f"Congratulations! You won {final_reward:,} BL Coins!",
+        "streak": {
+            "current": new_streak,
+            "multiplier": multiplier,
+            "next_multiplier": next_multiplier,
+            "max_multiplier": 3.0,
+            "bonus": f"+{int((multiplier - 1) * 100)}%" if multiplier > 1 else None
+        },
         "server_seed_hash": hashlib.sha256(server_seed.encode()).hexdigest()
     }
 
