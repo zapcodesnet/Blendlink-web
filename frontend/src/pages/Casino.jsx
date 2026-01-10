@@ -944,6 +944,205 @@ const Craps = ({ user, onBalanceUpdate }) => {
   );
 };
 
+// ============== DAILY SPIN COMPONENT ==============
+const DailySpin = ({ user, onBalanceUpdate }) => {
+  const [status, setStatus] = useState(null);
+  const [spinning, setSpinning] = useState(false);
+  const [result, setResult] = useState(null);
+  const [rotation, setRotation] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  const REWARDS = [1000, 5000, 15000, 35000, 80000, 200000];
+  const COLORS = ["#ef4444", "#f97316", "#eab308", "#22c55e", "#3b82f6", "#a855f7"];
+
+  useEffect(() => {
+    loadStatus();
+  }, []);
+
+  const loadStatus = async () => {
+    try {
+      const data = await api.casino.getDailySpinStatus();
+      setStatus(data);
+    } catch (error) {
+      console.error("Failed to load daily spin status:", error);
+    }
+    setLoading(false);
+  };
+
+  const spin = async () => {
+    if (!status?.can_spin) {
+      toast.error("Already claimed today! Come back tomorrow.");
+      return;
+    }
+
+    setSpinning(true);
+    setResult(null);
+
+    try {
+      const response = await api.casino.claimDailySpin();
+      
+      // Calculate rotation to land on the reward
+      const segmentAngle = 360 / REWARDS.length;
+      const targetRotation = rotation + 1800 + (response.reward_index * segmentAngle) + (segmentAngle / 2);
+      setRotation(targetRotation);
+
+      setTimeout(() => {
+        setResult(response);
+        onBalanceUpdate(response.new_balance);
+        toast.success(`🎉 ${response.message}`);
+        setStatus({ ...status, can_spin: false });
+        setSpinning(false);
+      }, 4000);
+    } catch (error) {
+      toast.error(error.message || "Failed to spin");
+      setSpinning(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-gradient-to-br from-yellow-900/40 to-amber-900/40 rounded-2xl p-6 border border-yellow-500/30 flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin w-8 h-8 border-2 border-yellow-500 border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-gradient-to-br from-yellow-900/40 to-amber-900/40 rounded-2xl p-6 border border-yellow-500/30">
+      <h3 className="text-xl font-bold text-center mb-2 text-yellow-300">🎁 Daily Bonus Spin</h3>
+      <p className="text-center text-sm text-yellow-200/70 mb-4">One FREE spin every day!</p>
+
+      {/* Wheel */}
+      <div className="relative w-64 h-64 mx-auto mb-6">
+        {/* Pointer */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-10">
+          <div className="w-0 h-0 border-l-[16px] border-r-[16px] border-t-[28px] border-l-transparent border-r-transparent border-t-yellow-400 drop-shadow-lg"></div>
+        </div>
+        
+        {/* Wheel SVG */}
+        <div 
+          className="w-full h-full rounded-full border-8 border-yellow-500 overflow-hidden shadow-2xl transition-transform duration-[4000ms] ease-out"
+          style={{ transform: `rotate(${rotation}deg)` }}
+        >
+          <svg viewBox="0 0 100 100" className="w-full h-full">
+            {REWARDS.map((reward, i) => {
+              const angle = 360 / REWARDS.length;
+              const startAngle = i * angle - 90;
+              const endAngle = startAngle + angle;
+              const midAngle = startAngle + angle / 2;
+              const start = {
+                x: 50 + 50 * Math.cos(Math.PI * startAngle / 180),
+                y: 50 + 50 * Math.sin(Math.PI * startAngle / 180)
+              };
+              const end = {
+                x: 50 + 50 * Math.cos(Math.PI * endAngle / 180),
+                y: 50 + 50 * Math.sin(Math.PI * endAngle / 180)
+              };
+              const textPos = {
+                x: 50 + 30 * Math.cos(Math.PI * midAngle / 180),
+                y: 50 + 30 * Math.sin(Math.PI * midAngle / 180)
+              };
+              return (
+                <g key={i}>
+                  <path
+                    d={`M 50 50 L ${start.x} ${start.y} A 50 50 0 0 1 ${end.x} ${end.y} Z`}
+                    fill={COLORS[i]}
+                    stroke="#1a1a2e"
+                    strokeWidth="0.5"
+                  />
+                  <text
+                    x={textPos.x}
+                    y={textPos.y}
+                    fill="white"
+                    fontSize="6"
+                    fontWeight="bold"
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    transform={`rotate(${midAngle + 90}, ${textPos.x}, ${textPos.y})`}
+                  >
+                    {reward >= 1000 ? `${reward/1000}K` : reward}
+                  </text>
+                </g>
+              );
+            })}
+            {/* Center */}
+            <circle cx="50" cy="50" r="12" fill="#1a1a2e" stroke="#f1c40f" strokeWidth="3" />
+            <text x="50" y="50" fill="#f1c40f" fontSize="6" fontWeight="bold" textAnchor="middle" dominantBaseline="middle">FREE</text>
+          </svg>
+        </div>
+
+        {/* Decorative lights */}
+        <div className="absolute inset-0 pointer-events-none">
+          {[...Array(12)].map((_, i) => (
+            <div
+              key={i}
+              className={`absolute w-3 h-3 rounded-full ${spinning ? 'animate-pulse' : ''}`}
+              style={{
+                left: `${50 + 45 * Math.cos(2 * Math.PI * i / 12 - Math.PI / 2)}%`,
+                top: `${50 + 45 * Math.sin(2 * Math.PI * i / 12 - Math.PI / 2)}%`,
+                backgroundColor: i % 2 === 0 ? '#fbbf24' : '#f97316',
+                transform: 'translate(-50%, -50%)',
+                boxShadow: '0 0 10px currentColor'
+              }}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Result */}
+      {result && (
+        <div className="text-center mb-4 p-4 rounded-xl bg-green-500/20 border border-green-500/50">
+          <p className="text-2xl font-bold text-green-400">🎉 {result.reward.toLocaleString()} BL!</p>
+          <p className="text-sm text-green-300 mt-1">Added to your balance</p>
+        </div>
+      )}
+
+      {/* Spin Button */}
+      <Button 
+        className={`w-full text-lg py-6 ${
+          status?.can_spin 
+            ? 'bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700' 
+            : 'bg-gray-600 cursor-not-allowed'
+        }`}
+        onClick={spin}
+        disabled={spinning || !status?.can_spin}
+        data-testid="daily-spin-btn"
+      >
+        {spinning ? (
+          <span className="flex items-center gap-2">
+            <RotateCcw className="w-5 h-5 animate-spin" /> Spinning...
+          </span>
+        ) : status?.can_spin ? (
+          "🎁 Claim Free Spin!"
+        ) : (
+          "Come Back Tomorrow!"
+        )}
+      </Button>
+
+      {!status?.can_spin && status?.next_spin_time && (
+        <p className="text-center text-xs text-yellow-200/60 mt-3">
+          Next spin available at midnight UTC
+        </p>
+      )}
+
+      {/* Rewards Preview */}
+      <div className="mt-6 grid grid-cols-3 gap-2">
+        {REWARDS.map((reward, i) => (
+          <div 
+            key={i} 
+            className="text-center p-2 rounded-lg"
+            style={{ backgroundColor: `${COLORS[i]}30` }}
+          >
+            <span className="text-xs font-bold" style={{ color: COLORS[i] }}>
+              {reward.toLocaleString()}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // ============== STATS/HISTORY COMPONENT ==============
 const CasinoStats = ({ user }) => {
   const [stats, setStats] = useState(null);
