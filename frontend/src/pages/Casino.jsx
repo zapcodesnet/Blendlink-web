@@ -1282,6 +1282,7 @@ export default function Casino() {
 
   if (activeGame) {
     const GameComponent = {
+      daily: DailySpin,
       slots: SlotMachine,
       blackjack: Blackjack,
       roulette: Roulette,
