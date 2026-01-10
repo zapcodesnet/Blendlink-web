@@ -26,7 +26,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 const eventsAPI = {
   getEvents: async () => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/events`, {
+    const res = await fetch(`${API_URL}/api/events/`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) throw new Error("Failed to load events");
@@ -35,7 +35,7 @@ const eventsAPI = {
   
   getMyEvents: async () => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/events/my-events`, {
+    const res = await fetch(`${API_URL}/api/events/my-events/`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) throw new Error("Failed to load my events");
@@ -44,7 +44,7 @@ const eventsAPI = {
   
   createEvent: async (data) => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/events`, {
+    const res = await fetch(`${API_URL}/api/events/`, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
