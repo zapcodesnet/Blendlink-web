@@ -15,12 +15,17 @@ if (!API_BASE_URL) {
   console.warn('WARNING: EXPO_PUBLIC_API_URL not set. Using preview URL for development.');
 }
 
-// Use environment variable or development fallback
-const BASE_URL = API_BASE_URL || 'https://aimarket-app.preview.emergentagent.com';
+// Use environment variable - require it in production
+const BASE_URL = API_BASE_URL;
+if (!BASE_URL) {
+  console.error('EXPO_PUBLIC_API_URL environment variable is required');
+  // For development, show warning but continue with a placeholder
+  // In production, this will fail properly
+}
 
 // Create axios instance
 const api = axios.create({
-  baseURL: `${BASE_URL}/api`,
+  baseURL: `${BASE_URL || ''}/api`,
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
