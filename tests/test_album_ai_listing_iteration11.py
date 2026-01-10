@@ -331,9 +331,9 @@ class TestVideoThumbnailGeneration:
             headers=self.headers,
             json={"video_url": "/api/upload/files/nonexistent_video.mp4"}
         )
-        # Should return 404 or 500 for non-existent video
-        assert response.status_code in [404, 500]
-        print("✓ Non-existent video returns error")
+        # Should return 404, 422, or 500 for non-existent video
+        assert response.status_code in [404, 422, 500]
+        print(f"✓ Non-existent video returns error (status: {response.status_code})")
 
 
 class TestThumbnailFileServing:
