@@ -207,7 +207,14 @@ def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
 def verify_password(password: str, hashed: str) -> bool:
-    return bcrypt.checkpw(password.encode(), hashed.encode())
+    """Verify password with bcrypt, handling invalid hashes gracefully."""
+    if not hashed or not password:
+        return False
+    try:
+        return bcrypt.checkpw(password.encode(), hashed.encode())
+    except (ValueError, TypeError):
+        # Handle invalid salt or hash format
+        return False
 
 def create_token(user_id: str) -> str:
     expires = datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRY_HOURS)
