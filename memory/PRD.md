@@ -7,6 +7,7 @@ Build a fully responsive Progressive Web App (PWA) version of Blendlink - an all
 - Property rentals (listing and browsing rental properties)
 - Professional services directory
 - Gaming (mini-games like spin wheel, scratch cards, memory match)
+- **Casino Games** (Slots, Blackjack, Roulette, Video Poker, Baccarat, Craps, Wheel of Fortune)
 - Raffle draws
 - Virtual currency (BL Coin system)
 - 2-level unilevel referral system with commissions
@@ -15,7 +16,54 @@ Build a fully responsive Progressive Web App (PWA) version of Blendlink - an all
 - **AI Media Generation** (images via OpenAI GPT Image 1.5, videos via Sora 2)
 - **React Native Mobile App** (iOS & Android)
 
-## Latest Update: React Native Mobile App (January 8, 2026)
+## Latest Update: Casino Games System (January 10, 2026)
+
+### Casino Games Feature ✅ COMPLETE
+Implemented comprehensive casino gambling system using BL Coins:
+
+**Games Available:**
+1. **Slot Machine** - 3x3 reel slots with various symbols and payouts up to 500x
+2. **Blackjack** - Classic 21 card game with hit/stand/double actions
+3. **Roulette** - European roulette with red/black/odd/even/number bets
+4. **Wheel of Fortune** - Spin wheel with multipliers from 0x to 50x (jackpot)
+5. **Video Poker** - Jacks or Better with hold and draw mechanics
+6. **Baccarat** - Player/Banker/Tie betting
+7. **Craps** - Dice game with pass/don't pass/field/any seven/any craps bets
+
+**Features:**
+- Bet limits: Min 10 BL, Max 10,000 BL per game
+- Provably fair RNG using server_seed + client_seed + nonce hashing
+- Real-time balance updates
+- Game history tracking
+- Player statistics (games played, total wagered, total won, net profit)
+- Leaderboard system
+
+**Backend Files:**
+- `/app/backend/casino_system.py` - All game logic and API endpoints
+
+**Frontend Files:**
+- `/app/frontend/src/pages/Casino.jsx` - Casino page with all 7 game components
+- `/app/frontend/src/services/api.js` - casinoAPI methods
+
+**API Endpoints:**
+- `POST /api/casino/slots/spin` - Spin slot machine
+- `POST /api/casino/blackjack/start` - Start blackjack game
+- `POST /api/casino/blackjack/action` - Hit/Stand/Double in blackjack
+- `POST /api/casino/roulette/spin` - Spin roulette wheel
+- `POST /api/casino/poker/deal` - Deal video poker hand
+- `POST /api/casino/poker/draw` - Draw new cards in poker
+- `POST /api/casino/baccarat/play` - Play baccarat hand
+- `POST /api/casino/craps/roll` - Roll dice in craps
+- `POST /api/casino/wheel/spin` - Spin wheel of fortune
+- `GET /api/casino/stats` - Get player statistics
+- `GET /api/casino/history` - Get game history
+- `GET /api/casino/leaderboard` - Get casino leaderboard
+
+**Testing:** 32/32 tests passed (100%) - `/app/test_reports/iteration_12.json`
+
+---
+
+## Previous Update: React Native Mobile App (January 8, 2026)
 
 ### Mobile App Setup ✅
 Created React Native/Expo mobile app at `/app/mobile/` that shares the same backend as PWA:
