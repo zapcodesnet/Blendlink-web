@@ -73,7 +73,7 @@ const BetControls = ({ bet, setBet, disabled }) => (
   </View>
 );
 
-// ============== DAILY SPIN GAME ==============
+// ============== DAILY SPIN GAME WITH STREAK ==============
 const DailySpinGame = ({ balance, onBalanceUpdate }) => {
   const [status, setStatus] = useState(null);
   const [spinning, setSpinning] = useState(false);
@@ -98,6 +98,13 @@ const DailySpinGame = ({ balance, onBalanceUpdate }) => {
     setLoading(false);
   };
 
+  const getStreakEmoji = (streak) => {
+    if (streak >= 10) return '🔥🔥🔥';
+    if (streak >= 7) return '🔥🔥';
+    if (streak >= 3) return '🔥';
+    return '⭐';
+  };
+
   const spin = async () => {
     if (!status?.can_spin) {
       Alert.alert('Daily Spin', 'Already claimed today! Come back tomorrow.');
@@ -109,7 +116,7 @@ const DailySpinGame = ({ balance, onBalanceUpdate }) => {
 
     // Start rotation animation
     Animated.timing(rotateAnim, {
-      toValue: 10,
+      toValue: rotateAnim._value + 10,
       duration: 4000,
       useNativeDriver: true,
     }).start();
@@ -120,9 +127,10 @@ const DailySpinGame = ({ balance, onBalanceUpdate }) => {
       setTimeout(() => {
         setResult(response);
         onBalanceUpdate(response.new_balance);
-        setStatus({ ...status, can_spin: false });
+        setStatus({ ...status, can_spin: false, streak: response.streak });
         setSpinning(false);
-        Alert.alert('🎉 Congratulations!', `You won ${response.reward.toLocaleString()} BL Coins!`);
+        const bonusText = response.streak?.bonus ? `\nStreak Bonus: ${response.streak.bonus}` : '';
+        Alert.alert('🎉 Congratulations!', `You won ${response.reward.toLocaleString()} BL Coins!${bonusText}`);
       }, 4000);
     } catch (error) {
       Alert.alert('Error', error.message || 'Failed to spin');
@@ -131,8 +139,8 @@ const DailySpinGame = ({ balance, onBalanceUpdate }) => {
   };
 
   const rotateInterpolate = rotateAnim.interpolate({
-    inputRange: [0, 10],
-    outputRange: ['0deg', '3600deg'],
+    inputRange: [0, 100],
+    outputRange: ['0deg', '36000deg'],
   });
 
   if (loading) {
@@ -143,10 +151,54 @@ const DailySpinGame = ({ balance, onBalanceUpdate }) => {
     );
   }
 
+  const streak = status?.streak || { current: 0, multiplier: 1.0, next_multiplier: 1.2, max_multiplier: 3.0 };
+
   return (
     <View style={[styles.gameContainer, { backgroundColor: 'rgba(234, 179, 8, 0.1)' }]}>
       <Text style={[styles.gameTitle, { color: COLORS.yellow }]}>🎁 Daily Bonus Spin</Text>
       <Text style={styles.gameSubtitle}>One FREE spin every day!</Text>
+
+      {/* Streak Display */}
+      <View style={streakStyles.container}>
+        <View style={streakStyles.leftSection}>
+          <Text style={streakStyles.emoji}>{getStreakEmoji(streak.current)}</Text>
+          <View>
+            <Text style={streakStyles.label}>Current Streak</Text>
+            <Text style={streakStyles.value}>{streak.current} Day{streak.current !== 1 ? 's' : ''}</Text>
+          </View>
+        </View>
+        <View style={streakStyles.rightSection}>
+          <Text style={streakStyles.label}>Multiplier</Text>
+          <Text style={streakStyles.multiplier}>{streak.multiplier?.toFixed(1)}x</Text>
+          {streak.multiplier < streak.max_multiplier ? (
+            <Text style={streakStyles.nextMultiplier}>Next: {streak.next_multiplier?.toFixed(1)}x</Text>
+          ) : (
+            <Text style={streakStyles.maxLabel}>MAX!</Text>
+          )}
+        </View>
+      </View>
+
+      {/* Progress Bar */}
+      {streak.current > 0 && (
+        <View style={streakStyles.progressContainer}>
+          <View style={streakStyles.progressLabels}>
+            <Text style={streakStyles.progressText}>Progress to 3.0x</Text>
+            <Text style={streakStyles.progressText}>{Math.min(100, ((streak.multiplier - 1) / 2) * 100).toFixed(0)}%</Text>
+          </View>
+          <View style={streakStyles.progressBar}>
+            <View 
+              style={[
+                streakStyles.progressFill,
+                { width: `${Math.min(100, ((streak.multiplier - 1) / 2) * 100)}%` }
+              ]} 
+            />
+          </View>
+        </View>
+      )}
+
+      {!status?.can_spin && streak.current > 0 && (
+        <Text style={streakStyles.reminder}>🔥 Don't break your streak! Come back tomorrow.</Text>
+      )}
 
       {/* Wheel */}
       <View style={styles.wheelContainer}>
@@ -184,6 +236,9 @@ const DailySpinGame = ({ balance, onBalanceUpdate }) => {
       {result && (
         <View style={[styles.resultBox, styles.resultWin]}>
           <Text style={styles.resultText}>🎉 {result.reward.toLocaleString()} BL!</Text>
+          {result.streak?.bonus && (
+            <Text style={[styles.resultSubtext, { color: COLORS.yellow }]}>Streak Bonus: {result.streak.bonus}</Text>
+          )}
           <Text style={styles.resultSubtext}>Added to your balance</Text>
         </View>
       )}
@@ -197,23 +252,122 @@ const DailySpinGame = ({ balance, onBalanceUpdate }) => {
         disabled={spinning || !status?.can_spin}
       >
         <Text style={styles.spinButtonText}>
-          {spinning ? '🎡 Spinning...' : status?.can_spin ? '🎁 Claim Free Spin!' : 'Come Back Tomorrow!'}
+          {spinning ? '🎡 Spinning...' : status?.can_spin ? `🎁 Claim Free Spin! ${streak.multiplier > 1 ? `(${streak.multiplier.toFixed(1)}x)` : ''}` : 'Come Back Tomorrow!'}
         </Text>
       </TouchableOpacity>
 
-      {/* Rewards Preview */}
+      {/* Rewards Preview with Multiplier */}
+      <Text style={streakStyles.rewardsLabel}>
+        {streak.multiplier > 1 ? `Base Rewards × ${streak.multiplier.toFixed(1)} streak bonus` : 'Base Rewards'}
+      </Text>
       <View style={styles.rewardsPreview}>
         {REWARDS.map((reward, i) => (
           <View key={i} style={[styles.rewardItem, { backgroundColor: `${REWARD_COLORS[i]}40` }]}>
             <Text style={[styles.rewardText, { color: REWARD_COLORS[i] }]}>
-              {reward.toLocaleString()}
+              {streak.multiplier > 1 
+                ? Math.floor(reward * streak.multiplier).toLocaleString()
+                : reward.toLocaleString()
+              }
             </Text>
           </View>
         ))}
       </View>
+
+      <Text style={streakStyles.info}>🔥 Spin daily to build your streak! Max 3.0x at Day 11+</Text>
     </View>
   );
 };
+
+// Streak-specific styles
+const streakStyles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'rgba(234, 88, 12, 0.2)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(234, 88, 12, 0.3)',
+  },
+  leftSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  rightSection: {
+    alignItems: 'flex-end',
+  },
+  emoji: {
+    fontSize: 28,
+  },
+  label: {
+    color: 'rgba(255, 200, 150, 0.8)',
+    fontSize: 12,
+  },
+  value: {
+    color: COLORS.text,
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  multiplier: {
+    color: COLORS.yellow,
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  nextMultiplier: {
+    color: 'rgba(234, 88, 12, 0.8)',
+    fontSize: 11,
+  },
+  maxLabel: {
+    color: COLORS.success,
+    fontSize: 11,
+    fontWeight: 'bold',
+  },
+  progressContainer: {
+    marginBottom: 16,
+  },
+  progressLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  progressText: {
+    color: 'rgba(234, 88, 12, 0.8)',
+    fontSize: 11,
+  },
+  progressBar: {
+    height: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: COLORS.yellow,
+    borderRadius: 4,
+  },
+  reminder: {
+    textAlign: 'center',
+    color: 'rgba(234, 88, 12, 0.8)',
+    fontSize: 12,
+    marginBottom: 12,
+  },
+  rewardsLabel: {
+    textAlign: 'center',
+    color: COLORS.yellow,
+    fontSize: 12,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  info: {
+    textAlign: 'center',
+    color: 'rgba(234, 179, 8, 0.6)',
+    fontSize: 11,
+    marginTop: 12,
+  },
+});
 
 // ============== SLOTS GAME ==============
 const SlotsGame = ({ balance, onBalanceUpdate }) => {
