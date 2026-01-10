@@ -1617,6 +1617,20 @@ async def get_uploaded_file(filename: str):
     
     return FileResponse(file_path)
 
+@upload_router.get("/files/thumbnails/{filename}")
+async def get_thumbnail_file(filename: str):
+    """Serve thumbnail files"""
+    from fastapi.responses import FileResponse
+    
+    thumb_dir = UPLOAD_DIR / "thumbnails"
+    thumb_dir.mkdir(exist_ok=True)
+    file_path = thumb_dir / filename
+    
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Thumbnail not found")
+    
+    return FileResponse(file_path)
+
 # ============== ROOT ROUTES ==============
 @api_router.get("/")
 async def root():
