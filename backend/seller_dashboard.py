@@ -27,14 +27,20 @@ load_dotenv()
 seller_router = APIRouter(prefix="/seller", tags=["Seller Dashboard"])
 ai_tools_router = APIRouter(prefix="/ai-tools", tags=["AI Tools"])
 
-# Database connection
-MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
-DB_NAME = os.environ.get('DB_NAME', 'blendlink')
+# Database connection - No fallbacks for production safety
+MONGO_URL = os.environ.get('MONGO_URL')
+if not MONGO_URL:
+    raise ValueError("MONGO_URL environment variable is required")
+DB_NAME = os.environ.get('DB_NAME')
+if not DB_NAME:
+    raise ValueError("DB_NAME environment variable is required")
 client = AsyncIOMotorClient(MONGO_URL)
 db = client[DB_NAME]
 
 # JWT Config
-JWT_SECRET = os.environ.get('JWT_SECRET', 'blendlink-jwt-secret-key-2024')
+JWT_SECRET = os.environ.get('JWT_SECRET')
+if not JWT_SECRET:
+    raise ValueError("JWT_SECRET environment variable is required")
 JWT_ALGORITHM = 'HS256'
 
 # Emergent LLM Key
