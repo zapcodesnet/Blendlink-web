@@ -48,7 +48,7 @@ const PAGE_CATEGORIES = [
 const pagesAPI = {
   getPages: async () => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/pages`, {
+    const res = await fetch(`${API_URL}/api/pages/`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) throw new Error("Failed to load pages");
@@ -57,7 +57,7 @@ const pagesAPI = {
   
   getMyPages: async () => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/pages/my-pages`, {
+    const res = await fetch(`${API_URL}/api/pages/my-pages/`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) throw new Error("Failed to load my pages");
@@ -66,7 +66,7 @@ const pagesAPI = {
   
   createPage: async (data) => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/pages`, {
+    const res = await fetch(`${API_URL}/api/pages/`, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
