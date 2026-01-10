@@ -203,6 +203,15 @@ function AppRouter() {
       {/* Casino Routes */}
       <Route path="/casino" element={<ProtectedRoute><Casino /></ProtectedRoute>} />
       
+      {/* Social Features Routes */}
+      <Route path="/friends" element={<ProtectedRoute><Friends /></ProtectedRoute>} />
+      <Route path="/groups" element={<ProtectedRoute><Groups /></ProtectedRoute>} />
+      <Route path="/groups/:id" element={<ProtectedRoute><Groups /></ProtectedRoute>} />
+      <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
+      <Route path="/events/:id" element={<ProtectedRoute><Events /></ProtectedRoute>} />
+      <Route path="/pages" element={<ProtectedRoute><Pages /></ProtectedRoute>} />
+      <Route path="/pages/:id" element={<ProtectedRoute><Pages /></ProtectedRoute>} />
+      
       {/* Seller Dashboard Routes */}
       <Route path="/seller-dashboard" element={<ProtectedRoute><SellerDashboard /></ProtectedRoute>} />
       
