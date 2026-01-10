@@ -300,7 +300,7 @@ export default function AIListingCreator() {
       });
       
       // Also get price suggestion
-      const priceResponse = await fetch(`${API_BASE_URL}/api/ai-tools/suggest-price`, {
+      const priceResponse = await fetch(`${API_BASE_URL}/api/ai-tools/price-suggestions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
