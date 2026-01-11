@@ -1,16 +1,15 @@
 # Blendlink Platform - Product Requirements Document
 
 ## Original Problem Statement
-Build a complete multi-platform referral and compensation system with a comprehensive, production-grade admin panel with secure 2FA authentication and automatic session management.
+Build a complete multi-platform referral and compensation system with a comprehensive, production-grade admin panel with secure 2FA authentication, automatic session management, and real-time push notifications.
 
-## Admin Panel Requirements
+## Admin Panel Requirements - Status
 - ✅ **Secure 2FA Login**: Admin login with Email OTP verification (using Resend) - WORKING
 - ✅ **Auto-Logout on Inactivity**: 5-minute timeout for Admin, Co-Admin, Moderator - IMPLEMENTED
+- ✅ **Browser Push Notifications**: Service worker + subscription management - IMPLEMENTED
 - ✅ **Security Dashboard**: Login history, failed attempts, locked accounts - COMPLETED
-- ✅ **Full User Management**: Search, filter, view, suspend, ban, reset passwords - COMPLETED
+- ✅ **Full User Management**: Search, filter, view, suspend, ban - COMPLETED
 - ✅ **Withdrawal Management**: Approve/reject KYC and cash withdrawals - COMPLETED
-- ✅ **Genealogy Management**: View and edit team hierarchy - COMPLETED
-- ✅ **RBAC**: Role-based access control - COMPLETED
 
 ## Current Tech Stack
 - **Frontend**: React (Web PWA), React Native (Mobile)
@@ -22,43 +21,65 @@ Build a complete multi-platform referral and compensation system with a comprehe
 
 ## What's Been Implemented (January 11, 2026)
 
-### ✅ Bug Fix - Admin Login Error
-- Fixed "Failed to execute 'clone' on 'Response': Response body is already used" error
-- Removed unnecessary response cloning logic from `AdminLogin.jsx`
-- Simplified error handling in Step 1 and Step 2 submission
+### ✅ P0 - Bug Fixes
+1. Fixed "Response body already used" error in AdminLogin.jsx
+2. Removed unnecessary response cloning logic
+3. Admin 2FA login now works correctly
 
-### ✅ Auto-Logout Feature
-- Implemented 5-minute inactivity auto-logout in `AdminLayout.jsx`
-- Tracks user activity via mouse, keyboard, scroll, touch events
-- Stores last activity timestamp in localStorage
-- Shows toast notification on auto-logout
-- Applies to all admin roles (Admin, Co-Admin, Moderator)
+### ✅ P1 - Auto-Logout Feature
+- 5-minute inactivity timeout for all admin roles
+- Activity tracking via mouse, keyboard, scroll, touch events
+- Toast notification on session expiry
+- Automatic redirect to `/admin/login`
 
-### ✅ Previous Implementations
-- Admin Security Dashboard with login/activity monitoring
-- Mobile Admin Panel screens (Genealogy, Management)
-- Backend Security API endpoints
+### ✅ P1 - Client-Side Push Notifications
+1. **Enhanced Service Worker** (`/frontend/public/service-worker.js`):
+   - Push notification handling with priority-based vibration patterns
+   - Action buttons for KYC review, withdrawal review, security investigate
+   - Smart notification routing on click
+
+2. **Push Notification Hook** (`/frontend/src/hooks/usePushNotifications.js`):
+   - Permission management
+   - Subscription/unsubscription to web push
+   - Test notification functionality
+
+3. **Backend Endpoints** (`/backend/admin_notifications.py`):
+   - `POST /api/admin/notifications/subscribe-web-push` - Register subscription
+   - `POST /api/admin/notifications/unsubscribe-web-push` - Remove subscription
+   - `POST /api/admin/notifications/test-push` - Send test notification
+   - `GET /api/admin/notifications/web-push-status` - Check subscription status
+
+4. **UI Updates** (`AdminNotificationSettings.jsx`):
+   - Browser push notification settings section
+   - Enable/disable controls
+   - Permission status display
+   - Test notification button
 
 ## Architecture
 
 ```
-/app/frontend/src/pages/admin/
-├── AdminLogin.jsx      # 2FA login (FIXED)
-├── AdminLayout.jsx     # Layout with auto-logout (NEW FEATURE)
-├── AdminSecurityDashboard.jsx
-└── [other admin pages]
+/app/frontend/
+├── public/
+│   └── service-worker.js       # Enhanced push notification handling
+├── src/
+│   ├── hooks/
+│   │   └── usePushNotifications.js  # Push subscription hook (NEW)
+│   └── pages/admin/
+│       ├── AdminLogin.jsx           # 2FA login (FIXED)
+│       ├── AdminLayout.jsx          # Auto-logout (UPDATED)
+│       └── AdminNotificationSettings.jsx  # Push UI (UPDATED)
+/app/backend/
+└── admin_notifications.py           # Web push endpoints (UPDATED)
 ```
 
-## Auto-Logout Implementation Details
-```javascript
-// 5-minute inactivity timeout
-const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 300,000ms
-
-// Tracked events
-const activityEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
-
-// On timeout: clear token, redirect to /admin/login
-```
+## Notification Types Supported
+- `new_kyc_request` - KYC verification requests
+- `new_withdrawal` - Withdrawal requests
+- `security_alert` - Security alerts
+- `suspicious_activity` - Suspicious activity detection
+- `brute_force_detected` - Brute force attack detection
+- `admin_login` - Admin login events
+- `system_alert` - System notifications
 
 ## Test Credentials
 - **Admin**: blendlinknet@gmail.com / link2026blend!
@@ -67,6 +88,5 @@ const activityEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchsta
 - Production: https://super-ctrl.preview.emergentagent.com
 
 ## Remaining Tasks
-- Client-side push notifications (service worker)
-- WebSocket real-time connection
-- AI Image/Video/Music Generation
+- **P2**: WebSocket real-time connection for live updates
+- **P3**: AI Image/Video/Music Generation features
