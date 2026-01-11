@@ -321,6 +321,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: -12,
   },
+  adminActionCard: {
+    width: '100%',
+  },
+  adminLabel: {
+    color: '#3B82F6',
+    fontWeight: 'bold',
+  },
+  adminRole: {
+    color: '#6B7280',
+    fontSize: 10,
+    textAlign: 'center',
+    textTransform: 'capitalize',
+    marginTop: 2,
+  },
   section: {
     padding: 16,
   },
