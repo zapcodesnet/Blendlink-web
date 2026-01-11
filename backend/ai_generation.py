@@ -469,6 +469,7 @@ async def generate_music_params(
     return {
         "success": True,
         "generation_id": generation_id,
+        "cover_art_url": cover_art_url,
         "params": {
             "tempo": adjusted_tempo,
             "duration": request.duration_seconds,
