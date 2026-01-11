@@ -360,9 +360,9 @@ export default function WithdrawPage() {
         <Button 
           variant="outline" 
           className="w-full"
-          onClick={() => navigate('/withdraw/history')}
+          onClick={() => navigate('/wallet')}
         >
-          View Withdrawal History
+          View Wallet & Transaction History
         </Button>
       </main>
     </div>
