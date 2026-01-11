@@ -30,6 +30,7 @@ export default function AdminGenealogy() {
   useEffect(() => {
     loadTrees();
     loadOrphans();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [maxDepth]);
 
   const loadTrees = async () => {
