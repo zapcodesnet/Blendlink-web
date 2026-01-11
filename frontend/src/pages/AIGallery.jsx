@@ -265,6 +265,16 @@ export default function AIGallery() {
                 My Media
               </Button>
               
+              {/* Link to Collections */}
+              <Button 
+                variant="outline" 
+                className="border-slate-600 hidden sm:flex"
+                onClick={() => navigate('/ai-collections')}
+              >
+                <Heart className="w-4 h-4 mr-2" />
+                Collections
+              </Button>
+              
               <Button 
                 onClick={() => navigate('/ai-studio')}
                 className="bg-purple-600 hover:bg-purple-700"
