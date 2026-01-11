@@ -20,6 +20,7 @@ import AdminAudit from "./AdminAudit";
 import AdminAnalytics from "./AdminAnalytics";
 import AdminSettings from "./AdminSettings";
 import DashboardWidgets from "./DashboardWidgets";
+import AdminABTesting from "./AdminABTesting";
 
 // Admin Context
 export const AdminContext = createContext(null);
