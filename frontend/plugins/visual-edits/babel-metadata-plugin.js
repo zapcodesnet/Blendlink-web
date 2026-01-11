@@ -230,6 +230,10 @@ function fileExportHasPortals({
         }
       },
     });
+    } catch (e) {
+      // Catch any stack overflow errors
+      return false;
+    }
     return hit;
   }
 
