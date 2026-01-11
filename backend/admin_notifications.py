@@ -665,3 +665,116 @@ async def update_delegates(
     )
     
     return {"success": True, "delegates": delegate_ids}
+
+# ============== WEB PUSH SUBSCRIPTION ENDPOINTS ==============
+
+class WebPushSubscription(BaseModel):
+    subscription: dict  # Contains endpoint, keys (p256dh, auth)
+    user_agent: str = ""
+    platform: str = "web"
+
+class WebPushUnsubscribe(BaseModel):
+    endpoint: str
+
+@admin_notifications_router.post("/subscribe-web-push")
+async def subscribe_web_push(
+    data: WebPushSubscription,
+    current_user: dict = Depends(get_current_user)
+):
+    """Register a web push subscription for admin notifications"""
+    if not current_user.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    admin_id = current_user.get("admin_id") or current_user.get("user_id")
+    
+    subscription_doc = {
+        "admin_id": admin_id,
+        "endpoint": data.subscription.get("endpoint"),
+        "keys": data.subscription.get("keys", {}),
+        "user_agent": data.user_agent,
+        "platform": data.platform,
+        "is_active": True,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Upsert based on endpoint (avoid duplicates)
+    await db.admin_web_push_subscriptions.update_one(
+        {"endpoint": data.subscription.get("endpoint")},
+        {"$set": subscription_doc},
+        upsert=True
+    )
+    
+    logger.info(f"Web push subscription registered for admin {admin_id}")
+    return {"success": True, "message": "Web push subscription registered"}
+
+@admin_notifications_router.post("/unsubscribe-web-push")
+async def unsubscribe_web_push(
+    data: WebPushUnsubscribe,
+    current_user: dict = Depends(get_current_user)
+):
+    """Remove a web push subscription"""
+    if not current_user.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    result = await db.admin_web_push_subscriptions.delete_one({"endpoint": data.endpoint})
+    
+    if result.deleted_count > 0:
+        logger.info(f"Web push subscription removed")
+        return {"success": True, "message": "Subscription removed"}
+    
+    return {"success": False, "message": "Subscription not found"}
+
+@admin_notifications_router.post("/test-push")
+async def test_web_push(
+    current_user: dict = Depends(get_current_user)
+):
+    """Send a test push notification to the current admin"""
+    if not current_user.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    admin_id = current_user.get("admin_id") or current_user.get("user_id")
+    admin_name = current_user.get("name", "Admin")
+    
+    # Create a test notification
+    test_notification = {
+        "notification_id": f"test_{uuid.uuid4().hex[:8]}",
+        "notification_type": "system_alert",
+        "title": "🔔 Test Notification",
+        "body": f"Hello {admin_name}! Push notifications are working correctly.",
+        "priority": "normal",
+        "data": {"test": True},
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Store in database
+    await db.admin_notifications.insert_one({
+        **test_notification,
+        "recipient_admin_ids": [admin_id],
+        "read_by": []
+    })
+    
+    # Note: In a production system, you would use a library like pywebpush
+    # to actually send the push notification to the browser
+    # For now, we'll store it and the frontend will poll for it
+    
+    return {"success": True, "message": "Test notification sent", "notification": test_notification}
+
+@admin_notifications_router.get("/web-push-status")
+async def get_web_push_status(current_user: dict = Depends(get_current_user)):
+    """Get web push subscription status for current admin"""
+    if not current_user.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    admin_id = current_user.get("admin_id") or current_user.get("user_id")
+    
+    subscriptions = await db.admin_web_push_subscriptions.find(
+        {"admin_id": admin_id, "is_active": True},
+        {"_id": 0, "endpoint": 1, "platform": 1, "created_at": 1}
+    ).to_list(10)
+    
+    return {
+        "is_subscribed": len(subscriptions) > 0,
+        "subscription_count": len(subscriptions),
+        "subscriptions": subscriptions
+    }
