@@ -238,6 +238,21 @@ export default function Profile() {
 
             {/* Media Sales Shortcuts */}
             <div className="grid grid-cols-2 gap-3 mb-6">
+              {/* Admin Panel Button - Only visible to admins */}
+              {(profile?.is_admin || profile?.admin_role) && (
+                <Button 
+                  variant="outline" 
+                  className="h-auto py-4 flex-col gap-2 col-span-2 border-2 border-blue-500/50 bg-blue-500/10 hover:bg-blue-500/20"
+                  onClick={() => navigate("/admin")}
+                  data-testid="admin-panel-btn"
+                >
+                  <Shield className="w-6 h-6 text-blue-500" />
+                  <span className="font-semibold text-blue-500">Admin Panel</span>
+                  <span className="text-xs text-muted-foreground capitalize">
+                    {profile?.admin_role?.replace('_', ' ') || 'Administrator'}
+                  </span>
+                </Button>
+              )}
               <Button 
                 variant="outline" 
                 className="h-auto py-4 flex-col gap-2"
