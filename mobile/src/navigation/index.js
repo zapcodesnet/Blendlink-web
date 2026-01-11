@@ -29,6 +29,7 @@ import AdminScreen from '../screens/AdminScreen';
 import AdminAnalyticsScreen from '../screens/AdminAnalyticsScreen';
 import AdminABTestingScreen from '../screens/AdminABTestingScreen';
 import AdminSettingsScreen from '../screens/AdminSettingsScreen';
+import MyTeamScreen from '../screens/MyTeamScreen';
 
 // API for notification count
 import { notificationsAPI } from '../services/api';
