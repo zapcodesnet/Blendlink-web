@@ -1749,10 +1749,28 @@ async def stripe_webhook(request: Request):
         
         # Update payment status based on webhook event
         if webhook_response.payment_status == "paid":
+            payment_txn = await db.payment_transactions.find_one(
+                {"stripe_session_id": webhook_response.session_id}
+            )
+            
             await db.payment_transactions.update_one(
                 {"stripe_session_id": webhook_response.session_id},
                 {"$set": {"payment_status": "paid", "updated_at": datetime.now(timezone.utc).isoformat()}}
             )
+            
+            # Process commissions for marketplace sales
+            if payment_txn and payment_txn.get("seller_id"):
+                try:
+                    from referral_system import process_sale_commissions
+                    sale_id = payment_txn.get("order_id") or f"sale_{uuid.uuid4().hex[:12]}"
+                    await process_sale_commissions(
+                        sale_id=sale_id,
+                        sale_amount=float(payment_txn.get("amount", 0)),
+                        seller_id=payment_txn["seller_id"]
+                    )
+                    logger.info(f"Commissions processed for payment {webhook_response.session_id}")
+                except Exception as comm_err:
+                    logger.error(f"Commission processing error: {comm_err}")
         
         return {"status": "success"}
     except Exception as e:
