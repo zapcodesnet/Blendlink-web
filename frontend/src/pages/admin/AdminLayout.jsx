@@ -205,9 +205,9 @@ export default function AdminLayout() {
               <Route path="users/*" element={<AdminUsers />} />
               <Route path="admins" element={<PlaceholderPage title="Admin Management" />} />
               <Route path="themes" element={<AdminThemes />} />
-              <Route path="pages" element={<PlaceholderPage title="Page Management" />} />
+              <Route path="pages" element={<AdminPages />} />
               <Route path="genealogy" element={<AdminGenealogy />} />
-              <Route path="ai" element={<PlaceholderPage title="AI Assistant" />} />
+              <Route path="ai" element={<AdminAI />} />
               <Route path="audit" element={<PlaceholderPage title="Audit Logs" />} />
               <Route path="analytics" element={<PlaceholderPage title="Analytics" />} />
               <Route path="settings" element={<PlaceholderPage title="Platform Settings" />} />
