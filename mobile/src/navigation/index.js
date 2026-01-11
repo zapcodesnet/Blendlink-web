@@ -211,7 +211,8 @@ function AppStack() {
       <Stack.Screen name="Admin" component={AdminScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AdminDashboard" component={AdminScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AdminUsers" component={AdminUsersScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="AdminManagement" component={AdminScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="AdminManagement" component={AdminManagementScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="AdminGenealogy" component={AdminGenealogyScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AdminAnalytics" component={AdminAnalyticsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AdminABTesting" component={AdminABTestingScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AdminAudit" component={AdminAuditScreen} options={{ headerShown: false }} />
