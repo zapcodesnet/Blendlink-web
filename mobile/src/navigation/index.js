@@ -24,6 +24,12 @@ import CasinoScreen from '../screens/CasinoScreen';
 import CasinoGameScreen from '../screens/CasinoGameScreen';
 import CasinoStatsScreen from '../screens/CasinoStatsScreen';
 
+// Admin Screens
+import AdminScreen from '../screens/AdminScreen';
+import AdminAnalyticsScreen from '../screens/AdminAnalyticsScreen';
+import AdminABTestingScreen from '../screens/AdminABTestingScreen';
+import AdminSettingsScreen from '../screens/AdminSettingsScreen';
+
 // API for notification count
 import { notificationsAPI } from '../services/api';
 
