@@ -4,15 +4,18 @@ import { Badge } from "../../components/ui/badge";
 import { toast } from "sonner";
 import { adminAPI } from "./AdminLayout";
 import { 
-  BarChart3, TrendingUp, Users, ShoppingBag, Coins,
+  BarChart3, TrendingUp, Users, Coins,
   Calendar, RefreshCw, ArrowUp, ArrowDown, Minus,
-  Eye, MessageSquare, Heart, Share2, DollarSign,
-  Activity, Clock, Globe, Smartphone, Monitor,
-  UserPlus, Shield, Download, Database, Server,
+  DollarSign, Activity, UserPlus, Database, Server,
   Wallet, CreditCard, AlertCircle
 } from "lucide-react";
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
+// GrowthIndicator component moved outside to avoid re-creation on every render
+const GrowthIndicator = ({ value }) => {
+  if (value > 0) return <span className="flex items-center text-green-400 text-sm font-medium"><ArrowUp className="w-3 h-3 mr-1" /> +{value}%</span>;
+  if (value < 0) return <span className="flex items-center text-red-400 text-sm font-medium"><ArrowDown className="w-3 h-3 mr-1" /> {value}%</span>;
+  return <span className="flex items-center text-slate-400 text-sm font-medium"><Minus className="w-3 h-3 mr-1" /> 0%</span>;
+};
 
 export default function AdminAnalytics() {
   const [analytics, setAnalytics] = useState(null);
