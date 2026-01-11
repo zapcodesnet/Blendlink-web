@@ -938,10 +938,9 @@ async def complete_transfer(contract_id: str):
         
         # Process and distribute commissions
         commission_result = await process_sale_commissions(
-            seller_id=contract["seller_id"],
+            sale_id=sale_id,
             sale_amount=contract["amount"],
-            transaction_id=sale_id,
-            commission_type="media_sale"
+            seller_id=contract["seller_id"]
         )
         logger.info(f"Commissions processed for sale {sale_id}: {commission_result}")
     except Exception as e:
