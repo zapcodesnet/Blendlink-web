@@ -208,12 +208,13 @@ function AppStack() {
       {/* Admin Screens */}
       <Stack.Screen name="Admin" component={AdminScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AdminDashboard" component={AdminScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="AdminUsers" component={AdminScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="AdminUsers" component={AdminUsersScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AdminManagement" component={AdminScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AdminAnalytics" component={AdminAnalyticsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AdminABTesting" component={AdminABTestingScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="AdminAudit" component={AdminScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="AdminAudit" component={AdminAuditScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AdminSettings" component={AdminSettingsScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="AdminWithdrawals" component={AdminWithdrawalsScreen} options={{ headerShown: false }} />
       {/* Referral System */}
       <Stack.Screen name="MyTeam" component={MyTeamScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
