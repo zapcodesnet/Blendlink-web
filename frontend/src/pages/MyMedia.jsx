@@ -73,10 +73,16 @@ export default function MyMediaPage() {
               </Button>
               <h1 className="text-xl font-bold">My Media</h1>
             </div>
-            <Button onClick={() => navigate("/upload-media")}>
-              <Plus className="w-4 h-4 mr-2" />
-              Upload
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={() => navigate("/ai-gallery")}>
+                <Sparkles className="w-4 h-4 mr-2" />
+                AI Gallery
+              </Button>
+              <Button onClick={() => navigate("/upload-media")}>
+                <Plus className="w-4 h-4 mr-2" />
+                Upload
+              </Button>
+            </div>
           </div>
           
           {/* Filters */}
