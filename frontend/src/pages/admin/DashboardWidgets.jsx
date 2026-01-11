@@ -27,24 +27,15 @@ const WIDGET_TYPES = {
 const DEFAULT_WIDGETS = ['total_users', 'new_users_7d', 'total_bl_coins', 'total_admins', 'recent_users'];
 
 export default function DashboardWidgets({ stats, onRefresh }) {
-  const [widgets, setWidgets] = useState([]);
-  const [editing, setEditing] = useState(false);
-  const [availableWidgets, setAvailableWidgets] = useState([]);
-
-  useEffect(() => {
-    // Load saved widgets from localStorage
+  // Initialize state from localStorage
+  const [widgets, setWidgets] = useState(() => {
     const saved = localStorage.getItem('admin_dashboard_widgets');
-    if (saved) {
-      setWidgets(JSON.parse(saved));
-    } else {
-      setWidgets(DEFAULT_WIDGETS);
-    }
-  }, []);
-
-  useEffect(() => {
-    const used = new Set(widgets);
-    setAvailableWidgets(Object.keys(WIDGET_TYPES).filter(k => !used.has(k)));
-  }, [widgets]);
+    return saved ? JSON.parse(saved) : DEFAULT_WIDGETS;
+  });
+  const [editing, setEditing] = useState(false);
+  
+  // Compute available widgets from current widgets
+  const availableWidgets = Object.keys(WIDGET_TYPES).filter(k => !widgets.includes(k));
 
   const saveWidgets = (newWidgets) => {
     setWidgets(newWidgets);
