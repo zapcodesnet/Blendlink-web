@@ -127,6 +127,14 @@ export default function AdminLayout() {
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
 
+  // Real-time WebSocket connection
+  const { 
+    isConnected: wsConnected, 
+    metrics: realtimeMetrics, 
+    notifications: realtimeNotifications,
+    connectionError: wsError 
+  } = useAdminWebSocket();
+
   // Responsive detection
   useEffect(() => {
     const checkDevice = () => {
