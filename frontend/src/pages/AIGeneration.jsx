@@ -29,6 +29,7 @@ export default function AIGeneration() {
   const [musicDuration, setMusicDuration] = useState(30);
   const [musicTempo, setMusicTempo] = useState(120);
   const [musicParams, setMusicParams] = useState(null);
+  const [musicCoverArt, setMusicCoverArt] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   
   const audioContextRef = useRef(null);
