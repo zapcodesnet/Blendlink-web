@@ -26,10 +26,11 @@ from referral_system import (
     DIAMOND_REWARD_BL, WITHDRAWAL_FEE_RATE, INACTIVITY_YEARS_FOR_REASSIGNMENT
 )
 
-# Router
+# Routers
 diamond_router = APIRouter(prefix="/diamond", tags=["Diamond Leader"])
 withdrawal_router = APIRouter(prefix="/withdrawal", tags=["Withdrawals"])
 kyc_router = APIRouter(prefix="/kyc", tags=["KYC Verification"])
+reassignment_router = APIRouter(prefix="/reassignment", tags=["Reassignment"])
 
 # ============== PYDANTIC MODELS ==============
 
