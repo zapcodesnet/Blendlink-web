@@ -22,7 +22,7 @@ import {
 // API functions for friends
 const friendsAPI = {
   getFriends: async () => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("blendlink_token") || localStorage.getItem("token");
     const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/friends/`, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -31,7 +31,7 @@ const friendsAPI = {
   },
   
   getRequests: async () => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("blendlink_token") || localStorage.getItem("token");
     const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/friends/requests`, {
       headers: { Authorization: `Bearer ${token}` },
     });
