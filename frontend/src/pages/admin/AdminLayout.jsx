@@ -15,6 +15,11 @@ import AdminThemes from "./AdminThemes";
 import AdminGenealogy from "./AdminGenealogy";
 import AdminAI from "./AdminAI";
 import AdminPages from "./AdminPages";
+import AdminManagement from "./AdminManagement";
+import AdminAudit from "./AdminAudit";
+import AdminAnalytics from "./AdminAnalytics";
+import AdminSettings from "./AdminSettings";
+import DashboardWidgets from "./DashboardWidgets";
 
 // Admin Context
 export const AdminContext = createContext(null);
