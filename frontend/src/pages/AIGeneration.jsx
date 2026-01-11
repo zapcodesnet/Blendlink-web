@@ -564,6 +564,17 @@ export default function AIGeneration() {
               {/* Music Player */}
               {musicParams && (
                 <div className="bg-slate-700 rounded-xl p-4">
+                  {/* Cover Art */}
+                  {musicCoverArt && (
+                    <div className="mb-4 flex justify-center">
+                      <img 
+                        src={`${API_BASE}${musicCoverArt}`}
+                        alt="Album cover art"
+                        className="w-48 h-48 rounded-xl shadow-lg object-cover"
+                      />
+                    </div>
+                  )}
+                  
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <p className="font-medium">Generated Music</p>
