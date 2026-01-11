@@ -214,6 +214,68 @@ export default function AdminLayout() {
     checkAdminAuth();
   }, [navigate]);
 
+  // Auto-logout after 5 minutes of inactivity
+  useEffect(() => {
+    const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
+    let inactivityTimer;
+
+    const resetTimer = () => {
+      // Update last activity timestamp
+      localStorage.setItem('admin_last_activity', Date.now().toString());
+      
+      // Clear existing timer
+      if (inactivityTimer) {
+        clearTimeout(inactivityTimer);
+      }
+      
+      // Set new timer
+      inactivityTimer = setTimeout(() => {
+        // Auto-logout due to inactivity
+        console.log('Admin auto-logout due to inactivity');
+        localStorage.removeItem('blendlink_token');
+        localStorage.removeItem('blendlink_user');
+        localStorage.removeItem('admin_last_activity');
+        toast.error('Session expired due to inactivity. Please login again.');
+        navigate('/admin/login');
+      }, INACTIVITY_TIMEOUT);
+    };
+
+    // Check if already timed out on mount
+    const lastActivity = localStorage.getItem('admin_last_activity');
+    if (lastActivity) {
+      const timeSinceActivity = Date.now() - parseInt(lastActivity);
+      if (timeSinceActivity > INACTIVITY_TIMEOUT) {
+        // Already timed out - logout immediately
+        localStorage.removeItem('blendlink_token');
+        localStorage.removeItem('blendlink_user');
+        localStorage.removeItem('admin_last_activity');
+        navigate('/admin/login');
+        return;
+      }
+    }
+
+    // Activity events to track
+    const activityEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
+    
+    // Add event listeners
+    activityEvents.forEach(event => {
+      document.addEventListener(event, resetTimer, { passive: true });
+    });
+
+    // Initialize timer
+    resetTimer();
+
+    // Cleanup
+    return () => {
+      if (inactivityTimer) {
+        clearTimeout(inactivityTimer);
+      }
+      activityEvents.forEach(event => {
+        document.removeEventListener(event, resetTimer);
+      });
+    };
+  }, [navigate]);
+
   // Zoom controls
   const handleZoomIn = () => {
     const newZoom = Math.min(zoomLevel + 10, 150);
