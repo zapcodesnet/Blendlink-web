@@ -1,92 +1,90 @@
 # Blendlink Platform - Product Requirements Document
 
 ## Original Problem Statement
-Build a complete multi-platform referral and compensation system with a comprehensive, production-grade admin panel with secure 2FA authentication, automatic session management, and real-time push notifications.
+Build a complete multi-platform referral and compensation system with a comprehensive, production-grade admin panel with secure 2FA authentication, automatic session management, real-time push notifications, and live WebSocket updates.
 
 ## Admin Panel Requirements - Status
-- ✅ **Secure 2FA Login**: Admin login with Email OTP verification (using Resend) - WORKING
-- ✅ **Auto-Logout on Inactivity**: 5-minute timeout for Admin, Co-Admin, Moderator - IMPLEMENTED
-- ✅ **Browser Push Notifications**: Service worker + subscription management - IMPLEMENTED
-- ✅ **Security Dashboard**: Login history, failed attempts, locked accounts - COMPLETED
-- ✅ **Full User Management**: Search, filter, view, suspend, ban - COMPLETED
-- ✅ **Withdrawal Management**: Approve/reject KYC and cash withdrawals - COMPLETED
+- ✅ **Secure 2FA Login**: Admin login with Email OTP verification - WORKING
+- ✅ **Auto-Logout on Inactivity**: 5-minute timeout - IMPLEMENTED
+- ✅ **Browser Push Notifications**: Service worker + subscription - IMPLEMENTED
+- ✅ **WebSocket Real-Time Updates**: Live metrics and status - IMPLEMENTED
+- ✅ **Security Dashboard**: Login history, failed attempts - COMPLETED
+- ✅ **Full User Management**: Search, filter, suspend, ban - COMPLETED
 
 ## Current Tech Stack
 - **Frontend**: React (Web PWA), React Native (Mobile)
-- **Backend**: FastAPI + MongoDB
+- **Backend**: FastAPI + MongoDB + WebSocket
 - **UI**: Tailwind CSS, Shadcn UI
 - **Email**: Resend (for OTP)
-- **Payments**: Stripe
-- **Auth**: JWT + Email OTP (2FA for admins)
+- **Real-time**: WebSocket for live updates
 
 ## What's Been Implemented (January 11, 2026)
 
 ### ✅ P0 - Bug Fixes
-1. Fixed "Response body already used" error in AdminLogin.jsx
-2. Removed unnecessary response cloning logic
-3. Admin 2FA login now works correctly
+- Fixed "Response body already used" error in AdminLogin.jsx
+- Admin 2FA login working correctly
 
 ### ✅ P1 - Auto-Logout Feature
 - 5-minute inactivity timeout for all admin roles
-- Activity tracking via mouse, keyboard, scroll, touch events
-- Toast notification on session expiry
-- Automatic redirect to `/admin/login`
 
 ### ✅ P1 - Client-Side Push Notifications
-1. **Enhanced Service Worker** (`/frontend/public/service-worker.js`):
-   - Push notification handling with priority-based vibration patterns
-   - Action buttons for KYC review, withdrawal review, security investigate
-   - Smart notification routing on click
+- Enhanced service worker
+- Push subscription hook
+- Backend endpoints for web push
 
-2. **Push Notification Hook** (`/frontend/src/hooks/usePushNotifications.js`):
-   - Permission management
-   - Subscription/unsubscription to web push
-   - Test notification functionality
+### ✅ P2 - WebSocket Real-Time Connection
+1. **WebSocket Hook** (`/frontend/src/hooks/useAdminWebSocket.js`):
+   - Auto-connect with token authentication
+   - Reconnection with exponential backoff
+   - Ping/pong keep-alive
+   - Message handling for metrics, notifications, activities
 
-3. **Backend Endpoints** (`/backend/admin_notifications.py`):
-   - `POST /api/admin/notifications/subscribe-web-push` - Register subscription
-   - `POST /api/admin/notifications/unsubscribe-web-push` - Remove subscription
-   - `POST /api/admin/notifications/test-push` - Send test notification
-   - `GET /api/admin/notifications/web-push-status` - Check subscription status
+2. **Real-Time Status Components** (`/frontend/src/components/admin/AdminRealtimeStatus.jsx`):
+   - `AdminRealtimeStatus` - Header status indicator (Live/Offline)
+   - `RealtimeMetricsPanel` - Dashboard live metrics panel
 
-4. **UI Updates** (`AdminNotificationSettings.jsx`):
-   - Browser push notification settings section
-   - Enable/disable controls
-   - Permission status display
-   - Test notification button
+3. **Admin Layout Integration**:
+   - Real-time status indicator in header
+   - Live metrics panel on dashboard
+   - WebSocket connection status display
+
+4. **Backend WebSocket** (`/backend/realtime_ab_system.py`):
+   - `/api/realtime/ws/analytics` - WebSocket endpoint
+   - Real-time metrics: users online, signups, posts, transactions
+   - Channel-based broadcasting
 
 ## Architecture
 
 ```
 /app/frontend/
-├── public/
-│   └── service-worker.js       # Enhanced push notification handling
 ├── src/
 │   ├── hooks/
-│   │   └── usePushNotifications.js  # Push subscription hook (NEW)
+│   │   ├── usePushNotifications.js   # Push subscription
+│   │   └── useAdminWebSocket.js      # WebSocket connection (NEW)
+│   ├── components/admin/
+│   │   └── AdminRealtimeStatus.jsx   # Status indicator (NEW)
 │   └── pages/admin/
-│       ├── AdminLogin.jsx           # 2FA login (FIXED)
-│       ├── AdminLayout.jsx          # Auto-logout (UPDATED)
-│       └── AdminNotificationSettings.jsx  # Push UI (UPDATED)
+│       ├── AdminLayout.jsx           # WebSocket integration (UPDATED)
+│       └── AdminLogin.jsx            # 2FA login (FIXED)
 /app/backend/
-└── admin_notifications.py           # Web push endpoints (UPDATED)
+├── admin_notifications.py            # Push endpoints
+└── realtime_ab_system.py             # WebSocket server
 ```
 
-## Notification Types Supported
-- `new_kyc_request` - KYC verification requests
-- `new_withdrawal` - Withdrawal requests
-- `security_alert` - Security alerts
-- `suspicious_activity` - Suspicious activity detection
-- `brute_force_detected` - Brute force attack detection
-- `admin_login` - Admin login events
-- `system_alert` - System notifications
+## Real-Time Metrics Available
+- `users_online` - Currently active users
+- `new_signups.hour` / `new_signups.today` - New user registrations
+- `content.new_posts_hour` / `new_posts_today` - Post activity
+- `transactions.count_hour` - Transaction volume
+- `transactions.bl_coins_volume` - BL Coins activity
+- `casino.bets_hour` - Casino activity
 
 ## Test Credentials
 - **Admin**: blendlinknet@gmail.com / link2026blend!
 
 ## API Base URL
 - Production: https://super-ctrl.preview.emergentagent.com
+- WebSocket: wss://super-ctrl.preview.emergentagent.com/api/realtime/ws/analytics
 
 ## Remaining Tasks
-- **P2**: WebSocket real-time connection for live updates
 - **P3**: AI Image/Video/Music Generation features
