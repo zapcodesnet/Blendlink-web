@@ -83,19 +83,7 @@ export default function AdminLogin() {
         body: JSON.stringify({ email, password }),
       });
       
-      // Clone response before reading to avoid "body stream already read" error
-      const responseClone = response.clone();
-      let data;
-      try {
-        data = await response.json();
-      } catch (jsonError) {
-        // If JSON parsing fails, try the clone
-        try {
-          data = await responseClone.json();
-        } catch {
-          throw new Error("Server error. Please try again.");
-        }
-      }
+      const data = await response.json();
       
       if (!response.ok) {
         throw new Error(data.detail || "Login failed");
@@ -113,7 +101,7 @@ export default function AdminLogin() {
       setTimeout(() => otpRefs.current[0]?.focus(), 100);
       
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -179,32 +167,22 @@ export default function AdminLogin() {
         }),
       });
       
-      // Clone response before reading to avoid "body stream already read" error
-      const responseClone = response.clone();
-      let data;
-      try {
-        data = await response.json();
-      } catch (jsonError) {
-        try {
-          data = await responseClone.json();
-        } catch {
-          throw new Error("Server error. Please try again.");
-        }
-      }
+      const data = await response.json();
       
       if (!response.ok) {
         throw new Error(data.detail || "Verification failed");
       }
       
-      // Store token and redirect
+      // Store token and redirect - also set last activity for auto-logout
       localStorage.setItem("blendlink_token", data.token);
       localStorage.setItem("blendlink_user", JSON.stringify(data.user));
+      localStorage.setItem("admin_last_activity", Date.now().toString());
       
       toast.success("Welcome to Admin Panel!");
       navigate("/admin");
       
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.message || "Verification failed. Please try again.");
       // Clear OTP on error
       setOtpCode(["", "", "", "", "", ""]);
       otpRefs.current[0]?.focus();
