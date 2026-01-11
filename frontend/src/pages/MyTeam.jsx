@@ -88,11 +88,13 @@ const TreeNode = ({ member, level = 1, expanded, onToggle }) => {
 // Daily Claim Section Component
 const DailyClaimSection = ({ onClaim, nextClaimAt, isDiamond, loading }) => {
   const [countdown, setCountdown] = useState(null);
-  const [canClaim, setCanClaim] = useState(false);
+  
+  // Calculate if can claim based on nextClaimAt
+  const canClaim = !nextClaimAt || new Date(nextClaimAt) <= new Date();
   
   useEffect(() => {
-    if (!nextClaimAt) {
-      setCanClaim(true);
+    if (!nextClaimAt || canClaim) {
+      setCountdown(null);
       return;
     }
     
@@ -102,12 +104,10 @@ const DailyClaimSection = ({ onClaim, nextClaimAt, isDiamond, loading }) => {
       const diff = next - now;
       
       if (diff <= 0) {
-        setCanClaim(true);
         setCountdown(null);
         return;
       }
       
-      setCanClaim(false);
       const hours = Math.floor(diff / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
@@ -117,7 +117,7 @@ const DailyClaimSection = ({ onClaim, nextClaimAt, isDiamond, loading }) => {
     updateCountdown();
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
-  }, [nextClaimAt]);
+  }, [nextClaimAt, canClaim]);
   
   const claimAmount = isDiamond ? '5,000' : '2,000';
   
