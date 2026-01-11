@@ -1769,6 +1769,16 @@ async def stripe_webhook(request: Request):
         logger.error(f"Webhook error: {e}")
         return {"status": "error", "message": str(e)}
 
+# Import and include real-time and A/B testing routers
+try:
+    from realtime_ab_system import realtime_router, ab_testing_router, biometric_router
+    api_router.include_router(realtime_router)
+    api_router.include_router(ab_testing_router)
+    api_router.include_router(biometric_router)
+    logger.info("Real-time analytics, A/B testing, and biometric routers loaded")
+except ImportError as e:
+    logger.warning(f"Could not load realtime_ab_system: {e}")
+
 app.include_router(api_router)
 
 app.add_middleware(
