@@ -6,8 +6,9 @@ import {
   Bell, BellOff, Shield, DollarSign, Users, Diamond,
   AlertTriangle, Clock, Moon, RefreshCw, Check, X,
   Settings, ChevronDown, ChevronRight, Smartphone,
-  Mail, Send, UserPlus, Volume2, VolumeX
+  Mail, Send, UserPlus, Volume2, VolumeX, Globe
 } from "lucide-react";
+import { usePushNotifications } from "../../hooks/usePushNotifications";
 
 // Note: Using local apiRequest instead of importing from AdminLayout to avoid circular dependency
 
