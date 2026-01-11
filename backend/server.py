@@ -1677,17 +1677,7 @@ api_router.include_router(offers_router)
 api_router.include_router(contracts_router)
 api_router.include_router(payments_router)
 
-# Import and include referral system routers
-from referral_system import (
-    referral_system_router, commission_router, diamond_router, 
-    orphan_router, withdrawal_router, admin_router
-)
-api_router.include_router(referral_system_router)
-api_router.include_router(commission_router)
-api_router.include_router(diamond_router)
-api_router.include_router(orphan_router)
-api_router.include_router(withdrawal_router)
-api_router.include_router(admin_router)
+# NOTE: Referral system routers are imported at the end of this file in a try-except block
 
 # Import and include social system routers
 from social_system import (
