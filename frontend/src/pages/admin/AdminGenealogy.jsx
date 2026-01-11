@@ -183,82 +183,9 @@ export default function AdminGenealogy() {
     }
   };
 
-  const TreeNode = ({ node, depth = 0, isExpanded = true }) => {
-    const [expanded, setExpanded] = useState(isExpanded && depth < 2);
-    const hasChildren = node.children && node.children.length > 0;
-
-    return (
-      <div className="ml-4 border-l-2 border-slate-600 pl-4 py-1" data-testid={`tree-node-${node.user_id}`}>
-        <div 
-          className={`flex items-center gap-2 p-3 bg-slate-800 rounded-lg border border-slate-700 hover:border-blue-500/50 transition-colors cursor-pointer group ${selectedUser === node.user_id ? 'border-blue-500 ring-1 ring-blue-500/50' : ''}`}
-          onClick={() => loadUserNetwork(node.user_id)}
-        >
-          {hasChildren && (
-            <button 
-              onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
-              className="p-1 hover:bg-slate-700 rounded"
-            >
-              {expanded ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-            </button>
-          )}
-          {!hasChildren && <div className="w-6" />}
-          
-          <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center overflow-hidden flex-shrink-0">
-            {node.avatar ? (
-              <img src={node.avatar} alt="" className="w-full h-full object-cover" />
-            ) : (
-              <User className="w-4 h-4 text-slate-400" />
-            )}
-          </div>
-          
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="text-white text-sm font-medium truncate">{node.name || "Unknown"}</span>
-              {node.rank === "diamond_leader" && (
-                <Badge className="bg-blue-500/20 text-blue-400 text-xs">Diamond</Badge>
-              )}
-            </div>
-            <p className="text-xs text-slate-500 truncate">@{node.username || node.email?.split('@')[0]}</p>
-          </div>
-          
-          <div className="text-right flex-shrink-0">
-            <p className="text-amber-400 text-sm font-medium">{(node.bl_coins || 0).toLocaleString()} BL</p>
-            <p className="text-xs text-slate-500">{node.referral_count || 0} refs</p>
-          </div>
-          
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-slate-400 hover:text-white"
-              onClick={(e) => { e.stopPropagation(); loadUserNetwork(node.user_id); }}
-            >
-              <Eye className="w-3.5 h-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-slate-400 hover:text-white"
-              onClick={(e) => { 
-                e.stopPropagation(); 
-                setReassignData({ ...reassignData, userId: node.user_id });
-                setShowReassignModal(true);
-              }}
-            >
-              <Move className="w-3.5 h-3.5" />
-            </Button>
-          </div>
-        </div>
-        
-        {expanded && hasChildren && (
-          <div className="mt-1">
-            {node.children.map(child => (
-              <TreeNode key={child.user_id} node={child} depth={depth + 1} />
-            ))}
-          </div>
-        )}
-      </div>
-    );
+  const handleReassignNode = (userId) => {
+    setReassignData({ ...reassignData, userId });
+    setShowReassignModal(true);
   };
 
   return (
