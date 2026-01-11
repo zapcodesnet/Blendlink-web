@@ -55,12 +55,6 @@ export default function AdminAnalytics() {
     return Math.round(((recent - previous) / previous) * 100);
   };
 
-  const GrowthIndicator = ({ value }) => {
-    if (value > 0) return <span className="flex items-center text-green-400 text-sm font-medium"><ArrowUp className="w-3 h-3 mr-1" /> +{value}%</span>;
-    if (value < 0) return <span className="flex items-center text-red-400 text-sm font-medium"><ArrowDown className="w-3 h-3 mr-1" /> {value}%</span>;
-    return <span className="flex items-center text-slate-400 text-sm font-medium"><Minus className="w-3 h-3 mr-1" /> 0%</span>;
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
