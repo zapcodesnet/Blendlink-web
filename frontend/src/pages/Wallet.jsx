@@ -148,15 +148,15 @@ export default function Wallet() {
             <p className="text-xs text-muted-foreground">Play games & tasks</p>
           </button>
           <button
-            onClick={() => navigate("/referrals")}
+            onClick={() => navigate("/my-team")}
             className="bg-card rounded-xl p-4 border border-border/50 card-hover text-left"
             data-testid="referrals-btn"
           >
             <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center mb-2">
               <Share2 className="w-5 h-5 text-blue-500" />
             </div>
-            <p className="font-semibold">Invite Friends</p>
-            <p className="text-xs text-muted-foreground">Earn referral bonus</p>
+            <p className="font-semibold">My Team</p>
+            <p className="text-xs text-muted-foreground">Referrals & commissions</p>
           </button>
         </div>
 
