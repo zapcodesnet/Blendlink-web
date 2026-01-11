@@ -724,7 +724,7 @@ Play responsibly. If you have concerns about compulsive behavior, please seek he
 © Blendlink. All rights reserved.
 """
 
-@referral_router.get("/disclaimer")
+@diamond_router.get("/disclaimer")
 async def get_disclaimer():
     """Get the legal disclaimer text"""
     return {
