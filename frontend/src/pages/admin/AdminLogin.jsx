@@ -58,13 +58,21 @@ export default function AdminLogin() {
       fetch(`${API_BASE}/api/admin-auth/secure/check-session`, {
         headers: { Authorization: `Bearer ${token}` }
       })
-        .then(res => res.json())
+        .then(async (res) => {
+          if (!res.ok) {
+            // Not a valid admin session, clear and stay on login
+            return { valid: false };
+          }
+          return res.json();
+        })
         .then(data => {
           if (data.valid) {
             navigate("/admin");
           }
         })
-        .catch(() => {});
+        .catch(() => {
+          // Silently fail - user stays on login page
+        });
     }
   }, [navigate]);
   
