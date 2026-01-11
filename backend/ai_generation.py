@@ -37,12 +37,14 @@ class VideoGenerationRequest(BaseModel):
     model: str = Field(default="sora-2")
     size: str = Field(default="1280x720")
     duration: int = Field(default=4)
+    generate_thumbnail: bool = Field(default=True)  # Auto-generate AI thumbnail
 
 class MusicGenerationRequest(BaseModel):
     genre: str = Field(default="electronic")
     mood: str = Field(default="upbeat")
     duration_seconds: int = Field(default=30, ge=5, le=120)
     tempo: int = Field(default=120, ge=60, le=200)
+    generate_cover_art: bool = Field(default=True)  # Auto-generate AI cover art
 
 # ============== IMAGE GENERATION ==============
 
