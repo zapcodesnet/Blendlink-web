@@ -113,7 +113,6 @@ export const adminAPI = {
 
 // Admin Layout Component
 export default function AdminLayout() {
-  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -160,24 +159,58 @@ export default function AdminLayout() {
   }, []);
 
   useEffect(() => {
-    const checkAdmin = async () => {
+    const checkAdminAuth = async () => {
       try {
-        // First check if user has is_admin flag
-        if (!user?.is_admin) {
-          toast.error("Admin access required. You don't have admin privileges.");
-          navigate('/');
+        const token = localStorage.getItem('blendlink_token');
+        
+        // No token - redirect to admin login
+        if (!token) {
+          navigate('/admin/login');
           return;
         }
         
-        // Then verify with the admin auth system
-        const data = await adminAPI.getProfile();
-        setAdminData(data);
+        // Verify admin session with secure endpoint
+        const response = await fetch(`${API_BASE}/api/admin-auth/secure/check-session`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (!response.ok) {
+          // Session invalid - redirect to admin login
+          toast.error("Admin session expired. Please login again.");
+          navigate('/admin/login');
+          return;
+        }
+        
+        const sessionData = await response.json();
+        if (!sessionData.valid) {
+          navigate('/admin/login');
+          return;
+        }
+        
+        // Valid admin session - load admin data
+        try {
+          const data = await adminAPI.getProfile();
+          setAdminData(data);
+        } catch (profileError) {
+          // If profile fails, use basic admin data from stored user
+          const storedUser = localStorage.getItem('blendlink_user');
+          if (storedUser) {
+            const userData = JSON.parse(storedUser);
+            setAdminData({
+              admin: userData,
+              stats: { total_users: 0, new_users_7d: 0 }
+            });
+          }
+        }
       } catch (error) {
-        console.error("Admin check failed:", error);
-        // If the admin-auth/me fails, user might need to set up admin account
-        if (user?.is_admin) {
-          // User has admin flag but no admin_account - show basic admin with user data
-          setAdminData({
+        console.error("Admin auth check failed:", error);
+        navigate('/admin/login');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAdminAuth();
             admin_id: `temp_${user.user_id}`,
             email: user.email,
             name: user.name,
