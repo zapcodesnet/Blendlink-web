@@ -199,6 +199,7 @@ function AppRouter() {
       <Route path="/referrals" element={<ProtectedRoute><Referrals /></ProtectedRoute>} />
       <Route path="/my-team" element={<ProtectedRoute><MyTeam /></ProtectedRoute>} />
       <Route path="/raffles" element={<ProtectedRoute><Raffles /></ProtectedRoute>} />
+      <Route path="/ai-studio" element={<ProtectedRoute><AIGeneration /></ProtectedRoute>} />
       
       {/* Media Sales Routes */}
       <Route path="/upload-media" element={<ProtectedRoute><MediaUpload /></ProtectedRoute>} />
