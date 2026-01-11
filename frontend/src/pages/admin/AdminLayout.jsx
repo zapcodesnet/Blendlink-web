@@ -217,6 +217,7 @@ export default function AdminLayout() {
               <Route path="ai" element={<AdminAI />} />
               <Route path="audit" element={<AdminAudit />} />
               <Route path="analytics" element={<AdminAnalytics />} />
+              <Route path="ab-testing" element={<AdminABTesting />} />
               <Route path="settings" element={<AdminSettings />} />
             </Routes>
           </div>
