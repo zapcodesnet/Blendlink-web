@@ -317,7 +317,7 @@ export default function AdminGenealogy() {
               <div className="flex flex-col items-center justify-center h-64 text-slate-400">
                 <Network className="w-16 h-16 mb-4 opacity-50" />
                 <p className="text-lg">No genealogy data found</p>
-                <p className="text-sm text-slate-500 mt-1">Users without referrers will appear here</p>
+                <p className="text-sm text-slate-500 mt-1">Users without referrers appear here</p>
               </div>
             ) : (
               <div className="space-y-2">
