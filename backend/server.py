@@ -1730,6 +1730,14 @@ api_router.include_router(genealogy_router)
 from theme_system import theme_router
 api_router.include_router(theme_router)
 
+# Import and include AI assistant router
+from ai_assistant import ai_assistant_router
+api_router.include_router(ai_assistant_router)
+
+# Import and include page manager router
+from page_manager import page_manager_router
+api_router.include_router(page_manager_router)
+
 # Stripe webhook endpoint (must be at app level, not api_router)
 @app.post("/api/webhook/stripe")
 async def stripe_webhook(request: Request):
