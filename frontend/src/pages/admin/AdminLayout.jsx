@@ -573,7 +573,7 @@ export default function AdminLayout() {
             }}
           >
             <Routes>
-              <Route index element={<AdminDashboardHome />} />
+              <Route index element={<AdminDashboardHome realtimeMetrics={realtimeMetrics} wsConnected={wsConnected} />} />
               <Route path="users/*" element={<AdminUsers />} />
               <Route path="admins" element={<AdminManagement />} />
               <Route path="security" element={<AdminSecurityDashboard />} />
