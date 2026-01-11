@@ -201,6 +201,15 @@ function AppStack() {
       <Stack.Screen name="CasinoStats" component={CasinoStatsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Friends" component={FriendsScreen} options={{ title: 'Friends' }} />
       <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
+      {/* Admin Screens */}
+      <Stack.Screen name="Admin" component={AdminScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="AdminDashboard" component={AdminScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="AdminUsers" component={AdminScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="AdminManagement" component={AdminScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="AdminAnalytics" component={AdminAnalyticsScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="AdminABTesting" component={AdminABTestingScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="AdminAudit" component={AdminScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="AdminSettings" component={AdminSettingsScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }
