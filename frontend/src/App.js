@@ -121,6 +121,23 @@ const ProtectedRoute = ({ children }) => {
     setStoredUser(updatedUser);
   };
 
+  const refreshUser = async () => {
+    try {
+      const profile = await api.auth.getProfile();
+      const balance = await api.wallet.getBalance();
+      const userData = {
+        ...profile,
+        bl_coins: balance.balance,
+      };
+      setStoredUser(userData);
+      setUser(userData);
+      return userData;
+    } catch (error) {
+      console.error('Failed to refresh user:', error);
+      return user;
+    }
+  };
+
   if (isAuthenticated === null) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
