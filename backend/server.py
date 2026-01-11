@@ -1803,6 +1803,26 @@ try:
 except ImportError as e:
     logger.warning(f"Could not load referral/diamond systems: {e}")
 
+# Import and include production admin system routers
+try:
+    from admin_auth_system import admin_auth_router, admin_realtime_router
+    from admin_core_system import (
+        admin_users_router, admin_finance_router, admin_genealogy_router,
+        admin_content_router, admin_roles_router, admin_system_router
+    )
+    api_router.include_router(admin_auth_router)
+    api_router.include_router(admin_users_router)
+    api_router.include_router(admin_finance_router)
+    api_router.include_router(admin_genealogy_router)
+    api_router.include_router(admin_content_router)
+    api_router.include_router(admin_roles_router)
+    api_router.include_router(admin_system_router)
+    # WebSocket router needs to be on the app directly
+    app.include_router(admin_realtime_router, prefix="/api")
+    logger.info("Production Admin System routers loaded (Auth, Users, Finance, Genealogy, Content, Roles, System)")
+except ImportError as e:
+    logger.warning(f"Could not load production admin system: {e}")
+
 app.include_router(api_router)
 
 app.add_middleware(
