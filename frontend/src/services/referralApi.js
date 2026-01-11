@@ -1,4 +1,4 @@
-// Referral System API Service
+// Referral System API Service - Updated for new compensation system
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 const API_PREFIX = '/api';
 
@@ -30,129 +30,128 @@ const apiRequest = async (endpoint, options = {}) => {
   return response.json();
 };
 
-// ============== REFERRAL NETWORK API ==============
-export const networkAPI = {
-  getMyNetwork: async () => {
-    return apiRequest('/referral-system/my-network');
+// ============== REFERRAL/GENEALOGY API ==============
+export const referralAPI = {
+  // Get genealogy tree (L1 + L2 downlines)
+  getGenealogy: async () => {
+    return apiRequest('/referral/genealogy');
   },
 
-  getStats: async () => {
-    return apiRequest('/referral-system/stats');
+  // Get commission rates
+  getRates: async () => {
+    return apiRequest('/referral/commission-rates');
   },
 
-  applyReferralCode: async (referralCode) => {
-    return apiRequest('/referral-system/apply-code', {
-      method: 'POST',
-      body: JSON.stringify({ referral_code: referralCode }),
-    });
-  },
-};
-
-// ============== COMMISSIONS API ==============
-export const commissionsAPI = {
-  getMyCommissions: async (skip = 0, limit = 50, status = null) => {
-    const params = new URLSearchParams({ skip, limit });
-    if (status) params.append('status', status);
-    return apiRequest(`/commissions/my-commissions?${params}`);
+  // Get dashboard overview
+  getDashboard: async () => {
+    return apiRequest('/referral/dashboard');
   },
 
-  getPending: async () => {
-    return apiRequest('/commissions/pending');
+  // Claim daily BL coins
+  claimDaily: async () => {
+    return apiRequest('/referral/daily-claim', { method: 'POST' });
+  },
+
+  // Get disclaimer
+  getDisclaimer: async () => {
+    return apiRequest('/diamond/disclaimer');
   },
 };
 
 // ============== DIAMOND LEADER API ==============
 export const diamondAPI = {
+  // Get diamond status and progress
   getStatus: async () => {
     return apiRequest('/diamond/status');
   },
 
+  // Check and potentially promote to diamond
   checkQualification: async () => {
     return apiRequest('/diamond/check-qualification', { method: 'POST' });
   },
 };
 
-// ============== ORPHAN QUEUE API ==============
-export const orphanAPI = {
-  getQueueStatus: async () => {
-    return apiRequest('/orphans/queue-status');
+// ============== KYC VERIFICATION API ==============
+export const kycAPI = {
+  // Get KYC status
+  getStatus: async () => {
+    return apiRequest('/kyc/status');
   },
 
-  joinQueue: async () => {
-    return apiRequest('/orphans/join-queue', { method: 'POST' });
+  // Initialize KYC verification (Stripe Identity)
+  initVerification: async (returnUrl) => {
+    return apiRequest('/kyc/init', {
+      method: 'POST',
+      body: JSON.stringify({ return_url: returnUrl }),
+    });
   },
 };
 
-// ============== WITHDRAWALS API ==============
-export const withdrawalsAPI = {
-  checkEligibility: async () => {
-    return apiRequest('/withdrawals/eligibility');
+// ============== WITHDRAWAL API ==============
+export const withdrawalAPI = {
+  // Get withdrawal eligibility status
+  getStatus: async () => {
+    return apiRequest('/withdrawal/status');
   },
 
-  request: async (amount, paymentMethod, paymentDetails = {}) => {
-    return apiRequest('/withdrawals/request', {
+  // Request withdrawal
+  request: async (amount, payoutMethod, bankDetails = {}) => {
+    return apiRequest('/withdrawal/request', {
       method: 'POST',
       body: JSON.stringify({
         amount,
-        payment_method: paymentMethod,
-        payment_details: paymentDetails,
+        payout_method: payoutMethod,
+        bank_name: bankDetails.bank_name,
+        account_number: bankDetails.account_number,
+        routing_number: bankDetails.routing_number,
+        card_last_four: bankDetails.card_last_four,
       }),
     });
   },
 
-  getHistory: async (skip = 0, limit = 20) => {
-    return apiRequest(`/withdrawals/history?skip=${skip}&limit=${limit}`);
-  },
-
-  startIDVerification: async () => {
-    return apiRequest('/withdrawals/verify-id/start', { method: 'POST' });
-  },
-
-  getIDVerificationStatus: async () => {
-    return apiRequest('/withdrawals/verify-id/status');
+  // Get withdrawal history
+  getHistory: async (skip = 0, limit = 50) => {
+    return apiRequest(`/withdrawal/history?skip=${skip}&limit=${limit}`);
   },
 };
 
-// ============== ADMIN API ==============
-export const adminAPI = {
-  getDashboard: async () => {
-    return apiRequest('/admin/dashboard');
-  },
-
-  getPendingWithdrawals: async () => {
-    return apiRequest('/admin/withdrawals/pending');
-  },
-
-  approveWithdrawal: async (withdrawalId) => {
-    return apiRequest(`/admin/withdrawals/${withdrawalId}/approve`, { method: 'POST' });
-  },
-
-  rejectWithdrawal: async (withdrawalId, reason) => {
-    return apiRequest(`/admin/withdrawals/${withdrawalId}/reject?reason=${encodeURIComponent(reason)}`, {
+// ============== REASSIGNMENT API (Admin) ==============
+export const reassignmentAPI = {
+  // Request reassignment (admin only)
+  request: async (inactiveUserId, newUplineId, reason = '5_year_inactivity') => {
+    return apiRequest('/reassignment/request', {
       method: 'POST',
+      body: JSON.stringify({
+        inactive_user_id: inactiveUserId,
+        new_upline_id: newUplineId,
+        reason,
+      }),
     });
   },
 
-  getUsers: async (skip = 0, limit = 50) => {
-    return apiRequest(`/admin/users?skip=${skip}&limit=${limit}`);
+  // List pending reassignment requests (admin only)
+  list: async (status = null) => {
+    const params = status ? `?status=${status}` : '';
+    return apiRequest(`/reassignment/admin/list${params}`);
   },
 
-  setUserAdmin: async (userId, isAdmin) => {
-    return apiRequest(`/admin/users/${userId}/set-admin?is_admin=${isAdmin}`, {
+  // Approve reassignment (admin only)
+  approve: async (reassignmentId) => {
+    return apiRequest(`/reassignment/admin/approve/${reassignmentId}`, { method: 'POST' });
+  },
+
+  // Reject reassignment (admin only)
+  reject: async (reassignmentId, reason = 'Rejected by admin') => {
+    return apiRequest(`/reassignment/admin/reject/${reassignmentId}?reason=${encodeURIComponent(reason)}`, {
       method: 'POST',
     });
-  },
-
-  getAnalytics: async () => {
-    return apiRequest('/admin/analytics');
   },
 };
 
 export default {
-  network: networkAPI,
-  commissions: commissionsAPI,
+  referral: referralAPI,
   diamond: diamondAPI,
-  orphan: orphanAPI,
-  withdrawals: withdrawalsAPI,
-  admin: adminAPI,
+  kyc: kycAPI,
+  withdrawal: withdrawalAPI,
+  reassignment: reassignmentAPI,
 };
