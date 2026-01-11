@@ -570,7 +570,10 @@ export const casinoAPI = {
 // ============== ADMIN API ==============
 
 export const adminAPI = {
-  // Profile & Dashboard
+  // ============== NEW PRODUCTION ADMIN API ==============
+  // Uses the new /api/admin/* endpoints for real-time production data
+  
+  // Profile & Dashboard (keep legacy endpoint for basic dashboard)
   getProfile: async () => {
     const response = await api.get('/admin-system/profile');
     return response.data;
@@ -587,15 +590,58 @@ export const adminAPI = {
     return response.data;
   },
 
-  // User Management
-  getUsers: async (skip = 0, limit = 50, status = null, search = null) => {
-    const params = new URLSearchParams();
-    params.append('skip', skip);
-    params.append('limit', limit);
-    if (status) params.append('status', status);
-    if (search) params.append('search', search);
-    const response = await api.get(`/admin-system/users?${params}`);
+  // ============== USER MANAGEMENT (NEW ENDPOINTS) ==============
+  searchUsers: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.query) queryParams.append('query', params.query);
+    if (params.status) queryParams.append('status', params.status);
+    if (params.skip !== undefined) queryParams.append('skip', params.skip);
+    if (params.limit !== undefined) queryParams.append('limit', params.limit);
+    const response = await api.get(`/admin/users/search?${queryParams}`);
     return response.data;
+  },
+
+  getUser: async (userId) => {
+    const response = await api.get(`/admin/users/${userId}`);
+    return response.data;
+  },
+
+  suspendUser: async (userId, reason, days = 7) => {
+    const response = await api.post(`/admin/users/${userId}/suspend`, { reason, days });
+    return response.data;
+  },
+
+  unsuspendUser: async (userId) => {
+    const response = await api.post(`/admin/users/${userId}/unsuspend`);
+    return response.data;
+  },
+
+  banUser: async (userId, reason) => {
+    const response = await api.post(`/admin/users/${userId}/ban`, { reason });
+    return response.data;
+  },
+
+  unbanUser: async (userId) => {
+    const response = await api.post(`/admin/users/${userId}/unban`);
+    return response.data;
+  },
+
+  resetUserPassword: async (userId, newPassword) => {
+    const response = await api.post(`/admin/users/${userId}/reset-password`, { new_password: newPassword });
+    return response.data;
+  },
+
+  forceLogout: async (userId) => {
+    const response = await api.post(`/admin/users/${userId}/force-logout`);
+    return response.data;
+  },
+
+  // Legacy endpoint for backward compatibility
+  getUsers: async (skip = 0, limit = 50, status = null, search = null) => {
+    const params = { skip, limit };
+    if (status) params.status = status;
+    if (search) params.query = search;
+    return adminAPI.searchUsers(params);
   },
 
   updateUserStatus: async (userId, action) => {
@@ -603,23 +649,98 @@ export const adminAPI = {
     return response.data;
   },
 
-  // Admin Management
-  getAdmins: async () => {
-    const response = await api.get('/admin-system/admins');
+  // ============== FINANCIAL MANAGEMENT (NEW ENDPOINTS) ==============
+  getFinancialOverview: async () => {
+    const response = await api.get('/admin/finance/overview');
     return response.data;
   },
 
-  createAdmin: async (data) => {
-    const response = await api.post('/admin-system/admins', data);
+  adjustBalance: async (userId, currency, amount, reason) => {
+    const response = await api.post(`/admin/finance/adjust-balance/${userId}`, { currency, amount, reason });
     return response.data;
+  },
+
+  getTransactions: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.user_id) queryParams.append('user_id', params.user_id);
+    if (params.type) queryParams.append('type', params.type);
+    if (params.skip !== undefined) queryParams.append('skip', params.skip);
+    if (params.limit !== undefined) queryParams.append('limit', params.limit);
+    const response = await api.get(`/admin/finance/transactions?${queryParams}`);
+    return response.data;
+  },
+
+  // ============== GENEALOGY MANAGEMENT (NEW ENDPOINTS) ==============
+  getGenealogyTree: async (userId = null, maxDepth = 3) => {
+    const params = new URLSearchParams();
+    if (userId) params.append('user_id', userId);
+    params.append('max_depth', maxDepth);
+    const response = await api.get(`/admin/genealogy/tree?${params}`);
+    return response.data;
+  },
+
+  getUserNetwork: async (userId) => {
+    const response = await api.get(`/admin/genealogy/user/${userId}/network`);
+    return response.data;
+  },
+
+  getOrphans: async () => {
+    const response = await api.get('/admin/genealogy/orphans');
+    return response.data;
+  },
+
+  reassignDownline: async (userId, newUplineId, reason) => {
+    const response = await api.post('/admin/genealogy/reassign', { user_id: userId, new_upline_id: newUplineId, reason });
+    return response.data;
+  },
+
+  // ============== ADMIN ROLE MANAGEMENT (NEW ENDPOINTS) ==============
+  listAdmins: async () => {
+    const response = await api.get('/admin/roles/admins');
+    return response.data;
+  },
+
+  createAdmin: async (userId, role, permissions = {}) => {
+    const response = await api.post('/admin/roles/admins', { user_id: userId, role, permissions });
+    return response.data;
+  },
+
+  updateAdmin: async (adminId, updates) => {
+    const response = await api.put(`/admin/roles/admins/${adminId}`, updates);
+    return response.data;
+  },
+
+  deleteAdmin: async (adminId) => {
+    const response = await api.delete(`/admin/roles/admins/${adminId}`);
+    return response.data;
+  },
+
+  // Legacy endpoint for backward compatibility
+  getAdmins: async () => {
+    return adminAPI.listAdmins();
   },
 
   updateAdminRole: async (adminId, role) => {
-    const response = await api.put(`/admin-system/admins/${adminId}`, { role });
+    return adminAPI.updateAdmin(adminId, { role });
+  },
+
+  // ============== SYSTEM & ANALYTICS (NEW ENDPOINTS) ==============
+  getAnalytics: async (period = '7d') => {
+    const response = await api.get(`/admin/system/analytics?period=${period}`);
     return response.data;
   },
 
-  // Audit Logs
+  getActivityFeed: async (limit = 50) => {
+    const response = await api.get(`/admin/system/activity-feed?limit=${limit}`);
+    return response.data;
+  },
+
+  getSystemHealth: async () => {
+    const response = await api.get('/admin/system/health');
+    return response.data;
+  },
+
+  // Legacy audit logs endpoint
   getAuditLogs: async (skip = 0, limit = 50, action = null) => {
     const params = new URLSearchParams();
     params.append('skip', skip);
@@ -629,7 +750,47 @@ export const adminAPI = {
     return response.data;
   },
 
-  // Settings
+  // ============== WITHDRAWALS (NEW ENDPOINTS) ==============
+  getWithdrawals: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.status) queryParams.append('status', params.status);
+    if (params.skip !== undefined) queryParams.append('skip', params.skip);
+    if (params.limit !== undefined) queryParams.append('limit', params.limit);
+    const response = await api.get(`/admin/withdrawals/list?${queryParams}`);
+    return response.data;
+  },
+
+  getWithdrawalStats: async () => {
+    const response = await api.get('/admin/withdrawals/stats/summary');
+    return response.data;
+  },
+
+  getPendingKYC: async () => {
+    const response = await api.get('/admin/withdrawals/kyc/pending');
+    return response.data;
+  },
+
+  approveKYC: async (userId) => {
+    const response = await api.post(`/admin/withdrawals/kyc/${userId}/approve`);
+    return response.data;
+  },
+
+  rejectKYC: async (userId, reason) => {
+    const response = await api.post(`/admin/withdrawals/kyc/${userId}/reject`, { reason });
+    return response.data;
+  },
+
+  approveWithdrawal: async (withdrawalId) => {
+    const response = await api.post(`/admin/withdrawals/${withdrawalId}/approve`);
+    return response.data;
+  },
+
+  rejectWithdrawal: async (withdrawalId, reason) => {
+    const response = await api.post(`/admin/withdrawals/${withdrawalId}/reject`, { reason });
+    return response.data;
+  },
+
+  // ============== SETTINGS ==============
   getSettings: async () => {
     const response = await api.get('/admin-system/settings');
     return response.data;
@@ -640,7 +801,7 @@ export const adminAPI = {
     return response.data;
   },
 
-  // A/B Testing
+  // ============== A/B TESTING ==============
   getABTests: async (status = null) => {
     const url = status ? `/ab-testing/tests?status=${status}` : '/ab-testing/tests';
     const response = await api.get(url);
