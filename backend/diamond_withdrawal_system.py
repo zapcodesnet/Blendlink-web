@@ -733,3 +733,355 @@ async def get_disclaimer():
         "version": "1.0",
         "last_updated": "2026-01-11",
     }
+
+# ============== ADMIN WITHDRAWAL MANAGEMENT ==============
+
+admin_withdrawal_router = APIRouter(prefix="/admin/withdrawals", tags=["Admin Withdrawals"])
+
+@admin_withdrawal_router.get("/list")
+async def admin_list_withdrawals(
+    status: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 50,
+    current_user: dict = Depends(get_current_user)
+):
+    """List all withdrawals (admin only)"""
+    user = await db.users.find_one({"user_id": current_user["user_id"]}, {"is_admin": 1})
+    if not user or not user.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    query = {}
+    if status:
+        query["status"] = status
+    
+    withdrawals = await db.withdrawals.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    # Enrich with user info
+    for w in withdrawals:
+        user_info = await db.users.find_one(
+            {"user_id": w["user_id"]},
+            {"_id": 0, "email": 1, "name": 1, "username": 1, "kyc_status": 1}
+        )
+        w["user"] = user_info
+    
+    # Get counts by status
+    counts = {
+        "pending": await db.withdrawals.count_documents({"status": "pending"}),
+        "approved": await db.withdrawals.count_documents({"status": "approved"}),
+        "rejected": await db.withdrawals.count_documents({"status": "rejected"}),
+        "completed": await db.withdrawals.count_documents({"status": "completed"}),
+    }
+    
+    total = await db.withdrawals.count_documents(query)
+    
+    return {
+        "withdrawals": withdrawals,
+        "counts": counts,
+        "total": total,
+        "skip": skip,
+        "limit": limit,
+    }
+
+@admin_withdrawal_router.get("/{withdrawal_id}")
+async def admin_get_withdrawal(
+    withdrawal_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get withdrawal details (admin only)"""
+    user = await db.users.find_one({"user_id": current_user["user_id"]}, {"is_admin": 1})
+    if not user or not user.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    withdrawal = await db.withdrawals.find_one({"withdrawal_id": withdrawal_id}, {"_id": 0})
+    if not withdrawal:
+        raise HTTPException(status_code=404, detail="Withdrawal not found")
+    
+    # Get user info
+    user_info = await db.users.find_one(
+        {"user_id": withdrawal["user_id"]},
+        {"_id": 0, "password_hash": 0}
+    )
+    withdrawal["user"] = user_info
+    
+    return withdrawal
+
+class WithdrawalApprovalRequest(BaseModel):
+    payout_reference: Optional[str] = None
+    notes: Optional[str] = None
+
+@admin_withdrawal_router.post("/{withdrawal_id}/approve")
+async def admin_approve_withdrawal(
+    withdrawal_id: str,
+    data: WithdrawalApprovalRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Approve a withdrawal request (admin only)"""
+    user = await db.users.find_one({"user_id": current_user["user_id"]}, {"is_admin": 1})
+    if not user or not user.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    withdrawal = await db.withdrawals.find_one({"withdrawal_id": withdrawal_id})
+    if not withdrawal:
+        raise HTTPException(status_code=404, detail="Withdrawal not found")
+    
+    if withdrawal["status"] != "pending":
+        raise HTTPException(status_code=400, detail=f"Cannot approve withdrawal with status: {withdrawal['status']}")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    await db.withdrawals.update_one(
+        {"withdrawal_id": withdrawal_id},
+        {"$set": {
+            "status": "approved",
+            "approved_by": current_user["user_id"],
+            "approved_at": now,
+            "payout_reference": data.payout_reference,
+            "admin_notes": data.notes,
+        }}
+    )
+    
+    logger.info(f"Withdrawal {withdrawal_id} approved by {current_user['user_id']}")
+    
+    return {
+        "success": True,
+        "withdrawal_id": withdrawal_id,
+        "status": "approved",
+        "message": "Withdrawal approved",
+    }
+
+class WithdrawalCompletionRequest(BaseModel):
+    payout_reference: str
+    payout_method_used: str
+    notes: Optional[str] = None
+
+@admin_withdrawal_router.post("/{withdrawal_id}/complete")
+async def admin_complete_withdrawal(
+    withdrawal_id: str,
+    data: WithdrawalCompletionRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Mark withdrawal as completed/paid out (admin only)"""
+    user = await db.users.find_one({"user_id": current_user["user_id"]}, {"is_admin": 1})
+    if not user or not user.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    withdrawal = await db.withdrawals.find_one({"withdrawal_id": withdrawal_id})
+    if not withdrawal:
+        raise HTTPException(status_code=404, detail="Withdrawal not found")
+    
+    if withdrawal["status"] not in ["pending", "approved"]:
+        raise HTTPException(status_code=400, detail=f"Cannot complete withdrawal with status: {withdrawal['status']}")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    await db.withdrawals.update_one(
+        {"withdrawal_id": withdrawal_id},
+        {"$set": {
+            "status": "completed",
+            "completed_by": current_user["user_id"],
+            "completed_at": now,
+            "payout_reference": data.payout_reference,
+            "payout_method_used": data.payout_method_used,
+            "admin_notes": data.notes,
+        }}
+    )
+    
+    logger.info(f"Withdrawal {withdrawal_id} completed by {current_user['user_id']}")
+    
+    return {
+        "success": True,
+        "withdrawal_id": withdrawal_id,
+        "status": "completed",
+        "message": "Withdrawal marked as completed",
+    }
+
+class WithdrawalRejectionRequest(BaseModel):
+    reason: str
+    refund_balance: bool = True
+
+@admin_withdrawal_router.post("/{withdrawal_id}/reject")
+async def admin_reject_withdrawal(
+    withdrawal_id: str,
+    data: WithdrawalRejectionRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Reject a withdrawal request (admin only)"""
+    user = await db.users.find_one({"user_id": current_user["user_id"]}, {"is_admin": 1})
+    if not user or not user.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    withdrawal = await db.withdrawals.find_one({"withdrawal_id": withdrawal_id})
+    if not withdrawal:
+        raise HTTPException(status_code=404, detail="Withdrawal not found")
+    
+    if withdrawal["status"] not in ["pending", "approved"]:
+        raise HTTPException(status_code=400, detail=f"Cannot reject withdrawal with status: {withdrawal['status']}")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Refund balance if requested
+    if data.refund_balance:
+        await db.users.update_one(
+            {"user_id": withdrawal["user_id"]},
+            {"$inc": {"usd_balance": withdrawal["amount_usd"]}}
+        )
+        
+        # Record refund transaction
+        await record_transaction(
+            user_id=withdrawal["user_id"],
+            transaction_type=TransactionType.WITHDRAWAL,
+            currency=Currency.USD,
+            amount=withdrawal["amount_usd"],
+            reference_id=withdrawal_id,
+            details={"type": "refund", "reason": data.reason}
+        )
+    
+    await db.withdrawals.update_one(
+        {"withdrawal_id": withdrawal_id},
+        {"$set": {
+            "status": "rejected",
+            "rejected_by": current_user["user_id"],
+            "rejected_at": now,
+            "rejection_reason": data.reason,
+            "balance_refunded": data.refund_balance,
+        }}
+    )
+    
+    logger.info(f"Withdrawal {withdrawal_id} rejected by {current_user['user_id']}: {data.reason}")
+    
+    return {
+        "success": True,
+        "withdrawal_id": withdrawal_id,
+        "status": "rejected",
+        "balance_refunded": data.refund_balance,
+        "message": "Withdrawal rejected",
+    }
+
+@admin_withdrawal_router.get("/stats/summary")
+async def admin_withdrawal_stats(current_user: dict = Depends(get_current_user)):
+    """Get withdrawal statistics (admin only)"""
+    user = await db.users.find_one({"user_id": current_user["user_id"]}, {"is_admin": 1})
+    if not user or not user.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Aggregate stats
+    pipeline = [
+        {"$group": {
+            "_id": "$status",
+            "count": {"$sum": 1},
+            "total_amount": {"$sum": "$amount_usd"},
+            "total_fees": {"$sum": "$fee_usd"},
+        }}
+    ]
+    
+    stats = await db.withdrawals.aggregate(pipeline).to_list(10)
+    stats_dict = {s["_id"]: {"count": s["count"], "amount": s["total_amount"], "fees": s["total_fees"]} for s in stats}
+    
+    # Total pending KYC verifications
+    pending_kyc = await db.users.count_documents({"kyc_status": "pending"})
+    
+    return {
+        "by_status": stats_dict,
+        "pending_kyc_count": pending_kyc,
+        "total_withdrawals": sum(s.get("count", 0) for s in stats_dict.values()),
+        "total_paid_out": stats_dict.get("completed", {}).get("amount", 0),
+        "total_fees_collected": sum(s.get("fees", 0) for s in stats_dict.values()),
+    }
+
+# ============== ADMIN KYC MANAGEMENT ==============
+
+@admin_withdrawal_router.get("/kyc/pending")
+async def admin_list_pending_kyc(
+    skip: int = 0,
+    limit: int = 50,
+    current_user: dict = Depends(get_current_user)
+):
+    """List users with pending KYC (admin only)"""
+    user = await db.users.find_one({"user_id": current_user["user_id"]}, {"is_admin": 1})
+    if not user or not user.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    users = await db.users.find(
+        {"kyc_status": "pending"},
+        {"_id": 0, "password_hash": 0}
+    ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    total = await db.users.count_documents({"kyc_status": "pending"})
+    
+    return {
+        "users": users,
+        "total": total,
+        "skip": skip,
+        "limit": limit,
+    }
+
+class KYCApprovalRequest(BaseModel):
+    notes: Optional[str] = None
+
+@admin_withdrawal_router.post("/kyc/{user_id}/approve")
+async def admin_approve_kyc(
+    user_id: str,
+    data: KYCApprovalRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Approve KYC for a user (admin only)"""
+    admin = await db.users.find_one({"user_id": current_user["user_id"]}, {"is_admin": 1})
+    if not admin or not admin.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    target_user = await db.users.find_one({"user_id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    await db.users.update_one(
+        {"user_id": user_id},
+        {"$set": {
+            "kyc_status": "verified",
+            "kyc_verified_at": now,
+            "kyc_verified_by": current_user["user_id"],
+            "kyc_notes": data.notes,
+            "id_verified": True,
+        }}
+    )
+    
+    logger.info(f"KYC approved for user {user_id} by {current_user['user_id']}")
+    
+    return {
+        "success": True,
+        "user_id": user_id,
+        "kyc_status": "verified",
+    }
+
+@admin_withdrawal_router.post("/kyc/{user_id}/reject")
+async def admin_reject_kyc(
+    user_id: str,
+    reason: str = "Documents not acceptable",
+    current_user: dict = Depends(get_current_user)
+):
+    """Reject KYC for a user (admin only)"""
+    admin = await db.users.find_one({"user_id": current_user["user_id"]}, {"is_admin": 1})
+    if not admin or not admin.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    await db.users.update_one(
+        {"user_id": user_id},
+        {"$set": {
+            "kyc_status": "rejected",
+            "kyc_rejected_at": now,
+            "kyc_rejected_by": current_user["user_id"],
+            "kyc_rejection_reason": reason,
+        }}
+    )
+    
+    logger.info(f"KYC rejected for user {user_id} by {current_user['user_id']}: {reason}")
+    
+    return {
+        "success": True,
+        "user_id": user_id,
+        "kyc_status": "rejected",
+    }
+
