@@ -29,6 +29,9 @@ import AdminScreen from '../screens/AdminScreen';
 import AdminAnalyticsScreen from '../screens/AdminAnalyticsScreen';
 import AdminABTestingScreen from '../screens/AdminABTestingScreen';
 import AdminSettingsScreen from '../screens/AdminSettingsScreen';
+import AdminUsersScreen from '../screens/AdminUsersScreen';
+import AdminWithdrawalsScreen from '../screens/AdminWithdrawalsScreen';
+import AdminAuditScreen from '../screens/AdminAuditScreen';
 import MyTeamScreen from '../screens/MyTeamScreen';
 
 // API for notification count
