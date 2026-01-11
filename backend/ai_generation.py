@@ -183,11 +183,13 @@ async def process_video_generation(
     prompt: str,
     model: str,
     size: str,
-    duration: int
+    duration: int,
+    generate_thumbnail: bool = True
 ):
-    """Background task to generate video"""
+    """Background task to generate video with optional AI thumbnail"""
     try:
         from emergentintegrations.llm.openai.video_generation import OpenAIVideoGeneration
+        from emergentintegrations.llm.openai.image_generation import OpenAIImageGeneration
         
         await db.ai_generations.update_one(
             {"generation_id": generation_id},
@@ -198,7 +200,46 @@ async def process_video_generation(
         if not api_key:
             raise Exception("AI service not configured")
         
+        # Generate AI thumbnail first (if enabled)
+        thumbnail_url = None
+        if generate_thumbnail:
+            try:
+                await db.ai_generations.update_one(
+                    {"generation_id": generation_id},
+                    {"$set": {"status": "generating_thumbnail"}}
+                )
+                
+                image_gen = OpenAIImageGeneration(api_key=api_key)
+                thumbnail_prompt = f"Cinematic thumbnail for video: {prompt}. High quality, dramatic lighting, movie poster style"
+                
+                images = await image_gen.generate_images(
+                    prompt=thumbnail_prompt,
+                    model="gpt-image-1",
+                    number_of_images=1
+                )
+                
+                if images and len(images) > 0:
+                    # Save thumbnail
+                    import base64
+                    thumbnail_filename = f"{generation_id}_thumb.png"
+                    thumbnail_path = f"/app/frontend/public/generated/{thumbnail_filename}"
+                    os.makedirs(os.path.dirname(thumbnail_path), exist_ok=True)
+                    
+                    with open(thumbnail_path, 'wb') as f:
+                        f.write(images[0])
+                    
+                    thumbnail_url = f"/generated/{thumbnail_filename}"
+                    logger.info(f"Thumbnail generated for {generation_id}")
+                    
+            except Exception as thumb_error:
+                logger.warning(f"Thumbnail generation failed: {thumb_error}")
+        
         # Generate video
+        await db.ai_generations.update_one(
+            {"generation_id": generation_id},
+            {"$set": {"status": "generating_video", "thumbnail_url": thumbnail_url}}
+        )
+        
         video_gen = OpenAIVideoGeneration(api_key=api_key)
         
         # Determine wait time based on duration
