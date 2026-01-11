@@ -56,6 +56,7 @@ import Friends from "./pages/Friends";
 import Groups from "./pages/Groups";
 import Events from "./pages/Events";
 import Pages from "./pages/Pages";
+import MyTeam from "./pages/MyTeam";
 
 // Components
 import BottomNav from "./components/BottomNav";
