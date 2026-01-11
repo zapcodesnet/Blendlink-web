@@ -83,7 +83,19 @@ export default function AdminLogin() {
         body: JSON.stringify({ email, password }),
       });
       
-      const data = await response.json();
+      // Clone response before reading to avoid "body stream already read" error
+      const responseClone = response.clone();
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        // If JSON parsing fails, try the clone
+        try {
+          data = await responseClone.json();
+        } catch {
+          throw new Error("Server error. Please try again.");
+        }
+      }
       
       if (!response.ok) {
         throw new Error(data.detail || "Login failed");
