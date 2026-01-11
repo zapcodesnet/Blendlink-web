@@ -179,7 +179,18 @@ export default function AdminLogin() {
         }),
       });
       
-      const data = await response.json();
+      // Clone response before reading to avoid "body stream already read" error
+      const responseClone = response.clone();
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        try {
+          data = await responseClone.json();
+        } catch {
+          throw new Error("Server error. Please try again.");
+        }
+      }
       
       if (!response.ok) {
         throw new Error(data.detail || "Verification failed");
@@ -213,7 +224,18 @@ export default function AdminLogin() {
         body: JSON.stringify({ email, session_token: sessionToken }),
       });
       
-      const data = await response.json();
+      // Clone response before reading to avoid "body stream already read" error
+      const responseClone = response.clone();
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        try {
+          data = await responseClone.json();
+        } catch {
+          throw new Error("Server error. Please try again.");
+        }
+      }
       
       if (!response.ok) {
         throw new Error(data.detail || "Failed to resend code");
