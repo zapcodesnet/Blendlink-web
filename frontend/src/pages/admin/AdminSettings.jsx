@@ -451,7 +451,7 @@ export default function AdminSettings() {
       {hasChanges && (
         <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 flex items-center gap-3">
           <AlertTriangle className="w-5 h-5 text-amber-400" />
-          <span className="text-amber-300 text-sm">You have unsaved changes. Don't forget to save!</span>
+          <span className="text-amber-300 text-sm">You have unsaved changes. Do not forget to save!</span>
         </div>
       )}
 
