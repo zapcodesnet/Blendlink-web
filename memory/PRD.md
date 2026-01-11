@@ -1,194 +1,91 @@
-# Blendlink PWA - Product Requirements Document
+# Blendlink Platform - Product Requirements Document
 
 ## Original Problem Statement
-Build a fully responsive Progressive Web App (PWA) version of Blendlink - an all-in-one super app with a complete, production-grade admin panel connected to live production database with real-time sync on both website and mobile app.
+Build a complete multi-platform referral and compensation system with a comprehensive, production-grade admin panel. The admin panel must connect to the live production database, handle real users, activities, transactions, and finances with all actions synchronizing in real-time between web PWA and mobile app.
 
----
+## Admin Panel Requirements
+- **Secure 2FA Login**: Admin login with Email OTP verification (using Resend)
+- **Full User Management**: Search, filter, view, suspend, ban, reset passwords
+- **Real-Time Financial Oversight**: View balances, transaction histories, manual balance adjustments with audit logging
+- **Withdrawal Management**: Approve/reject KYC and cash withdrawal requests
+- **Genealogy Management**: View and edit team hierarchy
+- **Content Moderation**: Access and moderate user content
+- **Platform Configuration**: Manage global settings
+- **RBAC**: Role-based access control
+- **Real-time Push Notifications**: Admin alerts for KYC, withdrawals, etc.
+- **100% Sync**: Full synchronization between web PWA and mobile app
 
-## Latest Update: Push Notifications + Social Pages (January 11, 2026)
-
-### ✅ ADMIN PUSH NOTIFICATION SYSTEM - COMPLETE
-### ✅ WEB ADMIN PANEL - 100% COMPLETE
-### ✅ MOBILE ADMIN PANEL - CORE SCREENS COMPLETE
-### ✅ SOCIAL PAGES (Friends, Groups, Events) - VERIFIED WORKING
-
-**Status:** All features tested with **100% test success rate** (19/19 latest backend tests + 22/22 previous)
-
-**Live Production Data Verified:**
-- 46 Total Users
-- 29,814 BL Coins in circulation
-- 70 Transactions in last 7 days
-- 3+ Admin notifications delivered
-- Real referral genealogy tree with 10+ root nodes
-
-### NEW: Admin Push Notifications ✅ COMPLETE
-- **6 Notification Categories**: KYC, Withdrawals, Diamond Leaders, Security, User Events, System
-- **Customizable Preferences**: Per-category toggles, priority thresholds, quiet hours
-- **Notification Delegation**: Forward alerts to other admins
-- **Real-time Delivery**: Push and in-app notification channels
-- **Security Alerts**: Brute force detection, unauthorized access alerts
-
-### Web Admin Panel Pages ✅ COMPLETE
-- **AdminUsers.jsx** - User management with search, filter, suspend/ban/balance adjust
-- **AdminGenealogy.jsx** - Visual tree hierarchy with zoom, reassignment
-- **AdminManagement.jsx** - RBAC with 4 roles and permissions
-- **AdminAnalytics.jsx** - Real-time charts (signups, transactions, financial)
-- **AdminAudit.jsx** - Activity feed with audit logs, signups, transactions
-- **AdminWithdrawals.jsx** - KYC and withdrawal management
-- **AdminNotificationSettings.jsx** - Push notification preferences UI (NEW)
-
-### Mobile Admin Panel Screens ✅ COMPLETE
-- **AdminUsersScreen.js** - Full user management with search, actions, balance adjust
-- **AdminWithdrawalsScreen.js** - KYC approval/rejection, withdrawal management
-- **AdminAuditScreen.js** - Activity feed with audit logs, signups, transactions
-- **Updated API service** - Mobile now uses new `/api/admin/*` endpoints
-
-### Social Pages ✅ VERIFIED WORKING
-- **Friends.jsx** - Friend requests, search, friend list management
-- **Groups.jsx** - Group creation, membership, discussions
-- **Events.jsx** - Event creation, RSVP, calendar view
-
-### Production-Grade Admin System ✅ COMPLETE
-
-**What was built:**
-
-#### 1. Enhanced Admin Authentication with 2FA
-- **Two-Factor Authentication (TOTP)** - Google Authenticator compatible
-- **Separate admin login flow** at `/api/admin-auth/login`
-- **Rate limiting** - 5 attempts before 30-minute lockout
-- **Shorter JWT expiry** - 4 hours for admin sessions
-- **Backup codes** for 2FA recovery
-- **IP logging** and tracking
-
-#### 2. Role-Based Access Control (RBAC)
-- **4 Admin Roles**: Super Admin, Co-Admin, Moderator, Support
-- **30+ granular permissions** per role
-- User management, financial, genealogy, content, system permissions
-- Least-privilege principle enforced
-
-#### 3. Complete Audit Trail
-- **Every admin action logged** with:
-  - Admin ID, email, name
-  - Action type
-  - Target type and ID
-  - IP address and user agent
-  - Timestamp
-- **45+ audit action types** tracked
-
-#### 4. Real-Time WebSocket Sync
-- **Admin WebSocket connection manager**
-- **Live broadcast** of admin actions to all connected admins
-- **Online admin tracking** - see who's logged in
-- **Instant sync** between web and mobile
-
-#### 5. Full User Management APIs
-- `GET /api/admin/users/search` - Search/filter all users
-- `GET /api/admin/users/{user_id}` - Detailed user profile with transactions
-- `POST /api/admin/users/{user_id}/suspend` - Suspend with reason and duration
-- `POST /api/admin/users/{user_id}/unsuspend` - Remove suspension
-- `POST /api/admin/users/{user_id}/ban` - Permanent ban
-- `POST /api/admin/users/{user_id}/unban` - Remove ban
-- `DELETE /api/admin/users/{user_id}` - Soft delete (data preserved)
-- `POST /api/admin/users/{user_id}/reset-password` - Admin password reset
-- `POST /api/admin/users/{user_id}/force-logout` - Invalidate all sessions
-
-#### 6. Financial Oversight APIs
-- `GET /api/admin/finance/overview` - Platform-wide financial stats
-- `GET /api/admin/finance/transactions` - All transactions with filters
-- `POST /api/admin/finance/adjust-balance/{user_id}` - Manual balance adjustment
-
-#### 7. Genealogy Management APIs
-- `GET /api/admin/genealogy/tree` - Full genealogy tree with profile pics, names, usernames
-- `GET /api/admin/genealogy/user/{user_id}/network` - User's complete network (upline + downline)
-- `POST /api/admin/genealogy/reassign` - Manual downline reassignment (drag-drop support)
-- `GET /api/admin/genealogy/orphans` - Orphan assignment queue
-
-#### 8. Role & Permission Management APIs
-- `GET /api/admin/roles/admins` - List all admin accounts
-- `POST /api/admin/roles/admins` - Create new admin
-- `PUT /api/admin/roles/admins/{id}` - Update admin role/permissions
-- `DELETE /api/admin/roles/admins/{id}` - Remove admin privileges
-
-#### 9. System Monitoring APIs
-- `GET /api/admin/system/health` - Database and system health metrics
-- `GET /api/admin/system/activity-feed` - Real-time activity feed
-- `GET /api/admin/system/analytics` - Platform analytics (24h, 7d, 30d)
-
----
-
-## Files Created This Session
-
-### Backend
-- `/app/backend/admin_auth_system.py` - 2FA authentication, WebSocket, audit logging
-- `/app/backend/admin_core_system.py` - User, financial, genealogy, role management
-
-### Routers Registered
-- `admin_auth_router` - `/api/admin-auth/*`
-- `admin_realtime_router` - `/api/admin-realtime/ws`
-- `admin_users_router` - `/api/admin/users/*`
-- `admin_finance_router` - `/api/admin/finance/*`
-- `admin_genealogy_router` - `/api/admin/genealogy/*`
-- `admin_content_router` - `/api/admin/content/*`
-- `admin_roles_router` - `/api/admin/roles/*`
-- `admin_system_router` - `/api/admin/system/*`
-
----
-
-## Admin Credentials
-- **Email:** `blendlinknet@gmail.com`
-- **Password:** `link2026blend!`
-- **Role:** Super Admin (all permissions)
-- **2FA:** Not enabled yet (can be enabled via `/api/admin-auth/2fa/setup`)
-
----
-
-## ✅ COMPLETED - Admin Panel Frontend (January 11, 2026)
-
-All admin pages rebuilt to use new production `/api/admin/*` endpoints:
-
-### Completed Pages
-- [x] **AdminUsers.jsx** - User management with search, filter, suspend/ban/password reset
-- [x] **AdminGenealogy.jsx** - Visual tree hierarchy with zoom, depth control, reassignment
-- [x] **AdminManagement.jsx** - RBAC with 4 roles and granular permissions
-- [x] **AdminAnalytics.jsx** - Real-time charts (signups, active users, transactions, financial)
-- [x] **AdminAudit.jsx** - Activity feed with audit logs, signups, transactions tabs
-- [x] **AdminWithdrawals.jsx** - KYC and withdrawal management
-
-### Test Results (Iteration 18)
-- Backend: 22/22 tests passed (100%)
-- Frontend: All admin pages functional with real production data
-
----
-
-## Remaining Tasks
-
-### P0 - Immediate (In Progress)
-- [ ] Mobile admin panel screens (React Native)
-- [ ] WebSocket connection fix (ws://localhost:443/ws error)
-
-### P1 - High Priority
-- [ ] Push notifications client integration (backend ready)
-- [ ] Mobile referral system UI (MyTeamScreen.js)
-- [ ] 2FA setup UI in admin settings
-
-### P2 - Medium
-- [ ] Content moderation UI (view private content)
-- [ ] Friends, Groups, Events pages
-- [ ] AI Music generation feature
-
----
-
-## Tech Stack
-- **Frontend**: React 18 + Tailwind CSS + Shadcn UI
+## Current Tech Stack
+- **Frontend**: React (Web PWA), React Native (Mobile)
 - **Backend**: FastAPI + MongoDB
-- **Payments**: Stripe (Checkout + Identity for KYC)
-- **AI Services**: OpenAI GPT Image 1.5, Sora 2, GPT-4o
-- **PWA**: Service Worker + manifest.json with offline support
-- **Auth**: JWT tokens + Emergent-managed Google OAuth + TOTP 2FA
-- **Real-time**: WebSockets for admin sync
-- **Mobile**: React Native/Expo
+- **UI**: Tailwind CSS, Shadcn UI
+- **Email**: Resend (for OTP)
+- **Payments**: Stripe
+- **Auth**: JWT + Email OTP (2FA for admins), Emergent Google Auth
+
+## What's Been Implemented
+
+### ✅ Completed (January 2026)
+1. **Admin Panel Frontend Overhaul** - All core pages rebuilt and connected to production APIs
+2. **Admin Push Notification System** - Backend + settings page (tested via curl)
+3. **Mobile Admin Panel Foundation** - API service updated, initial screens created
+4. **Email OTP Backend** - `admin_otp_auth.py` with Resend integration
+5. **Admin Login Page Fix (P0)** - Fixed import paths in `AdminLogin.jsx`, page now renders correctly
+6. **OTP Authentication Testing** - Full test suite at `/app/tests/test_admin_otp_auth_iteration20.py`
+
+### 🔄 In Progress
+1. **Complete Mobile Admin Panel** - Remaining screens needed (Genealogy, Analytics, Settings, Management)
+2. **Client-Side Push Notifications** - Service worker and browser push subscription
+
+### 📋 Pending
+1. **WebSocket Real-Time Connection** - Connect frontend to backend WebSocket
+2. **Fix `ValueError: Invalid salt`** - Legacy auth issue in server.py
+
+## Architecture
+
+```
+/app/
+├── backend/
+│   ├── admin_auth_system.py
+│   ├── admin_core_system.py
+│   ├── admin_notifications.py
+│   ├── admin_otp_auth.py        # Email OTP 2FA system
+│   └── server.py
+├── frontend/
+│   └── src/
+│       ├── App.js
+│       └── pages/admin/
+│           ├── AdminLayout.jsx
+│           ├── AdminLogin.jsx   # 2FA login page
+│           ├── AdminUsers.jsx
+│           ├── AdminGenealogy.jsx
+│           ├── AdminAudit.jsx
+│           ├── AdminAnalytics.jsx
+│           └── AdminManagement.jsx
+└── mobile/
+    └── src/
+        ├── screens/
+        │   ├── AdminScreen.js
+        │   ├── AdminUsersScreen.js
+        │   └── AdminWithdrawalsScreen.js
+        └── services/api.js
+```
+
+## Key API Endpoints
+- `POST /api/admin-auth/secure/login/step1` - Verify credentials, send OTP
+- `POST /api/admin-auth/secure/login/step2` - Verify OTP, return JWT
+- `POST /api/admin-auth/secure/login/resend-otp` - Resend OTP
+- `GET /api/admin-auth/secure/check-session` - Validate admin session
 
 ## Test Credentials
-- **Admin**: `blendlinknet@gmail.com` / `link2026blend!`
-- **Test User 1**: `testref@test.com` / `test123`
-- **Test User 2**: `testref2@test.com` / `test123`
+- **Admin**: blendlinknet@gmail.com / link2026blend!
+- **Regular User**: testuser@test.com / password
+
+## Future/Backlog
+- AI Image, Video, Music Generation
+- Social Pages verification (Friends, Groups, Events)
+- Media features (looping video thumbnails, watermarking)
+- App Store submission prep
+
+## Test Reports
+- `/app/test_reports/iteration_20.json` - Admin OTP auth testing (ALL PASSED)
