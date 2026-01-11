@@ -7,7 +7,7 @@ import {
   Shield, Users, Palette, Layout, GitBranch, Bot, 
   Settings, FileText, BarChart3, LogOut, Menu, X,
   ChevronRight, Home, Bell, Search, ZoomIn, ZoomOut,
-  RotateCcw, Maximize2, FlaskConical, Wallet
+  RotateCcw, Maximize2, FlaskConical, Wallet, Lock
 } from "lucide-react";
 
 // Import admin components
@@ -24,6 +24,7 @@ import DashboardWidgets from "./DashboardWidgets";
 import AdminABTesting from "./AdminABTesting";
 import AdminWithdrawals from "./AdminWithdrawals";
 import AdminNotificationSettings from "./AdminNotificationSettings";
+import AdminSecurityDashboard from "./AdminSecurityDashboard";
 
 // Admin Context
 export const AdminContext = createContext(null);
