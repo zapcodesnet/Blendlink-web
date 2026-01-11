@@ -14,7 +14,7 @@ import requests
 import os
 import uuid
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://referral-system-22.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://dashboard-hub-53.preview.emergentagent.com')
 
 # Test credentials
 ADMIN_EMAIL = "blendlinknet@gmail.com"
