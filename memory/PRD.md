@@ -51,4 +51,4 @@
 - Admin: blendlinknet@gmail.com / link2026blend!
 
 ## Live URL
-https://super-ctrl.preview.emergentagent.com
+https://createsuite-admin.preview.emergentagent.com
