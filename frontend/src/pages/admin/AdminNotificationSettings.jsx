@@ -236,6 +236,109 @@ export default function AdminNotificationSettings() {
         </div>
       </div>
 
+      {/* Browser Push Notifications Section */}
+      <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+        <button
+          className="w-full p-4 flex items-center justify-between hover:bg-slate-700/50 transition-colors"
+          onClick={() => toggleSection('push')}
+        >
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-lg ${pushSubscribed ? 'bg-green-500/20' : 'bg-slate-600'}`}>
+              <Globe className={`w-5 h-5 ${pushSubscribed ? 'text-green-400' : 'text-slate-400'}`} />
+            </div>
+            <div className="text-left">
+              <h3 className="font-semibold text-white">Browser Push Notifications</h3>
+              <p className="text-sm text-slate-400">
+                {pushSubscribed ? 'Enabled - receiving notifications in this browser' : 'Get real-time alerts even when the tab is closed'}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {pushSubscribed && <Badge className="bg-green-500/20 text-green-400">Active</Badge>}
+            {expandedSection === 'push' ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
+          </div>
+        </button>
+        
+        {expandedSection === 'push' && (
+          <div className="p-4 border-t border-slate-700 space-y-4">
+            {!pushSupported ? (
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+                <p className="text-yellow-400 flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5" />
+                  Push notifications are not supported in this browser
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between bg-slate-700/50 p-4 rounded-lg">
+                  <div>
+                    <p className="font-medium text-white">Permission Status</p>
+                    <p className="text-sm text-slate-400">
+                      {pushPermission === 'granted' && '✅ Permission granted'}
+                      {pushPermission === 'denied' && '❌ Permission denied - enable in browser settings'}
+                      {pushPermission === 'default' && '⏳ Not yet requested'}
+                    </p>
+                  </div>
+                  <Badge className={
+                    pushPermission === 'granted' ? 'bg-green-500/20 text-green-400' :
+                    pushPermission === 'denied' ? 'bg-red-500/20 text-red-400' :
+                    'bg-slate-500/20 text-slate-400'
+                  }>
+                    {pushPermission}
+                  </Badge>
+                </div>
+
+                <div className="flex gap-3">
+                  {!pushSubscribed ? (
+                    <Button
+                      onClick={subscribePush}
+                      disabled={pushLoading || pushPermission === 'denied'}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      {pushLoading ? (
+                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Bell className="w-4 h-4 mr-2" />
+                      )}
+                      Enable Browser Notifications
+                    </Button>
+                  ) : (
+                    <>
+                      <Button
+                        onClick={unsubscribePush}
+                        disabled={pushLoading}
+                        variant="outline"
+                        className="border-red-500/50 text-red-400 hover:bg-red-500/20"
+                      >
+                        <BellOff className="w-4 h-4 mr-2" />
+                        Disable Notifications
+                      </Button>
+                      <Button
+                        onClick={sendTestPush}
+                        variant="outline"
+                        className="border-slate-600"
+                      >
+                        <Send className="w-4 h-4 mr-2" />
+                        Send Test
+                      </Button>
+                    </>
+                  )}
+                </div>
+
+                {pushSubscribed && (
+                  <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3">
+                    <p className="text-green-400 text-sm flex items-center gap-2">
+                      <Check className="w-4 h-4" />
+                      You'll receive notifications for KYC requests, withdrawals, security alerts, and more
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Recent Notifications Preview */}
       <div className="bg-slate-800 rounded-xl border border-slate-700 p-4">
         <div className="flex items-center justify-between mb-4">
