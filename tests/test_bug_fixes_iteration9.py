@@ -17,7 +17,7 @@ import os
 import base64
 from datetime import datetime
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://socialize-hub-9.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://control-center-42.preview.emergentagent.com')
 
 # Test credentials
 TEST_EMAIL = "test@test.com"
