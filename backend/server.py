@@ -216,9 +216,18 @@ def verify_password(password: str, hashed: str) -> bool:
         # Handle invalid salt or hash format
         return False
 
-def create_token(user_id: str) -> str:
-    expires = datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRY_HOURS)
-    return jwt.encode({"user_id": user_id, "exp": expires}, JWT_SECRET, algorithm=JWT_ALGORITHM)
+def create_token(user_id: str, expiry_hours: int = None) -> str:
+    hours = expiry_hours if expiry_hours else JWT_EXPIRY_HOURS
+    expires = datetime.now(timezone.utc) + timedelta(hours=hours)
+    return jwt.encode({"sub": user_id, "user_id": user_id, "exp": expires}, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+def decode_token(token: str) -> dict:
+    """Decode and verify a JWT token"""
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        return payload
+    except JWTError as e:
+        raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
 
 async def get_current_user(request: Request) -> dict:
     token = request.cookies.get("session_token")
