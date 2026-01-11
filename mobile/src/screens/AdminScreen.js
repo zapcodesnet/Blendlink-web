@@ -143,6 +143,14 @@ export default function AdminScreen({ navigation }) {
       permission: 'admins',
     },
     {
+      id: 'genealogy',
+      title: 'Genealogy',
+      icon: '🌳',
+      description: 'Referral network tree',
+      screen: 'AdminGenealogy',
+      permission: 'users',
+    },
+    {
       id: 'analytics',
       title: 'Analytics',
       icon: '📈',
