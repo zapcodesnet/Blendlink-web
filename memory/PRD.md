@@ -1,126 +1,123 @@
 # Blendlink PWA - Product Requirements Document
 
 ## Original Problem Statement
-Build a fully responsive Progressive Web App (PWA) version of Blendlink - an all-in-one super app combining:
-- **Facebook-style Social Media** (profiles, news feed, posts, likes, comments, follows, messaging/chat, stories)
-- Marketplace (buy/sell items with listings, categories, search, shopping cart)
-- Property rentals (listing and browsing rental properties)
-- Professional services directory
-- Gaming (mini-games like spin wheel, scratch cards, memory match)
-- **Casino Games** (Slots, Blackjack, Roulette, Video Poker, Baccarat, Craps, Wheel of Fortune, Daily Spin)
-- Raffle draws
-- Virtual currency (BL Coin system)
-- **Comprehensive 2-level Referral & Compensation System**
-- Watermark & Media Sales System
-- **AI Media Generation** (images via OpenAI GPT Image 1.5, videos via Sora 2)
-- **React Native Mobile App** (iOS & Android)
-- **Admin System** (Full admin panel with RBAC, themes, user management, genealogy, A/B testing, real-time analytics, withdrawals)
+Build a fully responsive Progressive Web App (PWA) version of Blendlink - an all-in-one super app.
 
 ---
 
-## Latest Update: Phase 2 Complete (January 11, 2026)
+## Latest Update: Production Admin System Phase 1 Complete (January 11, 2026)
 
-### All 4 Requested Features Implemented ✅
+### Production-Grade Admin System ✅ BACKEND COMPLETE
 
-**1. Mobile App Referral System Sync ✅**
-- Created `MyTeamScreen.js` for React Native mobile app
-- Full feature parity with web PWA:
-  - Referral code sharing with native Share API
-  - Real-time genealogy tree display (L1/L2)
-  - Daily BL coin claim with countdown timer
-  - Diamond Leader status and progress
-  - Withdrawal status and KYC badge
-  - Commission structure info
-- Integrated into mobile navigation
+**What was built:**
 
-**2. Admin Withdrawal Management Panel ✅**
-- New page at `/admin/withdrawals`
-- Features:
-  - Stats dashboard (Total Paid Out, Fees Collected, Pending Withdrawals, Pending KYC)
-  - Pending KYC Verifications panel with Approve/Reject actions
-  - Withdrawal status filters (Pending, Approved, Completed, Rejected)
-  - Withdrawals table with user info, amount, method, status, date
-  - Detail modal for each withdrawal with full action controls
-  - Approve, Complete (with payout reference), Reject (with refund option)
-  - Pagination and search functionality
+#### 1. Enhanced Admin Authentication with 2FA
+- **Two-Factor Authentication (TOTP)** - Google Authenticator compatible
+- **Separate admin login flow** at `/api/admin-auth/login`
+- **Rate limiting** - 5 attempts before 30-minute lockout
+- **Shorter JWT expiry** - 4 hours for admin sessions
+- **Backup codes** for 2FA recovery
+- **IP logging** and tracking
 
-**3. Commission Calculation on Marketplace Sales ✅**
-- Integrated into Stripe webhook handler (`/api/webhook/stripe`)
-- Automatically triggers on successful payment
-- Calculates L1 (3%/4%) and L2 (1%/2%) commissions
-- Records commission transactions in database
-- Credits USD balance to upline users
-- Platform fee handling
+#### 2. Role-Based Access Control (RBAC)
+- **4 Admin Roles**: Super Admin, Co-Admin, Moderator, Support
+- **30+ granular permissions** per role
+- User management, financial, genealogy, content, system permissions
+- Least-privilege principle enforced
 
-**4. Push Notifications System ✅**
-- Backend notification service (`/app/backend/notifications_system.py`)
-- Notification types:
-  - Commission earned (instant notification)
-  - Daily BL claim ready (24h reminder)
-  - Daily spin ready (24h reminder)
-  - Referral joined (instant)
-  - Withdrawal status updates
-  - Diamond promotion/warning alerts
-- API endpoints:
-  - `GET /api/notifications/list` - Get user notifications
-  - `POST /api/notifications/mark-read/{id}` - Mark as read
-  - `POST /api/notifications/mark-all-read` - Mark all as read
-  - `GET /api/notifications/preferences` - Get preferences
-  - `PUT /api/notifications/preferences` - Update preferences
-  - `POST /api/notifications/subscribe` - Register push subscription
-- User notification preferences with granular control
+#### 3. Complete Audit Trail
+- **Every admin action logged** with:
+  - Admin ID, email, name
+  - Action type
+  - Target type and ID
+  - IP address and user agent
+  - Timestamp
+- **45+ audit action types** tracked
 
----
+#### 4. Real-Time WebSocket Sync
+- **Admin WebSocket connection manager**
+- **Live broadcast** of admin actions to all connected admins
+- **Online admin tracking** - see who's logged in
+- **Instant sync** between web and mobile
 
-## API Endpoints Created This Session
+#### 5. Full User Management APIs
+- `GET /api/admin/users/search` - Search/filter all users
+- `GET /api/admin/users/{user_id}` - Detailed user profile with transactions
+- `POST /api/admin/users/{user_id}/suspend` - Suspend with reason and duration
+- `POST /api/admin/users/{user_id}/unsuspend` - Remove suspension
+- `POST /api/admin/users/{user_id}/ban` - Permanent ban
+- `POST /api/admin/users/{user_id}/unban` - Remove ban
+- `DELETE /api/admin/users/{user_id}` - Soft delete (data preserved)
+- `POST /api/admin/users/{user_id}/reset-password` - Admin password reset
+- `POST /api/admin/users/{user_id}/force-logout` - Invalidate all sessions
 
-### Admin Withdrawal Management
-- `GET /api/admin/withdrawals/list` - List all withdrawals with counts
-- `GET /api/admin/withdrawals/{id}` - Get withdrawal details
-- `POST /api/admin/withdrawals/{id}/approve` - Approve withdrawal
-- `POST /api/admin/withdrawals/{id}/complete` - Mark as completed
-- `POST /api/admin/withdrawals/{id}/reject` - Reject with refund option
-- `GET /api/admin/withdrawals/stats/summary` - Withdrawal statistics
-- `GET /api/admin/withdrawals/kyc/pending` - List pending KYC users
-- `POST /api/admin/withdrawals/kyc/{user_id}/approve` - Approve KYC
-- `POST /api/admin/withdrawals/kyc/{user_id}/reject` - Reject KYC
+#### 6. Financial Oversight APIs
+- `GET /api/admin/finance/overview` - Platform-wide financial stats
+- `GET /api/admin/finance/transactions` - All transactions with filters
+- `POST /api/admin/finance/adjust-balance/{user_id}` - Manual balance adjustment
 
-### Notifications
-- `GET /api/notifications/list` - Get notifications (with pagination, unread filter)
-- `POST /api/notifications/mark-read/{id}` - Mark notification as read
-- `POST /api/notifications/mark-all-read` - Mark all as read
-- `DELETE /api/notifications/{id}` - Delete notification
-- `GET /api/notifications/preferences` - Get notification preferences
-- `PUT /api/notifications/preferences` - Update preferences
-- `POST /api/notifications/subscribe` - Register push subscription
+#### 7. Genealogy Management APIs
+- `GET /api/admin/genealogy/tree` - Full genealogy tree with profile pics, names, usernames
+- `GET /api/admin/genealogy/user/{user_id}/network` - User's complete network (upline + downline)
+- `POST /api/admin/genealogy/reassign` - Manual downline reassignment (drag-drop support)
+- `GET /api/admin/genealogy/orphans` - Orphan assignment queue
+
+#### 8. Role & Permission Management APIs
+- `GET /api/admin/roles/admins` - List all admin accounts
+- `POST /api/admin/roles/admins` - Create new admin
+- `PUT /api/admin/roles/admins/{id}` - Update admin role/permissions
+- `DELETE /api/admin/roles/admins/{id}` - Remove admin privileges
+
+#### 9. System Monitoring APIs
+- `GET /api/admin/system/health` - Database and system health metrics
+- `GET /api/admin/system/activity-feed` - Real-time activity feed
+- `GET /api/admin/system/analytics` - Platform analytics (24h, 7d, 30d)
 
 ---
 
-## Files Created/Modified
+## Files Created This Session
 
 ### Backend
-- `/app/backend/notifications_system.py` - NEW: Push notifications service
-- `/app/backend/diamond_withdrawal_system.py` - MODIFIED: Added admin_withdrawal_router
-- `/app/backend/referral_system.py` - MODIFIED: Commission notifications integration
-- `/app/backend/server.py` - MODIFIED: Commission processing in webhook, router registration
-- `/app/backend/media_sales.py` - MODIFIED: Fixed commission function signature
+- `/app/backend/admin_auth_system.py` - 2FA authentication, WebSocket, audit logging
+- `/app/backend/admin_core_system.py` - User, financial, genealogy, role management
 
-### Frontend
-- `/app/frontend/src/pages/admin/AdminWithdrawals.jsx` - NEW: Admin withdrawal management
-- `/app/frontend/src/pages/admin/AdminLayout.jsx` - MODIFIED: Added Withdrawals route and menu
-
-### Mobile
-- `/app/mobile/src/screens/MyTeamScreen.js` - NEW: Mobile referral screen
-- `/app/mobile/src/navigation/index.js` - MODIFIED: Added MyTeam navigation
+### Routers Registered
+- `admin_auth_router` - `/api/admin-auth/*`
+- `admin_realtime_router` - `/api/admin-realtime/ws`
+- `admin_users_router` - `/api/admin/users/*`
+- `admin_finance_router` - `/api/admin/finance/*`
+- `admin_genealogy_router` - `/api/admin/genealogy/*`
+- `admin_content_router` - `/api/admin/content/*`
+- `admin_roles_router` - `/api/admin/roles/*`
+- `admin_system_router` - `/api/admin/system/*`
 
 ---
 
-## Testing Results
-- **Iteration 17**: Backend 100% (33/33 tests), Frontend 100%
-- All admin withdrawal management endpoints tested
-- All notification endpoints tested
-- KYC workflow tested
-- Diamond status and disclaimer endpoints tested
+## Admin Credentials
+- **Email:** `blendlinknet@gmail.com`
+- **Password:** `link2026blend!`
+- **Role:** Super Admin (all permissions)
+- **2FA:** Not enabled yet (can be enabled via `/api/admin-auth/2fa/setup`)
+
+---
+
+## Next Steps (Frontend)
+
+### P0 - Immediate
+- [ ] Update existing admin pages to use new `/api/admin/*` endpoints
+- [ ] Add 2FA setup UI in admin settings
+- [ ] Add real-time WebSocket connection for live updates
+- [ ] Implement visual genealogy tree with drag-drop reassignment
+
+### P1 - High Priority
+- [ ] Mobile admin screens with full functionality
+- [ ] Content moderation UI (view private content)
+- [ ] Co-admin/moderator creation UI
+
+### P2 - Medium
+- [ ] Audit log viewer in admin panel
+- [ ] System health dashboard
+- [ ] Advanced analytics charts
 
 ---
 
@@ -130,31 +127,11 @@ Build a fully responsive Progressive Web App (PWA) version of Blendlink - an all
 - **Payments**: Stripe (Checkout + Identity for KYC)
 - **AI Services**: OpenAI GPT Image 1.5, Sora 2, GPT-4o
 - **PWA**: Service Worker + manifest.json with offline support
-- **Auth**: JWT tokens + Emergent-managed Google OAuth
+- **Auth**: JWT tokens + Emergent-managed Google OAuth + TOTP 2FA
+- **Real-time**: WebSockets for admin sync
 - **Mobile**: React Native/Expo
 
 ## Test Credentials
 - **Admin**: `blendlinknet@gmail.com` / `link2026blend!`
-- **Test User 1**: `testref@test.com` / `test123` (Referral Code: BFD6E873)
+- **Test User 1**: `testref@test.com` / `test123`
 - **Test User 2**: `testref2@test.com` / `test123`
-
----
-
-## Remaining Tasks (Prioritized)
-
-### P0 - Critical
-- [ ] Web push notification delivery (integrate web-push library)
-- [ ] Mobile push notifications (Expo notifications)
-
-### P1 - High
-- [ ] AI Music Generation feature
-- [ ] Complete Friends/Groups/Events/Pages UI
-
-### P2 - Medium
-- [ ] Video watermarking with drag-and-drop UI
-- [ ] Looping video thumbnails (FFmpeg)
-- [ ] Mobile Admin Panel full functionality
-
-### P3 - Lower
-- [ ] App Store submission prep
-- [ ] Performance optimization
