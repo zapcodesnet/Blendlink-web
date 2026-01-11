@@ -9,7 +9,7 @@ import {
   ArrowLeft, Wallet, DollarSign, CreditCard, Building2,
   ShieldCheck, AlertCircle, CheckCircle2, Clock, ExternalLink
 } from "lucide-react";
-import { withdrawalsAPI } from "../services/referralApi";
+import referralApi from "../services/referralApi";
 
 export default function WithdrawPage() {
   const { user } = useContext(AuthContext);
@@ -35,12 +35,22 @@ export default function WithdrawPage() {
 
   const loadData = async () => {
     try {
-      const [eligibilityData, verificationData] = await Promise.all([
-        withdrawalsAPI.checkEligibility(),
-        withdrawalsAPI.getIDVerificationStatus()
+      const [withdrawalData, kycData] = await Promise.all([
+        referralApi.withdrawal.getStatus().catch(() => null),
+        referralApi.kyc.getStatus().catch(() => null)
       ]);
-      setEligibility(eligibilityData);
-      setVerificationStatus(verificationData);
+      
+      // Transform to expected format
+      setEligibility({
+        available_balance: withdrawalData?.usd_balance || 0,
+        pending_earnings: 0,
+        can_withdraw: withdrawalData?.can_withdraw || false
+      });
+      
+      setVerificationStatus({
+        verified: kycData?.status === 'verified',
+        status: kycData?.status || 'not_started'
+      });
     } catch (error) {
       console.error("Failed to load data:", error);
     } finally {
@@ -51,10 +61,13 @@ export default function WithdrawPage() {
   const startVerification = async () => {
     setStartingVerification(true);
     try {
-      const result = await withdrawalsAPI.startIDVerification();
-      if (result.url) {
-        window.open(result.url, '_blank');
+      const result = await referralApi.kyc.initVerification(window.location.href);
+      if (result.verification_url) {
+        window.open(result.verification_url, '_blank');
         toast.success("Verification started! Complete the process in the new window.");
+      } else if (result.method === 'manual') {
+        toast.success(result.message || "KYC verification request submitted.");
+        loadData(); // Refresh status
       }
     } catch (error) {
       toast.error(error.message || "Failed to start verification");
@@ -89,9 +102,9 @@ export default function WithdrawPage() {
 
     setWithdrawing(true);
     try {
-      const result = await withdrawalsAPI.request(amount, form.payment_method, paymentDetails);
-      toast.success(`Withdrawal requested! Net amount: $${result.net_amount.toFixed(2)}`);
-      navigate('/withdraw/history');
+      const result = await referralApi.withdrawal.request(amount, form.payment_method, paymentDetails);
+      toast.success(`Withdrawal requested! Net amount: $${result.net_amount?.toFixed(2) || (amount * 0.99).toFixed(2)}`);
+      navigate('/wallet');
     } catch (error) {
       toast.error(error.message || "Withdrawal failed");
     } finally {
