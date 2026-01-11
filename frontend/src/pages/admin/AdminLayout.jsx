@@ -208,14 +208,14 @@ export default function AdminLayout() {
             <Routes>
               <Route index element={<AdminDashboardHome />} />
               <Route path="users/*" element={<AdminUsers />} />
-              <Route path="admins" element={<PlaceholderPage title="Admin Management" />} />
+              <Route path="admins" element={<AdminManagement />} />
               <Route path="themes" element={<AdminThemes />} />
               <Route path="pages" element={<AdminPages />} />
               <Route path="genealogy" element={<AdminGenealogy />} />
               <Route path="ai" element={<AdminAI />} />
-              <Route path="audit" element={<PlaceholderPage title="Audit Logs" />} />
-              <Route path="analytics" element={<PlaceholderPage title="Analytics" />} />
-              <Route path="settings" element={<PlaceholderPage title="Platform Settings" />} />
+              <Route path="audit" element={<AdminAudit />} />
+              <Route path="analytics" element={<AdminAnalytics />} />
+              <Route path="settings" element={<AdminSettings />} />
             </Routes>
           </div>
         </main>
