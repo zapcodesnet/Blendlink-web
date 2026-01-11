@@ -482,16 +482,24 @@ export default function AdminLayout() {
           {/* Desktop Header */}
           {!isMobile && (
             <header className="h-16 bg-slate-800 border-b border-slate-700 flex items-center justify-between px-4 md:px-6 sticky top-0 z-30">
-              <div className="flex items-center gap-2 text-slate-400 text-sm md:text-base overflow-hidden">
-                <Link to="/admin" className="hover:text-white flex-shrink-0">Admin</Link>
-                {location.pathname !== '/admin' && (
-                  <>
-                    <ChevronRight className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-white capitalize truncate">
-                      {location.pathname.split('/').pop().replace('-', ' ')}
-                    </span>
-                  </>
-                )}
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 text-slate-400 text-sm md:text-base overflow-hidden">
+                  <Link to="/admin" className="hover:text-white flex-shrink-0">Admin</Link>
+                  {location.pathname !== '/admin' && (
+                    <>
+                      <ChevronRight className="w-4 h-4 flex-shrink-0" />
+                      <span className="text-white capitalize truncate">
+                        {location.pathname.split('/').pop().replace('-', ' ')}
+                      </span>
+                    </>
+                  )}
+                </div>
+                {/* Real-time Status Indicator */}
+                <AdminRealtimeStatus 
+                  isConnected={wsConnected} 
+                  metrics={realtimeMetrics}
+                  connectionError={wsError}
+                />
               </div>
               <div className="flex items-center gap-2 md:gap-4">
                 {/* Search - Hidden on small tablets */}
