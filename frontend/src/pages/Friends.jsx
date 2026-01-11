@@ -32,7 +32,7 @@ const friendsAPI = {
   
   getRequests: async () => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/friends/requests/`, {
+    const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/friends/requests`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) throw new Error("Failed to load requests");
