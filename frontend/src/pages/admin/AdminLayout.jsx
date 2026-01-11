@@ -211,29 +211,7 @@ export default function AdminLayout() {
     };
 
     checkAdminAuth();
-            admin_id: `temp_${user.user_id}`,
-            email: user.email,
-            name: user.name,
-            role: user.admin_role || 'moderator',
-            permissions: {},
-          });
-          toast.info("Admin account being configured. Some features may be limited.");
-        } else {
-          toast.error("Admin access required");
-          navigate('/');
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-    
-    checkAdmin();
-  }, [user, navigate]);
+  }, [navigate]);
 
   // Zoom controls
   const handleZoomIn = () => {
