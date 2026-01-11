@@ -1,20 +1,16 @@
 # Blendlink Platform - Product Requirements Document
 
 ## Original Problem Statement
-Build a complete multi-platform referral and compensation system with a comprehensive, production-grade admin panel. The admin panel must connect to the live production database, handle real users, activities, transactions, and finances with all actions synchronizing in real-time between web PWA and mobile app.
+Build a complete multi-platform referral and compensation system with a comprehensive, production-grade admin panel with secure 2FA authentication and automatic session management.
 
 ## Admin Panel Requirements
-- ✅ **Secure 2FA Login**: Admin login with Email OTP verification (using Resend) - COMPLETED
-- ✅ **Security Dashboard**: Login history, failed attempts, locked accounts, location tracking - COMPLETED
+- ✅ **Secure 2FA Login**: Admin login with Email OTP verification (using Resend) - WORKING
+- ✅ **Auto-Logout on Inactivity**: 5-minute timeout for Admin, Co-Admin, Moderator - IMPLEMENTED
+- ✅ **Security Dashboard**: Login history, failed attempts, locked accounts - COMPLETED
 - ✅ **Full User Management**: Search, filter, view, suspend, ban, reset passwords - COMPLETED
-- ✅ **Real-Time Financial Oversight**: View balances, transaction histories, manual balance adjustments - COMPLETED
-- ✅ **Withdrawal Management**: Approve/reject KYC and cash withdrawal requests - COMPLETED
+- ✅ **Withdrawal Management**: Approve/reject KYC and cash withdrawals - COMPLETED
 - ✅ **Genealogy Management**: View and edit team hierarchy - COMPLETED
-- ✅ **Content Moderation**: Access and moderate user content - COMPLETED
-- ✅ **Platform Configuration**: Manage global settings - COMPLETED
 - ✅ **RBAC**: Role-based access control - COMPLETED
-- 🔄 **Real-time Push Notifications**: Admin alerts (backend done, client-side pending)
-- 🔄 **100% Sync**: Mobile admin panel nearing completion
 
 ## Current Tech Stack
 - **Frontend**: React (Web PWA), React Native (Mobile)
@@ -22,79 +18,55 @@ Build a complete multi-platform referral and compensation system with a comprehe
 - **UI**: Tailwind CSS, Shadcn UI
 - **Email**: Resend (for OTP)
 - **Payments**: Stripe
-- **Auth**: JWT + Email OTP (2FA for admins), Emergent Google Auth
+- **Auth**: JWT + Email OTP (2FA for admins)
 
 ## What's Been Implemented (January 11, 2026)
 
-### ✅ Session 1 - Admin OTP Login Fix
-- Fixed blank `/admin/login` page (import path bug)
-- Admin 2FA flow fully functional via Resend email
+### ✅ Bug Fix - Admin Login Error
+- Fixed "Failed to execute 'clone' on 'Response': Response body is already used" error
+- Removed unnecessary response cloning logic from `AdminLogin.jsx`
+- Simplified error handling in Step 1 and Step 2 submission
 
-### ✅ Session 2 - Mobile Admin Panel + Security Dashboard
-1. **Mobile Admin Screens Completed**:
-   - `AdminGenealogyScreen.js` - Full genealogy management with tree view, orphan detection, user reassignment
-   - `AdminManagementScreen.js` - Admin role management with permissions editor
+### ✅ Auto-Logout Feature
+- Implemented 5-minute inactivity auto-logout in `AdminLayout.jsx`
+- Tracks user activity via mouse, keyboard, scroll, touch events
+- Stores last activity timestamp in localStorage
+- Shows toast notification on auto-logout
+- Applies to all admin roles (Admin, Co-Admin, Moderator)
 
-2. **Admin Security Dashboard (Web)**:
-   - `AdminSecurityDashboard.jsx` - New security monitoring page
-   - Login history with IP, location, device tracking
-   - Failed login attempts monitoring
-   - Locked accounts management with unlock capability
-   - Security alerts display
-   - Time range filters (1h, 24h, 7d, 30d)
-
-3. **Backend Security API**:
-   - `admin_security_routes.py` - New security endpoints
-   - `/api/admin/security/stats` - Security statistics
-   - `/api/admin/security/login-history` - Login history
-   - `/api/admin/security/failed-attempts` - Failed attempts log
-   - `/api/admin/security/locked-accounts` - Locked accounts list
-   - `/api/admin/security/unlock-account` - Manual unlock
-   - `/api/admin/security/alerts` - Security alerts
+### ✅ Previous Implementations
+- Admin Security Dashboard with login/activity monitoring
+- Mobile Admin Panel screens (Genealogy, Management)
+- Backend Security API endpoints
 
 ## Architecture
 
 ```
-/app/
-├── backend/
-│   ├── admin_otp_auth.py          # Email OTP 2FA
-│   ├── admin_security_routes.py   # Security dashboard API (NEW)
-│   ├── admin_notifications.py     # Push notification system
-│   └── server.py                  # Main server with all routes
-├── frontend/
-│   └── src/pages/admin/
-│       ├── AdminLogin.jsx         # 2FA login page
-│       ├── AdminSecurityDashboard.jsx  # Security monitoring (NEW)
-│       ├── AdminLayout.jsx        # Layout with Security menu
-│       └── [other admin pages]
-└── mobile/
-    └── src/screens/
-        ├── AdminGenealogyScreen.js   # Genealogy management (NEW)
-        ├── AdminManagementScreen.js  # Admin roles (NEW)
-        └── [other admin screens]
+/app/frontend/src/pages/admin/
+├── AdminLogin.jsx      # 2FA login (FIXED)
+├── AdminLayout.jsx     # Layout with auto-logout (NEW FEATURE)
+├── AdminSecurityDashboard.jsx
+└── [other admin pages]
 ```
 
-## Test Reports
-- `/app/test_reports/iteration_20.json` - Admin OTP auth (ALL PASSED)
+## Auto-Logout Implementation Details
+```javascript
+// 5-minute inactivity timeout
+const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 300,000ms
 
-## Remaining Tasks
+// Tracked events
+const activityEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
 
-### P1 - High Priority
-- Client-side push notifications (service worker implementation)
-- WebSocket real-time connection for live updates
-
-### P2 - Medium Priority
-- Fix `ValueError: Invalid salt` in legacy auth
-
-### Future/Backlog
-- AI Image/Video/Music Generation
-- Social Pages verification
-- Media features (looping thumbnails, watermarking)
-- App Store submission prep
+// On timeout: clear token, redirect to /admin/login
+```
 
 ## Test Credentials
 - **Admin**: blendlinknet@gmail.com / link2026blend!
-- **Regular User**: testuser@test.com / password
 
 ## API Base URL
 - Production: https://super-ctrl.preview.emergentagent.com
+
+## Remaining Tasks
+- Client-side push notifications (service worker)
+- WebSocket real-time connection
+- AI Image/Video/Music Generation
