@@ -13,6 +13,8 @@ import {
 import AdminUsers from "./AdminUsers";
 import AdminThemes from "./AdminThemes";
 import AdminGenealogy from "./AdminGenealogy";
+import AdminAI from "./AdminAI";
+import AdminPages from "./AdminPages";
 
 // Admin Context
 export const AdminContext = createContext(null);
