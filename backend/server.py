@@ -207,13 +207,36 @@ def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
 def verify_password(password: str, hashed: str) -> bool:
-    """Verify password with bcrypt, handling invalid hashes gracefully."""
-    if not hashed or not password:
+    """
+    Verify password with bcrypt, handling invalid hashes gracefully.
+    
+    Returns False for:
+    - Empty passwords or hashes
+    - Invalid bcrypt hash formats (e.g., Google OAuth users with no password)
+    - Incorrect passwords
+    """
+    if not password:
         return False
+    
+    # Handle empty or None hash (Google OAuth users don't have passwords)
+    if not hashed:
+        logger.debug("Password verification failed: No password hash stored (likely OAuth user)")
+        return False
+    
+    # Validate bcrypt hash format before attempting verification
+    # Valid bcrypt hashes start with $2a$, $2b$, or $2y$ followed by cost factor
+    if not isinstance(hashed, str) or not hashed.startswith('$2'):
+        logger.warning(f"Password verification failed: Invalid hash format (not bcrypt)")
+        return False
+    
     try:
         return bcrypt.checkpw(password.encode(), hashed.encode())
-    except (ValueError, TypeError):
-        # Handle invalid salt or hash format
+    except ValueError as e:
+        # This occurs with malformed bcrypt hashes
+        logger.warning(f"Password verification failed: Invalid bcrypt salt - {str(e)}")
+        return False
+    except TypeError as e:
+        logger.warning(f"Password verification failed: Type error - {str(e)}")
         return False
 
 def create_token(user_id: str, expiry_hours: int = None) -> str:
