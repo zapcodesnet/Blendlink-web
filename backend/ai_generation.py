@@ -511,3 +511,41 @@ async def get_generation_history(
     ).sort("created_at", -1).limit(limit).to_list(limit)
     
     return {"generations": generations}
+
+@ai_generation_router.delete("/generation/{generation_id}")
+async def delete_generation(
+    generation_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Delete an AI generation"""
+    # Check ownership
+    generation = await db.ai_generations.find_one({
+        "generation_id": generation_id,
+        "user_id": current_user["user_id"]
+    })
+    
+    if not generation:
+        raise HTTPException(status_code=404, detail="Generation not found")
+    
+    # Delete associated files
+    import os
+    if generation.get("video_url"):
+        try:
+            os.remove(f"/app/frontend/public{generation['video_url']}")
+        except:
+            pass
+    if generation.get("thumbnail_url"):
+        try:
+            os.remove(f"/app/frontend/public{generation['thumbnail_url']}")
+        except:
+            pass
+    if generation.get("cover_art_url"):
+        try:
+            os.remove(f"/app/frontend/public{generation['cover_art_url']}")
+        except:
+            pass
+    
+    # Delete from database
+    await db.ai_generations.delete_one({"generation_id": generation_id})
+    
+    return {"success": True, "message": "Generation deleted"}
