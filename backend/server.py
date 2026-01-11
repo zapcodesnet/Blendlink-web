@@ -1790,13 +1790,14 @@ except ImportError as e:
 # Import and include referral system routers
 try:
     from referral_system import referral_router
-    from diamond_withdrawal_system import diamond_router, withdrawal_router, kyc_router, reassignment_router
+    from diamond_withdrawal_system import diamond_router, withdrawal_router, kyc_router, reassignment_router, admin_withdrawal_router
     api_router.include_router(referral_router)
     api_router.include_router(diamond_router)
     api_router.include_router(withdrawal_router)
     api_router.include_router(kyc_router)
     api_router.include_router(reassignment_router)
-    logger.info("Referral, Diamond Leader, Withdrawal, KYC, and Reassignment routers loaded")
+    api_router.include_router(admin_withdrawal_router)
+    logger.info("Referral, Diamond Leader, Withdrawal, KYC, Reassignment, and Admin Withdrawal routers loaded")
 except ImportError as e:
     logger.warning(f"Could not load referral/diamond systems: {e}")
 
