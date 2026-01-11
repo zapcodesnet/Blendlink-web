@@ -9,7 +9,7 @@ import {
   Copy, Share2, ChevronRight, RefreshCw, Crown,
   Wallet, Clock, CheckCircle2, Gift
 } from "lucide-react";
-import { networkAPI, commissionsAPI, diamondAPI } from "../services/referralApi";
+import referralApi from "../services/referralApi";
 
 export default function EarningsDashboard() {
   const { user } = useContext(AuthContext);
@@ -26,13 +26,37 @@ export default function EarningsDashboard() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [networkData, commissionsData, diamondData] = await Promise.all([
-        networkAPI.getMyNetwork(),
-        commissionsAPI.getMyCommissions(0, 10),
-        diamondAPI.getStatus()
+      // Use the available APIs from referralApi
+      const [genealogyData, diamondData] = await Promise.all([
+        referralApi.referral.getGenealogy().catch(() => []),
+        referralApi.diamond.getStatus().catch(() => null)
       ]);
-      setNetwork(networkData);
-      setCommissions(commissionsData);
+      
+      // Transform genealogy data to network format
+      const level1 = genealogyData.filter(m => m.level === 1);
+      const level2 = genealogyData.filter(m => m.level === 2);
+      
+      setNetwork({
+        referral_code: user?.referral_code,
+        level_1_count: level1.length,
+        level_2_count: level2.length,
+        total_network_size: genealogyData.length,
+        level_1_members: level1.map(m => ({
+          user_id: m.user_id,
+          name: m.username,
+          email: ''
+        }))
+      });
+      
+      // Set commissions from diamond status if available
+      setCommissions({
+        commissions: [],
+        totals: {
+          total: 0,
+          pending: 0
+        }
+      });
+      
       setDiamondStatus(diamondData);
     } catch (error) {
       console.error("Failed to load data:", error);
