@@ -567,4 +567,151 @@ export const casinoAPI = {
   },
 };
 
+// ============== ADMIN API ==============
+
+export const adminAPI = {
+  // Profile & Dashboard
+  getProfile: async () => {
+    const response = await api.get('/admin-system/profile');
+    return response.data;
+  },
+
+  getDashboard: async () => {
+    const response = await api.get('/admin-system/dashboard');
+    return response.data;
+  },
+
+  // Real-time Metrics
+  getRealtimeMetrics: async () => {
+    const response = await api.get('/realtime/metrics');
+    return response.data;
+  },
+
+  // User Management
+  getUsers: async (skip = 0, limit = 50, status = null, search = null) => {
+    const params = new URLSearchParams();
+    params.append('skip', skip);
+    params.append('limit', limit);
+    if (status) params.append('status', status);
+    if (search) params.append('search', search);
+    const response = await api.get(`/admin-system/users?${params}`);
+    return response.data;
+  },
+
+  updateUserStatus: async (userId, action) => {
+    const response = await api.put(`/admin-system/users/${userId}/status`, { action });
+    return response.data;
+  },
+
+  // Admin Management
+  getAdmins: async () => {
+    const response = await api.get('/admin-system/admins');
+    return response.data;
+  },
+
+  createAdmin: async (data) => {
+    const response = await api.post('/admin-system/admins', data);
+    return response.data;
+  },
+
+  updateAdminRole: async (adminId, role) => {
+    const response = await api.put(`/admin-system/admins/${adminId}`, { role });
+    return response.data;
+  },
+
+  // Audit Logs
+  getAuditLogs: async (skip = 0, limit = 50, action = null) => {
+    const params = new URLSearchParams();
+    params.append('skip', skip);
+    params.append('limit', limit);
+    if (action) params.append('action', action);
+    const response = await api.get(`/admin-system/audit-logs?${params}`);
+    return response.data;
+  },
+
+  // Settings
+  getSettings: async () => {
+    const response = await api.get('/admin-system/settings');
+    return response.data;
+  },
+
+  updateSettings: async (settings) => {
+    const response = await api.put('/admin-system/settings', settings);
+    return response.data;
+  },
+
+  // A/B Testing
+  getABTests: async (status = null) => {
+    const url = status ? `/ab-testing/tests?status=${status}` : '/ab-testing/tests';
+    const response = await api.get(url);
+    return response.data;
+  },
+
+  getABTest: async (testId) => {
+    const response = await api.get(`/ab-testing/tests/${testId}`);
+    return response.data;
+  },
+
+  createABTest: async (data) => {
+    const response = await api.post('/ab-testing/tests', data);
+    return response.data;
+  },
+
+  updateABTestStatus: async (testId, status) => {
+    const response = await api.put(`/ab-testing/tests/${testId}/status?status=${status}`);
+    return response.data;
+  },
+
+  deleteABTest: async (testId) => {
+    const response = await api.delete(`/ab-testing/tests/${testId}`);
+    return response.data;
+  },
+
+  getMyABAssignment: async (testId) => {
+    const response = await api.get(`/ab-testing/assignment/${testId}`);
+    return response.data;
+  },
+
+  trackABConversion: async (testId, conversionType = 'default') => {
+    const response = await api.post(`/ab-testing/conversion/${testId}?conversion_type=${conversionType}`);
+    return response.data;
+  },
+
+  // Biometric Authentication
+  registerBiometric: async (deviceId, deviceName, credentialType, publicKey, platform) => {
+    const response = await api.post('/biometric/register', {
+      device_id: deviceId,
+      device_name: deviceName,
+      credential_type: credentialType,
+      public_key: publicKey,
+      platform: platform,
+    });
+    return response.data;
+  },
+
+  getBiometricChallenge: async (deviceId) => {
+    const response = await api.get(`/biometric/challenge?device_id=${deviceId}`);
+    return response.data;
+  },
+
+  authenticateBiometric: async (deviceId, credentialId, signature) => {
+    const response = await api.post('/biometric/authenticate', {
+      device_id: deviceId,
+      credential_id: credentialId,
+      signature: signature,
+    });
+    return response.data;
+  },
+
+  getBiometricCredentials: async () => {
+    const response = await api.get('/biometric/credentials');
+    return response.data;
+  },
+
+  revokeBiometricCredential: async (credentialId) => {
+    const response = await api.delete(`/biometric/credentials/${credentialId}`);
+    return response.data;
+  },
+};
+
 export default api;
