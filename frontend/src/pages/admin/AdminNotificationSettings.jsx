@@ -93,8 +93,19 @@ export default function AdminNotificationSettings() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [delegates, setDelegates] = useState([]);
   const [availableDelegates, setAvailableDelegates] = useState([]);
-  const [expandedSection, setExpandedSection] = useState('categories');
+  const [expandedSection, setExpandedSection] = useState('push');
   const [testSending, setTestSending] = useState(false);
+
+  // Push notifications hook
+  const { 
+    isSupported: pushSupported, 
+    permission: pushPermission, 
+    isSubscribed: pushSubscribed,
+    loading: pushLoading,
+    subscribe: subscribePush,
+    unsubscribe: unsubscribePush,
+    sendTestNotification: sendTestPush
+  } = usePushNotifications();
 
   const loadData = useCallback(async () => {
     setLoading(true);
