@@ -252,6 +252,7 @@ export default function AdminLayout() {
     { icon: Home, label: 'Dashboard', path: '/admin' },
     { icon: Users, label: 'Users', path: '/admin/users' },
     { icon: Shield, label: 'Admins', path: '/admin/admins' },
+    { icon: Lock, label: 'Security', path: '/admin/security' },
     { icon: Wallet, label: 'Withdrawals', path: '/admin/withdrawals' },
     { icon: Bell, label: 'Notifications', path: '/admin/notifications' },
     { icon: Palette, label: 'Themes', path: '/admin/themes' },
