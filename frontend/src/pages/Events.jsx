@@ -25,7 +25,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 // API functions for events
 const eventsAPI = {
   getEvents: async () => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("blendlink_token") || localStorage.getItem("token");
     const res = await fetch(`${API_URL}/api/events/`, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -34,7 +34,7 @@ const eventsAPI = {
   },
   
   getMyEvents: async () => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("blendlink_token") || localStorage.getItem("token");
     const res = await fetch(`${API_URL}/api/events/my-events/`, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -43,7 +43,7 @@ const eventsAPI = {
   },
   
   createEvent: async (data) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("blendlink_token") || localStorage.getItem("token");
     const res = await fetch(`${API_URL}/api/events/`, {
       method: "POST",
       headers: { 
@@ -60,7 +60,7 @@ const eventsAPI = {
   },
   
   rsvpEvent: async (eventId, status) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("blendlink_token") || localStorage.getItem("token");
     const res = await fetch(`${API_URL}/api/events/${eventId}/rsvp`, {
       method: "POST",
       headers: { 

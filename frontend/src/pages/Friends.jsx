@@ -22,7 +22,7 @@ import {
 // API functions for friends
 const friendsAPI = {
   getFriends: async () => {
-    const token = localStorage.getItem("blendlink_token") || localStorage.getItem("token");
+    const token = localStorage.getItem("blendlink_token") || localStorage.getItem("blendlink_token") || localStorage.getItem("token");
     const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/friends/`, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -31,7 +31,7 @@ const friendsAPI = {
   },
   
   getRequests: async () => {
-    const token = localStorage.getItem("blendlink_token") || localStorage.getItem("token");
+    const token = localStorage.getItem("blendlink_token") || localStorage.getItem("blendlink_token") || localStorage.getItem("token");
     const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/friends/requests`, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -40,7 +40,7 @@ const friendsAPI = {
   },
   
   sendRequest: async (userId) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("blendlink_token") || localStorage.getItem("token");
     const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/friends/request/${userId}`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
@@ -53,7 +53,7 @@ const friendsAPI = {
   },
   
   acceptRequest: async (requestId) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("blendlink_token") || localStorage.getItem("token");
     const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/friends/accept/${requestId}`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
@@ -63,7 +63,7 @@ const friendsAPI = {
   },
   
   declineRequest: async (requestId) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("blendlink_token") || localStorage.getItem("token");
     const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/friends/decline/${requestId}`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
@@ -73,7 +73,7 @@ const friendsAPI = {
   },
   
   removeFriend: async (userId) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("blendlink_token") || localStorage.getItem("token");
     const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/friends/remove/${userId}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
@@ -83,7 +83,7 @@ const friendsAPI = {
   },
   
   searchUsers: async (query) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("blendlink_token") || localStorage.getItem("token");
     const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/users/search?q=${encodeURIComponent(query)}`, {
       headers: { Authorization: `Bearer ${token}` },
     });

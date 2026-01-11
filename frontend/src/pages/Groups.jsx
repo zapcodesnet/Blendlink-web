@@ -25,7 +25,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 // API functions for groups
 const groupsAPI = {
   getGroups: async () => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("blendlink_token") || localStorage.getItem("token");
     const res = await fetch(`${API_URL}/api/groups/`, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -34,7 +34,7 @@ const groupsAPI = {
   },
   
   getMyGroups: async () => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("blendlink_token") || localStorage.getItem("token");
     const res = await fetch(`${API_URL}/api/groups/my-groups/`, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -43,7 +43,7 @@ const groupsAPI = {
   },
   
   createGroup: async (data) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("blendlink_token") || localStorage.getItem("token");
     const res = await fetch(`${API_URL}/api/groups/`, {
       method: "POST",
       headers: { 
@@ -60,7 +60,7 @@ const groupsAPI = {
   },
   
   joinGroup: async (groupId) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("blendlink_token") || localStorage.getItem("token");
     const res = await fetch(`${API_URL}/api/groups/${groupId}/join`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
@@ -70,7 +70,7 @@ const groupsAPI = {
   },
   
   leaveGroup: async (groupId) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("blendlink_token") || localStorage.getItem("token");
     const res = await fetch(`${API_URL}/api/groups/${groupId}/leave`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
@@ -80,7 +80,7 @@ const groupsAPI = {
   },
   
   searchGroups: async (query) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("blendlink_token") || localStorage.getItem("token");
     const res = await fetch(`${API_URL}/api/groups/search?q=${encodeURIComponent(query)}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
