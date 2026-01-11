@@ -482,7 +482,7 @@ export default function AdminLayout() {
               <Route path="users/*" element={<AdminUsers />} />
               <Route path="admins" element={<AdminManagement />} />
               <Route path="withdrawals" element={<AdminWithdrawals />} />
-              <Route path="notifications" element={<AdminNotificationSettings />} />
+              <Route path="notifications" element={<div className="text-white p-4">Notification Settings - Loading...</div>} />
               <Route path="themes" element={<AdminThemes />} />
               <Route path="pages" element={<AdminPages />} />
               <Route path="genealogy" element={<AdminGenealogy />} />
