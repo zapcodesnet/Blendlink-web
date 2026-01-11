@@ -210,18 +210,7 @@ export default function AdminLogin() {
         body: JSON.stringify({ email, session_token: sessionToken }),
       });
       
-      // Clone response before reading to avoid "body stream already read" error
-      const responseClone = response.clone();
-      let data;
-      try {
-        data = await response.json();
-      } catch (jsonError) {
-        try {
-          data = await responseClone.json();
-        } catch {
-          throw new Error("Server error. Please try again.");
-        }
-      }
+      const data = await response.json();
       
       if (!response.ok) {
         throw new Error(data.detail || "Failed to resend code");
@@ -234,7 +223,7 @@ export default function AdminLogin() {
       otpRefs.current[0]?.focus();
       
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.message || "Failed to resend code. Please try again.");
     } finally {
       setLoading(false);
     }
