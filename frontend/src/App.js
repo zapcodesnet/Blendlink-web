@@ -217,8 +217,11 @@ function AppRouter() {
       {/* Seller Dashboard Routes */}
       <Route path="/seller-dashboard" element={<ProtectedRoute><SellerDashboard /></ProtectedRoute>} />
       
-      {/* Admin Routes */}
-      <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+      {/* Admin Routes - Old Dashboard */}
+      <Route path="/admin-old" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+      
+      {/* Admin System - New Full Admin Panel */}
+      <Route path="/admin/*" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>} />
       
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
