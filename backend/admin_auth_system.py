@@ -411,8 +411,11 @@ async def admin_login(request: Request, data: AdminLoginRequest):
     - Rate limited with lockout
     - Requires 2FA if enabled
     """
+    logger.info(f"Admin login attempt for email: {data.email}")
+    
     # Find user by email
     user = await db.users.find_one({"email": data.email}, {"_id": 0})
+    logger.info(f"User lookup result: {user['user_id'] if user else 'Not found'}")
     if not user:
         return AdminLoginResponse(
             success=False,
@@ -421,6 +424,7 @@ async def admin_login(request: Request, data: AdminLoginRequest):
     
     # Check if user has admin account
     admin = await db.admin_accounts.find_one({"user_id": user["user_id"], "is_active": True}, {"_id": 0})
+    logger.info(f"Admin lookup result: {admin['admin_id'] if admin else 'Not found'}")
     if not admin:
         return AdminLoginResponse(
             success=False,
