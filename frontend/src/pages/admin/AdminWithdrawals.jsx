@@ -574,6 +574,5 @@ export default function AdminWithdrawals() {
           onAction={fetchData}
         />
       </div>
-    </AdminLayout>
   );
 }
