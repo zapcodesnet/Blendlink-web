@@ -421,6 +421,39 @@ async def generate_music_params(
     
     generation_id = f"mus_{uuid.uuid4().hex[:12]}"
     
+    # Generate AI cover art if requested
+    cover_art_url = None
+    if request.generate_cover_art:
+        try:
+            from emergentintegrations.llm.openai.image_generation import OpenAIImageGeneration
+            
+            api_key = os.environ.get('EMERGENT_LLM_KEY')
+            if api_key:
+                image_gen = OpenAIImageGeneration(api_key=api_key)
+                
+                # Create cover art prompt based on genre and mood
+                cover_prompt = f"Album cover art for {request.genre} music, {request.mood} mood. Abstract artistic design, vibrant colors, professional quality, no text"
+                
+                images = await image_gen.generate_images(
+                    prompt=cover_prompt,
+                    model="gpt-image-1",
+                    number_of_images=1
+                )
+                
+                if images and len(images) > 0:
+                    import base64
+                    cover_filename = f"{generation_id}_cover.png"
+                    cover_path = f"/app/frontend/public/generated/{cover_filename}"
+                    os.makedirs(os.path.dirname(cover_path), exist_ok=True)
+                    
+                    with open(cover_path, 'wb') as f:
+                        f.write(images[0])
+                    
+                    cover_art_url = f"/generated/{cover_filename}"
+                    logger.info(f"Cover art generated for {generation_id}")
+        except Exception as cover_error:
+            logger.warning(f"Cover art generation failed: {cover_error}")
+    
     # Store generation record
     await db.ai_generations.insert_one({
         "generation_id": generation_id,
@@ -428,6 +461,7 @@ async def generate_music_params(
         "type": "music",
         "genre": request.genre,
         "mood": request.mood,
+        "cover_art_url": cover_art_url,
         "status": "completed",
         "created_at": datetime.now(timezone.utc).isoformat()
     })
