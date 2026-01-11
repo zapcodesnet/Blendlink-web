@@ -178,7 +178,8 @@ export default function AIGeneration() {
           genre: musicGenre,
           mood: musicMood,
           duration_seconds: musicDuration,
-          tempo: musicTempo
+          tempo: musicTempo,
+          generate_cover_art: true
         })
       });
       
@@ -186,7 +187,8 @@ export default function AIGeneration() {
       
       if (res.ok) {
         setMusicParams(data.params);
-        toast.success('Music parameters generated!');
+        setMusicCoverArt(data.cover_art_url);
+        toast.success('Music generated with cover art!');
         loadHistory();
       } else {
         throw new Error(data.detail || 'Generation failed');
