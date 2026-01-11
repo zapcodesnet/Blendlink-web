@@ -479,7 +479,7 @@ export default function AdminGenealogy() {
               <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
                 <p className="text-sm text-yellow-400">
                   <AlertTriangle className="w-4 h-4 inline mr-2" />
-                  This will change the user's referral relationship and may affect commission calculations.
+                  This will change the user&apos;s referral relationship and may affect commission calculations.
                 </p>
               </div>
 
