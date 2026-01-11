@@ -71,8 +71,11 @@
 ## Live URL
 https://createsuite-admin.preview.emergentagent.com
 
-## Known Issues (P3)
-- `ValueError: Invalid salt` in legacy user authentication (suppressed, not impacting functionality)
+## Resolved Issues
+- ✅ `ValueError: Invalid salt` - FIXED (Jan 11, 2026)
+  - Root cause: Google OAuth users had empty `password_hash` fields
+  - Fix: Improved `verify_password()` with proper validation and logging
+  - Cleaned up 5 database records with empty password hashes
 
 ## Mobile App Location
 - `/app/mobile/` - React Native/Expo mobile application
