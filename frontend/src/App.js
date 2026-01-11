@@ -39,9 +39,8 @@ import PaymentCancel from "./pages/PaymentCancel";
 // Referral/Earnings Pages
 import EarningsDashboard from "./pages/EarningsDashboard";
 import Withdraw from "./pages/Withdraw";
-import AdminDashboard from "./pages/AdminDashboard";
 
-// Admin System (New)
+// Admin System
 import AdminLayout from "./pages/admin/AdminLayout";
 
 // Social Analytics & Notifications
