@@ -1,200 +1,178 @@
 <analysis>**original_problem_statement:**
-The user wants to build a comprehensive, full-stack, cross-platform social media application named Blendlink, modeled after Facebook. It should include a responsive PWA and native mobile apps.
+The user has requested a complete overhaul and implementation of a complex, multi-platform referral and compensation system.
 
-Key features requested include a social feed, friend/group systems, a virtual currency (BL Coins) for rewards, and various AI-powered tools. The user has provided a detailed, prioritized list of features and fixes to implement, with the most recent request being the addition of a full suite of casino games using BL Coins. The project has moved from initial feature development to a cycle of bug fixing, enhancement, and implementing large new feature sets based on user priority.
+**PRODUCT REQUIREMENTS (New System):**
 
-**PRODUCT REQUIREMENTS:**
--   **Platform:** Responsive PWA (React/FastAPI/MongoDB) and React Native/Expo mobile apps.
--   **AI Seller Tools (P1):** A functional AI-powered dashboard for marketplace sellers, including AI listing generation.
--   **Mobile App (P2):** Achieve full feature and UI parity between the PWA and the React Native mobile app, starting with the Seller Dashboard.
--   **Media & Albums (P3):** Robust photo/video/music upload system with personal albums, including video thumbnail previews.
--   **Watermarking (P4):** A complete system for applying text/logo watermarks to images and videos, including a drag-and-drop UI and an AI Photo Studio for batch processing.
--   **Core Social Features (P5):** Full implementation of an activity feed, friends system, groups, pages, and events.
--   **Large File Transfer:** A new feature for users to send large files (5-15GB) for a BL Coin fee.
--   **Casino Games (Newest Request):** A full suite of real casino games (Blackjack, Poker, Slots, etc.) where users can bet and win BL Coins.
+*   **System Core:** All features must be 100% real-time synchronized between the web PWA and the mobile app. It must be secure, scalable, auditable, and legally compliant.
+*   **Compensation Plan:**
+    *   A 2-level unilevel plan: 3% on Level 1 (directs), 1% on Level 2 (indirects).
+    *   Diamond Leaders get enhanced rates: 4% on L1, 2% on L2.
+    *   Downline relationships are permanent unless a member is inactive for 5 years, triggering an admin-approved reassignment to the next active upline.
+*   **Sign-up & Orphan Bonuses:**
+    *   Referrer and new user both get 50,000 BL coins on sign-up with a code.
+    *   Orphan users (no code) are automatically assigned to an existing member based on a strict 11-tier priority system (based on verification status, recruit count, and login activity).
+*   **Visual Genealogy Tree:**
+    *   An interactive tree showing L1 and L2 downlines only.
+    *   Must include pan/zoom, profile pictures, and usernames.
+    *   Strict privacy: No visibility into downline earnings, transactions, or activity status.
+    *   Handles blocked user scenarios gracefully (grayed-out profile).
+*   **Daily BL Coin Claim:**
+    *   Regular members: 2,000 coins/24h.
+    *   Diamond Leaders: 5,000 coins/24h.
+    *   Server-side validation with a countdown timer.
+*   **Diamond Leader Rank:**
+    *   Qualification: Within 30 days - 100 direct recruits, k downline commissions, k personal sales.
+    *   Rewards: 00 USD + 500,000 BL coins (one-time).
+    *   Maintenance: 30-day rolling check for 1 new recruit, 0 personal sales, 0 downline commissions. Failure results in demotion.
+*   **Cash Withdrawals:**
+    *   Users can withdraw real money earnings (USD balance).
+    *   Requires mandatory KYC verification via an integrated provider.
+    *   Payouts are handled manually by an admin, with a configurable 1% platform fee.
+*   **Legal Disclaimers:** Prominent disclaimers about virtual currency and financial risk are required on sign-up, withdrawal, and genealogy pages.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application is a full-stack PWA with a corresponding React Native/Expo mobile app scaffold.
--   **Backend**: Built on FastAPI and MongoDB. It includes modules for authentication, social systems, referrals, a seller dashboard, and newly created stubs for album and casino systems. FFmpeg is installed and available system-wide for video processing.
--   **Frontend (PWA)**: A responsive React app with authentication, social feed, marketplace, a functional seller dashboard, and pages for albums and a multi-step AI listing creator. A guest checkout flow and a dynamic landing page carousel have also been implemented.
--   **Mobile App**: A React Native/Expo project at  with basic screen structure and navigation. New screens for the Marketplace and Seller Dashboard have been added but require full implementation to match the PWA.
+The application is a full-stack PWA and React Native mobile app with a newly completed, comprehensive admin system.
+-   **Backend**: FastAPI/MongoDB. Features include auth, social features, and an extensive admin panel with RBAC, theme management, user management, page management, an AI assistant, analytics, and A/B testing. WebSockets have been introduced for real-time features.
+-   **Frontend (PWA)**: A responsive React app featuring a full admin panel at . This panel was recently made fully responsive with zoom controls for desktop, tablet, and mobile views.
+-   **Mobile App**: A React Native/Expo app that now includes placeholder screens for the admin panel (, , , ) which have been integrated into the navigation.
+-   **Referral System**: Backend files (, ) have just been created to house the new logic, but are not yet fully integrated.
 
 **Last working item**:
--   **Last item agent was working**: The agent began implementing the user's request for casino games. It created a new backend module, , to house the logic for the games.
+-   **Last item agent was working**: Implementing the new, comprehensive referral and compensation system. The agent created two new backend files (, ) and started adding the corresponding API routers to the main  file. The process was interrupted before all routers were registered and no logic has been implemented yet.
 -   **Status**: IN PROGRESS
 -   **Agent Testing Done**: N
--   **Which testing method agent to use?**: backend testing agent (to test the casino game logic and endpoints once they are created).
+-   **Which testing method agent to use?**: both. This is a large, critical feature. The backend testing agent will be needed to verify complex business logic, database transactions, and commission calculations. The frontend testing agent will be needed to verify the visual genealogy tree, real-time balance updates on both web and mobile, and the withdrawal flow.
 -   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: (P0) AI Features Blocked by LLM Budget**
-    -   **Description**: The AI-powered features, particularly the AI Listing Creator, are failing because the Emergent LLM Key budget has been exceeded. The API returns a budget error.
-    -   **Attempted fixes**: The agent confirmed the error is due to budget limitations.
-    -   **Next debug checklist**: The next agent **MUST** inform the user at the beginning of the interaction that they need to add funds to their Emergent LLM Key via **Profile → Universal Key → Add Balance** to unblock all AI-related development and testing.
-    -   **Why fix this issue and what will be achieved with the fix?**: This is a hard blocker for implementing and testing a P1 priority feature (AI Seller Tools).
-    -   **Status**: BLOCKED
-    -   **Is recurring issue?**: N
-    -   **Should Test frontend/backend/both after fix?**: Backend
-    -   **Blocked on other issue**: No
+-   **Issue 1: Implement Comprehensive Referral & Compensation System (P0)**
+    -   This is the current, highest-priority task which is in progress.
+    -   **Status**: IN PROGRESS
 
--   **Issue 2: (P1) AI Music Generation Not Implemented**
-    -   **Description**: The user reported a bug in AI Music generation, but investigation revealed the feature was never implemented. The integration playbook does not offer a direct music generation API.
-    -   **Next debug checklist**: Implement a mock endpoint that returns a Coming Soon message, as this fulfills the immediate need to address the bug without a real integration.
-    -   **Why fix this issue and what will be achieved with the fix?**: Manages user expectations and closes an open bug report.
+-   **Issue 2: AI Music Generation Not Implemented (P1)**
+    -   A user-reported bug for a feature that was never built.
     -   **Status**: NOT STARTED
-    -   **Is recurring issue?**: N
-    -   **Should Test frontend/backend/both after fix?**: Backend
 
 **In progress Task List**:
--   **Task 1: Implement Casino Games (P0)**
-    -   **Where to resume**: The file  has been created. The next step is to add the router from this file into . Then, begin implementing the logic for the first game (e.g., Blackjack), including routes for placing bets, drawing cards, and determining outcomes using BL Coins.
-    -   **What will be achieved with this?**: This will create the foundational structure for the new casino feature requested by the user.
+-   **Task 1: Implement Comprehensive Referral & Compensation System (P0)**
+    -   **Where to resume**: The  file. The agent was in the process of importing and registering the new API routers from  and . The next step is to complete the registration, then proceed with the user's implementation plan, starting with the core 2-level commission engine.
+    -   **What will be achieved with this?**: This will deliver the user's primary requested feature set.
     -   **Status**: IN PROGRESS
     -   **Should Test frontend/backend/both after fix?**: Both
-    -   **Blocked on something**: No
+    -   **Blocked on something**: No.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **(P1) Finalize React Native Mobile App UI/UX Parity**: Implement the full UI for the  and  to match the PWA's functionality. Continue building out other screens (Social Feed, Profile, Wallet, Albums) for 100% feature parity.
-    -   **(P2) Complete Media Upload & Album System**:
-        - Fix any remaining upload reliability issues (multipart uploads, progress indicators).
-        - Implement looping video thumbnails (like GIFs) for videos in albums, using the installed FFmpeg.
-        - Ensure public album media appears on the global social feed.
-    -   **(P3) Complete Watermarking System**:
-        - Implement full video watermarking using FFmpeg via .
-        - Create a drag-and-drop frontend interface for positioning watermarks.
-        - Build the AI Photo Studio feature for batch watermarking and AI photo enhancement.
-
+    *   **(P0) Build Referral System Frontend**: Implement the My Team / Genealogy page on both the web PWA and mobile app, ensuring it meets all visual and privacy requirements.
+    *   **(P0) Build Daily Claim Frontend**: Implement the UI for the daily BL coin claim on both platforms.
+    *   **(P0) Build Withdrawal Frontend**: Implement the KYC and withdrawal flow UI on both platforms.
+    *   **(P1) Mobile App Admin Panel**: Flesh out the placeholder mobile admin screens to have full functionality, mirroring the web admin panel.
 -   **Future Tasks:**
-    -   Complete the core social features (full activity feed, friends system, groups, pages, events).
-    -   Implement the Secure Large File Transfer feature with BL Coin pricing.
-    -   Add a full shopping cart for logged-in members.
-    -   Implement real-time WebSocket notifications for sales and social interactions.
-    -   Provide Expo configuration and guides for App/Play Store submission.
+    *   **(P2) Complete Core Social UI**: Build out the full UI for the placeholder , , , and  pages.
+    *   **(P3) Media & Albums**: Implement looping video thumbnails using FFmpeg.
+    *   **(P4) Video Watermarking**: Add video watermarking with a drag-and-drop UI.
+    *   **(P5) App Store Submission**: Prepare and check for compliance for both iOS and Android app stores.
 
 **Completed work in this session**
--   **Bug Fixes & Core Functionality**:
-    -   Fixed a  in AI Seller tools ().
-    -   Implemented a file upload endpoint () and connected it to the  frontend, making media sharing functional.
-    -   Fixed an  call on a synchronous AI video generation function.
--   **Guest Experience & Landing Page**:
-    -   Created a  page and a backend endpoint for guest checkout.
-    -   Implemented a  on the landing page, which now sits directly below the main call-to-action buttons as per user feedback.
--   **Album Management System**:
-    -   Created a new backend module  with full CRUD operations for media albums, including video thumbnail generation using FFmpeg.
-    -   Created a corresponding frontend page  for album management.
--   **AI Listing Creator Flow**:
-    -   Created a dedicated, multi-step page  to guide users through the AI-powered listing creation process.
-    -   Added navigation to the new Albums and AI Listing Creator pages from the user's profile.
--   **Deployment Readiness & Security**:
-    -   Fixed hardcoded JWT secrets and API URLs in the backend and mobile app.
-    -   Successfully installed FFmpeg system-wide.
-    -   Added a navigation link to the Seller Dashboard from the Marketplace page, making it accessible.
--   **Comprehensive Testing**:
-    -   Successfully ran the testing agent three times (, , ), fixing bugs and verifying all new features (file upload, guest checkout, album creation, etc.).
+-   **Admin System Phase 3 & 4 (DONE)**:
+    -   Successfully implemented and verified the Admin Analytics, Platform Settings, and A/B testing pages on the web PWA.
+    -   Created backend systems using WebSockets to support real-time analytics and A/B testing.
+    -   Created and integrated placeholder screens for the Admin panel into the mobile app's navigation.
+-   **Admin UI/UX Overhaul (DONE)**:
+    -   Changed the admin login credentials as requested.
+    -   Rebuilt the Admin Layout to be fully responsive for desktop, tablet, and mobile, adding zoom controls.
+-   **Bug Fixes & Cleanup (DONE)**:
+    -   Fixed a critical bug where an API endpoint was returning a non-serializable MongoDB .
+    -   Removed the obsolete  file and its references in .
+    -   Resolved a deployment warning by adding a missing environment variable to the mobile  file.
+    -   Created a new admin user when the database was found to be empty, unblocking UI testing.
 
 **Earlier issues found/mentioned but not fixed**
 -   **Issue 1: Transient  in logs**
-    -   **Debug checklist**: A non-blocking  error appears in backend logs on startup. Investigate auth logic in  if it becomes problematic.
-    -   **Why to solve this issue and what will be achieved with this?**: Cleans up logs and mitigates potential future authentication issues.
+    -   **Debug checklist**: This error was suppressed with a  block in a previous session but the root cause was never found. The next agent should monitor backend logs during authentication to see if it recurs.
+    -   **Why to solve this issue and what will be achieved with this?**: Ensures authentication stability and cleans up logs.
     -   **Should Test frontend/backend/both after fix**: Backend
     -   **Is recurring issue?**: Y
 
 **Known issue recurrence from previous fork**
--   **Issue recurrence in previous fork**:  in backend logs.
--   **Recurrence count**: 2+
--   **Status**: NOT STARTED
+-   **Issue recurrence in previous fork**:  in .
+-   **Recurrence count**: 1
+-   **Status**: BLOCKED (Fix was a workaround, not a root cause solution).
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Frontend**: React, Tailwind CSS, Shadcn UI
--   **Backend**: FastAPI, MongoDB
--   **Mobile**: React Native, Expo
--   **AI**:  library for OpenAI (Currently Blocked)
--   **Media Processing**: FFmpeg for video thumbnails and watermarking.
+-   **Frontend**: React, React Native, Tailwind CSS, Shadcn UI.
+-   **Backend**: FastAPI, MongoDB, WebSockets.
+-   **Real-time**: WebSockets are being introduced for instant data synchronization.
+-   **Architecture**: Modular backend systems for distinct features (Admin, Real-time, Referral).
 
 **key DB schema**
--   **albums**: {album_id, user_id, name, description, privacy, created_at}
--   **media_items**: {media_id, user_id, album_id, url, thumbnail_url, media_type, created_at}
--   **users, posts, listings, notifications**: Unchanged from previous session.
+-   **users**: ,  fields exist. New fields to be added: , , , ,  (, ), .
+-   **New Collections (Proposed)**: , , , , , , , .
 
 **changes in tech stack**
--   **FFmpeg** has been installed and confirmed working for server-side video processing.
+- No new packages were added, but the use of WebSockets is a new pattern for the application.
 
 **All files of reference**
--   **/app/backend/casino_system.py**: New file for all casino game logic.
--   **/app/backend/album_system.py**: New file for media album management and thumbnail generation.
--   **/app/backend/server.py**: Heavily modified to include new routers (album, casino), static directories for thumbnails, and a file upload endpoint.
--   **/app/frontend/src/pages/AIListingCreator.jsx**: New multi-step UI for the AI listing flow.
--   **/app/frontend/src/pages/Albums.jsx**: New page for viewing and managing media albums.
--   **/app/frontend/src/pages/GuestMarketplace.jsx**: New page for guest browsing.
--   **/app/frontend/src/pages/Landing.jsx**: Modified to add the featured listings carousel and guest browsing link.
--   **/app/frontend/src/pages/SocialFeed.jsx**: Modified to add a functional file upload component.
--   **/app/mobile/src/screens/MarketplaceScreen.js**: New screen to build out the mobile marketplace experience.
+-   **/app/backend/referral_system.py**: New file for core referral and orphan logic.
+-   **/app/backend/diamond_withdrawal_system.py**: New file for rank management and cash withdrawals.
+-   **/app/backend/server.py**: Needs to be updated to register all new routers.
+-   **/app/memory/PRD.md**: Contains the latest user requirements.
+
+**Areas that need refactoring**:
+-   None. The agent successfully deleted the one obsolete file identified in the previous handoff.
+
+**key api endpoints**
+-   **/api/ab-testing/**: GET, POST endpoints for A/B test management.
+-   **/ws/analytics**: WebSocket endpoint for real-time data.
+-   **Referral System Endpoints**: To be created under new routers for commissions, genealogy, claims, etc.
 
 **Critical Info for New Agent**
--   **USER PRIORITY**: The user's latest set of priorities is: 1. **Casino Games**, 2. AI Seller Tools, 3. Mobile App Parity, 4. Media/Albums, 5. Watermarking, 6. Social Features. You should start with the Casino implementation.
--   **AI IS BLOCKED**: You **must** inform the user that their Emergent LLM Key budget is exhausted and they need to add funds before any AI features can be worked on or tested. This is a critical blocker for the P1 task.
--   **FFmpeg is Ready**: The  command-line tool is installed and available in the environment. It can be used for video thumbnail generation and watermarking tasks.
--   **Follow User-Defined Order**: The user has provided a very specific and numbered priority list. Adhere to this order after completing the current in-progress task (Casino).
+-   **New Mandate**: The user has issued a large and detailed request to build a new referral and compensation system. This is now the single highest priority. The user's message (ID: 196) and their clarifications (ID: 199) are the primary source of truth for this task.
+-   **Resume Point**: Start by finishing the registration of new API routers in .
+-   **Implementation Order**: Follow the 7-step implementation order suggested by the user at the end of their request.
 
 **documents and test reports created in this job**
--   /app/memory/PRD.md (Updated multiple times)
--   /app/test_reports/iteration_9.json
--   /app/test_reports/iteration_10.json
--   /app/test_reports/iteration_11.json
+-    (updated multiple times)
+-   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Requested to move the carousel and guest link on the landing page. (COMPLETED)
-2.  **User**: Confirmed the new landing page layout. (COMPLETED)
-3.  **User**: Provided a new list of priorities: make seller dashboard accessible, fix AI media gen, implement watermarking, and finalize mobile/social features. (SUPERSEDED)
-4.  **Agent**: Acknowledged and began work on the seller dashboard and watermarking. (COMPLETED)
-5.  **Agent**: Finished seller dashboard and watermarking fixes and presented a summary. (COMPLETED)
-6.  **User**: Provided a new, detailed list of features to implement, including a complete overhaul of social features, media uploads, watermarking, and large file transfers. (SUPERSEDED)
-7.  **Agent**: Asked for clarification and prioritization. (COMPLETED)
-8.  **User**: Provided a clear, numbered priority list: 1. AI Seller Tools, 2. Mobile App, 3. Media Uploads, 4. Watermarking, 5. FFmpeg, 6. Social Features. Also confirmed MongoDB should be used. (SUPERSEDED by latest request)
-9.  **Agent**: Acknowledged priorities and began work, but discovered the LLM key budget was exceeded. (IN PROGRESS)
-10. **Agent**: Finished a session by implementing a new Mobile Marketplace screen and summarizing progress, highlighting the LLM budget issue. (COMPLETED)
-11. **User:** Provided a new set of priorities, and asked for an end-to-end demo of AI Listing Creator. (IN PROGRESS)
-12. **Agent:** Acknowledged the request and installed FFmpeg. (COMPLETED)
-13. **Agent:** Completed media upload, albums, and AI listing creator features and presented a summary. (COMPLETED)
-14. **User:** Requested a deployment health check. (COMPLETED)
-15. **Agent:** Completed the health check and fixed security issues. (COMPLETED)
-16. **User:** Requested the addition of all real casino games using BL coins. (IN PROGRESS)
-17. **Agent:** Asked for clarification on casino games. (COMPLETED)
-18. **User:** Confirmed all casino games (Blackjack, Slots, Poker, Roulette) with specified bet limits. (IN PROGRESS)
+1.  **User (Latest)**: Provided detailed requirements for a comprehensive referral, compensation, and genealogy system. (IN PROGRESS)
+2.  **User**: Requested another deployment health check. (COMPLETED)
+3.  **User**: Requested the admin panel be made fully responsive and to change admin credentials. (COMPLETED)
+4.  **User**: Asked for instructions on how to log into the admin panel. (COMPLETED)
+5.  **User**: Requested a deployment health check. (COMPLETED)
+6.  **User**: Confirmed plan to proceed with implementing the admin panel on the mobile app, with several specific new requirements. (IN PROGRESS, superseded by referral system)
+7.  **User**: Provided detailed requirements for Admin Analytics and Platform Settings, comparing them to Facebook/eBay. Confirmed LLM budget. (COMPLETED)
 
 **Project Health Check:**
 -   **Broken**:
-    -   All AI-powered features (Listing Creator, price suggestion, etc.) are non-functional due to the exhausted Emergent LLM Key budget.
+    -   AI-powered features depend on the user's LLM key budget. Although the user confirmed they added funds, the feature itself was not tested in this session.
 -   **Mocked**:
-    -   AI Music Generation (no real implementation exists).
-    -   Guest checkout Stripe payment (processes order without real payment).
+    -   AI Music Generation (backend endpoint returns Coming Soon but was not implemented in this session).
 -   **Partially Implemented**:
-    -   **Casino System**: Backend file created, but no logic or routes implemented.
-    -   **Watermarking**: Backend functions for image watermarking exist, but video watermarking and the frontend UI are missing.
-    -   **Mobile App**: Core screens exist but lack full UI/UX and feature parity with the PWA.
-    -   **Core Social Features**: Backend routes exist for friends/groups, but the UI is not built.
+    -   **Referral & Compensation System**: This is the top-priority task. Backend files have been created, but no logic is implemented and routers are not fully registered.
+    -   **Mobile App Admin Panel**: Frontend screen files exist but are placeholders without the full UI or logic.
 
 **3rd Party Integrations**
--   **OpenAI GPT-4o (Vision + Text)**: **BLOCKED**. Integrated via  but non-functional due to exceeded user budget on the Emergent LLM Key.
--   **Stripe (Payments)**: Integrated and functional (mocked for guest checkout).
+-   **OpenAI GPT-4o**: Used for the Admin AI Assistant via . Status is UNVERIFIED.
+-   **Stripe (Payments)**: Integrated and functional.
 -   **Emergent-managed Google Auth**: Integrated and functional.
--   **FFmpeg**: Newly installed and available for video processing.
+-   **FFmpeg**: Installed.
+-   **KYC Provider**: To be integrated as per user request for the withdrawal feature.
 
 **Testing status**
--   **Testing agent used after significant changes**: YES. The testing agent was used successfully three times in this session (, , ), validating numerous bug fixes and new features. Test reports are available.
--   **Test files created**: Test cases were added by the testing agent to the main test suite.
--   **Known regressions**: None from this session; the user-reported bugs from the previous session were fixed. The AI features are broken due to an external factor (budget).
+-   **Testing agent used after significant changes**: YES. The agent was used to test the Admin Panel Phase 3 and Phase 4 features. It found one bug, which was subsequently fixed and verified.
+-   **Test files created**: None.
+-   **Known regressions**: None.
 
 **Credentials to test flow:**
--   Email: 
--   Password: 
+-   **Admin User**:  / 
+-   **Regular User**: No specific regular user was consistently used for testing. A new one may need to be created.
 
 **What agent forgot to execute**
--   The agent created  but did not add its router to  to make the endpoints live.
--   The agent did not implement a mock coming soon response for the AI Music generation feature after discovering no real integration was available.</analysis>
+-   The agent did not complete the task of registering the new API routers for the referral system in  before the session ended.</analysis>
