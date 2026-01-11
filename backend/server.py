@@ -1733,6 +1733,10 @@ api_router.include_router(theme_router)
 from ai_assistant import ai_assistant_router
 api_router.include_router(ai_assistant_router)
 
+# Import and include AI generation router
+from ai_generation import ai_generation_router
+api_router.include_router(ai_generation_router)
+
 # Import and include page manager router
 from page_manager import page_manager_router
 api_router.include_router(page_manager_router)
