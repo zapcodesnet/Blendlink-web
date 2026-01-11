@@ -482,6 +482,7 @@ export default function AdminLayout() {
               <Route path="users/*" element={<AdminUsers />} />
               <Route path="admins" element={<AdminManagement />} />
               <Route path="withdrawals" element={<AdminWithdrawals />} />
+              <Route path="notifications" element={<AdminNotificationSettings />} />
               <Route path="themes" element={<AdminThemes />} />
               <Route path="pages" element={<AdminPages />} />
               <Route path="genealogy" element={<AdminGenealogy />} />
