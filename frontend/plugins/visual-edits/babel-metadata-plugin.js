@@ -184,8 +184,10 @@ function fileExportHasPortals({
   }
 
   let found = false;
+  const MAX_SUBTREE_DEPTH = 10; // Prevent infinite recursion
 
-  function subtreeHasPortals(nodePath) {
+  function subtreeHasPortals(nodePath, subtreeDepth = 0) {
+    if (subtreeDepth > MAX_SUBTREE_DEPTH) return false; // Depth limit
     let hit = false;
     nodePath.traverse({
       JSXOpeningElement(op) {
@@ -199,7 +201,7 @@ function fileExportHasPortals({
           // capitalized child: may itself be portalish
           const binding = op.scope.getBinding(name);
           if (binding && binding.path) {
-            const childHas = subtreeHasPortals(binding.path);
+            const childHas = subtreeHasPortals(binding.path, subtreeDepth + 1);
             if (childHas) {
               hit = true;
               return;
