@@ -13,41 +13,39 @@
 - ✅ Image Generation (OpenAI GPT Image 1)
 - ✅ Video Generation (Sora 2) with AI thumbnails
 - ✅ Music Generation (Browser-based) with AI cover art
-- ✅ AI Gallery - Unified showcase of all AI content
+- ✅ AI Gallery - Unified showcase
+- ✅ AI Collections - Themed albums with favorites
+
+### AI Collections Features
+- Create themed collections (private/public)
+- 4 color themes: default, dark, vibrant, minimal
+- Add/remove AI generations to collections
+- Favorite individual generations
+- Discover public collections
+- Share collections with others
+- View counts and favorite counts
 
 ### Social Pages
-- ✅ Friends page
-- ✅ Groups page
-- ✅ Events page
+- ✅ Friends, Groups, Events
 
 ### Media Management
-- ✅ My Media (personal album)
-- ✅ AI Gallery (next to My Media)
-- ✅ Cross-linking between My Media ↔ AI Gallery
-
-## New Features Added
-
-### AI Gallery (`/ai-gallery`)
-- Filter by content type (All, Images, Videos, Music)
-- Grid and List view modes
-- Full preview modal with actions
-- Share and download capabilities
-- Delete generations
-- Links to My Media and AI Studio
-- AI-generated thumbnails for videos
-- AI-generated cover art for music
-
-## API Endpoints
-- `GET /api/ai/history` - Get all generations
-- `DELETE /api/ai/generation/{id}` - Delete generation
-- `POST /api/ai/generate-image` - Generate image
-- `POST /api/ai/generate-video` - Generate video with thumbnail
-- `POST /api/ai/generate-music-params` - Generate music with cover art
+- ✅ My Media ↔ AI Gallery ↔ AI Collections
 
 ## Routes
-- `/ai-studio` - AI content creation
-- `/ai-gallery` - AI content showcase
-- `/my-media` - Personal album (with AI Gallery link)
+- `/ai-studio` - Create AI content
+- `/ai-gallery` - View all AI creations
+- `/ai-collections` - Manage collections
+- `/ai-collections/:id` - Collection detail
+
+## API Endpoints
+- `POST /api/ai/collections/` - Create collection
+- `GET /api/ai/collections/` - Get my collections
+- `GET /api/ai/collections/public` - Discover public
+- `GET /api/ai/collections/{id}` - Get collection detail
+- `POST /api/ai/collections/{id}/add` - Add items
+- `POST /api/ai/collections/{id}/remove` - Remove items
+- `POST /api/ai/collections/{id}/favorite` - Toggle favorite
+- `POST /api/ai/collections/generation/{id}/favorite` - Favorite single item
 
 ## Test Credentials
 - Admin: blendlinknet@gmail.com / link2026blend!
