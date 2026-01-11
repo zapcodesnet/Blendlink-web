@@ -1720,6 +1720,16 @@ api_router.include_router(get_album_router())
 from casino_system import get_casino_router
 api_router.include_router(get_casino_router())
 
+# Import and include admin system routers
+from admin_system import admin_system_router, audit_router, genealogy_router
+api_router.include_router(admin_system_router)
+api_router.include_router(audit_router)
+api_router.include_router(genealogy_router)
+
+# Import and include theme system router
+from theme_system import theme_router
+api_router.include_router(theme_router)
+
 # Stripe webhook endpoint (must be at app level, not api_router)
 @app.post("/api/webhook/stripe")
 async def stripe_webhook(request: Request):
