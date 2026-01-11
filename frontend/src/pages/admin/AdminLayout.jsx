@@ -596,7 +596,7 @@ export default function AdminLayout() {
 }
 
 // Dashboard Home Component
-function AdminDashboardHome() {
+function AdminDashboardHome({ realtimeMetrics, wsConnected }) {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -628,6 +628,9 @@ function AdminDashboardHome() {
         <h1 className="text-xl md:text-2xl font-bold text-white">Dashboard</h1>
         <p className="text-slate-400 text-sm md:text-base">Welcome to the Admin Panel</p>
       </div>
+
+      {/* Real-time Metrics Panel */}
+      <RealtimeMetricsPanel metrics={realtimeMetrics} isConnected={wsConnected} />
       
       {/* Stats Grid - Responsive */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
