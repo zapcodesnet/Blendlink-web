@@ -127,6 +127,19 @@ export default function ProfileScreen({ navigation }) {
 
         {/* Quick Actions */}
         <View style={styles.actionsGrid}>
+          {/* Admin Panel Button - Only visible to admins */}
+          {(user?.is_admin || user?.admin_role) && (
+            <TouchableOpacity 
+              style={[styles.actionCard, styles.adminActionCard]} 
+              onPress={() => navigation.navigate('Admin')}
+            >
+              <Text style={styles.actionIcon}>🛡️</Text>
+              <Text style={[styles.actionLabel, styles.adminLabel]}>Admin Panel</Text>
+              <Text style={styles.adminRole}>
+                {user?.admin_role?.replace('_', ' ') || 'Admin'}
+              </Text>
+            </TouchableOpacity>
+          )}
           <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('Earnings')}>
             <Text style={styles.actionIcon}>{Icons.earnings}</Text>
             <Text style={styles.actionLabel}>Earnings</Text>
