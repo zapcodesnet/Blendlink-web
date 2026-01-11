@@ -151,7 +151,7 @@ const ProtectedRoute = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, setUser: updateUser }}>
+    <AuthContext.Provider value={{ user, setUser: updateUser, refreshUser }}>
       <div className="pb-20 md:pb-0 md:pl-20">
         {children}
         <BottomNav />
