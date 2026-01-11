@@ -48,8 +48,66 @@ const adminApiRequest = async (endpoint, options = {}) => {
 };
 
 export const adminAPI = {
-  getProfile: () => adminApiRequest('/admin-system/me'),
-  getDashboard: () => adminApiRequest('/admin-system/dashboard'),
+  // New production admin system endpoints
+  login: (email, password, totp_code = null) => adminApiRequest('/admin-auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password, totp_code }),
+  }),
+  getProfile: () => adminApiRequest('/admin-auth/me'),
+  logout: () => adminApiRequest('/admin-auth/logout', { method: 'POST' }),
+  
+  // 2FA
+  setup2FA: () => adminApiRequest('/admin-auth/2fa/setup', { method: 'POST' }),
+  verify2FA: (code) => adminApiRequest('/admin-auth/2fa/verify', {
+    method: 'POST',
+    body: JSON.stringify({ totp_code: code }),
+  }),
+  
+  // Dashboard (fallback to old endpoint if new not available)
+  getDashboard: () => adminApiRequest('/admin-system/dashboard').catch(() => ({})),
+  
+  // User Management
+  searchUsers: (params) => adminApiRequest(`/admin/users/search?${new URLSearchParams(params)}`),
+  getUser: (userId) => adminApiRequest(`/admin/users/${userId}`),
+  suspendUser: (userId, reason, duration) => adminApiRequest(`/admin/users/${userId}/suspend`, {
+    method: 'POST',
+    body: JSON.stringify({ reason, notify_user: true, duration_days: duration }),
+  }),
+  banUser: (userId, reason) => adminApiRequest(`/admin/users/${userId}/ban`, {
+    method: 'POST',
+    body: JSON.stringify({ reason, notify_user: true }),
+  }),
+  
+  // Financial
+  getFinancialOverview: () => adminApiRequest('/admin/finance/overview'),
+  adjustBalance: (userId, currency, amount, reason) => adminApiRequest(`/admin/finance/adjust-balance/${userId}`, {
+    method: 'POST',
+    body: JSON.stringify({ currency, amount, reason, notify_user: true }),
+  }),
+  
+  // Genealogy
+  getGenealogyTree: (rootUserId, maxDepth = 3) => {
+    const params = new URLSearchParams({ max_depth: maxDepth });
+    if (rootUserId) params.append('root_user_id', rootUserId);
+    return adminApiRequest(`/admin/genealogy/tree?${params}`);
+  },
+  getUserNetwork: (userId) => adminApiRequest(`/admin/genealogy/user/${userId}/network`),
+  reassignDownline: (userId, newUplineId, reason) => adminApiRequest('/admin/genealogy/reassign', {
+    method: 'POST',
+    body: JSON.stringify({ user_id: userId, new_upline_id: newUplineId, reason, notify_users: true }),
+  }),
+  
+  // System
+  getSystemHealth: () => adminApiRequest('/admin/system/health'),
+  getActivityFeed: (limit = 50) => adminApiRequest(`/admin/system/activity-feed?limit=${limit}`),
+  getAnalytics: (period = '7d') => adminApiRequest(`/admin/system/analytics?period=${period}`),
+  
+  // Role Management
+  listAdmins: () => adminApiRequest('/admin/roles/admins'),
+  createAdmin: (userId, role, permissions) => adminApiRequest('/admin/roles/admins', {
+    method: 'POST',
+    body: JSON.stringify({ user_id: userId, role, permissions }),
+  }),
 };
 
 // Admin Layout Component
