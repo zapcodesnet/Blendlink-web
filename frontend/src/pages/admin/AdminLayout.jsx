@@ -98,6 +98,7 @@ export default function AdminLayout() {
     { icon: Bot, label: 'AI Assistant', path: '/admin/ai' },
     { icon: FileText, label: 'Audit Logs', path: '/admin/audit' },
     { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' },
+    { icon: BarChart3, label: 'A/B Testing', path: '/admin/ab-testing' },
     { icon: Settings, label: 'Settings', path: '/admin/settings' },
   ];
 
