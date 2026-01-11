@@ -26,6 +26,10 @@ import AdminWithdrawals from "./AdminWithdrawals";
 import AdminNotificationSettings from "./AdminNotificationSettings";
 import AdminSecurityDashboard from "./AdminSecurityDashboard";
 
+// Import real-time components
+import { useAdminWebSocket } from "../../hooks/useAdminWebSocket";
+import { AdminRealtimeStatus, RealtimeMetricsPanel } from "../../components/admin/AdminRealtimeStatus";
+
 // Admin Context
 export const AdminContext = createContext(null);
 
