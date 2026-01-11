@@ -41,6 +41,9 @@ import EarningsDashboard from "./pages/EarningsDashboard";
 import Withdraw from "./pages/Withdraw";
 import AdminDashboard from "./pages/AdminDashboard";
 
+// Admin System (New)
+import AdminLayout from "./pages/admin/AdminLayout";
+
 // Social Analytics & Notifications
 import Notifications from "./pages/Notifications";
 import AnalyticsDashboard from "./pages/AnalyticsDashboard";
