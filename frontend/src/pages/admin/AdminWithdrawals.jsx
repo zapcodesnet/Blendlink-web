@@ -422,47 +422,46 @@ export default function AdminWithdrawals() {
   };
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Wallet className="w-6 h-6" />
-              Withdrawal Management
-            </h1>
-            <p className="text-muted-foreground">Review and process user withdrawal requests</p>
-          </div>
-          <Button onClick={fetchData} disabled={loading}>
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2 text-white">
+            <Wallet className="w-6 h-6" />
+            Withdrawal Management
+          </h1>
+          <p className="text-slate-400">Review and process user withdrawal requests</p>
         </div>
+        <Button onClick={fetchData} disabled={loading}>
+          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+          Refresh
+        </Button>
+      </div>
 
-        {/* Stats Cards */}
-        {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-card rounded-xl p-4 border border-border">
-              <p className="text-sm text-muted-foreground">Total Paid Out</p>
-              <p className="text-2xl font-bold text-green-500">${stats.total_paid_out?.toFixed(2) || "0.00"}</p>
-            </div>
-            <div className="bg-card rounded-xl p-4 border border-border">
-              <p className="text-sm text-muted-foreground">Fees Collected</p>
-              <p className="text-2xl font-bold">${stats.total_fees_collected?.toFixed(2) || "0.00"}</p>
-            </div>
-            <div className="bg-card rounded-xl p-4 border border-border">
-              <p className="text-sm text-muted-foreground">Pending Withdrawals</p>
-              <p className="text-2xl font-bold text-yellow-500">{counts.pending || 0}</p>
-            </div>
-            <div className="bg-card rounded-xl p-4 border border-border">
-              <p className="text-sm text-muted-foreground">Pending KYC</p>
-              <p className="text-2xl font-bold text-blue-500">{stats.pending_kyc_count || 0}</p>
-            </div>
+      {/* Stats Cards */}
+      {stats && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+            <p className="text-sm text-slate-400">Total Paid Out</p>
+            <p className="text-2xl font-bold text-green-500">${stats.total_paid_out?.toFixed(2) || "0.00"}</p>
           </div>
-        )}
+          <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+            <p className="text-sm text-slate-400">Fees Collected</p>
+            <p className="text-2xl font-bold text-white">${stats.total_fees_collected?.toFixed(2) || "0.00"}</p>
+          </div>
+          <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+            <p className="text-sm text-slate-400">Pending Withdrawals</p>
+            <p className="text-2xl font-bold text-yellow-500">{counts.pending || 0}</p>
+          </div>
+          <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+            <p className="text-sm text-slate-400">Pending KYC</p>
+            <p className="text-2xl font-bold text-blue-500">{stats.pending_kyc_count || 0}</p>
+          </div>
+        </div>
+      )}
 
-        {/* KYC Panel */}
-        <KYCPanel onRefresh={fetchData} />
+      {/* KYC Panel */}
+      <KYCPanel onRefresh={fetchData} />
 
         {/* Filters */}
         <div className="flex flex-wrap gap-4 items-center">
