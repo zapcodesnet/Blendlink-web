@@ -23,7 +23,7 @@ import AdminSettings from "./AdminSettings";
 import DashboardWidgets from "./DashboardWidgets";
 import AdminABTesting from "./AdminABTesting";
 import AdminWithdrawals from "./AdminWithdrawals";
-import AdminNotificationSettings from "./AdminNotificationSettings";
+// import AdminNotificationSettings from "./AdminNotificationSettings"; // Temporarily disabled
 
 // Admin Context
 export const AdminContext = createContext(null);
