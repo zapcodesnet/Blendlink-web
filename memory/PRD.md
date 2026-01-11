@@ -77,6 +77,17 @@ https://createsuite-admin.preview.emergentagent.com
   - Fix: Improved `verify_password()` with proper validation and logging
   - Cleaned up 5 database records with empty password hashes
 
+- ✅ Admin Login "body stream already read" Error - FIXED (Jan 11, 2026)
+  - Root cause: Response body read twice in check-session call
+  - Fix: Properly check `response.ok` before calling `.json()`
+  - Simplified error handling in resend OTP function
+
+## Security Features
+- Admin 2FA login with email OTP (60-second rate limiting)
+- 5-minute auto-logout for inactive admin sessions
+- Separate admin authentication from regular user auth
+- OTPs logged in dev mode for testing (production: email only)
+
 ## Mobile App Location
 - `/app/mobile/` - React Native/Expo mobile application
 - Run with: `cd /app/mobile && npx expo start`
