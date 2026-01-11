@@ -241,6 +241,7 @@ export default function AdminLayout() {
     { icon: Users, label: 'Users', path: '/admin/users' },
     { icon: Shield, label: 'Admins', path: '/admin/admins' },
     { icon: Wallet, label: 'Withdrawals', path: '/admin/withdrawals' },
+    { icon: Bell, label: 'Notifications', path: '/admin/notifications' },
     { icon: Palette, label: 'Themes', path: '/admin/themes' },
     { icon: Layout, label: 'Pages', path: '/admin/pages' },
     { icon: GitBranch, label: 'Genealogy', path: '/admin/genealogy' },
