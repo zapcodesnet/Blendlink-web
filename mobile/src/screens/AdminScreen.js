@@ -127,6 +127,14 @@ export default function AdminScreen({ navigation }) {
       permission: 'users',
     },
     {
+      id: 'withdrawals',
+      title: 'Withdrawals',
+      icon: '💸',
+      description: 'KYC & payouts',
+      screen: 'AdminWithdrawals',
+      permission: 'users',
+    },
+    {
       id: 'admins',
       title: 'Admins',
       icon: '🛡️',
