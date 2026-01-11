@@ -204,6 +204,8 @@ function AppRouter() {
       <Route path="/raffles" element={<ProtectedRoute><Raffles /></ProtectedRoute>} />
       <Route path="/ai-studio" element={<ProtectedRoute><AIGeneration /></ProtectedRoute>} />
       <Route path="/ai-gallery" element={<ProtectedRoute><AIGallery /></ProtectedRoute>} />
+      <Route path="/ai-collections" element={<ProtectedRoute><AICollections /></ProtectedRoute>} />
+      <Route path="/ai-collections/:collectionId" element={<ProtectedRoute><AICollectionDetail /></ProtectedRoute>} />
       
       {/* Media Sales Routes */}
       <Route path="/upload-media" element={<ProtectedRoute><MediaUpload /></ProtectedRoute>} />
