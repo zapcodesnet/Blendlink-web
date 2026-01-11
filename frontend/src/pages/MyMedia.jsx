@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { 
   Image, Video, Plus, Eye, DollarSign, MessageSquare, 
   ArrowLeft, Filter, Search, Trash2, MoreVertical,
-  ShoppingBag
+  ShoppingBag, Sparkles
 } from "lucide-react";
 import { mediaAPI, offersAPI } from "../services/mediaSalesApi";
 
