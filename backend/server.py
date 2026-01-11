@@ -1779,6 +1779,18 @@ try:
 except ImportError as e:
     logger.warning(f"Could not load realtime_ab_system: {e}")
 
+# Import and include referral system routers
+try:
+    from referral_system import referral_router
+    from diamond_withdrawal_system import diamond_router, withdrawal_router, kyc_router
+    api_router.include_router(referral_router)
+    api_router.include_router(diamond_router)
+    api_router.include_router(withdrawal_router)
+    api_router.include_router(kyc_router)
+    logger.info("Referral, Diamond Leader, Withdrawal, and KYC routers loaded")
+except ImportError as e:
+    logger.warning(f"Could not load referral/diamond systems: {e}")
+
 app.include_router(api_router)
 
 app.add_middleware(
