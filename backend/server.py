@@ -1737,6 +1737,10 @@ api_router.include_router(ai_assistant_router)
 from ai_generation import ai_generation_router
 api_router.include_router(ai_generation_router)
 
+# Import and include AI collections router
+from ai_collections import ai_collections_router
+api_router.include_router(ai_collections_router)
+
 # Import and include page manager router
 from page_manager import page_manager_router
 api_router.include_router(page_manager_router)
