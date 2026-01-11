@@ -363,25 +363,13 @@ function AdminDashboardHome() {
   );
 }
 
-// Placeholder components - will be expanded in separate files
-function AdminUsers() {
-  return <div className="text-white"><h1 className="text-2xl font-bold mb-4">User Management</h1><p className="text-slate-400">Loading user management module...</p></div>;
-}
-
+// Placeholder components for features not yet implemented
 function AdminManagement() {
   return <div className="text-white"><h1 className="text-2xl font-bold mb-4">Admin Management</h1><p className="text-slate-400">Manage admin roles and permissions</p></div>;
 }
 
-function AdminThemes() {
-  return <div className="text-white"><h1 className="text-2xl font-bold mb-4">Theme Management</h1><p className="text-slate-400">Loading themes...</p></div>;
-}
-
 function AdminPages() {
   return <div className="text-white"><h1 className="text-2xl font-bold mb-4">Page Management</h1><p className="text-slate-400">Manage pages and screens</p></div>;
-}
-
-function AdminGenealogy() {
-  return <div className="text-white"><h1 className="text-2xl font-bold mb-4">Genealogy Tree</h1><p className="text-slate-400">Visual team hierarchy</p></div>;
 }
 
 function AdminAI() {
