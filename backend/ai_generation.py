@@ -155,6 +155,7 @@ async def generate_video(
         "model": request.model,
         "size": request.size,
         "duration": request.duration,
+        "generate_thumbnail": request.generate_thumbnail,
         "status": "queued",
         "created_at": datetime.now(timezone.utc).isoformat()
     })
@@ -166,7 +167,8 @@ async def generate_video(
         request.prompt,
         request.model,
         request.size,
-        request.duration
+        request.duration,
+        request.generate_thumbnail
     )
     
     return {
