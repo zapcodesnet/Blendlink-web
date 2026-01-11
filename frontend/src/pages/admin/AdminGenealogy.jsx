@@ -334,7 +334,13 @@ export default function AdminGenealogy() {
             ) : (
               <div className="space-y-2">
                 {trees.map(tree => (
-                  <TreeNode key={tree.user_id} node={tree} />
+                  <TreeNode 
+                    key={tree.user_id} 
+                    node={tree}
+                    selectedUser={selectedUser}
+                    onSelectUser={loadUserNetwork}
+                    onReassign={handleReassignNode}
+                  />
                 ))}
               </div>
             )}
