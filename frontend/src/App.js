@@ -46,6 +46,7 @@ import AdminLogin from "./pages/admin/AdminLogin";
 
 // AI Generation
 import AIGeneration from "./pages/AIGeneration";
+import AIGallery from "./pages/AIGallery";
 
 // Social Analytics & Notifications
 import Notifications from "./pages/Notifications";
