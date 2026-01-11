@@ -152,6 +152,15 @@ class GenealogyMember(BaseModel):
     is_blocked: bool = False
     is_blocked_by_them: bool = False
 
+class ReferralRelationship(BaseModel):
+    relationship_id: str = Field(default_factory=lambda: f"rel_{uuid.uuid4().hex[:12]}")
+    referrer_id: str
+    referred_id: str
+    level: int = 1  # 1 for direct, 2 for indirect
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    last_activity: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    is_active: bool = True
+
 # ============== HELPER FUNCTIONS ==============
 
 async def get_user_rank(user_id: str) -> UserRank:
