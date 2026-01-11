@@ -446,7 +446,7 @@ export default function AIGeneration() {
               {/* Video Status */}
               {videoStatus && (
                 <div className="bg-slate-700 rounded-xl p-4">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 mb-3">
                     {videoStatus.status === 'completed' ? (
                       <CheckCircle className="w-6 h-6 text-green-400" />
                     ) : videoStatus.status === 'failed' ? (
@@ -459,11 +459,25 @@ export default function AIGeneration() {
                       <p className="text-sm text-slate-400">{videoStatus.generation_id}</p>
                     </div>
                   </div>
+                  
+                  {/* AI Generated Thumbnail */}
+                  {videoStatus.thumbnail_url && (
+                    <div className="mb-4">
+                      <p className="text-xs text-slate-400 mb-2">AI-Generated Thumbnail</p>
+                      <img 
+                        src={`${API_BASE}${videoStatus.thumbnail_url}`} 
+                        alt="Video thumbnail"
+                        className="w-full max-w-xs rounded-lg border border-slate-600"
+                      />
+                    </div>
+                  )}
+                  
                   {videoStatus.video_url && (
                     <video
                       src={`${API_BASE}${videoStatus.video_url}`}
+                      poster={videoStatus.thumbnail_url ? `${API_BASE}${videoStatus.thumbnail_url}` : undefined}
                       controls
-                      className="w-full mt-4 rounded-lg"
+                      className="w-full rounded-lg"
                     />
                   )}
                 </div>
