@@ -161,11 +161,33 @@ export default function AdminLayout() {
   useEffect(() => {
     const checkAdmin = async () => {
       try {
+        // First check if user has is_admin flag
+        if (!user?.is_admin) {
+          toast.error("Admin access required. You don't have admin privileges.");
+          navigate('/');
+          return;
+        }
+        
+        // Then verify with the admin auth system
         const data = await adminAPI.getProfile();
         setAdminData(data);
       } catch (error) {
-        toast.error("Admin access required");
-        navigate('/');
+        console.error("Admin check failed:", error);
+        // If the admin-auth/me fails, user might need to set up admin account
+        if (user?.is_admin) {
+          // User has admin flag but no admin_account - show basic admin with user data
+          setAdminData({
+            admin_id: `temp_${user.user_id}`,
+            email: user.email,
+            name: user.name,
+            role: user.admin_role || 'moderator',
+            permissions: {},
+          });
+          toast.info("Admin account being configured. Some features may be limited.");
+        } else {
+          toast.error("Admin access required");
+          navigate('/');
+        }
       } finally {
         setLoading(false);
       }
