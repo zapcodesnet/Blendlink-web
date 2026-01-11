@@ -494,6 +494,7 @@ export default function AdminLayout() {
               <Route index element={<AdminDashboardHome />} />
               <Route path="users/*" element={<AdminUsers />} />
               <Route path="admins" element={<AdminManagement />} />
+              <Route path="security" element={<AdminSecurityDashboard />} />
               <Route path="withdrawals" element={<AdminWithdrawals />} />
               <Route path="notifications" element={<AdminNotificationSettings />} />
               <Route path="themes" element={<AdminThemes />} />
