@@ -1041,7 +1041,7 @@ async def update_platform_settings(
     )
     
     await log_audit(
-        admin_id=current_user.get("admin", {}).get("admin_id", current_user["user_id"]),
+        admin_id=(current_user.get("admin") or {}).get("admin_id", current_user["user_id"]),
         admin_email=current_user["email"],
         action=AuditAction.PERMISSION_CHANGE,
         target_type="settings",
