@@ -335,6 +335,16 @@ async def process_sale_commissions(
     """
     commission = await calculate_commission(sale_amount, seller_id)
     
+    # Get seller info for notifications
+    seller = await db.users.find_one({"user_id": seller_id}, {"username": 1, "name": 1})
+    seller_name = seller.get("username") or seller.get("name", "Unknown") if seller else "Unknown"
+    
+    # Import notification functions
+    try:
+        from notifications_system import notify_commission_earned
+    except ImportError:
+        notify_commission_earned = None
+    
     # Record L1 commission
     if commission.l1_recipient_id and commission.l1_amount > 0:
         await record_transaction(
@@ -363,6 +373,13 @@ async def process_sale_commissions(
             "rank_at_time": (await get_user_rank(commission.l1_recipient_id)).value,
             "created_at": datetime.now(timezone.utc).isoformat(),
         })
+        
+        # Send notification
+        if notify_commission_earned:
+            try:
+                await notify_commission_earned(commission.l1_recipient_id, commission.l1_amount, 1, seller_name)
+            except Exception as e:
+                logger.warning(f"Failed to send L1 commission notification: {e}")
     
     # Record L2 commission
     if commission.l2_recipient_id and commission.l2_amount > 0:
@@ -391,6 +408,13 @@ async def process_sale_commissions(
             "rank_at_time": (await get_user_rank(commission.l2_recipient_id)).value,
             "created_at": datetime.now(timezone.utc).isoformat(),
         })
+        
+        # Send notification
+        if notify_commission_earned:
+            try:
+                await notify_commission_earned(commission.l2_recipient_id, commission.l2_amount, 2, seller_name)
+            except Exception as e:
+                logger.warning(f"Failed to send L2 commission notification: {e}")
     
     # Record platform fee
     if commission.platform_amount > 0:
