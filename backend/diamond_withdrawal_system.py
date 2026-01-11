@@ -530,7 +530,7 @@ async def init_kyc_verification(
 
 # ============== INACTIVITY REASSIGNMENT ==============
 
-@referral_router.post("/request-reassignment")
+@reassignment_router.post("/request")
 async def request_downline_reassignment(
     request: ReassignmentRequest,
     current_user: dict = Depends(get_current_user)
@@ -597,7 +597,7 @@ async def request_downline_reassignment(
 
 # ============== ADMIN ENDPOINTS FOR REASSIGNMENT ==============
 
-@referral_router.get("/admin/reassignment-requests")
+@reassignment_router.get("/admin/list")
 async def list_reassignment_requests(
     status: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
@@ -615,7 +615,7 @@ async def list_reassignment_requests(
     
     return requests
 
-@referral_router.post("/admin/approve-reassignment/{reassignment_id}")
+@reassignment_router.post("/admin/approve/{reassignment_id}")
 async def approve_reassignment(
     reassignment_id: str,
     current_user: dict = Depends(get_current_user)
@@ -671,7 +671,7 @@ async def approve_reassignment(
         "new_upline": request["new_upline_id"],
     }
 
-@referral_router.post("/admin/reject-reassignment/{reassignment_id}")
+@reassignment_router.post("/admin/reject/{reassignment_id}")
 async def reject_reassignment(
     reassignment_id: str,
     reason: str = "Rejected by admin",
