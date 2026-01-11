@@ -7,7 +7,7 @@ import {
   Shield, Users, Palette, Layout, GitBranch, Bot, 
   Settings, FileText, BarChart3, LogOut, Menu, X,
   ChevronRight, Home, Bell, Search, ZoomIn, ZoomOut,
-  RotateCcw, Maximize2, FlaskConical
+  RotateCcw, Maximize2, FlaskConical, Wallet
 } from "lucide-react";
 
 // Import admin components
@@ -22,6 +22,7 @@ import AdminAnalytics from "./AdminAnalytics";
 import AdminSettings from "./AdminSettings";
 import DashboardWidgets from "./DashboardWidgets";
 import AdminABTesting from "./AdminABTesting";
+import AdminWithdrawals from "./AdminWithdrawals";
 
 // Admin Context
 export const AdminContext = createContext(null);
@@ -158,6 +159,7 @@ export default function AdminLayout() {
     { icon: Home, label: 'Dashboard', path: '/admin' },
     { icon: Users, label: 'Users', path: '/admin/users' },
     { icon: Shield, label: 'Admins', path: '/admin/admins' },
+    { icon: Wallet, label: 'Withdrawals', path: '/admin/withdrawals' },
     { icon: Palette, label: 'Themes', path: '/admin/themes' },
     { icon: Layout, label: 'Pages', path: '/admin/pages' },
     { icon: GitBranch, label: 'Genealogy', path: '/admin/genealogy' },
@@ -397,6 +399,7 @@ export default function AdminLayout() {
               <Route index element={<AdminDashboardHome />} />
               <Route path="users/*" element={<AdminUsers />} />
               <Route path="admins" element={<AdminManagement />} />
+              <Route path="withdrawals" element={<AdminWithdrawals />} />
               <Route path="themes" element={<AdminThemes />} />
               <Route path="pages" element={<AdminPages />} />
               <Route path="genealogy" element={<AdminGenealogy />} />
