@@ -211,6 +211,8 @@ function AppStack() {
       <Stack.Screen name="AdminABTesting" component={AdminABTestingScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AdminAudit" component={AdminScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AdminSettings" component={AdminSettingsScreen} options={{ headerShown: false }} />
+      {/* Referral System */}
+      <Stack.Screen name="MyTeam" component={MyTeamScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }
