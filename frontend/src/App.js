@@ -44,6 +44,9 @@ import Withdraw from "./pages/Withdraw";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminLogin from "./pages/admin/AdminLogin";
 
+// AI Generation
+import AIGeneration from "./pages/AIGeneration";
+
 // Social Analytics & Notifications
 import Notifications from "./pages/Notifications";
 import AnalyticsDashboard from "./pages/AnalyticsDashboard";
