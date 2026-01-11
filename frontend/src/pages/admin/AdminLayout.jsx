@@ -1,13 +1,18 @@
 import React, { useState, useEffect, useContext, createContext } from "react";
 import { useNavigate, Routes, Route, Link, useLocation } from "react-router-dom";
-import { AuthContext } from "../App";
-import { Button } from "../components/ui/button";
+import { AuthContext } from "../../App";
+import { Button } from "../../components/ui/button";
 import { toast } from "sonner";
 import { 
   Shield, Users, Palette, Layout, GitBranch, Bot, 
   Settings, FileText, BarChart3, LogOut, Menu, X,
   ChevronRight, Home, Bell, Search
 } from "lucide-react";
+
+// Import admin components
+import AdminUsers from "./AdminUsers";
+import AdminThemes from "./AdminThemes";
+import AdminGenealogy from "./AdminGenealogy";
 
 // Admin Context
 export const AdminContext = createContext(null);
