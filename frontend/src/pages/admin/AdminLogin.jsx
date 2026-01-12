@@ -235,26 +235,22 @@ export default function AdminLogin() {
     
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE}/api/admin-auth/secure/login/resend-otp`, {
+      const result = await safeFetch(`${API_BASE}/api/admin-auth/secure/login/resend-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, session_token: sessionToken }),
       });
       
-      // Clone immediately before any body reading
-      let data;
-      try {
-        data = await response.clone().json();
-      } catch (jsonError) {
-        const text = await response.text();
-        throw new Error(text || "Server error");
+      if (!result.ok) {
+        const errorMsg = result.data?.detail || result.rawText || "Failed to resend code";
+        throw new Error(errorMsg);
       }
       
-      if (!response.ok) {
-        throw new Error(data.detail || "Failed to resend code");
+      if (result.parseError || !result.data) {
+        throw new Error("Invalid server response");
       }
       
-      setOtpExpiry(data.expires_in);
+      setOtpExpiry(result.data.expires_in);
       setResendCooldown(60);
       setOtpCode(["", "", "", "", "", ""]);
       toast.success("New verification code sent!");
