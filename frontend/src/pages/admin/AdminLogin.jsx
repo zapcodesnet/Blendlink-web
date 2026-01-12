@@ -54,25 +54,32 @@ export default function AdminLogin() {
   useEffect(() => {
     const token = localStorage.getItem("blendlink_token");
     if (token) {
-      // Verify if it's a valid admin session
-      fetch(`${API_BASE}/api/admin-auth/secure/check-session`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-        .then(async (res) => {
-          if (!res.ok) {
-            // Not a valid admin session, clear and stay on login
-            return { valid: false };
+      // Verify if it's a valid admin session using safeFetch pattern
+      (async () => {
+        try {
+          const response = await fetch(`${API_BASE}/api/admin-auth/secure/check-session`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          
+          // Read body as text first
+          const rawText = await response.text();
+          
+          if (!response.ok) {
+            return; // Not valid, stay on login
           }
-          return res.json();
-        })
-        .then(data => {
-          if (data.valid) {
-            navigate("/admin");
+          
+          try {
+            const data = JSON.parse(rawText);
+            if (data.valid) {
+              navigate("/admin");
+            }
+          } catch {
+            // Invalid JSON, stay on login
           }
-        })
-        .catch(() => {
-          // Silently fail - user stays on login page
-        });
+        } catch {
+          // Network error, stay on login
+        }
+      })();
     }
   }, [navigate]);
   
