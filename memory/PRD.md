@@ -2,10 +2,18 @@
 
 ## Latest Update: January 12, 2026
 
+### Changes This Session
+
+#### Resend OTP Removed from Admin Login
+- Removed the "Resend code" button from admin login OTP verification screen
+- Users must go back to login and re-enter credentials if OTP expires
+- Shows "Code expired" message when timer reaches 0
+- Simplified and cleaner UI
+
 ### Bugs Fixed This Session
 1. ✅ **Admin Login "body stream already read" error** - FIXED
-   - Changed response handling in AdminLogin.jsx to use `response.text()` then `JSON.parse()` instead of direct `response.json()`
-   - Prevents body stream errors when server returns error responses
+   - Created `safeFetch` helper that reads response body exactly once
+   - Uses `response.text()` then `JSON.parse()` pattern
    
 2. ✅ **AI Image Generation** - WORKING
    - Uses OpenAI GPT Image 1 via emergentintegrations library
