@@ -229,7 +229,16 @@ export default function AdminLogin() {
         body: JSON.stringify({ email, session_token: sessionToken }),
       });
       
-      const data = await response.json();
+      // Clone the response to safely read the body
+      const responseClone = response.clone();
+      
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        const text = await responseClone.text();
+        throw new Error(text || "Failed to parse server response");
+      }
       
       if (!response.ok) {
         throw new Error(data.detail || "Failed to resend code");
