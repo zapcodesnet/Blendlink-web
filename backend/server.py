@@ -1742,6 +1742,10 @@ api_router.include_router(get_album_router())
 from casino_system import get_casino_router
 api_router.include_router(get_casino_router())
 
+# Import and include poker tournament router
+from poker_tournament import poker_router
+api_router.include_router(poker_router)
+
 # Import and include admin system routers
 from admin_system import admin_system_router, audit_router, genealogy_router
 api_router.include_router(admin_system_router)
