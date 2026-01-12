@@ -1456,48 +1456,14 @@ async def get_balance(current_user: dict = Depends(get_current_user)):
 
 @wallet_router.post("/claim-daily")
 async def claim_daily(current_user: dict = Depends(get_current_user)):
-    """Claim daily login reward"""
-    user = await db.users.find_one({"user_id": current_user["user_id"]})
-    
-    # Check if already claimed today
-    last_claim = user.get("last_daily_claim")
-    today = datetime.now(timezone.utc).date()
-    
-    if last_claim:
-        last_claim_date = datetime.fromisoformat(last_claim.replace("Z", "+00:00")).date() if isinstance(last_claim, str) else last_claim.date()
-        if last_claim_date == today:
-            raise HTTPException(status_code=400, detail="Daily reward already claimed today")
-    
-    # Award daily bonus
-    daily_bonus = 10000
-    new_balance = user["bl_coins"] + daily_bonus
-    
-    await db.users.update_one(
-        {"user_id": current_user["user_id"]},
-        {"$set": {
-            "bl_coins": new_balance,
-            "last_daily_claim": datetime.now(timezone.utc).isoformat()
-        }}
-    )
-    
-    # Create transaction record
-    transaction = {
-        "transaction_id": f"tx_{uuid.uuid4().hex[:12]}",
-        "user_id": current_user["user_id"],
-        "type": "daily_claim",
-        "amount": daily_bonus,
-        "description": "Daily login reward",
-        "balance_after": new_balance,
-        "created_at": datetime.now(timezone.utc).isoformat()
-    }
-    await db.transactions.insert_one(transaction)
-    
-    return {
-        "success": True,
-        "amount": daily_bonus,
-        "new_balance": new_balance,
-        "message": f"Claimed {daily_bonus} BL Coins!"
-    }
+    """
+    Claim daily login reward - unified system
+    Uses referral system's daily claim logic for consistency
+    """
+    # Redirect to the main daily claim in referral system
+    # to ensure consistency across all pages
+    from referral_system import claim_daily_bl
+    return await claim_daily_bl(current_user)
 
 @wallet_router.get("/transactions")
 async def get_transactions(skip: int = 0, limit: int = 50, current_user: dict = Depends(get_current_user)):
