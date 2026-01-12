@@ -16,6 +16,7 @@ const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
 
 const getToken = () => localStorage.getItem('blendlink_token');
 
+// Safe API request helper
 const apiRequest = async (endpoint, options = {}) => {
   const token = getToken();
   const response = await fetch(`${API_BASE}/api${endpoint}`, {
@@ -26,11 +27,20 @@ const apiRequest = async (endpoint, options = {}) => {
       ...options.headers,
     },
   });
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.detail || "Request failed");
+  
+  const rawText = await response.text();
+  let data = {};
+  try {
+    data = rawText ? JSON.parse(rawText) : {};
+  } catch (e) {
+    console.error('JSON parse error:', e);
   }
-  return response.json();
+  
+  if (!response.ok) {
+    throw new Error(data.detail || "Request failed");
+  }
+  
+  return data;
 };
 
 const NOTIFICATION_CATEGORIES = [
