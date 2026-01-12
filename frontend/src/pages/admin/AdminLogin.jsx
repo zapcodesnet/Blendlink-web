@@ -55,8 +55,12 @@ export default function AdminLogin() {
             if (data.valid) {
               navigate("/admin");
             }
-          } catch {}
-        } catch {}
+          } catch {
+            // Invalid JSON, stay on login
+          }
+        } catch {
+          // Network error, stay on login
+        }
       })();
     }
   }, [navigate]);
