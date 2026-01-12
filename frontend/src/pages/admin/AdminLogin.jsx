@@ -91,7 +91,17 @@ export default function AdminLogin() {
         body: JSON.stringify({ email, password }),
       });
       
-      const data = await response.json();
+      // Clone the response to safely read the body
+      const responseClone = response.clone();
+      
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        // If JSON parsing fails, try to get text for error message
+        const text = await responseClone.text();
+        throw new Error(text || "Failed to parse server response");
+      }
       
       if (!response.ok) {
         throw new Error(data.detail || "Login failed");
