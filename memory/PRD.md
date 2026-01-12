@@ -96,7 +96,7 @@
 - Admin: blendlinknet@gmail.com / link2026blend!
 
 ## Live URL
-https://createsuite-admin.preview.emergentagent.com
+https://blendlink-debugger.preview.emergentagent.com
 
 ## Resolved Issues
 - ✅ `ValueError: Invalid salt` - FIXED (Jan 11, 2026)
