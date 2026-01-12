@@ -234,6 +234,8 @@ function AppRouter() {
       
       {/* Casino Routes */}
       <Route path="/casino" element={<ProtectedRoute><Casino /></ProtectedRoute>} />
+      <Route path="/poker" element={<ProtectedRoute><PokerLobby /></ProtectedRoute>} />
+      <Route path="/poker/:tournamentId" element={<ProtectedRoute><PokerTournament /></ProtectedRoute>} />
       
       {/* Social Features Routes */}
       <Route path="/friends" element={<ProtectedRoute><Friends /></ProtectedRoute>} />
