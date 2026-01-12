@@ -13,6 +13,7 @@ import os
 import uuid
 import base64
 import asyncio
+import logging
 from datetime import datetime, timezone, timedelta
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Header
@@ -22,6 +23,8 @@ from dotenv import load_dotenv
 from jose import jwt, JWTError
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 # Initialize routers
 seller_router = APIRouter(prefix="/seller", tags=["Seller Dashboard"])
