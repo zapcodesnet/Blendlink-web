@@ -91,14 +91,14 @@ export default function AdminLogin() {
         body: JSON.stringify({ email, password }),
       });
       
-      // Read response as text first, then parse as JSON
-      const responseText = await response.text();
+      // Clone immediately before any body reading
       let data;
       try {
-        data = JSON.parse(responseText);
-      } catch (parseError) {
-        // Response is not valid JSON
-        throw new Error(responseText || "Server error");
+        data = await response.clone().json();
+      } catch (jsonError) {
+        // JSON parsing failed, get text from original response
+        const text = await response.text();
+        throw new Error(text || "Server error");
       }
       
       if (!response.ok) {
