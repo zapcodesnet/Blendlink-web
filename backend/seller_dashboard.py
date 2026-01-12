@@ -163,12 +163,12 @@ async def analyze_images_with_ai(images: List[str], condition: str, system_promp
         ).with_model("openai", "gpt-4o")
         
         # Create image contents from base64 images
-        file_contents = []
+        image_contents = []
         for i, img_base64 in enumerate(images[:5]):  # Max 5 images for vision
             # Clean base64 string if it has data URL prefix
             if ',' in img_base64:
                 img_base64 = img_base64.split(',')[1]
-            file_contents.append(ImageContent(image_base64=img_base64))
+            image_contents.append(ImageContent(image_base64=img_base64))
         
         # Build the analysis prompt
         condition_context = ""
@@ -218,7 +218,7 @@ Please provide a JSON response with these fields:
 }}
 
 Respond ONLY with valid JSON, no other text.""",
-            file_contents=file_contents
+            image_contents=image_contents
         )
         
         response = await chat.send_message(user_message)
