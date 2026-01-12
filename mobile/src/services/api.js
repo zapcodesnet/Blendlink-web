@@ -115,6 +115,22 @@ export const authAPI = {
     return response.data;
   },
 
+  // Admin login - simple password-based authentication
+  adminLogin: async (email, password) => {
+    const response = await api.post('/admin-auth/secure/login', { email, password });
+    if (response.data.token) {
+      await setToken(response.data.token);
+      await setStoredUser(response.data.user);
+    }
+    return response.data;
+  },
+
+  // Check admin session
+  checkAdminSession: async () => {
+    const response = await api.get('/admin-auth/secure/check-session');
+    return response.data;
+  },
+
   register: async (data) => {
     const response = await api.post('/auth/register', data);
     if (response.data.token) {
