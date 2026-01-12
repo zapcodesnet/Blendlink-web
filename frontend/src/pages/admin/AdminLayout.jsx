@@ -36,6 +36,7 @@ export const AdminContext = createContext(null);
 // Admin API
 const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
 
+// Safe fetch helper - reads body only once to avoid "body stream already read" errors
 const adminApiRequest = async (endpoint, options = {}) => {
   const token = localStorage.getItem('blendlink_token');
   const headers = {
@@ -45,11 +46,23 @@ const adminApiRequest = async (endpoint, options = {}) => {
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
+  
   const response = await fetch(`${API_BASE}/api${endpoint}`, { ...options, headers });
-  const data = await response.json();
+  
+  // Read body as text first to avoid body stream errors
+  const rawText = await response.text();
+  
+  let data = {};
+  try {
+    data = rawText ? JSON.parse(rawText) : {};
+  } catch (e) {
+    console.error('JSON parse error:', e);
+  }
+  
   if (!response.ok) {
     throw new Error(data.detail || 'Request failed');
   }
+  
   return data;
 };
 
