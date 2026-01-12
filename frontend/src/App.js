@@ -59,6 +59,7 @@ import GuestMarketplace from "./pages/GuestMarketplace";
 import Albums from "./pages/Albums";
 import AIListingCreator from "./pages/AIListingCreator";
 import Casino from "./pages/Casino";
+import PokerTournament, { PokerLobby } from "./pages/PokerTournament";
 import Friends from "./pages/Friends";
 import Groups from "./pages/Groups";
 import Events from "./pages/Events";
