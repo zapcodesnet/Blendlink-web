@@ -200,6 +200,15 @@ export default function AdminLayout() {
           headers: { Authorization: `Bearer ${token}` }
         });
         
+        // Read body as text first to avoid body stream errors
+        const rawText = await response.text();
+        let sessionData = {};
+        try {
+          sessionData = rawText ? JSON.parse(rawText) : {};
+        } catch (e) {
+          console.error('Session check JSON parse error:', e);
+        }
+        
         if (!response.ok) {
           // Session invalid - redirect to admin login
           toast.error("Admin session expired. Please login again.");
@@ -207,7 +216,6 @@ export default function AdminLayout() {
           return;
         }
         
-        const sessionData = await response.json();
         if (!sessionData.valid) {
           navigate('/admin/login');
           return;
