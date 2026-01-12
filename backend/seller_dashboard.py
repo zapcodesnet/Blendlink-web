@@ -231,10 +231,25 @@ Respond ONLY with valid JSON, no other text.""",
         if response_text.endswith('```'):
             response_text = response_text[:-3]
         
-        return json.loads(response_text.strip())
+        try:
+            return json.loads(response_text.strip())
+        except json.JSONDecodeError as je:
+            # AI didn't return valid JSON, return a default structure
+            logger.warning(f"AI returned non-JSON response: {response_text[:200]}")
+            return {
+                "title": "Product Listing",
+                "description": response_text[:500] if response_text else "Unable to analyze image",
+                "category": "General",
+                "suggested_tags": [],
+                "specifications": {},
+                "detected_condition": condition,
+                "condition_details": "Analysis pending",
+                "flaws_detected": [],
+                "features_detected": []
+            }
         
     except Exception as e:
-        print(f"AI image analysis error: {e}")
+        logger.error(f"AI image analysis error: {e}")
         raise HTTPException(status_code=500, detail=f"AI analysis failed: {str(e)}")
 
 async def search_market_prices(title: str, condition: str, countries: List[str]) -> Dict[str, Any]:
