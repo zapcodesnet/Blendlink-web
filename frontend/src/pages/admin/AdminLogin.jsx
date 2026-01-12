@@ -5,7 +5,7 @@ import { Input } from "../../components/ui/input";
 import { toast } from "sonner";
 import { 
   Shield, Lock, Mail, ArrowRight, RefreshCw,
-  Eye, EyeOff, AlertTriangle, CheckCircle, Clock
+  Eye, EyeOff, CheckCircle, Clock
 } from "lucide-react";
 
 const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
@@ -25,11 +25,10 @@ export default function AdminLogin() {
   const [otpCode, setOtpCode] = useState(["", "", "", "", "", ""]);
   const [otpExpiry, setOtpExpiry] = useState(0);
   const [maskedEmail, setMaskedEmail] = useState("");
-  const [resendCooldown, setResendCooldown] = useState(0);
   
   const otpRefs = useRef([]);
   
-  // Countdown timers
+  // OTP expiry countdown timer
   useEffect(() => {
     let interval;
     if (otpExpiry > 0) {
@@ -40,45 +39,24 @@ export default function AdminLogin() {
     return () => clearInterval(interval);
   }, [otpExpiry]);
   
-  useEffect(() => {
-    let interval;
-    if (resendCooldown > 0) {
-      interval = setInterval(() => {
-        setResendCooldown(prev => Math.max(0, prev - 1));
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [resendCooldown]);
-  
   // Check if already logged in as admin
   useEffect(() => {
     const token = localStorage.getItem("blendlink_token");
     if (token) {
-      // Verify if it's a valid admin session using safeFetch pattern
       (async () => {
         try {
           const response = await fetch(`${API_BASE}/api/admin-auth/secure/check-session`, {
             headers: { Authorization: `Bearer ${token}` }
           });
-          
-          // Read body as text first
           const rawText = await response.text();
-          
-          if (!response.ok) {
-            return; // Not valid, stay on login
-          }
-          
+          if (!response.ok) return;
           try {
             const data = JSON.parse(rawText);
             if (data.valid) {
               navigate("/admin");
             }
-          } catch {
-            // Invalid JSON, stay on login
-          }
-        } catch {
-          // Network error, stay on login
-        }
+          } catch {}
+        } catch {}
       })();
     }
   }, [navigate]);
@@ -86,11 +64,7 @@ export default function AdminLogin() {
   // Safe fetch helper that handles response body properly
   const safeFetch = async (url, options) => {
     const response = await fetch(url, options);
-    
-    // Read the raw text first (this consumes the body once and only once)
     const rawText = await response.text();
-    
-    // Try to parse as JSON
     let data = null;
     let parseError = null;
     try {
@@ -98,14 +72,7 @@ export default function AdminLogin() {
     } catch (e) {
       parseError = e;
     }
-    
-    return {
-      ok: response.ok,
-      status: response.status,
-      data,
-      rawText,
-      parseError
-    };
+    return { ok: response.ok, status: response.status, data, rawText, parseError };
   };
 
   const handleStep1Submit = async (e) => {
@@ -136,7 +103,6 @@ export default function AdminLogin() {
       setSessionToken(result.data.session_token);
       setOtpExpiry(result.data.expires_in);
       setMaskedEmail(result.data.email_masked);
-      setResendCooldown(60);
       setStep(2);
       toast.success("Verification code sent to your email!");
       
@@ -151,7 +117,6 @@ export default function AdminLogin() {
   };
   
   const handleOtpChange = (index, value) => {
-    // Only allow digits
     if (value && !/^\d$/.test(value)) return;
     
     const newOtp = [...otpCode];
@@ -163,34 +128,31 @@ export default function AdminLogin() {
       otpRefs.current[index + 1]?.focus();
     }
     
-    // Auto-submit when all digits entered
-    if (value && index === 5 && newOtp.every(d => d)) {
-      handleStep2Submit(newOtp.join(""));
+    // Auto-submit when all filled
+    if (value && index === 5) {
+      const fullCode = [...newOtp.slice(0, 5), value].join("");
+      if (fullCode.length === 6) {
+        handleStep2Submit(fullCode);
+      }
     }
   };
   
   const handleOtpKeyDown = (index, e) => {
-    // Handle backspace
     if (e.key === "Backspace" && !otpCode[index] && index > 0) {
       otpRefs.current[index - 1]?.focus();
     }
-    // Handle paste
-    if (e.key === "v" && (e.ctrlKey || e.metaKey)) {
-      e.preventDefault();
-      navigator.clipboard.readText().then(text => {
-        const digits = text.replace(/\D/g, "").slice(0, 6).split("");
-        const newOtp = [...otpCode];
-        digits.forEach((d, i) => {
-          if (i < 6) newOtp[i] = d;
-        });
-        setOtpCode(newOtp);
-        if (digits.length === 6) {
-          handleStep2Submit(newOtp.join(""));
-        }
-      });
-    }
   };
   
+  const handleOtpPaste = (e) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (pastedData.length === 6) {
+      const newOtp = pastedData.split("");
+      setOtpCode(newOtp);
+      handleStep2Submit(pastedData);
+    }
+  };
+
   const handleStep2Submit = async (code = null) => {
     const otpString = code || otpCode.join("");
     if (otpString.length !== 6) {
@@ -219,7 +181,7 @@ export default function AdminLogin() {
         throw new Error("Invalid server response");
       }
       
-      // Store token and redirect - also set last activity for auto-logout
+      // Store token and redirect
       localStorage.setItem("blendlink_token", result.data.token);
       localStorage.setItem("blendlink_user", JSON.stringify(result.data.user));
       localStorage.setItem("admin_last_activity", Date.now().toString());
@@ -229,42 +191,8 @@ export default function AdminLogin() {
       
     } catch (error) {
       toast.error(error.message || "Verification failed. Please try again.");
-      // Clear OTP on error
       setOtpCode(["", "", "", "", "", ""]);
       otpRefs.current[0]?.focus();
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  const handleResendOtp = async () => {
-    if (resendCooldown > 0) return;
-    
-    setLoading(true);
-    try {
-      const result = await safeFetch(`${API_BASE}/api/admin-auth/secure/login/resend-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, session_token: sessionToken }),
-      });
-      
-      if (!result.ok) {
-        const errorMsg = result.data?.detail || result.rawText || "Failed to resend code";
-        throw new Error(errorMsg);
-      }
-      
-      if (result.parseError || !result.data) {
-        throw new Error("Invalid server response");
-      }
-      
-      setOtpExpiry(result.data.expires_in);
-      setResendCooldown(60);
-      setOtpCode(["", "", "", "", "", ""]);
-      toast.success("New verification code sent!");
-      otpRefs.current[0]?.focus();
-      
-    } catch (error) {
-      toast.error(error.message || "Failed to resend code. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -279,17 +207,17 @@ export default function AdminLogin() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo/Header */}
+        {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl mb-4 shadow-lg shadow-blue-500/30">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/25">
             <Shield className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-white">Admin Portal</h1>
-          <p className="text-slate-400 mt-1">Blendlink Management System</p>
+          <p className="text-slate-400 text-sm mt-1">Blendlink Management System</p>
         </div>
-
-        {/* Login Card */}
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700 p-8 shadow-xl">
+        
+        {/* Card */}
+        <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 shadow-xl">
           {step === 1 ? (
             <>
               <div className="mb-6">
@@ -297,49 +225,53 @@ export default function AdminLogin() {
                 <p className="text-slate-400 text-sm mt-1">Enter your admin credentials</p>
               </div>
               
-              <form onSubmit={handleStep1Submit} className="space-y-5">
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Email Address</label>
-                  <div className="relative">
-                    <Mail className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <Input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="admin@blendlink.net"
-                      className="pl-10 bg-slate-700/50 border-slate-600 focus:border-blue-500"
-                      required
-                      data-testid="admin-email-input"
-                    />
+              <form onSubmit={handleStep1Submit}>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                      Email Address
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                      <Input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
+                        placeholder="admin@example.com"
+                        data-testid="admin-email-input"
+                      />
+                    </div>
                   </div>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Password</label>
-                  <div className="relative">
-                    <Lock className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <Input
-                      type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="pl-10 pr-10 bg-slate-700/50 border-slate-600 focus:border-blue-500"
-                      required
-                      data-testid="admin-password-input"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
-                    >
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                    </button>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                      <Input
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="pl-10 pr-10 bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
+                        placeholder="••••••••"
+                        data-testid="admin-password-input"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                      >
+                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    </div>
                   </div>
                 </div>
                 
                 <Button 
                   type="submit" 
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400"
+                  className="w-full mt-6 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400"
                   disabled={loading}
                   data-testid="admin-login-submit"
                 >
@@ -352,11 +284,11 @@ export default function AdminLogin() {
                 </Button>
               </form>
               
-              <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <Shield className="w-5 h-5 text-blue-400 mt-0.5" />
+              <div className="mt-6 pt-6 border-t border-slate-700">
+                <div className="flex items-start gap-3 text-sm">
+                  <Shield className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm text-blue-300 font-medium">Secure Authentication</p>
+                    <p className="text-slate-300 font-medium">Secure Authentication</p>
                     <p className="text-xs text-slate-400 mt-1">
                       A verification code will be sent to your registered email after password verification.
                     </p>
@@ -392,7 +324,7 @@ export default function AdminLogin() {
               </div>
               
               {/* OTP Input */}
-              <div className="flex justify-center gap-3 mb-6">
+              <div className="flex justify-center gap-3 mb-6" onPaste={handleOtpPaste}>
                 {otpCode.map((digit, index) => (
                   <input
                     key={index}
@@ -424,8 +356,8 @@ export default function AdminLogin() {
                 Verify & Sign In
               </Button>
               
-              {/* Resend / Back */}
-              <div className="flex items-center justify-between text-sm">
+              {/* Back button only - no resend */}
+              <div className="flex items-center justify-center text-sm">
                 <button
                   onClick={() => {
                     setStep(1);
@@ -436,25 +368,13 @@ export default function AdminLogin() {
                 >
                   ← Back to login
                 </button>
-                
-                <button
-                  onClick={handleResendOtp}
-                  disabled={resendCooldown > 0 || loading}
-                  className={`flex items-center gap-1 ${
-                    resendCooldown > 0 ? 'text-slate-500' : 'text-blue-400 hover:text-blue-300'
-                  } transition-colors`}
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend code'}
-                </button>
               </div>
               
-              {/* Warning for expired */}
+              {/* Code expired message */}
               {otpExpiry === 0 && (
-                <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-2">
-                  <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0" />
-                  <p className="text-sm text-red-300">
-                    Your verification code has expired. Please request a new code.
+                <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-center">
+                  <p className="text-red-400 text-sm">
+                    Your code has expired. Please go back and try again.
                   </p>
                 </div>
               )}
@@ -464,7 +384,7 @@ export default function AdminLogin() {
         
         {/* Footer */}
         <p className="text-center text-slate-500 text-xs mt-6">
-          Protected by Blendlink Security • Unauthorized access is prohibited
+          Protected by 2FA email verification • Session timeout: 5 minutes
         </p>
       </div>
     </div>
