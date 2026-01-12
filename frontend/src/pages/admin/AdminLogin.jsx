@@ -193,7 +193,7 @@ export default function AdminLogin() {
     
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE}/api/admin-auth/secure/login/step2`, {
+      const result = await safeFetch(`${API_BASE}/api/admin-auth/secure/login/step2`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
@@ -203,22 +203,18 @@ export default function AdminLogin() {
         }),
       });
       
-      // Clone immediately before any body reading
-      let data;
-      try {
-        data = await response.clone().json();
-      } catch (jsonError) {
-        const text = await response.text();
-        throw new Error(text || "Server error");
+      if (!result.ok) {
+        const errorMsg = result.data?.detail || result.rawText || "Verification failed";
+        throw new Error(errorMsg);
       }
       
-      if (!response.ok) {
-        throw new Error(data.detail || "Verification failed");
+      if (result.parseError || !result.data) {
+        throw new Error("Invalid server response");
       }
       
       // Store token and redirect - also set last activity for auto-logout
-      localStorage.setItem("blendlink_token", data.token);
-      localStorage.setItem("blendlink_user", JSON.stringify(data.user));
+      localStorage.setItem("blendlink_token", result.data.token);
+      localStorage.setItem("blendlink_user", JSON.stringify(result.data.user));
       localStorage.setItem("admin_last_activity", Date.now().toString());
       
       toast.success("Welcome to Admin Panel!");
