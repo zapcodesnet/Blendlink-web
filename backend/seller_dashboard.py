@@ -462,7 +462,7 @@ Return JSON:
     "processing_status": "For actual background removal, please use our web editor tool",
     "tip": "Product photography tip for this item"
 }}""",
-            image_contents=[ImageContent(image_base64=img_base64)]
+            file_contents=[ImageContent(image_base64=img_base64)]
         )
         
         response = await chat.send_message(user_message)
