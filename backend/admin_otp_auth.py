@@ -32,8 +32,8 @@ ADMIN_EMAIL = "blendlinknet@gmail.com"
 # Password: Blend!Admin2026Link
 ADMIN_PASSWORD_HASH = bcrypt.hashpw("Blend!Admin2026Link".encode(), bcrypt.gensalt()).decode()
 
-# JWT Configuration
-SECRET_KEY = os.environ.get("SECRET_KEY", "blendlink-admin-secret-key-2026")
+# JWT Configuration - Use same secret as main server
+SECRET_KEY = os.environ.get("JWT_SECRET", os.environ.get("SECRET_KEY", "blendlink-secret-key-2026"))
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_HOURS = 24
 
