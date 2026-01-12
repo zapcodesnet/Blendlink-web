@@ -76,6 +76,31 @@ export default function AdminLogin() {
     }
   }, [navigate]);
   
+  // Safe fetch helper that handles response body properly
+  const safeFetch = async (url, options) => {
+    const response = await fetch(url, options);
+    
+    // Read the raw text first (this consumes the body once and only once)
+    const rawText = await response.text();
+    
+    // Try to parse as JSON
+    let data = null;
+    let parseError = null;
+    try {
+      data = rawText ? JSON.parse(rawText) : {};
+    } catch (e) {
+      parseError = e;
+    }
+    
+    return {
+      ok: response.ok,
+      status: response.status,
+      data,
+      rawText,
+      parseError
+    };
+  };
+
   const handleStep1Submit = async (e) => {
     e.preventDefault();
     if (!email || !password) {
@@ -85,30 +110,25 @@ export default function AdminLogin() {
     
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE}/api/admin-auth/secure/login/step1`, {
+      const result = await safeFetch(`${API_BASE}/api/admin-auth/secure/login/step1`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
       
-      // Clone immediately before any body reading
-      let data;
-      try {
-        data = await response.clone().json();
-      } catch (jsonError) {
-        // JSON parsing failed, get text from original response
-        const text = await response.text();
-        throw new Error(text || "Server error");
+      if (!result.ok) {
+        const errorMsg = result.data?.detail || result.rawText || "Login failed";
+        throw new Error(errorMsg);
       }
       
-      if (!response.ok) {
-        throw new Error(data.detail || "Login failed");
+      if (result.parseError || !result.data) {
+        throw new Error("Invalid server response");
       }
       
       // Move to step 2
-      setSessionToken(data.session_token);
-      setOtpExpiry(data.expires_in);
-      setMaskedEmail(data.email_masked);
+      setSessionToken(result.data.session_token);
+      setOtpExpiry(result.data.expires_in);
+      setMaskedEmail(result.data.email_masked);
       setResendCooldown(60);
       setStep(2);
       toast.success("Verification code sent to your email!");
