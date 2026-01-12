@@ -1427,10 +1427,15 @@ export default function Casino() {
           {games.map((game) => (
             <button
               key={game.id}
-              onClick={() => setActiveGame(game.id)}
-              className={`bg-gradient-to-br ${game.color} rounded-2xl p-4 text-white text-left hover:scale-105 transition-transform shadow-lg`}
+              onClick={() => game.link ? navigate(game.link) : setActiveGame(game.id)}
+              className={`bg-gradient-to-br ${game.color} rounded-2xl p-4 text-white text-left hover:scale-105 transition-transform shadow-lg relative`}
               data-testid={`game-${game.id}-btn`}
             >
+              {game.isNew && (
+                <span className="absolute top-2 right-2 bg-yellow-400 text-black text-xs font-bold px-2 py-0.5 rounded-full animate-pulse">
+                  NEW
+                </span>
+              )}
               <span className="text-4xl mb-2 block">{game.icon}</span>
               <h3 className="font-bold text-lg">{game.name}</h3>
               <p className="text-xs text-white/80 mt-1">{game.desc}</p>
