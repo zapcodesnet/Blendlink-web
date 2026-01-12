@@ -1440,6 +1440,34 @@ async def get_my_tournament(user: dict = Depends(get_current_user)):
         "tournament": tournament.to_dict(viewer_id=user["user_id"])
     }
 
+@poker_router.post("/tournaments/{tournament_id}/force-start")
+async def force_start_tournament(
+    tournament_id: str,
+    user: dict = Depends(get_current_user)
+):
+    """Force start a tournament (for testing with 2+ players)"""
+    tournament = tournament_manager.get_tournament(tournament_id)
+    if not tournament:
+        raise HTTPException(status_code=404, detail="Tournament not found")
+    
+    if tournament.status != TournamentStatus.REGISTERING:
+        raise HTTPException(status_code=400, detail="Tournament already started")
+    
+    if len(tournament.players) < 2:
+        raise HTTPException(status_code=400, detail="Need at least 2 players")
+    
+    # Check if requesting user is in the tournament
+    if user["user_id"] not in tournament.players:
+        raise HTTPException(status_code=403, detail="Only players can start the tournament")
+    
+    await tournament_manager.start_tournament(tournament)
+    
+    return {
+        "success": True,
+        "message": "Tournament started!",
+        "tournament": tournament.to_dict(viewer_id=user["user_id"])
+    }
+
 @poker_router.get("/leaderboard")
 async def get_leaderboard(
     limit: int = Query(default=20, le=100),
