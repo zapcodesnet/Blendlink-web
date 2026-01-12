@@ -100,20 +100,20 @@ https://createsuite-admin.preview.emergentagent.com
 
 ## Resolved Issues
 - ✅ `ValueError: Invalid salt` - FIXED (Jan 11, 2026)
-  - Root cause: Google OAuth users had empty `password_hash` fields
-  - Fix: Improved `verify_password()` with proper validation and logging
-  - Cleaned up 5 database records with empty password hashes
-
-- ✅ Admin Login "body stream already read" Error - FIXED (Jan 11, 2026)
-  - Root cause: Response body read twice in check-session call
-  - Fix: Properly check `response.ok` before calling `.json()`
-  - Simplified error handling in resend OTP function
+- ✅ Admin Login "body stream already read" - FIXED (Jan 11, 2026)
+- ✅ AI Image Generation - FIXED (Jan 12, 2026) - Using ImageContent instead of FileContent
+- ✅ AI Listing Analyzer - FIXED (Jan 12, 2026) - Fixed image content type handling
+- ✅ Daily Claim Inconsistency - FIXED (Jan 12, 2026) - Unified to use referral system's 2000 BL
+- ✅ Database field migration - Migrated `last_daily_claim` to `daily_claim_last`
+- ✅ Poker Force Start - ADDED (Jan 12, 2026) - Force start endpoint for testing with 2+ players
 
 ## Security Features
 - Admin 2FA login with email OTP (60-second rate limiting)
 - 5-minute auto-logout for inactive admin sessions
 - Separate admin authentication from regular user auth
 - OTPs logged in dev mode for testing (production: email only)
+
+## Social Features
 
 ## Mobile App Location
 - `/app/mobile/` - React Native/Expo mobile application
