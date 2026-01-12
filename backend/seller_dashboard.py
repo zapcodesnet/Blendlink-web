@@ -215,7 +215,7 @@ Please provide a JSON response with these fields:
 }}
 
 Respond ONLY with valid JSON, no other text.""",
-            file_contents=file_contents
+            image_contents=image_contents
         )
         
         response = await chat.send_message(user_message)
