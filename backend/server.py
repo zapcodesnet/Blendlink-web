@@ -1712,6 +1712,10 @@ api_router.include_router(get_casino_router())
 from poker_tournament import poker_router
 api_router.include_router(poker_router)
 
+# Import and include social messaging router
+from social_messaging import messaging_router
+api_router.include_router(messaging_router)
+
 # Import and include admin system routers
 from admin_system import admin_system_router, audit_router, genealogy_router
 api_router.include_router(admin_system_router)
