@@ -183,12 +183,13 @@ export default function AdminLogin() {
         }),
       });
       
-      const responseText = await response.text();
+      // Clone immediately before any body reading
       let data;
       try {
-        data = JSON.parse(responseText);
-      } catch (parseError) {
-        throw new Error(responseText || "Server error");
+        data = await response.clone().json();
+      } catch (jsonError) {
+        const text = await response.text();
+        throw new Error(text || "Server error");
       }
       
       if (!response.ok) {
