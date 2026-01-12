@@ -521,7 +521,7 @@ Return JSON only:
     "fragile": true/false,
     "notes": "any special shipping considerations"
 }""",
-                image_contents=[ImageContent(image_base64=img_base64)]
+                file_contents=[ImageContent(image_base64=img_base64)]
             )
             
             response = await chat.send_message(user_message)
