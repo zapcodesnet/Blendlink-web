@@ -162,7 +162,7 @@ async def create_payment_intent(
                 "listing_id": data.listing_id or "",
                 "type": "marketplace_purchase" if data.listing_id else "direct_payment",
             },
-            description=data.description or f"Blendlink purchase",
+            description=data.description or "Blendlink purchase",
         )
         
         # Record payment intent
@@ -387,9 +387,9 @@ async def stripe_webhook(request: Request):
             event = stripe.Event.construct_from(
                 json.loads(payload), stripe.api_key
             )
-    except ValueError as e:
+    except ValueError:
         raise HTTPException(status_code=400, detail="Invalid payload")
-    except stripe.error.SignatureVerificationError as e:
+    except stripe.error.SignatureVerificationError:
         raise HTTPException(status_code=400, detail="Invalid signature")
     
     # Handle specific events
