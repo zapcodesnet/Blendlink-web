@@ -159,10 +159,32 @@
 - ✅ Blackjack, Roulette, Wheel of Fortune
 - ✅ Video Poker, Baccarat, Craps
 
-### PKO Poker Tournament (Foundation)
-- ✅ Backend skeleton at /app/backend/poker_tournament.py
-- ✅ Frontend skeleton at /app/frontend/src/pages/PokerTournament.jsx
-- ⏳ Core game logic needs implementation
+## Phase E - PKO Poker Tournament ✅ ENHANCED (Jan 13)
+
+### Core Features Implemented:
+- ✅ **AI Bots** - Add up to 9 AI bots with human-like behavior
+  - Bot personalities: tight-aggressive, loose-aggressive, tight-passive, loose-passive, balanced
+  - Skill levels: medium, hard, expert
+  - Human-like thinking delays (1.5-4 seconds)
+- ✅ **Progressive Knockout (PKO) Bounty System**
+  - When you eliminate a player:
+    - 50% of their bounty goes to your BL wallet immediately
+    - 50% adds to your own bounty (progressive)
+- ✅ **Rebuy System** - Available for 60 minutes OR until blind level 5
+- ✅ **10-Player Single Table Tournament (STT)**
+- ✅ **Blind Structure** - 25/50 → 50/100 → 75/150 → 100/200 → 150/300+ante
+- ✅ **Prize Distribution** - 1st: 65%, 2nd: 35% + all accumulated bounties
+- ✅ **Enhanced Waiting Room** - Shows all registered players, bots with indicators
+- ✅ **Table Creator Bot Controls** - Add 1/3/Fill buttons for bots
+
+### API Endpoints Added:
+- `POST /api/poker/tournaments/{id}/add-bots` - Add AI bots (creator only)
+- `GET /api/poker/my-tournament` - Get player's current tournament
+- Enhanced `tournament.to_dict()` with bot info
+
+### Files Modified:
+- `backend/poker_tournament.py` - AI bot engine, progressive bounty, enhanced state
+- `frontend/src/pages/PokerTournament.jsx` - Bot UI indicators, add bots controls
 
 ### AI Generation Suite
 - ✅ Image Generation (OpenAI GPT Image 1)
