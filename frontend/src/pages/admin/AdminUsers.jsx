@@ -764,6 +764,53 @@ function UserDetail() {
           </div>
         </ActionModal>
       )}
+
+      {showActionModal === "delete" && (
+        <ActionModal
+          title="Delete User Permanently"
+          icon={Trash2}
+          iconColor="text-red-400"
+          onClose={() => setShowActionModal(null)}
+        >
+          <div className="space-y-4">
+            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+              <p className="text-sm text-red-400">
+                <AlertTriangle className="w-4 h-4 inline mr-2" />
+                <strong>WARNING:</strong> This action is IRREVERSIBLE. The user's account will be permanently deleted and cannot be recovered.
+              </p>
+            </div>
+            <div className="p-3 bg-slate-700/50 rounded-lg">
+              <p className="text-sm text-slate-300">
+                User: <span className="text-white font-medium">{data?.user?.name}</span>
+              </p>
+              <p className="text-sm text-slate-300">
+                Email: <span className="text-white font-medium">{data?.user?.email}</span>
+              </p>
+              <p className="text-sm text-slate-300">
+                BL Coins: <span className="text-amber-400 font-medium">{(data?.user?.bl_coins || 0).toLocaleString()}</span>
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm text-slate-300 mb-2">Reason for deletion (required)</label>
+              <Input
+                value={actionReason}
+                onChange={(e) => setActionReason(e.target.value)}
+                placeholder="Enter reason for deletion..."
+                className="bg-slate-700 border-slate-600"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={handleDeleteUser} variant="destructive" className="flex-1" disabled={actionLoading}>
+                {actionLoading ? <RefreshCw className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                Delete Permanently
+              </Button>
+              <Button variant="outline" onClick={() => setShowActionModal(null)} className="border-slate-600">
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </ActionModal>
+      )}
     </div>
   );
 }
