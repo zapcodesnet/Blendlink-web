@@ -386,18 +386,20 @@ export default function Landing() {
                   <Coins className="w-8 h-8 text-white" />
                 </div>
                 <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                  Earn <span className="bl-coin-text">BL Coins</span>
+                  Earn <span className="text-green-500">Real Cash</span> and <span className="bl-coin-text">BL Coins</span>
                 </h2>
                 <p className="text-muted-foreground mb-6">
-                  Get rewarded for everything you do. Post content, invite friends, 
-                  play games, and complete tasks to earn BL Coins you can spend in-app.
+                  Get rewarded for everything you do. Sell in Marketplace to earn real cash. 
+                  Post content, like, share, comment, create page, invite friends, play games, 
+                  and complete tasks to earn BL Coins you can spend in-app.
                 </p>
                 <ul className="space-y-3">
                   {[
-                    "100 BL Coins welcome bonus",
-                    "5 coins daily login reward",
-                    "50 coins per Level 1 referral",
-                    "25 coins per Level 2 referral"
+                    "50,000 BL Coins welcome bonus",
+                    "50,000 BL Coins when you invite a friend and joined",
+                    "2,000+ BL Coins daily login rewards",
+                    "3% - 4% per Level 1 referral",
+                    "1% - 2% per Level 2 referral"
                   ].map((item, i) => (
                     <li key={i} className="flex items-center gap-3">
                       <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
