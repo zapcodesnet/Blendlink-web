@@ -540,6 +540,17 @@ function UserDetail() {
               <CreditCard className="w-4 h-4 mr-2" />
               Adjust Balance
             </Button>
+
+            {/* Delete User */}
+            <Button 
+              onClick={() => setShowActionModal("delete")} 
+              variant="outline" 
+              className="col-span-2 border-red-500/50 text-red-500 hover:bg-red-500/10 mt-4"
+              disabled={actionLoading || user?.is_admin}
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete User Permanently
+            </Button>
           </div>
 
           {/* Suspension Info */}
