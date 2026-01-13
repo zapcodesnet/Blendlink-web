@@ -1023,3 +1023,617 @@ async def get_balances(current_user: dict = Depends(get_current_user)):
         "kyc_status": user.get("kyc_status", "not_started"),
         "can_withdraw": user.get("kyc_status") == "verified" and user.get("usd_balance", 0) > 0,
     }
+
+
+# ============== PHASE 2: ACTIVITY REWARDS ==============
+
+async def reward_activity(
+    user_id: str,
+    activity_type: str,
+    reference_id: Optional[str] = None,
+    custom_amount: Optional[int] = None,
+    details: Optional[Dict] = None
+) -> Dict[str, Any]:
+    """
+    Award BL coins for user activity and distribute upline bonuses.
+    Returns breakdown of rewards given.
+    """
+    # Get reward amount
+    if custom_amount is not None:
+        reward_amount = custom_amount
+    else:
+        reward_amount = ACTIVITY_REWARDS.get(activity_type, 0)
+    
+    if reward_amount <= 0:
+        return {"success": False, "message": "No reward for this activity"}
+    
+    # Map activity type to transaction type
+    activity_to_txn_type = {
+        "post_video": TransactionType.POST_VIDEO,
+        "post_story": TransactionType.POST_STORY,
+        "post_music": TransactionType.POST_MUSIC,
+        "post_photo": TransactionType.POST_PHOTO,
+        "create_event": TransactionType.CREATE_EVENT,
+        "create_group": TransactionType.CREATE_GROUP,
+        "create_page": TransactionType.CREATE_PAGE,
+        "page_subscribe": TransactionType.PAGE_SUBSCRIBE,
+        "share_post": TransactionType.SHARE_POST,
+        "share_ai_image": TransactionType.SHARE_AI_IMAGE,
+        "share_ai_video": TransactionType.SHARE_AI_VIDEO,
+        "share_ai_music": TransactionType.SHARE_AI_MUSIC,
+        "marketplace_listing": TransactionType.MARKETPLACE_LISTING,
+        "marketplace_purchase_bonus": TransactionType.MARKETPLACE_PURCHASE_BONUS,
+        "reaction_given": TransactionType.REACTION_GIVEN,
+        "reaction_received": TransactionType.REACTION_RECEIVED,
+        "first_comment": TransactionType.COMMENT_REWARD,
+    }
+    
+    txn_type = activity_to_txn_type.get(activity_type, TransactionType.ADMIN_ADJUSTMENT)
+    
+    # Record reward for user
+    await record_transaction(
+        user_id=user_id,
+        transaction_type=txn_type,
+        currency=Currency.BL,
+        amount=reward_amount,
+        reference_id=reference_id,
+        details=details or {"activity": activity_type}
+    )
+    
+    result = {
+        "success": True,
+        "user_reward": reward_amount,
+        "l1_bonus": 0,
+        "l2_bonus": 0,
+    }
+    
+    # Calculate and distribute upline bonuses
+    l1_upline_id, l2_upline_id = await get_upline_chain(user_id)
+    
+    if l1_upline_id:
+        l1_rank = await get_user_rank(l1_upline_id)
+        l1_rate = DIAMOND_L1_RATE if l1_rank == UserRank.DIAMOND_LEADER else REGULAR_L1_RATE
+        l1_bonus = round(reward_amount * l1_rate)
+        
+        if l1_bonus > 0:
+            await record_transaction(
+                user_id=l1_upline_id,
+                transaction_type=TransactionType.UPLINE_ACTIVITY_BONUS,
+                currency=Currency.BL,
+                amount=l1_bonus,
+                reference_id=reference_id,
+                details={
+                    "source_user_id": user_id,
+                    "activity": activity_type,
+                    "level": 1,
+                    "rate": l1_rate,
+                }
+            )
+            result["l1_bonus"] = l1_bonus
+    
+    if l2_upline_id:
+        l2_rank = await get_user_rank(l2_upline_id)
+        l2_rate = DIAMOND_L2_RATE if l2_rank == UserRank.DIAMOND_LEADER else REGULAR_L2_RATE
+        l2_bonus = round(reward_amount * l2_rate)
+        
+        if l2_bonus > 0:
+            await record_transaction(
+                user_id=l2_upline_id,
+                transaction_type=TransactionType.UPLINE_ACTIVITY_BONUS,
+                currency=Currency.BL,
+                amount=l2_bonus,
+                reference_id=reference_id,
+                details={
+                    "source_user_id": user_id,
+                    "activity": activity_type,
+                    "level": 2,
+                    "rate": l2_rate,
+                }
+            )
+            result["l2_bonus"] = l2_bonus
+    
+    # Update user's total BL earnings for Diamond qualification tracking
+    await db.users.update_one(
+        {"user_id": user_id},
+        {"$inc": {"total_bl_earned": reward_amount}}
+    )
+    
+    return result
+
+@referral_router.post("/reward-activity")
+async def api_reward_activity(
+    activity_type: str,
+    reference_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """API endpoint to reward user for activity"""
+    result = await reward_activity(
+        user_id=current_user["user_id"],
+        activity_type=activity_type,
+        reference_id=reference_id
+    )
+    return result
+
+# ============== PHASE 3: DIAMOND LEADER SYSTEM ==============
+
+async def check_diamond_qualification(user_id: str) -> Dict[str, Any]:
+    """
+    Check if user qualifies for Diamond Leader status.
+    Requirements (within 30 days):
+    - 100 direct recruits
+    - $1,000 in downline commissions
+    - $1,000 in personal sales
+    - 6 million BL coins earned
+    """
+    user = await db.users.find_one({"user_id": user_id})
+    if not user:
+        return {"qualified": False, "message": "User not found"}
+    
+    # Already Diamond?
+    if user.get("rank") == UserRank.DIAMOND_LEADER.value:
+        return {"qualified": True, "already_diamond": True, "message": "Already a Diamond Leader"}
+    
+    thirty_days_ago = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+    
+    # Check direct recruits (all-time for simplicity, could be 30-day)
+    direct_recruits = user.get("direct_referrals", 0)
+    
+    # Check downline commissions in last 30 days
+    downline_commissions = await db.commissions.aggregate([
+        {"$match": {
+            "recipient_id": user_id,
+            "created_at": {"$gte": thirty_days_ago}
+        }},
+        {"$group": {"_id": None, "total": {"$sum": "$amount_usd"}}}
+    ]).to_list(1)
+    total_commissions = downline_commissions[0]["total"] if downline_commissions else 0
+    
+    # Check personal sales in last 30 days
+    personal_sales = await db.sales.aggregate([
+        {"$match": {
+            "seller_id": user_id,
+            "status": "completed",
+            "created_at": {"$gte": thirty_days_ago}
+        }},
+        {"$group": {"_id": None, "total": {"$sum": "$amount_usd"}}}
+    ]).to_list(1)
+    total_sales = personal_sales[0]["total"] if personal_sales else 0
+    
+    # Check BL coins earned (all-time tracking)
+    total_bl_earned = user.get("total_bl_earned", 0)
+    
+    progress = {
+        "direct_recruits": {"current": direct_recruits, "required": DIAMOND_REQUIRED_DIRECT_RECRUITS},
+        "downline_commissions": {"current": total_commissions, "required": DIAMOND_REQUIRED_DOWNLINE_COMMISSIONS},
+        "personal_sales": {"current": total_sales, "required": DIAMOND_REQUIRED_PERSONAL_SALES},
+        "bl_coins_earned": {"current": total_bl_earned, "required": 6000000},
+    }
+    
+    qualified = (
+        direct_recruits >= DIAMOND_REQUIRED_DIRECT_RECRUITS and
+        total_commissions >= DIAMOND_REQUIRED_DOWNLINE_COMMISSIONS and
+        total_sales >= DIAMOND_REQUIRED_PERSONAL_SALES and
+        total_bl_earned >= 6000000
+    )
+    
+    return {
+        "qualified": qualified,
+        "already_diamond": False,
+        "progress": progress,
+        "message": "Qualified for Diamond Leader!" if qualified else "Keep working towards Diamond Leader status"
+    }
+
+async def promote_to_diamond(user_id: str) -> Dict[str, Any]:
+    """
+    Promote user to Diamond Leader status and award bonuses.
+    Note: USD bonus is credited manually by platform owner as per requirements.
+    """
+    user = await db.users.find_one({"user_id": user_id})
+    if not user:
+        return {"success": False, "message": "User not found"}
+    
+    if user.get("rank") == UserRank.DIAMOND_LEADER.value:
+        return {"success": False, "message": "Already a Diamond Leader"}
+    
+    # Check qualification
+    qualification = await check_diamond_qualification(user_id)
+    if not qualification["qualified"]:
+        return {"success": False, "message": "Does not meet Diamond Leader requirements", "progress": qualification.get("progress")}
+    
+    # Update user rank
+    await db.users.update_one(
+        {"user_id": user_id},
+        {
+            "$set": {
+                "rank": UserRank.DIAMOND_LEADER.value,
+                "is_diamond": True,
+                "diamond_achieved_at": datetime.now(timezone.utc).isoformat(),
+                "diamond_maintenance_due": (datetime.now(timezone.utc) + timedelta(days=30)).isoformat(),
+            }
+        }
+    )
+    
+    # Award BL coins bonus (10,000,000 as per requirements)
+    await record_transaction(
+        user_id=user_id,
+        transaction_type=TransactionType.DIAMOND_BONUS_BL,
+        currency=Currency.BL,
+        amount=10000000,
+        details={"type": "diamond_promotion_bonus"}
+    )
+    
+    # Record the pending USD bonus (to be credited manually by owner)
+    await db.pending_diamond_bonuses.insert_one({
+        "bonus_id": f"diamond_bonus_{uuid.uuid4().hex[:12]}",
+        "user_id": user_id,
+        "amount_usd": 100.0,
+        "status": "pending",  # Owner must approve/credit manually
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+    
+    logger.info(f"User {user_id} promoted to Diamond Leader")
+    
+    return {
+        "success": True,
+        "message": "Congratulations! You are now a Diamond Leader!",
+        "bl_bonus": 10000000,
+        "usd_bonus_pending": 100.0,
+        "note": "USD bonus will be credited by platform owner"
+    }
+
+async def check_diamond_maintenance(user_id: str) -> Dict[str, Any]:
+    """
+    Check if Diamond Leader meets maintenance requirements.
+    Requirements per 30-day period:
+    - At least 1 new recruit
+    - At least $10 from personal sales
+    - At least $10 in commissions from team
+    - At least 100,000 BL coins earned
+    """
+    user = await db.users.find_one({"user_id": user_id})
+    if not user or user.get("rank") != UserRank.DIAMOND_LEADER.value:
+        return {"applies": False, "message": "Not a Diamond Leader"}
+    
+    maintenance_due = user.get("diamond_maintenance_due")
+    if not maintenance_due:
+        return {"applies": False, "message": "No maintenance due date set"}
+    
+    # Check if maintenance period has ended
+    due_date = datetime.fromisoformat(maintenance_due.replace("Z", "+00:00"))
+    if datetime.now(timezone.utc) < due_date:
+        return {"applies": False, "due_date": maintenance_due, "message": "Maintenance period not yet due"}
+    
+    thirty_days_ago = (due_date - timedelta(days=30)).isoformat()
+    
+    # Count new recruits in the period
+    new_recruits = await db.referral_relationships.count_documents({
+        "referrer_id": user_id,
+        "level": 1,
+        "created_at": {"$gte": thirty_days_ago, "$lt": maintenance_due}
+    })
+    
+    # Sum personal sales
+    sales_result = await db.sales.aggregate([
+        {"$match": {
+            "seller_id": user_id,
+            "status": "completed",
+            "created_at": {"$gte": thirty_days_ago, "$lt": maintenance_due}
+        }},
+        {"$group": {"_id": None, "total": {"$sum": "$amount_usd"}}}
+    ]).to_list(1)
+    personal_sales = sales_result[0]["total"] if sales_result else 0
+    
+    # Sum team commissions
+    comm_result = await db.commissions.aggregate([
+        {"$match": {
+            "recipient_id": user_id,
+            "created_at": {"$gte": thirty_days_ago, "$lt": maintenance_due}
+        }},
+        {"$group": {"_id": None, "total": {"$sum": "$amount_usd"}}}
+    ]).to_list(1)
+    team_commissions = comm_result[0]["total"] if comm_result else 0
+    
+    # Sum BL earned (from transactions)
+    bl_result = await db.transactions.aggregate([
+        {"$match": {
+            "user_id": user_id,
+            "currency": "BL",
+            "amount": {"$gt": 0},
+            "created_at": {"$gte": thirty_days_ago, "$lt": maintenance_due}
+        }},
+        {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+    ]).to_list(1)
+    bl_earned = bl_result[0]["total"] if bl_result else 0
+    
+    meets_requirements = (
+        new_recruits >= DIAMOND_MAINTENANCE_NEW_RECRUITS and
+        personal_sales >= DIAMOND_MAINTENANCE_PERSONAL_SALES and
+        team_commissions >= DIAMOND_MAINTENANCE_COMMISSIONS and
+        bl_earned >= 100000
+    )
+    
+    progress = {
+        "new_recruits": {"current": new_recruits, "required": DIAMOND_MAINTENANCE_NEW_RECRUITS},
+        "personal_sales": {"current": personal_sales, "required": DIAMOND_MAINTENANCE_PERSONAL_SALES},
+        "team_commissions": {"current": team_commissions, "required": DIAMOND_MAINTENANCE_COMMISSIONS},
+        "bl_earned": {"current": bl_earned, "required": 100000},
+    }
+    
+    return {
+        "applies": True,
+        "meets_requirements": meets_requirements,
+        "progress": progress,
+        "action": "maintain" if meets_requirements else "demote"
+    }
+
+async def demote_from_diamond(user_id: str) -> bool:
+    """Demote user from Diamond Leader to Regular status"""
+    result = await db.users.update_one(
+        {"user_id": user_id, "rank": UserRank.DIAMOND_LEADER.value},
+        {
+            "$set": {
+                "rank": UserRank.REGULAR.value,
+                "is_diamond": False,
+                "diamond_demoted_at": datetime.now(timezone.utc).isoformat(),
+            },
+            "$unset": {"diamond_maintenance_due": ""}
+        }
+    )
+    
+    if result.modified_count > 0:
+        logger.info(f"User {user_id} demoted from Diamond Leader")
+        return True
+    return False
+
+@referral_router.get("/diamond-status")
+async def get_diamond_status(current_user: dict = Depends(get_current_user)):
+    """Get user's Diamond Leader status and progress"""
+    user = await db.users.find_one({"user_id": current_user["user_id"]})
+    
+    if user.get("rank") == UserRank.DIAMOND_LEADER.value:
+        maintenance = await check_diamond_maintenance(current_user["user_id"])
+        return {
+            "is_diamond": True,
+            "rank": "diamond_leader",
+            "achieved_at": user.get("diamond_achieved_at"),
+            "maintenance_due": user.get("diamond_maintenance_due"),
+            "maintenance_status": maintenance,
+        }
+    else:
+        qualification = await check_diamond_qualification(current_user["user_id"])
+        return {
+            "is_diamond": False,
+            "rank": "regular",
+            "qualification_progress": qualification.get("progress"),
+            "qualified": qualification.get("qualified", False),
+        }
+
+@referral_router.post("/claim-diamond")
+async def claim_diamond_status(current_user: dict = Depends(get_current_user)):
+    """Claim Diamond Leader status if qualified"""
+    result = await promote_to_diamond(current_user["user_id"])
+    if not result["success"]:
+        raise HTTPException(status_code=400, detail=result["message"])
+    return result
+
+# ============== PHASE 4: REACTIONS & ORPHAN SYSTEM ==============
+
+class ReactionType(str, Enum):
+    POSITIVE = "positive"  # Golden thumbs up
+    NEGATIVE = "negative"  # Silver thumbs down
+
+@referral_router.post("/react-to-post")
+async def react_to_post(
+    post_id: str,
+    reaction_type: ReactionType,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    React to a post with golden thumbs up (positive) or silver thumbs down (negative).
+    - Positive: Both reactor and post owner get 10 BL coins
+    - Negative: Only reactor gets 10 BL coins
+    - Reactions are permanent (no unreacting)
+    - Users cannot react to their own posts
+    """
+    # Get the post
+    post = await db.posts.find_one({"post_id": post_id})
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    
+    # Check if reacting to own post
+    if post.get("user_id") == current_user["user_id"]:
+        raise HTTPException(status_code=400, detail="Cannot react to your own post")
+    
+    # Check if already reacted
+    existing_reaction = await db.post_reactions.find_one({
+        "post_id": post_id,
+        "user_id": current_user["user_id"]
+    })
+    if existing_reaction:
+        raise HTTPException(status_code=400, detail="You have already reacted to this post")
+    
+    # Record the reaction
+    reaction_id = f"reaction_{uuid.uuid4().hex[:12]}"
+    await db.post_reactions.insert_one({
+        "reaction_id": reaction_id,
+        "post_id": post_id,
+        "user_id": current_user["user_id"],
+        "post_owner_id": post["user_id"],
+        "reaction_type": reaction_type.value,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+    
+    # Update post reaction counts
+    if reaction_type == ReactionType.POSITIVE:
+        await db.posts.update_one(
+            {"post_id": post_id},
+            {"$inc": {"positive_reactions": 1}}
+        )
+    else:
+        await db.posts.update_one(
+            {"post_id": post_id},
+            {"$inc": {"negative_reactions": 1}}
+        )
+    
+    # Award BL coins
+    reactor_reward = await reward_activity(
+        user_id=current_user["user_id"],
+        activity_type="reaction_given",
+        reference_id=post_id,
+        details={"reaction_type": reaction_type.value, "post_id": post_id}
+    )
+    
+    owner_reward = None
+    if reaction_type == ReactionType.POSITIVE:
+        # Only positive reactions reward the post owner
+        owner_reward = await reward_activity(
+            user_id=post["user_id"],
+            activity_type="reaction_received",
+            reference_id=post_id,
+            details={"reactor_id": current_user["user_id"], "post_id": post_id}
+        )
+    
+    return {
+        "success": True,
+        "reaction_id": reaction_id,
+        "reaction_type": reaction_type.value,
+        "reactor_reward": reactor_reward["user_reward"],
+        "owner_reward": owner_reward["user_reward"] if owner_reward else 0,
+    }
+
+@referral_router.post("/comment-on-post")
+async def comment_on_post_reward(
+    post_id: str,
+    comment_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Award BL coins for first comment on a public post.
+    - 10 BL coins for first comment only
+    - No reward for additional comments on same post
+    - Post owner gets no reward for replying
+    """
+    # Get the post
+    post = await db.posts.find_one({"post_id": post_id})
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    
+    # Check if this is the user's first comment on this post
+    existing_comment_reward = await db.comment_rewards.find_one({
+        "post_id": post_id,
+        "user_id": current_user["user_id"]
+    })
+    
+    if existing_comment_reward:
+        return {"success": False, "message": "Already received reward for commenting on this post", "reward": 0}
+    
+    # Check if user is the post owner
+    if post.get("user_id") == current_user["user_id"]:
+        return {"success": False, "message": "Post owners don't receive rewards for replying", "reward": 0}
+    
+    # Record the reward to prevent duplicates
+    await db.comment_rewards.insert_one({
+        "post_id": post_id,
+        "user_id": current_user["user_id"],
+        "comment_id": comment_id,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+    
+    # Award BL coins
+    result = await reward_activity(
+        user_id=current_user["user_id"],
+        activity_type="first_comment",
+        reference_id=post_id,
+        details={"comment_id": comment_id}
+    )
+    
+    return {
+        "success": True,
+        "reward": result["user_reward"],
+        "l1_bonus": result.get("l1_bonus", 0),
+        "l2_bonus": result.get("l2_bonus", 0),
+    }
+
+# Enhanced orphan assignment with all 11 tiers
+async def assign_orphan_to_queue(orphan_user_id: str) -> Optional[str]:
+    """
+    Assign an orphan user to a suitable upline based on 11 priority tiers.
+    Max 2 orphans per user, one at a time.
+    """
+    recipient_id = await find_orphan_recipient()
+    
+    if not recipient_id:
+        logger.warning(f"No suitable recipient found for orphan {orphan_user_id}")
+        return None
+    
+    # Create relationship but DON'T award bonuses (as per requirements)
+    relationship = ReferralRelationship(
+        referrer_id=recipient_id,
+        referred_id=orphan_user_id,
+        level=1
+    )
+    rel_dict = relationship.model_dump()
+    rel_dict["created_at"] = rel_dict["created_at"].isoformat()
+    rel_dict["last_activity"] = rel_dict["last_activity"].isoformat()
+    rel_dict["is_orphan_assignment"] = True
+    await db.referral_relationships.insert_one(rel_dict)
+    
+    # Update orphan count for recipient
+    await db.users.update_one(
+        {"user_id": recipient_id},
+        {"$inc": {"orphans_assigned": 1, "direct_referrals": 1}}
+    )
+    
+    # Mark orphan as assigned
+    await db.users.update_one(
+        {"user_id": orphan_user_id},
+        {"$set": {
+            "referred_by": recipient_id,
+            "is_orphan_assigned": True,
+            "orphan_assigned_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    logger.info(f"Orphan {orphan_user_id} assigned to {recipient_id}")
+    return recipient_id
+
+# Automatic demotion check (should be run as scheduled task)
+async def run_diamond_maintenance_checks():
+    """
+    Check all Diamond Leaders for maintenance requirements.
+    Should be run daily via scheduled task.
+    """
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Find Diamond Leaders with due maintenance
+    diamonds_due = await db.users.find({
+        "rank": UserRank.DIAMOND_LEADER.value,
+        "diamond_maintenance_due": {"$lt": now}
+    }).to_list(1000)
+    
+    demoted_count = 0
+    maintained_count = 0
+    
+    for user in diamonds_due:
+        maintenance = await check_diamond_maintenance(user["user_id"])
+        
+        if maintenance.get("applies") and not maintenance.get("meets_requirements"):
+            # Demote
+            await demote_from_diamond(user["user_id"])
+            demoted_count += 1
+        else:
+            # Extend maintenance period
+            await db.users.update_one(
+                {"user_id": user["user_id"]},
+                {"$set": {
+                    "diamond_maintenance_due": (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+                }}
+            )
+            maintained_count += 1
+    
+    return {
+        "checked": len(diamonds_due),
+        "demoted": demoted_count,
+        "maintained": maintained_count,
+    }
+
