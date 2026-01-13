@@ -128,6 +128,28 @@ DIAMOND_REWARD_BL = 500000
 # Withdrawal
 WITHDRAWAL_FEE_RATE = 0.01  # 1%
 
+# ============== ACTIVITY REWARDS (Phase 2) ==============
+# BL coins earned for various activities
+ACTIVITY_REWARDS = {
+    "post_video": 50,
+    "post_story": 50,
+    "post_music": 40,
+    "post_photo": 30,
+    "create_event": 20,
+    "create_group": 40,
+    "create_page": 40,
+    "page_subscribe": 10,  # Both subscriber and page owner get this
+    "share_post": 10,
+    "share_ai_image": 50,
+    "share_ai_video": 50,
+    "share_ai_music": 50,
+    "marketplace_listing": 100,  # Per listing
+    "marketplace_purchase_per_usd": 1000,  # BL per USD spent
+    "reaction_given": 10,
+    "reaction_received": 10,  # Only for positive reactions
+    "first_comment": 10,  # First comment on a post
+}
+
 # Orphan assignment
 MAX_ORPHANS_PER_USER = 2
 ORPHAN_INACTIVITY_THRESHOLD_MONTHS = 6
