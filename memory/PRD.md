@@ -21,12 +21,19 @@
 - ✅ Session management (create, load, delete)
 - ✅ Role-based access control for AI assistant
 
-## Phase C - Seller & AI Features ✅ COMPLETE
+## Phase C - Seller & AI Features ✅ ENHANCED (Jan 13)
 - ✅ **AI Listing Creation** - Auto-generate listing details from photos
-- ✅ **AI Price Suggestions** - Web search-based pricing
+- ✅ **AI Weight & Dimensions Estimation** - Exact weight in lbs, dimensions in cm/in/ft
+- ✅ **Unit Conversion** - Toggle between lbs/kg/oz, in/cm/ft
+- ✅ **AI Price Suggestions** - Low/Recommended/High with one-click selection
 - ✅ **AI Background Removal** - Photo enhancement
 - ✅ **AI Image Generation** - OpenAI GPT Image 1
 - ✅ **AI Video Generation** - Sora 2 support
+- ✅ **Location Detection** - Geolocation API + manual ZIP entry
+- ✅ **Shipping Estimation** - Comprehensive cost breakdown (materials, travel, fees)
+- ✅ **Shipping Provider Selection** - USPS, UPS, FedEx with nearby locations
+- ✅ **Sold Items Dashboard** - View orders, shipping status
+- ✅ **AI Shipping Tools** - Auto-fill shipping labels
 - ✅ Seller analytics and performance tracking
 
 ## Phase B - Social Features ✅ COMPLETE
