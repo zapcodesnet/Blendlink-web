@@ -729,13 +729,74 @@ export default function PokerTournament() {
       <main className="max-w-7xl mx-auto px-4 py-4">
         {/* Waiting for players */}
         {tournament?.status === "registering" && (
-          <div className="bg-blue-600/20 border border-blue-500/30 rounded-xl p-4 mb-4 text-center">
-            <p className="text-blue-300">
-              Waiting for players... {tournament.player_count}/10 registered
-            </p>
-            <p className="text-sm text-blue-400 mt-1">
-              Tournament will start when 10 players join (or after 30s with minimum players)
-            </p>
+          <div className="bg-blue-600/20 border border-blue-500/30 rounded-xl p-4 mb-4">
+            <div className="text-center">
+              <p className="text-blue-300 text-lg font-semibold">
+                Waiting for players... {tournament.player_count}/10 registered
+              </p>
+              <p className="text-sm text-blue-400 mt-1">
+                Tournament will start when 10 players join (or after 30s with minimum players)
+              </p>
+              
+              {/* Player list in lobby */}
+              <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+                {Object.values(tournament.players || {}).map((player) => (
+                  <div key={player.user_id} className={`p-2 rounded-lg text-sm ${player.is_bot ? 'bg-purple-600/30 border border-purple-500/50' : 'bg-blue-600/30 border border-blue-500/50'}`}>
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs">
+                        {player.username?.charAt(0)?.toUpperCase() || "?"}
+                      </div>
+                      <div className="text-left">
+                        <p className="text-white text-xs font-medium truncate max-w-16">
+                          {player.username}
+                        </p>
+                        {player.is_bot && (
+                          <span className="text-[10px] text-purple-400">AI Bot</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {/* Empty seats */}
+                {Array(10 - (tournament.player_count || 0)).fill(null).map((_, i) => (
+                  <div key={`empty-${i}`} className="p-2 rounded-lg bg-gray-800/30 border border-gray-700/50 text-gray-500 text-xs text-center">
+                    Empty Seat
+                  </div>
+                ))}
+              </div>
+              
+              {/* Add bots button (only for creator) */}
+              {tournament.creator_id === user?.user_id && tournament.player_count < 10 && (
+                <div className="mt-4 flex flex-col items-center gap-2">
+                  <p className="text-sm text-gray-400">As the table creator, you can add AI bots:</p>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={() => handleAddBots(1)} 
+                      variant="outline" 
+                      size="sm"
+                      className="border-purple-500/50 text-purple-400 hover:bg-purple-600/20"
+                    >
+                      + 1 Bot
+                    </Button>
+                    <Button 
+                      onClick={() => handleAddBots(3)} 
+                      variant="outline" 
+                      size="sm"
+                      className="border-purple-500/50 text-purple-400 hover:bg-purple-600/20"
+                    >
+                      + 3 Bots
+                    </Button>
+                    <Button 
+                      onClick={() => handleAddBots(10 - tournament.player_count)} 
+                      size="sm"
+                      className="bg-purple-600 hover:bg-purple-700"
+                    >
+                      Fill with Bots ({10 - tournament.player_count})
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
