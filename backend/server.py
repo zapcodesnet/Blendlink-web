@@ -86,6 +86,7 @@ class UserCreate(BaseModel):
     name: str
     username: str
     referral_code: Optional[str] = None
+    disclaimer_accepted: bool = False
 
 class UserLogin(BaseModel):
     email: str
