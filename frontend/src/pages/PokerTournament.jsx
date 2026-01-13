@@ -138,6 +138,7 @@ const PlayerSeat = ({
         <p className={`text-xs font-semibold truncate max-w-24 ${isMe ? 'text-yellow-400' : 'text-white'}`}>
           {player.username}
           {isMe && " (You)"}
+          {player.is_bot && " 🤖"}
         </p>
         <div className="flex items-center justify-center gap-1 text-xs">
           <Coins className="w-3 h-3 text-amber-400" />
@@ -146,7 +147,12 @@ const PlayerSeat = ({
         {player.bounty > 0 && (
           <div className="flex items-center justify-center gap-1 text-xs text-green-400">
             <Crown className="w-3 h-3" />
-            <span>{player.bounty}</span>
+            <span>{player.bounty.toLocaleString()}</span>
+          </div>
+        )}
+        {player.total_bounty_bl > 0 && (
+          <div className="text-[10px] text-purple-400">
+            +{player.total_bounty_bl.toLocaleString()} BL won
           </div>
         )}
       </div>
