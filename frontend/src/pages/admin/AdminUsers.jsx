@@ -776,7 +776,7 @@ function UserDetail() {
             <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
               <p className="text-sm text-red-400">
                 <AlertTriangle className="w-4 h-4 inline mr-2" />
-                <strong>WARNING:</strong> This action is IRREVERSIBLE. The user's account will be permanently deleted and cannot be recovered.
+                <strong>WARNING:</strong> This action is IRREVERSIBLE. The user&apos;s account will be permanently deleted and cannot be recovered.
               </p>
             </div>
             <div className="p-3 bg-slate-700/50 rounded-lg">
