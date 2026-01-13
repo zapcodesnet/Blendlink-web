@@ -1844,6 +1844,14 @@ api_router.include_router(ai_collections_router)
 from page_manager import page_manager_router
 api_router.include_router(page_manager_router)
 
+# Import and include Stripe integration router
+try:
+    from stripe_integration import stripe_router
+    api_router.include_router(stripe_router)
+    logger.info("Stripe integration router loaded")
+except Exception as e:
+    logger.warning(f"Failed to load Stripe integration: {e}")
+
 # Stripe webhook endpoint (must be at app level, not api_router)
 @app.post("/api/webhook/stripe")
 async def stripe_webhook(request: Request):
