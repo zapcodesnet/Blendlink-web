@@ -469,9 +469,10 @@ class AIBotEngine:
 # ============== TOURNAMENT STATE ==============
 
 class PokerTournament:
-    def __init__(self, tournament_id: str, name: str = "PKO Tournament"):
+    def __init__(self, tournament_id: str, name: str = "PKO Tournament", creator_id: str = None):
         self.tournament_id = tournament_id
         self.name = name
+        self.creator_id = creator_id  # First player who created the table
         self.status = TournamentStatus.REGISTERING
         self.created_at = datetime.now(timezone.utc)
         self.started_at = None
@@ -482,6 +483,10 @@ class PokerTournament:
         self.eliminated_players: List[str] = []
         self.seat_order: List[int] = list(range(MAX_PLAYERS))
         secrets.SystemRandom().shuffle(self.seat_order)
+        
+        # AI Bots
+        self.bot_count = 0
+        self.used_bot_names: Set[str] = set()
         
         # Blinds
         self.blind_level = 0
@@ -510,6 +515,7 @@ class PokerTournament:
         self.min_raise = 0
         self.action_timer_task = None
         self.rebuy_phase = True  # Allow rebuys in early levels
+        self.rebuy_end_time = None  # Set when tournament starts
         
         # Prize pool
         self.total_buy_ins = 0
@@ -611,6 +617,16 @@ class PokerTournament:
             
             previous_level = level
     
+    def can_rebuy(self) -> bool:
+        """Check if rebuys are still available"""
+        if not self.rebuy_phase:
+            return False
+        if self.blind_level >= REBUY_BLIND_LEVEL:
+            return False
+        if self.rebuy_end_time and datetime.now(timezone.utc) > self.rebuy_end_time:
+            return False
+        return True
+    
     def to_dict(self, viewer_id: str = None) -> Dict:
         """Convert tournament state to dict"""
         show_cards = self.phase == GamePhase.SHOWDOWN or self.phase == GamePhase.HAND_COMPLETE
@@ -619,13 +635,17 @@ class PokerTournament:
             "tournament_id": self.tournament_id,
             "name": self.name,
             "status": self.status,
+            "creator_id": self.creator_id,
             "created_at": self.created_at.isoformat(),
             "started_at": self.started_at.isoformat() if self.started_at else None,
             
             "players": {uid: p.to_dict(show_cards, viewer_id) for uid, p in self.players.items()},
             "player_count": len(self.players),
+            "human_player_count": len([p for p in self.players.values() if not p.is_bot]),
+            "bot_count": len([p for p in self.players.values() if p.is_bot]),
             "active_player_count": len(self.get_active_players()),
             "eliminated_count": len(self.eliminated_players),
+            "max_players": MAX_PLAYERS,
             
             "blind_level": self.blind_level,
             "small_blind": self.small_blind,
@@ -650,7 +670,8 @@ class PokerTournament:
             "total_prize_pool": self.total_buy_ins,
             "total_bounties": self.total_bounties,
             
-            "rebuy_available": self.rebuy_phase and self.blind_level < 3,
+            "rebuy_available": self.can_rebuy(),
+            "rebuy_phase": self.rebuy_phase,
             
             "chat_messages": self.chat_messages[-50:],  # Last 50 messages
         }
