@@ -68,7 +68,7 @@
 - POST /api/payments/withdraw - Request withdrawal
 
 ## Admin Panel
-**URL:** https://blendlink-debugger.preview.emergentagent.com/admin/login
+**URL:** https://blendlink-social.preview.emergentagent.com/admin/login
 **Credentials:** `blendlinknet@gmail.com` / `Blend!Admin2026Link`
 
 ## All Completed Features
@@ -130,7 +130,7 @@
 - Note: OTP is logged with [DEV] prefix in backend logs
 
 ## Live URL
-https://blendlink-debugger.preview.emergentagent.com
+https://blendlink-social.preview.emergentagent.com
 
 ## Key Files Modified This Session
 - /app/frontend/src/pages/admin/AdminLogin.jsx - Fixed response handling
