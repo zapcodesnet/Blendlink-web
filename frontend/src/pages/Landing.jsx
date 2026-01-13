@@ -289,15 +289,37 @@ export default function Landing() {
         </div>
       </header>
 
+      {/* Featured Listings Carousel - TOP OF PAGE */}
+      <FeaturedListingsCarousel onViewDetails={handleViewDetails} />
+
+      {/* Super App Badge + Browse as Guest Section */}
+      <section className="py-8 px-4">
+        <div className="max-w-3xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+            <Zap className="w-4 h-4" />
+            Your All-in-One Super App
+          </div>
+          
+          {/* Browse as Guest Link */}
+          <div>
+            <Button 
+              variant="link" 
+              className="text-muted-foreground hover:text-primary"
+              onClick={() => navigate('/marketplace/guest')}
+              data-testid="browse-guest-link"
+            >
+              <ShoppingCart className="w-4 h-4 mr-2" />
+              Or browse as guest without an account
+            </Button>
+          </div>
+        </div>
+      </section>
+
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 relative">
           <div className="text-center max-w-3xl mx-auto animate-slide-up">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-              <Zap className="w-4 h-4" />
-              Your All-in-One Super App
-            </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
               Social, Shop, Play &<br />
               <span className="bl-coin-text">Earn Rewards</span>
@@ -325,25 +347,9 @@ export default function Landing() {
                 I Have an Account
               </Button>
             </div>
-            
-            {/* Browse as Guest Link */}
-            <div className="mt-6">
-              <Button 
-                variant="link" 
-                className="text-muted-foreground hover:text-primary"
-                onClick={() => navigate('/marketplace/guest')}
-                data-testid="browse-guest-link"
-              >
-                <ShoppingCart className="w-4 h-4 mr-2" />
-                Or browse as guest without an account
-              </Button>
-            </div>
           </div>
         </div>
       </section>
-      
-      {/* Featured Listings Carousel - Right after Hero */}
-      <FeaturedListingsCarousel onViewDetails={handleViewDetails} />
 
       {/* Features Grid */}
       <section className="py-20 px-4">
