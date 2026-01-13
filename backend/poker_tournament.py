@@ -696,10 +696,10 @@ class TournamentManager:
         self.tournaments: Dict[str, PokerTournament] = {}
         self.player_tournament_map: Dict[str, str] = {}  # user_id -> tournament_id
     
-    def create_tournament(self, name: str = "PKO Tournament") -> PokerTournament:
+    def create_tournament(self, name: str = "PKO Tournament", creator_id: str = None) -> PokerTournament:
         """Create a new tournament"""
         tournament_id = f"pko_{uuid.uuid4().hex[:12]}"
-        tournament = PokerTournament(tournament_id, name)
+        tournament = PokerTournament(tournament_id, name, creator_id)
         self.tournaments[tournament_id] = tournament
         return tournament
     
@@ -718,6 +718,46 @@ class TournamentManager:
         """Get tournaments accepting registrations"""
         return [t for t in self.tournaments.values() if t.status == TournamentStatus.REGISTERING]
     
+    async def add_ai_bots(self, tournament: PokerTournament, bot_count: int) -> List[PokerPlayer]:
+        """Add AI bots to fill remaining seats"""
+        if tournament.status != TournamentStatus.REGISTERING:
+            raise HTTPException(status_code=400, detail="Cannot add bots after tournament starts")
+        
+        available_seats = MAX_PLAYERS - len(tournament.players)
+        bot_count = min(bot_count, available_seats, 9)  # Max 9 bots
+        
+        bots_added = []
+        
+        for i in range(bot_count):
+            # Get unique bot name
+            available_names = [n for n in AI_BOT_NAMES if n not in tournament.used_bot_names]
+            if not available_names:
+                available_names = [f"Bot_{i+1}"]
+            
+            bot_name = secrets.choice(available_names)
+            tournament.used_bot_names.add(bot_name)
+            
+            bot_id = f"bot_{uuid.uuid4().hex[:8]}"
+            seat = tournament.get_available_seat()
+            
+            if seat is None:
+                break
+            
+            # Create bot player
+            bot = PokerPlayer(bot_id, bot_name, "", seat, is_bot=True)
+            bot.bot_personality = secrets.choice(AI_BOT_PERSONALITIES)
+            bot.bot_skill = secrets.choice(AI_BOT_SKILL_LEVELS)
+            bot.is_connected = True  # Bots are always connected
+            
+            tournament.players[bot_id] = bot
+            tournament.total_buy_ins += BUY_IN
+            tournament.total_bounties += BOUNTY_AMOUNT
+            tournament.bot_count += 1
+            
+            bots_added.append(bot)
+        
+        return bots_added
+    
     async def register_player(self, tournament: PokerTournament, user_id: str, username: str, avatar: str) -> PokerPlayer:
         """Register a player in a tournament"""
         if user_id in tournament.players:
@@ -735,9 +775,13 @@ class TournamentManager:
             raise HTTPException(status_code=400, detail="No seats available")
         
         # Create player
-        player = PokerPlayer(user_id, username, avatar, seat)
+        player = PokerPlayer(user_id, username, avatar, seat, is_bot=False)
         tournament.players[user_id] = player
         self.player_tournament_map[user_id] = tournament.tournament_id
+        
+        # Set creator if first player
+        if tournament.creator_id is None:
+            tournament.creator_id = user_id
         
         # Update prize pool
         tournament.total_buy_ins += BUY_IN
@@ -769,6 +813,7 @@ class TournamentManager:
         tournament.status = TournamentStatus.IN_PROGRESS
         tournament.started_at = datetime.now(timezone.utc)
         tournament.blind_timer_start = datetime.now(timezone.utc)
+        tournament.rebuy_end_time = datetime.now(timezone.utc) + timedelta(minutes=REBUY_MINUTES)
         
         # Assign random dealer button
         active_seats = [p.seat for p in tournament.players.values()]
