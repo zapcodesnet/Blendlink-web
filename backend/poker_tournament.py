@@ -32,6 +32,16 @@ MIN_PLAYERS = 2  # Minimum players to start (testing mode - normally 10)
 MAX_PLAYERS = 10  # Maximum players per table
 ACTION_TIMEOUT = 30  # Seconds per action
 DISCONNECT_TIMEOUT = 60  # Seconds before auto-fold on disconnect
+REBUY_MINUTES = 60  # Minutes for rebuy phase
+REBUY_BLIND_LEVEL = 5  # Rebuy until this blind level
+
+# AI Bot personalities
+AI_BOT_NAMES = [
+    "DeepStack", "PokerMind", "CardShark", "BluffMaster", "ChipKing",
+    "AceHunter", "RiverRat", "NittyGritty", "LAGgy", "TightTerry"
+]
+AI_BOT_PERSONALITIES = ["tight-aggressive", "loose-aggressive", "tight-passive", "loose-passive", "balanced"]
+AI_BOT_SKILL_LEVELS = ["medium", "hard", "expert"]
 
 # Blind levels (duration in minutes)
 BLIND_LEVELS = [
