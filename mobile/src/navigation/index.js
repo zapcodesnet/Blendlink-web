@@ -208,6 +208,9 @@ function AppStack() {
       <Stack.Screen name="Casino" component={CasinoScreen} options={{ headerShown: false }} />
       <Stack.Screen name="CasinoGame" component={CasinoGameScreen} options={{ headerShown: false }} />
       <Stack.Screen name="CasinoStats" component={CasinoStatsScreen} options={{ headerShown: false }} />
+      {/* PKO Poker Screens */}
+      <Stack.Screen name="PokerLobby" component={PokerLobbyScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="PokerTable" component={PokerTableScreen} options={{ headerShown: false, orientation: 'landscape' }} />
       <Stack.Screen name="Friends" component={FriendsScreen} options={{ title: 'Friends' }} />
       <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
       {/* Admin Screens */}
