@@ -41,12 +41,20 @@ export default function Wallet() {
     setClaiming(true);
     try {
       const result = await api.wallet.claimDaily();
-      toast.success(`Claimed ${result.coins_earned?.toLocaleString()} BL Coins!`);
+      // Handle both response formats: amount (new) and coins_earned (legacy)
+      const claimedAmount = result.amount || result.coins_earned || 0;
+      toast.success(`Claimed ${claimedAmount.toLocaleString()} BL Coins!`);
       setBalance(prev => ({ ...prev, balance: result.new_balance }));
       setUser({ ...user, bl_coins: result.new_balance });
       fetchWalletData(); // Refresh transactions
     } catch (error) {
-      toast.error(error.message || "Already claimed today");
+      // Parse error message for cooldown info
+      const errorMsg = error.message || "Already claimed today";
+      if (errorMsg.includes("not yet available") || errorMsg.includes("429")) {
+        toast.error("Daily claim not ready yet. Try again later!");
+      } else {
+        toast.error(errorMsg);
+      }
     } finally {
       setClaiming(false);
     }
@@ -89,7 +97,7 @@ export default function Wallet() {
             </div>
           </div>
           
-          {/* Daily Claim */}
+          {/* Daily Claim - Regular: 2,000 BL | Diamond: 5,000 BL */}
           <Button 
             className="w-full mt-4 bg-white/20 hover:bg-white/30 text-white"
             onClick={handleClaimDaily}
@@ -101,7 +109,7 @@ export default function Wallet() {
             ) : (
               <Gift className="w-4 h-4 mr-2" />
             )}
-            Claim Daily 10,000 BL
+            Claim Daily BL Coins
           </Button>
         </div>
 
