@@ -283,6 +283,10 @@ async def register(data: UserCreate, response: Response):
     if existing_username:
         raise HTTPException(status_code=400, detail="Username already taken")
     
+    # Check disclaimer acceptance (required for new registrations)
+    if not getattr(data, 'disclaimer_accepted', False):
+        raise HTTPException(status_code=400, detail="You must accept the disclaimer to register")
+    
     user = UserBase(
         email=data.email,
         name=data.name,
@@ -292,41 +296,47 @@ async def register(data: UserCreate, response: Response):
     user_dict = user.model_dump()
     user_dict["password_hash"] = hash_password(data.password)
     user_dict["created_at"] = user_dict["created_at"].isoformat()
+    user_dict["disclaimer_accepted"] = True
+    user_dict["disclaimer_accepted_at"] = datetime.now(timezone.utc).isoformat()
+    
+    # Initialize new referral system fields
+    user_dict["bl_coins"] = 0  # Will be added via transaction
+    user_dict["usd_balance"] = 0.0
+    user_dict["rank"] = "regular"
+    user_dict["is_diamond"] = False
+    user_dict["kyc_status"] = "not_started"
+    user_dict["direct_referrals"] = 0
+    user_dict["indirect_referrals"] = 0
+    user_dict["total_earnings_bl"] = 0
+    user_dict["total_earnings_usd"] = 0.0
+    user_dict["diamond_qualification_progress"] = {}
+    user_dict["last_activity"] = datetime.now(timezone.utc).isoformat()
     
     has_referrer = False
+    referrer_id = None
+    l2_referrer_id = None
+    
+    # Constants for sign-up bonuses
+    SIGNUP_BONUS = 50000  # BL coins for new user
+    REFERRAL_BONUS = 50000  # BL coins for referrer
+    L1_SIGNUP_RATE = 0.03  # 3% to L1 upline
+    L2_SIGNUP_RATE = 0.01  # 1% to L2 upline
     
     # Handle referral
     if data.referral_code:
         referrer = await db.users.find_one({"referral_code": data.referral_code}, {"_id": 0})
         if referrer:
             has_referrer = True
-            user_dict["referred_by"] = referrer["user_id"]
-            # Update referrer's level 1 count and give bonus
-            await db.users.update_one(
-                {"user_id": referrer["user_id"]},
-                {"$inc": {"level1_referrals": 1, "bl_coins": 50, "direct_referrals": 1}}
-            )
-            # Check for level 2 referrer
-            if referrer.get("referred_by"):
-                await db.users.update_one(
-                    {"user_id": referrer["referred_by"]},
-                    {"$inc": {"level2_referrals": 1, "bl_coins": 25}}
-                )
-            # Record transaction
-            txn = TransactionBase(
-                user_id=referrer["user_id"],
-                type="referral",
-                amount=50,
-                description=f"Level 1 referral bonus for {data.username}"
-            )
-            txn_dict = txn.model_dump()
-            txn_dict["created_at"] = txn_dict["created_at"].isoformat()
-            await db.transactions.insert_one(txn_dict)
+            referrer_id = referrer["user_id"]
+            user_dict["referred_by"] = referrer_id
             
-            # Also create referral relationship record for new commission system
+            # Get L2 referrer (referrer's upline)
+            l2_referrer_id = referrer.get("referred_by")
+            
+            # Create referral relationship record
             from referral_system import ReferralRelationship
             relationship = ReferralRelationship(
-                referrer_id=referrer["user_id"],
+                referrer_id=referrer_id,
                 referred_id=user.user_id,
                 level=1
             )
@@ -334,7 +344,20 @@ async def register(data: UserCreate, response: Response):
             rel_dict["created_at"] = rel_dict["created_at"].isoformat()
             rel_dict["last_activity"] = rel_dict["last_activity"].isoformat()
             await db.referral_relationships.insert_one(rel_dict)
+            
+            # If L2 exists, create that relationship too
+            if l2_referrer_id:
+                l2_relationship = ReferralRelationship(
+                    referrer_id=l2_referrer_id,
+                    referred_id=user.user_id,
+                    level=2
+                )
+                l2_rel_dict = l2_relationship.model_dump()
+                l2_rel_dict["created_at"] = l2_rel_dict["created_at"].isoformat()
+                l2_rel_dict["last_activity"] = l2_rel_dict["last_activity"].isoformat()
+                await db.referral_relationships.insert_one(l2_rel_dict)
     
+    # Insert user first
     await db.users.insert_one(user_dict.copy())
     
     # If no referrer was provided or found, try to assign from orphan queue
@@ -343,14 +366,85 @@ async def register(data: UserCreate, response: Response):
             from referral_system import assign_orphan_to_queue
             assigned_to = await assign_orphan_to_queue(user.user_id)
             if assigned_to:
-                user_dict["referred_by"] = assigned_to
+                referrer_id = assigned_to
                 await db.users.update_one(
                     {"user_id": user.user_id},
-                    {"$set": {"referred_by": assigned_to}}
+                    {"$set": {"referred_by": assigned_to, "is_orphan_assigned": True}}
                 )
                 logger.info(f"Orphan user {user.user_id} assigned to {assigned_to}")
+                # Note: Assigned uplines do NOT receive bonuses for orphans
         except Exception as e:
             logger.error(f"Failed to assign orphan: {e}")
+    
+    # Process bonuses using the referral system
+    bonus_details = {
+        "new_user_bonus": SIGNUP_BONUS,
+        "referrer_bonus": 0,
+        "l1_upline_bonus": 0,
+        "l2_upline_bonus": 0,
+    }
+    
+    # Give new user the sign-up bonus (always)
+    from referral_system import record_transaction, TransactionType, Currency
+    await record_transaction(
+        user_id=user.user_id,
+        transaction_type=TransactionType.SIGNUP_BONUS,
+        currency=Currency.BL,
+        amount=SIGNUP_BONUS,
+        details={"type": "new_user_signup_bonus"}
+    )
+    
+    # If has valid referrer (not orphan-assigned), give referral bonuses
+    if has_referrer and referrer_id:
+        # Referrer gets 50,000 BL coins
+        await record_transaction(
+            user_id=referrer_id,
+            transaction_type=TransactionType.REFERRAL_BONUS,
+            currency=Currency.BL,
+            amount=REFERRAL_BONUS,
+            reference_id=user.user_id,
+            details={"type": "direct_referral_bonus", "new_user": user.user_id}
+        )
+        bonus_details["referrer_bonus"] = REFERRAL_BONUS
+        
+        # Update referrer's direct_referrals count
+        await db.users.update_one(
+            {"user_id": referrer_id},
+            {"$inc": {"direct_referrals": 1}}
+        )
+        
+        # L1 upline (referrer's upline) gets 3% of 50,000 = 1,500
+        if l2_referrer_id:
+            l1_bonus = round(REFERRAL_BONUS * L1_SIGNUP_RATE)  # 1500
+            await record_transaction(
+                user_id=l2_referrer_id,
+                transaction_type=TransactionType.COMMISSION_L1,
+                currency=Currency.BL,
+                amount=l1_bonus,
+                reference_id=user.user_id,
+                details={"type": "signup_l1_commission", "new_user": user.user_id, "via_referrer": referrer_id}
+            )
+            bonus_details["l1_upline_bonus"] = l1_bonus
+            
+            # Update L1's indirect count
+            await db.users.update_one(
+                {"user_id": l2_referrer_id},
+                {"$inc": {"indirect_referrals": 1}}
+            )
+            
+            # L2 upline (referrer's upline's upline) gets 1% of 50,000 = 500
+            l2_upline = await db.users.find_one({"user_id": l2_referrer_id}, {"referred_by": 1})
+            if l2_upline and l2_upline.get("referred_by"):
+                l2_bonus = round(REFERRAL_BONUS * L2_SIGNUP_RATE)  # 500
+                await record_transaction(
+                    user_id=l2_upline["referred_by"],
+                    transaction_type=TransactionType.COMMISSION_L2,
+                    currency=Currency.BL,
+                    amount=l2_bonus,
+                    reference_id=user.user_id,
+                    details={"type": "signup_l2_commission", "new_user": user.user_id}
+                )
+                bonus_details["l2_upline_bonus"] = l2_bonus
     
     token = create_token(user.user_id)
     response.set_cookie(
@@ -363,7 +457,14 @@ async def register(data: UserCreate, response: Response):
         max_age=JWT_EXPIRY_HOURS * 3600
     )
     
-    return {"user_id": user.user_id, "email": user.email, "name": user.name, "token": token}
+    return {
+        "user_id": user.user_id, 
+        "email": user.email, 
+        "name": user.name, 
+        "token": token,
+        "bl_coins_bonus": SIGNUP_BONUS,
+        "bonus_details": bonus_details,
+    }
 
 @auth_router.post("/login")
 async def login(data: UserLogin, response: Response):
