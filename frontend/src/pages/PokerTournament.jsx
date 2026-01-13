@@ -682,6 +682,16 @@ export default function PokerTournament() {
     }
   };
 
+  // Handle adding AI bots
+  const handleAddBots = async (count) => {
+    try {
+      const response = await api.post(`/poker/tournaments/${tournament.tournament_id}/add-bots?bot_count=${count}`);
+      toast.success(`Added ${response.bots_added} AI bot(s)!`);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to add bots");
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-950 flex items-center justify-center">
