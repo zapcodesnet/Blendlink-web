@@ -1268,7 +1268,7 @@ class TournamentManager:
         await self.start_new_hand(tournament)
     
     async def check_eliminations(self, tournament: PokerTournament, winner: PokerPlayer):
-        """Check for and process player eliminations"""
+        """Check for and process player eliminations with PKO progressive bounty"""
         for player in tournament.players.values():
             if player.is_active and player.chips == 0 and not player.is_all_in:
                 # Player is eliminated
@@ -1276,23 +1276,42 @@ class TournamentManager:
                 player.elimination_position = len(tournament.get_active_players()) + 1
                 tournament.eliminated_players.append(player.user_id)
                 
-                # Award bounty to winner
+                # PKO Progressive Bounty System:
+                # - Winner gets 50% of eliminated player's bounty (immediate BL coins)
+                # - Winner's own bounty increases by the other 50%
+                bounty_award = player.bounty // 2
+                bounty_add_to_winner = player.bounty - bounty_award  # Other half
+                
                 winner.bounties_won += 1
+                winner.total_bounty_bl += bounty_award
+                winner.bounty += bounty_add_to_winner  # Progressive - add to winner's bounty
                 
                 # Add bounty to winner's BL coins wallet (platform-funded)
-                await self.add_bounty_to_wallet(winner.user_id, player.bounty)
+                if not winner.is_bot:
+                    await self.add_bounty_to_wallet(winner.user_id, bounty_award)
                 
+                # Broadcast elimination with bounty details
                 await self.broadcast_to_tournament(tournament, {
                     "type": "player_eliminated",
                     "data": {
                         "eliminated_user_id": player.user_id,
                         "eliminated_username": player.username,
+                        "eliminated_bounty": player.bounty,
                         "eliminator_user_id": winner.user_id,
                         "eliminator_username": winner.username,
-                        "bounty_awarded": player.bounty,
+                        "bounty_awarded": bounty_award,
+                        "bounty_added_to_eliminator": bounty_add_to_winner,
+                        "eliminator_new_bounty": winner.bounty,
                         "position": player.elimination_position,
+                        "remaining_players": len(tournament.get_active_players()),
                     }
                 })
+                
+                # Check if tournament should end
+                active_players = tournament.get_active_players()
+                if len(active_players) == 1:
+                    await self.end_tournament(tournament)
+                    return
     
     async def add_bounty_to_wallet(self, user_id: str, amount: int):
         """Add bounty to player's BL coins wallet"""
