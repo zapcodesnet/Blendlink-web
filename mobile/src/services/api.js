@@ -891,4 +891,93 @@ export const adminAPI = {
   },
 };
 
+// ============== POKER TOURNAMENT API ==============
+
+export const pokerAPI = {
+  // Get open tournaments
+  getTournaments: async () => {
+    const response = await api.get('/poker/tournaments');
+    return response.data;
+  },
+
+  // Get specific tournament
+  getTournament: async (tournamentId) => {
+    const response = await api.get(`/poker/tournaments/${tournamentId}`);
+    return response.data;
+  },
+
+  // Get my current tournament
+  getMyTournament: async () => {
+    const response = await api.get('/poker/my-tournament');
+    return response.data;
+  },
+
+  // Create new tournament
+  createTournament: async (name = 'PKO Tournament') => {
+    const response = await api.post('/poker/tournaments/create', { name });
+    return response.data;
+  },
+
+  // Register for tournament
+  registerForTournament: async (tournamentId) => {
+    const response = await api.post('/poker/tournaments/register', { tournament_id: tournamentId });
+    return response.data;
+  },
+
+  // Add AI bots (creator only)
+  addBots: async (tournamentId, botCount) => {
+    const response = await api.post(`/poker/tournaments/${tournamentId}/add-bots?bot_count=${botCount}`);
+    return response.data;
+  },
+
+  // Force start tournament
+  forceStart: async (tournamentId) => {
+    const response = await api.post(`/poker/tournaments/${tournamentId}/force-start`);
+    return response.data;
+  },
+
+  // Player action (fold, check, call, bet, raise, all_in)
+  playerAction: async (tournamentId, action, amount = 0) => {
+    const response = await api.post('/poker/tournaments/action', {
+      tournament_id: tournamentId,
+      action: action,
+      amount: amount,
+    });
+    return response.data;
+  },
+
+  // Rebuy
+  rebuy: async (tournamentId) => {
+    const response = await api.post('/poker/tournaments/rebuy', { tournament_id: tournamentId });
+    return response.data;
+  },
+
+  // Leave tournament
+  leaveTournament: async (tournamentId) => {
+    const response = await api.post('/poker/tournaments/leave', { tournament_id: tournamentId });
+    return response.data;
+  },
+
+  // Send chat message
+  sendChat: async (tournamentId, message) => {
+    const response = await api.post('/poker/tournaments/chat', {
+      tournament_id: tournamentId,
+      message: message,
+    });
+    return response.data;
+  },
+
+  // Get leaderboard
+  getLeaderboard: async () => {
+    const response = await api.get('/poker/leaderboard');
+    return response.data;
+  },
+
+  // Get player history
+  getHistory: async () => {
+    const response = await api.get('/poker/my-history');
+    return response.data;
+  },
+};
+
 export default api;
