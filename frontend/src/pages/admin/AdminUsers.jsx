@@ -420,6 +420,27 @@ function UserDetail() {
     }
   };
 
+  const handleDeleteUser = async () => {
+    if (!actionReason) {
+      toast.error("Please provide a reason for deletion");
+      return;
+    }
+    setActionLoading(true);
+    try {
+      await apiRequest(`/admin/users/${userId}`, { 
+        method: "DELETE",
+        body: JSON.stringify({ reason: actionReason })
+      });
+      toast.success("User deleted successfully");
+      setShowActionModal(null);
+      navigate('/admin/users');
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
