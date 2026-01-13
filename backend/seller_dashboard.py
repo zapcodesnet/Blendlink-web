@@ -213,7 +213,7 @@ async def get_current_user(request: Request):
         raise HTTPException(status_code=401, detail="Invalid token")
 
 async def analyze_images_with_ai(images: List[str], condition: str, system_prompt: str) -> Dict[str, Any]:
-    """Analyze product images using GPT-4o vision"""
+    """Analyze product images using GPT-4o vision - includes weight and dimensions estimation"""
     try:
         from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
         
@@ -266,17 +266,32 @@ Please provide a JSON response with these fields:
     "specifications": {{
         "brand": "if identifiable",
         "model": "if visible",
-        "dimensions": "estimated size",
         "material": "if identifiable",
         "color": "main color(s)",
-        "weight": "estimated",
         "sku_serial": "if visible"
+    }},
+    "weight": {{
+        "value": estimated weight as a number (e.g., 2.5),
+        "unit": "lbs",
+        "estimate_confidence": "high/medium/low"
+    }},
+    "dimensions": {{
+        "length": estimated length as a number (e.g., 10),
+        "width": estimated width as a number (e.g., 5),
+        "height": estimated height as a number (e.g., 3),
+        "unit": "in",
+        "estimate_confidence": "high/medium/low"
     }},
     "detected_condition": "new/like_new/good/fair/poor",
     "condition_details": "Detailed condition description",
     "flaws_detected": ["list of any flaws visible"],
     "features_detected": ["list of notable features"]
 }}
+
+IMPORTANT: For weight and dimensions, provide your best estimate based on:
+- Visual cues in the images (hands, common objects for scale)
+- Knowledge of similar products
+- Standard sizing for the product category
 
 Respond ONLY with valid JSON, no other text.""",
             file_contents=image_contents
@@ -296,7 +311,13 @@ Respond ONLY with valid JSON, no other text.""",
             response_text = response_text[:-3]
         
         try:
-            return json.loads(response_text.strip())
+            result = json.loads(response_text.strip())
+            # Ensure weight and dimensions exist with defaults
+            if 'weight' not in result or not result['weight']:
+                result['weight'] = {"value": 1.0, "unit": "lbs", "estimate_confidence": "low"}
+            if 'dimensions' not in result or not result['dimensions']:
+                result['dimensions'] = {"length": 6, "width": 4, "height": 2, "unit": "in", "estimate_confidence": "low"}
+            return result
         except json.JSONDecodeError as je:
             # AI didn't return valid JSON, return a default structure
             logger.warning(f"AI returned non-JSON response: {response_text[:200]}")
@@ -306,6 +327,8 @@ Respond ONLY with valid JSON, no other text.""",
                 "category": "General",
                 "suggested_tags": [],
                 "specifications": {},
+                "weight": {"value": 1.0, "unit": "lbs", "estimate_confidence": "low"},
+                "dimensions": {"length": 6, "width": 4, "height": 2, "unit": "in", "estimate_confidence": "low"},
                 "detected_condition": condition,
                 "condition_details": "Analysis pending",
                 "flaws_detected": [],
