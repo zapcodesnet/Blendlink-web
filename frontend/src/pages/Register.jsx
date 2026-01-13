@@ -5,12 +5,24 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { toast } from "sonner";
 import api from "../services/api";
-import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Gift } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Gift, AlertTriangle, CheckCircle2 } from "lucide-react";
+
+// Disclaimer text
+const DISCLAIMER_TEXT = `Blendlink involves financial risks, including potential loss of money. All activities are for entertainment and networking purposes. Users must comply with local laws. BL coins have no cash value and are not redeemable for real money.
+
+By creating an account, you acknowledge that:
+• You are at least 18 years old
+• You understand the risks involved with any financial activities on this platform
+• BL coins are virtual currency with no real-world cash value
+• You are responsible for complying with your local laws and regulations
+• Blendlink is not responsible for any losses incurred through platform activities`;
 
 export default function Register() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
   const [form, setForm] = useState({ 
     email: "", 
     password: "", 
@@ -31,6 +43,16 @@ export default function Register() {
       return;
     }
     
+    // Show disclaimer if not yet accepted
+    if (!disclaimerAccepted) {
+      setShowDisclaimer(true);
+      return;
+    }
+    
+    await submitRegistration();
+  };
+
+  const submitRegistration = async () => {
     setLoading(true);
     try {
       const response = await api.auth.register({
@@ -39,6 +61,7 @@ export default function Register() {
         name: form.name,
         username: form.username,
         referral_code: form.referral_code || undefined,
+        disclaimer_accepted: true,
       });
       
       const bonus = response.bl_coins_bonus || 50000;
@@ -51,12 +74,71 @@ export default function Register() {
     }
   };
 
+  const handleAcceptDisclaimer = () => {
+    setDisclaimerAccepted(true);
+    setShowDisclaimer(false);
+    submitRegistration();
+  };
+
   const handleGoogleSignup = () => {
+    // Show disclaimer first for Google signup too
+    if (!disclaimerAccepted) {
+      setShowDisclaimer(true);
+      return;
+    }
     api.auth.googleAuth();
   };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {/* Disclaimer Modal */}
+      {showDisclaimer && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-2xl max-w-lg w-full max-h-[90vh] overflow-hidden animate-scale-in">
+            <div className="p-6 border-b border-border">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
+                  <AlertTriangle className="w-6 h-6 text-amber-500" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold">Important Disclaimer</h2>
+                  <p className="text-sm text-muted-foreground">Please read before continuing</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6 max-h-[50vh] overflow-y-auto">
+              <div className="prose prose-sm dark:prose-invert">
+                {DISCLAIMER_TEXT.split('\n\n').map((paragraph, i) => (
+                  <p key={i} className="text-sm text-muted-foreground mb-4 whitespace-pre-line">
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+            </div>
+            
+            <div className="p-6 border-t border-border bg-muted/30 flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setShowDisclaimer(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="flex-1 bg-primary"
+                onClick={handleAcceptDisclaimer}
+                disabled={loading}
+                data-testid="accept-disclaimer-btn"
+              >
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                {loading ? "Creating..." : "I Understand & Accept"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="p-4">
         <Button 
@@ -194,6 +276,9 @@ export default function Register() {
                   data-testid="referral-input"
                 />
               </div>
+              <p className="text-xs text-muted-foreground">
+                Both you and your referrer get 50,000 BL coins bonus!
+              </p>
             </div>
 
             <Button 
@@ -216,6 +301,11 @@ export default function Register() {
           {/* Sync info */}
           <p className="text-center mt-4 text-xs text-muted-foreground">
             🔄 Your account syncs with the Blendlink mobile app
+          </p>
+          
+          {/* Disclaimer note */}
+          <p className="text-center mt-2 text-xs text-muted-foreground/60">
+            By signing up, you agree to our terms and disclaimer
           </p>
         </div>
       </div>
