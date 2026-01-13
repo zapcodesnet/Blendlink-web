@@ -1655,6 +1655,48 @@ async def get_tournament(
     
     return tournament.to_dict(viewer_id=user["user_id"])
 
+@poker_router.post("/tournaments/{tournament_id}/add-bots")
+async def add_bots_to_tournament(
+    tournament_id: str,
+    bot_count: int = Query(default=1, ge=1, le=9),
+    user: dict = Depends(get_current_user)
+):
+    """Add AI bots to fill remaining seats (only creator can do this)"""
+    tournament = tournament_manager.get_tournament(tournament_id)
+    if not tournament:
+        raise HTTPException(status_code=404, detail="Tournament not found")
+    
+    # Only creator can add bots
+    if tournament.creator_id != user["user_id"]:
+        raise HTTPException(status_code=403, detail="Only tournament creator can add bots")
+    
+    if tournament.status != TournamentStatus.REGISTERING:
+        raise HTTPException(status_code=400, detail="Cannot add bots after tournament starts")
+    
+    bots_added = await tournament_manager.add_ai_bots(tournament, bot_count)
+    
+    # Broadcast bot additions
+    for bot in bots_added:
+        await tournament_manager.broadcast_to_tournament(tournament, {
+            "type": "bot_added",
+            "data": {
+                "user_id": bot.user_id,
+                "username": bot.username,
+                "seat": bot.seat,
+                "is_bot": True,
+                "personality": bot.bot_personality,
+                "skill": bot.bot_skill,
+                "player_count": len(tournament.players),
+            }
+        })
+    
+    return {
+        "success": True,
+        "bots_added": len(bots_added),
+        "total_players": len(tournament.players),
+        "bots": [{"username": b.username, "seat": b.seat, "personality": b.bot_personality} for b in bots_added]
+    }
+
 @poker_router.post("/tournaments/action")
 async def perform_action(
     request: PlayerActionRequest,
