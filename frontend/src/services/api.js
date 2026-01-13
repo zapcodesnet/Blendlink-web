@@ -136,42 +136,19 @@ export const authAPI = {
     window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
   },
 
-  // Handle Google OAuth callback
+  // Handle Google OAuth callback - Use backend proxy to avoid CORS issues
   handleGoogleCallback: async (sessionId) => {
-    // Get user data from Emergent Auth service
-    console.log("handleGoogleCallback: Fetching session data...");
+    console.log("handleGoogleCallback: Using backend proxy for session verification...");
     
-    let googleData;
     try {
-      const response = await fetch(
-        'https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data',
-        { headers: { 'X-Session-ID': sessionId } }
-      );
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Google session fetch failed:", response.status, errorText);
-        throw new Error(`Google auth session invalid (${response.status})`);
-      }
-      
-      googleData = await response.json();
-      console.log("handleGoogleCallback: Got user data for:", googleData.email);
-    } catch (error) {
-      console.error("handleGoogleCallback: Session fetch error:", error);
-      throw new Error('Failed to verify Google session: ' + error.message);
-    }
-    
-    // Create/login user with Google data
-    try {
-      const loginResult = await apiRequest('/auth/google', {
+      // Call our backend which will verify the session with Emergent Auth service
+      // This avoids CORS issues when calling demobackend.emergentagent.com directly
+      const loginResult = await apiRequest('/auth/google-session', {
         method: 'POST',
-        body: JSON.stringify({
-          email: googleData.email,
-          name: googleData.name,
-          picture: googleData.picture,
-          google_id: googleData.id,
-        }),
+        body: JSON.stringify({ session_id: sessionId }),
       });
+      
+      console.log("handleGoogleCallback: Backend verification successful");
       
       const authToken = loginResult.token || loginResult.access_token;
       if (authToken) {
@@ -182,7 +159,7 @@ export const authAPI = {
       }
       return loginResult;
     } catch (error) {
-      console.error("handleGoogleCallback: Backend login error:", error);
+      console.error("handleGoogleCallback: Backend verification error:", error);
       throw new Error('Google authentication failed: ' + error.message);
     }
   },
