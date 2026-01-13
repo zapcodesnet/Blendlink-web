@@ -36,6 +36,9 @@ import AdminGenealogyScreen from '../screens/AdminGenealogyScreen';
 import AdminManagementScreen from '../screens/AdminManagementScreen';
 import MyTeamScreen from '../screens/MyTeamScreen';
 
+// Poker Screens
+import { PokerLobbyScreen, PokerTableScreen } from '../screens/PokerTournamentScreen';
+
 // API for notification count
 import { notificationsAPI } from '../services/api';
 
