@@ -84,6 +84,11 @@ export default function CasinoScreen() {
   }, [refreshUser]);
 
   const navigateToGame = (gameId) => {
+    // Special handling for PKO Poker (navigate to separate screen)
+    if (gameId === 'pko_poker') {
+      navigation.navigate('PokerLobby');
+      return;
+    }
     navigation.navigate('CasinoGame', { gameId });
   };
 
