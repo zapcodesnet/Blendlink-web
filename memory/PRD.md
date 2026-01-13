@@ -1,6 +1,26 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 12, 2026
+## Latest Update: January 13, 2026
+
+### PHASE A FIXES IN PROGRESS (P0 Critical)
+
+## Completed Fixes (Jan 13):
+- ✅ Fixed "Claim Daily 10,000 BL" button text (now shows correct "Claim Daily BL Coins")
+- ✅ Fixed daily claim response field mapping (`amount` field handling)
+- ✅ Improved error handling for "Failed to fetch" network errors
+- ✅ Enhanced Google OAuth callback with better debugging and error messages
+- ✅ Added robust API error handling with response cloning pattern
+
+## Pending Fixes:
+- 🔴 User reports "Failed to fetch" on production (blendlink.net) - needs deployment
+- 🔴 Google Login never worked - requires testing after deployment to production
+- 🟡 Multiple daily claim amounts issue - removed incorrect 10,000 BL display
+
+## Production vs Preview:
+- **Preview URL**: https://blendlink-social.preview.emergentagent.com ✅ WORKING
+- **Production URL**: blendlink.net - User must DEPLOY to apply fixes
+
+---
 
 ### COMPLETE: Referral, Compensation & Bonus System
 
