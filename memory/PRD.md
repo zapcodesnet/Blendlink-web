@@ -170,21 +170,38 @@
   - When you eliminate a player:
     - 50% of their bounty goes to your BL wallet immediately
     - 50% adds to your own bounty (progressive)
-- ✅ **Rebuy System** - Available for 60 minutes OR until blind level 5
+- ✅ **Rebuy System** - Available 60 minutes OR until blind level 5
 - ✅ **10-Player Single Table Tournament (STT)**
 - ✅ **Blind Structure** - 25/50 → 50/100 → 75/150 → 100/200 → 150/300+ante
 - ✅ **Prize Distribution** - 1st: 65%, 2nd: 35% + all accumulated bounties
 - ✅ **Enhanced Waiting Room** - Shows all registered players, bots with indicators
 - ✅ **Table Creator Bot Controls** - Add 1/3/Fill buttons for bots
 
-### API Endpoints Added:
+### Mobile App Sync ✅ (Jan 13):
+- ✅ **PokerTournamentScreen.js** - Full mobile poker experience
+  - Lobby screen with tournament list and creation
+  - Table screen with card display and actions
+  - WebSocket real-time sync
+  - AI bot addition controls
+  - Rebuy support
+- ✅ **pokerAPI** in api.js - All poker endpoints
+- ✅ **Navigation** - PokerLobby and PokerTable routes
+- ✅ **Casino Screen** - PKO Poker with "NEW" badge at top
+
+### API Endpoints:
 - `POST /api/poker/tournaments/{id}/add-bots` - Add AI bots (creator only)
 - `GET /api/poker/my-tournament` - Get player's current tournament
-- Enhanced `tournament.to_dict()` with bot info
+- `POST /api/poker/tournaments/action` - Player actions
+- `POST /api/poker/tournaments/rebuy` - Rebuy chips
+- WebSocket: `wss://*/api/poker/ws/{tournamentId}` - Real-time sync
 
-### Files Modified:
-- `backend/poker_tournament.py` - AI bot engine, progressive bounty, enhanced state
-- `frontend/src/pages/PokerTournament.jsx` - Bot UI indicators, add bots controls
+### Files Created/Modified:
+- `backend/poker_tournament.py` - AI bot engine, progressive bounty
+- `frontend/src/pages/PokerTournament.jsx` - Bot UI indicators
+- `mobile/src/screens/PokerTournamentScreen.js` - NEW mobile poker screens
+- `mobile/src/services/api.js` - Added pokerAPI
+- `mobile/src/navigation/index.js` - Added poker routes
+- `mobile/src/screens/CasinoScreen.js` - Added PKO Poker game
 
 ### AI Generation Suite
 - ✅ Image Generation (OpenAI GPT Image 1)
