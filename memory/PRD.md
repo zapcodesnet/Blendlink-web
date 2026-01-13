@@ -43,6 +43,25 @@
 - ✅ **Direct Messages** - One-on-one chat with media support
 - ✅ WebSocket real-time updates
 
+## Enhanced AI Listing Features (Jan 13):
+1. **5-Step Listing Flow**: Photos → Details → Price → Shipping → Publish
+2. **AI-Generated Fields**:
+   - Title, Description, Category, Condition
+   - Exact weight (lbs, kg, oz, g)
+   - Exact dimensions (L×W×H in in, cm, ft)
+   - Detected flaws for used items
+3. **Price Suggestions**: 3-tier pricing (Low/Recommended/High)
+4. **Shipping Estimation**:
+   - Packaging materials cost breakdown (box, tape, label, padding)
+   - Travel cost to drop-off
+   - Multiple providers (USPS, UPS, FedEx)
+   - Nearby drop-off locations
+5. **Post-Sale Dashboard**:
+   - View sold items
+   - Ship manually or use AI Shipping Tools
+   - Generate shipping labels
+   - Track shipments
+
 ## Awaiting Deployment:
 - ⚠️ All features working on preview environment
 - ⚠️ User must **DEPLOY** to apply fixes to blendlink.net
