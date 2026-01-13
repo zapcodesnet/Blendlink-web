@@ -43,12 +43,12 @@ export default function AuthCallback() {
         setError(errorMsg);
         
         // More specific error messages
-        if (errorMsg.includes("Failed to fetch")) {
-          toast.error("Unable to connect to server. Please check your connection.");
+        if (errorMsg.includes("Failed to fetch") || errorMsg.includes("Network") || errorMsg.includes("Unable to connect")) {
+          toast.error("Server connection failed. Please ensure the app is deployed and try again.");
         } else if (errorMsg.includes("Invalid session") || errorMsg.includes("401")) {
           toast.error("Session expired. Please try signing in again.");
         } else {
-          toast.error("Authentication failed. Please try again.");
+          toast.error("Authentication failed: " + errorMsg);
         }
         
         setTimeout(() => navigate("/login", { replace: true }), 3000);
