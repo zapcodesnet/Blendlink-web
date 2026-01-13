@@ -176,6 +176,11 @@ export default function CasinoScreen() {
                   <Text style={styles.freeBadgeText}>FREE!</Text>
                 </View>
               )}
+              {game.isNew && (
+                <View style={[styles.freeBadge, { backgroundColor: '#EF4444' }]}>
+                  <Text style={styles.freeBadgeText}>NEW!</Text>
+                </View>
+              )}
               <Text style={styles.gameIcon}>{game.icon}</Text>
               <Text style={styles.gameName}>{game.name}</Text>
               <Text style={styles.gameDesc}>{game.desc}</Text>
