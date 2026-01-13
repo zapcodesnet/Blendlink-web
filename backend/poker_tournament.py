@@ -257,7 +257,7 @@ def evaluate_five_cards(cards: List[Card]) -> tuple:
 # ============== PLAYER STATE ==============
 
 class PokerPlayer:
-    def __init__(self, user_id: str, username: str, avatar: str, seat: int):
+    def __init__(self, user_id: str, username: str, avatar: str, seat: int, is_bot: bool = False):
         self.user_id = user_id
         self.username = username
         self.avatar = avatar
@@ -266,6 +266,7 @@ class PokerPlayer:
         self.hole_cards: List[Card] = []
         self.bounty = BOUNTY_AMOUNT
         self.bounties_won = 0
+        self.total_bounty_bl = 0  # Total BL coins from bounties
         self.is_active = True
         self.is_folded = False
         self.is_all_in = False
@@ -277,6 +278,10 @@ class PokerPlayer:
         self.last_action_time = None
         self.elimination_position = None
         self.rebuys = 0
+        # AI Bot properties
+        self.is_bot = is_bot
+        self.bot_personality = None
+        self.bot_skill = None
     
     def to_dict(self, show_cards: bool = False, viewer_id: str = None):
         """Convert player to dict, optionally hiding cards"""
@@ -295,6 +300,7 @@ class PokerPlayer:
             "cards": cards,
             "bounty": self.bounty,
             "bounties_won": self.bounties_won,
+            "total_bounty_bl": self.total_bounty_bl,
             "is_active": self.is_active,
             "is_folded": self.is_folded,
             "is_all_in": self.is_all_in,
@@ -303,6 +309,7 @@ class PokerPlayer:
             "is_connected": self.is_connected,
             "last_action": self.last_action,
             "elimination_position": self.elimination_position,
+            "is_bot": self.is_bot,
         }
     
     def reset_for_hand(self):
@@ -314,6 +321,150 @@ class PokerPlayer:
         self.total_invested = 0
         self.has_acted = False
         self.last_action = None
+
+# ============== AI BOT ENGINE ==============
+
+class AIBotEngine:
+    """AI Bot decision-making engine with human-like behaviors"""
+    
+    @staticmethod
+    def calculate_hand_strength(hole_cards: List[Card], community_cards: List[Card]) -> float:
+        """Calculate relative hand strength (0-1)"""
+        all_cards = hole_cards + community_cards
+        
+        if len(community_cards) == 0:
+            # Pre-flop strength based on hole cards
+            return AIBotEngine.preflop_strength(hole_cards)
+        else:
+            # Post-flop strength
+            rank, hand_name, tiebreaker, best = evaluate_hand(all_cards)
+            # Normalize hand rank to 0-1
+            return (rank / 10) + (sum(tiebreaker[:2]) / 100 if tiebreaker else 0)
+    
+    @staticmethod
+    def preflop_strength(hole_cards: List[Card]) -> float:
+        """Calculate pre-flop hand strength"""
+        if len(hole_cards) != 2:
+            return 0.3
+        
+        c1, c2 = hole_cards
+        r1, r2 = c1.value, c2.value
+        
+        # Pairs
+        if r1 == r2:
+            return 0.5 + (r1 / 26)  # 0.5 to 0.96 for pairs
+        
+        # High cards
+        high = max(r1, r2)
+        low = min(r1, r2)
+        suited = c1.suit == c2.suit
+        
+        base = (high + low) / 26  # 0 to 1 based on card values
+        
+        # Suited bonus
+        if suited:
+            base += 0.05
+        
+        # Connected bonus
+        gap = high - low
+        if gap == 1:
+            base += 0.05
+        elif gap == 2:
+            base += 0.03
+        
+        # Premium hands
+        if high == 12:  # Ace
+            if low >= 9:  # AK, AQ, AJ, AT
+                base += 0.15
+        
+        return min(base, 0.95)
+    
+    @staticmethod
+    def decide_action(
+        player: 'PokerPlayer',
+        tournament: 'PokerTournament',
+        personality: str = "balanced",
+        skill: str = "medium"
+    ) -> tuple:
+        """Decide bot action based on hand strength, personality, and game state"""
+        
+        hand_strength = AIBotEngine.calculate_hand_strength(
+            player.hole_cards, 
+            tournament.community_cards
+        )
+        
+        pot_odds = AIBotEngine.calculate_pot_odds(
+            tournament.current_bet - player.current_bet,
+            tournament.pot
+        )
+        
+        # Personality adjustments
+        aggression = {
+            "tight-aggressive": 0.6,
+            "loose-aggressive": 0.8,
+            "tight-passive": 0.3,
+            "loose-passive": 0.5,
+            "balanced": 0.5
+        }.get(personality, 0.5)
+        
+        looseness = {
+            "tight-aggressive": 0.3,
+            "loose-aggressive": 0.7,
+            "tight-passive": 0.3,
+            "loose-passive": 0.7,
+            "balanced": 0.5
+        }.get(personality, 0.5)
+        
+        # Skill-based randomness (lower skill = more variance)
+        skill_factor = {"medium": 0.3, "hard": 0.15, "expert": 0.05}.get(skill, 0.2)
+        
+        # Add human-like randomness
+        import random
+        rand = random.random() * skill_factor
+        effective_strength = hand_strength + (rand - skill_factor/2)
+        
+        to_call = tournament.current_bet - player.current_bet
+        
+        # Decision logic
+        if to_call == 0:
+            # Can check
+            if effective_strength > 0.6 + (1 - aggression) * 0.2:
+                # Bet with strong hands
+                bet_size = int(tournament.pot * (0.5 + effective_strength * 0.5))
+                bet_size = min(bet_size, player.chips)
+                bet_size = max(bet_size, tournament.big_blind)
+                return ("bet", bet_size)
+            else:
+                return ("check", 0)
+        else:
+            # Must call, raise, or fold
+            call_threshold = looseness * 0.5 + pot_odds
+            
+            if effective_strength < call_threshold - 0.2:
+                return ("fold", 0)
+            elif effective_strength > 0.7 and random.random() < aggression:
+                # Raise with strong hands
+                raise_amount = to_call + int(tournament.pot * (0.5 + effective_strength * 0.5))
+                raise_amount = min(raise_amount, player.chips + player.current_bet)
+                return ("raise", raise_amount)
+            elif effective_strength >= call_threshold - 0.2:
+                return ("call", 0)
+            else:
+                return ("fold", 0)
+    
+    @staticmethod
+    def calculate_pot_odds(to_call: int, pot: int) -> float:
+        """Calculate pot odds (0-1)"""
+        if to_call <= 0:
+            return 1.0
+        return pot / (pot + to_call)
+    
+    @staticmethod
+    async def think_delay():
+        """Add human-like thinking delay"""
+        import random
+        delay = random.uniform(1.5, 4.0)
+        await asyncio.sleep(delay)
 
 # ============== TOURNAMENT STATE ==============
 
