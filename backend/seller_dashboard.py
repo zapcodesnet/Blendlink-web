@@ -1005,7 +1005,262 @@ async def process_refund(order_id: str, amount: Optional[float] = None, current_
         "message": "Refund has been processed. Buyer will receive funds within 3-5 business days."
     }
 
+# ============== SOLD ITEMS & SHIPPING DASHBOARD ==============
+
+@seller_router.get("/sold-items")
+async def get_sold_items(
+    status: Optional[str] = None,  # pending_shipment, shipped, delivered
+    skip: int = 0,
+    limit: int = 20,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get seller's sold items for shipping dashboard"""
+    
+    user_id = current_user["user_id"]
+    
+    query = {"seller_id": user_id}
+    if status:
+        query["shipping_status"] = status
+    
+    orders = await db.orders.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    # Enrich with listing and buyer data
+    enriched_orders = []
+    for order in orders:
+        listing = await db.listings.find_one({"listing_id": order.get("listing_id")}, {"_id": 0, "title": 1, "images": 1, "weight": 1, "dimensions": 1, "shipping_method": 1})
+        buyer = await db.users.find_one({"user_id": order.get("buyer_id")}, {"_id": 0, "name": 1, "email": 1})
+        
+        enriched_orders.append({
+            "order_id": order.get("order_id"),
+            "listing_id": order.get("listing_id"),
+            "title": listing.get("title", "Item") if listing else "Item",
+            "image": listing.get("images", [None])[0] if listing and listing.get("images") else None,
+            "price": order.get("amount", 0),
+            "buyer_name": buyer.get("name", "Buyer") if buyer else "Buyer",
+            "buyer_email": buyer.get("email", "") if buyer else "",
+            "buyer_address": order.get("shipping_address", {}),
+            "sold_at": order.get("created_at"),
+            "shipping_status": order.get("shipping_status", "pending_shipment"),
+            "shipping_method": order.get("shipping_method") or (listing.get("shipping_method") if listing else None),
+            "tracking_number": order.get("tracking_number"),
+            "weight": listing.get("weight") if listing else None,
+            "dimensions": listing.get("dimensions") if listing else None
+        })
+    
+    total = await db.orders.count_documents(query)
+    pending_count = await db.orders.count_documents({"seller_id": user_id, "shipping_status": "pending_shipment"})
+    
+    return {
+        "orders": enriched_orders,
+        "total": total,
+        "pending_shipment_count": pending_count,
+        "skip": skip,
+        "limit": limit
+    }
+
+@seller_router.post("/sold-items/{order_id}/ship")
+async def mark_item_shipped(
+    order_id: str,
+    tracking_number: str,
+    carrier: str = "USPS",
+    current_user: dict = Depends(get_current_user)
+):
+    """Mark a sold item as shipped with tracking info"""
+    
+    user_id = current_user["user_id"]
+    
+    order = await db.orders.find_one({"order_id": order_id, "seller_id": user_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    await db.orders.update_one(
+        {"order_id": order_id},
+        {
+            "$set": {
+                "shipping_status": "shipped",
+                "tracking_number": tracking_number,
+                "carrier": carrier,
+                "shipped_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    # Send notification to buyer (would use Twilio/SendGrid in production)
+    buyer = await db.users.find_one({"user_id": order.get("buyer_id")}, {"_id": 0, "name": 1, "email": 1})
+    listing = await db.listings.find_one({"listing_id": order.get("listing_id")}, {"_id": 0, "title": 1})
+    
+    # Create notification
+    await db.notifications.insert_one({
+        "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+        "user_id": order.get("buyer_id"),
+        "type": "order_shipped",
+        "title": "Your order has shipped!",
+        "message": f"Your order '{listing.get('title', 'Item')}' has been shipped via {carrier}. Tracking: {tracking_number}",
+        "data": {
+            "order_id": order_id,
+            "tracking_number": tracking_number,
+            "carrier": carrier
+        },
+        "read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {
+        "success": True,
+        "order_id": order_id,
+        "tracking_number": tracking_number,
+        "carrier": carrier,
+        "shipped_at": datetime.now(timezone.utc).isoformat(),
+        "message": f"Item marked as shipped. Buyer has been notified."
+    }
+
+@shipping_router.post("/estimate")
+async def estimate_shipping_cost(request: AIShippingRequest, current_user: dict = Depends(get_current_user)):
+    """Get comprehensive shipping estimate with provider options"""
+    
+    dimensions = request.manual_dimensions or {"length": 12, "width": 9, "height": 6}
+    weight = request.manual_weight or 2.0
+    
+    result = await estimate_shipping(
+        dimensions=dimensions,
+        weight=weight,
+        origin=request.origin_zip,
+        destination=request.destination_zip or "90210",
+        country=request.destination_country,
+        origin_location=request.origin_location
+    )
+    
+    return result
+
+@shipping_router.post("/generate-label")
+async def generate_shipping_label(
+    order_id: str,
+    carrier: str,
+    service: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Generate shipping label for an order (mock implementation)"""
+    
+    user_id = current_user["user_id"]
+    
+    order = await db.orders.find_one({"order_id": order_id, "seller_id": user_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    listing = await db.listings.find_one({"listing_id": order.get("listing_id")}, {"_id": 0})
+    
+    # Generate tracking number
+    tracking_prefixes = {"USPS": "9400", "UPS": "1Z", "FedEx": "7489"}
+    prefix = tracking_prefixes.get(carrier, "SHIP")
+    tracking_number = f"{prefix}{uuid.uuid4().hex[:16].upper()}"
+    
+    # In production, this would call the actual carrier API
+    label_data = {
+        "tracking_number": tracking_number,
+        "carrier": carrier,
+        "service": service,
+        "from": {
+            "name": current_user.get("name", "Seller"),
+            "address": "Seller Address",
+            "city": "City",
+            "state": "ST",
+            "zip": "00000"
+        },
+        "to": order.get("shipping_address", {}),
+        "weight": listing.get("weight", {"value": 1, "unit": "lbs"}) if listing else {"value": 1, "unit": "lbs"},
+        "dimensions": listing.get("dimensions", {"length": 6, "width": 4, "height": 2, "unit": "in"}) if listing else {"length": 6, "width": 4, "height": 2, "unit": "in"},
+        "label_url": f"https://api.blendlink.net/shipping/labels/{tracking_number}.pdf",  # Mock URL
+        "label_format": "PDF",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "print_instructions": "1. Click 'Print Label' button\n2. Use standard 4x6 label paper\n3. Affix label to package\n4. Drop off at nearest carrier location"
+    }
+    
+    # Update order with tracking info
+    await db.orders.update_one(
+        {"order_id": order_id},
+        {
+            "$set": {
+                "shipping_label": label_data,
+                "tracking_number": tracking_number,
+                "carrier": carrier
+            }
+        }
+    )
+    
+    return {
+        "success": True,
+        "label": label_data,
+        "message": "Shipping label generated. Click Print to print the label."
+    }
+
+@shipping_router.get("/providers/nearby")
+async def get_nearby_shipping_providers(
+    lat: float,
+    lng: float,
+    radius_miles: float = 10,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get nearby shipping provider locations"""
+    
+    # Mock data - in production would use Google Places API or provider APIs
+    providers = [
+        {
+            "provider": "USPS",
+            "name": "USPS Post Office - Main Branch",
+            "address": "123 Main Street, City, ST 00000",
+            "lat": lat + 0.005,
+            "lng": lng + 0.003,
+            "distance_miles": 0.5,
+            "hours": "Mon-Fri: 9AM-5PM, Sat: 9AM-12PM",
+            "services": ["Ground Advantage", "Priority Mail", "Priority Mail Express", "International"],
+            "phone": "(555) 123-4567"
+        },
+        {
+            "provider": "UPS",
+            "name": "The UPS Store",
+            "address": "456 Oak Avenue, City, ST 00000",
+            "lat": lat + 0.01,
+            "lng": lng - 0.005,
+            "distance_miles": 1.2,
+            "hours": "Mon-Fri: 8AM-7PM, Sat: 9AM-5PM, Sun: 10AM-4PM",
+            "services": ["Ground", "2nd Day Air", "Next Day Air", "International"],
+            "phone": "(555) 234-5678"
+        },
+        {
+            "provider": "FedEx",
+            "name": "FedEx Office Print & Ship Center",
+            "address": "789 Elm Street, City, ST 00000",
+            "lat": lat - 0.008,
+            "lng": lng + 0.012,
+            "distance_miles": 1.8,
+            "hours": "Mon-Fri: 7AM-9PM, Sat-Sun: 9AM-6PM",
+            "services": ["Ground", "Express Saver", "2Day", "Priority Overnight", "International"],
+            "phone": "(555) 345-6789"
+        },
+        {
+            "provider": "USPS",
+            "name": "USPS Collection Box",
+            "address": "Corner of Main St & 2nd Ave",
+            "lat": lat + 0.002,
+            "lng": lng + 0.001,
+            "distance_miles": 0.2,
+            "hours": "Pickup: 10AM & 4PM daily",
+            "services": ["Ground Advantage", "Priority Mail (with proper postage)"],
+            "phone": None
+        }
+    ]
+    
+    # Filter by radius and sort by distance
+    filtered = [p for p in providers if p["distance_miles"] <= radius_miles]
+    filtered.sort(key=lambda x: x["distance_miles"])
+    
+    return {
+        "providers": filtered,
+        "search_location": {"lat": lat, "lng": lng},
+        "radius_miles": radius_miles
+    }
+
 # ============== EXPORT ROUTERS ==============
 
 def get_seller_routers():
-    return [seller_router, ai_tools_router]
+    return [seller_router, ai_tools_router, shipping_router]
