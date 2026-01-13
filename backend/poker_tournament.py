@@ -1505,12 +1505,16 @@ class TournamentManager:
     
     async def handle_rebuy(self, tournament: PokerTournament, user_id: str):
         """Handle rebuy request"""
-        if not tournament.rebuy_phase:
-            raise HTTPException(status_code=400, detail="Rebuys no longer available")
+        # Check if rebuys are still available
+        if not tournament.can_rebuy():
+            raise HTTPException(status_code=400, detail="Rebuys no longer available (60 minutes elapsed or blind level 5+ reached)")
         
         player = tournament.players.get(user_id)
         if not player:
             raise HTTPException(status_code=400, detail="Player not in tournament")
+        
+        if player.is_bot:
+            raise HTTPException(status_code=400, detail="Bots cannot rebuy")
         
         if player.is_active and player.chips > 0:
             raise HTTPException(status_code=400, detail="Cannot rebuy with chips remaining")
@@ -1528,11 +1532,16 @@ class TournamentManager:
             {"$inc": {"bl_coins": -BUY_IN}}
         )
         
-        # Add chips
+        # Add chips and reset bounty
         player.chips = STARTING_CHIPS
         player.is_active = True
         player.rebuys += 1
+        player.bounty = BOUNTY_AMOUNT  # Reset bounty on rebuy
         tournament.total_buy_ins += BUY_IN
+        
+        # Remove from eliminated list if present
+        if user_id in tournament.eliminated_players:
+            tournament.eliminated_players.remove(user_id)
         
         await self.broadcast_to_tournament(tournament, {
             "type": "player_rebuy",
@@ -1540,10 +1549,12 @@ class TournamentManager:
                 "user_id": user_id,
                 "username": player.username,
                 "new_chips": STARTING_CHIPS,
+                "new_bounty": BOUNTY_AMOUNT,
+                "prize_pool": tournament.total_buy_ins,
             }
         })
         
-        return {"success": True, "chips": player.chips}
+        return {"success": True, "chips": player.chips, "bounty": player.bounty}
 
 # Global tournament manager
 tournament_manager = TournamentManager()
