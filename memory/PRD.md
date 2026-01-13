@@ -206,7 +206,6 @@
 - Web/Mobile app sync issues
 
 ### P2 - In Progress Features
-- PKO Poker Tournament (core game logic needed)
 - Social Messaging with Group Chat
 
 ### P3 - Future
