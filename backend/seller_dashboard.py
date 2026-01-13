@@ -407,22 +407,38 @@ Be realistic with prices based on current market conditions. Respond ONLY with v
             "pricing_advice": "Unable to fetch prices. Please research manually."
         }
 
-async def estimate_shipping(dimensions: Dict[str, float], weight: float, origin: str, destination: str, country: str) -> List[Dict[str, Any]]:
-    """Estimate shipping costs - mock data with realistic rates"""
+async def estimate_shipping(dimensions: Dict[str, float], weight: float, origin: str, destination: str, country: str, origin_location: Optional[Dict[str, float]] = None) -> Dict[str, Any]:
+    """Estimate shipping costs with comprehensive breakdown including packaging materials"""
     
-    # Calculate dimensional weight
-    dim_weight = (dimensions.get('length', 12) * dimensions.get('width', 12) * dimensions.get('height', 12)) / 139
+    # Calculate dimensional weight (DIM factor is 139 for domestic, 166 for international)
+    dim_factor = 139 if country == "US" else 166
+    dim_weight = (dimensions.get('length', 12) * dimensions.get('width', 12) * dimensions.get('height', 12)) / dim_factor
     billable_weight = max(weight, dim_weight)
     
-    # Mock shipping providers with realistic rate calculation
+    # Packaging materials cost estimation
+    box_size = "small" if billable_weight < 2 else "medium" if billable_weight < 10 else "large"
+    packaging_costs = {
+        "small": {"box": 0.75, "tape": 0.25, "label": 0.10, "padding": 0.50, "total": 1.60},
+        "medium": {"box": 1.50, "tape": 0.35, "label": 0.10, "padding": 1.00, "total": 2.95},
+        "large": {"box": 2.50, "tape": 0.50, "label": 0.15, "padding": 1.50, "total": 4.65}
+    }
+    packaging = packaging_costs[box_size]
+    
+    # Estimated travel cost to drop-off (assuming average of 3 miles round trip)
+    travel_cost = 1.50  # Base estimate for gas/time
+    
+    # Shipping providers with realistic rate calculation
     base_rates = {
-        "USPS Ground Advantage": {"base": 4.50, "per_lb": 0.50, "days": "3-5"},
-        "USPS Priority Mail": {"base": 8.00, "per_lb": 0.75, "days": "1-3"},
-        "UPS Ground": {"base": 9.00, "per_lb": 0.85, "days": "3-5"},
-        "UPS 2nd Day Air": {"base": 18.00, "per_lb": 1.50, "days": "2"},
-        "FedEx Ground": {"base": 8.50, "per_lb": 0.80, "days": "3-5"},
-        "FedEx Express Saver": {"base": 15.00, "per_lb": 1.25, "days": "3"},
-        "DHL Express": {"base": 25.00, "per_lb": 2.00, "days": "1-2"},
+        "USPS Ground Advantage": {"base": 4.50, "per_lb": 0.50, "days": "3-5", "provider": "USPS"},
+        "USPS Priority Mail": {"base": 8.00, "per_lb": 0.75, "days": "1-3", "provider": "USPS"},
+        "USPS Priority Mail Express": {"base": 26.00, "per_lb": 1.20, "days": "1-2", "provider": "USPS"},
+        "UPS Ground": {"base": 9.00, "per_lb": 0.85, "days": "3-5", "provider": "UPS"},
+        "UPS 2nd Day Air": {"base": 18.00, "per_lb": 1.50, "days": "2", "provider": "UPS"},
+        "UPS Next Day Air": {"base": 35.00, "per_lb": 2.50, "days": "1", "provider": "UPS"},
+        "FedEx Ground": {"base": 8.50, "per_lb": 0.80, "days": "3-5", "provider": "FedEx"},
+        "FedEx Express Saver": {"base": 15.00, "per_lb": 1.25, "days": "3", "provider": "FedEx"},
+        "FedEx 2Day": {"base": 20.00, "per_lb": 1.75, "days": "2", "provider": "FedEx"},
+        "FedEx Priority Overnight": {"base": 40.00, "per_lb": 3.00, "days": "1", "provider": "FedEx"},
     }
     
     # International surcharge
@@ -430,27 +446,63 @@ async def estimate_shipping(dimensions: Dict[str, float], weight: float, origin:
     int_multiplier = 2.5 if international else 1.0
     
     shipping_options = []
-    for provider, rates in base_rates.items():
+    for service_name, rates in base_rates.items():
         # Skip some domestic options for international
-        if international and provider in ["USPS Ground Advantage", "UPS Ground", "FedEx Ground"]:
+        if international and "Ground" in service_name:
             continue
             
-        cost = (rates["base"] + (billable_weight * rates["per_lb"])) * int_multiplier
+        base_cost = (rates["base"] + (billable_weight * rates["per_lb"])) * int_multiplier
+        total_cost = base_cost + packaging["total"] + travel_cost
         
         shipping_options.append({
-            "provider": provider,
-            "service": provider,
-            "estimated_cost": round(cost, 2),
+            "provider": rates["provider"],
+            "service": service_name,
+            "base_shipping_cost": round(base_cost, 2),
+            "packaging_cost": round(packaging["total"], 2),
+            "travel_cost": round(travel_cost, 2),
+            "total_estimated_cost": round(total_cost, 2),
             "delivery_days": rates["days"] + (" international" if international else ""),
             "tracking_included": True,
             "insurance_available": True,
-            "pickup_available": provider not in ["USPS Ground Advantage", "USPS Priority Mail"]
+            "pickup_available": "USPS" not in service_name,
+            "cost_breakdown": {
+                "shipping_fee": round(base_cost, 2),
+                "box": packaging["box"],
+                "tape": packaging["tape"],
+                "label": packaging["label"],
+                "padding": packaging["padding"],
+                "travel": travel_cost
+            }
         })
     
-    # Sort by cost
-    shipping_options.sort(key=lambda x: x["estimated_cost"])
+    # Sort by total cost
+    shipping_options.sort(key=lambda x: x["total_estimated_cost"])
     
-    return shipping_options
+    # Generate nearby provider locations (mock data with realistic distances)
+    provider_locations = []
+    if origin_location:
+        # Mock nearby locations based on common providers
+        provider_locations = [
+            {"provider": "USPS", "name": "USPS Post Office", "address": "123 Main St", "distance_miles": 0.5, "services": ["Ground Advantage", "Priority Mail", "Express"]},
+            {"provider": "UPS", "name": "UPS Store", "address": "456 Oak Ave", "distance_miles": 1.2, "services": ["Ground", "2nd Day Air", "Next Day Air"]},
+            {"provider": "FedEx", "name": "FedEx Office", "address": "789 Elm St", "distance_miles": 1.8, "services": ["Ground", "Express Saver", "2Day", "Priority Overnight"]},
+            {"provider": "USPS", "name": "USPS Collection Box", "address": "Corner of Main & 2nd", "distance_miles": 0.2, "services": ["Ground Advantage", "Priority Mail"]},
+        ]
+        # Sort by distance
+        provider_locations.sort(key=lambda x: x["distance_miles"])
+    
+    return {
+        "billable_weight": round(billable_weight, 2),
+        "dimensional_weight": round(dim_weight, 2),
+        "actual_weight": round(weight, 2),
+        "box_size_recommended": box_size,
+        "packaging_materials_cost": round(packaging["total"], 2),
+        "travel_cost_estimate": round(travel_cost, 2),
+        "shipping_options": shipping_options,
+        "provider_locations": provider_locations,
+        "recommended_provider": shipping_options[0]["service"] if shipping_options else None,
+        "packaging_advice": f"Use a {box_size} box. Include padding material to protect the item. Print shipping label clearly."
+    }
 
 # ============== AI TOOLS ENDPOINTS ==============
 
