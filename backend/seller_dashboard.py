@@ -1,11 +1,12 @@
 """
 Blendlink AI-Powered Seller Dashboard
 Features:
-- AI Auto-Generate Listing Details from Photos
+- AI Auto-Generate Listing Details from Photos (with weight/dimensions)
 - AI Price Suggestions via Web Search
 - AI Photo Background Removal & Enhancement
-- AI Shipping Assistance
+- AI Shipping Estimation & Provider Selection
 - Seller Analytics & Performance Tracking
+- Post-Sale Dashboard & Shipping Tools
 - Returns & Refunds Management
 """
 
@@ -17,7 +18,7 @@ import logging
 from datetime import datetime, timezone, timedelta
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Header
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
 from jose import jwt, JWTError
@@ -29,6 +30,7 @@ logger = logging.getLogger(__name__)
 # Initialize routers
 seller_router = APIRouter(prefix="/seller", tags=["Seller Dashboard"])
 ai_tools_router = APIRouter(prefix="/ai-tools", tags=["AI Tools"])
+shipping_router = APIRouter(prefix="/shipping", tags=["Shipping"])
 
 # Database connection - No fallbacks for production safety
 MONGO_URL = os.environ.get('MONGO_URL')
@@ -53,7 +55,7 @@ EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY', '')
 
 class AIListingRequest(BaseModel):
     images: List[str]  # Base64 encoded images
-    condition: str = "new"  # "new" or "used"
+    condition: str = "new"  # "new", "like_new", "used", "fair", "poor"
     target_countries: List[str] = ["US"]
     category_hint: Optional[str] = None
 
@@ -67,6 +69,9 @@ class AIListingResponse(BaseModel):
     condition_details: str
     flaws_detected: List[str]
     features_detected: List[str]
+    # New fields for weight and dimensions
+    weight: Dict[str, Any]  # {"value": 2.5, "unit": "lbs"}
+    dimensions: Dict[str, Any]  # {"length": 10, "width": 5, "height": 3, "unit": "in"}
 
 class AIPriceRequest(BaseModel):
     title: str
@@ -93,7 +98,8 @@ class AIShippingRequest(BaseModel):
     manual_dimensions: Optional[Dict[str, float]] = None  # length, width, height in inches
     manual_weight: Optional[float] = None  # in lbs
     origin_zip: str
-    destination_zip: str
+    origin_location: Optional[Dict[str, float]] = None  # {"lat": x, "lng": y}
+    destination_zip: Optional[str] = None
     destination_country: str = "US"
 
 class AIShippingResponse(BaseModel):
@@ -102,6 +108,49 @@ class AIShippingResponse(BaseModel):
     shipping_options: List[Dict[str, Any]]
     recommended_provider: str
     packaging_advice: str
+    packaging_materials_cost: float
+    total_estimated_cost: float
+
+class ShippingProviderLocation(BaseModel):
+    provider: str
+    name: str
+    address: str
+    distance_miles: float
+    estimated_fee: float
+    services: List[str]
+
+class CreateListingRequest(BaseModel):
+    title: str
+    description: str
+    price: float
+    category: str
+    condition: str
+    images: List[str]
+    tags: List[str] = []
+    location: str = ""
+    weight: Optional[Dict[str, Any]] = None
+    dimensions: Optional[Dict[str, Any]] = None
+    shipping_method: Optional[Dict[str, Any]] = None
+    
+    @validator('price')
+    def price_must_be_positive(cls, v):
+        if v <= 0:
+            raise ValueError('Price must be positive')
+        return round(v, 2)
+    
+    @validator('weight')
+    def weight_must_be_valid(cls, v):
+        if v and v.get('value', 0) <= 0:
+            raise ValueError('Weight must be positive')
+        return v
+    
+    @validator('dimensions')
+    def dimensions_must_be_valid(cls, v):
+        if v:
+            for key in ['length', 'width', 'height']:
+                if v.get(key, 0) <= 0:
+                    raise ValueError(f'{key} must be positive')
+        return v
 
 class SellerStats(BaseModel):
     total_listings: int
@@ -124,6 +173,18 @@ class ListingPerformance(BaseModel):
     status: str
     performance_score: float
     ai_recommendations: List[str]
+
+class SoldItemDashboard(BaseModel):
+    order_id: str
+    listing_id: str
+    title: str
+    price: float
+    buyer_name: str
+    buyer_address: Dict[str, str]
+    sold_at: str
+    status: str  # pending_shipment, shipped, delivered
+    shipping_method: Optional[Dict[str, Any]] = None
+    tracking_number: Optional[str] = None
 
 # ============== HELPER FUNCTIONS ==============
 
