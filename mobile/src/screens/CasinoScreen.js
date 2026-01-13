@@ -38,6 +38,7 @@ const COLORS = {
 
 // Game configurations
 const GAMES = [
+  { id: 'pko_poker', name: 'PKO Poker', icon: '🃏', gradient: ['#8B5CF6', '#6366F1'], desc: 'Tournament!', isNew: true, route: 'PokerLobby' },
   { id: 'daily', name: 'Daily Spin', icon: '🎁', gradient: ['#EAB308', '#D97706'], desc: 'FREE spin every day!' },
   { id: 'slots', name: 'Slots', icon: '🎰', gradient: ['#9333EA', '#EC4899'], desc: 'Win up to 500x!' },
   { id: 'blackjack', name: 'Blackjack', icon: '🃏', gradient: ['#16A34A', '#059669'], desc: 'Beat the dealer' },
