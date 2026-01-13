@@ -21,7 +21,7 @@ export const getStoredUser = () => {
 export const setStoredUser = (user) => localStorage.setItem(USER_KEY, JSON.stringify(user));
 export const removeStoredUser = () => localStorage.removeItem(USER_KEY);
 
-// API request helper
+// API request helper with robust error handling
 const apiRequest = async (endpoint, options = {}) => {
   const token = getToken();
   const headers = {
@@ -33,25 +33,45 @@ const apiRequest = async (endpoint, options = {}) => {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${API_PREFIX}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  try {
+    const response = await fetch(`${API_BASE_URL}${API_PREFIX}${endpoint}`, {
+      ...options,
+      headers,
+    });
 
-  if (response.status === 401) {
-    removeToken();
-    removeStoredUser();
-    window.location.href = '/login';
-    throw new Error('Unauthorized');
+    if (response.status === 401) {
+      removeToken();
+      removeStoredUser();
+      window.location.href = '/login';
+      throw new Error('Unauthorized');
+    }
+
+    // Clone response to safely read it
+    const responseClone = response.clone();
+    let data;
+    
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      // If JSON parsing fails, try to get text
+      const text = await responseClone.text();
+      throw new Error(text || 'Invalid server response');
+    }
+    
+    if (!response.ok) {
+      // Handle error detail from FastAPI
+      const errorMessage = data.detail?.message || data.detail || data.message || 'Request failed';
+      throw new Error(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
+    }
+
+    return data;
+  } catch (error) {
+    // Handle network errors
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      throw new Error('Failed to fetch - Unable to connect to server');
+    }
+    throw error;
   }
-
-  const data = await response.json();
-  
-  if (!response.ok) {
-    throw new Error(data.detail || data.message || 'Request failed');
-  }
-
-  return data;
 };
 
 // ============== AUTH API ==============
