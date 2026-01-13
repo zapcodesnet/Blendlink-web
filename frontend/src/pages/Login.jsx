@@ -26,7 +26,15 @@ export default function Login() {
       toast.success("Welcome back!");
       navigate("/feed");
     } catch (error) {
-      toast.error(error.message || "Login failed");
+      // Handle network errors specifically
+      const errorMsg = error.message || "Login failed";
+      if (errorMsg.includes("Failed to fetch") || errorMsg.includes("Network")) {
+        toast.error("Unable to connect to server. Please check your internet connection and try again.");
+      } else if (errorMsg.includes("Invalid credentials") || errorMsg.includes("401")) {
+        toast.error("Invalid email or password. Please try again.");
+      } else {
+        toast.error(errorMsg);
+      }
     } finally {
       setLoading(false);
     }
