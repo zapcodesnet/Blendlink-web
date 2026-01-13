@@ -139,14 +139,29 @@ export const authAPI = {
   // Handle Google OAuth callback
   handleGoogleCallback: async (sessionId) => {
     // Get user data from Emergent Auth service
-    const response = await fetch(
-      'https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data',
-      { headers: { 'X-Session-ID': sessionId } }
-    );
-    if (!response.ok) throw new Error('Google auth failed');
-    const googleData = await response.json();
+    console.log("handleGoogleCallback: Fetching session data...");
     
-    // Try to login with Google email first
+    let googleData;
+    try {
+      const response = await fetch(
+        'https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data',
+        { headers: { 'X-Session-ID': sessionId } }
+      );
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Google session fetch failed:", response.status, errorText);
+        throw new Error(`Google auth session invalid (${response.status})`);
+      }
+      
+      googleData = await response.json();
+      console.log("handleGoogleCallback: Got user data for:", googleData.email);
+    } catch (error) {
+      console.error("handleGoogleCallback: Session fetch error:", error);
+      throw new Error('Failed to verify Google session: ' + error.message);
+    }
+    
+    // Create/login user with Google data
     try {
       const loginResult = await apiRequest('/auth/google', {
         method: 'POST',
@@ -167,6 +182,7 @@ export const authAPI = {
       }
       return loginResult;
     } catch (error) {
+      console.error("handleGoogleCallback: Backend login error:", error);
       throw new Error('Google authentication failed: ' + error.message);
     }
   },
