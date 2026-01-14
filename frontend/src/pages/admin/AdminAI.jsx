@@ -58,11 +58,7 @@ export default function AdminAI() {
 
   const checkStatus = async () => {
     try {
-      const token = localStorage.getItem('blendlink_token');
-      const response = await fetch(`${API_BASE}/api/ai-assistant/status`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
+      const data = await safeFetch(`${API_BASE}/api/ai-assistant/status`);
       setAiStatus(data);
     } catch (error) {
       setAiStatus({ available: false });
@@ -71,11 +67,7 @@ export default function AdminAI() {
 
   const loadSessions = async () => {
     try {
-      const token = localStorage.getItem('blendlink_token');
-      const response = await fetch(`${API_BASE}/api/ai-assistant/sessions`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
+      const data = await safeFetch(`${API_BASE}/api/ai-assistant/sessions`);
       setSessions(data.sessions || []);
     } catch (error) {
       console.error("Failed to load sessions");
@@ -84,11 +76,7 @@ export default function AdminAI() {
 
   const loadSession = async (sessionId) => {
     try {
-      const token = localStorage.getItem('blendlink_token');
-      const response = await fetch(`${API_BASE}/api/ai-assistant/sessions/${sessionId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
+      const data = await safeFetch(`${API_BASE}/api/ai-assistant/sessions/${sessionId}`);
       setCurrentSession(sessionId);
       setMessages(data.messages || []);
     } catch (error) {
@@ -113,25 +101,13 @@ export default function AdminAI() {
     }]);
 
     try {
-      const token = localStorage.getItem('blendlink_token');
-      const response = await fetch(`${API_BASE}/api/ai-assistant/chat`, {
+      const data = await safeFetch(`${API_BASE}/api/ai-assistant/chat`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify({
           session_id: currentSession,
           message: userMessage
         })
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || 'Failed to send message');
-      }
-
-      const data = await response.json();
       
       if (!currentSession) {
         setCurrentSession(data.session_id);
@@ -162,10 +138,8 @@ export default function AdminAI() {
 
   const deleteSession = async (sessionId) => {
     try {
-      const token = localStorage.getItem('blendlink_token');
-      await fetch(`${API_BASE}/api/ai-assistant/sessions/${sessionId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+      await safeFetch(`${API_BASE}/api/ai-assistant/sessions/${sessionId}`, {
+        method: 'DELETE'
       });
       setSessions(prev => prev.filter(s => s.session_id !== sessionId));
       if (currentSession === sessionId) {
@@ -180,16 +154,10 @@ export default function AdminAI() {
   const quickAction = async (action, context) => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('blendlink_token');
-      const response = await fetch(`${API_BASE}/api/ai-assistant/quick-action`, {
+      const data = await safeFetch(`${API_BASE}/api/ai-assistant/quick-action`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify({ action, context })
       });
-      const data = await response.json();
       
       // Add to current chat
       setMessages(prev => [
