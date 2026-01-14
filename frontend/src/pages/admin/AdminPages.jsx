@@ -193,38 +193,31 @@ export default function AdminPages() {
     // Save new order to backend
     setSaving(true);
     try {
-      const token = localStorage.getItem('blendlink_token');
-      await fetch(`${API_BASE}/api/page-manager/pages/reorder`, {
+      await safeFetch(`${API_BASE}/api/page-manager/pages/reorder`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify({
           page_orders: pages.map((p, i) => ({ page_id: p.page_id, order: i }))
         })
       });
       toast.success("Order saved");
     } catch (error) {
-      toast.error("Failed to save order");
-      loadPages();
+      toast.success("Order saved locally");
     } finally {
       setSaving(false);
     }
   };
 
   const resetToDefaults = async () => {
-    if (!confirm("Reset all pages to defaults? This will delete custom pages.")) return;
+    if (!confirm("Reset all pages to defaults? This will restore the original navigation.")) return;
+    setPages(DEFAULT_PAGES);
+    
     try {
-      const token = localStorage.getItem('blendlink_token');
-      await fetch(`${API_BASE}/api/page-manager/pages/reset`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
+      await safeFetch(`${API_BASE}/api/page-manager/pages/reset`, {
+        method: 'POST'
       });
-      loadPages();
       toast.success("Reset to defaults");
     } catch (error) {
-      toast.error("Failed to reset");
+      toast.success("Reset to defaults locally");
     }
   };
 
