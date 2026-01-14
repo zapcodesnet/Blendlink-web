@@ -1765,6 +1765,61 @@ async def get_my_tournament(user: dict = Depends(get_current_user)):
         "tournament": tournament.to_dict(viewer_id=user["user_id"])
     }
 
+@poker_router.post("/tournaments/leave")
+async def leave_tournament(user: dict = Depends(get_current_user)):
+    """Leave a tournament (only works during waiting/registering phase)"""
+    tournament = tournament_manager.get_player_tournament(user["user_id"])
+    if not tournament:
+        raise HTTPException(status_code=404, detail="Not in any tournament")
+    
+    # Can only leave during registration/waiting phase
+    if tournament.status not in [TournamentStatus.REGISTERING]:
+        raise HTTPException(
+            status_code=400, 
+            detail="Cannot leave tournament after it has started. You can fold and wait for elimination."
+        )
+    
+    player = tournament.players.get(user["user_id"])
+    if not player:
+        raise HTTPException(status_code=404, detail="Player not found in tournament")
+    
+    # Remove player from tournament
+    del tournament.players[user["user_id"]]
+    
+    # Remove from player mapping
+    if user["user_id"] in tournament_manager.player_tournament_map:
+        del tournament_manager.player_tournament_map[user["user_id"]]
+    
+    # Refund buy-in
+    await db.users.update_one(
+        {"user_id": user["user_id"]},
+        {"$inc": {"bl_coins": BUY_IN}}
+    )
+    
+    # Update prize pool
+    tournament.total_buy_ins -= BUY_IN
+    tournament.total_bounties -= BOUNTY_AMOUNT
+    
+    # Broadcast player left
+    await tournament_manager.broadcast_to_tournament(tournament, {
+        "type": "player_left",
+        "data": {
+            "user_id": user["user_id"],
+            "username": player.username,
+            "player_count": len(tournament.players),
+        }
+    })
+    
+    # If tournament is empty or creator left, cancel it
+    if len(tournament.players) == 0:
+        tournament.status = TournamentStatus.CANCELLED
+    
+    return {
+        "success": True,
+        "message": "Left tournament successfully. Buy-in refunded.",
+        "refund": BUY_IN
+    }
+
 @poker_router.post("/tournaments/{tournament_id}/force-start")
 async def force_start_tournament(
     tournament_id: str,
