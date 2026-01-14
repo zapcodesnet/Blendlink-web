@@ -7,7 +7,8 @@ import {
   Shield, Users, Palette, Layout, GitBranch, Bot, 
   Settings, FileText, BarChart3, LogOut, Menu, X,
   ChevronRight, Home, Bell, Search, ZoomIn, ZoomOut,
-  RotateCcw, Maximize2, FlaskConical, Wallet, Lock
+  RotateCcw, Maximize2, FlaskConical, Wallet, Lock,
+  Crown, UserPlus
 } from "lucide-react";
 
 // Import admin components
