@@ -26,14 +26,14 @@ class TestAdminAuthentication:
             "password": ADMIN_PASSWORD
         })
         print(f"Admin login step1 response: {response.status_code}")
-        # Should return 200 with session_token for OTP step
+        # Should return 200 with token for admin access
         # or 401 if credentials are wrong
         assert response.status_code in [200, 401, 429], f"Unexpected status: {response.status_code}"
         if response.status_code == 200:
             data = response.json()
-            assert "session_token" in data or "error" in data
+            assert "token" in data or "session_token" in data or "error" in data
             print(f"Admin login step1 success: {data.keys()}")
-            return data.get("session_token")
+            return data.get("token") or data.get("session_token")
         return None
     
     def test_admin_login_invalid_credentials(self):
