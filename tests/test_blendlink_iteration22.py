@@ -114,12 +114,12 @@ class TestAdminDiamondLeadersAPI:
         return None
     
     def test_get_diamond_leaders(self, admin_token):
-        """Test GET /api/admin/diamonds - list diamond leaders"""
+        """Test GET /api/admin/diamond-leaders - list diamond leaders"""
         headers = {}
         if admin_token:
             headers["Authorization"] = f"Bearer {admin_token}"
         
-        response = requests.get(f"{BASE_URL}/api/admin/diamonds", headers=headers)
+        response = requests.get(f"{BASE_URL}/api/admin/diamond-leaders", headers=headers)
         print(f"Get diamond leaders response: {response.status_code}")
         assert response.status_code in [200, 401, 403]
         if response.status_code == 200:
@@ -127,22 +127,22 @@ class TestAdminDiamondLeadersAPI:
             print(f"Diamond leaders data keys: {data.keys()}")
     
     def test_get_diamond_candidates(self, admin_token):
-        """Test GET /api/admin/diamonds/candidates"""
+        """Test GET /api/admin/diamond-leaders/candidates"""
         headers = {}
         if admin_token:
             headers["Authorization"] = f"Bearer {admin_token}"
         
-        response = requests.get(f"{BASE_URL}/api/admin/diamonds/candidates", headers=headers)
+        response = requests.get(f"{BASE_URL}/api/admin/diamond-leaders/candidates", headers=headers)
         print(f"Diamond candidates response: {response.status_code}")
         assert response.status_code in [200, 401, 403]
     
     def test_get_diamond_stats(self, admin_token):
-        """Test GET /api/admin/diamonds/stats"""
+        """Test GET /api/admin/diamond-leaders/stats"""
         headers = {}
         if admin_token:
             headers["Authorization"] = f"Bearer {admin_token}"
         
-        response = requests.get(f"{BASE_URL}/api/admin/diamonds/stats", headers=headers)
+        response = requests.get(f"{BASE_URL}/api/admin/diamond-leaders/stats", headers=headers)
         print(f"Diamond stats response: {response.status_code}")
         assert response.status_code in [200, 401, 403]
 
