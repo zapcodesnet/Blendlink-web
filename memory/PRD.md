@@ -224,25 +224,32 @@
 
 ## Remaining Issues (P1-P3)
 
-### P1 - High Priority
-- Daily BL coin claim inconsistency (multiple endpoints exist)
-- Google Login not working end-to-end
-- Web/Mobile app sync issues
+### P1 - High Priority (from user request Jan 14)
+- ⏳ Fix broken Admin Panel features (Push Notifications, Theme Management, Edit/Create Page)
+- ⏳ Relocate Daily BL Claim to Wallet page (dynamic: 2,000 regular / 5,000 Diamond)
+- ⏳ Implement real-time Wallet earnings feeds
 
 ### P2 - In Progress Features
-- Social Messaging with Group Chat
+- ⏳ Orphan Monitoring System with manual assignment
+- ⏳ Diamond Leader promotion/demotion/performance monitoring
+- ⏳ Update all referral/commission/bonus structures to new rates
+- ⏳ Implement new binary reaction system (golden/silver thumbs)
 
 ### P3 - Future
-- Advanced media features (looping thumbnails, watermarks)
-- App Store submission preparation
+- ⏳ Manual code editor & UI editing tools in Admin Panel
+- ⏳ Fix AI-generated listings through full lifecycle
+- ⏳ Advanced media features (looping thumbnails, watermarks)
+- ⏳ App Store submission preparation
 
 ## Test Credentials
-- Admin: blendlinknet@gmail.com / link2026blend!
+- Admin: blendlinknet@gmail.com / Blend!Admin2026Link
+- Regular User: test@example.com / Test123!
 - Note: OTP is logged with [DEV] prefix in backend logs
 
 ## Live URL
 https://realtime-social-11.preview.emergentagent.com
 
-## Key Files Modified This Session
-- /app/frontend/src/pages/admin/AdminLogin.jsx - Fixed response handling
-- /app/backend/seller_dashboard.py - Fixed ImageContent usage for AI tools
+## Key Files Modified This Session (Jan 14)
+- /app/frontend/src/pages/admin/AdminGenealogy.jsx - Added safeFetch to fix body stream errors
+- /app/frontend/src/pages/admin/AdminAI.jsx - Added safeFetch to fix body stream errors
+- /app/backend/poker_tournament.py - Added leave tournament endpoint
