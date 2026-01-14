@@ -933,6 +933,17 @@ export function PokerLobby() {
 
   // If player is in a tournament, redirect
   if (myTournament) {
+    const handleLeaveTournament = async () => {
+      try {
+        await api.post("/poker/tournaments/leave");
+        toast.success("Left tournament. Buy-in refunded!");
+        setMyTournament(null);
+        loadData();
+      } catch (error) {
+        toast.error(error.response?.data?.detail || "Failed to leave tournament");
+      }
+    };
+
     return (
       <div className="min-h-screen bg-gray-950">
         <header className="glass sticky top-0 z-40 border-b border-border/50">
@@ -949,9 +960,26 @@ export function PokerLobby() {
             <p className="text-gray-400 mb-4">
               {myTournament.name} - {myTournament.status}
             </p>
-            <Button onClick={() => navigate(`/poker/${myTournament.tournament_id}`)} size="lg">
-              Return to Table
-            </Button>
+            <div className="flex justify-center gap-3">
+              <Button onClick={() => navigate(`/poker/${myTournament.tournament_id}`)} size="lg">
+                Return to Table
+              </Button>
+              {myTournament.status === "registering" && (
+                <Button 
+                  onClick={handleLeaveTournament} 
+                  variant="outline" 
+                  size="lg"
+                  className="border-red-500/50 text-red-400 hover:bg-red-600/20"
+                >
+                  Leave & Refund
+                </Button>
+              )}
+            </div>
+            {myTournament.status !== "registering" && (
+              <p className="text-sm text-gray-500 mt-3">
+                Tournament in progress. You can fold and wait for elimination to leave.
+              </p>
+            )}
           </div>
         </main>
       </div>
