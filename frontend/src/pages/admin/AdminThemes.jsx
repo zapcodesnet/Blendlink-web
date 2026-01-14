@@ -521,34 +521,3 @@ export default function AdminThemes() {
     </div>
   );
 }
-                    <div
-                      key={key}
-                      className="w-5 h-5 rounded-full border border-white/20"
-                      style={{ backgroundColor: theme.colors?.[key] }}
-                    />
-                  ))}
-                </div>
-                <div className="bg-slate-800 p-3">
-                  <h3 className="font-semibold text-white flex items-center gap-2">
-                    {theme.category === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-                    {theme.name}
-                    {isActive && <Check className="w-4 h-4 text-green-400" />}
-                  </h3>
-                  <p className="text-xs text-slate-400 capitalize mb-2">{theme.category}</p>
-                  <Button
-                    size="sm"
-                    className={`w-full ${isActive ? 'bg-green-600' : 'bg-blue-600 hover:bg-blue-700'}`}
-                    onClick={() => !isActive && activateTheme(theme.theme_id)}
-                    disabled={isActive || activating === theme.theme_id}
-                  >
-                    {activating === theme.theme_id ? 'Activating...' : isActive ? 'Active' : 'Activate'}
-                  </Button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
