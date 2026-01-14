@@ -349,6 +349,8 @@ export default function AdminLayout() {
   const menuItems = [
     { icon: Home, label: 'Dashboard', path: '/admin' },
     { icon: Users, label: 'Users', path: '/admin/users' },
+    { icon: Crown, label: 'Diamond Leaders', path: '/admin/diamonds' },
+    { icon: UserPlus, label: 'Orphans', path: '/admin/orphans' },
     { icon: Shield, label: 'Admins', path: '/admin/admins' },
     { icon: Lock, label: 'Security', path: '/admin/security' },
     { icon: Wallet, label: 'Withdrawals', path: '/admin/withdrawals' },
