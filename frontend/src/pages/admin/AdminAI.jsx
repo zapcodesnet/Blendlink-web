@@ -8,6 +8,36 @@ import {
 
 const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
 
+// Safe fetch helper to avoid "body stream already read" errors
+const safeFetch = async (url, options = {}) => {
+  const token = localStorage.getItem('blendlink_token');
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  const response = await fetch(url, { ...options, headers });
+  
+  // Read body as text first to avoid body stream errors
+  const rawText = await response.text();
+  
+  let data = {};
+  try {
+    data = rawText ? JSON.parse(rawText) : {};
+  } catch (e) {
+    console.error('JSON parse error:', e);
+  }
+  
+  if (!response.ok) {
+    throw new Error(data.detail || 'Request failed');
+  }
+  
+  return data;
+};
+
 export default function AdminAI() {
   const [sessions, setSessions] = useState([]);
   const [currentSession, setCurrentSession] = useState(null);

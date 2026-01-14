@@ -13,6 +13,36 @@ import {
 
 const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
 
+// Safe fetch helper to avoid "body stream already read" errors
+const safeFetch = async (url, options = {}) => {
+  const token = localStorage.getItem('blendlink_token');
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  const response = await fetch(url, { ...options, headers });
+  
+  // Read body as text first to avoid body stream errors
+  const rawText = await response.text();
+  
+  let data = {};
+  try {
+    data = rawText ? JSON.parse(rawText) : {};
+  } catch (e) {
+    console.error('JSON parse error:', e);
+  }
+  
+  if (!response.ok) {
+    throw new Error(data.detail || 'Request failed');
+  }
+  
+  return data;
+};
+
 // TreeNode component moved outside to prevent re-creation on every render
 function TreeNode({ node, depth = 0, isExpanded = true, selectedUser, onSelectUser, onReassign }) {
   const [expanded, setExpanded] = useState(isExpanded && depth < 2);
@@ -132,11 +162,7 @@ export default function AdminGenealogy() {
 
   const loadOrphans = async () => {
     try {
-      const token = localStorage.getItem('blendlink_token');
-      const response = await fetch(`${API_BASE}/api/admin/genealogy/orphans`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
+      const data = await safeFetch(`${API_BASE}/api/admin/genealogy/orphans`);
       setOrphans(data.orphans || []);
     } catch (error) {
       console.error("Failed to load orphans:", error);
