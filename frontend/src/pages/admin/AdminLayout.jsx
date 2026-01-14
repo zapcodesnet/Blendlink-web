@@ -25,6 +25,8 @@ import AdminABTesting from "./AdminABTesting";
 import AdminWithdrawals from "./AdminWithdrawals";
 import AdminNotificationSettings from "./AdminNotificationSettings";
 import AdminSecurityDashboard from "./AdminSecurityDashboard";
+import AdminOrphans from "./AdminOrphans";
+import AdminDiamondLeaders from "./AdminDiamondLeaders";
 
 // Import real-time components
 import { useAdminWebSocket } from "../../hooks/useAdminWebSocket";
