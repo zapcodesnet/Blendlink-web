@@ -1,6 +1,13 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 13, 2026
+## Latest Update: January 14, 2026
+
+### P0 CRITICAL BUGS FIXED ✅ (Jan 14)
+
+## Bug Fixes (Jan 14):
+- ✅ **Fixed "body stream already read" errors** - Applied safeFetch pattern to AdminGenealogy.jsx and AdminAI.jsx
+- ✅ **Fixed PKO Poker tournament flow** - Added leave tournament endpoint with buy-in refund
+- ✅ **Improved error messages** - Tournament creation now shows specific backend errors
 
 ### ALL PHASES COMPLETE ✅
 
