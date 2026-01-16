@@ -955,7 +955,7 @@ export function PokerLobby() {
     );
   }
 
-  // If player is in a tournament, redirect
+  // If player is in a tournament, show options
   if (myTournament) {
     const handleLeaveTournament = async () => {
       try {
@@ -964,7 +964,15 @@ export function PokerLobby() {
         setMyTournament(null);
         loadData();
       } catch (error) {
-        toast.error(error.response?.data?.detail || "Failed to leave tournament");
+        // If normal leave fails, try force leave
+        try {
+          await api.post("/poker/tournaments/force-leave");
+          toast.success("Force left tournament. Buy-in refunded!");
+          setMyTournament(null);
+          loadData();
+        } catch (forceError) {
+          toast.error(forceError.response?.data?.detail || "Failed to leave tournament");
+        }
       }
     };
 
@@ -981,27 +989,35 @@ export function PokerLobby() {
           <div className="bg-green-600/20 border border-green-500/30 rounded-xl p-8">
             <Trophy className="w-16 h-16 text-green-400 mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2">You're in a Tournament!</h2>
-            <p className="text-gray-400 mb-4">
-              {myTournament.name} - {myTournament.status}
+            <p className="text-gray-400 mb-2">
+              {myTournament.name} - <span className="capitalize">{myTournament.status}</span>
             </p>
-            <div className="flex justify-center gap-3">
-              <Button onClick={() => navigate(`/poker/${myTournament.tournament_id}`)} size="lg">
+            <p className="text-sm text-gray-500 mb-4">
+              Players: {myTournament.player_count}/{myTournament.max_players} | 
+              Pot: {myTournament.total_prize_pool?.toLocaleString() || 0} BL
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center gap-3">
+              <Button 
+                onClick={() => navigate(`/poker/${myTournament.tournament_id}`)} 
+                size="lg"
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <Play className="w-4 h-4 mr-2" />
                 Return to Table
               </Button>
-              {myTournament.status === "registering" && (
-                <Button 
-                  onClick={handleLeaveTournament} 
-                  variant="outline" 
-                  size="lg"
-                  className="border-red-500/50 text-red-400 hover:bg-red-600/20"
-                >
-                  Leave & Refund
-                </Button>
-              )}
+              <Button 
+                onClick={handleLeaveTournament} 
+                variant="outline" 
+                size="lg"
+                className="border-red-500/50 text-red-400 hover:bg-red-600/20"
+              >
+                <X className="w-4 h-4 mr-2" />
+                Leave & Refund ({BUY_IN} BL)
+              </Button>
             </div>
-            {myTournament.status !== "registering" && (
-              <p className="text-sm text-gray-500 mt-3">
-                Tournament in progress. You can fold and wait for elimination to leave.
+            {myTournament.status === "in_progress" && (
+              <p className="text-sm text-amber-400 mt-3">
+                ⚠️ Tournament in progress. Leaving will forfeit your position.
               </p>
             )}
           </div>
