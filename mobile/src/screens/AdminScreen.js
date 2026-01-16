@@ -109,6 +109,7 @@ export default function AdminScreen({ navigation }) {
     );
   }
 
+  // Menu items matching web admin panel for 100% sync
   const menuItems = [
     {
       id: 'dashboard',
@@ -127,11 +128,19 @@ export default function AdminScreen({ navigation }) {
       permission: 'users',
     },
     {
-      id: 'withdrawals',
-      title: 'Withdrawals',
-      icon: '💸',
-      description: 'KYC & payouts',
-      screen: 'AdminWithdrawals',
+      id: 'diamonds',
+      title: 'Diamond Leaders',
+      icon: '💎',
+      description: 'Manage diamond status',
+      screen: 'AdminDiamondLeaders',
+      permission: 'users',
+    },
+    {
+      id: 'orphans',
+      title: 'Orphans',
+      icon: '👶',
+      description: 'Orphan monitoring',
+      screen: 'AdminOrphans',
       permission: 'users',
     },
     {
@@ -143,12 +152,76 @@ export default function AdminScreen({ navigation }) {
       permission: 'admins',
     },
     {
+      id: 'security',
+      title: 'Security',
+      icon: '🔒',
+      description: 'Security dashboard',
+      screen: 'AdminSecurity',
+      permission: 'admins',
+    },
+    {
+      id: 'withdrawals',
+      title: 'Withdrawals',
+      icon: '💸',
+      description: 'KYC & payouts',
+      screen: 'AdminWithdrawals',
+      permission: 'users',
+    },
+    {
+      id: 'notifications',
+      title: 'Notifications',
+      icon: '🔔',
+      description: 'Notification settings',
+      screen: 'AdminNotifications',
+      permission: 'settings',
+    },
+    {
+      id: 'themes',
+      title: 'Themes',
+      icon: '🎨',
+      description: 'UI theme management',
+      screen: 'AdminThemes',
+      permission: 'settings',
+    },
+    {
+      id: 'ui_editor',
+      title: 'UI Editor',
+      icon: '✏️',
+      description: 'Edit UI components',
+      screen: 'AdminUIEditor',
+      permission: 'settings',
+    },
+    {
+      id: 'pages',
+      title: 'Pages',
+      icon: '📄',
+      description: 'Manage pages',
+      screen: 'AdminPages',
+      permission: 'settings',
+    },
+    {
       id: 'genealogy',
       title: 'Genealogy',
       icon: '🌳',
       description: 'Referral network tree',
       screen: 'AdminGenealogy',
       permission: 'users',
+    },
+    {
+      id: 'ai_assistant',
+      title: 'AI Assistant',
+      icon: '🤖',
+      description: 'AI tools & insights',
+      screen: 'AdminAI',
+      permission: 'analytics',
+    },
+    {
+      id: 'audit',
+      title: 'Audit Logs',
+      icon: '📋',
+      description: 'Activity history',
+      screen: 'AdminAudit',
+      permission: 'audit',
     },
     {
       id: 'analytics',
@@ -165,14 +238,6 @@ export default function AdminScreen({ navigation }) {
       description: 'Experiments & splits',
       screen: 'AdminABTesting',
       permission: 'ab_testing',
-    },
-    {
-      id: 'audit',
-      title: 'Audit Logs',
-      icon: '📋',
-      description: 'Activity history',
-      screen: 'AdminAudit',
-      permission: 'audit',
     },
     {
       id: 'settings',
