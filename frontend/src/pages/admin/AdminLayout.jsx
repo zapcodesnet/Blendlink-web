@@ -28,6 +28,7 @@ import AdminNotificationSettings from "./AdminNotificationSettings";
 import AdminSecurityDashboard from "./AdminSecurityDashboard";
 import AdminOrphans from "./AdminOrphans";
 import AdminDiamondLeaders from "./AdminDiamondLeaders";
+import AdminUIEditor from "./AdminUIEditor";
 
 // Import real-time components
 import { useAdminWebSocket } from "../../hooks/useAdminWebSocket";
