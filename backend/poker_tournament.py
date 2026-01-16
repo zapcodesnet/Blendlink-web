@@ -1157,7 +1157,13 @@ class TournamentManager:
         )
         
         await self.broadcast_game_state(tournament)
-        await self.start_action_timer(tournament)
+        
+        # Check if first player is a bot
+        first_player = tournament.get_player_by_seat(tournament.current_player_seat)
+        if first_player and first_player.is_bot:
+            await self.handle_bot_turn(tournament, first_player)
+        else:
+            await self.start_action_timer(tournament)
     
     async def run_out_board(self, tournament: PokerTournament):
         """Deal remaining community cards when all players are all-in"""
