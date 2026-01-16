@@ -1867,12 +1867,15 @@ async def create_tournament(
     user: dict = Depends(get_current_user)
 ):
     """Create a new tournament"""
+    # Initialize manager if needed
+    await tournament_manager.initialize()
+    
     # Check if user is already in a tournament
-    existing = tournament_manager.get_player_tournament(user["user_id"])
+    existing = await tournament_manager.get_player_tournament(user["user_id"])
     if existing:
         raise HTTPException(status_code=400, detail="Already in a tournament")
     
-    tournament = tournament_manager.create_tournament(request.name)
+    tournament = await tournament_manager.create_tournament(request.name, user["user_id"])
     return {
         "tournament_id": tournament.tournament_id,
         "name": tournament.name,
