@@ -652,6 +652,11 @@ export const adminAPI = {
     return response.data;
   },
 
+  deleteUser: async (userId) => {
+    const response = await api.delete(`/admin/users/${userId}`);
+    return response.data;
+  },
+
   // Legacy endpoint for backward compatibility
   getUsers: async (skip = 0, limit = 50, status = null, search = null) => {
     const params = { skip, limit };
@@ -662,6 +667,68 @@ export const adminAPI = {
 
   updateUserStatus: async (userId, action) => {
     const response = await api.put(`/admin-system/users/${userId}/status`, { action });
+    return response.data;
+  },
+
+  // ============== ORPHAN MANAGEMENT ==============
+  getOrphansAdmin: async () => {
+    const response = await api.get('/admin/orphans');
+    return response.data;
+  },
+
+  getOrphanStats: async () => {
+    const response = await api.get('/admin/orphans/stats');
+    return response.data;
+  },
+
+  getPotentialParents: async () => {
+    const response = await api.get('/admin/orphans/potential-parents');
+    return response.data;
+  },
+
+  autoAssignOrphan: async (orphanId) => {
+    const response = await api.post('/admin/orphans/auto-assign', { orphan_id: orphanId });
+    return response.data;
+  },
+
+  manualAssignOrphan: async (orphanId, parentId) => {
+    const response = await api.post('/admin/orphans/assign', { orphan_id: orphanId, parent_id: parentId });
+    return response.data;
+  },
+
+  // ============== DIAMOND LEADER MANAGEMENT ==============
+  getDiamondLeaders: async () => {
+    const response = await api.get('/admin/diamond-leaders');
+    return response.data;
+  },
+
+  getDiamondCandidates: async () => {
+    const response = await api.get('/admin/diamond-leaders/candidates');
+    return response.data;
+  },
+
+  getPendingDemotions: async () => {
+    const response = await api.get('/admin/diamond-leaders/pending-demotions');
+    return response.data;
+  },
+
+  getDiamondStats: async () => {
+    const response = await api.get('/admin/diamond-leaders/stats');
+    return response.data;
+  },
+
+  promoteToDiamond: async (userId) => {
+    const response = await api.post('/admin/diamond-leaders/promote', { user_id: userId });
+    return response.data;
+  },
+
+  demoteDiamond: async (userId) => {
+    const response = await api.post('/admin/diamond-leaders/demote', { user_id: userId });
+    return response.data;
+  },
+
+  extendMaintenance: async (userId, days = 30) => {
+    const response = await api.post('/admin/diamond-leaders/extend-maintenance', { user_id: userId, days });
     return response.data;
   },
 
