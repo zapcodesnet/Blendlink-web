@@ -913,8 +913,14 @@ class TournamentManager:
         # Broadcast hand start
         await self.broadcast_game_state(tournament)
         
-        # Start action timer
-        await self.start_action_timer(tournament)
+        # Check if first player is a bot
+        first_player = tournament.get_player_by_seat(tournament.current_player_seat)
+        if first_player and first_player.is_bot:
+            # Bot plays first - handle bot turn
+            await self.handle_bot_turn(tournament, first_player)
+        else:
+            # Human player - start action timer
+            await self.start_action_timer(tournament)
     
     async def check_blind_level(self, tournament: PokerTournament):
         """Check and update blind level if needed"""
