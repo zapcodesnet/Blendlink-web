@@ -261,7 +261,9 @@ class TestPokerTournamentIteration27:
         
         data = start_response.json()
         assert data.get("success") == True, "Force start not successful"
-        assert data.get("status") == "in_progress", f"Expected status 'in_progress', got {data.get('status')}"
+        # Status may be in root or in tournament object
+        status = data.get("status") or data.get("tournament", {}).get("status")
+        assert status == "in_progress", f"Expected status 'in_progress', got {status}"
         
         print(f"✓ Tournament force started: {tournament_id}")
         
