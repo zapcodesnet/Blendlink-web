@@ -1098,24 +1098,29 @@ class TournamentManager:
     
     async def handle_bot_turn(self, tournament: PokerTournament, bot: PokerPlayer):
         """Handle AI bot's turn with human-like thinking delay"""
-        # Add thinking delay
-        await AIBotEngine.think_delay()
-        
-        # Get bot's decision
-        action, amount = AIBotEngine.decide_action(
-            bot, 
-            tournament,
-            bot.bot_personality or "balanced",
-            bot.bot_skill or "medium"
-        )
-        
-        # Process the action
         try:
+            # Add thinking delay (shorter for faster gameplay)
+            await AIBotEngine.think_delay()
+            
+            # Get bot's decision
+            action, amount = AIBotEngine.decide_action(
+                bot, 
+                tournament,
+                bot.bot_personality or "balanced",
+                bot.bot_skill or "medium"
+            )
+            
+            logger.info(f"Bot {bot.username} decides: {action} {amount}")
+            
+            # Process the action
             await self.process_action(tournament, bot.user_id, action, amount)
         except Exception as e:
             # If action fails, default to fold
-            logger.error(f"Bot action failed: {e}")
-            await self.process_action(tournament, bot.user_id, "fold", 0)
+            logger.error(f"Bot {bot.username} action failed: {e}")
+            try:
+                await self.process_action(tournament, bot.user_id, "fold", 0)
+            except Exception as e2:
+                logger.error(f"Bot {bot.username} fold also failed: {e2}")
     
     async def advance_phase(self, tournament: PokerTournament):
         """Advance to next betting phase"""
