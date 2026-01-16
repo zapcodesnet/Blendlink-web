@@ -692,7 +692,7 @@ export default function PokerTournament() {
   const handleAddBots = async (count) => {
     try {
       const response = await api.post(`/poker/tournaments/${tournament.tournament_id}/add-bots?bot_count=${count}`);
-      toast.success(`Added ${response.bots_added} AI bot(s)!`);
+      toast.success(`Added ${response.data.bots_added} AI bot(s)!`);
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to add bots");
     }
