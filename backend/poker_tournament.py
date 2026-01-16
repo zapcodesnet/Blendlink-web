@@ -1840,6 +1840,39 @@ async def leave_tournament(user: dict = Depends(get_current_user)):
         "refund": BUY_IN
     }
 
+@poker_router.post("/tournaments/force-leave")
+async def force_leave_tournament(user: dict = Depends(get_current_user)):
+    """Force leave a tournament (for testing - works even during in-progress games)"""
+    tournament = tournament_manager.get_player_tournament(user["user_id"])
+    if not tournament:
+        raise HTTPException(status_code=404, detail="Not in any tournament")
+    
+    player = tournament.players.get(user["user_id"])
+    if not player:
+        raise HTTPException(status_code=404, detail="Player not found in tournament")
+    
+    # Mark player as eliminated/inactive
+    player.is_active = False
+    player.is_folded = True
+    player.elimination_position = len(tournament.get_active_players()) + 1
+    tournament.eliminated_players.append(user["user_id"])
+    
+    # Remove from player mapping
+    if user["user_id"] in tournament_manager.player_tournament_map:
+        del tournament_manager.player_tournament_map[user["user_id"]]
+    
+    # Refund buy-in for testing
+    await db.users.update_one(
+        {"user_id": user["user_id"]},
+        {"$inc": {"bl_coins": BUY_IN}}
+    )
+    
+    return {
+        "success": True,
+        "message": "Force left tournament. Buy-in refunded for testing.",
+        "refund": BUY_IN
+    }
+
 @poker_router.post("/tournaments/{tournament_id}/force-start")
 async def force_start_tournament(
     tournament_id: str,
