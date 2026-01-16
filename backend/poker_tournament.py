@@ -1003,6 +1003,9 @@ class TournamentManager:
             
             bots_added.append(bot)
         
+        # Save to MongoDB
+        await self.save_tournament(tournament)
+        
         return bots_added
     
     async def register_player(self, tournament: PokerTournament, user_id: str, username: str, avatar: str) -> PokerPlayer:
@@ -1026,6 +1029,9 @@ class TournamentManager:
         tournament.players[user_id] = player
         self.player_tournament_map[user_id] = tournament.tournament_id
         
+        # Save player mapping to MongoDB
+        await self.save_player_map(user_id, tournament.tournament_id)
+        
         # Set creator if first player
         if tournament.creator_id is None:
             tournament.creator_id = user_id
@@ -1033,6 +1039,9 @@ class TournamentManager:
         # Update prize pool
         tournament.total_buy_ins += BUY_IN
         tournament.total_bounties += BOUNTY_AMOUNT
+        
+        # Save tournament to MongoDB
+        await self.save_tournament(tournament)
         
         # Check if tournament should start
         if len(tournament.players) >= MIN_PLAYERS:
@@ -1065,6 +1074,9 @@ class TournamentManager:
         # Assign random dealer button
         active_seats = [p.seat for p in tournament.players.values()]
         tournament.dealer_seat = secrets.choice(active_seats)
+        
+        # Save to MongoDB
+        await self.save_tournament(tournament)
         
         # Broadcast start
         await self.broadcast_to_tournament(tournament, {
