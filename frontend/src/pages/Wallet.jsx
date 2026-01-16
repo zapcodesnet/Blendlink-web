@@ -6,9 +6,12 @@ import { Button } from "../components/ui/button";
 import { 
   Coins, TrendingUp, ArrowUpRight, ArrowDownRight, 
   Gift, Gamepad2, Trophy, Share2, ChevronRight, RefreshCw,
-  Users, DollarSign, Crown, Sparkles, Clock, Eye, EyeOff
+  Users, DollarSign, Crown, Sparkles, Clock, Eye, EyeOff,
+  Wifi, WifiOff
 } from "lucide-react";
 import { toast } from "sonner";
+
+const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
 
 export default function Wallet() {
   const { user, setUser } = useContext(AuthContext);
@@ -31,10 +34,129 @@ export default function Wallet() {
   const [newTeamEarning, setNewTeamEarning] = useState(null);
   const [newPersonalEarning, setNewPersonalEarning] = useState(null);
   const [activeTab, setActiveTab] = useState('team'); // 'team' or 'personal'
+  
+  // WebSocket state
+  const [wsConnected, setWsConnected] = useState(false);
+  const wsRef = useRef(null);
+  const reconnectTimeoutRef = useRef(null);
 
   // Refs for infinite scroll
   const teamFeedRef = useRef(null);
   const personalFeedRef = useRef(null);
+
+  // WebSocket connection for real-time earnings
+  useEffect(() => {
+    if (!user?.user_id) return;
+    
+    const connectWebSocket = () => {
+      const token = localStorage.getItem('blendlink_token');
+      if (!token) return;
+      
+      // Construct WebSocket URL
+      const wsUrl = API_BASE.replace('https://', 'wss://').replace('http://', 'ws://');
+      const wsEndpoint = `${wsUrl}/api/referral/ws/earnings/${user.user_id}?token=${token}`;
+      
+      console.log('Connecting to wallet WebSocket...');
+      
+      try {
+        wsRef.current = new WebSocket(wsEndpoint);
+        
+        wsRef.current.onopen = () => {
+          console.log('Wallet WebSocket connected');
+          setWsConnected(true);
+        };
+        
+        wsRef.current.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            console.log('Wallet WS message:', data.type);
+            
+            if (data.type === 'connected') {
+              // Initial connection confirmed
+              toast.success('Real-time notifications active', { duration: 2000 });
+            } else if (data.type === 'balance_update') {
+              // Update balances in real-time
+              setBalance(prev => ({
+                ...prev,
+                balance: data.bl_balance,
+                usd_balance: data.usd_balance
+              }));
+              setUser(prev => ({ ...prev, bl_coins: data.bl_balance }));
+            } else if (data.type === 'new_earning') {
+              // New earning notification
+              const earning = data.data;
+              toast.success(
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-yellow-400" />
+                  <span>
+                    +{earning.amount?.toLocaleString()} {earning.currency || 'BL'}
+                    <span className="text-sm opacity-70 ml-1">({earning.description || earning.type})</span>
+                  </span>
+                </div>,
+                { duration: 5000 }
+              );
+              
+              // Add to appropriate feed
+              if (earning.type?.includes('commission')) {
+                setNewTeamEarning(earning);
+                fetchTeamEarnings(0); // Refresh team earnings
+                setTimeout(() => setNewTeamEarning(null), 3000);
+              } else {
+                setNewPersonalEarning(earning);
+                fetchPersonalEarnings(0); // Refresh personal earnings
+                setTimeout(() => setNewPersonalEarning(null), 3000);
+              }
+              
+              // Also refresh wallet data
+              fetchWalletData();
+            }
+          } catch (e) {
+            console.error('WebSocket message parse error:', e);
+          }
+        };
+        
+        wsRef.current.onclose = () => {
+          console.log('Wallet WebSocket disconnected');
+          setWsConnected(false);
+          
+          // Attempt reconnection after 5 seconds
+          reconnectTimeoutRef.current = setTimeout(() => {
+            if (user?.user_id) {
+              connectWebSocket();
+            }
+          }, 5000);
+        };
+        
+        wsRef.current.onerror = (error) => {
+          console.error('Wallet WebSocket error:', error);
+          setWsConnected(false);
+        };
+        
+      } catch (e) {
+        console.error('WebSocket connection error:', e);
+      }
+    };
+    
+    // Initial connection
+    connectWebSocket();
+    
+    // Ping to keep connection alive
+    const pingInterval = setInterval(() => {
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({ type: 'ping' }));
+      }
+    }, 30000);
+    
+    return () => {
+      clearInterval(pingInterval);
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, [user?.user_id]);
 
   useEffect(() => {
     fetchWalletData();
@@ -42,13 +164,15 @@ export default function Wallet() {
     fetchTeamEarnings(0);
     fetchPersonalEarnings(0);
     
-    // Set up real-time polling for new earnings (every 30 seconds)
+    // Fallback polling for new earnings (every 60 seconds) when WebSocket not connected
     const interval = setInterval(() => {
-      pollNewEarnings();
-    }, 30000);
+      if (!wsConnected) {
+        pollNewEarnings();
+      }
+    }, 60000);
     
     return () => clearInterval(interval);
-  }, []);
+  }, [wsConnected]);
 
   const fetchWalletData = async () => {
     try {
