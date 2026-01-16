@@ -2,53 +2,69 @@
 
 ## Latest Update: January 16, 2026 (Session 3)
 
-### SESSION SUMMARY - PKO Poker Tournament Fully Fixed ✅
+### SESSION SUMMARY - PKO Poker Tournament Bug FIXED ✅
 
 ---
 
-## COMPLETED THIS SESSION (January 16, 2026 - Session 3)
+## BUG FIX: "Failed to create tournament" (CRITICAL - RESOLVED)
 
-### PKO Poker Tournament Bug Fixes ✅
-- **Fixed "Failed to create tournament" error**:
-  - Added `api.get`, `api.post`, `api.put`, `api.delete` methods to frontend API service
-  - Root cause: Frontend was calling `api.get("/poker/...")` but default export didn't have these methods
-  
-- **Fixed Bot AI Not Playing Automatically**:
-  - Added bot turn handling after hand starts and phase advances
-  - Fixed `handle_bot_turn` to be called when current player is a bot
-  - Bots now automatically make decisions (fold, call, raise, check)
-  
-- **Performance Improvements**:
-  - Reduced bot think delay from 1.5-4s to 0.5-1.5s for faster gameplay
-  - Reduced action timeout from 30s to 15s
-  - Added better logging for bot decisions
+### Root Cause
+Users were getting stuck in old tournaments from previous sessions. When they tried to create a new tournament, the backend returned "Already in a tournament" but the frontend showed a generic "Failed to create tournament" error.
 
-### Poker Game Mechanics Working ✅
-1. **Tournament Creation**: Create and auto-join tournaments
+### Fixes Applied
+1. **Frontend - createTournament function** (`PokerTournament.jsx`):
+   - Added check for existing tournament before API call
+   - Improved error messages to be specific ("Already in a tournament" → shows helpful message)
+   - Added force-leave fallback for stuck tournaments
+   - Success toast: "Tournament created! Waiting for players..."
+
+2. **Frontend - Lobby UI** (`PokerTournament.jsx`):
+   - Added "Leave & Refund" button with proper styling
+   - Shows tournament info (players, pot size)
+   - Works for both registering and in-progress tournaments
+
+3. **Backend - WebSocket fix** (`poker_tournament.py`):
+   - Fixed KeyError on WebSocket disconnect by adding existence checks
+
+### Test Results
+- **5x consecutive tournament creation**: ALL PASSED ✅
+- **Backend tests**: 13/13 passed (100%)
+- **Frontend tests**: All UI flows verified
+
+---
+
+## PKO Poker Tournament - Working Features ✅
+
+1. **Tournament Creation**: Create and auto-join tournaments (2000 BL buy-in)
 2. **AI Bots**: Add 1-9 bots with unique personalities (tight-aggressive, loose-passive, etc.)
-3. **Auto-Start**: Tournaments auto-start 30s after reaching 10 players (or force-start)
+3. **Auto-Start**: Tournaments auto-start 30s after reaching 10 players
 4. **Bot AI Decisions**: Bots analyze hand strength, pot odds, and position
 5. **Game Phases**: pre_flop → flop → turn → river → showdown
 6. **Hand Evaluation**: All poker hands correctly ranked
-7. **Bounty System**: 50% immediate payout, 50% added to winner's bounty
+7. **PKO Bounty System**: 50% immediate payout, 50% added to winner's bounty
 8. **Rebuy System**: Available during early tournament phase
-9. **Real-time Updates**: WebSocket broadcasts game state changes
+9. **Force Leave**: Users can leave stuck tournaments with buy-in refund
+10. **Real-time Updates**: WebSocket broadcasts game state changes
 
 ---
 
-## Testing Results
+## Previous Session Fixes
 
-**Latest Test Report**: `/app/test_reports/iteration_24.json`
-- **Backend**: 13/13 tests passed (100%)
-- **Frontend**: All UI elements verified
+### Session 2 - Admin Panel
+- Fixed Orphan Auto-Assignment (12-tier priority system)
+- Mobile Admin Panel 100% synced with web (8 new screens)
+- Fixed User Management
 
-**Test Coverage**:
-- Tournament CRUD operations
-- Player registration and seating
-- AI bot addition and behavior
-- Game phase progression
-- Player actions (fold/call/raise/all-in)
-- Bounty and prize pool distribution
+### Session 1 - Core Bugs  
+- Fixed "body stream already read" errors
+- Fixed PKO Poker tournament flow
+
+---
+
+## Testing Reports
+- `/app/test_reports/iteration_25.json` - PKO Bug Fix (13/13 passed)
+- `/app/test_reports/iteration_24.json` - Poker Features (13/13 passed)
+- `/app/test_reports/iteration_23.json` - Admin Panel (22/22 passed)
 
 ---
 
