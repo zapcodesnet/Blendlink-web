@@ -1031,6 +1031,12 @@ export const pokerAPI = {
     return response.data;
   },
 
+  // Alias for forceLeave
+  forceLeave: async () => {
+    const response = await api.post('/poker/tournaments/force-leave');
+    return response.data;
+  },
+
   // Send chat message
   sendChat: async (tournamentId, message) => {
     const response = await api.post('/poker/tournaments/chat', {
