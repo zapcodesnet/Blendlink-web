@@ -658,6 +658,58 @@ const PokerTableScreen = ({ route, navigation }) => {
           </View>
         )}
 
+        {/* Table Chat Section */}
+        <View style={styles.chatSection}>
+          <TouchableOpacity 
+            style={styles.chatToggle} 
+            onPress={() => setShowChat(!showChat)}
+          >
+            <Text style={styles.chatToggleText}>
+              💬 Chat {showChat ? '▼' : '▲'}
+            </Text>
+          </TouchableOpacity>
+          
+          {showChat && (
+            <View style={styles.chatContainer}>
+              <ScrollView style={styles.chatMessages}>
+                {tournament.chat_messages?.length === 0 && (
+                  <Text style={styles.noChatText}>No messages yet. Say hello!</Text>
+                )}
+                {tournament.chat_messages?.map((msg, idx) => (
+                  <View key={idx} style={styles.chatMessage}>
+                    <Text style={styles.chatUsername}>{msg.username}:</Text>
+                    <Text style={styles.chatText}>{msg.message}</Text>
+                  </View>
+                ))}
+              </ScrollView>
+              <View style={styles.chatInputRow}>
+                <TextInput
+                  style={styles.chatInput}
+                  placeholder="Type a message..."
+                  placeholderTextColor="#64748B"
+                  value={chatMessage}
+                  onChangeText={setChatMessage}
+                />
+                <TouchableOpacity 
+                  style={styles.chatSendBtn}
+                  onPress={async () => {
+                    if (chatMessage.trim()) {
+                      try {
+                        await pokerAPI.sendChat(tournamentId, chatMessage);
+                        setChatMessage('');
+                      } catch (e) {
+                        console.error('Chat error:', e);
+                      }
+                    }
+                  }}
+                >
+                  <Text style={styles.chatSendText}>Send</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </View>
+
         {/* Back button */}
         <TouchableOpacity style={styles.exitButton} onPress={() => navigation.goBack()}>
           <Text style={styles.exitButtonText}>← EXIT</Text>
