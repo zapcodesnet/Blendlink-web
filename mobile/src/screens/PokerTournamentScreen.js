@@ -561,73 +561,74 @@ const PokerTableScreen = ({ route, navigation }) => {
   return (
     <View style={styles.tableContainer}>
       <LinearGradient colors={['#0F172A', '#064E3B', '#0F172A']} style={styles.tableGradient}>
-        {/* Header Info */}
-        <View style={styles.tableHeader}>
-          <View>
-            <Text style={styles.blindsText}>Blinds: {tournament.small_blind}/{tournament.big_blind}</Text>
-            <Text style={styles.levelText}>Level {tournament.blind_level + 1}</Text>
-          </View>
-          <View style={styles.potContainer}>
-            <Text style={styles.potLabel}>POT</Text>
-            <Text style={styles.potValue}>{tournament.pot?.toLocaleString()}</Text>
-          </View>
-          <View>
-            <Text style={styles.handText}>Hand #{tournament.hand_number}</Text>
-            <Text style={styles.phaseText}>{tournament.phase?.toUpperCase()}</Text>
-          </View>
-        </View>
-
-        {/* Community Cards */}
-        <View style={styles.communityCards}>
-          {tournament.community_cards?.map((card, i) => (
-            <Card key={i} card={card} style={styles.communityCard} />
-          ))}
-          {Array(5 - (tournament.community_cards?.length || 0)).fill(null).map((_, i) => (
-            <View key={`empty-${i}`} style={styles.emptyCard} />
-          ))}
-        </View>
-
-        {/* Players around table */}
-        <View style={styles.playersContainer}>
-          {players.map((player) => (
-            <PlayerSeat
-              key={player.user_id}
-              player={player}
-              isCurrentTurn={tournament.current_player_seat === player.seat}
-              isDealer={tournament.dealer_seat === player.seat}
-              isSB={tournament.small_blind_seat === player.seat}
-              isBB={tournament.big_blind_seat === player.seat}
-              isMe={player.user_id === user?.user_id}
-              showCards={tournament.phase === 'showdown' || tournament.phase === 'hand_complete'}
-            />
-          ))}
-        </View>
-
-        {/* My Cards & Actions */}
-        {myPlayer && (
-          <View style={styles.mySection}>
-            {/* My hole cards (larger) */}
-            <View style={styles.myCards}>
-              {myPlayer.cards?.map((card, i) => (
-                <Card key={i} card={card} style={styles.myCard} />
-              ))}
+        <ScrollView contentContainerStyle={styles.tableScrollContent} showsVerticalScrollIndicator={false}>
+          {/* Header Info */}
+          <View style={styles.tableHeader}>
+            <View>
+              <Text style={styles.blindsText}>Blinds: {tournament.small_blind}/{tournament.big_blind}</Text>
+              <Text style={styles.levelText}>Level {tournament.blind_level + 1}</Text>
             </View>
+            <View style={styles.potContainer}>
+              <Text style={styles.potLabel}>POT</Text>
+              <Text style={styles.potValue}>{tournament.pot?.toLocaleString()}</Text>
+            </View>
+            <View>
+              <Text style={styles.handText}>Hand #{tournament.hand_number}</Text>
+              <Text style={styles.phaseText}>{tournament.phase?.toUpperCase()}</Text>
+            </View>
+          </View>
 
-            {/* Action buttons */}
-            {canAct && (
-              <View style={styles.actionsContainer}>
-                <TouchableOpacity
-                  style={[styles.actionButton, styles.foldButton]}
-                  onPress={() => handleAction('fold')}
-                  disabled={actionLoading}
-                >
-                  <Text style={styles.actionButtonText}>FOLD</Text>
-                </TouchableOpacity>
+          {/* Community Cards */}
+          <View style={styles.communityCards}>
+            {tournament.community_cards?.map((card, i) => (
+              <Card key={i} card={card} style={styles.communityCard} />
+            ))}
+            {Array(5 - (tournament.community_cards?.length || 0)).fill(null).map((_, i) => (
+              <View key={`empty-${i}`} style={styles.emptyCard} />
+            ))}
+          </View>
 
-                {tournament.current_bet === myPlayer.current_bet ? (
+          {/* Players around table */}
+          <View style={styles.playersContainer}>
+            {players.map((player) => (
+              <PlayerSeat
+                key={player.user_id}
+                player={player}
+                isCurrentTurn={tournament.current_player_seat === player.seat}
+                isDealer={tournament.dealer_seat === player.seat}
+                isSB={tournament.small_blind_seat === player.seat}
+                isBB={tournament.big_blind_seat === player.seat}
+                isMe={player.user_id === user?.user_id}
+                showCards={tournament.phase === 'showdown' || tournament.phase === 'hand_complete'}
+              />
+            ))}
+          </View>
+
+          {/* My Cards & Actions */}
+          {myPlayer && (
+            <View style={styles.mySection}>
+              {/* My hole cards (larger) */}
+              <View style={styles.myCards}>
+                {myPlayer.cards?.map((card, i) => (
+                  <Card key={i} card={card} style={styles.myCard} />
+                ))}
+              </View>
+
+              {/* Action buttons */}
+              {canAct && (
+                <View style={styles.actionsContainer}>
                   <TouchableOpacity
-                    style={[styles.actionButton, styles.checkButton]}
-                    onPress={() => handleAction('check')}
+                    style={[styles.actionButton, styles.foldButton]}
+                    onPress={() => handleAction('fold')}
+                    disabled={actionLoading}
+                  >
+                    <Text style={styles.actionButtonText}>FOLD</Text>
+                  </TouchableOpacity>
+
+                  {tournament.current_bet === myPlayer.current_bet ? (
+                    <TouchableOpacity
+                      style={[styles.actionButton, styles.checkButton]}
+                      onPress={() => handleAction('check')}
                     disabled={actionLoading}
                   >
                     <Text style={styles.actionButtonText}>CHECK</Text>
