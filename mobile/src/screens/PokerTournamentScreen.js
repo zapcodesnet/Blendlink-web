@@ -392,7 +392,9 @@ const PokerTableScreen = ({ route, navigation }) => {
     loadTournament();
 
     // Connect to WebSocket for real-time updates
-    const wsUrl = `wss://blendlink-social.preview.emergentagent.com/api/poker/ws/${tournamentId}?token=${token}`;
+    // Use the same backend URL but with wss protocol
+    const backendUrl = 'realtime-platform-1.preview.emergentagent.com';
+    const wsUrl = `wss://${backendUrl}/api/poker/ws/${tournamentId}?token=${token}`;
     wsRef.current = new WebSocket(wsUrl);
 
     wsRef.current.onopen = () => {
