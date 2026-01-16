@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="10" skipped="0" tests="13" time="4.561" timestamp="2026-01-16T06:07:26.449267+00:00" hostname="agent-env-fec7840d-3764-4678-9659-daa0dd4b8b68"><testcase classname="tests.test_poker_tournament.TestPokerTournamentAPI" name="test_get_tournaments_list" time="0.351" /><testcase classname="tests.test_poker_tournament.TestPokerTournamentAPI" name="test_get_my_tournament_status" time="0.337" /><testcase classname="tests.test_poker_tournament.TestPokerTournamentAPI" name="test_create_tournament" time="0.297"><failure message="AssertionError: Expected 200, got 400: {&quot;detail&quot;:&quot;Already in a tournament&quot;}&#10;assert 400 == 200&#10; +  where 400 = &lt;Response [400]&gt;.status_code">tests/test_poker_tournament.py:80: in test_create_tournament
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 400: {"detail":"Already in a tournament"}
+E   assert 400 == 200
+E    +  where 400 = &lt;Response [400]&gt;.status_code</failure></testcase><testcase classname="tests.test_poker_tournament.TestPokerTournamentAPI" name="test_register_for_tournament" time="0.340"><failure message="assert 400 == 200&#10; +  where 400 = &lt;Response [400]&gt;.status_code">tests/test_poker_tournament.py:107: in test_register_for_tournament
+    assert create_response.status_code == 200
+E   assert 400 == 200
+E    +  where 400 = &lt;Response [400]&gt;.status_code</failure></testcase><testcase classname="tests.test_poker_tournament.TestPokerTournamentAPI" name="test_add_ai_bots" time="0.345"><failure message="assert 400 == 200&#10; +  where 400 = &lt;Response [400]&gt;.status_code">tests/test_poker_tournament.py:139: in test_add_ai_bots
+    assert create_response.status_code == 200
+E   assert 400 == 200
+E    +  where 400 = &lt;Response [400]&gt;.status_code</failure></testcase><testcase classname="tests.test_poker_tournament.TestPokerTournamentAPI" name="test_force_start_tournament" time="0.378"><failure message="assert 400 == 200&#10; +  where 400 = &lt;Response [400]&gt;.status_code">tests/test_poker_tournament.py:177: in test_force_start_tournament
+    assert create_response.status_code == 200
+E   assert 400 == 200
+E    +  where 400 = &lt;Response [400]&gt;.status_code</failure></testcase><testcase classname="tests.test_poker_tournament.TestPokerTournamentAPI" name="test_get_tournament_state" time="0.331"><failure message="assert 400 == 200&#10; +  where 400 = &lt;Response [400]&gt;.status_code">tests/test_poker_tournament.py:216: in test_get_tournament_state
+    assert create_response.status_code == 200
+E   assert 400 == 200
+E    +  where 400 = &lt;Response [400]&gt;.status_code</failure></testcase><testcase classname="tests.test_poker_tournament.TestPokerTournamentAPI" name="test_player_action_fold" time="0.373"><failure message="assert 400 == 200&#10; +  where 400 = &lt;Response [400]&gt;.status_code">tests/test_poker_tournament.py:254: in test_player_action_fold
+    assert create_response.status_code == 200
+E   assert 400 == 200
+E    +  where 400 = &lt;Response [400]&gt;.status_code</failure></testcase><testcase classname="tests.test_poker_tournament.TestPokerTournamentAPI" name="test_full_game_flow" time="0.328"><failure message="AssertionError: Create failed: {&quot;detail&quot;:&quot;Already in a tournament&quot;}&#10;assert 400 == 200&#10; +  where 400 = &lt;Response [400]&gt;.status_code">tests/test_poker_tournament.py:310: in test_full_game_flow
+    assert create_response.status_code == 200, f"Create failed: {create_response.text}"
+E   AssertionError: Create failed: {"detail":"Already in a tournament"}
+E   assert 400 == 200
+E    +  where 400 = &lt;Response [400]&gt;.status_code</failure></testcase><testcase classname="tests.test_poker_tournament.TestPokerTournamentAPI" name="test_leave_tournament" time="0.335"><failure message="assert 400 == 200&#10; +  where 400 = &lt;Response [400]&gt;.status_code">tests/test_poker_tournament.py:390: in test_leave_tournament
+    assert create_response.status_code == 200
+E   assert 400 == 200
+E    +  where 400 = &lt;Response [400]&gt;.status_code</failure></testcase><testcase classname="tests.test_poker_tournament.TestPokerTournamentAPI" name="test_get_leaderboard" time="0.318" /><testcase classname="tests.test_poker_tournament.TestPokerGameMechanics" name="test_bot_ai_makes_decisions" time="0.325"><failure message="KeyError: 'tournament_id'">tests/test_poker_tournament.py:465: in test_bot_ai_makes_decisions
+    tournament_id = create_response.json()["tournament_id"]
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'tournament_id'</failure></testcase><testcase classname="tests.test_poker_tournament.TestPokerGameMechanics" name="test_game_phase_progression" time="0.297"><failure message="KeyError: 'tournament_id'">tests/test_poker_tournament.py:516: in test_game_phase_progression
+    tournament_id = create_response.json()["tournament_id"]
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'tournament_id'</failure></testcase></testsuite></testsuites>
