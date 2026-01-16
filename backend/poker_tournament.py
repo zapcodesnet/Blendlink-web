@@ -692,26 +692,273 @@ class PokerTournament:
 # ============== TOURNAMENT MANAGER ==============
 
 class TournamentManager:
+    """
+    Tournament Manager with MongoDB Persistence
+    - Saves tournament state to MongoDB for persistence across restarts
+    - Keeps in-memory cache for real-time gameplay
+    - Auto-loads active tournaments on startup
+    """
+    
     def __init__(self):
         self.tournaments: Dict[str, PokerTournament] = {}
         self.player_tournament_map: Dict[str, str] = {}  # user_id -> tournament_id
+        self._db_initialized = False
     
-    def create_tournament(self, name: str = "PKO Tournament", creator_id: str = None) -> PokerTournament:
-        """Create a new tournament"""
+    async def initialize(self):
+        """Initialize manager and load active tournaments from MongoDB"""
+        if self._db_initialized:
+            return
+        
+        try:
+            # Create indexes for efficient queries
+            await db.poker_tournaments.create_index("tournament_id", unique=True)
+            await db.poker_tournaments.create_index("status")
+            await db.poker_tournaments.create_index("created_at")
+            await db.poker_player_maps.create_index("user_id", unique=True)
+            
+            # Load active tournaments from database
+            active_tournaments = await db.poker_tournaments.find({
+                "status": {"$in": ["registering", "in_progress"]}
+            }).to_list(100)
+            
+            for doc in active_tournaments:
+                tournament = self._tournament_from_doc(doc)
+                if tournament:
+                    self.tournaments[tournament.tournament_id] = tournament
+                    # Rebuild player map
+                    for user_id in tournament.players.keys():
+                        if not user_id.startswith("bot_"):
+                            self.player_tournament_map[user_id] = tournament.tournament_id
+            
+            logger.info(f"Loaded {len(active_tournaments)} active tournaments from database")
+            self._db_initialized = True
+            
+        except Exception as e:
+            logger.error(f"Failed to initialize tournament manager: {e}")
+            self._db_initialized = True  # Still mark as initialized to prevent loops
+    
+    def _tournament_to_doc(self, tournament: PokerTournament) -> dict:
+        """Convert tournament to MongoDB document"""
+        players_doc = {}
+        for user_id, player in tournament.players.items():
+            players_doc[user_id] = {
+                "user_id": player.user_id,
+                "username": player.username,
+                "avatar": player.avatar,
+                "seat": player.seat,
+                "chips": player.chips,
+                "bounty": player.bounty,
+                "bounties_won": player.bounties_won,
+                "total_bounty_bl": player.total_bounty_bl,
+                "is_active": player.is_active,
+                "is_folded": player.is_folded,
+                "is_all_in": player.is_all_in,
+                "current_bet": player.current_bet,
+                "has_acted": player.has_acted,
+                "last_action": player.last_action,
+                "elimination_position": player.elimination_position,
+                "is_bot": player.is_bot,
+                "bot_personality": player.bot_personality,
+                "bot_skill": player.bot_skill,
+                "rebuys": player.rebuys,
+                "cards": [{"rank": c.rank, "suit": c.suit} for c in player.cards] if player.cards else [],
+            }
+        
+        return {
+            "tournament_id": tournament.tournament_id,
+            "name": tournament.name,
+            "status": tournament.status.value,
+            "creator_id": tournament.creator_id,
+            "created_at": tournament.created_at.isoformat(),
+            "started_at": tournament.started_at.isoformat() if tournament.started_at else None,
+            "ended_at": tournament.ended_at.isoformat() if tournament.ended_at else None,
+            "players": players_doc,
+            "eliminated_players": tournament.eliminated_players,
+            "used_bot_names": list(tournament.used_bot_names),
+            "bot_count": tournament.bot_count,
+            "blind_level": tournament.blind_level,
+            "small_blind": tournament.small_blind,
+            "big_blind": tournament.big_blind,
+            "ante": tournament.ante,
+            "hand_number": tournament.hand_number,
+            "phase": tournament.phase.value,
+            "community_cards": [{"rank": c.rank, "suit": c.suit} for c in tournament.community_cards],
+            "pot": tournament.pot,
+            "side_pots": tournament.side_pots,
+            "dealer_seat": tournament.dealer_seat,
+            "small_blind_seat": tournament.small_blind_seat,
+            "big_blind_seat": tournament.big_blind_seat,
+            "current_player_seat": tournament.current_player_seat,
+            "current_bet": tournament.current_bet,
+            "min_raise": tournament.min_raise,
+            "total_buy_ins": tournament.total_buy_ins,
+            "total_bounties": tournament.total_bounties,
+            "rebuy_phase": tournament.rebuy_phase,
+            "chat_messages": tournament.chat_messages[-50:],  # Keep last 50 messages
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }
+    
+    def _tournament_from_doc(self, doc: dict) -> Optional[PokerTournament]:
+        """Create tournament from MongoDB document"""
+        try:
+            tournament = PokerTournament(
+                doc["tournament_id"],
+                doc["name"],
+                doc.get("creator_id")
+            )
+            
+            # Restore status
+            tournament.status = TournamentStatus(doc.get("status", "registering"))
+            
+            # Restore timestamps
+            if doc.get("created_at"):
+                tournament.created_at = datetime.fromisoformat(doc["created_at"].replace("Z", "+00:00"))
+            if doc.get("started_at"):
+                tournament.started_at = datetime.fromisoformat(doc["started_at"].replace("Z", "+00:00"))
+            if doc.get("ended_at"):
+                tournament.ended_at = datetime.fromisoformat(doc["ended_at"].replace("Z", "+00:00"))
+            
+            # Restore players
+            for user_id, p_doc in doc.get("players", {}).items():
+                player = PokerPlayer(
+                    p_doc["user_id"],
+                    p_doc["username"],
+                    p_doc.get("avatar", ""),
+                    p_doc["seat"],
+                    p_doc.get("is_bot", False)
+                )
+                player.chips = p_doc.get("chips", STARTING_CHIPS)
+                player.bounty = p_doc.get("bounty", BOUNTY_AMOUNT)
+                player.bounties_won = p_doc.get("bounties_won", 0)
+                player.total_bounty_bl = p_doc.get("total_bounty_bl", 0)
+                player.is_active = p_doc.get("is_active", True)
+                player.is_folded = p_doc.get("is_folded", False)
+                player.is_all_in = p_doc.get("is_all_in", False)
+                player.current_bet = p_doc.get("current_bet", 0)
+                player.has_acted = p_doc.get("has_acted", False)
+                player.last_action = p_doc.get("last_action")
+                player.elimination_position = p_doc.get("elimination_position")
+                player.bot_personality = p_doc.get("bot_personality")
+                player.bot_skill = p_doc.get("bot_skill")
+                player.rebuys = p_doc.get("rebuys", 0)
+                player.is_connected = p_doc.get("is_bot", False)  # Bots always connected
+                
+                # Restore cards
+                if p_doc.get("cards"):
+                    player.cards = [Card(c["rank"], c["suit"]) for c in p_doc["cards"]]
+                
+                tournament.players[user_id] = player
+            
+            # Restore other state
+            tournament.eliminated_players = doc.get("eliminated_players", [])
+            tournament.used_bot_names = set(doc.get("used_bot_names", []))
+            tournament.bot_count = doc.get("bot_count", 0)
+            tournament.blind_level = doc.get("blind_level", 0)
+            tournament.small_blind = doc.get("small_blind", BLIND_LEVELS[0]["small"])
+            tournament.big_blind = doc.get("big_blind", BLIND_LEVELS[0]["big"])
+            tournament.ante = doc.get("ante", 0)
+            tournament.hand_number = doc.get("hand_number", 0)
+            tournament.phase = GamePhase(doc.get("phase", "waiting"))
+            
+            # Restore community cards
+            if doc.get("community_cards"):
+                tournament.community_cards = [Card(c["rank"], c["suit"]) for c in doc["community_cards"]]
+            
+            tournament.pot = doc.get("pot", 0)
+            tournament.side_pots = doc.get("side_pots", [])
+            tournament.dealer_seat = doc.get("dealer_seat", 0)
+            tournament.small_blind_seat = doc.get("small_blind_seat", 0)
+            tournament.big_blind_seat = doc.get("big_blind_seat", 0)
+            tournament.current_player_seat = doc.get("current_player_seat", 0)
+            tournament.current_bet = doc.get("current_bet", 0)
+            tournament.min_raise = doc.get("min_raise", 0)
+            tournament.total_buy_ins = doc.get("total_buy_ins", 0)
+            tournament.total_bounties = doc.get("total_bounties", 0)
+            tournament.rebuy_phase = doc.get("rebuy_phase", True)
+            tournament.chat_messages = doc.get("chat_messages", [])
+            
+            return tournament
+            
+        except Exception as e:
+            logger.error(f"Failed to restore tournament from doc: {e}")
+            return None
+    
+    async def save_tournament(self, tournament: PokerTournament):
+        """Save tournament state to MongoDB"""
+        try:
+            doc = self._tournament_to_doc(tournament)
+            await db.poker_tournaments.update_one(
+                {"tournament_id": tournament.tournament_id},
+                {"$set": doc},
+                upsert=True
+            )
+        except Exception as e:
+            logger.error(f"Failed to save tournament {tournament.tournament_id}: {e}")
+    
+    async def delete_tournament(self, tournament_id: str):
+        """Delete tournament from MongoDB"""
+        try:
+            await db.poker_tournaments.delete_one({"tournament_id": tournament_id})
+        except Exception as e:
+            logger.error(f"Failed to delete tournament {tournament_id}: {e}")
+    
+    async def save_player_map(self, user_id: str, tournament_id: str):
+        """Save player-tournament mapping to MongoDB"""
+        try:
+            await db.poker_player_maps.update_one(
+                {"user_id": user_id},
+                {"$set": {"user_id": user_id, "tournament_id": tournament_id, "updated_at": datetime.now(timezone.utc).isoformat()}},
+                upsert=True
+            )
+        except Exception as e:
+            logger.error(f"Failed to save player map: {e}")
+    
+    async def remove_player_map(self, user_id: str):
+        """Remove player-tournament mapping from MongoDB"""
+        try:
+            await db.poker_player_maps.delete_one({"user_id": user_id})
+        except Exception as e:
+            logger.error(f"Failed to remove player map: {e}")
+    
+    async def create_tournament(self, name: str = "PKO Tournament", creator_id: str = None) -> PokerTournament:
+        """Create a new tournament with MongoDB persistence"""
         tournament_id = f"pko_{uuid.uuid4().hex[:12]}"
         tournament = PokerTournament(tournament_id, name, creator_id)
         self.tournaments[tournament_id] = tournament
+        
+        # Save to MongoDB
+        await self.save_tournament(tournament)
+        
         return tournament
     
     def get_tournament(self, tournament_id: str) -> Optional[PokerTournament]:
         """Get tournament by ID"""
         return self.tournaments.get(tournament_id)
     
-    def get_player_tournament(self, user_id: str) -> Optional[PokerTournament]:
+    async def get_player_tournament(self, user_id: str) -> Optional[PokerTournament]:
         """Get tournament a player is currently in"""
+        # First check in-memory map
         tournament_id = self.player_tournament_map.get(user_id)
         if tournament_id:
-            return self.tournaments.get(tournament_id)
+            tournament = self.tournaments.get(tournament_id)
+            if tournament:
+                return tournament
+        
+        # Check MongoDB for persisted mapping
+        try:
+            mapping = await db.poker_player_maps.find_one({"user_id": user_id})
+            if mapping:
+                tournament_id = mapping.get("tournament_id")
+                if tournament_id and tournament_id in self.tournaments:
+                    # Update in-memory map
+                    self.player_tournament_map[user_id] = tournament_id
+                    return self.tournaments[tournament_id]
+                else:
+                    # Tournament no longer exists, clean up mapping
+                    await self.remove_player_map(user_id)
+        except Exception as e:
+            logger.error(f"Error checking player tournament: {e}")
+        
         return None
     
     def get_open_tournaments(self) -> List[PokerTournament]:
