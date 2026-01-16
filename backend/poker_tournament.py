@@ -2041,7 +2041,10 @@ async def send_chat(
 @poker_router.get("/my-tournament")
 async def get_my_tournament(user: dict = Depends(get_current_user)):
     """Get current tournament player is in"""
-    tournament = tournament_manager.get_player_tournament(user["user_id"])
+    # Initialize manager if needed
+    await tournament_manager.initialize()
+    
+    tournament = await tournament_manager.get_player_tournament(user["user_id"])
     if not tournament:
         return {"in_tournament": False}
     
