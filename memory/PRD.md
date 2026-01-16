@@ -1,66 +1,98 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 16, 2026 (Session 4)
+## Latest Update: January 16, 2026 (Session 5)
 
-### SESSION SUMMARY - MongoDB Persistence for PKO Poker ✅
+### SESSION SUMMARY - PKO Poker Mobile & Chat Fixes ✅
 
 ---
 
 ## COMPLETED THIS SESSION
 
-### MongoDB Persistence for Poker Tournaments ✅
-**New Collections**:
-- `poker_tournaments` - Stores full tournament state (players, cards, pot, phase, etc.)
-- `poker_player_maps` - Maps user_id to tournament_id for quick lookups
+### PKO Poker Mobile App Fixes ✅
+1. **Fixed handleAddBots function**:
+   - Now shows proper alerts ("Successfully added X bots!")
+   - Checks available seats before adding
+   - Refreshes tournament data after adding bots
 
-**Key Features**:
-1. **Auto-Load on Startup**: TournamentManager loads active tournaments from MongoDB
-2. **Save on Change**: Tournament state saved after create, register, add bots, leave
-3. **Survives Restart**: Tournaments persist through backend restarts (verified by tests)
-4. **Player Mapping**: Tracks which user is in which tournament in MongoDB
+2. **Added Chat Section to Mobile**:
+   - Toggle button to show/hide chat
+   - Light colored text for visibility (#E2E8F0 messages, #FBBF24 usernames)
+   - Send button with text input
+   - Styled chat container with dark background
 
-**Code Changes**:
-- `poker_tournament.py`: Added `save_tournament()`, `_tournament_to_doc()`, `_tournament_from_doc()`, `initialize()`
-- Fixed serialization bug: `hole_cards` attribute (not `cards`)
-- Added `await tournament_manager.initialize()` to all endpoints
+3. **Improved Mobile Layout**:
+   - Added ScrollView wrapper for better scrolling
+   - Added paddingBottom to prevent content cutoff
+   - Improved styles for chat section
 
-### Mobile App Fixes ✅
-- Fixed `handleCreateTournament` to register after creating tournament
-- Added `forceLeaveTournament` API call for stuck tournaments
-- Fixed WebSocket URL to use correct backend URL
-- Added proper error handling with "Leave & Create" option
-
----
-
-## Testing Results
-
-**Test Report**: `/app/test_reports/iteration_26.json`
-- **Backend**: 11/11 tests passed (100%)
+### Testing Results
+**Test Report**: `/app/test_reports/iteration_27.json`
+- **Backend**: 12/12 tests passed (100%)
 - **Frontend**: All UI flows verified
 
-**Key Test Cases**:
-- Tournament creation saves to MongoDB ✓
-- Player registration saves to MongoDB ✓
-- Adding bots saves to MongoDB ✓
-- Force leave removes from DB mapping ✓
-- Tournament survives backend restart ✓
+**Verified Features**:
+- Create tournament ✓
+- Register for tournament ✓
+- Add 3 bots ✓
+- Add 9 bots (fill table) ✓
+- Cannot add bots to full table ✓
+- Force start tournament ✓
+- Table Chat working ✓
+- Leave & Refund ✓
+- Join existing tournament ✓
 
 ---
 
 ## Previous Sessions
 
+### Session 4 - MongoDB Persistence
+- Implemented MongoDB persistence for poker tournaments
+- Tournaments survive backend restarts
+
 ### Session 3 - PKO Bug Fix
 - Fixed "Failed to create tournament" error
-- Root cause: Users stuck in old tournaments with unhelpful error messages
-- Added force-leave option and better error handling
+- Added force-leave option
 
 ### Session 2 - Admin Panel
-- Fixed Orphan Auto-Assignment (12-tier priority system)
+- Fixed Orphan Auto-Assignment (12-tier priority)
 - Mobile Admin Panel 100% synced with web
 
 ### Session 1 - Core Bugs
 - Fixed "body stream already read" errors
-- Fixed PKO Poker tournament flow
+
+---
+
+## PKO Poker - Complete Feature List ✅
+
+1. **Tournament Management**
+   - Create/Join/Leave tournaments
+   - MongoDB persistence (survives restarts)
+   - 2000 BL buy-in, 1000 BL bounty
+
+2. **AI Bots**
+   - Add 1-9 bots to fill seats
+   - Bot personalities (tight-aggressive, loose-passive, etc.)
+   - Bots make automatic decisions
+
+3. **Gameplay**
+   - Pre-flop, Flop, Turn, River, Showdown phases
+   - Fold, Check, Call, Raise, All-In actions
+   - Blinds (25/50 starting)
+   - Hand evaluation
+
+4. **PKO System**
+   - Bounties tracked per player
+   - 50% immediate payout, 50% added to winner's bounty
+
+5. **Table Chat**
+   - Real-time WebSocket messages
+   - Visible on both web and mobile
+   - Light colored text for visibility
+
+6. **User Experience**
+   - "Leave & Refund" for stuck tournaments
+   - Force-leave option
+   - Success/error toasts
 
 ---
 
