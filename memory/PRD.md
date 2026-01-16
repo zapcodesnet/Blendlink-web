@@ -176,4 +176,4 @@
 
 ## PREVIEW URL
 
-https://realtime-platform-1.preview.emergentagent.com
+https://wallet-notify.preview.emergentagent.com
