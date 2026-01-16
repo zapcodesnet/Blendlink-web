@@ -448,12 +448,33 @@ const PokerTableScreen = ({ route, navigation }) => {
 
   // Handle add bots
   const handleAddBots = async (count) => {
+    if (!tournament) return;
+    
+    const availableSeats = 10 - Object.keys(tournament.players || {}).length;
+    if (availableSeats <= 0) {
+      Alert.alert('Table Full', 'The table is already full with 10 players.');
+      return;
+    }
+    
+    const botsToAdd = Math.min(count, availableSeats);
+    
     try {
-      const result = await pokerAPI.addBots(tournamentId, count);
-      Alert.alert('Success', `Added ${result.bots_added} AI bot(s)!`);
-      loadTournament();
+      const result = await pokerAPI.addBots(tournamentId, botsToAdd);
+      const added = result.bots_added || 0;
+      
+      if (added > 0) {
+        Alert.alert('Bots Added', `Successfully added ${added} AI bot${added > 1 ? 's' : ''} to the table!`);
+        // Refresh tournament data
+        const updatedTournament = await pokerAPI.getMyTournament();
+        if (updatedTournament.in_tournament) {
+          setTournament(updatedTournament.tournament);
+        }
+      } else {
+        Alert.alert('No Bots Added', 'Could not add bots. The table may be full or the tournament has already started.');
+      }
     } catch (error) {
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to add bots');
+      const msg = error.response?.data?.detail || 'Failed to add bots';
+      Alert.alert('Error', msg);
     }
   };
 
