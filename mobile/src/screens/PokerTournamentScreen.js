@@ -1040,6 +1040,10 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
+  tableScrollContent: {
+    flexGrow: 1,
+    paddingBottom: 80,
+  },
   tableHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
