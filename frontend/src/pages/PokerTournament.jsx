@@ -8,7 +8,8 @@ import { Input } from "../components/ui/input";
 import { 
   ChevronLeft, Users, Trophy, Clock, Send, 
   Volume2, VolumeX, Maximize2, Minimize2,
-  Coins, Crown, Zap, MessageCircle, Eye, RefreshCw
+  Coins, Crown, Zap, MessageCircle, Eye, RefreshCw,
+  Play, X
 } from "lucide-react";
 
 // ============== CONSTANTS ==============
