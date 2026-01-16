@@ -339,8 +339,22 @@ export default function Wallet() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="glass sticky top-0 z-40 border-b border-border/50 safe-top">
-        <div className="max-w-2xl mx-auto px-4 h-14 flex items-center">
+        <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
           <h1 className="text-xl font-bold">Wallet</h1>
+          {/* WebSocket connection status */}
+          <div className="flex items-center gap-2" data-testid="wallet-ws-status">
+            {wsConnected ? (
+              <div className="flex items-center gap-1 text-green-500 text-sm">
+                <Wifi className="w-4 h-4" />
+                <span className="hidden sm:inline">Live</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1 text-yellow-500 text-sm">
+                <WifiOff className="w-4 h-4" />
+                <span className="hidden sm:inline">Polling</span>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
