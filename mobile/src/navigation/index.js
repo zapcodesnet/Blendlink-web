@@ -34,6 +34,14 @@ import AdminWithdrawalsScreen from '../screens/AdminWithdrawalsScreen';
 import AdminAuditScreen from '../screens/AdminAuditScreen';
 import AdminGenealogyScreen from '../screens/AdminGenealogyScreen';
 import AdminManagementScreen from '../screens/AdminManagementScreen';
+import AdminOrphansScreen from '../screens/AdminOrphansScreen';
+import AdminDiamondLeadersScreen from '../screens/AdminDiamondLeadersScreen';
+import AdminSecurityScreen from '../screens/AdminSecurityScreen';
+import AdminNotificationsScreen from '../screens/AdminNotificationsScreen';
+import AdminThemesScreen from '../screens/AdminThemesScreen';
+import AdminUIEditorScreen from '../screens/AdminUIEditorScreen';
+import AdminPagesScreen from '../screens/AdminPagesScreen';
+import AdminAIScreen from '../screens/AdminAIScreen';
 import MyTeamScreen from '../screens/MyTeamScreen';
 
 // Poker Screens
