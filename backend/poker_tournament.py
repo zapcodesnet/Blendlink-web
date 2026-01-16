@@ -2001,8 +2001,10 @@ async def websocket_endpoint(
     
     except WebSocketDisconnect:
         if is_player:
-            del tournament.connections[user_id]
-            tournament.players[user_id].is_connected = False
+            if user_id in tournament.connections:
+                del tournament.connections[user_id]
+            if user_id in tournament.players:
+                tournament.players[user_id].is_connected = False
             
             # Notify others
             await tournament_manager.broadcast_to_tournament(tournament, {
