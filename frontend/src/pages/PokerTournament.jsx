@@ -891,6 +891,12 @@ export function PokerLobby() {
   };
 
   const createTournament = async () => {
+    // Check if already in a tournament
+    if (myTournament) {
+      toast.error("You're already in a tournament. Leave it first or return to your table.");
+      return;
+    }
+    
     if (user.bl_coins < BUY_IN) {
       toast.error(`Need ${BUY_IN} BL coins to create a tournament`);
       return;
@@ -899,12 +905,30 @@ export function PokerLobby() {
     setCreating(true);
     try {
       const response = await api.post("/poker/tournaments/create", { name: "PKO Tournament" });
+      
+      if (!response.data.tournament_id) {
+        throw new Error("Failed to create tournament - no tournament ID returned");
+      }
+      
       const registerResponse = await api.post("/poker/tournaments/register", { 
         tournament_id: response.data.tournament_id 
       });
+      
+      toast.success("Tournament created! Waiting for players...");
       navigate(`/poker/${response.data.tournament_id}`);
     } catch (error) {
-      toast.error(error.response?.data?.detail || "Failed to create tournament");
+      const errorMessage = error.message || error.response?.data?.detail || "Failed to create tournament";
+      
+      // Handle specific error cases
+      if (errorMessage.includes("Already in a tournament")) {
+        toast.error("You're already in a tournament. Leave it first to create a new one.");
+        // Refresh data to get current tournament
+        loadData();
+      } else if (errorMessage.includes("Insufficient BL coins")) {
+        toast.error(`Not enough BL coins. Need ${BUY_IN} BL to join.`);
+      } else {
+        toast.error(errorMessage);
+      }
     }
     setCreating(false);
   };
