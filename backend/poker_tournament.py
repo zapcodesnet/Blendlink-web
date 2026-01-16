@@ -761,7 +761,7 @@ class TournamentManager:
                 "bot_personality": player.bot_personality,
                 "bot_skill": player.bot_skill,
                 "rebuys": player.rebuys,
-                "cards": [{"rank": c.rank, "suit": c.suit} for c in player.cards] if player.cards else [],
+                "cards": [{"rank": c.rank, "suit": c.suit} for c in player.hole_cards] if player.hole_cards else [],
             }
         
         return {
