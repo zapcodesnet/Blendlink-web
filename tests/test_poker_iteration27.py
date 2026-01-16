@@ -80,8 +80,8 @@ class TestPokerTournamentIteration27:
         
         # Force leave any existing tournament
         response = self.session.post(f"{BASE_URL}/api/poker/tournaments/force-leave")
-        # Either 200 (left) or 400 (not in tournament) is acceptable
-        assert response.status_code in [200, 400], f"Force leave failed: {response.text}"
+        # Either 200 (left), 400 (not in tournament), or 404 (not in tournament) is acceptable
+        assert response.status_code in [200, 400, 404], f"Force leave failed: {response.text}"
         print(f"✓ Force leave completed (status: {response.status_code})")
     
     # ============== TEST 3: Create Tournament ==============
