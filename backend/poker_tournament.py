@@ -845,7 +845,7 @@ class TournamentManager:
                 
                 # Restore cards
                 if p_doc.get("cards"):
-                    player.cards = [Card(c["rank"], c["suit"]) for c in p_doc["cards"]]
+                    player.hole_cards = [Card(c["rank"], c["suit"]) for c in p_doc["cards"]]
                 
                 tournament.players[user_id] = player
             
