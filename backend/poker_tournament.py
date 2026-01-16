@@ -1457,10 +1457,13 @@ class TournamentManager:
         await asyncio.sleep(ACTION_TIMEOUT)
         
         player = tournament.get_player_by_seat(tournament.current_player_seat)
-        if player and not player.is_folded and not player.is_all_in:
+        if player and not player.is_folded and not player.is_all_in and not player.has_acted:
             # Auto-fold on timeout
             player.is_folded = True
+            player.has_acted = True
             player.last_action = "timeout_fold"
+            
+            logger.info(f"Player {player.username} timed out and auto-folded")
             
             await self.broadcast_to_tournament(tournament, {
                 "type": "player_timeout",
