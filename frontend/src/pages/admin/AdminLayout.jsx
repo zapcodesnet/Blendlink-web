@@ -610,6 +610,7 @@ export default function AdminLayout() {
               <Route path="withdrawals" element={<AdminWithdrawals />} />
               <Route path="notifications" element={<AdminNotificationSettings />} />
               <Route path="themes" element={<AdminThemes />} />
+              <Route path="ui-editor" element={<AdminUIEditor />} />
               <Route path="pages" element={<AdminPages />} />
               <Route path="genealogy" element={<AdminGenealogy />} />
               <Route path="ai" element={<AdminAI />} />
