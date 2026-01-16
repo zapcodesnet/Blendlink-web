@@ -810,24 +810,36 @@ export default function SellerDashboard() {
               <p className="text-sm text-muted-foreground">Manage your listings with AI-powered tools</p>
             </div>
           </div>
-          <Button onClick={() => setActiveTab("create")}>
-            <Sparkles className="w-4 h-4 mr-2" />
-            Create Listing
-          </Button>
+          {/* Create button hidden as per user request */}
         </div>
 
         {/* Tabs */}
         <div className="flex gap-2 overflow-x-auto pb-2 mb-6">
           {tabs.map(tab => (
-            <Button
-              key={tab.id}
-              variant={activeTab === tab.id ? "default" : "outline"}
-              onClick={() => setActiveTab(tab.id)}
-              className="flex-shrink-0"
-            >
-              <tab.icon className="w-4 h-4 mr-2" />
-              {tab.label}
-            </Button>
+            tab.externalLink ? (
+              <a
+                key={tab.id}
+                href={tab.externalLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-shrink-0"
+              >
+                <Button variant="outline" className="flex items-center">
+                  <tab.icon className="w-4 h-4 mr-2" />
+                  {tab.label}
+                </Button>
+              </a>
+            ) : (
+              <Button
+                key={tab.id}
+                variant={activeTab === tab.id ? "default" : "outline"}
+                onClick={() => setActiveTab(tab.id)}
+                className="flex-shrink-0"
+              >
+                <tab.icon className="w-4 h-4 mr-2" />
+                {tab.label}
+              </Button>
+            )
           ))}
         </div>
 
