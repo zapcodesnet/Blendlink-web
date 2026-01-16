@@ -463,7 +463,7 @@ class AIBotEngine:
     async def think_delay():
         """Add human-like thinking delay"""
         import random
-        delay = random.uniform(1.5, 4.0)
+        delay = random.uniform(0.5, 1.5)  # Reduced for faster gameplay
         await asyncio.sleep(delay)
 
 # ============== TOURNAMENT STATE ==============
