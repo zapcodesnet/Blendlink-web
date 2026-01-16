@@ -1356,6 +1356,81 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     fontSize: 14,
   },
+  // Chat styles
+  chatSection: {
+    margin: 16,
+    marginTop: 8,
+  },
+  chatToggle: {
+    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  chatToggleText: {
+    color: '#3B82F6',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  chatContainer: {
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    borderRadius: 12,
+    marginTop: 8,
+    maxHeight: 200,
+  },
+  chatMessages: {
+    padding: 12,
+    maxHeight: 120,
+  },
+  noChatText: {
+    color: '#64748B',
+    fontSize: 13,
+    fontStyle: 'italic',
+    textAlign: 'center',
+  },
+  chatMessage: {
+    flexDirection: 'row',
+    marginBottom: 8,
+    flexWrap: 'wrap',
+  },
+  chatUsername: {
+    color: '#FBBF24',
+    fontWeight: '600',
+    fontSize: 13,
+    marginRight: 6,
+  },
+  chatText: {
+    color: '#E2E8F0',
+    fontSize: 13,
+    flex: 1,
+  },
+  chatInputRow: {
+    flexDirection: 'row',
+    padding: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
+    gap: 8,
+  },
+  chatInput: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    color: '#fff',
+    fontSize: 13,
+  },
+  chatSendBtn: {
+    backgroundColor: '#3B82F6',
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    justifyContent: 'center',
+  },
+  chatSendText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 13,
+  },
 });
 
 export default PokerLobbyScreen;
