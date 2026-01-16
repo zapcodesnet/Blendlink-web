@@ -1947,6 +1947,9 @@ async def get_tournament(
     user: dict = Depends(get_current_user)
 ):
     """Get tournament state"""
+    # Initialize manager to load tournaments from DB if needed
+    await tournament_manager.initialize()
+    
     tournament = tournament_manager.get_tournament(tournament_id)
     if not tournament:
         raise HTTPException(status_code=404, detail="Tournament not found")
@@ -1960,6 +1963,9 @@ async def add_bots_to_tournament(
     user: dict = Depends(get_current_user)
 ):
     """Add AI bots to fill remaining seats (only creator can do this)"""
+    # Initialize manager to load tournaments from DB if needed
+    await tournament_manager.initialize()
+    
     tournament = tournament_manager.get_tournament(tournament_id)
     if not tournament:
         raise HTTPException(status_code=404, detail="Tournament not found")
