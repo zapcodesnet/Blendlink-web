@@ -1,0 +1,73 @@
+{
+  "summary": "Bug fix verification complete: PKO Poker Tournament creation bug is FIXED. All 13 backend tests passed (100%). Frontend UI verified - Create Table, Add Bots, Leave & Refund all working correctly. 5x consecutive tournament creation test passed. Error handling for 'already in tournament' shows helpful message.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "WebSocket /api/poker/ws/{tournament_id}",
+        "issue": "KeyError when deleting connection on disconnect - non-blocking but logs error",
+        "priority": "LOW"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Backend: GET /api/poker/tournaments - List available tournaments",
+    "Backend: GET /api/poker/my-tournament - Check player tournament status",
+    "Backend: POST /api/poker/tournaments/create - Create new tournament",
+    "Backend: POST /api/poker/tournaments/register - Register for tournament",
+    "Backend: POST /api/poker/tournaments/{id}/add-bots - Add AI bots",
+    "Backend: POST /api/poker/tournaments/{id}/force-start - Force start tournament",
+    "Backend: GET /api/poker/tournaments/{id} - Get tournament state",
+    "Backend: POST /api/poker/tournaments/action - Player actions (fold/call/raise/check)",
+    "Backend: POST /api/poker/tournaments/leave - Leave tournament during registration",
+    "Backend: POST /api/poker/tournaments/force-leave - Force leave stuck tournaments",
+    "Backend: GET /api/poker/leaderboard - Get poker leaderboard",
+    "Backend: Bot AI makes decisions automatically",
+    "Backend: Game phase progression (pre_flop -> flop -> turn -> river)",
+    "Backend: 5x consecutive tournament creation - ALL PASSED",
+    "Backend: Error handling when already in tournament - returns 'Already in a tournament'",
+    "Frontend: Poker lobby loads at /poker",
+    "Frontend: Create Table button creates tournament and navigates to table",
+    "Frontend: Success toast 'Tournament created! Waiting for players...'",
+    "Frontend: Add Bots buttons work (+1 Bot, +3 Bots, Fill with Bots)",
+    "Frontend: Success toast 'Added 9 AI bot(s)!'",
+    "Frontend: 'You're in a Tournament' screen shows when already registered",
+    "Frontend: 'Return to Table' button navigates to tournament",
+    "Frontend: 'Leave & Refund' button leaves tournament and refunds buy-in",
+    "Frontend: Success toast 'Left tournament. Buy-in refunded!'",
+    "Frontend: Poker table displays all 10 player seats with chips/bounty",
+    "Frontend: Action buttons (Fold, Raise, All In) and bet slider present",
+    "Frontend: Tournament info panel shows Blinds, Prize Pool, Level"
+  ],
+  "test_report_links": [
+    "/app/tests/test_poker_tournament.py",
+    "/app/test_reports/pytest/pytest_poker_bugfix_iteration25.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Bug fix verified: Users can now create tournaments without getting stuck",
+    "Force-leave endpoint properly clears player from tournament map",
+    "Error messages are now specific ('Already in a tournament' instead of generic 'Failed to create tournament')",
+    "Frontend properly handles error cases and shows helpful messages",
+    "Minor: WebSocket disconnect handler has KeyError when connection not in dict - should add check before delete"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "100% (13/13 tests passed)",
+    "frontend": "100% (All UI flows verified)"
+  },
+  "test_credentials": {
+    "email": "test@example.com",
+    "password": "Test123!",
+    "bl_coins": "~38,000"
+  },
+  "seed_data_creation": "None - used existing test user",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "PKO Poker Tournament bug fix verified: 1) Tournament creation now works reliably - tested 5x consecutive creations all passed, 2) Force-leave endpoint allows users to leave stuck tournaments, 3) Error handling improved - shows 'Already in a tournament' instead of generic error, 4) Frontend Leave & Refund button works correctly, 5) All 13 backend tests pass, 6) Minor issue: WebSocket disconnect handler logs KeyError but doesn't affect functionality."
+}
