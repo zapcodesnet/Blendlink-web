@@ -516,7 +516,7 @@ export default function AdminUIEditor() {
           />
           
           <div className="p-3 border-t border-slate-700 text-xs text-slate-500">
-            Edit JSON directly • Changes sync to web and mobile apps • Use "Apply" to preview
+            Edit JSON directly • Changes sync to web and mobile apps • Use Apply to preview
           </div>
         </div>
       )}
