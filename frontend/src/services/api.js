@@ -677,4 +677,28 @@ export default {
   removeToken,
   getStoredUser,
   setStoredUser,
+  
+  // HTTP methods for direct API calls
+  get: async (endpoint) => {
+    const response = await apiRequest(endpoint, { method: 'GET' });
+    return { data: response };
+  },
+  post: async (endpoint, data) => {
+    const response = await apiRequest(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    return { data: response };
+  },
+  put: async (endpoint, data) => {
+    const response = await apiRequest(endpoint, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+    return { data: response };
+  },
+  delete: async (endpoint) => {
+    const response = await apiRequest(endpoint, { method: 'DELETE' });
+    return { data: response };
+  },
 };
