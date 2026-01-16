@@ -143,4 +143,4 @@
 
 ## PREVIEW URL
 
-https://realtime-social-11.preview.emergentagent.com
+https://realtime-platform-1.preview.emergentagent.com
