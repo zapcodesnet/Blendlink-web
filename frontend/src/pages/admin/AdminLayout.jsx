@@ -357,6 +357,7 @@ export default function AdminLayout() {
     { icon: Wallet, label: 'Withdrawals', path: '/admin/withdrawals' },
     { icon: Bell, label: 'Notifications', path: '/admin/notifications' },
     { icon: Palette, label: 'Themes', path: '/admin/themes' },
+    { icon: Code, label: 'UI Editor', path: '/admin/ui-editor' },
     { icon: Layout, label: 'Pages', path: '/admin/pages' },
     { icon: GitBranch, label: 'Genealogy', path: '/admin/genealogy' },
     { icon: Bot, label: 'AI Assistant', path: '/admin/ai' },
