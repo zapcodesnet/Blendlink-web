@@ -2053,7 +2053,7 @@ async def get_my_tournament(user: dict = Depends(get_current_user)):
 @poker_router.post("/tournaments/leave")
 async def leave_tournament(user: dict = Depends(get_current_user)):
     """Leave a tournament (only works during waiting/registering phase)"""
-    tournament = tournament_manager.get_player_tournament(user["user_id"])
+    tournament = await tournament_manager.get_player_tournament(user["user_id"])
     if not tournament:
         raise HTTPException(status_code=404, detail="Not in any tournament")
     
@@ -2071,9 +2071,10 @@ async def leave_tournament(user: dict = Depends(get_current_user)):
     # Remove player from tournament
     del tournament.players[user["user_id"]]
     
-    # Remove from player mapping
+    # Remove from player mapping (memory and DB)
     if user["user_id"] in tournament_manager.player_tournament_map:
         del tournament_manager.player_tournament_map[user["user_id"]]
+    await tournament_manager.remove_player_map(user["user_id"])
     
     # Refund buy-in
     await db.users.update_one(
@@ -2084,6 +2085,9 @@ async def leave_tournament(user: dict = Depends(get_current_user)):
     # Update prize pool
     tournament.total_buy_ins -= BUY_IN
     tournament.total_bounties -= BOUNTY_AMOUNT
+    
+    # Save tournament to MongoDB
+    await tournament_manager.save_tournament(tournament)
     
     # Broadcast player left
     await tournament_manager.broadcast_to_tournament(tournament, {
@@ -2098,6 +2102,7 @@ async def leave_tournament(user: dict = Depends(get_current_user)):
     # If tournament is empty or creator left, cancel it
     if len(tournament.players) == 0:
         tournament.status = TournamentStatus.CANCELLED
+        await tournament_manager.save_tournament(tournament)
     
     return {
         "success": True,
@@ -2108,7 +2113,7 @@ async def leave_tournament(user: dict = Depends(get_current_user)):
 @poker_router.post("/tournaments/force-leave")
 async def force_leave_tournament(user: dict = Depends(get_current_user)):
     """Force leave a tournament (for testing - works even during in-progress games)"""
-    tournament = tournament_manager.get_player_tournament(user["user_id"])
+    tournament = await tournament_manager.get_player_tournament(user["user_id"])
     if not tournament:
         raise HTTPException(status_code=404, detail="Not in any tournament")
     
@@ -2122,15 +2127,19 @@ async def force_leave_tournament(user: dict = Depends(get_current_user)):
     player.elimination_position = len(tournament.get_active_players()) + 1
     tournament.eliminated_players.append(user["user_id"])
     
-    # Remove from player mapping
+    # Remove from player mapping (memory and DB)
     if user["user_id"] in tournament_manager.player_tournament_map:
         del tournament_manager.player_tournament_map[user["user_id"]]
+    await tournament_manager.remove_player_map(user["user_id"])
     
     # Refund buy-in for testing
     await db.users.update_one(
         {"user_id": user["user_id"]},
         {"$inc": {"bl_coins": BUY_IN}}
     )
+    
+    # Save tournament to MongoDB
+    await tournament_manager.save_tournament(tournament)
     
     return {
         "success": True,
