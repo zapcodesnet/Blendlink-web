@@ -1,70 +1,66 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 16, 2026 (Session 3)
+## Latest Update: January 16, 2026 (Session 4)
 
-### SESSION SUMMARY - PKO Poker Tournament Bug FIXED ✅
-
----
-
-## BUG FIX: "Failed to create tournament" (CRITICAL - RESOLVED)
-
-### Root Cause
-Users were getting stuck in old tournaments from previous sessions. When they tried to create a new tournament, the backend returned "Already in a tournament" but the frontend showed a generic "Failed to create tournament" error.
-
-### Fixes Applied
-1. **Frontend - createTournament function** (`PokerTournament.jsx`):
-   - Added check for existing tournament before API call
-   - Improved error messages to be specific ("Already in a tournament" → shows helpful message)
-   - Added force-leave fallback for stuck tournaments
-   - Success toast: "Tournament created! Waiting for players..."
-
-2. **Frontend - Lobby UI** (`PokerTournament.jsx`):
-   - Added "Leave & Refund" button with proper styling
-   - Shows tournament info (players, pot size)
-   - Works for both registering and in-progress tournaments
-
-3. **Backend - WebSocket fix** (`poker_tournament.py`):
-   - Fixed KeyError on WebSocket disconnect by adding existence checks
-
-### Test Results
-- **5x consecutive tournament creation**: ALL PASSED ✅
-- **Backend tests**: 13/13 passed (100%)
-- **Frontend tests**: All UI flows verified
+### SESSION SUMMARY - MongoDB Persistence for PKO Poker ✅
 
 ---
 
-## PKO Poker Tournament - Working Features ✅
+## COMPLETED THIS SESSION
 
-1. **Tournament Creation**: Create and auto-join tournaments (2000 BL buy-in)
-2. **AI Bots**: Add 1-9 bots with unique personalities (tight-aggressive, loose-passive, etc.)
-3. **Auto-Start**: Tournaments auto-start 30s after reaching 10 players
-4. **Bot AI Decisions**: Bots analyze hand strength, pot odds, and position
-5. **Game Phases**: pre_flop → flop → turn → river → showdown
-6. **Hand Evaluation**: All poker hands correctly ranked
-7. **PKO Bounty System**: 50% immediate payout, 50% added to winner's bounty
-8. **Rebuy System**: Available during early tournament phase
-9. **Force Leave**: Users can leave stuck tournaments with buy-in refund
-10. **Real-time Updates**: WebSocket broadcasts game state changes
+### MongoDB Persistence for Poker Tournaments ✅
+**New Collections**:
+- `poker_tournaments` - Stores full tournament state (players, cards, pot, phase, etc.)
+- `poker_player_maps` - Maps user_id to tournament_id for quick lookups
+
+**Key Features**:
+1. **Auto-Load on Startup**: TournamentManager loads active tournaments from MongoDB
+2. **Save on Change**: Tournament state saved after create, register, add bots, leave
+3. **Survives Restart**: Tournaments persist through backend restarts (verified by tests)
+4. **Player Mapping**: Tracks which user is in which tournament in MongoDB
+
+**Code Changes**:
+- `poker_tournament.py`: Added `save_tournament()`, `_tournament_to_doc()`, `_tournament_from_doc()`, `initialize()`
+- Fixed serialization bug: `hole_cards` attribute (not `cards`)
+- Added `await tournament_manager.initialize()` to all endpoints
+
+### Mobile App Fixes ✅
+- Fixed `handleCreateTournament` to register after creating tournament
+- Added `forceLeaveTournament` API call for stuck tournaments
+- Fixed WebSocket URL to use correct backend URL
+- Added proper error handling with "Leave & Create" option
 
 ---
 
-## Previous Session Fixes
+## Testing Results
+
+**Test Report**: `/app/test_reports/iteration_26.json`
+- **Backend**: 11/11 tests passed (100%)
+- **Frontend**: All UI flows verified
+
+**Key Test Cases**:
+- Tournament creation saves to MongoDB ✓
+- Player registration saves to MongoDB ✓
+- Adding bots saves to MongoDB ✓
+- Force leave removes from DB mapping ✓
+- Tournament survives backend restart ✓
+
+---
+
+## Previous Sessions
+
+### Session 3 - PKO Bug Fix
+- Fixed "Failed to create tournament" error
+- Root cause: Users stuck in old tournaments with unhelpful error messages
+- Added force-leave option and better error handling
 
 ### Session 2 - Admin Panel
 - Fixed Orphan Auto-Assignment (12-tier priority system)
-- Mobile Admin Panel 100% synced with web (8 new screens)
-- Fixed User Management
+- Mobile Admin Panel 100% synced with web
 
-### Session 1 - Core Bugs  
+### Session 1 - Core Bugs
 - Fixed "body stream already read" errors
 - Fixed PKO Poker tournament flow
-
----
-
-## Testing Reports
-- `/app/test_reports/iteration_25.json` - PKO Bug Fix (13/13 passed)
-- `/app/test_reports/iteration_24.json` - Poker Features (13/13 passed)
-- `/app/test_reports/iteration_23.json` - Admin Panel (22/22 passed)
 
 ---
 
