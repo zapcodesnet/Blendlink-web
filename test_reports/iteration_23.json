@@ -8,9 +8,7 @@
   },
   "frontend_issues": {
     "ui_bugs": [],
-    "integration_issues": [
-      {"flow": "Diamond Leaders navigation", "issue": "Sidebar link goes to /admin/diamond-leaders but route is /admin/diamonds - causes blank page", "affected_selectors": ["sidebar link 'Diamond Leaders'"], "priority": "LOW"}
-    ],
+    "integration_issues": [],
     "design_issues": []
   },
   "passed_tests": [
