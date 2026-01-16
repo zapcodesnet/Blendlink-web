@@ -731,6 +731,7 @@ const PokerTableScreen = ({ route, navigation }) => {
             </View>
           )}
         </View>
+        </ScrollView>
 
         {/* Back button */}
         <TouchableOpacity style={styles.exitButton} onPress={() => navigation.goBack()}>
