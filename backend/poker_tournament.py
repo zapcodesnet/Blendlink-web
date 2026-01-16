@@ -1843,13 +1843,16 @@ tournament_manager = TournamentManager()
 @poker_router.get("/tournaments")
 async def list_tournaments(user: dict = Depends(get_current_user)):
     """List all available tournaments"""
+    # Initialize manager if needed
+    await tournament_manager.initialize()
+    
     open_tournaments = tournament_manager.get_open_tournaments()
     return {
         "tournaments": [
             {
                 "tournament_id": t.tournament_id,
                 "name": t.name,
-                "status": t.status,
+                "status": t.status.value,
                 "player_count": len(t.players),
                 "max_players": MAX_PLAYERS,
                 "buy_in": BUY_IN,
