@@ -4,7 +4,7 @@
  * - Real-time WebSocket sync with web app
  * - AI Bots with human-like behaviors
  * - Progressive Knockout bounty system
- * - Landscape mode for gameplay
+ * - Responsive layout for all screen sizes
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -14,25 +14,30 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Animated,
   Dimensions,
   Alert,
   RefreshControl,
   TextInput,
   ActivityIndicator,
-  Modal,
+  Platform,
+  StatusBar,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import { useAuth } from '../context/AuthContext';
 import { pokerAPI } from '../services/api';
 
-const { width, height } = Dimensions.get('window');
+// Get dynamic dimensions
+const getScreenDimensions = () => {
+  const { width, height } = Dimensions.get('window');
+  return { width, height, isLandscape: width > height };
+};
 
 // Card Component
 const Card = ({ card, faceDown = false, style }) => {
   const getSuitColor = (suit) => {
-    return ['♥', '♦'].includes(suit) ? '#EF4444' : '#1F2937';
+    return ['hearts', 'diamonds', '♥', '♦'].includes(suit) ? '#EF4444' : '#1F2937';
   };
 
   const getSuitSymbol = (suit) => {
@@ -49,7 +54,7 @@ const Card = ({ card, faceDown = false, style }) => {
   }
 
   const suitSymbol = getSuitSymbol(card.suit);
-  const suitColor = getSuitColor(suitSymbol);
+  const suitColor = getSuitColor(card.suit);
 
   return (
     <View style={[styles.card, style]}>
@@ -90,35 +95,33 @@ const PlayerSeat = ({ player, isCurrentTurn, isDealer, isSB, isBB, isMe, showCar
         {player.is_bot && <Text style={styles.botIndicator}>🤖</Text>}
       </View>
 
-      {/* Cards */}
+      {/* Player cards */}
       <View style={styles.playerCards}>
         {player.cards?.map((card, i) => (
-          <Card 
-            key={i} 
-            card={card} 
-            faceDown={!showCards && !isMe && card.rank === '?'}
+          <Card
+            key={i}
+            card={card}
+            faceDown={!isMe && !showCards && card.rank !== '?'}
             style={styles.playerCard}
           />
         ))}
       </View>
 
-      {/* Player info */}
+      {/* Name */}
       <Text style={[styles.playerName, isMe && styles.myName]} numberOfLines={1}>
-        {player.username} {isMe && '(You)'} {player.is_bot && '🤖'}
+        {player.username} {isMe && '(You)'}
       </Text>
-      
+
+      {/* Chips */}
       <View style={styles.playerChips}>
         <Text style={styles.chipsText}>💰 {player.chips?.toLocaleString()}</Text>
       </View>
-      
+
+      {/* Bounty */}
       {player.bounty > 0 && (
         <View style={styles.bountyBadge}>
           <Text style={styles.bountyText}>👑 {player.bounty?.toLocaleString()}</Text>
         </View>
-      )}
-
-      {player.total_bounty_bl > 0 && (
-        <Text style={styles.bountyWonText}>+{player.total_bounty_bl} BL won</Text>
       )}
 
       {/* Current bet */}
@@ -128,31 +131,33 @@ const PlayerSeat = ({ player, isCurrentTurn, isDealer, isSB, isBB, isMe, showCar
         </View>
       )}
 
-      {/* Status indicators */}
+      {/* Status badges */}
       {player.is_folded && <View style={styles.foldedBadge}><Text style={styles.foldedText}>FOLD</Text></View>}
       {player.is_all_in && <View style={styles.allInBadge}><Text style={styles.allInText}>ALL IN</Text></View>}
     </View>
   );
 };
 
-// Lobby Screen
+// Poker Lobby Screen
 const PokerLobbyScreen = ({ navigation }) => {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const [tournaments, setTournaments] = useState([]);
   const [myTournament, setMyTournament] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [creating, setCreating] = useState(false);
 
   const loadData = async () => {
     try {
-      const [tournamentsRes, myTournamentRes] = await Promise.all([
+      const [tournamentsData, myTournamentData] = await Promise.all([
         pokerAPI.getTournaments(),
         pokerAPI.getMyTournament(),
       ]);
-      setTournaments(tournamentsRes.tournaments || []);
-      if (myTournamentRes.in_tournament) {
-        setMyTournament(myTournamentRes.tournament);
+      setTournaments(tournamentsData.tournaments || []);
+      if (myTournamentData.in_tournament) {
+        setMyTournament(myTournamentData.tournament);
+      } else {
+        setMyTournament(null);
       }
     } catch (error) {
       console.error('Failed to load poker data:', error);
@@ -166,69 +171,69 @@ const PokerLobbyScreen = ({ navigation }) => {
     loadData();
   }, []);
 
+  const handleRefresh = () => {
+    setRefreshing(true);
+    loadData();
+  };
+
   const handleCreateTournament = async () => {
-    // Check if already in tournament
     if (myTournament) {
-      Alert.alert(
-        'Already in Tournament',
-        'You\'re already in a tournament. Leave it first or continue playing.',
-        [
-          { text: 'Continue Playing', onPress: () => navigation.navigate('PokerTable', { tournamentId: myTournament.tournament_id }) },
-          { text: 'Leave & Create New', onPress: handleForceLeaveAndCreate },
-        ]
-      );
+      Alert.alert('Already in Tournament', 'Leave your current tournament first.');
       return;
     }
 
     setCreating(true);
     try {
       // Create tournament
-      const result = await pokerAPI.createTournament('PKO Tournament');
+      const createResult = await pokerAPI.createTournament('Mobile PKO Tournament');
       
-      if (result.tournament_id) {
-        // Register for the tournament we just created
-        await pokerAPI.registerForTournament(result.tournament_id);
-        
-        // Navigate to table
-        navigation.navigate('PokerTable', { tournamentId: result.tournament_id });
+      if (!createResult.tournament_id) {
+        throw new Error('Failed to create tournament');
       }
+
+      // Register for it
+      await pokerAPI.registerForTournament(createResult.tournament_id);
+      
+      Alert.alert('Success', 'Tournament created! Waiting for players...');
+      navigation.navigate('PokerTable', { tournamentId: createResult.tournament_id });
     } catch (error) {
-      const errorMessage = error.response?.data?.detail || error.message || 'Failed to create tournament';
-      
-      if (errorMessage.includes('Already in a tournament')) {
-        Alert.alert(
-          'Already in Tournament',
-          'You\'re already in a tournament. Would you like to leave and create a new one?',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Leave & Create', onPress: handleForceLeaveAndCreate },
-          ]
-        );
-      } else {
-        Alert.alert('Error', errorMessage);
-      }
+      const msg = error.response?.data?.detail || error.message || 'Failed to create tournament';
+      Alert.alert('Error', msg);
     } finally {
       setCreating(false);
     }
   };
 
-  const handleForceLeaveAndCreate = async () => {
-    try {
-      await pokerAPI.forceLeaveTournament();
-      setMyTournament(null);
-      // Retry creating
-      handleCreateTournament();
-    } catch (error) {
-      Alert.alert('Error', 'Failed to leave tournament');
-    }
-  };
-
   const handleJoinTournament = async (tournamentId) => {
+    if (myTournament) {
+      Alert.alert('Already in Tournament', 'Leave your current tournament first.');
+      return;
+    }
+
     try {
       await pokerAPI.registerForTournament(tournamentId);
       navigation.navigate('PokerTable', { tournamentId });
     } catch (error) {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to join tournament');
+    }
+  };
+
+  const handleLeaveTournament = async () => {
+    try {
+      await pokerAPI.leaveTournament(myTournament.tournament_id);
+      Alert.alert('Success', 'Left tournament. Buy-in refunded!');
+      setMyTournament(null);
+      loadData();
+    } catch (error) {
+      // Try force leave
+      try {
+        await pokerAPI.forceLeave();
+        Alert.alert('Success', 'Force left tournament.');
+        setMyTournament(null);
+        loadData();
+      } catch (forceError) {
+        Alert.alert('Error', forceError.response?.data?.detail || 'Failed to leave');
+      }
     }
   };
 
@@ -246,8 +251,9 @@ const PokerLobbyScreen = ({ navigation }) => {
       <LinearGradient colors={['#0F172A', '#1E293B']} style={styles.gradient}>
         <ScrollView
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadData(); }} />
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#8B5CF6" />
           }
+          contentContainerStyle={styles.lobbyContent}
         >
           {/* Header */}
           <View style={styles.header}>
@@ -255,7 +261,7 @@ const PokerLobbyScreen = ({ navigation }) => {
             <Text style={styles.headerSubtitle}>Texas Hold'em Progressive Knockout</Text>
           </View>
 
-          {/* Tournament Info Card */}
+          {/* Tournament Info */}
           <View style={styles.infoCard}>
             <Text style={styles.infoTitle}>Tournament Format</Text>
             <View style={styles.infoRow}>
@@ -264,7 +270,7 @@ const PokerLobbyScreen = ({ navigation }) => {
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Starting Bounty:</Text>
-              <Text style={styles.infoValue}>1,000 BL (Platform bonus)</Text>
+              <Text style={styles.infoValue}>1,000 BL</Text>
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Players:</Text>
@@ -289,9 +295,27 @@ const PokerLobbyScreen = ({ navigation }) => {
               <Text style={styles.myTournamentTitle}>🎮 Your Active Tournament</Text>
               <Text style={styles.myTournamentName}>{myTournament.name}</Text>
               <Text style={styles.myTournamentStatus}>
-                {myTournament.player_count}/10 players • {myTournament.status}
+                Status: {myTournament.status} | Players: {myTournament.player_count}/10
               </Text>
               <Text style={styles.continueText}>Tap to continue playing →</Text>
+              
+              {/* Leave button */}
+              <TouchableOpacity 
+                style={styles.leaveTournamentBtn}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  Alert.alert(
+                    'Leave Tournament?',
+                    'Your buy-in will be refunded.',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      { text: 'Leave', style: 'destructive', onPress: handleLeaveTournament }
+                    ]
+                  );
+                }}
+              >
+                <Text style={styles.leaveTournamentText}>Leave & Refund</Text>
+              </TouchableOpacity>
             </TouchableOpacity>
           )}
 
@@ -303,7 +327,7 @@ const PokerLobbyScreen = ({ navigation }) => {
               disabled={creating}
             >
               <LinearGradient
-                colors={['#8B5CF6', '#6366F1']}
+                colors={['#F59E0B', '#D97706']}
                 style={styles.createButtonGradient}
               >
                 {creating ? (
@@ -318,7 +342,7 @@ const PokerLobbyScreen = ({ navigation }) => {
             </TouchableOpacity>
           )}
 
-          {/* Open Tournaments */}
+          {/* Open Tables */}
           <Text style={styles.sectionTitle}>Open Tables</Text>
           {tournaments.length === 0 ? (
             <View style={styles.emptyState}>
@@ -335,8 +359,7 @@ const PokerLobbyScreen = ({ navigation }) => {
                 <View style={styles.tournamentInfo}>
                   <Text style={styles.tournamentName}>{t.name}</Text>
                   <Text style={styles.tournamentPlayers}>
-                    {t.player_count}/10 players
-                    {t.bot_count > 0 && ` (${t.bot_count} bots)`}
+                    Players: {t.player_count}/{t.max_players} | Prize: {t.prize_pool} BL
                   </Text>
                 </View>
                 <TouchableOpacity style={styles.joinButton}>
@@ -366,18 +389,35 @@ const PokerTableScreen = ({ route, navigation }) => {
   const { user, token } = useAuth();
   const [tournament, setTournament] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [betAmount, setBetAmount] = useState(0);
+  const [betAmount, setBetAmount] = useState(100);
   const [actionLoading, setActionLoading] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
   const [showChat, setShowChat] = useState(false);
+  const [screenDimensions, setScreenDimensions] = useState(getScreenDimensions());
   const wsRef = useRef(null);
+  const insets = useSafeAreaInsets();
+
+  // Handle screen dimension changes (rotation)
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setScreenDimensions({
+        width: window.width,
+        height: window.height,
+        isLandscape: window.width > window.height
+      });
+    });
+
+    return () => subscription?.remove();
+  }, []);
 
   // Load tournament data
   const loadTournament = async () => {
     try {
       const data = await pokerAPI.getTournament(tournamentId);
       setTournament(data);
-      setBetAmount(data.big_blind || 50);
+      if (data.big_blind) {
+        setBetAmount(data.big_blind * 2);
+      }
     } catch (error) {
       console.error('Failed to load tournament:', error);
       Alert.alert('Error', 'Failed to load tournament');
@@ -391,43 +431,66 @@ const PokerTableScreen = ({ route, navigation }) => {
   useEffect(() => {
     loadTournament();
 
-    // Connect to WebSocket for real-time updates
-    // Use the same backend URL but with wss protocol
-    const backendUrl = 'realtime-platform-1.preview.emergentagent.com';
-    const wsUrl = `wss://${backendUrl}/api/poker/ws/${tournamentId}?token=${token}`;
-    wsRef.current = new WebSocket(wsUrl);
+    // Get the WebSocket URL from environment or construct it
+    const apiUrl = process.env.EXPO_PUBLIC_API_URL || '';
+    const wsUrl = apiUrl.replace('https://', 'wss://').replace('http://', 'ws://') + `/api/poker/ws/${tournamentId}?token=${token}`;
+    
+    console.log('Connecting to WebSocket:', wsUrl);
 
-    wsRef.current.onopen = () => {
-      console.log('WebSocket connected');
-    };
+    try {
+      wsRef.current = new WebSocket(wsUrl);
 
-    wsRef.current.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === 'game_state' || data.type === 'state_update') {
-          setTournament(data.data);
-        } else if (data.type === 'player_eliminated') {
-          Alert.alert(
-            'Player Eliminated!',
-            `${data.data.eliminator_username} knocked out ${data.data.eliminated_username}\nBounty won: ${data.data.bounty_awarded} BL`
-          );
-        } else if (data.type === 'tournament_ended') {
-          Alert.alert('Tournament Ended', 'Results are being calculated...');
+      wsRef.current.onopen = () => {
+        console.log('WebSocket connected');
+      };
+
+      wsRef.current.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log('WebSocket message:', data.type);
+          
+          if (data.type === 'connected' || data.type === 'game_state' || data.type === 'state_update') {
+            setTournament(data.data);
+          } else if (data.type === 'tournament_started') {
+            setTournament(data.data);
+            Alert.alert('Tournament Started!', 'Good luck!');
+          } else if (data.type === 'player_eliminated') {
+            Alert.alert(
+              'Player Eliminated!',
+              `${data.data.eliminator_username || 'Someone'} knocked out ${data.data.eliminated_username}\nBounty: ${data.data.bounty_awarded} BL`
+            );
+          } else if (data.type === 'tournament_ended') {
+            Alert.alert('Tournament Ended!', `Winner: ${data.data.winner?.username || 'Unknown'}`);
+          } else if (data.type === 'pot_awarded') {
+            if (data.data.user_id === user?.user_id) {
+              Alert.alert('You Won!', `${data.data.amount} BL (${data.data.hand_name})`);
+            }
+          }
+        } catch (e) {
+          console.error('WebSocket message parse error:', e);
         }
-      } catch (e) {
-        console.error('WebSocket message error:', e);
+      };
+
+      wsRef.current.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+
+      wsRef.current.onclose = () => {
+        console.log('WebSocket disconnected');
+      };
+    } catch (e) {
+      console.error('WebSocket connection error:', e);
+    }
+
+    // Polling fallback for game state
+    const pollInterval = setInterval(() => {
+      if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+        loadTournament();
       }
-    };
-
-    wsRef.current.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
-
-    wsRef.current.onclose = () => {
-      console.log('WebSocket disconnected');
-    };
+    }, 5000);
 
     return () => {
+      clearInterval(pollInterval);
       if (wsRef.current) {
         wsRef.current.close();
       }
@@ -436,11 +499,19 @@ const PokerTableScreen = ({ route, navigation }) => {
 
   // Handle player action
   const handleAction = async (action, amount = 0) => {
+    if (actionLoading) return;
+    
     setActionLoading(true);
     try {
+      console.log(`Sending action: ${action} with amount: ${amount}`);
       await pokerAPI.playerAction(tournamentId, action, amount);
+      
+      // Refresh tournament state
+      setTimeout(loadTournament, 500);
     } catch (error) {
-      Alert.alert('Error', error.response?.data?.detail || 'Action failed');
+      const errorMsg = error.response?.data?.detail || 'Action failed';
+      console.error('Action error:', errorMsg);
+      Alert.alert('Error', errorMsg);
     } finally {
       setActionLoading(false);
     }
@@ -450,7 +521,9 @@ const PokerTableScreen = ({ route, navigation }) => {
   const handleAddBots = async (count) => {
     if (!tournament) return;
     
-    const availableSeats = 10 - Object.keys(tournament.players || {}).length;
+    const currentPlayers = Object.keys(tournament.players || {}).length;
+    const availableSeats = 10 - currentPlayers;
+    
     if (availableSeats <= 0) {
       Alert.alert('Table Full', 'The table is already full with 10 players.');
       return;
@@ -463,18 +536,24 @@ const PokerTableScreen = ({ route, navigation }) => {
       const added = result.bots_added || 0;
       
       if (added > 0) {
-        Alert.alert('Bots Added', `Successfully added ${added} AI bot${added > 1 ? 's' : ''} to the table!`);
-        // Refresh tournament data
-        const updatedTournament = await pokerAPI.getMyTournament();
-        if (updatedTournament.in_tournament) {
-          setTournament(updatedTournament.tournament);
-        }
+        Alert.alert('Bots Added', `Successfully added ${added} AI bot${added > 1 ? 's' : ''}!`);
+        loadTournament();
       } else {
-        Alert.alert('No Bots Added', 'Could not add bots. The table may be full or the tournament has already started.');
+        Alert.alert('No Bots Added', 'Could not add bots. The table may be full.');
       }
     } catch (error) {
-      const msg = error.response?.data?.detail || 'Failed to add bots';
-      Alert.alert('Error', msg);
+      Alert.alert('Error', error.response?.data?.detail || 'Failed to add bots');
+    }
+  };
+
+  // Handle force start
+  const handleForceStart = async () => {
+    try {
+      await pokerAPI.forceStart(tournamentId);
+      Alert.alert('Tournament Started!', 'Let the games begin!');
+      loadTournament();
+    } catch (error) {
+      Alert.alert('Error', error.response?.data?.detail || 'Failed to start tournament');
     }
   };
 
@@ -486,6 +565,19 @@ const PokerTableScreen = ({ route, navigation }) => {
       loadTournament();
     } catch (error) {
       Alert.alert('Error', error.response?.data?.detail || 'Rebuy failed');
+    }
+  };
+
+  // Handle chat
+  const handleSendChat = async () => {
+    if (!chatMessage.trim()) return;
+    
+    try {
+      await pokerAPI.sendChat(tournamentId, chatMessage);
+      setChatMessage('');
+      loadTournament();
+    } catch (e) {
+      console.error('Chat error:', e);
     }
   };
 
@@ -501,29 +593,36 @@ const PokerTableScreen = ({ route, navigation }) => {
   const players = Object.values(tournament?.players || {});
   const myPlayer = players.find(p => p.user_id === user?.user_id);
   const isMyTurn = tournament?.current_player_seat === myPlayer?.seat;
-  const canAct = isMyTurn && !myPlayer?.is_folded && myPlayer?.is_active;
+  const canAct = isMyTurn && !myPlayer?.is_folded && myPlayer?.is_active && !myPlayer?.is_all_in;
+  const isCreator = tournament?.creator_id === user?.user_id;
+  const isRegistering = tournament?.status === 'registering';
+  const currentBet = tournament?.current_bet || 0;
+  const myCurrentBet = myPlayer?.current_bet || 0;
+  const toCall = currentBet - myCurrentBet;
+  const minRaise = tournament?.min_raise || tournament?.big_blind || 50;
 
   // Waiting room view
-  if (tournament?.status === 'registering') {
+  if (isRegistering) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+        <StatusBar barStyle="light-content" />
         <LinearGradient colors={['#0F172A', '#1E293B']} style={styles.gradient}>
-          <View style={styles.waitingRoom}>
+          <ScrollView contentContainerStyle={styles.waitingContent}>
             <Text style={styles.waitingTitle}>⏳ Waiting for Players</Text>
-            <Text style={styles.waitingCount}>{tournament.player_count}/10</Text>
+            <Text style={styles.waitingCount}>{tournament?.player_count || 0}/10</Text>
 
             {/* Players list */}
             <View style={styles.playersList}>
               {players.map((p) => (
                 <View key={p.user_id} style={[styles.waitingPlayer, p.is_bot && styles.botPlayer]}>
                   <Text style={styles.waitingPlayerName}>
-                    {p.username} {p.is_bot && '🤖'}
+                    {p.username} {p.is_bot && '🤖'} {p.user_id === user?.user_id && '(You)'}
                   </Text>
                   {p.is_bot && <Text style={styles.botSkill}>{p.bot_personality}</Text>}
                 </View>
               ))}
               {/* Empty seats */}
-              {Array(10 - tournament.player_count).fill(null).map((_, i) => (
+              {Array(10 - (tournament?.player_count || 0)).fill(null).map((_, i) => (
                 <View key={`empty-${i}`} style={styles.emptySeatWaiting}>
                   <Text style={styles.emptySeatText}>Empty Seat</Text>
                 </View>
@@ -531,7 +630,7 @@ const PokerTableScreen = ({ route, navigation }) => {
             </View>
 
             {/* Add bots (creator only) */}
-            {tournament.creator_id === user?.user_id && tournament.player_count < 10 && (
+            {isCreator && tournament.player_count < 10 && (
               <View style={styles.addBotsSection}>
                 <Text style={styles.addBotsTitle}>Add AI Bots</Text>
                 <View style={styles.addBotsButtons}>
@@ -545,13 +644,20 @@ const PokerTableScreen = ({ route, navigation }) => {
                     <Text style={styles.fillBotsBtnText}>Fill ({10 - tournament.player_count})</Text>
                   </TouchableOpacity>
                 </View>
+                
+                {/* Force start button */}
+                {tournament.player_count >= 2 && (
+                  <TouchableOpacity style={styles.forceStartBtn} onPress={handleForceStart}>
+                    <Text style={styles.forceStartBtnText}>Force Start Tournament</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             )}
 
             <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
               <Text style={styles.backButtonText}>← Leave Lobby</Text>
             </TouchableOpacity>
-          </View>
+          </ScrollView>
         </LinearGradient>
       </SafeAreaView>
     );
@@ -559,31 +665,36 @@ const PokerTableScreen = ({ route, navigation }) => {
 
   // Game view
   return (
-    <View style={styles.tableContainer}>
+    <View style={[styles.tableContainer, { paddingTop: insets.top }]}>
+      <StatusBar barStyle="light-content" />
       <LinearGradient colors={['#0F172A', '#064E3B', '#0F172A']} style={styles.tableGradient}>
-        <ScrollView contentContainerStyle={styles.tableScrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView 
+          contentContainerStyle={[styles.tableScrollContent, { paddingBottom: 100 }]} 
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
           {/* Header Info */}
           <View style={styles.tableHeader}>
             <View>
-              <Text style={styles.blindsText}>Blinds: {tournament.small_blind}/{tournament.big_blind}</Text>
-              <Text style={styles.levelText}>Level {tournament.blind_level + 1}</Text>
+              <Text style={styles.blindsText}>Blinds: {tournament?.small_blind}/{tournament?.big_blind}</Text>
+              <Text style={styles.levelText}>Level {(tournament?.blind_level || 0) + 1}</Text>
             </View>
             <View style={styles.potContainer}>
               <Text style={styles.potLabel}>POT</Text>
-              <Text style={styles.potValue}>{tournament.pot?.toLocaleString()}</Text>
+              <Text style={styles.potValue}>{tournament?.pot?.toLocaleString() || 0}</Text>
             </View>
             <View>
-              <Text style={styles.handText}>Hand #{tournament.hand_number}</Text>
-              <Text style={styles.phaseText}>{tournament.phase?.toUpperCase()}</Text>
+              <Text style={styles.handText}>Hand #{tournament?.hand_number || 0}</Text>
+              <Text style={styles.phaseText}>{tournament?.phase?.toUpperCase() || 'WAITING'}</Text>
             </View>
           </View>
 
           {/* Community Cards */}
           <View style={styles.communityCards}>
-            {tournament.community_cards?.map((card, i) => (
+            {tournament?.community_cards?.map((card, i) => (
               <Card key={i} card={card} style={styles.communityCard} />
             ))}
-            {Array(5 - (tournament.community_cards?.length || 0)).fill(null).map((_, i) => (
+            {Array(5 - (tournament?.community_cards?.length || 0)).fill(null).map((_, i) => (
               <View key={`empty-${i}`} style={styles.emptyCard} />
             ))}
           </View>
@@ -594,12 +705,12 @@ const PokerTableScreen = ({ route, navigation }) => {
               <PlayerSeat
                 key={player.user_id}
                 player={player}
-                isCurrentTurn={tournament.current_player_seat === player.seat}
-                isDealer={tournament.dealer_seat === player.seat}
-                isSB={tournament.small_blind_seat === player.seat}
-                isBB={tournament.big_blind_seat === player.seat}
+                isCurrentTurn={tournament?.current_player_seat === player.seat}
+                isDealer={tournament?.dealer_seat === player.seat}
+                isSB={tournament?.small_blind_seat === player.seat}
+                isBB={tournament?.big_blind_seat === player.seat}
                 isMe={player.user_id === user?.user_id}
-                showCards={tournament.phase === 'showdown' || tournament.phase === 'hand_complete'}
+                showCards={tournament?.phase === 'showdown' || tournament?.phase === 'hand_complete'}
               />
             ))}
           </View>
@@ -607,136 +718,169 @@ const PokerTableScreen = ({ route, navigation }) => {
           {/* My Cards & Actions */}
           {myPlayer && (
             <View style={styles.mySection}>
+              {/* Turn indicator */}
+              {isMyTurn && !myPlayer.is_folded && (
+                <View style={styles.turnIndicator}>
+                  <Text style={styles.turnIndicatorText}>🎯 YOUR TURN!</Text>
+                </View>
+              )}
+
               {/* My hole cards (larger) */}
               <View style={styles.myCards}>
-                {myPlayer.cards?.map((card, i) => (
-                  <Card key={i} card={card} style={styles.myCard} />
-                ))}
+                <Text style={styles.myCardsLabel}>Your Cards:</Text>
+                <View style={styles.myCardsRow}>
+                  {myPlayer.cards?.map((card, i) => (
+                    <Card key={i} card={card} style={styles.myCard} />
+                  ))}
+                </View>
               </View>
 
-              {/* Action buttons */}
+              {/* Action buttons - Always show when it's my turn */}
               {canAct && (
                 <View style={styles.actionsContainer}>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.foldButton]}
-                    onPress={() => handleAction('fold')}
-                    disabled={actionLoading}
-                  >
-                    <Text style={styles.actionButtonText}>FOLD</Text>
-                  </TouchableOpacity>
-
-                  {tournament.current_bet === myPlayer.current_bet ? (
+                  <View style={styles.actionButtonsRow}>
                     <TouchableOpacity
-                      style={[styles.actionButton, styles.checkButton]}
-                      onPress={() => handleAction('check')}
-                    disabled={actionLoading}
-                  >
-                    <Text style={styles.actionButtonText}>CHECK</Text>
-                  </TouchableOpacity>
-                ) : (
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.callButton]}
-                    onPress={() => handleAction('call')}
-                    disabled={actionLoading}
-                  >
-                    <Text style={styles.actionButtonText}>
-                      CALL {tournament.current_bet - myPlayer.current_bet}
-                    </Text>
-                  </TouchableOpacity>
-                )}
+                      style={[styles.actionButton, styles.foldButton]}
+                      onPress={() => handleAction('fold')}
+                      disabled={actionLoading}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.actionButtonText}>FOLD</Text>
+                    </TouchableOpacity>
 
-                <View style={styles.raiseSection}>
-                  <TextInput
-                    style={styles.betInput}
-                    value={String(betAmount)}
-                    onChangeText={(t) => setBetAmount(parseInt(t) || 0)}
-                    keyboardType="number-pad"
-                  />
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.raiseButton]}
-                    onPress={() => handleAction('raise', betAmount)}
-                    disabled={actionLoading}
-                  >
-                    <Text style={styles.actionButtonText}>RAISE</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <TouchableOpacity
-                  style={[styles.actionButton, styles.allInButton]}
-                  onPress={() => handleAction('all_in')}
-                  disabled={actionLoading}
-                >
-                  <Text style={styles.actionButtonText}>ALL IN</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-
-            {/* Rebuy option */}
-            {tournament.rebuy_available && myPlayer && myPlayer.chips === 0 && !myPlayer.is_active && (
-              <TouchableOpacity style={styles.rebuyButton} onPress={handleRebuy}>
-                <Text style={styles.rebuyButtonText}>REBUY (2,000 BL)</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        )}
-
-        {/* Table Chat Section */}
-        <View style={styles.chatSection}>
-          <TouchableOpacity 
-            style={styles.chatToggle} 
-            onPress={() => setShowChat(!showChat)}
-          >
-            <Text style={styles.chatToggleText}>
-              💬 Chat {showChat ? '▼' : '▲'}
-            </Text>
-          </TouchableOpacity>
-          
-          {showChat && (
-            <View style={styles.chatContainer}>
-              <ScrollView style={styles.chatMessages}>
-                {tournament.chat_messages?.length === 0 && (
-                  <Text style={styles.noChatText}>No messages yet. Say hello!</Text>
-                )}
-                {tournament.chat_messages?.map((msg, idx) => (
-                  <View key={idx} style={styles.chatMessage}>
-                    <Text style={styles.chatUsername}>{msg.username}:</Text>
-                    <Text style={styles.chatText}>{msg.message}</Text>
+                    {toCall <= 0 ? (
+                      <TouchableOpacity
+                        style={[styles.actionButton, styles.checkButton]}
+                        onPress={() => handleAction('check')}
+                        disabled={actionLoading}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.actionButtonText}>CHECK</Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <TouchableOpacity
+                        style={[styles.actionButton, styles.callButton]}
+                        onPress={() => handleAction('call')}
+                        disabled={actionLoading}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.actionButtonText}>CALL {toCall}</Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
-                ))}
-              </ScrollView>
-              <View style={styles.chatInputRow}>
-                <TextInput
-                  style={styles.chatInput}
-                  placeholder="Type a message..."
-                  placeholderTextColor="#64748B"
-                  value={chatMessage}
-                  onChangeText={setChatMessage}
-                />
-                <TouchableOpacity 
-                  style={styles.chatSendBtn}
-                  onPress={async () => {
-                    if (chatMessage.trim()) {
-                      try {
-                        await pokerAPI.sendChat(tournamentId, chatMessage);
-                        setChatMessage('');
-                      } catch (e) {
-                        console.error('Chat error:', e);
-                      }
-                    }
-                  }}
-                >
-                  <Text style={styles.chatSendText}>Send</Text>
+
+                  {/* Raise section */}
+                  <View style={styles.raiseSection}>
+                    <TextInput
+                      style={styles.betInput}
+                      value={String(betAmount)}
+                      onChangeText={(t) => setBetAmount(parseInt(t) || minRaise)}
+                      keyboardType="number-pad"
+                      placeholder="Amount"
+                      placeholderTextColor="#666"
+                    />
+                    <TouchableOpacity
+                      style={[styles.actionButton, styles.raiseButton]}
+                      onPress={() => handleAction('raise', betAmount)}
+                      disabled={actionLoading || betAmount < currentBet + minRaise}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.actionButtonText}>RAISE</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.actionButton, styles.allInButton]}
+                      onPress={() => handleAction('all_in')}
+                      disabled={actionLoading}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.actionButtonText}>ALL IN</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+
+              {/* Show waiting message when not your turn */}
+              {!canAct && myPlayer && !myPlayer.is_folded && (
+                <View style={styles.waitingMessage}>
+                  <Text style={styles.waitingMessageText}>
+                    {myPlayer.is_all_in ? '🔥 You are ALL IN!' : '⏳ Waiting for your turn...'}
+                  </Text>
+                </View>
+              )}
+
+              {/* Folded message */}
+              {myPlayer && myPlayer.is_folded && (
+                <View style={styles.foldedMessage}>
+                  <Text style={styles.foldedMessageText}>You folded this hand</Text>
+                </View>
+              )}
+
+              {/* Rebuy option */}
+              {tournament?.rebuy_available && myPlayer && myPlayer.chips === 0 && !myPlayer.is_active && (
+                <TouchableOpacity style={styles.rebuyButton} onPress={handleRebuy}>
+                  <Text style={styles.rebuyButtonText}>REBUY (2,000 BL)</Text>
                 </TouchableOpacity>
-              </View>
+              )}
             </View>
           )}
-        </View>
+
+          {/* Table Chat Section */}
+          <View style={styles.chatSection}>
+            <TouchableOpacity 
+              style={styles.chatToggle} 
+              onPress={() => setShowChat(!showChat)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.chatToggleText}>
+                💬 Chat {showChat ? '▼' : '▲'}
+              </Text>
+            </TouchableOpacity>
+            
+            {showChat && (
+              <View style={styles.chatContainer}>
+                <ScrollView style={styles.chatMessages}>
+                  {tournament?.chat_messages?.length === 0 && (
+                    <Text style={styles.noChatText}>No messages yet. Say hello!</Text>
+                  )}
+                  {tournament?.chat_messages?.map((msg, idx) => (
+                    <View key={idx} style={styles.chatMessage}>
+                      <Text style={styles.chatUsername}>{msg.username}:</Text>
+                      <Text style={styles.chatText}>{msg.message}</Text>
+                    </View>
+                  ))}
+                </ScrollView>
+                <View style={styles.chatInputRow}>
+                  <TextInput
+                    style={styles.chatInput}
+                    placeholder="Type a message..."
+                    placeholderTextColor="#64748B"
+                    value={chatMessage}
+                    onChangeText={setChatMessage}
+                  />
+                  <TouchableOpacity style={styles.chatSendBtn} onPress={handleSendChat}>
+                    <Text style={styles.chatSendText}>Send</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+          </View>
         </ScrollView>
 
-        {/* Back button */}
-        <TouchableOpacity style={styles.exitButton} onPress={() => navigation.goBack()}>
+        {/* Exit button - Fixed position */}
+        <TouchableOpacity 
+          style={[styles.exitButton, { top: insets.top + 10 }]} 
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.7}
+        >
           <Text style={styles.exitButtonText}>← EXIT</Text>
         </TouchableOpacity>
+
+        {/* Loading overlay */}
+        {actionLoading && (
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator size="large" color="#fff" />
+          </View>
+        )}
       </LinearGradient>
     </View>
   );
@@ -764,6 +908,9 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     marginTop: 16,
     fontSize: 16,
+  },
+  lobbyContent: {
+    paddingBottom: 40,
   },
   header: {
     padding: 20,
@@ -838,6 +985,19 @@ const styles = StyleSheet.create({
     color: '#22C55E',
     fontWeight: '600',
     marginTop: 12,
+  },
+  leaveTournamentBtn: {
+    marginTop: 12,
+    padding: 10,
+    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#EF4444',
+    alignItems: 'center',
+  },
+  leaveTournamentText: {
+    color: '#EF4444',
+    fontWeight: '600',
   },
   createButton: {
     margin: 16,
@@ -935,8 +1095,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   // Waiting room
-  waitingRoom: {
-    flex: 1,
+  waitingContent: {
+    flexGrow: 1,
     padding: 20,
     alignItems: 'center',
   },
@@ -1024,6 +1184,18 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
   },
+  forceStartBtn: {
+    marginTop: 16,
+    padding: 14,
+    backgroundColor: '#22C55E',
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  forceStartBtnText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
   backButton: {
     marginTop: 24,
     padding: 16,
@@ -1035,14 +1207,15 @@ const styles = StyleSheet.create({
   // Table view
   tableContainer: {
     flex: 1,
+    backgroundColor: '#0F172A',
   },
   tableGradient: {
     flex: 1,
-    padding: 16,
   },
   tableScrollContent: {
     flexGrow: 1,
-    paddingBottom: 80,
+    padding: 16,
+    paddingTop: 50,
   },
   tableHeader: {
     flexDirection: 'row',
@@ -1303,28 +1476,56 @@ const styles = StyleSheet.create({
   mySection: {
     marginTop: 20,
     alignItems: 'center',
+    paddingHorizontal: 16,
+  },
+  turnIndicator: {
+    backgroundColor: '#22C55E',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    marginBottom: 10,
+  },
+  turnIndicatorText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
   myCards: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  myCardsLabel: {
+    color: '#94A3B8',
+    fontSize: 12,
+    marginBottom: 8,
+  },
+  myCardsRow: {
     flexDirection: 'row',
     gap: 8,
-    marginBottom: 16,
   },
   myCard: {
     width: 60,
     height: 84,
   },
   actionsContainer: {
+    width: '100%',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    borderRadius: 16,
+    padding: 16,
+  },
+  actionButtonsRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     justifyContent: 'center',
-    gap: 8,
+    gap: 12,
+    marginBottom: 12,
   },
   actionButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 8,
-    minWidth: 70,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderRadius: 10,
+    minWidth: 80,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   foldButton: {
     backgroundColor: '#EF4444',
@@ -1344,22 +1545,45 @@ const styles = StyleSheet.create({
   actionButtonText: {
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: 12,
+    fontSize: 14,
   },
   raiseSection: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
   },
   betInput: {
-    width: 60,
-    height: 40,
+    width: 80,
+    height: 46,
     backgroundColor: '#fff',
-    borderRadius: 8,
-    paddingHorizontal: 8,
+    borderRadius: 10,
+    paddingHorizontal: 12,
     textAlign: 'center',
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
+  },
+  waitingMessage: {
+    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+  waitingMessageText: {
+    color: '#3B82F6',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  foldedMessage: {
+    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+  foldedMessageText: {
+    color: '#EF4444',
+    fontSize: 14,
+    fontWeight: '500',
   },
   rebuyButton: {
     marginTop: 16,
@@ -1375,13 +1599,23 @@ const styles = StyleSheet.create({
   },
   exitButton: {
     position: 'absolute',
-    top: 40,
     left: 16,
-    padding: 8,
+    padding: 10,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 8,
+    zIndex: 100,
   },
   exitButtonText: {
-    color: '#94A3B8',
+    color: '#fff',
     fontSize: 14,
+    fontWeight: '600',
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
   },
   // Chat styles
   chatSection: {
@@ -1450,6 +1684,7 @@ const styles = StyleSheet.create({
   chatSendBtn: {
     backgroundColor: '#3B82F6',
     paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: 8,
     justifyContent: 'center',
   },
@@ -1459,5 +1694,3 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
 });
-
-export default PokerLobbyScreen;
