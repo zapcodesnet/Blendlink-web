@@ -167,16 +167,59 @@ const PokerLobbyScreen = ({ navigation }) => {
   }, []);
 
   const handleCreateTournament = async () => {
+    // Check if already in tournament
+    if (myTournament) {
+      Alert.alert(
+        'Already in Tournament',
+        'You\'re already in a tournament. Leave it first or continue playing.',
+        [
+          { text: 'Continue Playing', onPress: () => navigation.navigate('PokerTable', { tournamentId: myTournament.tournament_id }) },
+          { text: 'Leave & Create New', onPress: handleForceLeaveAndCreate },
+        ]
+      );
+      return;
+    }
+
     setCreating(true);
     try {
+      // Create tournament
       const result = await pokerAPI.createTournament('PKO Tournament');
+      
       if (result.tournament_id) {
+        // Register for the tournament we just created
+        await pokerAPI.registerForTournament(result.tournament_id);
+        
+        // Navigate to table
         navigation.navigate('PokerTable', { tournamentId: result.tournament_id });
       }
     } catch (error) {
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to create tournament');
+      const errorMessage = error.response?.data?.detail || error.message || 'Failed to create tournament';
+      
+      if (errorMessage.includes('Already in a tournament')) {
+        Alert.alert(
+          'Already in Tournament',
+          'You\'re already in a tournament. Would you like to leave and create a new one?',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Leave & Create', onPress: handleForceLeaveAndCreate },
+          ]
+        );
+      } else {
+        Alert.alert('Error', errorMessage);
+      }
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleForceLeaveAndCreate = async () => {
+    try {
+      await pokerAPI.forceLeaveTournament();
+      setMyTournament(null);
+      // Retry creating
+      handleCreateTournament();
+    } catch (error) {
+      Alert.alert('Error', 'Failed to leave tournament');
     }
   };
 
