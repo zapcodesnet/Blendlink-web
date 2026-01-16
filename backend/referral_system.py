@@ -472,11 +472,33 @@ async def process_sale_commissions(
     return commission
 
 # ============== ORPHAN ASSIGNMENT ==============
+# Per user requirements:
+# - Max 2 orphans per user
+# - Assign one at a time, alternating among eligible users
+# - Assigned uplines do NOT receive any BL coin bonuses for orphans
+# - Orphans still get their 50,000 BL signup bonus
+# - Users inactive for more than 6 months are excluded
 
 async def find_orphan_recipient() -> Optional[str]:
     """
-    Find the best recipient for an orphan according to priority tiers.
+    Find the best recipient for an orphan according to 12 priority tiers.
     Returns user_id of the best match or None if no suitable recipient.
+    
+    Priority Rules (in descending order):
+    1. ID-verified active users with 0 direct recruits who log in daily (oldest join date first)
+    2. Non-ID-verified active users with 0 direct recruits who log in daily
+    3. Active users with 0 direct recruits who log in at least once a week
+    4. Active users with 0 direct recruits who log in at least once a month
+    5. Users with 0 direct recruits who log in at least once in 3 months
+    6. ID-verified active users with 1 direct recruit who log in daily
+    7. Non-ID-verified active users with 1 direct recruit who log in daily
+    8. Active users with 1 direct recruit who log in once a week
+    9. Active users with 1 direct recruit who log in at least once a month
+    10. Active users with 1 direct recruit who log in at least once in 3 months
+    11. Members with 1 direct recruit who log in at least once in less than 6 months
+    12. (Reserved for future expansion)
+    
+    Exclusions: Orphans are not assigned to users inactive for more than 6 months.
     """
     now = datetime.now(timezone.utc)
     six_months_ago = (now - timedelta(days=180)).isoformat()
@@ -486,32 +508,38 @@ async def find_orphan_recipient() -> Optional[str]:
     weekly_threshold = (now - timedelta(days=7)).isoformat()
     monthly_threshold = (now - timedelta(days=30)).isoformat()
     quarterly_threshold = (now - timedelta(days=90)).isoformat()
-    biannual_threshold = six_months_ago
     
-    # 11 Priority Tiers
+    # Track last assigned user to alternate fairly
+    last_assignment = await db.orphan_assignments.find_one(
+        {"assignment_type": "auto"},
+        sort=[("created_at", -1)]
+    )
+    last_assigned_to = last_assignment.get("assigned_to") if last_assignment else None
+    
+    # 12 Priority Tiers (per user specification)
     tiers = [
-        # Tier 1: ID-verified + active + 0 direct recruits + daily login
+        # Tier 1: ID-verified + 0 direct recruits + daily login
         {"id_verified": True, "direct_referrals": 0, "last_login_at": {"$gte": daily_threshold}},
-        # Tier 2: Not ID-verified + active + 0 direct recruits + daily login
+        # Tier 2: Non-ID-verified + 0 direct recruits + daily login
         {"id_verified": {"$ne": True}, "direct_referrals": 0, "last_login_at": {"$gte": daily_threshold}},
-        # Tier 3: Active + 0 direct recruits + weekly login
-        {"direct_referrals": 0, "last_login_at": {"$gte": weekly_threshold}},
-        # Tier 4: Active + 0 direct recruits + monthly login
-        {"direct_referrals": 0, "last_login_at": {"$gte": monthly_threshold}},
-        # Tier 5: Active + 0 direct recruits + quarterly login
-        {"direct_referrals": 0, "last_login_at": {"$gte": quarterly_threshold}},
-        # Tier 6: ID-verified + active + 1 direct recruit + daily login
+        # Tier 3: 0 direct recruits + weekly login
+        {"direct_referrals": 0, "last_login_at": {"$gte": weekly_threshold, "$lt": daily_threshold}},
+        # Tier 4: 0 direct recruits + monthly login
+        {"direct_referrals": 0, "last_login_at": {"$gte": monthly_threshold, "$lt": weekly_threshold}},
+        # Tier 5: 0 direct recruits + quarterly login (once in 3 months)
+        {"direct_referrals": 0, "last_login_at": {"$gte": quarterly_threshold, "$lt": monthly_threshold}},
+        # Tier 6: ID-verified + 1 direct recruit + daily login
         {"id_verified": True, "direct_referrals": 1, "last_login_at": {"$gte": daily_threshold}},
-        # Tier 7: Not ID-verified + active + 1 direct recruit + daily login
+        # Tier 7: Non-ID-verified + 1 direct recruit + daily login
         {"id_verified": {"$ne": True}, "direct_referrals": 1, "last_login_at": {"$gte": daily_threshold}},
-        # Tier 8: Active + 1 direct recruit + weekly login
-        {"direct_referrals": 1, "last_login_at": {"$gte": weekly_threshold}},
-        # Tier 9: Active + 1 direct recruit + monthly login
-        {"direct_referrals": 1, "last_login_at": {"$gte": monthly_threshold}},
-        # Tier 10: Active + 1 direct recruit + quarterly login
-        {"direct_referrals": 1, "last_login_at": {"$gte": quarterly_threshold}},
-        # Tier 11: Active + 1 direct recruit + biannual login
-        {"direct_referrals": 1, "last_login_at": {"$gte": biannual_threshold}},
+        # Tier 8: 1 direct recruit + weekly login
+        {"direct_referrals": 1, "last_login_at": {"$gte": weekly_threshold, "$lt": daily_threshold}},
+        # Tier 9: 1 direct recruit + monthly login
+        {"direct_referrals": 1, "last_login_at": {"$gte": monthly_threshold, "$lt": weekly_threshold}},
+        # Tier 10: 1 direct recruit + quarterly login (once in 3 months)
+        {"direct_referrals": 1, "last_login_at": {"$gte": quarterly_threshold, "$lt": monthly_threshold}},
+        # Tier 11: 1 direct recruit + login in less than 6 months (but more than 3 months)
+        {"direct_referrals": 1, "last_login_at": {"$gte": six_months_ago, "$lt": quarterly_threshold}},
     ]
     
     for tier_idx, tier_query in enumerate(tiers, 1):
@@ -522,7 +550,19 @@ async def find_orphan_recipient() -> Optional[str]:
             "last_login_at": {"$gte": six_months_ago},  # Never assign to inactive > 6 months
         }
         
-        # Find oldest user matching this tier
+        # For fairness: Try to alternate by excluding the last assigned user if possible
+        if last_assigned_to:
+            query_with_exclusion = {**query, "user_id": {"$ne": last_assigned_to}}
+            candidate = await db.users.find_one(
+                query_with_exclusion,
+                {"user_id": 1},
+                sort=[("created_at", 1)]  # Oldest first
+            )
+            if candidate:
+                logger.info(f"Found orphan recipient in Tier {tier_idx}: {candidate['user_id']} (alternated)")
+                return candidate["user_id"]
+        
+        # Fallback: Find oldest user matching this tier (without exclusion)
         candidate = await db.users.find_one(
             query,
             {"user_id": 1},
@@ -540,6 +580,10 @@ async def assign_orphan(new_user_id: str) -> Optional[str]:
     """
     Assign an orphan (user without referrer) to an existing member.
     Returns the assigned referrer's user_id or None.
+    
+    IMPORTANT: Per user specification:
+    - Assigned uplines do NOT receive any BL coin bonuses for orphans
+    - The new orphan user still receives their 50,000 BL signup bonus
     """
     recipient_id = await find_orphan_recipient()
     
@@ -553,11 +597,13 @@ async def assign_orphan(new_user_id: str) -> Optional[str]:
         {"$set": {
             "referred_by": recipient_id,
             "is_orphan": True,
+            "is_orphan_assigned": True,
             "orphan_assigned_at": datetime.now(timezone.utc).isoformat(),
         }}
     )
     
     # Increment recipient's orphan count and direct referrals
+    # NOTE: No bonus is given to the recipient for orphan assignments
     await db.users.update_one(
         {"user_id": recipient_id},
         {"$inc": {
@@ -566,27 +612,30 @@ async def assign_orphan(new_user_id: str) -> Optional[str]:
         }}
     )
     
-    # Give referral bonus to recipient
-    await record_transaction(
-        user_id=recipient_id,
-        transaction_type=TransactionType.REFERRAL_BONUS,
-        currency=Currency.BL,
-        amount=REFERRAL_BONUS_BL,
-        reference_id=new_user_id,
-        details={"type": "orphan_assignment", "new_user_id": new_user_id}
-    )
+    # Create referral relationship record (but NO bonus)
+    relationship = {
+        "relationship_id": f"rel_{uuid.uuid4().hex[:12]}",
+        "referrer_id": recipient_id,
+        "referred_id": new_user_id,
+        "level": 1,
+        "is_orphan_assignment": True,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "last_activity": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.referral_relationships.insert_one(relationship)
     
-    # Record orphan assignment in audit log
-    await db.orphan_assignments.insert_one({
+    # Record orphan assignment in audit log with tier info
+    assignment_record = {
         "assignment_id": f"orphan_{uuid.uuid4().hex[:12]}",
         "orphan_user_id": new_user_id,
         "assigned_to": recipient_id,
         "assignment_type": "auto",
-        "tier_matched": None,  # Could track which tier matched
         "created_at": datetime.now(timezone.utc).isoformat(),
-    })
+        "notes": "Upline does not receive bonus for orphan assignment",
+    }
+    await db.orphan_assignments.insert_one(assignment_record)
     
-    logger.info(f"Orphan {new_user_id} assigned to {recipient_id}")
+    logger.info(f"Orphan {new_user_id} assigned to {recipient_id} (no bonus given)")
     return recipient_id
 
 # ============== SIGNUP BONUSES ==============
