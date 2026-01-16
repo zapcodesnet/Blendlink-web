@@ -1,0 +1,81 @@
+{
+  "summary": "MongoDB persistence for PKO Poker tournaments verified. All 11 backend tests passed (100%). Frontend UI working correctly - tournament creation, registration, add bots, leave & refund all functional. Tournament data survives backend restart (verified via my-tournament endpoint). One bug found: GET /tournaments/{id} returns 404 after restart because it doesn't call initialize().",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "GET /api/poker/tournaments/{tournament_id}",
+        "issue": "Returns 404 after backend restart because it doesn't call tournament_manager.initialize() - tournaments not loaded from MongoDB",
+        "priority": "MEDIUM",
+        "fix": "Add 'await tournament_manager.initialize()' at start of get_tournament endpoint"
+      },
+      {
+        "endpoint": "WebSocket bot_added message",
+        "issue": "Frontend logs 'Unknown message type: bot_added' - message type not handled in frontend",
+        "priority": "LOW"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Backend: POST /api/poker/tournaments/create - creates and saves to MongoDB",
+    "Backend: POST /api/poker/tournaments/register - adds player and saves to MongoDB",
+    "Backend: POST /api/poker/tournaments/{id}/add-bots - adds bots and saves to MongoDB",
+    "Backend: POST /api/poker/tournaments/force-leave - removes player from DB mapping",
+    "Backend: GET /api/poker/my-tournament - returns tournament from memory/DB",
+    "Backend: GET /api/poker/tournaments - shows all open tournaments from DB",
+    "Backend: Tournament state persists after player actions",
+    "Backend: Multiple tournaments can be created and tracked",
+    "Backend: GET /api/poker/leaderboard - returns leaderboard",
+    "Backend: Full tournament flow (create -> register -> add bots -> start -> action)",
+    "Backend: Tournament survives backend restart (verified via my-tournament endpoint)",
+    "Frontend: Login and navigate to Casino",
+    "Frontend: PKO Poker card visible with NEW badge",
+    "Frontend: Create Tournament button creates tournament",
+    "Frontend: Success toast 'Tournament created! Waiting for players...'",
+    "Frontend: Navigates to poker table /poker/pko_xxx",
+    "Frontend: Waiting room displays with player list",
+    "Frontend: Add Bot buttons work (+1 Bot, +3 Bots, Fill with Bots)",
+    "Frontend: Success toast 'Added 9 AI bot(s)!'",
+    "Frontend: Poker table UI displays correctly (green felt, seats, action buttons)",
+    "Frontend: Tournament info panel shows Blinds, Prize Pool, Level",
+    "Frontend: Table Chat panel present",
+    "Frontend: 'You're in a Tournament' screen shows when already registered",
+    "Frontend: 'Return to Table' and 'Leave & Refund' buttons work",
+    "Frontend: 'Left tournament. Buy-in refunded!' toast on leave"
+  ],
+  "test_report_links": [
+    "/app/tests/test_poker_mongodb_persistence.py",
+    "/app/test_reports/pytest/pytest_poker_mongodb_iteration26.xml"
+  ],
+  "action_items": [
+    "Add 'await tournament_manager.initialize()' to GET /api/poker/tournaments/{tournament_id} endpoint to fix 404 after restart",
+    "Optional: Handle 'bot_added' WebSocket message type in frontend PokerTournament.jsx"
+  ],
+  "critical_code_review_comments": [
+    "MongoDB persistence is working correctly - tournaments saved to poker_tournaments collection",
+    "Player-tournament mapping saved to poker_player_maps collection",
+    "Tournaments load from DB on startup via initialize() method",
+    "Bug: GET /tournaments/{id} doesn't call initialize() so returns 404 after restart",
+    "The my-tournament endpoint works correctly because it calls initialize()"
+  ],
+  "updated_files": [
+    "/app/tests/test_poker_mongodb_persistence.py"
+  ],
+  "success_rate": {
+    "backend": "100% (11/11 tests passed)",
+    "frontend": "100% (All UI flows verified)"
+  },
+  "test_credentials": {
+    "email": "test@example.com",
+    "password": "Test123!"
+  },
+  "seed_data_creation": "Multiple test tournaments created during testing",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "MongoDB persistence for PKO Poker is working. Key findings: 1) Tournaments persist in poker_tournaments collection, 2) Player mappings in poker_player_maps collection, 3) Bug: GET /tournaments/{id} needs initialize() call to work after restart, 4) Frontend fully functional - create, register, add bots, leave all work, 5) WebSocket connection works for real-time updates."
+}
