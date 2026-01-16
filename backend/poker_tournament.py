@@ -887,11 +887,13 @@ class TournamentManager:
         """Save tournament state to MongoDB"""
         try:
             doc = self._tournament_to_doc(tournament)
+            logger.info(f"Saving tournament {tournament.tournament_id} with {len(doc.get('players', {}))} players")
             await db.poker_tournaments.update_one(
                 {"tournament_id": tournament.tournament_id},
                 {"$set": doc},
                 upsert=True
             )
+            logger.info(f"Tournament {tournament.tournament_id} saved successfully")
         except Exception as e:
             logger.error(f"Failed to save tournament {tournament.tournament_id}: {e}")
     
