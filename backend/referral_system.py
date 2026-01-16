@@ -1749,8 +1749,8 @@ async def wallet_websocket(websocket: WebSocket, user_id: str):
         return
     
     try:
-        from server import verify_token
-        payload = verify_token(token)
+        from server import decode_token
+        payload = decode_token(token)
         token_user_id = payload.get("sub")
         
         # Verify user is accessing their own wallet
