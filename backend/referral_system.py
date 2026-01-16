@@ -1686,3 +1686,152 @@ async def run_diamond_maintenance_checks():
         "maintained": maintained_count,
     }
 
+
+# ============== WALLET WEBSOCKET ==============
+
+class WalletConnectionManager:
+    """Manages WebSocket connections for real-time wallet notifications"""
+    
+    def __init__(self):
+        self.active_connections: Dict[str, WebSocket] = {}  # user_id -> websocket
+    
+    async def connect(self, websocket: WebSocket, user_id: str):
+        await websocket.accept()
+        self.active_connections[user_id] = websocket
+        logger.info(f"Wallet WebSocket connected for user: {user_id}")
+    
+    def disconnect(self, user_id: str):
+        if user_id in self.active_connections:
+            del self.active_connections[user_id]
+            logger.info(f"Wallet WebSocket disconnected for user: {user_id}")
+    
+    async def send_to_user(self, user_id: str, message: dict):
+        """Send message to specific user"""
+        if user_id in self.active_connections:
+            try:
+                await self.active_connections[user_id].send_json(message)
+                return True
+            except Exception as e:
+                logger.error(f"Failed to send to user {user_id}: {e}")
+                del self.active_connections[user_id]
+                return False
+        return False
+    
+    async def broadcast_earning(self, user_id: str, earning_data: dict):
+        """Broadcast a new earning notification to the user"""
+        message = {
+            "type": "new_earning",
+            "data": earning_data,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        return await self.send_to_user(user_id, message)
+
+wallet_ws_manager = WalletConnectionManager()
+
+@referral_router.websocket("/ws/earnings/{user_id}")
+async def wallet_websocket(websocket: WebSocket, user_id: str):
+    """
+    WebSocket endpoint for real-time wallet earnings notifications.
+    
+    Usage from frontend:
+    ws://host/api/referral/ws/earnings/{user_id}?token=JWT_TOKEN
+    
+    Messages sent to client:
+    - {"type": "connected", "user_id": "..."}
+    - {"type": "new_earning", "data": {...}, "timestamp": "..."}
+    - {"type": "balance_update", "bl_balance": 0, "usd_balance": 0}
+    - {"type": "pong"}
+    """
+    # Validate token
+    token = websocket.query_params.get("token")
+    if not token:
+        await websocket.close(code=4001, reason="Token required")
+        return
+    
+    try:
+        from server import verify_token
+        payload = verify_token(token)
+        token_user_id = payload.get("sub")
+        
+        # Verify user is accessing their own wallet
+        if token_user_id != user_id:
+            await websocket.close(code=4003, reason="Unauthorized")
+            return
+        
+        await wallet_ws_manager.connect(websocket, user_id)
+        
+        # Send initial connection confirmation
+        await websocket.send_json({
+            "type": "connected",
+            "user_id": user_id,
+            "message": "Connected to wallet notifications"
+        })
+        
+        # Send current balances
+        user = await db.users.find_one({"user_id": user_id}, {"bl_coins": 1, "usd_balance": 1})
+        if user:
+            await websocket.send_json({
+                "type": "balance_update",
+                "bl_balance": user.get("bl_coins", 0),
+                "usd_balance": user.get("usd_balance", 0)
+            })
+        
+        # Keep connection alive and handle messages
+        while True:
+            try:
+                data = await websocket.receive_json()
+                
+                if data.get("type") == "ping":
+                    await websocket.send_json({"type": "pong"})
+                    
+                elif data.get("type") == "get_balance":
+                    # Return current balance
+                    user = await db.users.find_one({"user_id": user_id}, {"bl_coins": 1, "usd_balance": 1})
+                    await websocket.send_json({
+                        "type": "balance_update",
+                        "bl_balance": user.get("bl_coins", 0) if user else 0,
+                        "usd_balance": user.get("usd_balance", 0) if user else 0
+                    })
+                    
+            except WebSocketDisconnect:
+                break
+            except Exception as e:
+                logger.error(f"Wallet WebSocket error: {e}")
+                break
+    
+    except Exception as e:
+        logger.error(f"Wallet WebSocket auth error: {e}")
+        await websocket.close(code=4001, reason="Authentication failed")
+    finally:
+        wallet_ws_manager.disconnect(user_id)
+
+# Update broadcast_balance_update to use wallet_ws_manager
+async def notify_wallet_earning(user_id: str, earning: dict):
+    """
+    Send real-time earning notification to user's wallet.
+    Call this whenever a user earns BL coins or USD.
+    """
+    try:
+        # Format earning data
+        earning_data = {
+            "type": earning.get("type", "unknown"),
+            "amount": earning.get("amount", 0),
+            "currency": earning.get("currency", "BL"),
+            "description": earning.get("description", ""),
+            "source": earning.get("source", ""),
+            "timestamp": earning.get("timestamp", datetime.now(timezone.utc).isoformat()),
+        }
+        
+        await wallet_ws_manager.broadcast_earning(user_id, earning_data)
+        
+        # Also get and send updated balance
+        user = await db.users.find_one({"user_id": user_id}, {"bl_coins": 1, "usd_balance": 1})
+        if user:
+            await wallet_ws_manager.send_to_user(user_id, {
+                "type": "balance_update",
+                "bl_balance": user.get("bl_coins", 0),
+                "usd_balance": user.get("usd_balance", 0)
+            })
+            
+    except Exception as e:
+        logger.warning(f"Could not send wallet notification to {user_id}: {e}")
