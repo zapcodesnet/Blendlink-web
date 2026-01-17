@@ -207,6 +207,13 @@
     </div>
 
     <script>
+        // Check if ethers loaded properly
+        if (typeof ethers === 'undefined') {
+            document.body.innerHTML = '<div style="padding: 40px; text-align: center; color: #ef4444;"><h2>Error: ethers.js failed to load</h2><p>Please refresh the page or check your internet connection.</p><button onclick="location.reload()" style="margin-top: 20px; padding: 12px 24px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer;">Refresh Page</button></div>';
+            throw new Error('ethers.js not loaded');
+        }
+        console.log('ethers.js loaded successfully:', ethers.version);
+
         // Immutable zkEVM Mainnet config
         const CHAIN_ID = 13371;
         const CHAIN_ID_HEX = '0x343b';
