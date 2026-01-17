@@ -398,14 +398,14 @@ contract BlendlinkNFT is ERC721URIStorage, Ownable {
         operatorAllowlist = IOperatorAllowlist(newAllowlist);
     }
 
-    function approve(address to, uint256 tokenId) public virtual override(ERC721, IERC721) {
+    function approve(address to, uint256 tokenId) public virtual override {
         if (address(operatorAllowlist) != address(0) && to != address(0)) {
             if (!operatorAllowlist.isAllowlisted(to)) revert ApproveTargetNotAllowlisted();
         }
         super.approve(to, tokenId);
     }
 
-    function setApprovalForAll(address operator, bool approved) public virtual override(ERC721, IERC721) {
+    function setApprovalForAll(address operator, bool approved) public virtual override {
         if (address(operatorAllowlist) != address(0) && approved) {
             if (!operatorAllowlist.isAllowlisted(operator)) revert ApproveTargetNotAllowlisted();
         }
