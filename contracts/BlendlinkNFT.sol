@@ -111,7 +111,7 @@ contract BlendlinkNFT is ERC721URIStorage, Ownable {
             uint256 tokenId = _tokenIdCounter.current();
             
             _safeMint(to, tokenId);
-            _setTokenURI(tokenId, tokenURI);
+            _setTokenURI(tokenId, tokenURIs[i]);
             tokenIds[i] = tokenId;
         }
         
