@@ -65,6 +65,7 @@ import Groups from "./pages/Groups";
 import Events from "./pages/Events";
 import Pages from "./pages/Pages";
 import MyTeam from "./pages/MyTeam";
+import DeployNFT from "./pages/DeployNFT";
 
 // Components
 import BottomNav from "./components/BottomNav";
