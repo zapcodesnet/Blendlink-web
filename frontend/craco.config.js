@@ -54,7 +54,7 @@ const webpackConfig = {
         buffer: require.resolve('buffer/'),
         crypto: require.resolve('crypto-browserify'),
         stream: require.resolve('stream-browserify'),
-        process: require.resolve('process/browser'),
+        process: require.resolve('process/browser.js'),
         util: false,
         assert: false,
         http: false,
@@ -64,11 +64,17 @@ const webpackConfig = {
         zlib: false,
       };
 
+      // Add resolve alias to fix process/browser issue
+      webpackConfig.resolve.alias = {
+        ...webpackConfig.resolve.alias,
+        'process/browser': require.resolve('process/browser.js'),
+      };
+
       // Provide global polyfills
       webpackConfig.plugins.push(
         new webpack.ProvidePlugin({
           Buffer: ['buffer', 'Buffer'],
-          process: 'process/browser',
+          process: 'process/browser.js',
         })
       );
 
