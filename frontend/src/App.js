@@ -65,7 +65,6 @@ import Groups from "./pages/Groups";
 import Events from "./pages/Events";
 import Pages from "./pages/Pages";
 import MyTeam from "./pages/MyTeam";
-import DeployNFT from "./pages/DeployNFT";
 
 // Components
 import BottomNav from "./components/BottomNav";
@@ -203,7 +202,6 @@ function AppRouter() {
       <Route path="/create-post" element={<ProtectedRoute><CreatePost /></ProtectedRoute>} />
       <Route path="/referrals" element={<ProtectedRoute><Referrals /></ProtectedRoute>} />
       <Route path="/my-team" element={<ProtectedRoute><MyTeam /></ProtectedRoute>} />
-      <Route path="/deploy-nft" element={<DeployNFT />} />
       <Route path="/raffles" element={<ProtectedRoute><Raffles /></ProtectedRoute>} />
       <Route path="/ai-studio" element={<ProtectedRoute><AIGeneration /></ProtectedRoute>} />
       <Route path="/ai-gallery" element={<ProtectedRoute><AIGallery /></ProtectedRoute>} />
