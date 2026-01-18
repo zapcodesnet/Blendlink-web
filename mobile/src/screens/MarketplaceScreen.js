@@ -508,4 +508,53 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '300',
   },
+  // Photo Marketplace Banner
+  photoMarketplaceBanner: {
+    backgroundColor: '#8B5CF6',
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 4,
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  photoMarketplaceBannerLeft: {
+    flex: 1,
+  },
+  newBadge: {
+    backgroundColor: '#22C55E',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    marginBottom: 8,
+  },
+  newBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  photoMarketplaceBannerTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  photoMarketplaceBannerSubtitle: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 12,
+  },
+  photoMarketplaceBannerRight: {
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 12,
+  },
+  arrowText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 13,
+  },
 });
