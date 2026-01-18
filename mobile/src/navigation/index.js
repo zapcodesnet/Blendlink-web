@@ -28,6 +28,7 @@ import CasinoStatsScreen from '../screens/CasinoStatsScreen';
 // Photo Game Screens
 import PhotoGameArenaScreen from '../screens/PhotoGameArenaScreen';
 import MintedPhotosScreen from '../screens/MintedPhotosScreen';
+import PhotoMarketplaceScreen from '../screens/PhotoMarketplaceScreen';
 
 // Admin Screens
 import AdminScreen from '../screens/AdminScreen';
