@@ -6,7 +6,7 @@ Blendlink Internal Minting API Routes
 """
 
 import base64
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, Request
 from pydantic import BaseModel
 from typing import Optional, List
 import logging
@@ -29,18 +29,21 @@ minting_router = APIRouter(prefix="/minting", tags=["Minting"])
 # Services will be initialized when routes are included
 _minting_service: Optional[MintingService] = None
 _album_service: Optional[AlbumService] = None
+_db = None
 
 
-def get_minting_service() -> MintingService:
-    if not _minting_service:
-        raise HTTPException(status_code=500, detail="Minting service not initialized")
-    return _minting_service
+def setup_minting_routes(db):
+    """Initialize minting services with database connection"""
+    global _minting_service, _album_service, _db
+    _minting_service, _album_service = init_minting_services(db)
+    _db = db
+    logger.info("Minting services initialized")
 
 
-def get_album_service() -> AlbumService:
-    if not _album_service:
-        raise HTTPException(status_code=500, detail="Album service not initialized")
-    return _album_service
+async def get_current_user_from_request(request: Request) -> dict:
+    """Get current user from request"""
+    from server import get_current_user
+    return await get_current_user(request)
 
 
 # ============== REQUEST/RESPONSE MODELS ==============
@@ -90,14 +93,10 @@ async def get_minting_config():
 
 
 @minting_router.get("/status")
-async def get_mint_status(current_user: dict = Depends()):
+async def get_mint_status(current_user: dict = Depends(get_current_user_from_request)):
     """Check if user can mint and their current status"""
-    from server import get_current_user, db
-    current_user = await get_current_user(current_user)
-    
-    global _minting_service
     if not _minting_service:
-        _minting_service, _ = init_minting_services(db)
+        raise HTTPException(status_code=500, detail="Minting service not initialized")
     
     return await _minting_service.check_can_mint(current_user["user_id"])
 
@@ -105,7 +104,7 @@ async def get_mint_status(current_user: dict = Depends()):
 @minting_router.post("/photo")
 async def mint_photo(
     data: MintPhotoRequest,
-    current_user: dict = Depends()
+    current_user: dict = Depends(get_current_user_from_request)
 ):
     """
     Mint a new photo collectible
@@ -114,12 +113,8 @@ async def mint_photo(
     - Daily limit applies based on subscription
     - AI analyzes photo for stats
     """
-    from server import get_current_user, db
-    current_user = await get_current_user(current_user)
-    
-    global _minting_service
     if not _minting_service:
-        _minting_service, _ = init_minting_services(db)
+        raise HTTPException(status_code=500, detail="Minting service not initialized")
     
     result = await _minting_service.mint_photo(
         user_id=current_user["user_id"],
@@ -146,17 +141,13 @@ async def mint_photo_upload(
     show_in_feed: bool = Form(True),
     album_id: Optional[str] = Form(None),
     file: UploadFile = File(...),
-    current_user: dict = Depends()
+    current_user: dict = Depends(get_current_user_from_request)
 ):
     """
     Mint a photo from file upload
     """
-    from server import get_current_user, db
-    current_user = await get_current_user(current_user)
-    
-    global _minting_service
     if not _minting_service:
-        _minting_service, _ = init_minting_services(db)
+        raise HTTPException(status_code=500, detail="Minting service not initialized")
     
     # Validate file type
     allowed_types = ["image/jpeg", "image/png", "image/webp"]
@@ -195,15 +186,11 @@ async def get_my_photos(
     album_id: Optional[str] = None,
     skip: int = 0,
     limit: int = 20,
-    current_user: dict = Depends()
+    current_user: dict = Depends(get_current_user_from_request)
 ):
     """Get current user's minted photos"""
-    from server import get_current_user, db
-    current_user = await get_current_user(current_user)
-    
-    global _minting_service
     if not _minting_service:
-        _minting_service, _ = init_minting_services(db)
+        raise HTTPException(status_code=500, detail="Minting service not initialized")
     
     photos = await _minting_service.get_user_photos(
         user_id=current_user["user_id"],
@@ -224,11 +211,8 @@ async def get_user_photos(
     limit: int = 20,
 ):
     """Get another user's public minted photos"""
-    from server import db
-    
-    global _minting_service
     if not _minting_service:
-        _minting_service, _ = init_minting_services(db)
+        raise HTTPException(status_code=500, detail="Minting service not initialized")
     
     photos = await _minting_service.get_user_photos(
         user_id=user_id,
@@ -244,11 +228,8 @@ async def get_user_photos(
 @minting_router.get("/photo/{mint_id}")
 async def get_photo(mint_id: str):
     """Get a specific minted photo"""
-    from server import db
-    
-    global _minting_service
     if not _minting_service:
-        _minting_service, _ = init_minting_services(db)
+        raise HTTPException(status_code=500, detail="Minting service not initialized")
     
     photo = await _minting_service.get_photo(mint_id)
     if not photo:
@@ -260,12 +241,8 @@ async def get_photo(mint_id: str):
 @minting_router.get("/photo/{mint_id}/image")
 async def get_photo_image(mint_id: str):
     """Get the full image data for a minted photo"""
-    from server import db
-    from fastapi.responses import Response
-    
-    global _minting_service
     if not _minting_service:
-        _minting_service, _ = init_minting_services(db)
+        raise HTTPException(status_code=500, detail="Minting service not initialized")
     
     photo = await _minting_service.get_photo(mint_id, include_image=True)
     if not photo:
@@ -286,15 +263,11 @@ async def get_photo_image(mint_id: str):
 async def rename_photo(
     mint_id: str,
     data: RenamePhotoRequest,
-    current_user: dict = Depends()
+    current_user: dict = Depends(get_current_user_from_request)
 ):
     """Rename a minted photo"""
-    from server import get_current_user, db
-    current_user = await get_current_user(current_user)
-    
-    global _minting_service
     if not _minting_service:
-        _minting_service, _ = init_minting_services(db)
+        raise HTTPException(status_code=500, detail="Minting service not initialized")
     
     result = await _minting_service.rename_photo(
         mint_id=mint_id,
@@ -312,15 +285,11 @@ async def rename_photo(
 async def update_photo_privacy(
     mint_id: str,
     data: UpdatePrivacyRequest,
-    current_user: dict = Depends()
+    current_user: dict = Depends(get_current_user_from_request)
 ):
     """Update photo privacy settings"""
-    from server import get_current_user, db
-    current_user = await get_current_user(current_user)
-    
-    global _minting_service
     if not _minting_service:
-        _minting_service, _ = init_minting_services(db)
+        raise HTTPException(status_code=500, detail="Minting service not initialized")
     
     result = await _minting_service.update_photo_privacy(
         mint_id=mint_id,
@@ -339,15 +308,11 @@ async def update_photo_privacy(
 async def move_photo_to_album(
     mint_id: str,
     data: MoveToAlbumRequest,
-    current_user: dict = Depends()
+    current_user: dict = Depends(get_current_user_from_request)
 ):
     """Move a photo to an album"""
-    from server import get_current_user, db
-    current_user = await get_current_user(current_user)
-    
-    global _minting_service
     if not _minting_service:
-        _minting_service, _ = init_minting_services(db)
+        raise HTTPException(status_code=500, detail="Minting service not initialized")
     
     result = await _minting_service.move_to_album(
         mint_id=mint_id,
@@ -365,15 +330,11 @@ async def move_photo_to_album(
 @minting_router.post("/albums")
 async def create_album(
     data: CreateAlbumRequest,
-    current_user: dict = Depends()
+    current_user: dict = Depends(get_current_user_from_request)
 ):
     """Create a new photo album"""
-    from server import get_current_user, db
-    current_user = await get_current_user(current_user)
-    
-    global _album_service
     if not _album_service:
-        _, _album_service = init_minting_services(db)
+        raise HTTPException(status_code=500, detail="Album service not initialized")
     
     result = await _album_service.create_album(
         user_id=current_user["user_id"],
@@ -386,14 +347,10 @@ async def create_album(
 
 
 @minting_router.get("/albums")
-async def get_my_albums(current_user: dict = Depends()):
+async def get_my_albums(current_user: dict = Depends(get_current_user_from_request)):
     """Get current user's albums"""
-    from server import get_current_user, db
-    current_user = await get_current_user(current_user)
-    
-    global _album_service
     if not _album_service:
-        _, _album_service = init_minting_services(db)
+        raise HTTPException(status_code=500, detail="Album service not initialized")
     
     albums = await _album_service.get_user_albums(
         user_id=current_user["user_id"],
@@ -406,11 +363,8 @@ async def get_my_albums(current_user: dict = Depends()):
 @minting_router.get("/albums/user/{user_id}")
 async def get_user_albums(user_id: str):
     """Get another user's public albums"""
-    from server import db
-    
-    global _album_service
     if not _album_service:
-        _, _album_service = init_minting_services(db)
+        raise HTTPException(status_code=500, detail="Album service not initialized")
     
     albums = await _album_service.get_user_albums(
         user_id=user_id,
@@ -424,15 +378,11 @@ async def get_user_albums(user_id: str):
 async def rename_album(
     album_id: str,
     data: RenameAlbumRequest,
-    current_user: dict = Depends()
+    current_user: dict = Depends(get_current_user_from_request)
 ):
     """Rename an album"""
-    from server import get_current_user, db
-    current_user = await get_current_user(current_user)
-    
-    global _album_service
     if not _album_service:
-        _, _album_service = init_minting_services(db)
+        raise HTTPException(status_code=500, detail="Album service not initialized")
     
     result = await _album_service.rename_album(
         album_id=album_id,
@@ -447,14 +397,13 @@ async def rename_album(
 
 
 @minting_router.delete("/albums/{album_id}")
-async def delete_album(album_id: str, current_user: dict = Depends()):
+async def delete_album(
+    album_id: str,
+    current_user: dict = Depends(get_current_user_from_request)
+):
     """Delete an album (photos are kept, just unassigned)"""
-    from server import get_current_user, db
-    current_user = await get_current_user(current_user)
-    
-    global _album_service
     if not _album_service:
-        _, _album_service = init_minting_services(db)
+        raise HTTPException(status_code=500, detail="Album service not initialized")
     
     result = await _album_service.delete_album(
         album_id=album_id,
@@ -471,9 +420,10 @@ async def delete_album(album_id: str, current_user: dict = Depends()):
 @minting_router.get("/feed")
 async def get_minted_photos_feed(skip: int = 0, limit: int = 20):
     """Get public minted photos feed"""
-    from server import db
+    if not _db:
+        raise HTTPException(status_code=500, detail="Database not initialized")
     
-    photos = await db.minted_photos.find(
+    photos = await _db.minted_photos.find(
         {"is_private": False, "show_in_feed": True},
         {"_id": 0, "image_data": 0}
     ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
@@ -481,7 +431,7 @@ async def get_minted_photos_feed(skip: int = 0, limit: int = 20):
     # Batch fetch users
     if photos:
         user_ids = list(set(p["user_id"] for p in photos))
-        users = await db.users.find(
+        users = await _db.users.find(
             {"user_id": {"$in": user_ids}},
             {"_id": 0, "password_hash": 0}
         ).to_list(len(user_ids))
@@ -491,11 +441,3 @@ async def get_minted_photos_feed(skip: int = 0, limit: int = 20):
             photo["user"] = users_map.get(photo["user_id"])
     
     return {"photos": photos, "count": len(photos)}
-
-
-# ============== INIT FUNCTION ==============
-def setup_minting_routes(db):
-    """Initialize minting services with database connection"""
-    global _minting_service, _album_service
-    _minting_service, _album_service = init_minting_services(db)
-    logger.info("Minting services initialized")
