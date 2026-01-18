@@ -92,6 +92,10 @@ class MintedPhoto(BaseModel):
     battles_lost: int = 0
     times_transferred: int = 0
     
+    # Photo stamina for battles (100% = 24 battles)
+    stamina: float = 100.0
+    last_battle_at: Optional[datetime] = None
+    
     # Privacy & Display
     is_private: bool = False
     show_in_feed: bool = True
