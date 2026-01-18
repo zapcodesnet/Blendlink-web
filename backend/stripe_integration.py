@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 # Stripe API keys
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
-STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY", "pk_test_51SkM67RyuUJLCAOO8G4RFhwbRR1w5cpt8NWlyV6jc5cvxOEkujPX57f6jSV2dsLwwiFYAvGqG6PhRQsHT1KDlwCq00FBFT1zsX")
+STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY", "")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
 
 # Initialize Stripe
