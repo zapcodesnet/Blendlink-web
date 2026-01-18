@@ -131,7 +131,7 @@ async def get_my_listings(
 @marketplace_router.get("/listing/{listing_id}")
 async def get_listing(listing_id: str):
     """Get a specific listing"""
-    if not _db:
+    if _db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     listing = await _db.marketplace_listings.find_one(
@@ -215,7 +215,7 @@ async def cancel_listing(
     current_user: dict = Depends(get_current_user_from_request),
 ):
     """Cancel a listing"""
-    if not _db:
+    if _db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     listing = await _db.marketplace_listings.find_one({
@@ -281,7 +281,7 @@ async def get_received_offers(
     current_user: dict = Depends(get_current_user_from_request),
 ):
     """Get offers received on your content"""
-    if not _db:
+    if _db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     query = {"seller_id": current_user["user_id"]}
@@ -316,7 +316,7 @@ async def get_sent_offers(
     current_user: dict = Depends(get_current_user_from_request),
 ):
     """Get offers you've sent"""
-    if not _db:
+    if _db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     query = {"buyer_id": current_user["user_id"]}
@@ -360,7 +360,7 @@ async def cancel_offer(
     current_user: dict = Depends(get_current_user_from_request),
 ):
     """Cancel your pending offer"""
-    if not _db:
+    if _db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     result = await _db.marketplace_offers.update_one(
@@ -387,7 +387,7 @@ async def get_sales_history(
     current_user: dict = Depends(get_current_user_from_request),
 ):
     """Get sales history"""
-    if not _db:
+    if _db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     if role == "seller":
@@ -408,7 +408,7 @@ async def get_marketplace_stats(
     current_user: dict = Depends(get_current_user_from_request),
 ):
     """Get user's marketplace stats"""
-    if not _db:
+    if _db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     user_id = current_user["user_id"]

@@ -177,7 +177,7 @@ async def execute_photo_battle(
 @game_router.get("/session/{session_id}")
 async def get_game_session(session_id: str):
     """Get current game session state"""
-    if not _db:
+    if _db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     session = await _db.game_sessions.find_one(
@@ -194,7 +194,7 @@ async def get_game_session(session_id: str):
 @game_router.get("/sessions/active")
 async def get_active_sessions(current_user: dict = Depends(get_current_user_from_request)):
     """Get user's active game sessions"""
-    if not _db:
+    if _db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     sessions = await _db.game_sessions.find(
@@ -215,7 +215,7 @@ async def get_game_history(
     current_user: dict = Depends(get_current_user_from_request)
 ):
     """Get user's completed game history"""
-    if not _db:
+    if _db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     sessions = await _db.game_sessions.find(
