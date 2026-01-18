@@ -48,7 +48,7 @@ const webpackConfig = {
       '@': path.resolve(__dirname, 'src'),
     },
     configure: (webpackConfig) => {
-      // Add polyfills for Node.js core modules (required by @imtbl/sdk)
+      // Add polyfills for Node.js core modules (required for certain npm packages)
       webpackConfig.resolve.fallback = {
         ...webpackConfig.resolve.fallback,
         buffer: require.resolve('buffer/'),
