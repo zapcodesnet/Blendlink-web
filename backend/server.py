@@ -1995,6 +1995,66 @@ try:
 except ImportError as e:
     logger.warning(f"Could not load BL rewards: {e}")
 
+# Load Subscription & Ranked System
+try:
+    from subscription_tiers import subscription_router, setup_subscription_routes
+    api_router.include_router(subscription_router)
+    setup_subscription_routes(db)
+    logger.info("Subscription System loaded (Tiers, Daily Bonuses, Ranked, Tournaments)")
+except ImportError as e:
+    logger.warning(f"Could not load subscription routes: {e}")
+
+# Load WebSocket Notifications
+try:
+    from websocket_notifications import ws_manager, WebSocketNotification, NotificationType
+    from fastapi import WebSocket, WebSocketDisconnect
+    
+    @app.websocket("/ws/{token}")
+    async def websocket_endpoint(websocket: WebSocket, token: str):
+        """WebSocket endpoint for real-time notifications"""
+        try:
+            # Verify token
+            payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+            user_id = payload.get("user_id")
+            if not user_id:
+                await websocket.close(code=1008, reason="Invalid token")
+                return
+            
+            await ws_manager.connect(websocket, user_id)
+            
+            try:
+                while True:
+                    # Keep connection alive and handle incoming messages
+                    data = await websocket.receive_json()
+                    
+                    # Handle ping/pong
+                    if data.get("type") == "ping":
+                        await websocket.send_json({"type": "pong"})
+                    
+                    # Handle room subscriptions
+                    elif data.get("type") == "subscribe_room":
+                        room_id = data.get("room_id")
+                        if room_id:
+                            # Join room logic handled by manager
+                            pass
+                            
+            except WebSocketDisconnect:
+                pass
+            finally:
+                await ws_manager.disconnect(websocket, user_id)
+                
+        except JWTError:
+            await websocket.close(code=1008, reason="Invalid token")
+    
+    @api_router.get("/ws/status")
+    async def get_websocket_status():
+        """Get WebSocket connection stats"""
+        return ws_manager.get_stats()
+    
+    logger.info("WebSocket Notifications loaded")
+except Exception as e:
+    logger.warning(f"Could not load WebSocket system: {e}")
+
 app.include_router(api_router)
 
 app.add_middleware(
