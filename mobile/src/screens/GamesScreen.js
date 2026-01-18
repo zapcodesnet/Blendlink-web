@@ -273,7 +273,6 @@ export default function GamesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   header: {
     flexDirection: 'row',
@@ -282,21 +281,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
   },
   headerTitle: {
-    color: COLORS.text,
     fontSize: 20,
     fontWeight: 'bold',
   },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  themeToggle: {
+    padding: 8,
+  },
+  themeToggleText: {
+    fontSize: 20,
+  },
   balanceChip: {
-    backgroundColor: 'rgba(245, 158, 11, 0.2)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
   },
   balanceText: {
-    color: COLORS.primary,
     fontWeight: '600',
   },
   scrollView: {
@@ -305,12 +311,118 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
   },
+  // Photo Battle Banner
+  photoBattleBanner: {
+    backgroundColor: '#8B5CF6',
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginBottom: 16,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  photoBattleContent: {
+    flexDirection: 'row',
+    padding: 20,
+  },
+  photoBattleLeft: {
+    flex: 1,
+  },
+  newFeatureBadge: {
+    backgroundColor: '#22C55E',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    marginBottom: 8,
+  },
+  newFeatureBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  photoBattleTitle: {
+    color: '#fff',
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  photoBattleSubtitle: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 14,
+    marginBottom: 12,
+  },
+  photoBattleStats: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  photoBattleStat: {
+    alignItems: 'center',
+  },
+  photoBattleStatValue: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  photoBattleStatLabel: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 10,
+  },
+  photoBattleRight: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+  },
+  photoBattleEmoji: {
+    fontSize: 48,
+  },
+  photoBattleArrow: {
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  // Minted Photos Card
+  mintedPhotosCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+  },
+  mintedPhotosIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#F59E0B',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mintedPhotosEmoji: {
+    fontSize: 22,
+  },
+  mintedPhotosInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  mintedPhotosTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  mintedPhotosDesc: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  mintedPhotosArrow: {
+    fontSize: 20,
+  },
+  // Casino Banner
   casinoBanner: {
     backgroundColor: '#D97706',
     borderRadius: 20,
     overflow: 'hidden',
     marginBottom: 24,
-    shadowColor: '#F59E0B',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -324,7 +436,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   newBadge: {
-    backgroundColor: COLORS.success,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -332,12 +443,12 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   newBadgeText: {
-    color: COLORS.text,
+    color: '#fff',
     fontSize: 10,
     fontWeight: 'bold',
   },
   casinoBannerTitle: {
-    color: COLORS.text,
+    color: '#fff',
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 4,
@@ -358,7 +469,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   tagText: {
-    color: COLORS.text,
+    color: '#fff',
     fontSize: 11,
   },
   casinoBannerRight: {
@@ -375,7 +486,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 45,
     height: 60,
-    backgroundColor: COLORS.text,
+    backgroundColor: '#fff',
     borderRadius: 6,
     justifyContent: 'center',
     alignItems: 'center',
@@ -411,11 +522,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   arrowText: {
-    color: COLORS.text,
+    color: '#fff',
     fontWeight: '600',
   },
   sectionTitle: {
-    color: COLORS.text,
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 12,
@@ -440,14 +550,13 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: COLORS.success,
   },
   quickGameIcon: {
     fontSize: 36,
     marginBottom: 8,
   },
   quickGameName: {
-    color: COLORS.text,
+    color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -456,16 +565,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   allGamesButton: {
-    backgroundColor: COLORS.card,
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: COLORS.border,
   },
   allGamesText: {
-    color: COLORS.primary,
     fontWeight: '600',
   },
   miniGamesContainer: {
@@ -474,12 +580,10 @@ const styles = StyleSheet.create({
   miniGameCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.card,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: COLORS.border,
   },
   miniGameIcon: {
     width: 50,
@@ -496,38 +600,31 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   miniGameName: {
-    color: COLORS.text,
     fontSize: 16,
     fontWeight: '600',
   },
   miniGameDesc: {
-    color: COLORS.textMuted,
     fontSize: 12,
   },
   comingSoonBadge: {
-    backgroundColor: COLORS.background,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
   },
   comingSoonText: {
-    color: COLORS.textMuted,
     fontSize: 11,
   },
   rafflesCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.card,
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: COLORS.border,
   },
   rafflesIcon: {
     width: 50,
     height: 50,
     borderRadius: 12,
-    backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -539,16 +636,13 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   rafflesTitle: {
-    color: COLORS.text,
     fontSize: 16,
     fontWeight: '600',
   },
   rafflesDesc: {
-    color: COLORS.textMuted,
     fontSize: 12,
   },
   syncNotice: {
-    color: COLORS.textMuted,
     fontSize: 12,
     textAlign: 'center',
     marginTop: 24,
