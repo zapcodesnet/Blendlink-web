@@ -769,14 +769,32 @@ def get_tournament_service():
 
 async def get_current_user(request: Request) -> dict:
     """Extract current user from request"""
-    from auth import verify_token
-    token = request.headers.get("Authorization", "").replace("Bearer ", "")
+    from jose import jwt, JWTError
+    import os
+    
+    JWT_SECRET = os.environ.get('JWT_SECRET')
+    JWT_ALGORITHM = os.environ.get('JWT_ALGORITHM', 'HS256')
+    
+    token = request.cookies.get("session_token")
+    if not token:
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header[7:]
+    
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    user = await verify_token(token, _db)
-    if not user:
+    
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        user_id = payload.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        user = await _db.users.find_one({"user_id": user_id}, {"_id": 0})
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+        return user
+    except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
-    return user
 
 
 @subscription_router.get("/tiers")
