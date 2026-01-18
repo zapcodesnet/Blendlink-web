@@ -260,3 +260,99 @@ async def get_photos_leaderboard(
     
     leaderboard = await _game_service.get_photo_leaderboard(period=period, limit=limit)
     return {"leaderboard": leaderboard, "period": period}
+
+
+
+# ============== PVP MATCHMAKING ==============
+from pvp_matchmaking import init_pvp_service, PvPGameService
+
+_pvp_service: Optional[PvPGameService] = None
+
+
+class FindMatchRequest(BaseModel):
+    bet_amount: int = 0
+    photo_id: Optional[str] = None
+    use_bot_fallback: bool = True
+
+
+@game_router.post("/pvp/find-match")
+async def find_pvp_match(
+    data: FindMatchRequest,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """
+    Start searching for a PvP match
+    - If opponent found, returns match immediately
+    - If no opponent, waits up to 30 seconds
+    - After timeout, creates bot match if use_bot_fallback is True
+    """
+    global _pvp_service
+    if not _pvp_service:
+        _pvp_service = init_pvp_service(_db)
+    
+    result = await _pvp_service.find_match(
+        user_id=current_user["user_id"],
+        bet_amount=data.bet_amount,
+        photo_id=data.photo_id,
+        use_bot_fallback=data.use_bot_fallback,
+    )
+    
+    if not result["success"]:
+        raise HTTPException(status_code=400, detail=result.get("error"))
+    
+    return result
+
+
+@game_router.get("/pvp/match-status")
+async def check_match_status(
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """Check if a match has been found"""
+    global _pvp_service
+    if not _pvp_service:
+        _pvp_service = init_pvp_service(_db)
+    
+    return await _pvp_service.check_match_status(current_user["user_id"])
+
+
+@game_router.post("/pvp/cancel")
+async def cancel_matchmaking(
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """Cancel matchmaking"""
+    global _pvp_service
+    if not _pvp_service:
+        _pvp_service = init_pvp_service(_db)
+    
+    return await _pvp_service.cancel_matchmaking(current_user["user_id"])
+
+
+@game_router.post("/pvp/match/{match_id}/start")
+async def start_match_game(
+    match_id: str,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """Start the game from a matched pair"""
+    global _pvp_service
+    if not _pvp_service:
+        _pvp_service = init_pvp_service(_db)
+    
+    result = await _pvp_service.start_match_game(
+        match_id=match_id,
+        user_id=current_user["user_id"],
+    )
+    
+    if not result["success"]:
+        raise HTTPException(status_code=400, detail=result.get("error"))
+    
+    return result
+
+
+@game_router.get("/pvp/queue-status")
+async def get_queue_status():
+    """Get current matchmaking queue status"""
+    global _pvp_service
+    if not _pvp_service:
+        _pvp_service = init_pvp_service(_db)
+    
+    return await _pvp_service.get_queue_status()
