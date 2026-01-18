@@ -325,6 +325,10 @@ class PhotoGameService:
         
         await self.db.game_sessions.insert_one(session_dict)
         
+        # Remove MongoDB _id from response
+        if "_id" in session_dict:
+            del session_dict["_id"]
+        
         # Deduct stamina from player stats
         await self.db.player_stats.update_one(
             {"user_id": player_id},
