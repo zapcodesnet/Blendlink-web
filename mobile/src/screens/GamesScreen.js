@@ -1,5 +1,5 @@
 /**
- * Games Screen - Links to Casino and other games
+ * Games Screen - Links to Casino, Photo Game, and other games
  */
 
 import React, { useState, useEffect } from 'react';
@@ -15,25 +15,18 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
-import { walletAPI, casinoAPI } from '../services/api';
+import { useTheme } from '../context/ThemeContext';
+import { walletAPI, casinoAPI, photoGameAPI } from '../services/api';
 
 const { width } = Dimensions.get('window');
-
-const COLORS = {
-  background: '#0F172A',
-  card: '#1E293B',
-  primary: '#F59E0B',
-  text: '#FFFFFF',
-  textMuted: '#9CA3AF',
-  border: '#334155',
-  success: '#22C55E',
-};
 
 export default function GamesScreen() {
   const navigation = useNavigation();
   const { user } = useAuth();
+  const { colors, toggleTheme, isDark } = useTheme();
   const [balance, setBalance] = useState(user?.bl_coins || 0);
   const [dailySpinAvailable, setDailySpinAvailable] = useState(false);
+  const [gameStats, setGameStats] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -41,24 +34,31 @@ export default function GamesScreen() {
 
   const loadData = async () => {
     try {
-      const [balanceData, dailyStatus] = await Promise.all([
+      const [balanceData, dailyStatus, stats] = await Promise.all([
         walletAPI.getBalance(),
         casinoAPI.getDailySpinStatus().catch(() => ({ can_spin: false })),
+        photoGameAPI.getMyStats().catch(() => null),
       ]);
       setBalance(balanceData.balance);
       setDailySpinAvailable(dailyStatus.can_spin);
+      setGameStats(stats);
     } catch (error) {
       console.error('Failed to load games data:', error);
     }
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>🎮 Games</Text>
-        <View style={styles.balanceChip}>
-          <Text style={styles.balanceText}>💰 {Math.floor(balance).toLocaleString()} BL</Text>
+      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>🎮 Games</Text>
+        <View style={styles.headerRight}>
+          <TouchableOpacity onPress={toggleTheme} style={styles.themeToggle}>
+            <Text style={styles.themeToggleText}>{isDark ? '☀️' : '🌙'}</Text>
+          </TouchableOpacity>
+          <View style={[styles.balanceChip, { backgroundColor: colors.gold + '20' }]}>
+            <Text style={[styles.balanceText, { color: colors.gold }]}>💰 {Math.floor(balance).toLocaleString()} BL</Text>
+          </View>
         </View>
       </View>
 
@@ -67,16 +67,72 @@ export default function GamesScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* Photo Game Arena CTA - NEW */}
+        <TouchableOpacity
+          style={[styles.photoBattleBanner, { shadowColor: colors.primary }]}
+          onPress={() => navigation.navigate('PhotoGameArena')}
+          activeOpacity={0.9}
+        >
+          <View style={styles.photoBattleContent}>
+            <View style={styles.photoBattleLeft}>
+              <View style={styles.newFeatureBadge}>
+                <Text style={styles.newFeatureBadgeText}>⚡ NEW</Text>
+              </View>
+              <Text style={styles.photoBattleTitle}>⚔️ Photo Battle Arena</Text>
+              <Text style={styles.photoBattleSubtitle}>
+                PvP • RPS • Photo Auctions
+              </Text>
+              {gameStats && (
+                <View style={styles.photoBattleStats}>
+                  <View style={styles.photoBattleStat}>
+                    <Text style={styles.photoBattleStatValue}>{gameStats.battles_won || 0}</Text>
+                    <Text style={styles.photoBattleStatLabel}>Wins</Text>
+                  </View>
+                  <View style={styles.photoBattleStat}>
+                    <Text style={styles.photoBattleStatValue}>{gameStats.current_win_streak || 0}</Text>
+                    <Text style={styles.photoBattleStatLabel}>Streak</Text>
+                  </View>
+                  <View style={styles.photoBattleStat}>
+                    <Text style={styles.photoBattleStatValue}>{Math.round(gameStats.stamina || 100)}</Text>
+                    <Text style={styles.photoBattleStatLabel}>Stamina</Text>
+                  </View>
+                </View>
+              )}
+            </View>
+            <View style={styles.photoBattleRight}>
+              <Text style={styles.photoBattleEmoji}>⚔️</Text>
+            </View>
+          </View>
+          <View style={styles.photoBattleArrow}>
+            <Text style={styles.arrowText}>Battle Now →</Text>
+          </View>
+        </TouchableOpacity>
+
+        {/* Minted Photos Quick Access */}
+        <TouchableOpacity
+          style={[styles.mintedPhotosCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+          onPress={() => navigation.navigate('MintedPhotos')}
+        >
+          <View style={styles.mintedPhotosIcon}>
+            <Text style={styles.mintedPhotosEmoji}>✨</Text>
+          </View>
+          <View style={styles.mintedPhotosInfo}>
+            <Text style={[styles.mintedPhotosTitle, { color: colors.text }]}>Minted Photos</Text>
+            <Text style={[styles.mintedPhotosDesc, { color: colors.textMuted }]}>View & mint collectibles</Text>
+          </View>
+          <Text style={[styles.mintedPhotosArrow, { color: colors.textMuted }]}>→</Text>
+        </TouchableOpacity>
+
         {/* Casino CTA - Featured with Poker Image */}
         <TouchableOpacity
-          style={styles.casinoBanner}
+          style={[styles.casinoBanner, { shadowColor: colors.gold }]}
           onPress={() => navigation.navigate('Casino')}
           activeOpacity={0.9}
         >
           <View style={styles.casinoBannerContent}>
             <View style={styles.casinoBannerLeft}>
               {dailySpinAvailable && (
-                <View style={styles.newBadge}>
+                <View style={[styles.newBadge, { backgroundColor: colors.success }]}>
                   <Text style={styles.newBadgeText}>FREE SPIN!</Text>
                 </View>
               )}
@@ -114,13 +170,22 @@ export default function GamesScreen() {
         </TouchableOpacity>
 
         {/* Quick Access to Games */}
-        <Text style={styles.sectionTitle}>Quick Access</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Quick Access</Text>
         <View style={styles.quickGamesGrid}>
+          <TouchableOpacity
+            style={[styles.quickGameCard, { backgroundColor: '#8B5CF6' }]}
+            onPress={() => navigation.navigate('PhotoGameArena')}
+          >
+            <Text style={styles.quickGameIcon}>⚔️</Text>
+            <Text style={styles.quickGameName}>Battle</Text>
+            <Text style={styles.quickGameDesc}>PvP Arena</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity
             style={[styles.quickGameCard, { backgroundColor: '#EAB308' }]}
             onPress={() => navigation.navigate('CasinoGame', { gameId: 'daily' })}
           >
-            {dailySpinAvailable && <View style={styles.freeDot} />}
+            {dailySpinAvailable && <View style={[styles.freeDot, { backgroundColor: colors.success }]} />}
             <Text style={styles.quickGameIcon}>🎁</Text>
             <Text style={styles.quickGameName}>Daily Spin</Text>
             <Text style={styles.quickGameDesc}>Free daily!</Text>
@@ -143,68 +208,59 @@ export default function GamesScreen() {
             <Text style={styles.quickGameName}>Blackjack</Text>
             <Text style={styles.quickGameDesc}>Beat 21</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.quickGameCard, { backgroundColor: '#DC2626' }]}
-            onPress={() => navigation.navigate('CasinoGame', { gameId: 'roulette' })}
-          >
-            <Text style={styles.quickGameIcon}>🎡</Text>
-            <Text style={styles.quickGameName}>Roulette</Text>
-            <Text style={styles.quickGameDesc}>Red or Black</Text>
-          </TouchableOpacity>
         </View>
 
         {/* All Casino Games Link */}
         <TouchableOpacity
-          style={styles.allGamesButton}
+          style={[styles.allGamesButton, { backgroundColor: colors.card, borderColor: colors.border }]}
           onPress={() => navigation.navigate('Casino')}
         >
-          <Text style={styles.allGamesText}>View All 8 Casino Games →</Text>
+          <Text style={[styles.allGamesText, { color: colors.gold }]}>View All 8 Casino Games →</Text>
         </TouchableOpacity>
 
         {/* Mini Games Section */}
-        <Text style={styles.sectionTitle}>Mini Games</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Mini Games</Text>
         <View style={styles.miniGamesContainer}>
-          <TouchableOpacity style={styles.miniGameCard}>
+          <TouchableOpacity style={[styles.miniGameCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={[styles.miniGameIcon, { backgroundColor: '#3B82F6' }]}>
               <Text style={styles.miniGameEmoji}>🧠</Text>
             </View>
             <View style={styles.miniGameInfo}>
-              <Text style={styles.miniGameName}>Memory Match</Text>
-              <Text style={styles.miniGameDesc}>Free to play! Match pairs</Text>
+              <Text style={[styles.miniGameName, { color: colors.text }]}>Memory Match</Text>
+              <Text style={[styles.miniGameDesc, { color: colors.textMuted }]}>Free to play! Match pairs</Text>
             </View>
-            <View style={styles.comingSoonBadge}>
-              <Text style={styles.comingSoonText}>Coming Soon</Text>
+            <View style={[styles.comingSoonBadge, { backgroundColor: colors.background }]}>
+              <Text style={[styles.comingSoonText, { color: colors.textMuted }]}>Coming Soon</Text>
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.miniGameCard}>
+          <TouchableOpacity style={[styles.miniGameCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={[styles.miniGameIcon, { backgroundColor: '#EC4899' }]}>
               <Text style={styles.miniGameEmoji}>🎫</Text>
             </View>
             <View style={styles.miniGameInfo}>
-              <Text style={styles.miniGameName}>Scratch Cards</Text>
-              <Text style={styles.miniGameDesc}>Instant win prizes</Text>
+              <Text style={[styles.miniGameName, { color: colors.text }]}>Scratch Cards</Text>
+              <Text style={[styles.miniGameDesc, { color: colors.textMuted }]}>Instant win prizes</Text>
             </View>
-            <View style={styles.comingSoonBadge}>
-              <Text style={styles.comingSoonText}>Coming Soon</Text>
+            <View style={[styles.comingSoonBadge, { backgroundColor: colors.background }]}>
+              <Text style={[styles.comingSoonText, { color: colors.textMuted }]}>Coming Soon</Text>
             </View>
           </TouchableOpacity>
         </View>
 
         {/* Raffles Link */}
-        <TouchableOpacity style={styles.rafflesCard}>
-          <View style={styles.rafflesIcon}>
+        <TouchableOpacity style={[styles.rafflesCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={[styles.rafflesIcon, { backgroundColor: colors.gold }]}>
             <Text style={styles.rafflesEmoji}>🏆</Text>
           </View>
           <View style={styles.rafflesInfo}>
-            <Text style={styles.rafflesTitle}>Raffles & Contests</Text>
-            <Text style={styles.rafflesDesc}>Enter for a chance to win big prizes!</Text>
+            <Text style={[styles.rafflesTitle, { color: colors.text }]}>Raffles & Contests</Text>
+            <Text style={[styles.rafflesDesc, { color: colors.textMuted }]}>Enter for a chance to win big prizes!</Text>
           </View>
         </TouchableOpacity>
 
         {/* Sync Notice */}
-        <Text style={styles.syncNotice}>
+        <Text style={[styles.syncNotice, { color: colors.textMuted }]}>
           🔄 Synced with Blendlink website
         </Text>
 
