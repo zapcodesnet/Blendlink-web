@@ -243,15 +243,38 @@ class PvPGameService:
             user = await self.db.users.find_one({"user_id": user_id}, {"bl_coins": 1})
             if not user or user.get("bl_coins", 0) < bet_amount:
                 return {"success": False, "error": "Not enough BL coins for bet"}
+            
+            # Deduct bet amount when joining matchmaking (held in escrow)
+            await self.db.users.update_one(
+                {"user_id": user_id},
+                {"$inc": {"bl_coins": -bet_amount}}
+            )
         
-        # Verify photo ownership if provided
+        # Verify photo ownership and stamina if provided
         if photo_id:
             photo = await self.db.minted_photos.find_one({
                 "mint_id": photo_id,
                 "user_id": user_id,
             })
             if not photo:
+                # Refund bet if photo check fails
+                if bet_amount > 0:
+                    await self.db.users.update_one(
+                        {"user_id": user_id},
+                        {"$inc": {"bl_coins": bet_amount}}
+                    )
                 return {"success": False, "error": "Photo not found or not owned"}
+            
+            # Check photo stamina
+            photo_stamina = photo.get("stamina", 100)
+            if photo_stamina <= 0:
+                # Refund bet if photo has no stamina
+                if bet_amount > 0:
+                    await self.db.users.update_one(
+                        {"user_id": user_id},
+                        {"$inc": {"bl_coins": bet_amount}}
+                    )
+                return {"success": False, "error": "This photo has no stamina. Wait for it to recover."}
         
         # Join matchmaking queue
         result = await self.queue.join_queue(
@@ -297,8 +320,22 @@ class PvPGameService:
         return {"status": "not_in_queue"}
     
     async def cancel_matchmaking(self, user_id: str) -> Dict[str, Any]:
-        """Cancel matchmaking"""
-        return await self.queue.leave_queue(user_id)
+        """Cancel matchmaking and refund bet"""
+        # Get player data to refund bet
+        player_data = self.queue.waiting_players.get(user_id)
+        bet_amount = player_data.get("bet_amount", 0) if player_data else 0
+        
+        result = await self.queue.leave_queue(user_id)
+        
+        # Refund bet if was in queue
+        if result.get("success") and bet_amount > 0:
+            await self.db.users.update_one(
+                {"user_id": user_id},
+                {"$inc": {"bl_coins": bet_amount}}
+            )
+            result["bet_refunded"] = bet_amount
+        
+        return result
     
     async def start_match_game(self, match_id: str, user_id: str) -> Dict[str, Any]:
         """
@@ -327,12 +364,13 @@ class PvPGameService:
         opponent_id = match["player2_id"] if is_player1 else match["player1_id"]
         photo_id = match["player1_photo_id"] if is_player1 else match["player2_photo_id"]
         
-        # Start game session
+        # Start game session (bet was already deducted in find_match, so skip_bet_deduction=True)
         result = await game_service.start_game(
             player_id=user_id,
             opponent_id=opponent_id,
             bet_amount=match["bet_amount"],
             player_photo_id=photo_id,
+            skip_bet_deduction=True,  # Bet was deducted when joining matchmaking
         )
         
         if result["success"]:
