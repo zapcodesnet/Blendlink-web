@@ -81,13 +81,81 @@ const FriendsScreen = () => (
   </View>
 );
 
-const SettingsScreen = () => (
-  <View style={styles.placeholder}>
-    <Text style={styles.placeholderIcon}>⚙️</Text>
-    <Text style={styles.placeholderTitle}>Settings</Text>
-    <Text style={styles.placeholderText}>Coming Soon</Text>
-  </View>
-);
+// Settings Screen with Theme Toggle
+const SettingsScreen = () => {
+  const { colors, isDark, toggleTheme, theme } = useTheme();
+  
+  return (
+    <View style={[styles.settingsContainer, { backgroundColor: colors.background }]}>
+      <Text style={[styles.settingsTitle, { color: colors.text }]}>⚙️ Settings</Text>
+      
+      {/* Theme Section */}
+      <View style={[styles.settingsSection, { backgroundColor: colors.card }]}>
+        <Text style={[styles.settingsSectionTitle, { color: colors.text }]}>Appearance</Text>
+        
+        <TouchableOpacity 
+          style={[styles.settingsRow, { borderBottomColor: colors.border }]}
+          onPress={toggleTheme}
+        >
+          <View style={styles.settingsRowLeft}>
+            <Text style={styles.settingsRowIcon}>{isDark ? '🌙' : '☀️'}</Text>
+            <View>
+              <Text style={[styles.settingsRowLabel, { color: colors.text }]}>Theme</Text>
+              <Text style={[styles.settingsRowValue, { color: colors.textMuted }]}>
+                {isDark ? 'Dark Mode' : 'Light Mode'}
+              </Text>
+            </View>
+          </View>
+          <View style={[styles.themeToggle, { backgroundColor: isDark ? colors.primary : colors.cardSecondary }]}>
+            <Text style={styles.themeToggleText}>{isDark ? '🌙' : '☀️'}</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+      
+      {/* Account Section */}
+      <View style={[styles.settingsSection, { backgroundColor: colors.card }]}>
+        <Text style={[styles.settingsSectionTitle, { color: colors.text }]}>Account</Text>
+        
+        <View style={[styles.settingsRow, { borderBottomColor: colors.border }]}>
+          <View style={styles.settingsRowLeft}>
+            <Text style={styles.settingsRowIcon}>👤</Text>
+            <Text style={[styles.settingsRowLabel, { color: colors.text }]}>Profile</Text>
+          </View>
+          <Text style={[styles.settingsRowArrow, { color: colors.textMuted }]}>→</Text>
+        </View>
+        
+        <View style={[styles.settingsRow, { borderBottomColor: colors.border }]}>
+          <View style={styles.settingsRowLeft}>
+            <Text style={styles.settingsRowIcon}>🔔</Text>
+            <Text style={[styles.settingsRowLabel, { color: colors.text }]}>Notifications</Text>
+          </View>
+          <Text style={[styles.settingsRowArrow, { color: colors.textMuted }]}>→</Text>
+        </View>
+        
+        <View style={[styles.settingsRow, { borderBottomColor: colors.border }]}>
+          <View style={styles.settingsRowLeft}>
+            <Text style={styles.settingsRowIcon}>🔒</Text>
+            <Text style={[styles.settingsRowLabel, { color: colors.text }]}>Privacy</Text>
+          </View>
+          <Text style={[styles.settingsRowArrow, { color: colors.textMuted }]}>→</Text>
+        </View>
+      </View>
+      
+      {/* App Info */}
+      <View style={[styles.settingsSection, { backgroundColor: colors.card }]}>
+        <Text style={[styles.settingsSectionTitle, { color: colors.text }]}>About</Text>
+        
+        <View style={[styles.settingsRow, { borderBottomWidth: 0 }]}>
+          <View style={styles.settingsRowLeft}>
+            <Text style={styles.settingsRowIcon}>📱</Text>
+            <Text style={[styles.settingsRowLabel, { color: colors.text }]}>Version</Text>
+          </View>
+          <Text style={[styles.settingsRowValue, { color: colors.textMuted }]}>1.0.0</Text>
+        </View>
+      </View>
+    </View>
+  );
+};
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
