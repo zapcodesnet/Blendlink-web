@@ -115,6 +115,65 @@ export default function Games() {
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-6">
+        {/* Photo Battle Arena CTA - NEW FEATURED */}
+        <button
+          onClick={() => navigate("/photo-game")}
+          className="w-full bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 rounded-2xl p-6 text-white mb-4 text-left hover:scale-[1.02] transition-transform shadow-lg relative overflow-hidden"
+          data-testid="photo-battle-cta"
+        >
+          <div className="absolute top-2 right-2 px-2 py-1 bg-emerald-500 text-xs font-bold rounded-full animate-pulse">
+            ⚡ NEW
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-white/80 text-sm font-medium">⚔️ PvP BATTLES</p>
+              <p className="text-2xl font-bold mt-1">Photo Battle Arena</p>
+              <p className="text-sm text-white/90 mt-1">Rock-Paper-Scissors • Photo Auctions • Win BL Coins!</p>
+            </div>
+            <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
+              <Swords className="w-8 h-8" />
+            </div>
+          </div>
+          <div className="mt-4 flex items-center gap-2 text-sm flex-wrap">
+            {gameStats && (
+              <>
+                <span className="px-3 py-1 bg-white/20 rounded-full">🏆 {gameStats.battles_won || 0} Wins</span>
+                <span className="px-3 py-1 bg-white/20 rounded-full">🔥 {gameStats.current_win_streak || 0} Streak</span>
+              </>
+            )}
+            {queueStatus && (
+              <span className="px-3 py-1 bg-emerald-500/30 rounded-full">👥 {queueStatus.players_waiting} Searching</span>
+            )}
+          </div>
+        </button>
+
+        {/* Minted Photos & Marketplace Row */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <button
+            onClick={() => navigate("/minted-photos")}
+            className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-4 text-white text-left hover:scale-[1.02] transition-transform shadow-lg"
+            data-testid="minted-photos-cta"
+          >
+            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center mb-3">
+              <Image className="w-5 h-5" />
+            </div>
+            <p className="font-bold">✨ Minted Photos</p>
+            <p className="text-xs text-white/80 mt-1">Mint collectibles</p>
+          </button>
+
+          <button
+            onClick={() => navigate("/marketplace")}
+            className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-4 text-white text-left hover:scale-[1.02] transition-transform shadow-lg"
+            data-testid="photo-marketplace-cta"
+          >
+            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center mb-3">
+              <Store className="w-5 h-5" />
+            </div>
+            <p className="font-bold">🏪 Marketplace</p>
+            <p className="text-xs text-white/80 mt-1">Buy & Sell Photos</p>
+          </button>
+        </div>
+
         {/* Casino CTA Banner */}
         <button
           onClick={() => navigate("/casino")}
@@ -123,7 +182,7 @@ export default function Games() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-white/80 text-sm font-medium">🎰 NEW!</p>
+              <p className="text-white/80 text-sm font-medium">🎰 CASINO</p>
               <p className="text-2xl font-bold mt-1">Casino Games</p>
               <p className="text-sm text-white/90 mt-1">Blackjack • Slots • Roulette • Poker & More!</p>
             </div>
