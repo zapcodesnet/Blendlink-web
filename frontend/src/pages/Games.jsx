@@ -1,15 +1,17 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../App";
 import api from "../services/api";
 import { toast } from "sonner";
 import { Button } from "../components/ui/button";
-import { Coins, Gamepad2, Trophy, Sparkles, Play, CircleDot, AlertCircle, Spade } from "lucide-react";
+import { Coins, Gamepad2, Trophy, Sparkles, Play, CircleDot, AlertCircle, Spade, Swords, Image, Store, Zap, Crown, Target } from "lucide-react";
 
 // Games Components
 import SpinWheel from "../components/games/SpinWheel";
 import ScratchCard from "../components/games/ScratchCard";
 import MemoryMatch from "../components/games/MemoryMatch";
+
+const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
 export default function Games() {
   const { user, setUser } = useContext(AuthContext);
