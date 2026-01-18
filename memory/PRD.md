@@ -214,4 +214,4 @@
 
 ## PREVIEW URL
 
-https://wallet-notify.preview.emergentagent.com
+https://blendlink-nft.preview.emergentagent.com
