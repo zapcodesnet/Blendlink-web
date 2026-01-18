@@ -1059,4 +1059,255 @@ export const pokerAPI = {
   },
 };
 
+// ============== PHOTO GAME API ==============
+
+export const photoGameAPI = {
+  // Get game configuration
+  getConfig: async () => {
+    const response = await api.get('/photo-game/config');
+    return response.data;
+  },
+
+  // Get current user's game stats
+  getMyStats: async () => {
+    const response = await api.get('/photo-game/stats');
+    return response.data;
+  },
+
+  // Get another user's public stats
+  getUserStats: async (userId) => {
+    const response = await api.get(`/photo-game/stats/${userId}`);
+    return response.data;
+  },
+
+  // Start a new game session
+  startGame: async (opponentId = 'bot', betAmount = 0, photoId = null) => {
+    const response = await api.post('/photo-game/start', {
+      opponent_id: opponentId,
+      bet_amount: betAmount,
+      photo_id: photoId,
+    });
+    return response.data;
+  },
+
+  // Play RPS round
+  playRPS: async (sessionId, choice) => {
+    const response = await api.post(`/photo-game/session/${sessionId}/rps`, { choice });
+    return response.data;
+  },
+
+  // Execute photo battle
+  playPhotoBattle: async (sessionId) => {
+    const response = await api.post(`/photo-game/session/${sessionId}/photo-battle`);
+    return response.data;
+  },
+
+  // Get game session
+  getSession: async (sessionId) => {
+    const response = await api.get(`/photo-game/session/${sessionId}`);
+    return response.data;
+  },
+
+  // Get active sessions
+  getActiveSessions: async () => {
+    const response = await api.get('/photo-game/sessions/active');
+    return response.data;
+  },
+
+  // Get game history
+  getGameHistory: async (skip = 0, limit = 20) => {
+    const response = await api.get(`/photo-game/sessions/history?skip=${skip}&limit=${limit}`);
+    return response.data;
+  },
+
+  // Get wins leaderboard
+  getWinsLeaderboard: async (period = '24h', limit = 20) => {
+    const response = await api.get(`/photo-game/leaderboard/wins?period=${period}&limit=${limit}`);
+    return response.data;
+  },
+
+  // Get photos leaderboard
+  getPhotosLeaderboard: async (period = '24h', limit = 20) => {
+    const response = await api.get(`/photo-game/leaderboard/photos?period=${period}&limit=${limit}`);
+    return response.data;
+  },
+
+  // PvP Matchmaking
+  findMatch: async ({ bet_amount = 0, photo_id = null, use_bot_fallback = true }) => {
+    const response = await api.post('/photo-game/pvp/find-match', {
+      bet_amount,
+      photo_id,
+      use_bot_fallback,
+    });
+    return response.data;
+  },
+
+  // Check match status
+  checkMatchStatus: async () => {
+    const response = await api.get('/photo-game/pvp/match-status');
+    return response.data;
+  },
+
+  // Cancel matchmaking
+  cancelMatchmaking: async () => {
+    const response = await api.post('/photo-game/pvp/cancel');
+    return response.data;
+  },
+
+  // Start match game
+  startMatch: async (matchId) => {
+    const response = await api.post(`/photo-game/pvp/match/${matchId}/start`);
+    return response.data;
+  },
+
+  // Get queue status
+  getQueueStatus: async () => {
+    const response = await api.get('/photo-game/pvp/queue-status');
+    return response.data;
+  },
+};
+
+// ============== MINTING API ==============
+
+export const mintingAPI = {
+  // Get mint configuration
+  getConfig: async () => {
+    const response = await api.get('/minting/config');
+    return response.data;
+  },
+
+  // Get mint status (remaining mints, BL coins, etc.)
+  getMintStatus: async () => {
+    const response = await api.get('/minting/status');
+    return response.data;
+  },
+
+  // Get user's minted photos
+  getMyPhotos: async () => {
+    const response = await api.get('/minting/photos');
+    return response.data;
+  },
+
+  // Get specific photo
+  getPhoto: async (mintId) => {
+    const response = await api.get(`/minting/photo/${mintId}`);
+    return response.data;
+  },
+
+  // Upload and mint a photo
+  uploadPhoto: async (formData) => {
+    const response = await api.post('/minting/photo/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  // Rename photo
+  renamePhoto: async (mintId, newName) => {
+    const response = await api.put(`/minting/photo/${mintId}/rename`, { new_name: newName });
+    return response.data;
+  },
+
+  // Update photo privacy
+  updatePrivacy: async (mintId, isPrivate, showInFeed) => {
+    const response = await api.put(`/minting/photo/${mintId}/privacy`, {
+      is_private: isPrivate,
+      show_in_feed: showInFeed,
+    });
+    return response.data;
+  },
+
+  // Get public gallery
+  getGallery: async (skip = 0, limit = 20) => {
+    const response = await api.get(`/minting/gallery?skip=${skip}&limit=${limit}`);
+    return response.data;
+  },
+
+  // Get user's public photos
+  getUserPhotos: async (userId, skip = 0, limit = 20) => {
+    const response = await api.get(`/minting/user/${userId}/photos?skip=${skip}&limit=${limit}`);
+    return response.data;
+  },
+};
+
+// ============== PHOTO MARKETPLACE API ==============
+
+export const photoMarketplaceAPI = {
+  // Get marketplace configuration
+  getConfig: async () => {
+    const response = await api.get('/marketplace/config');
+    return response.data;
+  },
+
+  // Get marketplace listings
+  getListings: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.asset_type) queryParams.append('asset_type', params.asset_type);
+    if (params.listing_type) queryParams.append('listing_type', params.listing_type);
+    if (params.min_price) queryParams.append('min_price', params.min_price);
+    if (params.max_price) queryParams.append('max_price', params.max_price);
+    if (params.skip !== undefined) queryParams.append('skip', params.skip);
+    if (params.limit !== undefined) queryParams.append('limit', params.limit);
+    const response = await api.get(`/marketplace/listings?${queryParams}`);
+    return response.data;
+  },
+
+  // Create listing
+  createListing: async (data) => {
+    const response = await api.post('/marketplace/listings', data);
+    return response.data;
+  },
+
+  // Get specific listing
+  getListing: async (listingId) => {
+    const response = await api.get(`/marketplace/listing/${listingId}`);
+    return response.data;
+  },
+
+  // Buy listing
+  buyListing: async (listingId) => {
+    const response = await api.post(`/marketplace/listing/${listingId}/buy`);
+    return response.data;
+  },
+
+  // Cancel listing
+  cancelListing: async (listingId) => {
+    const response = await api.post(`/marketplace/listing/${listingId}/cancel`);
+    return response.data;
+  },
+
+  // Make offer
+  makeOffer: async (listingId, amount) => {
+    const response = await api.post('/marketplace/offers', {
+      listing_id: listingId,
+      amount,
+    });
+    return response.data;
+  },
+
+  // Respond to offer
+  respondToOffer: async (offerId, accept) => {
+    const response = await api.post(`/marketplace/offers/${offerId}/respond`, { accept });
+    return response.data;
+  },
+
+  // Get my offers
+  getMyOffers: async () => {
+    const response = await api.get('/marketplace/my-offers');
+    return response.data;
+  },
+
+  // Get my listings
+  getMyListings: async () => {
+    const response = await api.get('/marketplace/my-listings');
+    return response.data;
+  },
+
+  // Get marketplace stats
+  getStats: async () => {
+    const response = await api.get('/marketplace/stats');
+    return response.data;
+  },
+};
+
 export default api;
