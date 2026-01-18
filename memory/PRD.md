@@ -1,68 +1,83 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 18, 2026 (Session 10)
+## Latest Update: January 18, 2026 (Session 12)
 
 ---
 
-## SESSION 11 SUMMARY - AI Photo Analysis, Push Notifications & Full Feature Integration ✅
+## SESSION 12 SUMMARY - Bug Fixes & Battle Photo Selection ✅
 
-### COMPLETED THIS SESSION
+### CRITICAL BUGS FIXED
 
-#### 1. AI Photo Analysis (GPT-4o Vision) ✅
-- Updated `/app/backend/minting_system.py` with improved AI analysis
-- Uses Emergent LLM Key for GPT-4o Vision API
-- Analyzes photos for:
-  - Scenery type (natural/water/manmade)
-  - 10 rating criteria (originality, composition, etc.)
-  - Face detection
-- Returns fallback data if AI unavailable
+#### 1. Minting Failed ✅ FIXED
+- **Issue**: Minting was failing for users
+- **Root Cause**: Date comparison in `check_can_mint()` was using `.isoformat()` incorrectly
+- **Fix**: Updated `/app/backend/minting_system.py` to use proper string comparison for ISO dates stored in MongoDB
+- **Test Result**: Minting now works correctly, 500 BL deducted per mint, daily limit (3 free mints) tracked
 
-#### 2. Push Notifications (Expo) ✅
-**New Files:**
-- `/app/backend/push_notifications.py` - Push notification service
-- `/app/mobile/src/context/PushNotificationContext.js` - Mobile context
+#### 2. BL Coin Bet Not Working ✅ FIXED
+- **Issue**: Betting wasn't deducting BL coins when joining PvP matchmaking
+- **Root Cause**: Bet was only deducted when game started, not when joining queue
+- **Fix**: Updated `/app/backend/pvp_matchmaking.py`:
+  - `find_match()`: Now deducts bet when joining queue
+  - `cancel_matchmaking()`: Refunds bet if user cancels
+  - `start_match_game()`: Uses `skip_bet_deduction=True` since bet already taken
+- **Test Result**: Bet properly deducted on join, refunded on cancel
 
-**Endpoints:**
-- `POST /api/push/register` - Register Expo push token
-- `POST /api/push/unregister` - Unregister push token
-- `POST /api/push/test` - Send test notification
+#### 3. Battle Not Starting ✅ FIXED
+- **Issue**: Battles were not initiating correctly
+- **Root Cause**: Photo selection was required but not enforced, ObjectId serialization error
+- **Fix**: Updated `/app/backend/photo_game.py`:
+  - Added `skip_bet_deduction` parameter to `start_game()`
+  - Added photo stamina check (0% stamina = cannot battle)
+  - Fixed MongoDB `_id` serialization issue
+- **Test Result**: Battles start correctly with proper photo selection
 
-**Features:**
-- Expo push token management
-- Android notification channels (default, games, marketplace)
-- Automatic registration on login
-- Bulk notifications for tournaments
+### NEW FEATURE: Battle Photo Selection/Preview Screen ✅
 
-#### 3. Mobile API Updates ✅
-- Added `pushNotificationsAPI` module
-- Added `subscriptionAPI` module
-- Updated App.js with PushNotificationProvider
-- Auto-initializes push on user authentication
+**Requirement**: Before starting a battle, show a preview/selection screen of all qualified minted photos
 
-#### 4. Stripe Setup Documentation ✅
-- Created `/app/docs/STRIPE_SETUP.md`
-- Step-by-step guide for creating products
-- Webhook configuration instructions
-- Test card numbers
+**Implementation** (Web + Mobile synchronized):
+
+1. **New API Endpoint**: `GET /api/photo-game/battle-photos`
+   - Returns user's minted photos sorted by Dollar value (highest to lowest)
+   - Each photo includes: thumbnail, name, dollar_value, strength/weakness, stamina_percent, is_available, battles_remaining
+
+2. **Photo Stamina System**:
+   - Max stamina: 100% = 24 battles
+   - Stamina per battle: ~4.16% (100/24)
+   - Stamina recovery: 1 battle per hour (~4.16%/hour)
+   - Full recovery: 24 hours
+   - Defeat penalty: 25% faster stamina drain
+   - Photos with 0% stamina: Grayed out, unavailable for battle
+
+3. **UI Components**:
+   - **Web**: `PhotoSelectionScreen` component in `/app/frontend/src/pages/PhotoGameArena.jsx`
+   - **Mobile**: `PhotoSelectionView` component in `/app/mobile/src/screens/PhotoGameArenaScreen.js`
+   - Shows: Photo thumbnail, Dollar value (power), scenery type, strength/weakness, stamina bar, battles remaining
+   - Available photos: Full color, selectable
+   - Resting photos: Grayed out with recovery time display
 
 ---
 
 ## TESTING RESULTS ✅
 
-**Iteration 32 Backend Tests:** 27/27 passed
-- Push Notifications: register, test, unregister ✅
-- Subscription Tiers: all tiers & ranked ✅
-- Minting System: config, status, feed ✅
-- Photo Game: all APIs ✅
-- Marketplace: all APIs ✅
-- Tournaments: list ✅
-- Casino: daily spin, stats ✅
-- WebSocket: status ✅
+**Iteration 33 Backend Tests:** 16/16 passed (100%)
+- Health & Auth ✅
+- Minting Status & Config ✅
+- Battle Photos Endpoint (sorted, stamina) ✅
+- Photo Game Stats & Config ✅
+- PvP Queue Status ✅
+- Find Match with Photo ✅
+- BL Coin Bet Deduction ✅
+- Battle Start ✅
+- Leaderboards ✅
 
-**Frontend Tests:** 6/6 passed
+**Frontend Tests:** 7/7 passed (100%)
 - Games page with Photo Battle Arena CTA ✅
-- Minted Photos & Marketplace CTAs ✅
-- User balance displayed ✅
+- Battle Arena loads with photo selection UI ✅
+- Photo cards show name, dollar value, scenery type ✅
+- Stamina display (88% = 21 battles) ✅
+- Strength indicator visible ✅
 
 ---
 
@@ -72,166 +87,132 @@
 /app/
 ├── backend/
 │   ├── server.py                  # Main FastAPI app
+│   ├── minting_system.py          # FIXED: Date comparison for daily limits
+│   ├── photo_game.py              # FIXED: skip_bet_deduction, ObjectId removal
+│   ├── pvp_matchmaking.py         # FIXED: Bet deduction on join, refund on cancel
+│   ├── game_routes.py             # NEW: GET /battle-photos endpoint
 │   ├── subscription_tiers.py      # Subscription & Ranked system
 │   ├── websocket_notifications.py # Real-time notifications
-│   ├── push_notifications.py      # NEW: Expo push notifications
-│   ├── minting_system.py          # Internal minting + AI analysis
-│   ├── minting_routes.py          # Minting API endpoints
-│   ├── photo_game.py              # Game logic & battles
-│   ├── game_routes.py             # Game API + PvP endpoints
-│   ├── pvp_matchmaking.py         # PvP matchmaking queue
+│   ├── push_notifications.py      # Expo push notifications
 │   ├── marketplace_system.py      # Marketplace service
-│   ├── marketplace_routes.py      # Marketplace API
-│   ├── bl_rewards.py              # BL coin rewards system
-│   ├── reactions_system.py        # Golden/Silver reactions
-│   ├── referral_system.py         # Commission & transactions
 │   └── .env                       # Environment variables
 ├── frontend/
-│   ├── src/
-│   │   ├── pages/
-│   │   │   ├── Games.jsx              # Photo Game CTAs + stats
-│   │   │   ├── SubscriptionTiers.jsx  # Subscription page
-│   │   │   ├── PhotoGameArena.jsx     # Battle arena UI
-│   │   │   └── MintedPhotos.jsx       # Minted photos page
-│   │   └── components/
-│   │       └── MintAnimation.jsx      # Mint animation effects
-│   └── .env                       # Frontend env
+│   ├── src/pages/
+│   │   ├── PhotoGameArena.jsx     # UPDATED: PhotoSelectionScreen component
+│   │   ├── Games.jsx              # Photo Game CTAs + stats
+│   │   ├── MintedPhotos.jsx       # Minted photos page
+│   │   └── SubscriptionTiers.jsx  # Subscription page
+│   └── .env
 ├── mobile/
-│   ├── App.js                     # Root with all providers
-│   └── src/
-│       ├── context/
-│       │   ├── AuthContext.js
-│       │   ├── ThemeContext.js          # Light/Dark theme
-│       │   └── PushNotificationContext.js  # NEW: Push notifications
-│       ├── navigation/
-│       │   └── index.js               # All screens
-│       ├── screens/
-│       │   ├── PhotoGameArenaScreen.js    # Mobile battle UI
-│       │   ├── MintedPhotosScreen.js      # Photo collection
-│       │   ├── PhotoMarketplaceScreen.js  # Photo trading
-│       │   ├── GamesScreen.js             # Arena CTA
-│       │   └── MarketplaceScreen.js       # Photo marketplace link
-│       └── services/
-│           └── api.js                 # All API modules + push + subscription
+│   ├── src/screens/
+│   │   └── PhotoGameArenaScreen.js # UPDATED: PhotoSelectionView component
+│   ├── src/services/
+│   │   └── api.js                   # UPDATED: getBattlePhotos() added
+│   └── App.js
 └── docs/
-    └── STRIPE_SETUP.md            # NEW: Stripe configuration guide
+    └── STRIPE_SETUP.md
 ```
 
 ---
 
-## API ENDPOINTS
+## KEY API ENDPOINTS
 
-### Push Notification APIs
-- `POST /api/push/register` - Register Expo push token (auth required)
-- `POST /api/push/unregister` - Unregister push token (auth required)
-- `POST /api/push/test` - Send test notification (auth required)
+### Photo Game & Battles
+- `GET /api/photo-game/battle-photos` - **NEW**: Get battle-ready photos sorted by dollar value
+- `POST /api/photo-game/pvp/find-match` - **FIXED**: Deducts bet on join
+- `POST /api/photo-game/pvp/cancel` - **FIXED**: Refunds bet
+- `POST /api/photo-game/pvp/match/{match_id}/start` - **FIXED**: Uses skip_bet_deduction
+- `GET /api/photo-game/stats` - Player game stats
+- `POST /api/photo-game/session/{session_id}/rps` - RPS round
+- `POST /api/photo-game/session/{session_id}/photo-battle` - Photo battle
 
-### Subscription APIs
-- `GET /api/subscriptions/tiers` - Get all subscription and ranked tiers
-- `GET /api/subscriptions/my-subscription` - Get user's subscription
-- `POST /api/subscriptions/checkout` - Create Stripe checkout session
-- `POST /api/subscriptions/claim-daily-bonus` - Claim daily BL bonus
-- `POST /api/subscriptions/cancel` - Cancel subscription
-- `GET /api/subscriptions/ranked/profile` - Get user's ranked profile
-- `GET /api/subscriptions/ranked/leaderboard` - Get ranked leaderboard
-- `GET /api/subscriptions/tournaments` - List tournaments
-- `POST /api/subscriptions/tournaments` - Create tournament (Premium only)
-- `POST /api/subscriptions/tournaments/{id}/join` - Join tournament
-
-### WebSocket
-- `WS /ws/{token}` - Real-time notifications endpoint
-- `GET /api/ws/status` - WebSocket connection stats
+### Minting
+- `POST /api/minting/photos/internal_mint` - **FIXED**: Mint a photo (500 BL)
+- `GET /api/minting/status` - **FIXED**: Daily limit tracking
+- `GET /api/minting/photos` - User's minted photos
 
 ---
 
-## KEY CONSTANTS
+## DATA MODELS
 
-**BL Rewards:**
-| Content Type | Reward | Privacy Lock |
-|--------------|--------|--------------|
-| Video | 50 BL | 24h |
-| Story | 50 BL | 24h |
-| Music | 30 BL | 24h |
-| Photo | 20 BL | 24h |
-| Event | 20 BL | 24h |
-| Group | 40 BL | 24h |
-| Page | 40 BL | 24h |
-| Subscribe | 10 BL each | - |
-| Share | 10 BL | - |
+### Minted Photo (with Stamina)
+```json
+{
+  "mint_id": "string",
+  "name": "string",
+  "description": "string",
+  "scenery_type": "natural|water|manmade",
+  "strength_vs": "string",
+  "weakness_vs": "string",
+  "dollar_value": 1000000,
+  "overall_score": 50,
+  "power": 100,
+  "level": 1,
+  "xp": 0,
+  "stamina": 100.0,           // NEW: 100% = 24 battles
+  "last_battle_at": "datetime" // NEW: For stamina regeneration
+}
+```
 
-**Marketplace:**
-- Platform fee: 8%
-- Min price: $1.00
-- Max auction: 7 days
-
-**Photo Game:**
-- Max stamina: 100
-- Battles per full: 24
-- Stamina/battle: ~4
-- Regen time: 24h full
-- Win streak max: 2x
-
----
-
-## DEPLOYMENT STATUS
-
-✅ **READY FOR EMERGENT DEPLOYMENT**
-- All blockchain code removed
-- No hardcoded secrets
-- All tests passing (59+ tests total)
-- Subscription system operational
-- Ranked matchmaking operational
-- WebSocket notifications operational
-
----
-
-## NEXT STEPS
-
-### Pending Setup (Action Required)
-- 🔴 **Stripe Price IDs** - Create Basic ($4.99) and Premium ($9.99) products in Stripe Dashboard
-  - Follow `/app/docs/STRIPE_SETUP.md` for instructions
-  - Add STRIPE_BASIC_PRICE_ID and STRIPE_PREMIUM_PRICE_ID to backend/.env
-
-### Remaining Implementation (P2)
-- 🔵 **24-hour public lock** on BL-rewarded content
-- 🔵 **Immediate fee distribution** on marketplace sales
-- 🔵 **Tournament bracket visualization**
-- 🔵 **Season rewards distribution**
-
-### Future/Backlog
-- (P3) Live selfie matching for bonus verification
-- (P3) Voice chat during battles
-- (P3) Legacy mobile PKO Poker UI/UX fixes
+### Battle Photo Response
+```json
+{
+  "photos": [{
+    "mint_id": "string",
+    "name": "string",
+    "dollar_value": 86800000,
+    "stamina": 88.0,
+    "stamina_percent": 88.0,
+    "battles_remaining": 21,
+    "is_available": true,
+    "time_until_available": null
+  }],
+  "count": 1,
+  "available_count": 1
+}
+```
 
 ---
 
-## DEPLOYMENT STATUS
+## UPCOMING TASKS
 
-✅ **READY FOR EMERGENT DEPLOYMENT**
-- All blockchain code removed
-- No hardcoded secrets
-- All tests passing (59+ tests total)
-- Subscription system operational
-- Ranked matchmaking operational
-- WebSocket notifications operational
-- Push notifications operational
-- AI Photo Analysis operational
+### P1 - High Priority
+- **Stripe Price ID Integration**: Use `/app/docs/STRIPE_SETUP.md` to create products and connect Price IDs to `/frontend/src/pages/SubscriptionTiers.jsx`
 
----
+### P2 - Medium Priority
+- Ranked matchmaking tiers and tournament modes
+- 24-hour "public" lock on content with BL coin rewards
+- Immediate 8% marketplace fee deduction
+- Tournament bracket visualization
+- Season rewards distribution
 
-## CUMULATIVE TEST RESULTS
-
-| Iteration | Backend | Frontend | Total |
-|-----------|---------|----------|-------|
-| 29 | 13/13 | - | 13 |
-| 30 | 26/26 | - | 26 |
-| 31 | 20/20 | 12/12 | 32 |
-| 32 | 27/27 | 6/6 | 33 |
-| **Total** | **86** | **18** | **104** |
+### P3 - Lower Priority
+- Live selfie matching for minting bonus
+- Legacy PKO Poker UI improvements
 
 ---
 
 ## TEST CREDENTIALS
 
-- **Admin:** `blendlinknet@gmail.com` / `Blend!Admin2026Link`
-- **Test User:** `test@example.com` / `Test123!`
+- **Admin**: `blendlinknet@gmail.com` / `Blend!Admin2026Link`
+- **Test User**: `test@example.com` / `Test123!`
+
+---
+
+## CHANGELOG
+
+### January 18, 2026 (Session 12)
+- ✅ Fixed minting failed bug (date comparison)
+- ✅ Fixed BL coin bet not working (deduction timing)
+- ✅ Fixed battle not starting (photo validation, ObjectId)
+- ✅ Added photo selection/preview screen before battle
+- ✅ Implemented photo-level stamina tracking
+- ✅ Added stamina regeneration (1 battle/hour)
+- ✅ Added defeat stamina penalty (25% faster drain)
+- ✅ All 16 backend + 7 frontend tests passing
+
+### January 18, 2026 (Session 11)
+- ✅ AI Photo Analysis with GPT-4o Vision
+- ✅ Expo Push Notifications
+- ✅ Stripe Setup Documentation
+- ✅ 27 backend + 6 frontend tests passing
