@@ -1165,6 +1165,12 @@ export const photoGameAPI = {
     const response = await api.get('/photo-game/pvp/queue-status');
     return response.data;
   },
+
+  // Get battle-ready photos sorted by dollar value
+  getBattlePhotos: async () => {
+    const response = await api.get('/photo-game/battle-photos');
+    return response.data;
+  },
 };
 
 // ============== MINTING API ==============
