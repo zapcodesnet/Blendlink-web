@@ -202,19 +202,18 @@
 ## NEXT STEPS
 
 ### Upcoming Tasks (P1)
-- 🟡 **WebSocket Notifications** - Real-time game events (match found, turn updates)
-- 🟡 **Expo Push Notifications** - Background alerts for matches/offers
-- 🟡 **Subscription Tiers** - $4.99/$9.99 monthly via Stripe
+- 🟡 **AI Photo Analysis** - Implement GPT-4o Vision call in minting to generate stats
+- 🟡 **Expo Push Notifications** - Background alerts for mobile app
 
 ### Pending Implementation (P2)
-- 🔵 **24-hour public lock** on BL-rewarded content (code in bl_rewards.py needs hook in create endpoints)
-- 🔵 **Immediate fee distribution** on marketplace sales (code in marketplace_system.py needs hook on purchase)
-- 🔵 **AI Photo Analysis** - GPT-4o Vision integration for stat generation
+- 🔵 **24-hour public lock** on BL-rewarded content
+- 🔵 **Immediate fee distribution** on marketplace sales
+- 🔵 **Stripe Price IDs** - Create subscription products in Stripe dashboard
 
 ### Future/Backlog
 - (P2) Live selfie matching for bonus verification
-- (P2) Ranked matchmaking tiers
-- (P2) Tournament mode
+- (P2) Tournament bracket visualization
+- (P2) Season rewards distribution
 - (P2) Legacy mobile PKO Poker UI/UX fixes
 
 ---
