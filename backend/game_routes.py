@@ -356,3 +356,102 @@ async def get_queue_status():
         _pvp_service = init_pvp_service(_db)
     
     return await _pvp_service.get_queue_status()
+
+
+
+# ============== BATTLE-READY PHOTOS ==============
+@game_router.get("/battle-photos")
+async def get_battle_ready_photos(
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """
+    Get user's minted photos sorted by dollar value (power) for battle selection.
+    Includes stamina info and grays out photos with 0% stamina.
+    
+    Stamina recovery:
+    - 1 battle restored per 1 hour of rest
+    - Full 24 battles restored after 24 hours rest
+    - Max stamina: 100% = 24 battles
+    """
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    from datetime import datetime, timezone
+    
+    # Get all user's minted photos
+    photos = await _db.minted_photos.find(
+        {"user_id": current_user["user_id"]},
+        {"_id": 0, "image_data": 0}
+    ).sort("dollar_value", -1).to_list(100)  # Sort by dollar value (power) descending
+    
+    # Calculate current stamina for each photo based on time since last battle
+    now = datetime.now(timezone.utc)
+    battle_photos = []
+    
+    for photo in photos:
+        # Get stored stamina (default 100%)
+        stamina = photo.get("stamina", 100)
+        last_battle = photo.get("last_battle_at")
+        
+        # Regenerate stamina based on time passed
+        if last_battle and stamina < 100:
+            if isinstance(last_battle, str):
+                last_battle_dt = datetime.fromisoformat(last_battle.replace("Z", "+00:00"))
+            else:
+                last_battle_dt = last_battle
+            
+            hours_passed = (now - last_battle_dt).total_seconds() / 3600
+            
+            # 1 battle worth of stamina per hour = ~4.16% per hour
+            stamina_regen_per_hour = 100 / 24  # ~4.16%
+            stamina_gained = hours_passed * stamina_regen_per_hour
+            stamina = min(100, stamina + stamina_gained)
+            
+            # Update photo stamina in DB if regenerated
+            if stamina > photo.get("stamina", 100):
+                await _db.minted_photos.update_one(
+                    {"mint_id": photo["mint_id"]},
+                    {"$set": {"stamina": stamina}}
+                )
+        
+        # Determine if photo can be used for battle
+        is_available = stamina > 0
+        battles_remaining = int(stamina / (100 / 24))  # How many battles this photo can do
+        
+        # Calculate time until 1 battle is available (if stamina is low)
+        time_until_available = None
+        if stamina <= 0:
+            # Need at least ~4.16% stamina for 1 battle
+            time_until_available = 60  # 60 minutes for 1 battle
+        elif stamina < (100 / 24):
+            needed = (100 / 24) - stamina
+            time_until_available = int(needed / (100 / 24) * 60)
+        
+        battle_photos.append({
+            "mint_id": photo.get("mint_id"),
+            "name": photo.get("name"),
+            "description": photo.get("description", ""),
+            "scenery_type": photo.get("scenery_type", "natural"),
+            "strength_vs": photo.get("strength_vs"),
+            "weakness_vs": photo.get("weakness_vs"),
+            "dollar_value": photo.get("dollar_value", 1000000),
+            "overall_score": photo.get("overall_score", 50),
+            "power": photo.get("power", 100),
+            "level": photo.get("level", 1),
+            "xp": photo.get("xp", 0),
+            "battles_won": photo.get("battles_won", 0),
+            "battles_lost": photo.get("battles_lost", 0),
+            "has_face": photo.get("has_face", False),
+            "stamina": round(stamina, 1),
+            "stamina_percent": round(stamina, 1),
+            "battles_remaining": battles_remaining,
+            "is_available": is_available,
+            "time_until_available": time_until_available,
+            "image_url": photo.get("image_url", ""),
+        })
+    
+    return {
+        "photos": battle_photos,
+        "count": len(battle_photos),
+        "available_count": sum(1 for p in battle_photos if p["is_available"]),
+    }
