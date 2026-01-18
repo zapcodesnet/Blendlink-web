@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 IMMUTABLE_CONFIG = {
     "contract_address": os.environ.get("IMMUTABLE_NFT_CONTRACT", "0x0116c46e3c84e39c2c38ad5a3273b51d68d6e4bb"),
     "api_key": os.environ.get("IMMUTABLE_MINTING_API_KEY", ""),
-    "chain_id": os.environ.get("IMMUTABLE_CHAIN_ID", "eip155:13371"),
+    "chain_name": "imtbl-zkevm-mainnet",  # Correct chain name for Minting API
     "api_base": "https://api.immutable.com/v1",
     "explorer_url": "https://explorer.immutable.com",
 }
