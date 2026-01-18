@@ -649,7 +649,7 @@ class PhotoGameService:
         
         # Update loser stats
         if loser_id and loser_id != "bot":
-            # Extra stamina penalty for loss
+            # Extra stamina penalty for loss (player stats)
             extra_stamina_loss = STAMINA_PER_BATTLE * (DEFEAT_STAMINA_PENALTY - 1)
             
             await self.db.player_stats.update_one(
@@ -664,6 +664,20 @@ class PhotoGameService:
                     "$set": {"current_win_streak": 0},
                 }
             )
+            
+            # Extra stamina penalty for photo on loss (25% faster drain)
+            loser_photo_id = None
+            if session["player1_id"] == loser_id:
+                loser_photo_id = session.get("player1_photo_id")
+            elif session["player2_id"] == loser_id:
+                loser_photo_id = session.get("player2_photo_id")
+            
+            if loser_photo_id:
+                extra_photo_stamina_loss = STAMINA_PERCENT_PER_BATTLE * (DEFEAT_STAMINA_PENALTY - 1)
+                await self.db.minted_photos.update_one(
+                    {"mint_id": loser_photo_id},
+                    {"$inc": {"stamina": -extra_photo_stamina_loss}}
+                )
             
             # Record loss transaction
             if bet_amount > 0:
