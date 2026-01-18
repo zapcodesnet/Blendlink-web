@@ -112,7 +112,7 @@ const tabBarOptions = {
     paddingBottom: 20,
     paddingTop: 10,
   },
-  tabBarActiveTintColor: '#2563EB',
+  tabBarActiveTintColor: '#8B5CF6',
   tabBarInactiveTintColor: '#9CA3AF',
   tabBarLabelStyle: {
     fontSize: 11,
@@ -124,6 +124,25 @@ const tabBarOptions = {
 // Main Tab Navigator
 function MainTabs() {
   const [unreadCount, setUnreadCount] = useState(0);
+  const { colors } = useTheme();
+
+  // Dynamic tab bar style based on theme
+  const themedTabBarOptions = {
+    tabBarStyle: {
+      backgroundColor: colors.tabBar,
+      borderTopColor: colors.tabBarBorder,
+      height: 80,
+      paddingBottom: 20,
+      paddingTop: 10,
+    },
+    tabBarActiveTintColor: colors.primary,
+    tabBarInactiveTintColor: colors.textMuted,
+    tabBarLabelStyle: {
+      fontSize: 11,
+      fontWeight: '500',
+    },
+    headerShown: false,
+  };
 
   // Fetch unread notification count
   useEffect(() => {
@@ -142,7 +161,7 @@ function MainTabs() {
   }, []);
 
   return (
-    <Tab.Navigator screenOptions={tabBarOptions}>
+    <Tab.Navigator screenOptions={themedTabBarOptions}>
       <Tab.Screen
         name="Feed"
         component={SocialFeedScreen}
