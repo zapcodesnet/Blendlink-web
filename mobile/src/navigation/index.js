@@ -8,6 +8,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, StyleSheet } from 'react-native';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 // Screens
 import LoginScreen from '../screens/LoginScreen';
@@ -23,6 +24,10 @@ import GamesScreen from '../screens/GamesScreen';
 import CasinoScreen from '../screens/CasinoScreen';
 import CasinoGameScreen from '../screens/CasinoGameScreen';
 import CasinoStatsScreen from '../screens/CasinoStatsScreen';
+
+// Photo Game Screens
+import PhotoGameArenaScreen from '../screens/PhotoGameArenaScreen';
+import MintedPhotosScreen from '../screens/MintedPhotosScreen';
 
 // Admin Screens
 import AdminScreen from '../screens/AdminScreen';
