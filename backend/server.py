@@ -1969,6 +1969,15 @@ try:
 except ImportError as e:
     logger.warning(f"Could not load minting routes: {e}")
 
+# Load Photo Game System
+try:
+    from game_routes import game_router, setup_game_routes
+    api_router.include_router(game_router)
+    setup_game_routes(db)
+    logger.info("Photo Game System loaded (Battles, Leaderboards, XP)")
+except ImportError as e:
+    logger.warning(f"Could not load game routes: {e}")
+
 app.include_router(api_router)
 
 app.add_middleware(
