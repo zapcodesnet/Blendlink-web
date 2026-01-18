@@ -66,6 +66,7 @@ import Events from "./pages/Events";
 import Pages from "./pages/Pages";
 import MyTeam from "./pages/MyTeam";
 import MintedPhotos from "./pages/MintedPhotos";
+import PhotoGameArena from "./pages/PhotoGameArena";
 
 // Components
 import BottomNav from "./components/BottomNav";
