@@ -54,7 +54,7 @@ async def get_nft_config():
     """Get NFT contract configuration"""
     return {
         "contract_address": IMMUTABLE_CONFIG["contract_address"],
-        "chain_id": IMMUTABLE_CONFIG["chain_id"],
+        "chain_name": IMMUTABLE_CONFIG["chain_name"],
         "chain_name": "Immutable zkEVM Mainnet",
         "explorer_url": minting_service.get_contract_url(),
         "minting_enabled": bool(IMMUTABLE_CONFIG["api_key"]),
