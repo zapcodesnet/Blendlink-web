@@ -221,10 +221,15 @@ class PhotoGameService:
             stats_dict = new_stats.model_dump()
             stats_dict["last_stamina_update"] = stats_dict["last_stamina_update"].isoformat()
             await self.db.player_stats.insert_one(stats_dict)
-            stats = stats_dict
+            # Re-fetch without _id to avoid ObjectId issues
+            stats = await self.db.player_stats.find_one({"user_id": user_id}, {"_id": 0})
         else:
             # Update stamina based on time passed
             stats = await self._regenerate_stamina(stats)
+        
+        # Ensure no ObjectId in response
+        if stats and "_id" in stats:
+            del stats["_id"]
         
         return stats
     
