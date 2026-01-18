@@ -187,30 +187,24 @@ async def react_to_item(
         owner_reward=owner_reward,
         message="Reaction added permanently!"
     )
+
+
+async def update_content_likes(item_type: str, item_id: str, golden_count: int):
+    """Update likes_count on content for compatibility"""
+    collection_map = {
+        "post": ("posts", "post_id"),
+        "listing": ("listings", "listing_id"),
+        "minted_photo": ("minted_photos", "mint_id"),
+        "comment": ("comments", "comment_id"),
     }
     
-    if new_reaction:
-        update_data[f"user_reactions.{user_id}"] = new_reaction
-    else:
-        # Remove user reaction
-        await db.reactions.update_one(
-            {"item_type": request.item_type, "item_id": request.item_id},
-            {"$unset": {f"user_reactions.{user_id}": ""}}
+    if item_type in collection_map:
+        collection, id_field = collection_map[item_type]
+        await db[collection].update_one(
+            {id_field: item_id},
+            {"$set": {"likes_count": golden_count, "golden_reactions": golden_count}}
         )
-    
-    await db.reactions.update_one(
-        {"item_type": request.item_type, "item_id": request.item_id},
-        {"$set": update_data}
-    )
-    
-    return ReactionResponse(
-        success=True,
-        upvotes=upvotes,
-        downvotes=downvotes,
-        user_reaction=new_reaction,
-        reward_given=reward_given,
-        message="Reaction updated"
-    )
+
 
 @reactions_router.get("/item/{item_type}/{item_id}")
 async def get_item_reactions(
