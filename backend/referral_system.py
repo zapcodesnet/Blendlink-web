@@ -45,6 +45,12 @@ class TransactionType(str, Enum):
     DIAMOND_BONUS_USD = "diamond_bonus_usd"
     ADMIN_ADJUSTMENT = "admin_adjustment"
     PLATFORM_FEE = "platform_fee"
+    # Minting system
+    MINT_COST = "mint_cost"
+    MINT_REWARD = "mint_reward"
+    BATTLE_WIN = "battle_win"
+    BATTLE_LOSS = "battle_loss"
+    BATTLE_BET = "battle_bet"
     # Activity rewards - Phase 2
     POST_VIDEO = "post_video"
     POST_STORY = "post_story"
