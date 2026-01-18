@@ -50,7 +50,7 @@ class ImmutableMintingService:
     def __init__(self):
         self.contract_address = IMMUTABLE_CONFIG["contract_address"]
         self.api_key = IMMUTABLE_CONFIG["api_key"]
-        self.chain_id = IMMUTABLE_CONFIG["chain_id"]
+        self.chain_name = IMMUTABLE_CONFIG["chain_name"]
         self.api_base = IMMUTABLE_CONFIG["api_base"]
         
         if not self.api_key:
