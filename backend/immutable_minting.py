@@ -88,6 +88,7 @@ class ImmutableMintingService:
         
         payload = {
             "assets": [{
+                "reference_id": f"blendlink-{token_id}",
                 "owner_address": owner_address,
                 "token_id": token_id,
                 "metadata": metadata.dict(exclude_none=True)
