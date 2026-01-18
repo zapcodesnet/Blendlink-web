@@ -467,8 +467,10 @@ class TestLeaderboards:
         )
         assert response.status_code == 200
         data = response.json()
-        assert isinstance(data, list)
-        print(f"✓ Wins leaderboard: {len(data)} entries")
+        # Response is wrapped in object with leaderboard array
+        assert "leaderboard" in data
+        assert isinstance(data["leaderboard"], list)
+        print(f"✓ Wins leaderboard: {len(data['leaderboard'])} entries")
     
     def test_photos_leaderboard(self, api_client, test_user_token):
         """Test photos leaderboard"""
@@ -478,8 +480,10 @@ class TestLeaderboards:
         )
         assert response.status_code == 200
         data = response.json()
-        assert isinstance(data, list)
-        print(f"✓ Photos leaderboard: {len(data)} entries")
+        # Response is wrapped in object with leaderboard array
+        assert "leaderboard" in data
+        assert isinstance(data["leaderboard"], list)
+        print(f"✓ Photos leaderboard: {len(data['leaderboard'])} entries")
 
 
 if __name__ == "__main__":
