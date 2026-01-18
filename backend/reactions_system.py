@@ -31,10 +31,11 @@ class ReactionRequest(BaseModel):
 
 class ReactionResponse(BaseModel):
     success: bool
-    upvotes: int
-    downvotes: int
+    golden_count: int
+    silver_count: int
     user_reaction: Optional[str]
-    reward_given: bool = False
+    reactor_reward: int = 0
+    owner_reward: int = 0
     message: Optional[str] = None
 
 @reactions_router.post("/react", response_model=ReactionResponse)
@@ -42,7 +43,12 @@ async def react_to_item(
     request: ReactionRequest,
     current_user: dict = Depends(get_current_user)
 ):
-    """Add or toggle a reaction on an item"""
+    """
+    Add a PERMANENT reaction on an item
+    - Reactions cannot be removed or changed once placed
+    - Golden thumbs up: Both reactor AND owner get 10 BL coins
+    - Silver thumbs down: Only reactor gets 10 BL coins
+    """
     user_id = current_user["user_id"]
     
     # Get or create reaction document for this item
@@ -56,78 +62,131 @@ async def react_to_item(
             "reaction_id": f"react_{uuid.uuid4().hex[:12]}",
             "item_type": request.item_type,
             "item_id": request.item_id,
-            "upvotes": 0,
-            "downvotes": 0,
-            "user_reactions": {},  # {user_id: 'up' or 'down'}
+            "golden_count": 0,
+            "silver_count": 0,
+            "user_reactions": {},  # {user_id: 'golden_up' or 'silver_down'}
             "created_at": datetime.now(timezone.utc).isoformat()
         }
         await db.reactions.insert_one(item_reactions)
     
-    # Get existing user reaction
+    # Check if user already reacted - REACTIONS ARE PERMANENT
     existing_reaction = item_reactions.get("user_reactions", {}).get(user_id)
+    if existing_reaction:
+        return ReactionResponse(
+            success=False,
+            golden_count=item_reactions.get("golden_count", 0),
+            silver_count=item_reactions.get("silver_count", 0),
+            user_reaction=existing_reaction,
+            message="You have already reacted. Reactions are permanent and cannot be changed."
+        )
+    
+    # Find content owner
+    owner_id = await get_content_owner(request.item_type, request.item_id)
+    
+    # Cannot react to own content
+    if owner_id == user_id:
+        return ReactionResponse(
+            success=False,
+            golden_count=item_reactions.get("golden_count", 0),
+            silver_count=item_reactions.get("silver_count", 0),
+            user_reaction=None,
+            message="You cannot react to your own content."
+        )
     
     # Calculate new counts
-    upvotes = item_reactions.get("upvotes", 0)
-    downvotes = item_reactions.get("downvotes", 0)
-    new_reaction = None
-    reward_given = False
+    golden_count = item_reactions.get("golden_count", 0)
+    silver_count = item_reactions.get("silver_count", 0)
+    reactor_reward = 0
+    owner_reward = 0
     
-    if request.is_toggle and existing_reaction == request.reaction_type:
-        # Remove reaction
-        if existing_reaction == 'up':
-            upvotes = max(0, upvotes - 1)
-        else:
-            downvotes = max(0, downvotes - 1)
-        new_reaction = None
-    else:
-        # Remove old reaction if switching
-        if existing_reaction:
-            if existing_reaction == 'up':
-                upvotes = max(0, upvotes - 1)
-            else:
-                downvotes = max(0, downvotes - 1)
+    if request.reaction_type == 'golden_up':
+        golden_count += 1
+        reactor_reward = GOLDEN_REWARD_REACTOR
         
-        # Add new reaction
-        if request.reaction_type == 'up':
-            upvotes += 1
-            new_reaction = 'up'
-            
-            # Award BL coins to content creator for upvotes
-            if existing_reaction != 'up':
-                # Find content owner
-                owner_id = await get_content_owner(request.item_type, request.item_id)
-                if owner_id and owner_id != user_id:
-                    # Award BL coins
-                    await db.users.update_one(
-                        {"user_id": owner_id},
-                        {"$inc": {"bl_coins": UPVOTE_REWARD_BL}}
-                    )
-                    
-                    # Record transaction
-                    await db.transactions.insert_one({
-                        "transaction_id": f"txn_{uuid.uuid4().hex[:12]}",
-                        "user_id": owner_id,
-                        "type": "reaction_received",
-                        "currency": "BL",
-                        "amount": UPVOTE_REWARD_BL,
-                        "description": f"Received upvote on {request.item_type}",
-                        "related_item_type": request.item_type,
-                        "related_item_id": request.item_id,
-                        "from_user_id": user_id,
-                        "created_at": datetime.now(timezone.utc).isoformat()
-                    })
-                    
-                    reward_given = True
-                    logger.info(f"Awarded {UPVOTE_REWARD_BL} BL to {owner_id} for upvote")
-        else:
-            downvotes += 1
-            new_reaction = 'down'
+        # Reactor gets 10 BL
+        await db.users.update_one(
+            {"user_id": user_id},
+            {"$inc": {"bl_coins": GOLDEN_REWARD_REACTOR}}
+        )
+        await db.transactions.insert_one({
+            "transaction_id": f"txn_{uuid.uuid4().hex[:12]}",
+            "user_id": user_id,
+            "type": "reaction_given",
+            "currency": "BL",
+            "amount": GOLDEN_REWARD_REACTOR,
+            "description": f"Gave golden thumbs up on {request.item_type}",
+            "related_item_id": request.item_id,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        # Owner also gets 10 BL
+        if owner_id:
+            owner_reward = GOLDEN_REWARD_OWNER
+            await db.users.update_one(
+                {"user_id": owner_id},
+                {"$inc": {"bl_coins": GOLDEN_REWARD_OWNER}}
+            )
+            await db.transactions.insert_one({
+                "transaction_id": f"txn_{uuid.uuid4().hex[:12]}",
+                "user_id": owner_id,
+                "type": "reaction_received",
+                "currency": "BL",
+                "amount": GOLDEN_REWARD_OWNER,
+                "description": f"Received golden thumbs up on {request.item_type}",
+                "related_item_id": request.item_id,
+                "from_user_id": user_id,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+        
+        logger.info(f"Golden reaction: reactor {user_id} +{GOLDEN_REWARD_REACTOR}BL, owner {owner_id} +{GOLDEN_REWARD_OWNER}BL")
+        
+    else:  # silver_down
+        silver_count += 1
+        reactor_reward = SILVER_REWARD_REACTOR
+        
+        # Only reactor gets 10 BL for thumbs down
+        await db.users.update_one(
+            {"user_id": user_id},
+            {"$inc": {"bl_coins": SILVER_REWARD_REACTOR}}
+        )
+        await db.transactions.insert_one({
+            "transaction_id": f"txn_{uuid.uuid4().hex[:12]}",
+            "user_id": user_id,
+            "type": "reaction_given",
+            "currency": "BL",
+            "amount": SILVER_REWARD_REACTOR,
+            "description": f"Gave silver thumbs down on {request.item_type}",
+            "related_item_id": request.item_id,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        logger.info(f"Silver reaction: reactor {user_id} +{SILVER_REWARD_REACTOR}BL")
     
-    # Update in database
-    update_data = {
-        "upvotes": upvotes,
-        "downvotes": downvotes,
-        "updated_at": datetime.now(timezone.utc).isoformat()
+    # Update in database - mark as permanent
+    await db.reactions.update_one(
+        {"item_type": request.item_type, "item_id": request.item_id},
+        {
+            "$set": {
+                "golden_count": golden_count,
+                "silver_count": silver_count,
+                f"user_reactions.{user_id}": request.reaction_type,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    # Also update likes_count on the content for compatibility
+    await update_content_likes(request.item_type, request.item_id, golden_count)
+    
+    return ReactionResponse(
+        success=True,
+        golden_count=golden_count,
+        silver_count=silver_count,
+        user_reaction=request.reaction_type,
+        reactor_reward=reactor_reward,
+        owner_reward=owner_reward,
+        message="Reaction added permanently!"
+    )
     }
     
     if new_reaction:
