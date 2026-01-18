@@ -17,6 +17,34 @@ export default function Games() {
   const { user, setUser } = useContext(AuthContext);
   const navigate = useNavigate();
   const [activeGame, setActiveGame] = useState(null);
+  const [gameStats, setGameStats] = useState(null);
+  const [queueStatus, setQueueStatus] = useState(null);
+
+  // Fetch game stats and queue status
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem('blendlink_token');
+        if (!token) return;
+
+        const [statsRes, queueRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/api/photo-game/stats`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }).then(r => r.ok ? r.json() : null),
+          fetch(`${API_BASE_URL}/api/photo-game/pvp/queue-status`).then(r => r.ok ? r.json() : null)
+        ]);
+
+        setGameStats(statsRes);
+        setQueueStatus(queueRes);
+      } catch (e) {
+        console.error('Failed to fetch game data:', e);
+      }
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const games = [
     {
