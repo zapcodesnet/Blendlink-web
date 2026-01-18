@@ -1,217 +1,209 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 16, 2026 (Session 6 continued)
+## Latest Update: January 18, 2026 (Session 7)
 
-### SESSION SUMMARY - PKO Poker Fixes, Wallet WebSocket & Admin Sync ✅
+### SESSION SUMMARY - Blockchain Removal & Internal Minting System ✅
 
 ---
 
 ## COMPLETED THIS SESSION
 
-### 1. PKO Poker Web & Mobile Fixes ✅
+### 1. Phase 1: Blockchain Removal & Deployment Readiness ✅
 
-1. **Verified Web Poker is Fully Functional**:
-   - Create tournament works
-   - Register for tournament works
-   - Add AI bots (1, 3, fill table) works
-   - Force start tournament works
-   - Action buttons (Fold, Check, Call, Raise, All In) are visible and clickable
-   - Bet slider and quick bet buttons work
-   - Table Chat works
-   - Leave & Refund works with proper refund
+**Removed Blockchain/NFT Components:**
+- ❌ Deleted `nft_routes.py`, `immutable_minting.py`
+- ❌ Removed `ethers.js`, `@imtbl/sdk` from package.json
+- ❌ Removed NFT-related environment variables from `.env`
+- ❌ Removed NFT route imports from `server.py`
 
-2. **Fixed Mobile Poker Screen**:
-   - Rewrote `/app/mobile/src/screens/PokerTournamentScreen.js`
-   - Fixed WebSocket URL (was hardcoded to wrong domain)
-   - Added proper turn indicator ("YOUR TURN!")
-   - Improved action buttons layout - now always visible when it's player's turn
-   - Added loading overlay during actions
-   - Added Force Start button for tournament creator
-   - Added polling fallback for game state if WebSocket fails
-   - Improved responsive layout with dynamic dimensions
-   - Added `forceLeave` API method
+**Fixed Deployment Blockers:**
+- ✅ Removed hardcoded Stripe publishable key fallback in `stripe_integration.py`
+- ✅ Removed `.env` blocking entries from `.gitignore` (lines 96-97)
+- ✅ Verified CORS, auth redirects, and database config
 
-3. **Verified Seller Dashboard Changes**:
-   - AI Create Listing button now links to `https://blendlink.net/ai-listing-creator`
-   - Header Create button is properly hidden
+**Deployment Status: ✅ PASS - Ready for Emergent Deployment**
 
-### 2. Mobile Admin Panel Sync ✅
+### 2. Phase 2: Internal Minting System ✅
 
-**All 6 admin screens are fully implemented with working UI**:
-- `AdminSecurityScreen.js` - Security dashboard with stats, status badges, quick actions
-- `AdminNotificationsScreen.js` - Notification settings with toggle switches
-- `AdminThemesScreen.js` - Theme selection with color previews
-- `AdminUIEditorScreen.js` - UI component editor with property inputs
-- `AdminPagesScreen.js` - Page management with visibility toggles
-- `AdminAIScreen.js` - AI assistant with chat interface and quick insights
+**New Files Created:**
+- `minting_system.py` - Core minting service with AI photo analysis
+- `minting_routes.py` - API endpoints for minting operations
 
-**100% Feature Parity**: All 17 menu items from web admin are available in mobile
+**Features Implemented:**
+- Photo minting costs 500 BL coins
+- Daily mint limits: Free (3), Basic $4.99 (20), Premium $9.99 (50)
+- AI photo analysis using GPT-4o Vision (via Emergent LLM Key)
+- Scenery type detection: Natural, Water, Man-made/Mixed
+- 10 rating criteria scoring (Originality, Innovation, etc.)
+- Dollar value calculation ($1M - $1B based on ratings)
+- Face detection bonus (+10%)
+- Selfie matching bonus (+1% to +20% hidden)
+- Mock transaction hashes for NFT-like feel
+- Personal photo albums with privacy settings
 
-### 3. Real-Time Wallet Notifications ✅
+**API Endpoints:**
+- `GET /api/minting/config` - Get minting configuration
+- `GET /api/minting/status` - Check if user can mint
+- `POST /api/minting/photo` - Mint a photo (base64)
+- `POST /api/minting/photo/upload` - Mint a photo (file upload)
+- `GET /api/minting/photos` - Get user's minted photos
+- `GET /api/minting/photo/{mint_id}` - Get specific photo
+- `PUT /api/minting/photo/{mint_id}/rename` - Rename photo
+- `PUT /api/minting/photo/{mint_id}/privacy` - Update privacy
+- `POST /api/minting/albums` - Create album
+- `GET /api/minting/albums` - Get user's albums
+- `GET /api/minting/feed` - Public minted photos feed
 
-**Implemented WebSocket-based real-time notifications for the Wallet page**:
+### 3. Phase 4: Photo Game System ✅
 
-- **Backend** (`/app/backend/referral_system.py`):
-  - Added `WalletConnectionManager` class for managing user WebSocket connections
-  - Added WebSocket endpoint: `/api/referral/ws/earnings/{user_id}`
-  - Supports ping/pong heartbeat, balance updates, and new earning notifications
-  - Added `notify_wallet_earning()` helper function for broadcasting earnings
+**New Files Created:**
+- `photo_game.py` - Game logic, battles, leaderboards
+- `game_routes.py` - API endpoints for game operations
 
-- **Frontend** (`/app/frontend/src/pages/Wallet.jsx`):
-  - Added WebSocket connection with automatic reconnection
-  - Shows "Live" (green) when connected, "Polling" (yellow) as fallback
-  - Real-time toast notifications for new earnings
-  - Automatic balance updates without page refresh
+**Features Implemented:**
+- **Stamina System:**
+  - 100% stamina = 24 battles max
+  - ~4 stamina per battle
+  - 25% extra stamina loss on defeat
+  - Full regeneration in 24 hours
 
-### Testing Results
-**Test Report**: `/app/test_reports/iteration_28.json`
-- **Frontend**: 100% tests passed
-- PKO Poker, Seller Dashboard verified
-- Wallet WebSocket connection verified working
+- **Rock-Paper-Scissors Mini-Game:**
+  - First to 3 wins advances
+  - Bot opponent auto-plays
+
+- **Photo Auction Battles:**
+  - Dollar value comparison with modifiers
+  - Strength/Weakness multipliers (+25%)
+  - Win streak bonuses (1.25x → 2x)
+
+- **Game Flow:**
+  1. RPS race to 3 wins
+  2. Photo battle (highest value wins)
+  3. If split: RPS tiebreaker
+
+- **XP & Level System:**
+  - Level 1-60 progression
+  - 50% marginal XP increase per level
+  - 1 XP per battle
+
+- **Leaderboards:**
+  - Most wins (24h, 7d, 30d, 1y)
+  - Most liked photos (24h, 7d, 30d, 1y)
+
+**API Endpoints:**
+- `GET /api/photo-game/config` - Get game configuration
+- `GET /api/photo-game/stats` - Get player stats
+- `POST /api/photo-game/start` - Start game session
+- `POST /api/photo-game/session/{id}/rps` - Play RPS round
+- `POST /api/photo-game/session/{id}/photo-battle` - Execute photo battle
+- `GET /api/photo-game/leaderboard/wins` - Wins leaderboard
+- `GET /api/photo-game/leaderboard/photos` - Photos leaderboard
+
+### 4. Phase 5: Enhanced Reactions System ✅
+
+**Updated `reactions_system.py` with:**
+- **Golden Thumbs Up:** Both reactor AND owner get 10 BL coins
+- **Silver Thumbs Down:** Only reactor gets 10 BL coins (owner gets nothing)
+- **Permanent Reactions:** Cannot be undone or changed
+- **Self-reaction Block:** Users cannot react to own content
+- Support for minted_photo content type
+
+**Reaction Flow:**
+1. Tap thumbs up → Golden thumbs up (instant)
+2. Long-press thumbs up (2s) → Reveal silver thumbs down option
+3. Once reacted, reaction is permanent
 
 ---
 
-## Previous Sessions
+## REMAINING PHASES TO IMPLEMENT
 
-### Session 5 - PKO Poker Mobile & Chat Fixes
-- Fixed handleAddBots function
-- Added Chat Section to Mobile
-- Improved Mobile Layout with ScrollView
+### Phase 3: AI Photo Analysis (Partially Done)
+- ✅ Basic scenery detection
+- ✅ 10 criteria rating
+- ✅ Face detection
+- ⏳ Live selfie matching for bonus verification
 
-### Session 4 - MongoDB Persistence
-- Implemented MongoDB persistence for poker tournaments
-- Tournaments survive backend restarts
+### Phase 5: BL Coins Economy (Partially Done)
+- ✅ Reaction rewards
+- ⏳ Content creation rewards (50 BL video, 30 BL music, 20 BL photo, etc.)
+- ⏳ Downline activity bonuses (3%/1% regular, 4%/2% diamond)
 
-### Session 3 - PKO Bug Fix
-- Fixed "Failed to create tournament" error
-- Added force-leave option
+### Phase 6: Marketplace Expansion
+- ⏳ Photo/Video/Music listing for sale
+- ⏳ 8% platform fee distribution
+- ⏳ Offer system for public content
+- ⏳ Subscription tiers integration ($4.99, $9.99)
 
-### Session 2 - Admin Panel
-- Fixed Orphan Auto-Assignment (12-tier priority)
-- Mobile Admin Panel sync started
-
-### Session 1 - Core Bugs
-- Fixed "body stream already read" errors
-
----
-
-## PKO Poker - Complete Feature List ✅
-
-1. **Tournament Management**
-   - Create/Join/Leave tournaments
-   - MongoDB persistence (survives restarts)
-   - 2000 BL buy-in, 1000 BL bounty
-   - Force start tournament (creator only)
-
-2. **AI Bots**
-   - Add 1-9 bots to fill seats
-   - Bot personalities (tight-aggressive, loose-passive, etc.)
-   - Bots make automatic decisions
-
-3. **Gameplay**
-   - Pre-flop, Flop, Turn, River, Showdown phases
-   - Fold, Check, Call, Raise, All-In actions
-   - Blinds (25/50 starting)
-   - Hand evaluation
-
-4. **PKO System**
-   - Bounties tracked per player
-   - 50% immediate payout, 50% added to winner's bounty
-
-5. **Table Chat**
-   - Real-time WebSocket messages
-   - Visible on both web and mobile
-   - Light colored text for visibility
-
-6. **User Experience**
-   - "Leave & Refund" for stuck tournaments
-   - Force-leave option
-   - Success/error toasts
-   - Turn indicator on mobile
+### Phase 7: Web/Mobile Sync
+- ⏳ Implement all features in Expo mobile app
+- ⏳ Real-time WebSocket sync for game updates
+- ⏳ Mirror UI components
 
 ---
 
 ## ARCHITECTURE
 
-### Backend Files
-- `/app/backend/poker_tournament.py` - PKO Poker APIs with MongoDB persistence
-- `/app/backend/server.py` - Main server with all routers
-- `/app/backend/referral_system.py` - 12-tier orphan logic
-
-### Frontend Files
-- `/app/frontend/src/pages/PokerTournament.jsx` - Web poker UI
-- `/app/frontend/src/pages/SellerDashboard.jsx` - Seller dashboard with AI Create link
-- `/app/frontend/src/pages/admin/AdminOrphans.jsx` - Orphan management
-
-### Mobile Files
-- `/app/mobile/src/screens/PokerTournamentScreen.js` - Mobile poker UI (rewritten)
-- `/app/mobile/src/services/api.js` - Mobile API service
-
----
-
-## API ENDPOINTS
-
-### Poker Endpoints
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/poker/tournaments` | List open tournaments |
-| GET | `/api/poker/tournaments/{id}` | Get tournament details |
-| GET | `/api/poker/my-tournament` | Get player's current tournament |
-| POST | `/api/poker/tournaments/create` | Create new tournament |
-| POST | `/api/poker/tournaments/register` | Register for tournament |
-| POST | `/api/poker/tournaments/{id}/add-bots` | Add AI bots |
-| POST | `/api/poker/tournaments/{id}/force-start` | Force start tournament |
-| POST | `/api/poker/tournaments/action` | Player action (fold, call, etc.) |
-| POST | `/api/poker/tournaments/rebuy` | Rebuy into tournament |
-| POST | `/api/poker/tournaments/leave` | Leave tournament |
-| POST | `/api/poker/tournaments/force-leave` | Force leave stuck tournament |
-| POST | `/api/poker/tournaments/chat` | Send chat message |
-| WS | `/api/poker/ws/{tournament_id}` | WebSocket for real-time updates |
+```
+/app/
+├── backend/
+│   ├── server.py              # Main FastAPI app
+│   ├── minting_system.py      # NEW: Internal minting service
+│   ├── minting_routes.py      # NEW: Minting API endpoints
+│   ├── photo_game.py          # NEW: Game logic & battles
+│   ├── game_routes.py         # NEW: Game API endpoints
+│   ├── reactions_system.py    # UPDATED: Golden/Silver reactions
+│   ├── referral_system.py     # Commission & BL coin transactions
+│   ├── stripe_integration.py  # Payment processing
+│   └── .env                   # Environment variables
+├── frontend/
+│   ├── src/
+│   │   ├── pages/            # React pages
+│   │   └── components/       # React components
+│   └── .env                  # Frontend env
+├── mobile/
+│   └── src/                  # Expo React Native app
+└── .gitignore                # FIXED: No longer blocks .env
+```
 
 ---
 
-## CREDENTIALS
+## KEY CONSTANTS
 
-| Type | Email | Password |
-|------|-------|----------|
-| Admin | blendlinknet@gmail.com | Blend!Admin2026Link |
-| Test User | test@example.com | Test123! |
+**Minting:**
+- Cost: 500 BL coins
+- Daily limits: Free(3), Basic(20), Premium(50)
+- Scenery types: Natural, Water, Man-made
 
----
+**Game:**
+- Max stamina: 100
+- Battles per full stamina: 24
+- Strength multiplier: 1.25x (+25%)
+- Win streak max: 2x power
 
-## REMAINING/FUTURE TASKS
+**Reactions:**
+- Golden thumbs up: +10 BL to both parties
+- Silver thumbs down: +10 BL to reactor only
+- First comment: +10 BL to commenter
 
-### In Progress Tasks
-1. **Sync Admin Panel to Mobile (P1)** - Implement actual UI/logic for:
-   - AdminSecurityScreen
-   - AdminNotificationsScreen
-   - AdminThemesScreen
-   - AdminUIEditorScreen
-   - AdminPagesScreen
-   - AdminAIScreen
-
-### Upcoming Tasks
-2. **Real-Time Wallet Notifications (P2)** - Implement WebSocket-based notifications for earnings feeds
-
-### Future Tasks
-- AI-generated listings full lifecycle
-- Push notification settings in admin panel
-- Advanced media features (looping thumbnails, watermarks)
-- App Store submission preparation
+**Commissions:**
+- Platform fee: 8% on sales
+- Regular: 3% L1, 1% L2, 4% platform
+- Diamond: 4% L1, 2% L2, 2% platform
 
 ---
 
-## TECH STACK
+## TEST CREDENTIALS
 
-- **Frontend**: React, Tailwind CSS, Shadcn UI
-- **Backend**: FastAPI, Pydantic, MongoDB (motor)
-- **Mobile**: React Native, Expo
-- **Real-Time**: WebSockets
-- **Authentication**: JWT, Emergent-managed Google Auth
-- **AI**: Emergent LLM Key (GPT-4o)
+- **Admin:** `blendlinknet@gmail.com` / `Blend!Admin2026Link`
+- **Test User:** `test@example.com` / `Test123!`
 
 ---
 
-## PREVIEW URL
+## DEPLOYMENT STATUS
 
-https://blendlink-nft.preview.emergentagent.com
+✅ **READY FOR EMERGENT DEPLOYMENT**
+- No blockchain dependencies
+- No hardcoded secrets
+- .env files can be committed
+- CORS properly configured
+- Auth redirects use window.location.origin
