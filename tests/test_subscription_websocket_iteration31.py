@@ -168,7 +168,9 @@ class TestMintingAPIs:
         assert response.status_code == 200
         
         data = response.json()
-        assert isinstance(data, list)
+        # Response is a dict with photos key
+        assert "photos" in data
+        assert isinstance(data["photos"], list)
 
 
 class TestMarketplaceAPIs:
