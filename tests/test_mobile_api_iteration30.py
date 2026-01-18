@@ -367,7 +367,7 @@ class TestMarketplaceListings:
         print(f"✓ Filtered listings: {len(data)} electronics listings")
     
     def test_get_listing_by_id(self):
-        """Test /api/marketplace/listing/{listing_id} returns specific listing"""
+        """Test /api/marketplace/listings/{listing_id} returns specific listing"""
         # First get a listing ID from the list
         response = requests.get(f"{BASE_URL}/api/marketplace/listings")
         assert response.status_code == 200
@@ -375,7 +375,7 @@ class TestMarketplaceListings:
         
         if len(listings) > 0:
             listing_id = listings[0]["listing_id"]
-            response = requests.get(f"{BASE_URL}/api/marketplace/listing/{listing_id}")
+            response = requests.get(f"{BASE_URL}/api/marketplace/listings/{listing_id}")
             assert response.status_code == 200
             
             data = response.json()
