@@ -276,22 +276,25 @@ async def get_user_reaction_stats(current_user: dict = Depends(get_current_user)
 async def get_content_owner(item_type: str, item_id: str) -> Optional[str]:
     """Get the owner user_id of content"""
     collection_map = {
-        "post": "posts",
-        "listing": "listings",
-        "comment": "comments",
-        "story": "stories",
-        "event": "events"
+        "post": ("posts", "post_id"),
+        "listing": ("listings", "listing_id"),
+        "comment": ("comments", "comment_id"),
+        "story": ("stories", "story_id"),
+        "event": ("events", "event_id"),
+        "minted_photo": ("minted_photos", "mint_id"),
+        "music": ("minted_music", "mint_id"),
+        "video": ("minted_videos", "mint_id"),
     }
     
-    collection_name = collection_map.get(item_type, f"{item_type}s")
+    if item_type in collection_map:
+        collection_name, id_field = collection_map[item_type]
+    else:
+        collection_name = f"{item_type}s"
+        id_field = f"{item_type}_id"
     
     try:
         item = await db[collection_name].find_one(
-            {"$or": [
-                {f"{item_type}_id": item_id},
-                {"_id": item_id},
-                {"id": item_id}
-            ]},
+            {id_field: item_id},
             {"user_id": 1, "author_id": 1, "owner_id": 1, "seller_id": 1}
         )
         
