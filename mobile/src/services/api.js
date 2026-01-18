@@ -1310,4 +1310,99 @@ export const photoMarketplaceAPI = {
   },
 };
 
+// ============== PUSH NOTIFICATIONS API ==============
+
+export const pushNotificationsAPI = {
+  // Register Expo push token
+  registerToken: async (expoToken, deviceInfo = {}) => {
+    const response = await api.post('/push/register', null, {
+      params: { expo_token: expoToken },
+      data: deviceInfo,
+    });
+    return response.data;
+  },
+
+  // Unregister push token
+  unregisterToken: async (expoToken) => {
+    const response = await api.post('/push/unregister', null, {
+      params: { expo_token: expoToken },
+    });
+    return response.data;
+  },
+
+  // Send test notification
+  testNotification: async () => {
+    const response = await api.post('/push/test');
+    return response.data;
+  },
+};
+
+// ============== SUBSCRIPTION API ==============
+
+export const subscriptionAPI = {
+  // Get subscription tiers
+  getTiers: async () => {
+    const response = await api.get('/subscriptions/tiers');
+    return response.data;
+  },
+
+  // Get my subscription
+  getMySubscription: async () => {
+    const response = await api.get('/subscriptions/my-subscription');
+    return response.data;
+  },
+
+  // Create checkout session
+  createCheckout: async (tier, successUrl, cancelUrl) => {
+    const response = await api.post('/subscriptions/checkout', null, {
+      params: { tier, success_url: successUrl, cancel_url: cancelUrl },
+    });
+    return response.data;
+  },
+
+  // Claim daily bonus
+  claimDailyBonus: async () => {
+    const response = await api.post('/subscriptions/claim-daily-bonus');
+    return response.data;
+  },
+
+  // Cancel subscription
+  cancelSubscription: async () => {
+    const response = await api.post('/subscriptions/cancel');
+    return response.data;
+  },
+
+  // Get ranked profile
+  getRankedProfile: async () => {
+    const response = await api.get('/subscriptions/ranked/profile');
+    return response.data;
+  },
+
+  // Get ranked leaderboard
+  getLeaderboard: async (limit = 50) => {
+    const response = await api.get(`/subscriptions/ranked/leaderboard?limit=${limit}`);
+    return response.data;
+  },
+
+  // Get tournaments
+  getTournaments: async (status = null, limit = 20) => {
+    const params = { limit };
+    if (status) params.status = status;
+    const response = await api.get('/subscriptions/tournaments', { params });
+    return response.data;
+  },
+
+  // Create tournament
+  createTournament: async (data) => {
+    const response = await api.post('/subscriptions/tournaments', data);
+    return response.data;
+  },
+
+  // Join tournament
+  joinTournament: async (tournamentId) => {
+    const response = await api.post(`/subscriptions/tournaments/${tournamentId}/join`);
+    return response.data;
+  },
+};
+
 export default api;
