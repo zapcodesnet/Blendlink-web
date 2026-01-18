@@ -2055,6 +2055,15 @@ try:
 except Exception as e:
     logger.warning(f"Could not load WebSocket system: {e}")
 
+# Load Push Notifications
+try:
+    from push_notifications import push_router, setup_push_routes
+    api_router.include_router(push_router)
+    setup_push_routes(db)
+    logger.info("Push Notifications loaded (Expo push tokens)")
+except ImportError as e:
+    logger.warning(f"Could not load push notifications: {e}")
+
 app.include_router(api_router)
 
 app.add_middleware(
