@@ -1,6 +1,6 @@
 /**
  * Photo Game Arena Screen for Blendlink Mobile
- * PvP Photo Battles with RPS mechanics
+ * PvP Photo Battles with RPS mechanics + Photo Selection
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -15,8 +15,8 @@ import {
   ActivityIndicator,
   TextInput,
   Switch,
-  Modal,
   Vibration,
+  FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -35,15 +35,23 @@ const RPS_CHOICES = [
 
 // Scenery config
 const SCENERY_CONFIG = {
-  natural: { gradient: ['#22C55E', '#10B981'], emoji: '🌿', label: 'Natural' },
-  water: { gradient: ['#3B82F6', '#06B6D4'], emoji: '🌊', label: 'Water' },
-  manmade: { gradient: ['#F97316', '#EF4444'], emoji: '🏙️', label: 'Man-made' },
+  natural: { gradient: ['#22C55E', '#10B981'], emoji: '🌿', label: 'Natural', strong: 'water', weak: 'manmade' },
+  water: { gradient: ['#3B82F6', '#06B6D4'], emoji: '🌊', label: 'Water', strong: 'manmade', weak: 'natural' },
+  manmade: { gradient: ['#F97316', '#EF4444'], emoji: '🏙️', label: 'Man-made', strong: 'natural', weak: 'water' },
+};
+
+// Format dollar value
+const formatDollarValue = (value) => {
+  if (!value) return '$0';
+  if (value >= 1_000_000_000) return `$${(value / 1_000_000_000).toFixed(2)}B`;
+  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
+  return `$${value.toLocaleString()}`;
 };
 
 // ============== COMPONENTS ==============
 
 // Stamina Bar Component
-const StaminaBar = ({ stamina, maxStamina = 100, colors }) => {
+const StaminaBar = ({ stamina, maxStamina = 100, colors, showLabel = true }) => {
   const percent = (stamina / maxStamina) * 100;
   const animatedWidth = useRef(new Animated.Value(0)).current;
 
@@ -67,13 +75,16 @@ const StaminaBar = ({ stamina, maxStamina = 100, colors }) => {
                 inputRange: [0, 100],
                 outputRange: ['0%', '100%'],
               }),
+              backgroundColor: percent > 20 ? colors.gold : colors.error,
             },
           ]}
         />
       </View>
-      <Text style={[styles.staminaText, { color: colors.textMuted }]}>
-        {Math.round(stamina)}/{maxStamina}
-      </Text>
+      {showLabel && (
+        <Text style={[styles.staminaText, { color: colors.textMuted }]}>
+          {Math.round(stamina)}/{maxStamina}
+        </Text>
+      )}
     </View>
   );
 };
@@ -99,6 +110,156 @@ const WinStreakBadge = ({ streak, colors }) => {
       <Text style={styles.winStreakIcon}>🏆</Text>
       <Text style={styles.winStreakText}>{streak} Win Streak! ({multiplier}x)</Text>
     </Animated.View>
+  );
+};
+
+// ============== PHOTO SELECTION COMPONENT ==============
+const PhotoSelectionView = ({ photos, loading, selectedPhotoId, onSelectPhoto, colors }) => {
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.textMuted }]}>Loading your photos...</Text>
+      </View>
+    );
+  }
+
+  if (!photos || photos.length === 0) {
+    return (
+      <View style={[styles.emptyContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <Text style={styles.emptyIcon}>📷</Text>
+        <Text style={[styles.emptyTitle, { color: colors.text }]}>No Minted Photos</Text>
+        <Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>
+          Mint some photos first to enter battles!
+        </Text>
+      </View>
+    );
+  }
+
+  const availablePhotos = photos.filter(p => p.is_available);
+  const unavailablePhotos = photos.filter(p => !p.is_available);
+
+  const renderPhotoItem = ({ item: photo, isAvailable }) => {
+    const scenery = SCENERY_CONFIG[photo.scenery_type] || SCENERY_CONFIG.natural;
+    const isSelected = selectedPhotoId === photo.mint_id;
+
+    return (
+      <TouchableOpacity
+        onPress={() => isAvailable && onSelectPhoto(photo)}
+        activeOpacity={isAvailable ? 0.7 : 1}
+        disabled={!isAvailable}
+        style={[
+          styles.photoItem,
+          {
+            backgroundColor: isSelected ? colors.primary + '20' : colors.card,
+            borderColor: isSelected ? colors.primary : colors.border,
+            opacity: isAvailable ? 1 : 0.5,
+          },
+        ]}
+      >
+        {/* Thumbnail */}
+        <View style={[styles.photoThumbnail, { backgroundColor: scenery.gradient[0] }]}>
+          <Text style={styles.photoThumbnailEmoji}>{scenery.emoji}</Text>
+        </View>
+
+        {/* Info */}
+        <View style={styles.photoInfo}>
+          <View style={styles.photoNameRow}>
+            <Text style={[styles.photoName, { color: colors.text }]} numberOfLines={1}>
+              {photo.name}
+            </Text>
+            <View style={[styles.sceneryBadge, { backgroundColor: scenery.gradient[0] }]}>
+              <Text style={styles.sceneryBadgeText}>{scenery.label}</Text>
+            </View>
+          </View>
+
+          <View style={styles.photoStatsRow}>
+            <Text style={[styles.photoValue, { color: colors.gold }]}>
+              {formatDollarValue(photo.dollar_value)}
+            </Text>
+            <Text style={[styles.photoStrength, { color: colors.textMuted }]}>
+              💪 vs {SCENERY_CONFIG[photo.strength_vs]?.label || 'Unknown'}
+            </Text>
+          </View>
+
+          {/* Stamina */}
+          {isAvailable ? (
+            <View style={styles.photoStaminaRow}>
+              <View style={styles.photoStaminaBar}>
+                <View
+                  style={[
+                    styles.photoStaminaFill,
+                    {
+                      width: `${photo.stamina}%`,
+                      backgroundColor: photo.stamina > 20 ? colors.gold : colors.error,
+                    },
+                  ]}
+                />
+              </View>
+              <Text style={[styles.photoStaminaText, { color: colors.textMuted }]}>
+                {Math.round(photo.stamina)}% ({photo.battles_remaining} battles)
+              </Text>
+            </View>
+          ) : (
+            <Text style={[styles.photoRecoveryText, { color: colors.error }]}>
+              ⏳ Available in ~{photo.time_until_available || 60} min
+            </Text>
+          )}
+        </View>
+
+        {/* Selection indicator */}
+        {isAvailable && (
+          <View
+            style={[
+              styles.selectionIndicator,
+              {
+                borderColor: isSelected ? colors.primary : colors.border,
+                backgroundColor: isSelected ? colors.primary : 'transparent',
+              },
+            ]}
+          >
+            {isSelected && <Text style={styles.checkmark}>✓</Text>}
+          </View>
+        )}
+      </TouchableOpacity>
+    );
+  };
+
+  return (
+    <View style={styles.photoSelectionContainer}>
+      <Text style={[styles.sectionTitle, { color: colors.text }]}>Select Your Battle Photo</Text>
+      <Text style={[styles.sectionSubtitle, { color: colors.textMuted }]}>
+        Sorted by Dollar Value (Power). Higher = Stronger!
+      </Text>
+
+      {/* Available Photos */}
+      {availablePhotos.length > 0 && (
+        <View style={styles.photoSection}>
+          <Text style={[styles.photoSectionTitle, { color: colors.success }]}>
+            ✅ Available ({availablePhotos.length})
+          </Text>
+          {availablePhotos.map((photo) => (
+            <View key={photo.mint_id}>
+              {renderPhotoItem({ item: photo, isAvailable: true })}
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* Resting Photos */}
+      {unavailablePhotos.length > 0 && (
+        <View style={styles.photoSection}>
+          <Text style={[styles.photoSectionTitle, { color: colors.textMuted }]}>
+            ⏳ Resting ({unavailablePhotos.length})
+          </Text>
+          {unavailablePhotos.map((photo) => (
+            <View key={photo.mint_id}>
+              {renderPhotoItem({ item: photo, isAvailable: false })}
+            </View>
+          ))}
+        </View>
+      )}
+    </View>
   );
 };
 
@@ -138,7 +299,7 @@ const RPSChoiceButton = ({ choice, onPress, selected, disabled, colors }) => {
   );
 };
 
-// Photo Card
+// Photo Card for Battle
 const PhotoCard = ({ photo, isPlayer, effectiveValue, isAnimating, colors }) => {
   const scenery = SCENERY_CONFIG[photo?.scenery_type] || SCENERY_CONFIG.natural;
   const shakeAnim = useRef(new Animated.Value(0)).current;
@@ -155,13 +316,6 @@ const PhotoCard = ({ photo, isPlayer, effectiveValue, isAnimating, colors }) => 
       shakeAnim.setValue(0);
     }
   }, [isAnimating]);
-
-  const formatValue = (value) => {
-    if (!value) return '$0';
-    if (value >= 1_000_000_000) return `$${(value / 1_000_000_000).toFixed(2)}B`;
-    if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
-    return `$${value.toLocaleString()}`;
-  };
 
   return (
     <Animated.View
@@ -186,11 +340,11 @@ const PhotoCard = ({ photo, isPlayer, effectiveValue, isAnimating, colors }) => 
           {photo?.name || 'Photo'}
         </Text>
         <Text style={[styles.photoCardValue, { color: colors.gold }]}>
-          {formatValue(photo?.dollar_value)}
+          {formatDollarValue(photo?.dollar_value)}
         </Text>
         {effectiveValue && effectiveValue !== photo?.dollar_value && (
           <Text style={[styles.photoCardEffective, { color: colors.success }]}>
-            Effective: {formatValue(effectiveValue)}
+            Effective: {formatDollarValue(effectiveValue)}
           </Text>
         )}
       </View>
@@ -199,18 +353,21 @@ const PhotoCard = ({ photo, isPlayer, effectiveValue, isAnimating, colors }) => 
 };
 
 // ============== MATCHMAKING VIEW ==============
-const MatchmakingView = ({ onMatchFound, onCancel, colors }) => {
-  const [status, setStatus] = useState('idle');
+const MatchmakingView = ({ onMatchFound, onCancel, selectedPhoto, onPhotoSelect, colors }) => {
+  const [status, setStatus] = useState('photo_select');
   const [betAmount, setBetAmount] = useState('0');
   const [useBotFallback, setUseBotFallback] = useState(true);
   const [elapsed, setElapsed] = useState(0);
   const [queueStatus, setQueueStatus] = useState(null);
+  const [battlePhotos, setBattlePhotos] = useState([]);
+  const [loadingPhotos, setLoadingPhotos] = useState(true);
   const [error, setError] = useState(null);
   
   const intervalRef = useRef(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
+    fetchBattlePhotos();
     fetchQueueStatus();
     const interval = setInterval(fetchQueueStatus, 5000);
     return () => clearInterval(interval);
@@ -229,6 +386,19 @@ const MatchmakingView = ({ onMatchFound, onCancel, colors }) => {
     }
   }, [status]);
 
+  const fetchBattlePhotos = async () => {
+    try {
+      setLoadingPhotos(true);
+      const data = await photoGameAPI.getBattlePhotos();
+      setBattlePhotos(data.photos || []);
+    } catch (err) {
+      console.error('Failed to fetch battle photos:', err);
+      setError('Failed to load your photos');
+    } finally {
+      setLoadingPhotos(false);
+    }
+  };
+
   const fetchQueueStatus = async () => {
     try {
       const data = await photoGameAPI.getQueueStatus();
@@ -239,6 +409,11 @@ const MatchmakingView = ({ onMatchFound, onCancel, colors }) => {
   };
 
   const startMatchmaking = async () => {
+    if (!selectedPhoto) {
+      setError('Please select a photo first!');
+      return;
+    }
+
     setError(null);
     try {
       setStatus('searching');
@@ -246,6 +421,7 @@ const MatchmakingView = ({ onMatchFound, onCancel, colors }) => {
       
       const response = await photoGameAPI.findMatch({
         bet_amount: parseInt(betAmount) || 0,
+        photo_id: selectedPhoto.mint_id,
         use_bot_fallback: useBotFallback,
       });
       
@@ -254,7 +430,6 @@ const MatchmakingView = ({ onMatchFound, onCancel, colors }) => {
         Vibration.vibrate([100, 100, 100]);
         onMatchFound?.(response);
       } else if (response.status === 'searching') {
-        // Start polling
         intervalRef.current = setInterval(async () => {
           try {
             const statusRes = await photoGameAPI.checkMatchStatus();
@@ -273,18 +448,21 @@ const MatchmakingView = ({ onMatchFound, onCancel, colors }) => {
       }
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to start matchmaking');
-      setStatus('idle');
+      setStatus('photo_select');
     }
   };
 
   const cancelMatchmaking = async () => {
     clearInterval(intervalRef.current);
     try {
-      await photoGameAPI.cancelMatchmaking();
+      const response = await photoGameAPI.cancelMatchmaking();
+      if (response.bet_refunded) {
+        setError(`Bet refunded: ${response.bet_refunded} BL`);
+      }
     } catch (err) {
       console.error('Cancel failed:', err);
     }
-    setStatus('idle');
+    setStatus('photo_select');
     onCancel?.();
   };
 
@@ -314,6 +492,12 @@ const MatchmakingView = ({ onMatchFound, onCancel, colors }) => {
           {useBotFallback && ' (Bot match after timeout)'}
         </Text>
         
+        {selectedPhoto && (
+          <Text style={[styles.searchingPhoto, { color: colors.primary }]}>
+            Fighting with: {selectedPhoto.name} ({formatDollarValue(selectedPhoto.dollar_value)})
+          </Text>
+        )}
+        
         <View style={[styles.searchingProgressBg, { backgroundColor: colors.cardSecondary }]}>
           <View
             style={[
@@ -334,76 +518,97 @@ const MatchmakingView = ({ onMatchFound, onCancel, colors }) => {
   }
 
   return (
-    <View style={styles.matchmakingIdle}>
+    <ScrollView style={styles.matchmakingIdle} showsVerticalScrollIndicator={false}>
+      {/* Photo Selection */}
       <View style={[styles.matchmakingCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Text style={[styles.matchmakingTitle, { color: colors.text }]}>
-          👥 Find PvP Match
-        </Text>
-        
-        {queueStatus && (
-          <View style={[styles.queueStatusCard, { backgroundColor: colors.cardSecondary }]}>
-            <View style={styles.queueStatusRow}>
-              <Text style={[styles.queueStatusLabel, { color: colors.textMuted }]}>Players searching:</Text>
-              <Text style={[styles.queueStatusValue, { color: colors.text }]}>{queueStatus.players_waiting}</Text>
-            </View>
-            <View style={styles.queueStatusRow}>
-              <Text style={[styles.queueStatusLabel, { color: colors.textMuted }]}>Active matches:</Text>
-              <Text style={[styles.queueStatusValue, { color: colors.text }]}>{queueStatus.active_matches}</Text>
-            </View>
-          </View>
-        )}
-        
-        <View style={styles.inputGroup}>
-          <Text style={[styles.inputLabel, { color: colors.textMuted }]}>BL Coin Bet (optional)</Text>
-          <TextInput
-            style={[styles.textInput, { backgroundColor: colors.cardSecondary, color: colors.text, borderColor: colors.border }]}
-            value={betAmount}
-            onChangeText={setBetAmount}
-            keyboardType="numeric"
-            placeholder="0"
-            placeholderTextColor={colors.textMuted}
-          />
-        </View>
-        
-        <View style={styles.switchRow}>
-          <Text style={[styles.switchLabel, { color: colors.text }]}>Play with bot if no players</Text>
-          <Switch
-            value={useBotFallback}
-            onValueChange={setUseBotFallback}
-            trackColor={{ false: colors.cardSecondary, true: colors.primary + '80' }}
-            thumbColor={useBotFallback ? colors.primary : colors.textMuted}
-          />
-        </View>
-        
-        {error && (
-          <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
-        )}
+        <PhotoSelectionView
+          photos={battlePhotos}
+          loading={loadingPhotos}
+          selectedPhotoId={selectedPhoto?.mint_id}
+          onSelectPhoto={onPhotoSelect}
+          colors={colors}
+        />
       </View>
+
+      {/* Battle Settings (show only when photo is selected) */}
+      {selectedPhoto && (
+        <View style={[styles.matchmakingCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.matchmakingTitle, { color: colors.text }]}>
+            🪙 Battle Settings
+          </Text>
+          
+          {queueStatus && (
+            <View style={[styles.queueStatusCard, { backgroundColor: colors.cardSecondary }]}>
+              <View style={styles.queueStatusRow}>
+                <Text style={[styles.queueStatusLabel, { color: colors.textMuted }]}>Players searching:</Text>
+                <Text style={[styles.queueStatusValue, { color: colors.text }]}>{queueStatus.players_waiting}</Text>
+              </View>
+              <View style={styles.queueStatusRow}>
+                <Text style={[styles.queueStatusLabel, { color: colors.textMuted }]}>Active matches:</Text>
+                <Text style={[styles.queueStatusValue, { color: colors.text }]}>{queueStatus.active_matches}</Text>
+              </View>
+            </View>
+          )}
+          
+          <View style={styles.inputGroup}>
+            <Text style={[styles.inputLabel, { color: colors.textMuted }]}>BL Coin Bet (optional)</Text>
+            <TextInput
+              style={[styles.textInput, { backgroundColor: colors.cardSecondary, color: colors.text, borderColor: colors.border }]}
+              value={betAmount}
+              onChangeText={setBetAmount}
+              keyboardType="numeric"
+              placeholder="0"
+              placeholderTextColor={colors.textMuted}
+            />
+          </View>
+          
+          <View style={styles.switchRow}>
+            <Text style={[styles.switchLabel, { color: colors.text }]}>Play with bot if no players</Text>
+            <Switch
+              value={useBotFallback}
+              onValueChange={setUseBotFallback}
+              trackColor={{ false: colors.cardSecondary, true: colors.primary + '80' }}
+              thumbColor={useBotFallback ? colors.primary : colors.textMuted}
+            />
+          </View>
+          
+          {error && (
+            <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+          )}
+        </View>
+      )}
       
-      <TouchableOpacity
-        style={styles.findMatchButton}
-        onPress={startMatchmaking}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.findMatchButtonText}>⚔️ Find Match</Text>
-      </TouchableOpacity>
+      {/* Find Match Button */}
+      {selectedPhoto && (
+        <TouchableOpacity
+          style={styles.findMatchButton}
+          onPress={startMatchmaking}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.findMatchButtonText}>⚔️ Find Match with {selectedPhoto.name}</Text>
+        </TouchableOpacity>
+      )}
       
       <View style={styles.quickMatchRow}>
         <TouchableOpacity
-          style={[styles.quickMatchButton, { backgroundColor: colors.card, borderColor: colors.border }]}
+          style={[styles.quickMatchButton, { backgroundColor: colors.card, borderColor: colors.border, opacity: selectedPhoto ? 1 : 0.5 }]}
           onPress={startMatchmaking}
+          disabled={!selectedPhoto}
         >
           <Text style={styles.quickMatchIcon}>🤖</Text>
           <Text style={[styles.quickMatchText, { color: colors.text }]}>Quick Bot</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.quickMatchButton, { backgroundColor: colors.card, borderColor: colors.border }]}
+          style={[styles.quickMatchButton, { backgroundColor: colors.card, borderColor: colors.border, opacity: selectedPhoto ? 1 : 0.5 }]}
+          disabled={!selectedPhoto}
         >
           <Text style={styles.quickMatchIcon}>🏆</Text>
           <Text style={[styles.quickMatchText, { color: colors.text }]}>Ranked</Text>
         </TouchableOpacity>
       </View>
-    </View>
+
+      <View style={{ height: 100 }} />
+    </ScrollView>
   );
 };
 
@@ -430,7 +635,6 @@ const RPSBattleView = ({ session, onChoice, isTiebreaker, colors }) => {
         setRoundResult(result.round.winner === 'player1' ? 'win' : result.round.winner === 'player2' ? 'lose' : 'tie');
         setScore({ player: result.player1_wins, opponent: result.player2_wins });
         
-        // Reset for next round after delay
         setTimeout(() => {
           setPlayerChoice(null);
           setOpponentChoice(null);
@@ -594,18 +798,9 @@ const PhotoBattleView = ({ session, onBattle, colors }) => {
 const ResultView = ({ session, onPlayAgain, user, colors }) => {
   const isWinner = session?.winner_id === user?.user_id;
   const scaleAnim = useRef(new Animated.Value(0.5)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.spring(scaleAnim, { toValue: 1, friction: 3, useNativeDriver: true }),
-      Animated.timing(rotateAnim, {
-        toValue: isWinner ? 1 : 0,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-    ]).start();
-    
+    Animated.spring(scaleAnim, { toValue: 1, friction: 3, useNativeDriver: true }).start();
     if (isWinner) {
       Vibration.vibrate([100, 100, 100, 100, 100]);
     }
@@ -644,6 +839,7 @@ export default function PhotoGameArenaScreen() {
   const [session, setSession] = useState(null);
   const [stats, setStats] = useState(null);
   const [matchData, setMatchData] = useState(null);
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const fetchStats = async () => {
@@ -660,6 +856,10 @@ export default function PhotoGameArenaScreen() {
   useEffect(() => {
     fetchStats();
   }, []);
+
+  const handlePhotoSelect = (photo) => {
+    setSelectedPhoto(photo);
+  };
 
   const handleMatchFound = async (matchInfo) => {
     setMatchData(matchInfo);
@@ -728,12 +928,13 @@ export default function PhotoGameArenaScreen() {
     setGameState('matchmaking');
     setSession(null);
     setMatchData(null);
+    setSelectedPhoto(null);
     fetchStats();
   };
 
   if (loading) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+      <View style={[styles.loadingContainerFull, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
@@ -777,45 +978,49 @@ export default function PhotoGameArenaScreen() {
       )}
       
       {/* Main Content */}
-      <ScrollView
-        style={styles.content}
-        contentContainerStyle={styles.contentContainer}
-        showsVerticalScrollIndicator={false}
-      >
+      <View style={styles.content}>
         {gameState === 'matchmaking' && (
           <MatchmakingView
             onMatchFound={handleMatchFound}
             onCancel={() => {}}
+            selectedPhoto={selectedPhoto}
+            onPhotoSelect={handlePhotoSelect}
             colors={colors}
           />
         )}
         
         {(gameState === 'rps' || gameState === 'tiebreaker') && (
-          <RPSBattleView
-            session={session}
-            onChoice={handleRPSChoice}
-            isTiebreaker={gameState === 'tiebreaker'}
-            colors={colors}
-          />
+          <ScrollView contentContainerStyle={styles.contentContainer}>
+            <RPSBattleView
+              session={session}
+              onChoice={handleRPSChoice}
+              isTiebreaker={gameState === 'tiebreaker'}
+              colors={colors}
+            />
+          </ScrollView>
         )}
         
         {gameState === 'photo_battle' && (
-          <PhotoBattleView
-            session={session}
-            onBattle={handlePhotoBattle}
-            colors={colors}
-          />
+          <ScrollView contentContainerStyle={styles.contentContainer}>
+            <PhotoBattleView
+              session={session}
+              onBattle={handlePhotoBattle}
+              colors={colors}
+            />
+          </ScrollView>
         )}
         
         {gameState === 'result' && session && (
-          <ResultView
-            session={session}
-            onPlayAgain={handlePlayAgain}
-            user={user}
-            colors={colors}
-          />
+          <ScrollView contentContainerStyle={styles.contentContainer}>
+            <ResultView
+              session={session}
+              onPlayAgain={handlePlayAgain}
+              user={user}
+              colors={colors}
+            />
+          </ScrollView>
         )}
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -824,10 +1029,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  loadingContainer: {
+  loadingContainerFull: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  loadingContainer: {
+    padding: 40,
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
   },
   header: {
     flexDirection: 'row',
@@ -915,7 +1128,6 @@ const styles = StyleSheet.create({
   },
   staminaBarFill: {
     height: '100%',
-    backgroundColor: '#EAB308',
     borderRadius: 4,
   },
   staminaText: {
@@ -930,9 +1142,145 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 100,
   },
+  // Photo Selection
+  photoSelectionContainer: {
+    paddingTop: 8,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  sectionSubtitle: {
+    fontSize: 13,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  photoSection: {
+    marginBottom: 20,
+  },
+  photoSectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  photoItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 2,
+    marginBottom: 8,
+  },
+  photoThumbnail: {
+    width: 56,
+    height: 56,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  photoThumbnailEmoji: {
+    fontSize: 24,
+  },
+  photoInfo: {
+    flex: 1,
+  },
+  photoNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  photoName: {
+    fontSize: 15,
+    fontWeight: '600',
+    marginRight: 8,
+    flexShrink: 1,
+  },
+  sceneryBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  sceneryBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  photoStatsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  photoValue: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginRight: 12,
+  },
+  photoStrength: {
+    fontSize: 12,
+  },
+  photoStaminaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  photoStaminaBar: {
+    width: 60,
+    height: 6,
+    backgroundColor: '#374151',
+    borderRadius: 3,
+    overflow: 'hidden',
+    marginRight: 8,
+  },
+  photoStaminaFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  photoStaminaText: {
+    fontSize: 11,
+  },
+  photoRecoveryText: {
+    fontSize: 12,
+    marginTop: 4,
+  },
+  selectionIndicator: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  checkmark: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  emptyContainer: {
+    padding: 40,
+    alignItems: 'center',
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  emptyIcon: {
+    fontSize: 48,
+    marginBottom: 12,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    textAlign: 'center',
+  },
   // Matchmaking
   matchmakingIdle: {
     flex: 1,
+    padding: 16,
   },
   matchmakingCard: {
     borderRadius: 16,
@@ -998,7 +1346,7 @@ const styles = StyleSheet.create({
   },
   findMatchButtonText: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
   },
   quickMatchRow: {
@@ -1026,6 +1374,7 @@ const styles = StyleSheet.create({
   matchmakingSearching: {
     alignItems: 'center',
     paddingVertical: 40,
+    paddingHorizontal: 16,
   },
   searchingCircle: {
     width: 100,
@@ -1045,6 +1394,11 @@ const styles = StyleSheet.create({
   },
   searchingSubtitle: {
     fontSize: 14,
+    marginBottom: 8,
+  },
+  searchingPhoto: {
+    fontSize: 14,
+    fontWeight: '600',
     marginBottom: 16,
   },
   searchingProgressBg: {
