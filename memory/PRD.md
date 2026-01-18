@@ -72,9 +72,10 @@
 /app/
 ├── backend/
 │   ├── server.py                  # Main FastAPI app
-│   ├── subscription_tiers.py      # NEW: Subscription & Ranked system
+│   ├── subscription_tiers.py      # Subscription & Ranked system
 │   ├── websocket_notifications.py # Real-time notifications
-│   ├── minting_system.py          # Internal minting service
+│   ├── push_notifications.py      # NEW: Expo push notifications
+│   ├── minting_system.py          # Internal minting + AI analysis
 │   ├── minting_routes.py          # Minting API endpoints
 │   ├── photo_game.py              # Game logic & battles
 │   ├── game_routes.py             # Game API + PvP endpoints
@@ -88,34 +89,42 @@
 ├── frontend/
 │   ├── src/
 │   │   ├── pages/
-│   │   │   ├── Games.jsx              # UPDATED: Photo Game CTAs
-│   │   │   ├── SubscriptionTiers.jsx  # NEW: Subscription page
+│   │   │   ├── Games.jsx              # Photo Game CTAs + stats
+│   │   │   ├── SubscriptionTiers.jsx  # Subscription page
 │   │   │   ├── PhotoGameArena.jsx     # Battle arena UI
 │   │   │   └── MintedPhotos.jsx       # Minted photos page
 │   │   └── components/
 │   │       └── MintAnimation.jsx      # Mint animation effects
 │   └── .env                       # Frontend env
-└── mobile/
-    ├── App.js                     # Root with ThemeProvider
-    └── src/
-        ├── context/
-        │   ├── AuthContext.js
-        │   └── ThemeContext.js        # Light/Dark theme
-        ├── navigation/
-        │   └── index.js               # All screens
-        ├── screens/
-        │   ├── PhotoGameArenaScreen.js    # Mobile battle UI
-        │   ├── MintedPhotosScreen.js      # Photo collection
-        │   ├── PhotoMarketplaceScreen.js  # Photo trading
-        │   ├── GamesScreen.js             # Arena CTA
-        │   └── MarketplaceScreen.js       # Photo marketplace link
-        └── services/
-            └── api.js                 # All API modules
+├── mobile/
+│   ├── App.js                     # Root with all providers
+│   └── src/
+│       ├── context/
+│       │   ├── AuthContext.js
+│       │   ├── ThemeContext.js          # Light/Dark theme
+│       │   └── PushNotificationContext.js  # NEW: Push notifications
+│       ├── navigation/
+│       │   └── index.js               # All screens
+│       ├── screens/
+│       │   ├── PhotoGameArenaScreen.js    # Mobile battle UI
+│       │   ├── MintedPhotosScreen.js      # Photo collection
+│       │   ├── PhotoMarketplaceScreen.js  # Photo trading
+│       │   ├── GamesScreen.js             # Arena CTA
+│       │   └── MarketplaceScreen.js       # Photo marketplace link
+│       └── services/
+│           └── api.js                 # All API modules + push + subscription
+└── docs/
+    └── STRIPE_SETUP.md            # NEW: Stripe configuration guide
 ```
 
 ---
 
 ## API ENDPOINTS
+
+### Push Notification APIs
+- `POST /api/push/register` - Register Expo push token (auth required)
+- `POST /api/push/unregister` - Unregister push token (auth required)
+- `POST /api/push/test` - Send test notification (auth required)
 
 ### Subscription APIs
 - `GET /api/subscriptions/tiers` - Get all subscription and ranked tiers
