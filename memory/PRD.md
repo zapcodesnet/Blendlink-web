@@ -95,43 +95,67 @@
 ```
 /app/
 ├── backend/
-│   ├── server.py              # Main FastAPI app
-│   ├── minting_system.py      # Internal minting service
-│   ├── minting_routes.py      # Minting API endpoints
-│   ├── photo_game.py          # Game logic & battles
-│   ├── game_routes.py         # Game API + PvP endpoints
-│   ├── pvp_matchmaking.py     # PvP matchmaking queue
-│   ├── marketplace_system.py  # Marketplace service
-│   ├── marketplace_routes.py  # Marketplace API
-│   ├── bl_rewards.py          # BL coin rewards system
-│   ├── reactions_system.py    # Golden/Silver reactions
-│   ├── referral_system.py     # Commission & transactions
-│   └── .env                   # Environment variables
+│   ├── server.py                  # Main FastAPI app
+│   ├── subscription_tiers.py      # NEW: Subscription & Ranked system
+│   ├── websocket_notifications.py # Real-time notifications
+│   ├── minting_system.py          # Internal minting service
+│   ├── minting_routes.py          # Minting API endpoints
+│   ├── photo_game.py              # Game logic & battles
+│   ├── game_routes.py             # Game API + PvP endpoints
+│   ├── pvp_matchmaking.py         # PvP matchmaking queue
+│   ├── marketplace_system.py      # Marketplace service
+│   ├── marketplace_routes.py      # Marketplace API
+│   ├── bl_rewards.py              # BL coin rewards system
+│   ├── reactions_system.py        # Golden/Silver reactions
+│   ├── referral_system.py         # Commission & transactions
+│   └── .env                       # Environment variables
 ├── frontend/
 │   ├── src/
 │   │   ├── pages/
-│   │   │   ├── PhotoGameArena.jsx  # Battle arena UI
-│   │   │   └── MintedPhotos.jsx    # Minted photos page
+│   │   │   ├── Games.jsx              # UPDATED: Photo Game CTAs
+│   │   │   ├── SubscriptionTiers.jsx  # NEW: Subscription page
+│   │   │   ├── PhotoGameArena.jsx     # Battle arena UI
+│   │   │   └── MintedPhotos.jsx       # Minted photos page
 │   │   └── components/
-│   │       └── MintAnimation.jsx   # Mint animation effects
-│   └── .env                   # Frontend env
+│   │       └── MintAnimation.jsx      # Mint animation effects
+│   └── .env                       # Frontend env
 └── mobile/
-    ├── App.js                 # Root with ThemeProvider
+    ├── App.js                     # Root with ThemeProvider
     └── src/
         ├── context/
         │   ├── AuthContext.js
-        │   └── ThemeContext.js    # NEW: Light/Dark theme
+        │   └── ThemeContext.js        # Light/Dark theme
         ├── navigation/
-        │   └── index.js           # UPDATED: New screens added
+        │   └── index.js               # All screens
         ├── screens/
-        │   ├── PhotoGameArenaScreen.js  # NEW: Mobile battle UI
-        │   ├── MintedPhotosScreen.js    # NEW: Photo collection
-        │   ├── PhotoMarketplaceScreen.js # NEW: Photo trading
-        │   ├── GamesScreen.js           # UPDATED: Arena CTA
-        │   └── MarketplaceScreen.js     # UPDATED: Photo marketplace link
+        │   ├── PhotoGameArenaScreen.js    # Mobile battle UI
+        │   ├── MintedPhotosScreen.js      # Photo collection
+        │   ├── PhotoMarketplaceScreen.js  # Photo trading
+        │   ├── GamesScreen.js             # Arena CTA
+        │   └── MarketplaceScreen.js       # Photo marketplace link
         └── services/
-            └── api.js             # UPDATED: photoGameAPI, mintingAPI, photoMarketplaceAPI
+            └── api.js                 # All API modules
 ```
+
+---
+
+## API ENDPOINTS
+
+### Subscription APIs
+- `GET /api/subscriptions/tiers` - Get all subscription and ranked tiers
+- `GET /api/subscriptions/my-subscription` - Get user's subscription
+- `POST /api/subscriptions/checkout` - Create Stripe checkout session
+- `POST /api/subscriptions/claim-daily-bonus` - Claim daily BL bonus
+- `POST /api/subscriptions/cancel` - Cancel subscription
+- `GET /api/subscriptions/ranked/profile` - Get user's ranked profile
+- `GET /api/subscriptions/ranked/leaderboard` - Get ranked leaderboard
+- `GET /api/subscriptions/tournaments` - List tournaments
+- `POST /api/subscriptions/tournaments` - Create tournament (Premium only)
+- `POST /api/subscriptions/tournaments/{id}/join` - Join tournament
+
+### WebSocket
+- `WS /ws/{token}` - Real-time notifications endpoint
+- `GET /api/ws/status` - WebSocket connection stats
 
 ---
 
