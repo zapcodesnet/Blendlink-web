@@ -1,70 +1,92 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 18, 2026 (Session 9)
+## Latest Update: January 18, 2026 (Session 10)
 
 ---
 
-## SESSION 9 SUMMARY - Mobile App Sync: Photo Game, Minting & Marketplace ✅
+## SESSION 10 SUMMARY - Subscription Tiers, Ranked Matchmaking & WebSocket Notifications ✅
 
 ### COMPLETED THIS SESSION
 
-#### Mobile App Feature Sync ✅
-**New Files Created:**
-- `/app/mobile/src/screens/PhotoGameArenaScreen.js` - Full PvP battle UI with RPS, photo battles
-- `/app/mobile/src/screens/MintedPhotosScreen.js` - Photo collection with minting dialog
-- `/app/mobile/src/screens/PhotoMarketplaceScreen.js` - Buy/sell/auction photo collectibles
-- `/app/mobile/src/context/ThemeContext.js` - Light/dark theme toggle support
+#### 1. Fixed Photo Game, Minting & Marketplace Visibility ✅
+- Updated `/app/frontend/src/pages/Games.jsx` with prominent CTAs
+- Photo Battle Arena now featured at top with purple gradient and "NEW" badge
+- Minted Photos and Marketplace have dedicated card buttons
+- Real-time stats (wins, streak, players searching) displayed
 
-**Updated Files:**
-- `/app/mobile/App.js` - Added ThemeProvider wrapper
-- `/app/mobile/src/navigation/index.js` - Added new screens, theme toggle to SettingsScreen
-- `/app/mobile/src/screens/GamesScreen.js` - Added Photo Battle Arena CTA, Minted Photos link
-- `/app/mobile/src/screens/MarketplaceScreen.js` - Added Photo Marketplace banner
-- `/app/mobile/src/services/api.js` - Added photoGameAPI, mintingAPI, photoMarketplaceAPI modules
+#### 2. Subscription Tiers System ✅
+**New File: `/app/backend/subscription_tiers.py`**
 
-**Mobile PhotoGameArenaScreen Features:**
-- Stamina bar with animation
-- Win streak badges with multiplier display
-- PvP matchmaking with queue status
-- RPS battle UI with 🪨📄✂️ emojis
-- Photo battle card comparison
-- Victory/defeat animations with haptic feedback
+| Tier | Price | Daily Bonus | Mint Limit | Marketplace Fee | Stamina Regen | Tournament |
+|------|-------|-------------|------------|-----------------|---------------|------------|
+| Free | $0 | 0 BL | 3/day | 8% | 1x | ❌ |
+| Basic | $4.99/mo | 100 BL | 20/day | 7% | 1.25x | ❌ |
+| Premium | $9.99/mo | 300 BL | 50/day | 6% | 1.5x | ✅ |
 
-**Mobile MintedPhotosScreen Features:**
-- Grid/List view toggle
-- Photo collection stats (total, value, battles)
-- Daily mint limit display
-- Image picker integration (expo-image-picker)
-- Mint animation overlay
-- Photo cards with power, level, scenery type
+**Features:**
+- Stripe integration for payments
+- Daily bonus claiming with streak multipliers (up to 70% bonus at 7+ days)
+- Automatic subscription lifecycle management
 
-**Mobile PhotoMarketplaceScreen Features:**
-- Filter tabs (All, Buy Now, Auctions)
-- Listing cards with price, power, scenery
-- Listing detail modal with buy/offer actions
-- Create listing modal with photo selector
-- 8% platform fee notice
-- Balance display
+#### 3. Ranked Matchmaking System ✅
 
-**Theme System:**
-- Light mode (default) with option to toggle
-- Dark mode with consistent colors
-- Theme persisted via SecureStore
-- All new screens use theme-aware styling
+| Tier | Rating Range | Icon | Season Rewards |
+|------|--------------|------|----------------|
+| Bronze | 0-999 | 🥉 | 100 BL |
+| Silver | 1000-1499 | 🥈 | 300 BL |
+| Gold | 1500-1999 | 🥇 | 500 BL |
+| Platinum | 2000-2499 | 💎 | 1000 BL |
+| Diamond | 2500-2999 | 💠 | 2000 BL |
+| Master | 3000+ | 👑 | 5000 BL |
+
+**Features:**
+- ELO-based rating system (K-factor: 32)
+- Win/loss streak tracking
+- Season stats and lifetime stats
+- Ranked leaderboard
+
+#### 4. Tournament System ✅
+- Premium users can create tournaments
+- Single/double elimination and Swiss formats
+- Entry fees and prize pools
+- Registration and scheduling
+
+#### 5. WebSocket Notifications ✅
+**File: `/app/backend/websocket_notifications.py`**
+- Real-time connection manager
+- Game events: match found, turn updates, battle results
+- Marketplace events: new offers, offer responses, sales
+- Subscription events: daily bonus, level up, achievements
+
+#### 6. Frontend Updates ✅
+- New `/app/frontend/src/pages/SubscriptionTiers.jsx` page
+- Subscription tiers comparison UI
+- Ranked profile display with tier icon
+- Leaderboard integration
+- Daily bonus claiming button
 
 ---
 
 ## TESTING RESULTS ✅
 
-**Backend Tests (Session 9):** 26/26 passed
-- Photo Game: config, stats, PvP queue, leaderboards, sessions ✅
-- Minting: config, status, photos, feed ✅
-- Marketplace: config, listings, stats, offers, sales ✅
+**Iteration 31 Backend Tests:** 20/20 passed
+- Subscription Tiers API ✅
+- Ranked Leaderboard API ✅
+- WebSocket Status API ✅
+- Photo Game APIs ✅
+- Minting APIs ✅
+- Marketplace APIs ✅
+- Tournament APIs ✅
 
-**Previous Backend Tests (Session 8):** 13/13 passed
-- All config APIs return correct values
-- Authenticated endpoints properly require auth
-- PvP queue status shows real-time data
+**Frontend Tests:** 12/12 passed
+- Games page CTAs visible ✅
+- Photo Game Arena loads ✅
+- Subscription page displays all tiers ✅
+- Ranked tiers displayed ✅
+
+**Bugs Fixed:**
+- Auth import error in subscription_tiers.py
+- MongoDB ObjectId serialization in subscription/ranked profile creation
 
 ---
 
