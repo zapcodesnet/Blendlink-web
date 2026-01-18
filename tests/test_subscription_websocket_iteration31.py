@@ -133,7 +133,9 @@ class TestPhotoGameAPIs:
         assert response.status_code == 200
         
         data = response.json()
-        assert isinstance(data, list)
+        # Response is a dict with leaderboard key
+        assert "leaderboard" in data
+        assert isinstance(data["leaderboard"], list)
         
     def test_photo_game_leaderboard_photos(self):
         """Test /api/photo-game/leaderboard/photos returns leaderboard"""
@@ -141,7 +143,9 @@ class TestPhotoGameAPIs:
         assert response.status_code == 200
         
         data = response.json()
-        assert isinstance(data, list)
+        # Response is a dict with leaderboard key
+        assert "leaderboard" in data
+        assert isinstance(data["leaderboard"], list)
 
 
 class TestMintingAPIs:
