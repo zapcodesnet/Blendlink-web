@@ -139,6 +139,7 @@ class ImmutableMintingService:
         payload = {
             "assets": [
                 {
+                    "reference_id": f"blendlink-batch-{req.token_id}",
                     "owner_address": req.owner_address,
                     "token_id": req.token_id,
                     "metadata": req.metadata.dict(exclude_none=True)
