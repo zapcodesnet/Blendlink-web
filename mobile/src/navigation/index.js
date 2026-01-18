@@ -223,13 +223,15 @@ function AuthStack() {
 
 // Main App Stack Navigator
 function AppStack() {
+  const { colors } = useTheme();
+
   return (
     <Stack.Navigator
       screenOptions={{
-        headerStyle: { backgroundColor: '#1E293B' },
-        headerTintColor: '#fff',
+        headerStyle: { backgroundColor: colors.card },
+        headerTintColor: colors.text,
         headerTitleStyle: { fontWeight: '600' },
-        contentStyle: { backgroundColor: '#0F172A' },
+        contentStyle: { backgroundColor: colors.background },
       }}
     >
       <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
@@ -240,6 +242,9 @@ function AppStack() {
       <Stack.Screen name="Casino" component={CasinoScreen} options={{ headerShown: false }} />
       <Stack.Screen name="CasinoGame" component={CasinoGameScreen} options={{ headerShown: false }} />
       <Stack.Screen name="CasinoStats" component={CasinoStatsScreen} options={{ headerShown: false }} />
+      {/* Photo Game Screens */}
+      <Stack.Screen name="PhotoGameArena" component={PhotoGameArenaScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="MintedPhotos" component={MintedPhotosScreen} options={{ headerShown: false }} />
       {/* PKO Poker Screens */}
       <Stack.Screen name="PokerLobby" component={PokerLobbyScreen} options={{ headerShown: false }} />
       <Stack.Screen name="PokerTable" component={PokerTableScreen} options={{ headerShown: false, orientation: 'landscape' }} />
