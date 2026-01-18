@@ -84,7 +84,7 @@ class ImmutableMintingService:
         if not self.api_key:
             return MintResponse(success=False, error="Minting API key not configured")
         
-        url = f"{self.api_base}/chains/{self.chain_id}/collections/{self.contract_address}/nfts/mint-requests"
+        url = f"{self.api_base}/chains/{self.chain_name}/collections/{self.contract_address}/nfts/mint-requests"
         
         payload = {
             "assets": [{
@@ -134,7 +134,7 @@ class ImmutableMintingService:
         if len(mint_requests) > 100:
             return {"success": False, "error": "Maximum 100 NFTs per batch request"}
         
-        url = f"{self.api_base}/chains/{self.chain_id}/collections/{self.contract_address}/nfts/mint-requests"
+        url = f"{self.api_base}/chains/{self.chain_name}/collections/{self.contract_address}/nfts/mint-requests"
         
         payload = {
             "assets": [
@@ -176,7 +176,7 @@ class ImmutableMintingService:
         Returns:
             Status information including transaction hash when complete
         """
-        url = f"{self.api_base}/chains/{self.chain_id}/collections/{self.contract_address}/nfts/mint-requests/{mint_request_id}"
+        url = f"{self.api_base}/chains/{self.chain_name}/collections/{self.contract_address}/nfts/mint-requests/{mint_request_id}"
         
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
@@ -192,7 +192,7 @@ class ImmutableMintingService:
     
     async def get_collection_info(self) -> Dict[str, Any]:
         """Get collection information from the contract"""
-        url = f"{self.api_base}/chains/{self.chain_id}/collections/{self.contract_address}"
+        url = f"{self.api_base}/chains/{self.chain_name}/collections/{self.contract_address}"
         
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
