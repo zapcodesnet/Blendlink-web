@@ -2,8 +2,9 @@
 Binary Reaction System
 =====================
 Implements golden thumbs up / silver thumbs down reactions
-- Upvote: Awards 10 BL coins to content creator
-- Downvote: No reward
+- Golden Thumbs Up: Awards 10 BL coins to BOTH reactor and content creator
+- Silver Thumbs Down: Awards 10 BL coins to reactor only (owner gets nothing)
+- Reactions are PERMANENT (no undo/remove/change)
 - Only one reaction per user per item
 - Real-time sync across web and mobile
 """
@@ -19,13 +20,14 @@ from server import get_current_user, db, logger
 reactions_router = APIRouter(prefix="/reactions", tags=["Reactions"])
 
 # Constants
-UPVOTE_REWARD_BL = 10
+GOLDEN_REWARD_REACTOR = 10  # BL coins for giving golden thumbs up
+GOLDEN_REWARD_OWNER = 10    # BL coins for receiving golden thumbs up
+SILVER_REWARD_REACTOR = 10  # BL coins for giving silver thumbs down (owner gets nothing)
 
 class ReactionRequest(BaseModel):
-    item_type: str  # 'post', 'listing', 'comment', etc.
+    item_type: str  # 'post', 'listing', 'minted_photo', 'comment', etc.
     item_id: str
-    reaction_type: Literal['up', 'down']
-    is_toggle: bool = False  # True if removing existing reaction
+    reaction_type: Literal['golden_up', 'silver_down']  # Updated to match new system
 
 class ReactionResponse(BaseModel):
     success: bool
