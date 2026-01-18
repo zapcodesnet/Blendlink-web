@@ -122,13 +122,15 @@ class TestMintingSystem:
         assert response.status_code == 200
         data = response.json()
         
-        # Response should be a list
-        assert isinstance(data, list)
-        print(f"✓ User has {len(data)} minted photos")
+        # Response is wrapped in object with photos array
+        assert "photos" in data
+        photos = data["photos"]
+        assert isinstance(photos, list)
+        print(f"✓ User has {len(photos)} minted photos")
         
         # If photos exist, verify structure
-        if len(data) > 0:
-            photo = data[0]
+        if len(photos) > 0:
+            photo = photos[0]
             assert "mint_id" in photo
             assert "name" in photo
             assert "dollar_value" in photo
