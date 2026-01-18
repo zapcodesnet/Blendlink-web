@@ -1960,6 +1960,15 @@ except ImportError as e:
 
 # NFT/Blockchain features removed - using internal minting system instead
 
+# Load Internal Minting System
+try:
+    from minting_routes import minting_router, setup_minting_routes
+    api_router.include_router(minting_router)
+    setup_minting_routes(db)
+    logger.info("Internal Minting System loaded (Photo/Video/Music collectibles)")
+except ImportError as e:
+    logger.warning(f"Could not load minting routes: {e}")
+
 app.include_router(api_router)
 
 app.add_middleware(
