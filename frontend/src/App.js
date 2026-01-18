@@ -235,6 +235,7 @@ function AppRouter() {
       {/* Minted Photos & Photo Game Routes */}
       <Route path="/minted-photos" element={<ProtectedRoute><MintedPhotos /></ProtectedRoute>} />
       <Route path="/photo-game" element={<ProtectedRoute><PhotoGameArena /></ProtectedRoute>} />
+      <Route path="/photo-game-arena" element={<ProtectedRoute><PhotoGameArena /></ProtectedRoute>} />
       <Route path="/subscription" element={<ProtectedRoute><SubscriptionTiers /></ProtectedRoute>} />
       
       {/* AI Listing Creator Route */}
