@@ -220,16 +220,16 @@ async def get_item_reactions(
     
     if not item_reactions:
         return {
-            "upvotes": 0,
-            "downvotes": 0,
+            "golden_count": 0,
+            "silver_count": 0,
             "user_reaction": None
         }
     
     user_reaction = item_reactions.get("user_reactions", {}).get(current_user["user_id"])
     
     return {
-        "upvotes": item_reactions.get("upvotes", 0),
-        "downvotes": item_reactions.get("downvotes", 0),
+        "golden_count": item_reactions.get("golden_count", 0),
+        "silver_count": item_reactions.get("silver_count", 0),
         "user_reaction": user_reaction
     }
 
@@ -239,28 +239,38 @@ async def get_user_reaction_stats(current_user: dict = Depends(get_current_user)
     user_id = current_user["user_id"]
     
     # Count reactions given
-    given_up = await db.reactions.count_documents({
-        f"user_reactions.{user_id}": "up"
+    given_golden = await db.reactions.count_documents({
+        f"user_reactions.{user_id}": "golden_up"
     })
-    given_down = await db.reactions.count_documents({
-        f"user_reactions.{user_id}": "down"
+    given_silver = await db.reactions.count_documents({
+        f"user_reactions.{user_id}": "silver_down"
     })
     
-    # Get total rewards earned from reactions
-    rewards = await db.transactions.aggregate([
+    # Get total rewards earned from reactions (both given and received)
+    rewards_given = await db.transactions.aggregate([
+        {"$match": {"user_id": user_id, "type": "reaction_given"}},
+        {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+    ]).to_list(1)
+    
+    rewards_received = await db.transactions.aggregate([
         {"$match": {"user_id": user_id, "type": "reaction_received"}},
         {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
     ]).to_list(1)
     
-    total_earned = rewards[0]["total"] if rewards else 0
+    total_from_giving = rewards_given[0]["total"] if rewards_given else 0
+    total_from_receiving = rewards_received[0]["total"] if rewards_received else 0
     
     return {
         "reactions_given": {
-            "upvotes": given_up,
-            "downvotes": given_down,
-            "total": given_up + given_down
+            "golden": given_golden,
+            "silver": given_silver,
+            "total": given_golden + given_silver
         },
-        "bl_earned_from_reactions": total_earned
+        "bl_earned": {
+            "from_giving": total_from_giving,
+            "from_receiving": total_from_receiving,
+            "total": total_from_giving + total_from_receiving
+        }
     }
 
 async def get_content_owner(item_type: str, item_id: str) -> Optional[str]:
