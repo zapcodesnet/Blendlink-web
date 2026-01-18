@@ -23,8 +23,11 @@ logger = logging.getLogger(__name__)
 MAX_STAMINA = 100
 BATTLES_PER_FULL_STAMINA = 24
 STAMINA_PER_BATTLE = MAX_STAMINA // BATTLES_PER_FULL_STAMINA  # ~4.16
-STAMINA_REGEN_PER_HOUR = MAX_STAMINA / 24  # Full regen in 24 hours
+STAMINA_REGEN_PER_HOUR = MAX_STAMINA / 24  # Full regen in 24 hours = 1 battle per hour
 DEFEAT_STAMINA_PENALTY = 1.25  # 25% more stamina loss on defeat
+
+# Stamina percentage per battle (for display)
+STAMINA_PERCENT_PER_BATTLE = 100 / BATTLES_PER_FULL_STAMINA  # ~4.16%
 
 # Win streak multipliers
 WIN_STREAK_MULTIPLIERS = {
@@ -266,6 +269,7 @@ class PhotoGameService:
         opponent_id: str = "bot",
         bet_amount: int = 0,
         player_photo_id: Optional[str] = None,
+        skip_bet_deduction: bool = False,  # Used when bet was already deducted in PvP matchmaking
     ) -> Dict[str, Any]:
         """Start a new game session"""
         # Check stamina
@@ -279,13 +283,13 @@ class PhotoGameService:
                 "stamina": stats.get("stamina", 0),
             }
         
-        # Check BL coins for bet
-        if bet_amount > 0:
+        # Check BL coins for bet (only if not already deducted)
+        if bet_amount > 0 and not skip_bet_deduction:
             user = await self.db.users.find_one({"user_id": player_id}, {"bl_coins": 1})
             if not user or user.get("bl_coins", 0) < bet_amount:
                 return {"success": False, "error": "Insufficient BL coins for bet"}
         
-        # Get player's photo
+        # Get player's photo - REQUIRED for battle
         player_photo = None
         if player_photo_id:
             player_photo = await self.db.minted_photos.find_one(
@@ -294,6 +298,11 @@ class PhotoGameService:
             )
             if not player_photo:
                 return {"success": False, "error": "Photo not found or not owned"}
+            
+            # Check if photo has stamina (stamina stored as percentage 0-100)
+            photo_stamina = player_photo.get("stamina", 100)
+            if photo_stamina <= 0:
+                return {"success": False, "error": "This photo has no stamina. Wait for it to recover."}
         
         # Generate bot photo if playing against bot
         opponent_photo = None
@@ -316,14 +325,24 @@ class PhotoGameService:
         
         await self.db.game_sessions.insert_one(session_dict)
         
-        # Deduct stamina
+        # Deduct stamina from player stats
         await self.db.player_stats.update_one(
             {"user_id": player_id},
             {"$inc": {"stamina": -stamina_cost}}
         )
         
-        # Deduct bet amount
-        if bet_amount > 0:
+        # Deduct stamina from photo (one battle = ~4.16% stamina)
+        if player_photo_id:
+            await self.db.minted_photos.update_one(
+                {"mint_id": player_photo_id},
+                {
+                    "$inc": {"stamina": -STAMINA_PERCENT_PER_BATTLE},
+                    "$set": {"last_battle_at": datetime.now(timezone.utc).isoformat()}
+                }
+            )
+        
+        # Deduct bet amount (only if not already deducted in PvP flow)
+        if bet_amount > 0 and not skip_bet_deduction:
             await self.db.users.update_one(
                 {"user_id": player_id},
                 {"$inc": {"bl_coins": -bet_amount}}

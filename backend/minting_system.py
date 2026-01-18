@@ -352,10 +352,12 @@ class MintingService:
         subscription = user.get("subscription_tier", "free")
         daily_limit = SUBSCRIPTION_LIMITS.get(subscription, 3)
         
+        # Fix: Use string comparison properly for ISO dates stored as strings
         today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        today_start_str = today_start.isoformat()
         mints_today = await self.db.mint_transactions.count_documents({
             "user_id": user_id,
-            "created_at": {"$gte": today_start.isoformat()}
+            "created_at": {"$gte": today_start_str}
         })
         
         if mints_today >= daily_limit:
