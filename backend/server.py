@@ -1978,6 +1978,23 @@ try:
 except ImportError as e:
     logger.warning(f"Could not load game routes: {e}")
 
+# Load Marketplace System
+try:
+    from marketplace_routes import marketplace_router, setup_marketplace_routes
+    api_router.include_router(marketplace_router)
+    setup_marketplace_routes(db)
+    logger.info("Marketplace System loaded (Sales, Offers, Auctions)")
+except ImportError as e:
+    logger.warning(f"Could not load marketplace routes: {e}")
+
+# Load BL Rewards System
+try:
+    from bl_rewards import init_reward_service
+    init_reward_service(db)
+    logger.info("BL Rewards System loaded (Content rewards, Downline bonuses)")
+except ImportError as e:
+    logger.warning(f"Could not load BL rewards: {e}")
+
 app.include_router(api_router)
 
 app.add_middleware(
