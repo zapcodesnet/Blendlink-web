@@ -6,7 +6,7 @@ Blendlink Photo Game API Routes
 - Leaderboards
 """
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel
 from typing import Optional, List
 import logging
@@ -25,12 +25,21 @@ game_router = APIRouter(prefix="/photo-game", tags=["Photo Game"])
 
 # Service will be initialized when routes are included
 _game_service: Optional[PhotoGameService] = None
+_db = None
 
 
-def get_game_service() -> PhotoGameService:
-    if not _game_service:
-        raise HTTPException(status_code=500, detail="Game service not initialized")
-    return _game_service
+def setup_game_routes(db):
+    """Initialize game services with database connection"""
+    global _game_service, _db
+    _game_service = init_game_service(db)
+    _db = db
+    logger.info("Photo Game services initialized")
+
+
+async def get_current_user_from_request(request: Request) -> dict:
+    """Get current user from request"""
+    from server import get_current_user
+    return await get_current_user(request)
 
 
 # ============== REQUEST MODELS ==============
@@ -63,14 +72,10 @@ async def get_game_config():
 
 
 @game_router.get("/stats")
-async def get_my_stats(current_user: dict = Depends()):
+async def get_my_stats(current_user: dict = Depends(get_current_user_from_request)):
     """Get current user's game stats"""
-    from server import get_current_user, db
-    current_user = await get_current_user(current_user)
-    
-    global _game_service
     if not _game_service:
-        _game_service = init_game_service(db)
+        raise HTTPException(status_code=500, detail="Game service not initialized")
     
     stats = await _game_service.get_player_stats(current_user["user_id"])
     return stats
@@ -79,11 +84,8 @@ async def get_my_stats(current_user: dict = Depends()):
 @game_router.get("/stats/{user_id}")
 async def get_user_stats(user_id: str):
     """Get a user's public game stats"""
-    from server import db
-    
-    global _game_service
     if not _game_service:
-        _game_service = init_game_service(db)
+        raise HTTPException(status_code=500, detail="Game service not initialized")
     
     stats = await _game_service.get_player_stats(user_id)
     
@@ -97,7 +99,7 @@ async def get_user_stats(user_id: str):
 @game_router.post("/start")
 async def start_game(
     data: StartGameRequest,
-    current_user: dict = Depends()
+    current_user: dict = Depends(get_current_user_from_request)
 ):
     """
     Start a new game session
@@ -106,12 +108,8 @@ async def start_game(
     - Optional BL coin bet
     - Select a minted photo for battle
     """
-    from server import get_current_user, db
-    current_user = await get_current_user(current_user)
-    
-    global _game_service
     if not _game_service:
-        _game_service = init_game_service(db)
+        raise HTTPException(status_code=500, detail="Game service not initialized")
     
     result = await _game_service.start_game(
         player_id=current_user["user_id"],
@@ -130,19 +128,15 @@ async def start_game(
 async def play_rps(
     session_id: str,
     data: RPSMoveRequest,
-    current_user: dict = Depends()
+    current_user: dict = Depends(get_current_user_from_request)
 ):
     """
     Play a Rock-Paper-Scissors round
     
     First to 3 wins advances to next phase
     """
-    from server import get_current_user, db
-    current_user = await get_current_user(current_user)
-    
-    global _game_service
     if not _game_service:
-        _game_service = init_game_service(db)
+        raise HTTPException(status_code=500, detail="Game service not initialized")
     
     result = await _game_service.play_rps_round(
         session_id=session_id,
@@ -159,19 +153,15 @@ async def play_rps(
 @game_router.post("/session/{session_id}/photo-battle")
 async def execute_photo_battle(
     session_id: str,
-    current_user: dict = Depends()
+    current_user: dict = Depends(get_current_user_from_request)
 ):
     """
     Execute the photo battle phase
     
     Photos are compared based on dollar value with strength/weakness modifiers
     """
-    from server import get_current_user, db
-    current_user = await get_current_user(current_user)
-    
-    global _game_service
     if not _game_service:
-        _game_service = init_game_service(db)
+        raise HTTPException(status_code=500, detail="Game service not initialized")
     
     result = await _game_service.play_photo_battle(
         session_id=session_id,
@@ -187,9 +177,10 @@ async def execute_photo_battle(
 @game_router.get("/session/{session_id}")
 async def get_game_session(session_id: str):
     """Get current game session state"""
-    from server import db
+    if not _db:
+        raise HTTPException(status_code=500, detail="Database not initialized")
     
-    session = await db.game_sessions.find_one(
+    session = await _db.game_sessions.find_one(
         {"session_id": session_id},
         {"_id": 0}
     )
@@ -201,12 +192,12 @@ async def get_game_session(session_id: str):
 
 
 @game_router.get("/sessions/active")
-async def get_active_sessions(current_user: dict = Depends()):
+async def get_active_sessions(current_user: dict = Depends(get_current_user_from_request)):
     """Get user's active game sessions"""
-    from server import get_current_user, db
-    current_user = await get_current_user(current_user)
+    if not _db:
+        raise HTTPException(status_code=500, detail="Database not initialized")
     
-    sessions = await db.game_sessions.find(
+    sessions = await _db.game_sessions.find(
         {
             "player1_id": current_user["user_id"],
             "phase": {"$ne": "completed"},
@@ -221,13 +212,13 @@ async def get_active_sessions(current_user: dict = Depends()):
 async def get_game_history(
     skip: int = 0,
     limit: int = 20,
-    current_user: dict = Depends()
+    current_user: dict = Depends(get_current_user_from_request)
 ):
     """Get user's completed game history"""
-    from server import get_current_user, db
-    current_user = await get_current_user(current_user)
+    if not _db:
+        raise HTTPException(status_code=500, detail="Database not initialized")
     
-    sessions = await db.game_sessions.find(
+    sessions = await _db.game_sessions.find(
         {
             "$or": [
                 {"player1_id": current_user["user_id"]},
@@ -248,11 +239,8 @@ async def get_wins_leaderboard(
     limit: int = 20
 ):
     """Get leaderboard for most wins"""
-    from server import db
-    
-    global _game_service
     if not _game_service:
-        _game_service = init_game_service(db)
+        raise HTTPException(status_code=500, detail="Game service not initialized")
     
     if period not in ["24h", "7d", "30d", "1y"]:
         raise HTTPException(status_code=400, detail="Invalid period. Use: 24h, 7d, 30d, 1y")
@@ -267,19 +255,8 @@ async def get_photos_leaderboard(
     limit: int = 20
 ):
     """Get leaderboard for most liked minted photos"""
-    from server import db
-    
-    global _game_service
     if not _game_service:
-        _game_service = init_game_service(db)
+        raise HTTPException(status_code=500, detail="Game service not initialized")
     
     leaderboard = await _game_service.get_photo_leaderboard(period=period, limit=limit)
     return {"leaderboard": leaderboard, "period": period}
-
-
-# ============== INIT FUNCTION ==============
-def setup_game_routes(db):
-    """Initialize game services with database connection"""
-    global _game_service
-    _game_service = init_game_service(db)
-    logger.info("Photo Game services initialized")
