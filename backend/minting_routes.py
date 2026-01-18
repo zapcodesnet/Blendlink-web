@@ -420,7 +420,7 @@ async def delete_album(
 @minting_router.get("/feed")
 async def get_minted_photos_feed(skip: int = 0, limit: int = 20):
     """Get public minted photos feed"""
-    if not _db:
+    if _db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     photos = await _db.minted_photos.find(
