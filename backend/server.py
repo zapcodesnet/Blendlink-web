@@ -1958,6 +1958,14 @@ try:
 except ImportError as e:
     logger.warning(f"Could not load production admin system: {e}")
 
+# Load NFT Minting routes
+try:
+    from nft_routes import nft_router
+    api_router.include_router(nft_router)
+    logger.info("NFT Minting routes loaded (Immutable zkEVM)")
+except ImportError as e:
+    logger.warning(f"Could not load NFT routes: {e}")
+
 app.include_router(api_router)
 
 app.add_middleware(
