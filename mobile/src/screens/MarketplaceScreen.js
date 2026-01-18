@@ -162,6 +162,24 @@ export default function MarketplaceScreen({ navigation }) {
         </View>
       </View>
 
+      {/* Photo Marketplace CTA */}
+      <TouchableOpacity
+        style={styles.photoMarketplaceBanner}
+        onPress={() => navigation.navigate('PhotoMarketplace')}
+        activeOpacity={0.9}
+      >
+        <View style={styles.photoMarketplaceBannerLeft}>
+          <View style={styles.newBadge}>
+            <Text style={styles.newBadgeText}>⚡ NEW</Text>
+          </View>
+          <Text style={styles.photoMarketplaceBannerTitle}>📸 Photo Marketplace</Text>
+          <Text style={styles.photoMarketplaceBannerSubtitle}>Trade minted photo collectibles</Text>
+        </View>
+        <View style={styles.photoMarketplaceBannerRight}>
+          <Text style={styles.arrowText}>View →</Text>
+        </View>
+      </TouchableOpacity>
+
       {/* Search Bar */}
       <View style={styles.searchContainer}>
         <Text style={styles.searchIcon}>🔍</Text>
