@@ -269,6 +269,11 @@ class SubscriptionService:
             sub["created_at"] = sub["created_at"].isoformat()
             sub["updated_at"] = sub["updated_at"].isoformat()
             await self.db.subscriptions.insert_one(sub)
+            # Re-fetch without _id
+            sub = await self.db.subscriptions.find_one(
+                {"user_id": user_id},
+                {"_id": 0}
+            )
         
         # Add tier details
         tier_info = SUBSCRIPTION_TIERS.get(sub.get("tier", "free"), SUBSCRIPTION_TIERS["free"])
