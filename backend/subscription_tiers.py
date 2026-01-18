@@ -530,6 +530,11 @@ class RankedService:
             profile = RankedProfile(user_id=user_id).model_dump()
             profile["updated_at"] = profile["updated_at"].isoformat()
             await self.db.ranked_profiles.insert_one(profile)
+            # Re-fetch without _id
+            profile = await self.db.ranked_profiles.find_one(
+                {"user_id": user_id},
+                {"_id": 0}
+            )
         
         # Add tier info
         tier = self._get_tier_from_rating(profile.get("rating", 1000))
