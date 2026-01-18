@@ -426,4 +426,61 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
   },
+  // Settings Styles
+  settingsContainer: {
+    flex: 1,
+    padding: 16,
+  },
+  settingsTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 24,
+    marginTop: 8,
+  },
+  settingsSection: {
+    borderRadius: 16,
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
+  settingsSectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    padding: 16,
+    paddingBottom: 8,
+  },
+  settingsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+  },
+  settingsRowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  settingsRowIcon: {
+    fontSize: 20,
+    marginRight: 12,
+  },
+  settingsRowLabel: {
+    fontSize: 16,
+  },
+  settingsRowValue: {
+    fontSize: 14,
+  },
+  settingsRowArrow: {
+    fontSize: 18,
+  },
+  themeToggle: {
+    width: 48,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  themeToggleText: {
+    fontSize: 14,
+  },
 });
