@@ -157,7 +157,7 @@ class PhotoBattle(BaseModel):
 # ============== AI PHOTO ANALYSIS ==============
 async def analyze_photo_with_ai(image_base64: str, mime_type: str = "image/jpeg") -> Dict[str, Any]:
     """
-    Analyze photo using OpenAI GPT-4o Vision
+    Analyze photo using OpenAI GPT-4o Vision via Emergent LLM Key
     Returns scenery type, ratings, face detection, etc.
     """
     try:
@@ -168,6 +168,7 @@ async def analyze_photo_with_ai(image_base64: str, mime_type: str = "image/jpeg"
             logger.error("EMERGENT_LLM_KEY not configured")
             return get_fallback_analysis()
         
+        # Initialize chat with GPT-4o Vision
         chat = LlmChat(
             api_key=api_key,
             session_id=f"photo_analysis_{uuid.uuid4().hex[:8]}",
@@ -176,8 +177,9 @@ Analyze photos and provide structured ratings. Be fair but varied in your assess
 Return ONLY valid JSON without any markdown formatting or code blocks."""
         ).with_model("openai", "gpt-4o")
         
-        # Create image content
-        image_content = ImageContent(image_base64=image_base64)
+        # Create image content with proper data URL format
+        image_data_url = f"data:{mime_type};base64,{image_base64}"
+        image_content = ImageContent(image_base64=image_data_url)
         
         analysis_prompt = """Analyze this photo and return a JSON object with these exact fields:
 
@@ -206,6 +208,7 @@ Scenery types:
 - "manmade": cities, buildings, streets, interiors, vehicles, tech
 
 Be generous but realistic. Most photos should score 40-80 range.
+Exceptional photos can score 80-95.
 Return ONLY the JSON object, no other text."""
 
         user_message = UserMessage(
@@ -213,19 +216,40 @@ Return ONLY the JSON object, no other text."""
             image_contents=[image_content]
         )
         
+        # Send message and get response
         response = await chat.send_message(user_message)
         
-        # Parse response
+        # Parse response - clean any markdown formatting
         import json
-        # Clean response - remove any markdown code blocks
         cleaned = response.strip()
+        
+        # Remove markdown code blocks if present
         if cleaned.startswith("```"):
-            cleaned = cleaned.split("```")[1]
+            lines = cleaned.split("\n")
+            # Find content between ``` markers
+            start_idx = 1 if lines[0].startswith("```") else 0
+            end_idx = len(lines)
+            for i, line in enumerate(lines[1:], 1):
+                if line.strip() == "```":
+                    end_idx = i
+                    break
+            cleaned = "\n".join(lines[start_idx:end_idx])
             if cleaned.startswith("json"):
-                cleaned = cleaned[4:]
-        cleaned = cleaned.strip()
+                cleaned = cleaned[4:].strip()
         
         result = json.loads(cleaned)
+        
+        # Validate and normalize response
+        if "scenery_type" not in result:
+            result["scenery_type"] = "natural"
+        if result["scenery_type"] not in SCENERY_TYPES:
+            result["scenery_type"] = "natural"
+        if "ratings" not in result:
+            result["ratings"] = {criterion: random.randint(50, 75) for criterion in RATING_CRITERIA}
+        if "has_face" not in result:
+            result["has_face"] = False
+            
+        logger.info(f"AI photo analysis complete: scenery={result['scenery_type']}, has_face={result.get('has_face')}")
         return result
         
     except Exception as e:
