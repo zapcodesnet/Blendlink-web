@@ -4,7 +4,7 @@ import {
   Swords, Trophy, Zap, Users, Bot, Clock, 
   Hand, Scissors, FileText, Sparkles, Crown,
   Shield, Target, TrendingUp, Coins, RefreshCw,
-  X, Check, AlertCircle, Loader2
+  X, Check, AlertCircle, Loader2, Image, ChevronRight
 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../services/api';
@@ -22,25 +22,33 @@ const RPS_CHOICES = [
 ];
 
 const SCENERY_CONFIG = {
-  natural: { color: 'from-green-500 to-emerald-600', icon: '🌿', label: 'Natural' },
-  water: { color: 'from-blue-500 to-cyan-600', icon: '🌊', label: 'Water' },
-  manmade: { color: 'from-orange-500 to-red-600', icon: '🏙️', label: 'Man-made' },
+  natural: { color: 'from-green-500 to-emerald-600', icon: '🌿', label: 'Natural', strong: 'water', weak: 'manmade' },
+  water: { color: 'from-blue-500 to-cyan-600', icon: '🌊', label: 'Water', strong: 'manmade', weak: 'natural' },
+  manmade: { color: 'from-orange-500 to-red-600', icon: '🏙️', label: 'Man-made', strong: 'natural', weak: 'water' },
+};
+
+// ============== HELPER FUNCTIONS ==============
+const formatDollarValue = (value) => {
+  if (!value) return '$0';
+  if (value >= 1_000_000_000) return `$${(value / 1_000_000_000).toFixed(2)}B`;
+  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
+  return `$${value?.toLocaleString()}`;
 };
 
 // ============== HELPER COMPONENTS ==============
-const StaminaBar = ({ stamina, maxStamina = 100 }) => {
+const StaminaBar = ({ stamina, maxStamina = 100, showLabel = true }) => {
   const percent = (stamina / maxStamina) * 100;
   return (
     <div className="flex items-center gap-2">
       <Zap className="w-4 h-4 text-yellow-400" />
       <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
         <motion.div 
-          className="h-full bg-gradient-to-r from-yellow-500 to-orange-500"
+          className={`h-full ${percent > 20 ? 'bg-gradient-to-r from-yellow-500 to-orange-500' : 'bg-red-500'}`}
           initial={{ width: 0 }}
           animate={{ width: `${percent}%` }}
         />
       </div>
-      <span className="text-sm text-gray-400">{Math.round(stamina)}/{maxStamina}</span>
+      {showLabel && <span className="text-sm text-gray-400">{Math.round(stamina)}/{maxStamina}</span>}
     </div>
   );
 };
@@ -62,10 +70,168 @@ const WinStreakBadge = ({ streak }) => {
   );
 };
 
+// ============== PHOTO SELECTION COMPONENT ==============
+const PhotoSelectionScreen = ({ photos, loading, onSelectPhoto, selectedPhotoId }) => {
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!photos || photos.length === 0) {
+    return (
+      <div className="text-center py-12 bg-gray-800/50 rounded-xl border border-gray-700/50">
+        <Image className="w-16 h-16 mx-auto text-gray-600 mb-4" />
+        <h3 className="text-xl font-semibold text-white mb-2">No Minted Photos</h3>
+        <p className="text-gray-400 mb-4">Mint some photos first to enter battles!</p>
+        <Button 
+          onClick={() => window.location.href = '/minted-photos'}
+          className="bg-gradient-to-r from-purple-600 to-pink-600"
+        >
+          <Sparkles className="w-4 h-4 mr-2" />
+          Mint Photos
+        </Button>
+      </div>
+    );
+  }
+
+  const availablePhotos = photos.filter(p => p.is_available);
+  const unavailablePhotos = photos.filter(p => !p.is_available);
+
+  return (
+    <div className="space-y-6">
+      <div className="text-center mb-6">
+        <h3 className="text-xl font-bold text-white mb-2">Select Your Battle Photo</h3>
+        <p className="text-gray-400">
+          Choose wisely! Photos are sorted by Dollar Value (Power). 
+          <span className="text-yellow-400 ml-1">Higher value = stronger!</span>
+        </p>
+      </div>
+
+      {/* Available Photos */}
+      {availablePhotos.length > 0 && (
+        <div className="space-y-3">
+          <h4 className="text-sm font-semibold text-green-400 flex items-center gap-2">
+            <Check className="w-4 h-4" />
+            Available for Battle ({availablePhotos.length})
+          </h4>
+          <div className="grid gap-3">
+            {availablePhotos.map((photo) => {
+              const scenery = SCENERY_CONFIG[photo.scenery_type] || SCENERY_CONFIG.natural;
+              const isSelected = selectedPhotoId === photo.mint_id;
+              
+              return (
+                <motion.button
+                  key={photo.mint_id}
+                  onClick={() => onSelectPhoto(photo)}
+                  className={`relative flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left ${
+                    isSelected 
+                      ? 'bg-purple-900/50 border-purple-500 ring-2 ring-purple-400' 
+                      : 'bg-gray-800/50 border-gray-700/50 hover:border-purple-500/50'
+                  }`}
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  data-testid={`photo-select-${photo.mint_id}`}
+                >
+                  {/* Thumbnail */}
+                  <div className={`w-16 h-16 rounded-lg overflow-hidden bg-gradient-to-br ${scenery.color} flex items-center justify-center flex-shrink-0`}>
+                    <span className="text-2xl">{scenery.icon}</span>
+                  </div>
+                  
+                  {/* Photo Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="font-semibold text-white truncate">{photo.name}</h4>
+                      <span className={`px-2 py-0.5 rounded text-xs font-bold bg-gradient-to-r ${scenery.color} text-white`}>
+                        {scenery.label}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center gap-4 text-sm">
+                      <span className="text-yellow-400 font-bold">
+                        {formatDollarValue(photo.dollar_value)}
+                      </span>
+                      <span className="text-gray-400">
+                        <Shield className="w-3 h-3 inline mr-1" />
+                        Strong vs {SCENERY_CONFIG[photo.strength_vs]?.label || 'Unknown'}
+                      </span>
+                    </div>
+                    
+                    {/* Stamina Bar */}
+                    <div className="mt-2 flex items-center gap-2">
+                      <div className="flex-1 max-w-32">
+                        <StaminaBar stamina={photo.stamina} showLabel={false} />
+                      </div>
+                      <span className="text-xs text-gray-400">
+                        {Math.round(photo.stamina)}% ({photo.battles_remaining} battles left)
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Selection indicator */}
+                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                    isSelected ? 'bg-purple-500 border-purple-500' : 'border-gray-600'
+                  }`}>
+                    {isSelected && <Check className="w-4 h-4 text-white" />}
+                  </div>
+                </motion.button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Unavailable Photos (Grayed Out) */}
+      {unavailablePhotos.length > 0 && (
+        <div className="space-y-3">
+          <h4 className="text-sm font-semibold text-gray-500 flex items-center gap-2">
+            <Clock className="w-4 h-4" />
+            Resting ({unavailablePhotos.length})
+          </h4>
+          <div className="grid gap-3">
+            {unavailablePhotos.map((photo) => {
+              const scenery = SCENERY_CONFIG[photo.scenery_type] || SCENERY_CONFIG.natural;
+              
+              return (
+                <div
+                  key={photo.mint_id}
+                  className="relative flex items-center gap-4 p-4 rounded-xl border border-gray-700/50 bg-gray-800/30 opacity-50 cursor-not-allowed"
+                >
+                  {/* Thumbnail */}
+                  <div className={`w-16 h-16 rounded-lg overflow-hidden bg-gradient-to-br ${scenery.color} flex items-center justify-center flex-shrink-0 grayscale`}>
+                    <span className="text-2xl">{scenery.icon}</span>
+                  </div>
+                  
+                  {/* Photo Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="font-semibold text-gray-400 truncate">{photo.name}</h4>
+                    </div>
+                    
+                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <span>{formatDollarValue(photo.dollar_value)}</span>
+                    </div>
+                    
+                    {/* Recovery time */}
+                    <div className="mt-2 text-xs text-red-400">
+                      <Clock className="w-3 h-3 inline mr-1" />
+                      Available in ~{photo.time_until_available || 60} min
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ============== RPS BATTLE COMPONENT ==============
 const RPSBattle = ({ onChoice, playerChoice, opponentChoice, result, disabled }) => {
-  const [hoveredChoice, setHoveredChoice] = useState(null);
-  
   return (
     <div className="text-center">
       <h3 className="text-xl font-bold text-white mb-4">Rock Paper Scissors</h3>
@@ -76,8 +242,6 @@ const RPSBattle = ({ onChoice, playerChoice, opponentChoice, result, disabled })
           <motion.button
             key={choice.id}
             onClick={() => !disabled && onChoice(choice.id)}
-            onMouseEnter={() => setHoveredChoice(choice.id)}
-            onMouseLeave={() => setHoveredChoice(null)}
             className={`w-24 h-24 rounded-2xl flex flex-col items-center justify-center transition-all ${
               playerChoice === choice.id 
                 ? 'bg-purple-600 ring-4 ring-purple-400' 
@@ -85,6 +249,7 @@ const RPSBattle = ({ onChoice, playerChoice, opponentChoice, result, disabled })
             } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
             whileHover={!disabled ? { scale: 1.1 } : {}}
             whileTap={!disabled ? { scale: 0.95 } : {}}
+            data-testid={`rps-choice-${choice.id}`}
           >
             <span className="text-4xl mb-1">{choice.icon}</span>
             <span className="text-xs text-gray-400">{choice.label}</span>
@@ -144,21 +309,13 @@ const RPSBattle = ({ onChoice, playerChoice, opponentChoice, result, disabled })
 // ============== PHOTO BATTLE COMPONENT ==============
 const PhotoBattle = ({ playerPhoto, opponentPhoto, result, onBattle }) => {
   const [isAnimating, setIsAnimating] = useState(false);
-  const [showResult, setShowResult] = useState(false);
   
   const handleBattle = async () => {
     setIsAnimating(true);
     await onBattle();
     setTimeout(() => {
       setIsAnimating(false);
-      setShowResult(true);
     }, 2000);
-  };
-  
-  const formatValue = (value) => {
-    if (value >= 1_000_000_000) return `$${(value / 1_000_000_000).toFixed(2)}B`;
-    if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
-    return `$${value?.toLocaleString()}`;
   };
   
   const PhotoCard = ({ photo, isPlayer, effectiveValue }) => {
@@ -183,9 +340,9 @@ const PhotoBattle = ({ playerPhoto, opponentPhoto, result, onBattle }) => {
         
         <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-2">
           <p className="text-white font-bold text-sm truncate">{photo?.name || 'Photo'}</p>
-          <p className="text-yellow-400 font-bold">{formatValue(photo?.dollar_value)}</p>
+          <p className="text-yellow-400 font-bold">{formatDollarValue(photo?.dollar_value)}</p>
           {effectiveValue && effectiveValue !== photo?.dollar_value && (
-            <p className="text-green-400 text-xs">Effective: {formatValue(effectiveValue)}</p>
+            <p className="text-green-400 text-xs">Effective: {formatDollarValue(effectiveValue)}</p>
           )}
         </div>
         
@@ -224,6 +381,7 @@ const PhotoBattle = ({ playerPhoto, opponentPhoto, result, onBattle }) => {
             <Button 
               onClick={handleBattle}
               className="bg-gradient-to-r from-purple-600 to-pink-600"
+              data-testid="battle-button"
             >
               <Swords className="w-4 h-4 mr-2" />
               Battle!
@@ -255,11 +413,11 @@ const PhotoBattle = ({ playerPhoto, opponentPhoto, result, onBattle }) => {
             <div className="flex justify-center gap-8 text-sm">
               <div>
                 <p className="text-gray-400">Your Value</p>
-                <p className="text-yellow-400 font-bold">{formatValue(result.player1_value)}</p>
+                <p className="text-yellow-400 font-bold">{formatDollarValue(result.player1_value)}</p>
               </div>
               <div>
                 <p className="text-gray-400">Opponent Value</p>
-                <p className="text-yellow-400 font-bold">{formatValue(result.player2_value)}</p>
+                <p className="text-yellow-400 font-bold">{formatDollarValue(result.player2_value)}</p>
               </div>
             </div>
           </motion.div>
@@ -270,13 +428,29 @@ const PhotoBattle = ({ playerPhoto, opponentPhoto, result, onBattle }) => {
 };
 
 // ============== MATCHMAKING COMPONENT ==============
-const Matchmaking = ({ onMatchFound, onCancel }) => {
-  const [status, setStatus] = useState('idle');
+const Matchmaking = ({ onMatchFound, onCancel, selectedPhoto, onPhotoSelect }) => {
+  const [status, setStatus] = useState('photo_select'); // photo_select, searching
   const [betAmount, setBetAmount] = useState(0);
   const [useBotFallback, setUseBotFallback] = useState(true);
   const [elapsed, setElapsed] = useState(0);
   const [queueStatus, setQueueStatus] = useState(null);
+  const [battlePhotos, setBattlePhotos] = useState([]);
+  const [loadingPhotos, setLoadingPhotos] = useState(true);
+  const [error, setError] = useState(null);
   const intervalRef = useRef(null);
+  
+  const fetchBattlePhotos = async () => {
+    try {
+      setLoadingPhotos(true);
+      const response = await api.get('/photo-game/battle-photos');
+      setBattlePhotos(response.data.photos || []);
+    } catch (err) {
+      console.error('Failed to fetch battle photos:', err);
+      setError('Failed to load your photos');
+    } finally {
+      setLoadingPhotos(false);
+    }
+  };
   
   const fetchQueueStatus = async () => {
     try {
@@ -288,18 +462,26 @@ const Matchmaking = ({ onMatchFound, onCancel }) => {
   };
   
   useEffect(() => {
+    fetchBattlePhotos();
     fetchQueueStatus();
     const interval = setInterval(fetchQueueStatus, 5000);
     return () => clearInterval(interval);
   }, []);
   
   const startMatchmaking = async () => {
+    if (!selectedPhoto) {
+      toast.error('Please select a photo first!');
+      return;
+    }
+    
     try {
       setStatus('searching');
       setElapsed(0);
+      setError(null);
       
       const response = await api.post('/photo-game/pvp/find-match', {
         bet_amount: betAmount,
+        photo_id: selectedPhoto.mint_id,
         use_bot_fallback: useBotFallback,
       });
       
@@ -325,18 +507,22 @@ const Matchmaking = ({ onMatchFound, onCancel }) => {
       }
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Failed to start matchmaking');
-      setStatus('idle');
+      setStatus('photo_select');
+      setError(err.response?.data?.detail);
     }
   };
   
   const cancelMatchmaking = async () => {
     clearInterval(intervalRef.current);
     try {
-      await api.post('/photo-game/pvp/cancel');
+      const response = await api.post('/photo-game/pvp/cancel');
+      if (response.data.bet_refunded) {
+        toast.success(`Bet refunded: ${response.data.bet_refunded} BL`);
+      }
     } catch (err) {
       console.error('Cancel failed:', err);
     }
-    setStatus('idle');
+    setStatus('photo_select');
     onCancel?.();
   };
   
@@ -365,6 +551,12 @@ const Matchmaking = ({ onMatchFound, onCancel }) => {
           {useBotFallback && ' (Bot match after timeout)'}
         </p>
         
+        {selectedPhoto && (
+          <p className="text-purple-400 mb-4">
+            Fighting with: <span className="font-bold">{selectedPhoto.name}</span> ({formatDollarValue(selectedPhoto.dollar_value)})
+          </p>
+        )}
+        
         <div className="w-48 mx-auto h-2 bg-gray-700 rounded-full overflow-hidden mb-6">
           <motion.div 
             className="h-full bg-purple-500"
@@ -373,7 +565,7 @@ const Matchmaking = ({ onMatchFound, onCancel }) => {
           />
         </div>
         
-        <Button variant="outline" onClick={cancelMatchmaking}>
+        <Button variant="outline" onClick={cancelMatchmaking} data-testid="cancel-matchmaking-btn">
           <X className="w-4 h-4 mr-2" />
           Cancel
         </Button>
@@ -382,68 +574,97 @@ const Matchmaking = ({ onMatchFound, onCancel }) => {
   }
   
   return (
-    <div className="max-w-md mx-auto">
-      <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700/50 mb-6">
-        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-          <Users className="w-5 h-5 text-purple-400" />
-          Find PvP Match
-        </h3>
-        
-        {queueStatus && (
-          <div className="bg-gray-700/50 rounded-lg p-3 mb-4 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-400">Players searching:</span>
-              <span className="text-white font-bold">{queueStatus.players_waiting}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Active matches:</span>
-              <span className="text-white font-bold">{queueStatus.active_matches}</span>
-            </div>
-          </div>
-        )}
-        
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm text-gray-400 mb-1 block">BL Coin Bet (optional)</label>
-            <Input
-              type="number"
-              value={betAmount}
-              onChange={(e) => setBetAmount(Math.max(0, parseInt(e.target.value) || 0))}
-              placeholder="0"
-              className="bg-gray-700 border-gray-600"
-            />
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <span className="text-gray-300">Play with bot if no players</span>
-            <button
-              onClick={() => setUseBotFallback(!useBotFallback)}
-              className={`relative w-12 h-6 rounded-full transition-colors ${
-                useBotFallback ? 'bg-purple-600' : 'bg-gray-700'
-              }`}
-            >
-              <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
-                useBotFallback ? 'left-7' : 'left-1'
-              }`} />
-            </button>
-          </div>
-        </div>
+    <div className="max-w-2xl mx-auto space-y-6">
+      {/* Photo Selection */}
+      <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700/50">
+        <PhotoSelectionScreen 
+          photos={battlePhotos}
+          loading={loadingPhotos}
+          onSelectPhoto={onPhotoSelect}
+          selectedPhotoId={selectedPhoto?.mint_id}
+        />
       </div>
       
-      <Button 
-        onClick={startMatchmaking} 
-        className="w-full bg-gradient-to-r from-purple-600 to-pink-600"
-        size="lg"
-      >
-        <Swords className="w-5 h-5 mr-2" />
-        Find Match
-      </Button>
+      {/* Battle Settings */}
+      {selectedPhoto && (
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gray-800/50 rounded-xl p-6 border border-gray-700/50"
+        >
+          <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <Coins className="w-5 h-5 text-yellow-400" />
+            Battle Settings
+          </h3>
+          
+          {queueStatus && (
+            <div className="bg-gray-700/50 rounded-lg p-3 mb-4 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-400">Players searching:</span>
+                <span className="text-white font-bold">{queueStatus.players_waiting}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Active matches:</span>
+                <span className="text-white font-bold">{queueStatus.active_matches}</span>
+              </div>
+            </div>
+          )}
+          
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm text-gray-400 mb-1 block">BL Coin Bet (optional)</label>
+              <Input
+                type="number"
+                value={betAmount}
+                onChange={(e) => setBetAmount(Math.max(0, parseInt(e.target.value) || 0))}
+                placeholder="0"
+                className="bg-gray-700 border-gray-600"
+                data-testid="bet-amount-input"
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <span className="text-gray-300">Play with bot if no players</span>
+              <button
+                onClick={() => setUseBotFallback(!useBotFallback)}
+                className={`relative w-12 h-6 rounded-full transition-colors ${
+                  useBotFallback ? 'bg-purple-600' : 'bg-gray-700'
+                }`}
+                data-testid="bot-fallback-toggle"
+              >
+                <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                  useBotFallback ? 'left-7' : 'left-1'
+                }`} />
+              </button>
+            </div>
+          </div>
+          
+          {error && (
+            <p className="text-red-400 text-sm mt-4">{error}</p>
+          )}
+        </motion.div>
+      )}
       
-      <div className="mt-6 grid grid-cols-2 gap-4">
+      {/* Start Battle Button */}
+      {selectedPhoto && (
+        <Button 
+          onClick={startMatchmaking} 
+          className="w-full bg-gradient-to-r from-purple-600 to-pink-600"
+          size="lg"
+          data-testid="find-match-btn"
+        >
+          <Swords className="w-5 h-5 mr-2" />
+          Find Match with {selectedPhoto.name}
+        </Button>
+      )}
+      
+      <div className="grid grid-cols-2 gap-4">
         <Button
           variant="outline"
-          onClick={() => startMatchmaking()}
+          onClick={startMatchmaking}
           className="border-gray-700"
+          disabled={!selectedPhoto}
+          data-testid="quick-bot-btn"
         >
           <Bot className="w-4 h-4 mr-2" />
           Quick Bot Match
@@ -451,6 +672,7 @@ const Matchmaking = ({ onMatchFound, onCancel }) => {
         <Button
           variant="outline"
           className="border-gray-700"
+          disabled={!selectedPhoto}
         >
           <Trophy className="w-4 h-4 mr-2" />
           Ranked Match
@@ -467,6 +689,7 @@ const PhotoGameArena = () => {
   const [session, setSession] = useState(null);
   const [stats, setStats] = useState(null);
   const [matchData, setMatchData] = useState(null);
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [loading, setLoading] = useState(true);
   
   // RPS state
@@ -491,6 +714,10 @@ const PhotoGameArena = () => {
     fetchStats();
   }, []);
   
+  const handlePhotoSelect = (photo) => {
+    setSelectedPhoto(photo);
+  };
+  
   const handleMatchFound = async (matchInfo) => {
     setMatchData(matchInfo);
     
@@ -504,7 +731,7 @@ const PhotoGameArena = () => {
         toast.success(matchInfo.mode === 'bot' ? 'Bot match started!' : 'Match found!');
       }
     } catch (err) {
-      toast.error('Failed to start game');
+      toast.error(err.response?.data?.detail || 'Failed to start game');
       setGameState('matchmaking');
     }
   };
@@ -577,6 +804,7 @@ const PhotoGameArena = () => {
     setGameState('matchmaking');
     setSession(null);
     setMatchData(null);
+    setSelectedPhoto(null);
     setRpsScore({ player: 0, opponent: 0 });
     setLastRpsResult(null);
     setPhotoBattleResult(null);
@@ -592,7 +820,7 @@ const PhotoGameArena = () => {
   }
   
   return (
-    <div className="min-h-screen bg-gray-900 pb-24">
+    <div className="min-h-screen bg-gray-900 pb-24" data-testid="photo-game-arena">
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-900/50 to-pink-900/50 border-b border-gray-700/50">
         <div className="max-w-4xl mx-auto px-4 py-6">
@@ -644,6 +872,8 @@ const PhotoGameArena = () => {
               <Matchmaking 
                 onMatchFound={handleMatchFound}
                 onCancel={() => {}}
+                selectedPhoto={selectedPhoto}
+                onPhotoSelect={handlePhotoSelect}
               />
             </motion.div>
           )}
@@ -746,6 +976,7 @@ const PhotoGameArena = () => {
                 onClick={handlePlayAgain}
                 className="bg-gradient-to-r from-purple-600 to-pink-600"
                 size="lg"
+                data-testid="play-again-btn"
               >
                 <RefreshCw className="w-5 h-5 mr-2" />
                 Play Again
