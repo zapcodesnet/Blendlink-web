@@ -531,8 +531,12 @@ class MintingService:
         result["analysis"] = {
             "scenery_type": scenery_type,
             "scenery_name": scenery_info["name"],
+            "light_type": light_type,
+            "light_name": light_info["name"],
             "strength_vs": scenery_info["strong_vs"],
             "weakness_vs": scenery_info["weak_vs"],
+            "light_strength_vs": light_info["strong_vs"],
+            "light_weakness_vs": light_info["weak_vs"],
             "has_face": has_face,
         }
         
