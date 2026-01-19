@@ -1089,7 +1089,7 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect }) => {
               setStatus('matched');
               auctionSounds.matchFound();
               onMatchFoundRef.current?.(statusRes.data);
-            } else if (statusRes.data.status === 'not_searching') {
+            } else if (statusRes.data.status === 'not_searching' || statusRes.data.status === 'not_in_queue') {
               // User is no longer in queue (timeout or error)
               clearInterval(intervalRef.current);
               intervalRef.current = null;
