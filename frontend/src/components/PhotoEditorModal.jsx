@@ -271,6 +271,72 @@ export default function PhotoEditorModal({ isOpen, onClose, onComplete }) {
     }
   };
   
+  // AI Auto-Enhance (single photo)
+  const handleAutoEnhance = async () => {
+    if (!selectedPhoto) return;
+    
+    setIsProcessing(true);
+    setProcessingAction('AI analyzing and enhancing...');
+    
+    try {
+      const response = await apiRequest('/photo-editor/auto-enhance', {
+        method: 'POST',
+        body: JSON.stringify({ photo_id: selectedPhoto.photo_id }),
+      });
+      
+      // Update sliders to show applied values
+      setBrightness(response.adjustments_applied.brightness);
+      setContrast(response.adjustments_applied.contrast);
+      setSaturation(response.adjustments_applied.saturation);
+      setSharpness(response.adjustments_applied.sharpness);
+      
+      toast.success(`Auto-enhanced in ${response.processing_time_ms}ms`);
+      await loadPhotos();
+    } catch (error) {
+      toast.error(error.message || "Auto-enhance failed");
+    } finally {
+      setIsProcessing(false);
+      setProcessingAction('');
+    }
+  };
+  
+  // Batch AI Auto-Enhance
+  const handleBatchAutoEnhance = async () => {
+    const photosToEnhance = photos.filter(p => !p.auto_enhanced);
+    
+    if (photosToEnhance.length === 0) {
+      toast.info("All photos already enhanced");
+      return;
+    }
+    
+    setIsBatchProcessing(true);
+    setProcessingAction(`Auto-enhancing ${photosToEnhance.length} photos...`);
+    
+    try {
+      const response = await apiRequest('/photo-editor/auto-enhance-batch', {
+        method: 'POST',
+        body: JSON.stringify({
+          photo_ids: photosToEnhance.map(p => p.photo_id),
+        }),
+      });
+      
+      const { total_processed, total_failed, total_time_ms } = response;
+      
+      if (total_failed === 0) {
+        toast.success(`All ${total_processed} photos enhanced in ${(total_time_ms / 1000).toFixed(1)}s`);
+      } else {
+        toast.warning(`${total_processed} enhanced, ${total_failed} failed`);
+      }
+      
+      await loadPhotos();
+    } catch (error) {
+      toast.error(error.message || "Batch auto-enhance failed");
+    } finally {
+      setIsBatchProcessing(false);
+      setProcessingAction('');
+    }
+  };
+  
   // Apply adjustments
   const handleApplyAdjustments = async () => {
     if (!selectedPhoto) return;
