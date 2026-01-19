@@ -952,8 +952,16 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect }) => {
   const [loadingPhotos, setLoadingPhotos] = useState(true);
   const [error, setError] = useState(null);
   const intervalRef = useRef(null);
+  const isMountedRef = useRef(true);
+  const onMatchFoundRef = useRef(onMatchFound);
+  
+  // Keep callback ref updated to avoid stale closure
+  useEffect(() => {
+    onMatchFoundRef.current = onMatchFound;
+  }, [onMatchFound]);
   
   useEffect(() => {
+    isMountedRef.current = true;
     const fetchData = async () => {
       try {
         setLoadingPhotos(true);
@@ -961,22 +969,33 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect }) => {
           api.get('/photo-game/battle-photos'),
           api.get('/photo-game/pvp/queue-status')
         ]);
-        setBattlePhotos(photosRes.data.photos || []);
-        setQueueStatus(queueRes.data);
+        if (isMountedRef.current) {
+          setBattlePhotos(photosRes.data.photos || []);
+          setQueueStatus(queueRes.data);
+        }
       } catch (err) {
-        setError('Failed to load your photos');
+        if (isMountedRef.current) {
+          setError('Failed to load your photos');
+        }
       } finally {
-        setLoadingPhotos(false);
+        if (isMountedRef.current) {
+          setLoadingPhotos(false);
+        }
       }
     };
     fetchData();
     const interval = setInterval(async () => {
       try {
         const res = await api.get('/photo-game/pvp/queue-status');
-        setQueueStatus(res.data);
+        if (isMountedRef.current) {
+          setQueueStatus(res.data);
+        }
       } catch (err) {}
     }, 5000);
-    return () => clearInterval(interval);
+    return () => {
+      isMountedRef.current = false;
+      clearInterval(interval);
+    };
   }, []);
   
   const startMatchmaking = async () => {
@@ -1000,22 +1019,45 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect }) => {
       if (response.data.status === 'matched') {
         setStatus('matched');
         auctionSounds.matchFound();
-        onMatchFound?.(response.data);
+        onMatchFoundRef.current?.(response.data);
       } else if (response.data.status === 'searching') {
+        // Clear any existing interval first
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+        }
+        
+        // Poll for match status every 800ms (faster than before)
         intervalRef.current = setInterval(async () => {
+          if (!isMountedRef.current) {
+            clearInterval(intervalRef.current);
+            return;
+          }
+          
           try {
             const statusRes = await api.get('/photo-game/pvp/match-status');
+            
+            if (!isMountedRef.current) return;
+            
             setElapsed(statusRes.data.elapsed_seconds || 0);
             auctionSounds.tick();
             
             if (statusRes.data.status === 'matched') {
               clearInterval(intervalRef.current);
+              intervalRef.current = null;
               setStatus('matched');
               auctionSounds.matchFound();
-              onMatchFound?.(statusRes.data);
+              onMatchFoundRef.current?.(statusRes.data);
+            } else if (statusRes.data.status === 'not_searching') {
+              // User is no longer in queue (timeout or error)
+              clearInterval(intervalRef.current);
+              intervalRef.current = null;
+              setStatus('photo_select');
+              toast.error('Matchmaking expired. Please try again.');
             }
-          } catch (err) {}
-        }, 1000);
+          } catch (err) {
+            console.error('Match status check failed:', err);
+          }
+        }, 800);
       }
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Failed to start matchmaking');
@@ -1025,7 +1067,10 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect }) => {
   };
   
   const cancelMatchmaking = async () => {
-    clearInterval(intervalRef.current);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
     try {
       const res = await api.post('/photo-game/pvp/cancel');
       if (res.data.bet_refunded) {
@@ -1035,7 +1080,13 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect }) => {
     setStatus('photo_select');
   };
   
-  useEffect(() => () => clearInterval(intervalRef.current), []);
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, []);
   
   if (status === 'searching') {
     return (
