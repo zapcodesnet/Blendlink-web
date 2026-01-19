@@ -138,7 +138,7 @@ export default function PhotoEditorScreen({ navigation }) {
 
   const loadPhotos = async () => {
     try {
-      const response = await api.get('/photo-editor/photos?limit=50');
+      const response = await api.get('/photo-editor/photos?limit=10');
       setPhotos(response.data.photos || []);
     } catch (error) {
       console.error('Failed to load photos:', error);
