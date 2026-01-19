@@ -95,3 +95,7 @@ frontend/node_modules/.cache/default-development/12.pack
 # Local development files (not .env - those are needed)
 *.local
 .DS_Store
+-e 
+# Environment files
+*.env
+*.env.*
