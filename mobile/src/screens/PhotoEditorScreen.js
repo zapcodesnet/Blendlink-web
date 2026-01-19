@@ -1020,6 +1020,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginBottom: 8,
   },
+  autoEnhanceSection: {
+    marginTop: 8,
+    padding: 12,
+    backgroundColor: '#92400E20',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#92400E40',
+  },
+  autoEnhanceDesc: {
+    color: '#FCD34D',
+    fontSize: 12,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
   sliderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
