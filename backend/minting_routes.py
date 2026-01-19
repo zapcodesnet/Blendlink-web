@@ -19,6 +19,8 @@ from minting_system import (
     DAILY_MINT_LIMIT,
     SUBSCRIPTION_LIMITS,
     SCENERY_TYPES,
+    LIGHT_TYPES,
+    RATING_CRITERIA,
 )
 
 logger = logging.getLogger(__name__)
