@@ -1549,6 +1549,7 @@ const PhotoGameArena = () => {
                 onMatchFound={handleMatchFound}
                 selectedPhoto={selectedPhoto}
                 onPhotoSelect={setSelectedPhoto}
+                onPracticeStart={handlePracticeStart}
               />
             </motion.div>
           )}
