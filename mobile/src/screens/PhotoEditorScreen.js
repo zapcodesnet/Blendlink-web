@@ -241,6 +241,66 @@ export default function PhotoEditorScreen({ navigation }) {
     }
   };
 
+  // AI Auto-Enhance (single photo)
+  const handleAutoEnhance = async () => {
+    if (!selectedPhoto) return;
+
+    setIsProcessing(true);
+    setProcessingMessage('AI analyzing and enhancing...');
+
+    try {
+      const response = await api.post('/photo-editor/auto-enhance', {
+        photo_id: selectedPhoto.photo_id,
+      });
+
+      // Update sliders to show applied values
+      setBrightness(response.data.adjustments_applied.brightness);
+      setContrast(response.data.adjustments_applied.contrast);
+      setSaturation(response.data.adjustments_applied.saturation);
+      setSharpness(response.data.adjustments_applied.sharpness);
+
+      Alert.alert('Success', `Auto-enhanced in ${response.data.processing_time_ms}ms`);
+      await loadPhotos();
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Auto-enhance failed');
+    } finally {
+      setIsProcessing(false);
+      setProcessingMessage('');
+    }
+  };
+
+  // Batch AI Auto-Enhance
+  const handleBatchAutoEnhance = async () => {
+    const photosToEnhance = photos.filter((p) => !p.auto_enhanced);
+
+    if (photosToEnhance.length === 0) {
+      Alert.alert('Info', 'All photos already enhanced');
+      return;
+    }
+
+    setIsProcessing(true);
+    setProcessingMessage(`Auto-enhancing ${photosToEnhance.length} photos...`);
+
+    try {
+      const response = await api.post('/photo-editor/auto-enhance-batch', {
+        photo_ids: photosToEnhance.map((p) => p.photo_id),
+      });
+
+      const { total_processed, total_failed, total_time_ms } = response.data;
+
+      Alert.alert(
+        'Auto-Enhance Complete',
+        `${total_processed} enhanced, ${total_failed} failed\nTotal time: ${(total_time_ms / 1000).toFixed(1)}s`
+      );
+      await loadPhotos();
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Batch auto-enhance failed');
+    } finally {
+      setIsProcessing(false);
+      setProcessingMessage('');
+    }
+  };
+
   // Apply adjustments
   const handleApplyAdjustments = async () => {
     if (!selectedPhoto) return;
