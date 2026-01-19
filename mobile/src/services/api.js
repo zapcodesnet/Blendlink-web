@@ -1080,12 +1080,14 @@ export const photoGameAPI = {
     return response.data;
   },
 
-  // Start a new game session
-  startGame: async (opponentId = 'bot', betAmount = 0, photoId = null) => {
+  // Start a new game session (supports practice_mode for no risk battles)
+  startGame: async (options = {}) => {
+    const { opponent_id = 'bot', bet_amount = 0, photo_id = null, practice_mode = false } = options;
     const response = await api.post('/photo-game/start', {
-      opponent_id: opponentId,
-      bet_amount: betAmount,
-      photo_id: photoId,
+      opponent_id,
+      bet_amount,
+      photo_id,
+      practice_mode,
     });
     return response.data;
   },
