@@ -1,151 +1,55 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 19, 2026 (Session 14)
+## Latest Update: January 19, 2026 (Session 14 - Part 2)
 
 ---
 
-## SESSION 14 SUMMARY - Bug Fixes & Feature Enhancements ✅
+## SESSION 14 - PART 2 SUMMARY ✅
 
 ### BUGS FIXED
 
-#### 1. Minting Bug (P0 - BLOCKER) ✅
-- **Issue**: "Minting failed" error on web and mobile
-- **Root Cause**: Mobile FormData was sending boolean values instead of strings
-- **Fix**: Updated `/app/mobile/src/screens/MintedPhotosScreen.js` to send `is_private` and `show_in_feed` as explicit strings ('true'/'false')
-- **Backend**: Already handles both boolean and string values robustly
-
-#### 2. Matchmaking UI Polling Bug (P1) ✅
-- **Issue**: Frontend got stuck on "Searching for opponent" screen
-- **Root Cause**: Stale closure in polling interval, missing status handlers
-- **Fix**: Refactored `/app/frontend/src/pages/PhotoGameArena.jsx`:
-  - Added `useRef` for interval and callback to prevent stale closures
-  - Increased polling frequency from 1s to 800ms
-  - Added handling for `in_match`, `already_searching`, `not_searching`, `not_in_queue` statuses
-  - Added `isMountedRef` to prevent state updates on unmounted component
+#### "Minting Failed" Error (P0 - PERMANENTLY FIXED) ✅
+- **Issue**: Photo minting failed with "Minting failed" toast on web and mobile
+- **Root Cause**: The `ImageContent` class in emergentintegrations was being passed a data URL prefix (`data:image/jpeg;base64,...`) but the library internally adds this prefix again in `_add_user_message`, causing double-encoding
+- **Fix**: Changed `ImageContent(image_base64=f'data:{mime_type};base64,{base64}')` to `ImageContent(image_base64=base64)` - passing just the raw base64 string
+- **File**: `/app/backend/minting_system.py` line 200
+- **Tested**: Minting now works with real AI analysis (GPT-4o Vision via Emergent LLM Key)
 
 ### NEW FEATURES
 
-#### Stripe Subscription Integration ✅
-- Created Stripe products and prices:
-  - **Basic** ($4.99/month): `price_1SrC5sRyuUJLCAOOkiQESx14`
-  - **Premium** ($9.99/month): `price_1SrC5sRyuUJLCAOONLaOe847`
-- Added Price IDs to `/app/backend/.env`
-- Checkout flow now generates valid Stripe checkout URLs
-
-#### Mobile Sound Effects (Haptic Feedback) ✅
-- Created `/app/mobile/src/utils/auctionSounds.js`
-- Uses expo-av and device vibration for tactile feedback
-- Integrated into PhotoGameArenaScreen.js:
-  - `matchFound()` - Success vibration pattern
-  - `roundWin()` / `roundLose()` - Win/lose feedback
-  - `battleVictory()` / `battleDefeat()` - End game feedback
-  - `selectionConfirm()` - Photo selection feedback
-  - `gavelSlam()` - Game start feedback
-  - `bidPlaced()` - RPS choice feedback
-  - `tick()` - Matchmaking countdown
-
----
-
-## SESSION 13 SUMMARY - Auction House Sound Effects & Animations ✅
-
-### NEW: Immersive Auction Experience
-
-#### Sound Effects (Web Audio API - No External Files)
-- 🔨 **Gavel Slam**: Dramatic impact sound when round ends
-- 🏷️ **Paddle Raise**: Whoosh sound when submitting bids
-- 💰 **Bid Placed**: Cash register ding when bids are confirmed
-- 🪙 **Coins Count**: Multiple coin clicks during money transfer
-- 🎉 **Round Win**: Triumphant fanfare
-- 😢 **Round Lose**: Sad trombone
-- 🏆 **Battle Victory**: Epic fanfare for overall win
-- 💥 **Photo Clash**: Dramatic impact for photo battles
-- ⏱️ **Tick**: Countdown tick during matchmaking
-- 🔔 **Match Found**: Ascending notification sound
-
-#### Enhanced Animations
-- **Auction Paddles**: Animated paddle UI that raises when bidding
-- **Bankroll Display**: Animated value changes with +/- indicators
-- **Flying Coins**: Coin animation during pot transfers
-- **Animated Gavel**: Gavel slams down when round completes
-- **Confetti Effect**: Particle effect on battle victory
-- **Photo Clash**: Collision animation with 💥 effect
-- **Pulsing Elements**: Search icon, tiebreaker badge, buttons
-
-#### UI Enhancements
-- **Sound Toggle**: 🔊/🔇 button in header to enable/disable sounds
-- **Gradient Headers**: Colorful gradient backgrounds
-- **Decorative Elements**: 🏛️💎👑 background decorations
-- **Score Animations**: Score numbers pulse when updated
-- **Button Hover Effects**: Scale and lift on hover
-
----
-
-## GAME SYSTEM COMPLETE
-
-### Game Flow: Dollar Auction Battles
-1. **Photo Upload** → AI rates permanent Dollar value ($1M-$1B)
-2. **Stage 1: Million Dollar RPS Bidding Auction** (race to 3 wins)
-3. **Stage 2: Photo Dollar Auction Clash** (value comparison)
-4. **Stage 3: Tiebreaker** (if split, repeat RPS auction)
-
-### Stage 1: Million Dollar RPS Bidding Auction
-- $10,000,000 starting bankroll
-- $1M-$5M bids in $1M increments
-- Animated auction paddles show bid amounts
-- Gavel slam confirms each round
-- Bankrupt = automatic loss
-
-### Stage 2: Photo Dollar Auction Clash
-- Photos collide with 💥 animation
-- Value comparison with strength/weakness bonuses
-- Gavel slam announces winner
+#### Practice Mode (100% Synchronized Web + Mobile) ✅
+- **Purpose**: Battle bots without risking BL coins or stamina - pure practice
+- **Backend Implementation**:
+  - Added `practice_mode: bool = False` to `StartGameRequest` model
+  - Updated `start_game()` to skip stamina deduction when `practice_mode=True`
+  - Updated `_process_game_result()` to skip all rewards/stats updates for practice games
+- **Frontend Implementation**:
+  - Added "Practice vs Bot (No Risk)" button with 🎯 icon
+  - Added helper text explaining practice mode benefits
+  - Shows toast "Practice mode started! No risk, just fun."
+- **Mobile Implementation**:
+  - Same "Practice vs Bot (No Risk)" button
+  - Same API integration via `photoGameAPI.startGame()`
+- **Files Modified**:
+  - Backend: `/app/backend/photo_game.py`, `/app/backend/game_routes.py`
+  - Frontend: `/app/frontend/src/pages/PhotoGameArena.jsx`
+  - Mobile: `/app/mobile/src/screens/PhotoGameArenaScreen.js`, `/app/mobile/src/services/api.js`
 
 ---
 
 ## TESTING STATUS ✅
 
-**Latest Test Run: iteration_35.json**
-- Backend: 8/8 tests passed (100%)
-- Frontend: 8/8 UI checks passed (100%)
+**Latest Test Run: iteration_37.json**
+- Backend: 8/8 pytest tests passed (100%)
+- Frontend: All UI elements verified (100%)
 
 **Key Features Verified:**
-- Minting with AI analysis ✅
-- BL coin betting ✅
-- Battle start/end ✅
-- Photo selection/preview ✅
-- RPS Auction with bidding ✅
-- Sound effects (Web Audio API) ✅
-- Animations (Framer Motion) ✅
-- Stripe checkout flow ✅
-
----
-
-## ARCHITECTURE
-
-```
-/app/
-├── frontend/
-│   ├── src/
-│   │   ├── utils/
-│   │   │   └── auctionSounds.js     # Web Audio API sound effects
-│   │   └── pages/
-│   │       └── PhotoGameArena.jsx   # UPDATED: Fixed matchmaking polling
-│   └── ...
-├── backend/
-│   ├── photo_game.py               # Million Dollar RPS Auction logic
-│   ├── minting_system.py           # AI analysis with light types
-│   ├── pvp_matchmaking.py          # 5s timeout, bet escrow
-│   ├── subscription_tiers.py       # Stripe Price IDs configured
-│   └── ...
-└── mobile/
-    └── src/
-        ├── utils/
-        │   └── auctionSounds.js    # NEW: Mobile haptic feedback
-        ├── screens/
-        │   ├── PhotoGameArenaScreen.js  # UPDATED: Fixed matchmaking + sounds
-        │   └── MintedPhotosScreen.js    # FIXED: FormData string booleans
-        └── services/api.js
-```
+- Photo minting with real AI analysis ✅
+- Practice Mode creates game without stamina deduction ✅
+- Practice Mode forces bot opponent and zero bet ✅
+- Practice Mode skips all rewards/stats on completion ✅
+- Regular battles still deduct stamina correctly ✅
+- Frontend Practice Mode button works ✅
 
 ---
 
