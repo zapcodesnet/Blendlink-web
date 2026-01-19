@@ -398,7 +398,7 @@ const LocationShippingSection = ({ location, setLocation, shippingData, setShipp
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setUserLocation({
+          setLocation({
             lat: position.coords.latitude,
             lng: position.coords.longitude,
             detected: true,
@@ -435,8 +435,8 @@ const LocationShippingSection = ({ location, setLocation, shippingData, setShipp
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          origin_zip: userLocation.zip,
-          origin_location: userLocation.lat ? { lat: userLocation.lat, lng: userLocation.lng } : null,
+          origin_zip: location.zip,
+          origin_location: location.lat ? { lat: location.lat, lng: location.lng } : null,
           manual_weight: weight?.value || 2,
           manual_dimensions: {
             length: dimensions?.length || 12,
