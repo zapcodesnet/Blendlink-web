@@ -1,6 +1,48 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 19, 2026 (Session 13)
+## Latest Update: January 19, 2026 (Session 14)
+
+---
+
+## SESSION 14 SUMMARY - Bug Fixes & Feature Enhancements ✅
+
+### BUGS FIXED
+
+#### 1. Minting Bug (P0 - BLOCKER) ✅
+- **Issue**: "Minting failed" error on web and mobile
+- **Root Cause**: Mobile FormData was sending boolean values instead of strings
+- **Fix**: Updated `/app/mobile/src/screens/MintedPhotosScreen.js` to send `is_private` and `show_in_feed` as explicit strings ('true'/'false')
+- **Backend**: Already handles both boolean and string values robustly
+
+#### 2. Matchmaking UI Polling Bug (P1) ✅
+- **Issue**: Frontend got stuck on "Searching for opponent" screen
+- **Root Cause**: Stale closure in polling interval, missing status handlers
+- **Fix**: Refactored `/app/frontend/src/pages/PhotoGameArena.jsx`:
+  - Added `useRef` for interval and callback to prevent stale closures
+  - Increased polling frequency from 1s to 800ms
+  - Added handling for `in_match`, `already_searching`, `not_searching`, `not_in_queue` statuses
+  - Added `isMountedRef` to prevent state updates on unmounted component
+
+### NEW FEATURES
+
+#### Stripe Subscription Integration ✅
+- Created Stripe products and prices:
+  - **Basic** ($4.99/month): `price_1SrC5sRyuUJLCAOOkiQESx14`
+  - **Premium** ($9.99/month): `price_1SrC5sRyuUJLCAOONLaOe847`
+- Added Price IDs to `/app/backend/.env`
+- Checkout flow now generates valid Stripe checkout URLs
+
+#### Mobile Sound Effects (Haptic Feedback) ✅
+- Created `/app/mobile/src/utils/auctionSounds.js`
+- Uses expo-av and device vibration for tactile feedback
+- Integrated into PhotoGameArenaScreen.js:
+  - `matchFound()` - Success vibration pattern
+  - `roundWin()` / `roundLose()` - Win/lose feedback
+  - `battleVictory()` / `battleDefeat()` - End game feedback
+  - `selectionConfirm()` - Photo selection feedback
+  - `gavelSlam()` - Game start feedback
+  - `bidPlaced()` - RPS choice feedback
+  - `tick()` - Matchmaking countdown
 
 ---
 
@@ -62,9 +104,9 @@
 
 ## TESTING STATUS ✅
 
-**All Tests Passing:**
-- Backend: 15/15 tests (100%)
-- Frontend: 10/10 UI checks (100%)
+**Latest Test Run: iteration_35.json**
+- Backend: 8/8 tests passed (100%)
+- Frontend: 8/8 UI checks passed (100%)
 
 **Key Features Verified:**
 - Minting with AI analysis ✅
@@ -74,6 +116,7 @@
 - RPS Auction with bidding ✅
 - Sound effects (Web Audio API) ✅
 - Animations (Framer Motion) ✅
+- Stripe checkout flow ✅
 
 ---
 
@@ -84,17 +127,24 @@
 ├── frontend/
 │   ├── src/
 │   │   ├── utils/
-│   │   │   └── auctionSounds.js     # NEW: Web Audio API sound effects
+│   │   │   └── auctionSounds.js     # Web Audio API sound effects
 │   │   └── pages/
-│   │       └── PhotoGameArena.jsx   # UPDATED: Enhanced animations & sounds
+│   │       └── PhotoGameArena.jsx   # UPDATED: Fixed matchmaking polling
 │   └── ...
 ├── backend/
 │   ├── photo_game.py               # Million Dollar RPS Auction logic
 │   ├── minting_system.py           # AI analysis with light types
 │   ├── pvp_matchmaking.py          # 5s timeout, bet escrow
+│   ├── subscription_tiers.py       # Stripe Price IDs configured
 │   └── ...
 └── mobile/
-    └── src/services/api.js         # playRPSAuction method
+    └── src/
+        ├── utils/
+        │   └── auctionSounds.js    # NEW: Mobile haptic feedback
+        ├── screens/
+        │   ├── PhotoGameArenaScreen.js  # UPDATED: Fixed matchmaking + sounds
+        │   └── MintedPhotosScreen.js    # FIXED: FormData string booleans
+        └── services/api.js
 ```
 
 ---
