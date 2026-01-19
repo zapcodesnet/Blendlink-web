@@ -1,83 +1,85 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 18, 2026 (Session 12)
+## Latest Update: January 19, 2026 (Session 13)
 
 ---
 
-## SESSION 12 SUMMARY - Bug Fixes & Battle Photo Selection ✅
+## SESSION 13 SUMMARY - Million Dollar RPS Auction + Bug Fixes ✅
 
-### CRITICAL BUGS FIXED
+### GAME SYSTEM OVERHAUL
 
-#### 1. Minting Failed ✅ FIXED
-- **Issue**: Minting was failing for users
-- **Root Cause**: Date comparison in `check_can_mint()` was using `.isoformat()` incorrectly
-- **Fix**: Updated `/app/backend/minting_system.py` to use proper string comparison for ISO dates stored in MongoDB
-- **Test Result**: Minting now works correctly, 500 BL deducted per mint, daily limit (3 free mints) tracked
+#### New Game Flow: Dollar Auction Battles
+1. **Photo Upload** → AI rates permanent Dollar value ($1M-$1B)
+2. **Stage 1: Million Dollar RPS Bidding Auction** (race to 3 wins)
+3. **Stage 2: Photo Dollar Auction Clash** (value comparison)
+4. **Stage 3: Tiebreaker** (if split, repeat RPS auction)
 
-#### 2. BL Coin Bet Not Working ✅ FIXED
-- **Issue**: Betting wasn't deducting BL coins when joining PvP matchmaking
-- **Root Cause**: Bet was only deducted when game started, not when joining queue
-- **Fix**: Updated `/app/backend/pvp_matchmaking.py`:
-  - `find_match()`: Now deducts bet when joining queue
-  - `cancel_matchmaking()`: Refunds bet if user cancels
-  - `start_match_game()`: Uses `skip_bet_deduction=True` since bet already taken
-- **Test Result**: Bet properly deducted on join, refunded on cancel
+#### Stage 1: Million Dollar RPS Bidding Auction
+- Each player starts with **$10,000,000** bankroll
+- Bids: **$1M-$5M** in $1M increments
+- Players choose RPS (Rock/Paper/Scissors) + bid amount
+- Winner of RPS takes the total pot (both bids)
+- If tie RPS, higher bid wins
+- Bankrupt ($0 balance) = automatic loss
+- First to **3 wins** takes Stage 1
 
-#### 3. Battle Not Starting ✅ FIXED
-- **Issue**: Battles were not initiating correctly
-- **Root Cause**: Photo selection was required but not enforced, ObjectId serialization error
-- **Fix**: Updated `/app/backend/photo_game.py`:
-  - Added `skip_bet_deduction` parameter to `start_game()`
-  - Added photo stamina check (0% stamina = cannot battle)
-  - Fixed MongoDB `_id` serialization issue
-- **Test Result**: Battles start correctly with proper photo selection
+#### Stage 2: Photo Dollar Auction Clash
+- Higher total Dollar value wins
+- Effective value includes:
+  - Base Dollar value from AI rating
+  - Scenery strength/weakness (+25%/-25%)
+  - Light condition bonus (+15%/-15%)
+  - Legacy: Age (0.1%/day), Likes (0.05%/like)
+  - Win streak multiplier (1.25x-2x)
 
-### NEW FEATURE: Battle Photo Selection/Preview Screen ✅
+### BUG FIXES VERIFIED ✅
 
-**Requirement**: Before starting a battle, show a preview/selection screen of all qualified minted photos
+1. **Minting Fixed** ✅ - Date comparison corrected, 500 BL deduction working
+2. **BL Coin Bet Fixed** ✅ - Deducted on queue join, refunded on cancel
+3. **Battle Start Fixed** ✅ - Photo validation, stamina check working
 
-**Implementation** (Web + Mobile synchronized):
+### NEW AI ANALYSIS FEATURES
 
-1. **New API Endpoint**: `GET /api/photo-game/battle-photos`
-   - Returns user's minted photos sorted by Dollar value (highest to lowest)
-   - Each photo includes: thumbnail, name, dollar_value, strength/weakness, stamina_percent, is_available, battles_remaining
+#### Light Types (NEW)
+- **Sunlight/Fire** ☀️ → Strong vs Darkness/Night, Weak vs Rain/Snow/Ice
+- **Rain/Snow/Ice** ❄️ → Strong vs Sunlight/Fire, Weak vs Darkness/Night
+- **Darkness/Night/Interior** 🌙 → Strong vs Rain/Snow/Ice, Weak vs Sunlight/Fire
 
-2. **Photo Stamina System**:
-   - Max stamina: 100% = 24 battles
-   - Stamina per battle: ~4.16% (100/24)
-   - Stamina recovery: 1 battle per hour (~4.16%/hour)
-   - Full recovery: 24 hours
-   - Defeat penalty: 25% faster stamina drain
-   - Photos with 0% stamina: Grayed out, unavailable for battle
-
-3. **UI Components**:
-   - **Web**: `PhotoSelectionScreen` component in `/app/frontend/src/pages/PhotoGameArena.jsx`
-   - **Mobile**: `PhotoSelectionView` component in `/app/mobile/src/screens/PhotoGameArenaScreen.js`
-   - Shows: Photo thumbnail, Dollar value (power), scenery type, strength/weakness, stamina bar, battles remaining
-   - Available photos: Full color, selectable
-   - Resting photos: Grayed out with recovery time display
+#### Weighted Rating Criteria
+| Criterion | Weight |
+|-----------|--------|
+| Originality | 12% |
+| Innovation | 12% |
+| Uniqueness | 12% |
+| Focus/Sharpness | 10% |
+| Exposure/Tonal Range | 10% |
+| Color Accuracy | 8% |
+| Subject Clarity | 8% |
+| Composition | 10% |
+| Narrative/Emotion | 10% |
+| Captivating/Mesmerizing | 8% |
 
 ---
 
 ## TESTING RESULTS ✅
 
-**Iteration 33 Backend Tests:** 16/16 passed (100%)
-- Health & Auth ✅
-- Minting Status & Config ✅
-- Battle Photos Endpoint (sorted, stamina) ✅
-- Photo Game Stats & Config ✅
-- PvP Queue Status ✅
-- Find Match with Photo ✅
-- BL Coin Bet Deduction ✅
-- Battle Start ✅
+**Iteration 34 Backend Tests:** 15/15 passed (100%)
+- Game Config with RPS Auction settings ✅
+- Minting Config with light_types ✅
+- Rating criteria weights sum to 100% ✅
+- Battle photos sorted by dollar_value ✅
+- PvP Find Match with bet deduction ✅
+- RPS Auction rounds with bidding ✅
+- Invalid bid rejection ✅
+- Full game flow (RPS → Photo Battle → Result) ✅
 - Leaderboards ✅
 
-**Frontend Tests:** 7/7 passed (100%)
-- Games page with Photo Battle Arena CTA ✅
-- Battle Arena loads with photo selection UI ✅
-- Photo cards show name, dollar value, scenery type ✅
-- Stamina display (88% = 21 battles) ✅
-- Strength indicator visible ✅
+**Frontend Tests:** 10/10 passed (100%)
+- Dollar Auction Arena title ✅
+- Million Dollar RPS + Photo Battles subtitle ✅
+- Photo selection with stamina, dollar value, strength ✅
+- Battle settings with bet input, queue status ✅
+- Find Match button ✅
 
 ---
 
@@ -86,31 +88,18 @@
 ```
 /app/
 ├── backend/
-│   ├── server.py                  # Main FastAPI app
-│   ├── minting_system.py          # FIXED: Date comparison for daily limits
-│   ├── photo_game.py              # FIXED: skip_bet_deduction, ObjectId removal
-│   ├── pvp_matchmaking.py         # FIXED: Bet deduction on join, refund on cancel
-│   ├── game_routes.py             # NEW: GET /battle-photos endpoint
-│   ├── subscription_tiers.py      # Subscription & Ranked system
-│   ├── websocket_notifications.py # Real-time notifications
-│   ├── push_notifications.py      # Expo push notifications
-│   ├── marketplace_system.py      # Marketplace service
-│   └── .env                       # Environment variables
+│   ├── photo_game.py             # UPDATED: Million Dollar RPS Auction logic
+│   ├── minting_system.py         # UPDATED: Light types, weighted ratings
+│   ├── pvp_matchmaking.py        # UPDATED: 5s timeout, bet escrow
+│   ├── game_routes.py            # UPDATED: /rps-auction endpoint
+│   └── minting_routes.py         # UPDATED: Light types in config
 ├── frontend/
 │   ├── src/pages/
-│   │   ├── PhotoGameArena.jsx     # UPDATED: PhotoSelectionScreen component
-│   │   ├── Games.jsx              # Photo Game CTAs + stats
-│   │   ├── MintedPhotos.jsx       # Minted photos page
-│   │   └── SubscriptionTiers.jsx  # Subscription page
-│   └── .env
-├── mobile/
-│   ├── src/screens/
-│   │   └── PhotoGameArenaScreen.js # UPDATED: PhotoSelectionView component
-│   ├── src/services/
-│   │   └── api.js                   # UPDATED: getBattlePhotos() added
-│   └── App.js
-└── docs/
-    └── STRIPE_SETUP.md
+│   │   └── PhotoGameArena.jsx    # UPDATED: RPSAuctionBattle component
+│   └── ...
+└── mobile/
+    └── src/services/
+        └── api.js                # UPDATED: playRPSAuction method
 ```
 
 ---
@@ -118,57 +107,50 @@
 ## KEY API ENDPOINTS
 
 ### Photo Game & Battles
-- `GET /api/photo-game/battle-photos` - **NEW**: Get battle-ready photos sorted by dollar value
-- `POST /api/photo-game/pvp/find-match` - **FIXED**: Deducts bet on join
-- `POST /api/photo-game/pvp/cancel` - **FIXED**: Refunds bet
-- `POST /api/photo-game/pvp/match/{match_id}/start` - **FIXED**: Uses skip_bet_deduction
-- `GET /api/photo-game/stats` - Player game stats
-- `POST /api/photo-game/session/{session_id}/rps` - RPS round
-- `POST /api/photo-game/session/{session_id}/photo-battle` - Photo battle
+- `GET /api/photo-game/config` - Game config with RPS auction settings
+- `GET /api/photo-game/battle-photos` - Photos sorted by dollar value
+- `POST /api/photo-game/session/{id}/rps-auction` - **NEW**: RPS auction round (choice + bid)
+- `POST /api/photo-game/session/{id}/photo-battle` - Photo value comparison
+- `POST /api/photo-game/pvp/find-match` - Start matchmaking (5s timeout)
 
 ### Minting
-- `POST /api/minting/photos/internal_mint` - **FIXED**: Mint a photo (500 BL)
-- `GET /api/minting/status` - **FIXED**: Daily limit tracking
-- `GET /api/minting/photos` - User's minted photos
+- `GET /api/minting/config` - **UPDATED**: Includes light_types, weighted rating_criteria
+- `POST /api/minting/photos/internal_mint` - Mint with AI analysis
 
 ---
 
 ## DATA MODELS
 
-### Minted Photo (with Stamina)
+### Game Session (Updated)
 ```json
 {
-  "mint_id": "string",
-  "name": "string",
-  "description": "string",
-  "scenery_type": "natural|water|manmade",
-  "strength_vs": "string",
-  "weakness_vs": "string",
-  "dollar_value": 1000000,
-  "overall_score": 50,
-  "power": 100,
-  "level": 1,
-  "xp": 0,
-  "stamina": 100.0,           // NEW: 100% = 24 battles
-  "last_battle_at": "datetime" // NEW: For stamina regeneration
+  "session_id": "game_xxx",
+  "player1_id": "user_xxx",
+  "player2_id": "bot",
+  "bet_amount": 100,
+  "phase": "rps_auction",  // rps_auction, photo_battle, tiebreaker, completed
+  "stage_number": 1,       // 1=RPS, 2=Photo Battle, 3=Tiebreaker
+  "player1_bankroll": 10000000,  // $10M start
+  "player2_bankroll": 10000000,
+  "player1_rps_wins": 0,
+  "player2_rps_wins": 0,
+  "rps_rounds": []
 }
 ```
 
-### Battle Photo Response
+### RPS Auction Round
 ```json
 {
-  "photos": [{
-    "mint_id": "string",
-    "name": "string",
-    "dollar_value": 86800000,
-    "stamina": 88.0,
-    "stamina_percent": 88.0,
-    "battles_remaining": 21,
-    "is_available": true,
-    "time_until_available": null
-  }],
-  "count": 1,
-  "available_count": 1
+  "round": 1,
+  "player1_choice": "rock",
+  "player1_bid": 2000000,
+  "player2_choice": "scissors",
+  "player2_bid": 1000000,
+  "rps_result": "player1",  // player1, player2, tie
+  "total_pot": 3000000,
+  "winner": "player1",
+  "player1_bankroll_after": 12000000,
+  "player2_bankroll_after": 9000000
 }
 ```
 
@@ -177,18 +159,14 @@
 ## UPCOMING TASKS
 
 ### P1 - High Priority
-- **Stripe Price ID Integration**: Use `/app/docs/STRIPE_SETUP.md` to create products and connect Price IDs to `/frontend/src/pages/SubscriptionTiers.jsx`
+- **Stripe Price ID Integration** - Connect real Stripe products to subscriptions
 
 ### P2 - Medium Priority
-- Ranked matchmaking tiers and tournament modes
-- 24-hour "public" lock on content with BL coin rewards
-- Immediate 8% marketplace fee deduction
+- Ranked matchmaking tiers & tournaments
 - Tournament bracket visualization
 - Season rewards distribution
-
-### P3 - Lower Priority
-- Live selfie matching for minting bonus
-- Legacy PKO Poker UI improvements
+- 24-hour public lock on rewarded content
+- 8% marketplace fee distribution
 
 ---
 
@@ -201,18 +179,17 @@
 
 ## CHANGELOG
 
-### January 18, 2026 (Session 12)
-- ✅ Fixed minting failed bug (date comparison)
-- ✅ Fixed BL coin bet not working (deduction timing)
-- ✅ Fixed battle not starting (photo validation, ObjectId)
-- ✅ Added photo selection/preview screen before battle
-- ✅ Implemented photo-level stamina tracking
-- ✅ Added stamina regeneration (1 battle/hour)
-- ✅ Added defeat stamina penalty (25% faster drain)
-- ✅ All 16 backend + 7 frontend tests passing
+### January 19, 2026 (Session 13)
+- ✅ Implemented Million Dollar RPS Bidding Auction
+- ✅ Added light_type to AI photo analysis (sunlight_fire, rain_snow_ice, darkness_night)
+- ✅ Weighted rating criteria (totals 100%)
+- ✅ Reduced matchmaking timeout to 5 seconds
+- ✅ Updated frontend with RPS Auction UI
+- ✅ All 15 backend + 10 frontend tests passing
 
-### January 18, 2026 (Session 11)
-- ✅ AI Photo Analysis with GPT-4o Vision
-- ✅ Expo Push Notifications
-- ✅ Stripe Setup Documentation
-- ✅ 27 backend + 6 frontend tests passing
+### January 18, 2026 (Session 12)
+- ✅ Fixed minting failed bug
+- ✅ Fixed BL coin bet not working
+- ✅ Fixed battle not starting
+- ✅ Added photo selection/preview screen
+- ✅ Implemented photo-level stamina tracking
