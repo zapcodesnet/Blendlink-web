@@ -1057,6 +1057,7 @@ export default function PhotoGameArenaScreen() {
           <MatchmakingView
             onMatchFound={handleMatchFound}
             onCancel={() => {}}
+            onPracticeStart={handlePracticeStart}
             selectedPhoto={selectedPhoto}
             onPhotoSelect={handlePhotoSelect}
             colors={colors}
