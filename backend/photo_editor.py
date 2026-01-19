@@ -93,11 +93,21 @@ class PhotoUploadResponse(BaseModel):
 class BackgroundRemovalRequest(BaseModel):
     photo_id: str
 
+class BatchBackgroundRemovalRequest(BaseModel):
+    photo_ids: List[str]  # List of photo IDs to process
+
 class BackgroundRemovalResponse(BaseModel):
     photo_id: str
     processed_url: str
     has_transparency: bool
     processing_time_ms: int
+
+class BatchBackgroundRemovalResponse(BaseModel):
+    total_requested: int
+    total_processed: int
+    total_failed: int
+    total_time_ms: int
+    results: List[Dict[str, Any]]  # Individual results per photo
 
 class AdjustmentsRequest(BaseModel):
     photo_id: str
