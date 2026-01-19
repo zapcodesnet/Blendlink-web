@@ -1079,7 +1079,9 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect }) => {
       if (res.data.bet_refunded) {
         toast.success(`Bet refunded: ${res.data.bet_refunded} BL`);
       }
-    } catch (err) {}
+    } catch (err) {
+      // Ignore cancel errors
+    }
     setStatus('photo_select');
   };
   
