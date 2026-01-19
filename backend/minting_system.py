@@ -175,7 +175,7 @@ class PhotoBattle(BaseModel):
 async def analyze_photo_with_ai(image_base64: str, mime_type: str = "image/jpeg") -> Dict[str, Any]:
     """
     Analyze photo using OpenAI GPT-4o Vision via Emergent LLM Key
-    Returns scenery type, ratings, face detection, etc.
+    Returns scenery type, light type, ratings, face detection, etc.
     """
     try:
         from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
@@ -202,7 +202,9 @@ Return ONLY valid JSON without any markdown formatting or code blocks."""
 
 {
   "scenery_type": "natural" or "water" or "manmade",
+  "light_type": "sunlight_fire" or "rain_snow_ice" or "darkness_night",
   "scenery_description": "brief description of dominant background",
+  "light_description": "brief description of lighting conditions",
   "has_face": true/false,
   "face_count": number,
   "ratings": {
@@ -221,8 +223,13 @@ Return ONLY valid JSON without any markdown formatting or code blocks."""
 
 Scenery types:
 - "natural": landscapes, forests, mountains, gardens, macro nature, animals
-- "water": oceans, waterfalls, rivers, lakes, rain, underwater
-- "manmade": cities, buildings, streets, interiors, vehicles, tech
+- "water": oceans, waterfalls, rivers, lakes, rain, underwater, beaches
+- "manmade": cities, buildings, streets, interiors, vehicles, tech, urban
+
+Light types:
+- "sunlight_fire": bright daylight, golden hour, fire, warm artificial light
+- "rain_snow_ice": rain, snow, ice, fog, overcast, cold weather
+- "darkness_night": night scenes, dark interiors, low light, shadows
 
 Be generous but realistic. Most photos should score 40-80 range.
 Exceptional photos can score 80-95.
@@ -243,7 +250,6 @@ Return ONLY the JSON object, no other text."""
         # Remove markdown code blocks if present
         if cleaned.startswith("```"):
             lines = cleaned.split("\n")
-            # Find content between ``` markers
             start_idx = 1 if lines[0].startswith("```") else 0
             end_idx = len(lines)
             for i, line in enumerate(lines[1:], 1):
@@ -261,12 +267,18 @@ Return ONLY the JSON object, no other text."""
             result["scenery_type"] = "natural"
         if result["scenery_type"] not in SCENERY_TYPES:
             result["scenery_type"] = "natural"
+        
+        if "light_type" not in result:
+            result["light_type"] = "sunlight_fire"
+        if result["light_type"] not in LIGHT_TYPES:
+            result["light_type"] = "sunlight_fire"
+            
         if "ratings" not in result:
-            result["ratings"] = {criterion: random.randint(50, 75) for criterion in RATING_CRITERIA}
+            result["ratings"] = {criterion: random.randint(50, 75) for criterion in RATING_CRITERIA.keys()}
         if "has_face" not in result:
             result["has_face"] = False
             
-        logger.info(f"AI photo analysis complete: scenery={result['scenery_type']}, has_face={result.get('has_face')}")
+        logger.info(f"AI photo analysis complete: scenery={result['scenery_type']}, light={result.get('light_type')}, has_face={result.get('has_face')}")
         return result
         
     except Exception as e:
@@ -277,13 +289,16 @@ Return ONLY the JSON object, no other text."""
 def get_fallback_analysis() -> Dict[str, Any]:
     """Generate fallback analysis when AI is unavailable"""
     scenery = random.choice(["natural", "water", "manmade"])
+    light = random.choice(["sunlight_fire", "rain_snow_ice", "darkness_night"])
     return {
         "scenery_type": scenery,
+        "light_type": light,
         "scenery_description": "Unable to analyze - using default",
+        "light_description": "Unable to analyze - using default",
         "has_face": random.random() > 0.7,
         "face_count": 1 if random.random() > 0.7 else 0,
         "ratings": {
-            criterion: random.randint(50, 85) for criterion in RATING_CRITERIA
+            criterion: random.randint(50, 85) for criterion in RATING_CRITERIA.keys()
         }
     }
 
