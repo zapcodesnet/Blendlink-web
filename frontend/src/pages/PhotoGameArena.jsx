@@ -1019,10 +1019,49 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect }) => {
         use_bot_fallback: useBotFallback,
       });
       
-      if (response.data.status === 'matched') {
+      if (response.data.status === 'matched' || response.data.status === 'in_match') {
+        // Handle both 'matched' (new match) and 'in_match' (existing match)
         setStatus('matched');
         auctionSounds.matchFound();
         onMatchFoundRef.current?.(response.data);
+      } else if (response.data.status === 'already_searching') {
+        // User is already in queue, start polling
+        // Clear any existing interval first
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+        }
+        
+        // Poll for match status every 800ms
+        intervalRef.current = setInterval(async () => {
+          if (!isMountedRef.current) {
+            clearInterval(intervalRef.current);
+            return;
+          }
+          
+          try {
+            const statusRes = await api.get('/photo-game/pvp/match-status');
+            
+            if (!isMountedRef.current) return;
+            
+            setElapsed(statusRes.data.elapsed_seconds || 0);
+            auctionSounds.tick();
+            
+            if (statusRes.data.status === 'matched') {
+              clearInterval(intervalRef.current);
+              intervalRef.current = null;
+              setStatus('matched');
+              auctionSounds.matchFound();
+              onMatchFoundRef.current?.(statusRes.data);
+            } else if (statusRes.data.status === 'not_searching') {
+              clearInterval(intervalRef.current);
+              intervalRef.current = null;
+              setStatus('photo_select');
+              toast.error('Matchmaking expired. Please try again.');
+            }
+          } catch (err) {
+            console.error('Match status check failed:', err);
+          }
+        }, 800);
       } else if (response.data.status === 'searching') {
         // Clear any existing interval first
         if (intervalRef.current) {
