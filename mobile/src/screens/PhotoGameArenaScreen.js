@@ -1406,12 +1406,27 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   findMatchButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  practiceButton: {
+    borderWidth: 2,
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  practiceButtonText: {
+    fontSize: 15,
+    fontWeight: 'bold',
+  },
+  practiceSubtext: {
+    fontSize: 11,
+    marginTop: 2,
   },
   quickMatchRow: {
     flexDirection: 'row',
