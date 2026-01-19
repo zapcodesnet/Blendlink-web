@@ -760,6 +760,53 @@ const RPSAuctionBattle = ({
   );
 };
 
+// ============== BATTLE PHOTO CARD COMPONENT ==============
+const BattlePhotoCard = ({ photo, isPlayer, effectiveValue, isAnimating, hasResult }) => {
+  const scenery = SCENERY_CONFIG[photo?.scenery_type] || SCENERY_CONFIG.natural;
+  
+  return (
+    <motion.div
+      className={`relative w-48 rounded-xl overflow-hidden border-4 shadow-2xl ${
+        isPlayer ? 'border-purple-500' : 'border-red-500'
+      }`}
+      animate={isAnimating ? { 
+        x: isPlayer ? [0, 100, 0] : [0, -100, 0],
+        scale: [1, 1.15, 1],
+        rotate: isPlayer ? [0, 5, -5, 0] : [0, -5, 5, 0]
+      } : {}}
+      transition={{ duration: 0.8, repeat: isAnimating ? 2 : 0 }}
+    >
+      <div className={`aspect-square bg-gradient-to-br ${scenery.color}`}>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <motion.span 
+            className="text-7xl opacity-50"
+            animate={isAnimating ? { scale: [1, 1.3, 1], rotate: [0, 360] } : {}}
+            transition={{ duration: 1 }}
+          >
+            {scenery.icon}
+          </motion.span>
+        </div>
+      </div>
+      
+      <div className="absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-sm p-3">
+        <p className="text-white font-bold truncate">{photo?.name || 'Photo'}</p>
+        <motion.p 
+          className="text-yellow-400 font-bold text-lg"
+          animate={hasResult && effectiveValue ? { scale: [1, 1.2, 1] } : {}}
+        >
+          {formatDollarValue(effectiveValue || photo?.dollar_value)}
+        </motion.p>
+      </div>
+      
+      <div className="absolute top-2 left-2">
+        <span className={`px-2 py-0.5 rounded text-xs font-bold bg-gradient-to-r ${scenery.color} text-white`}>
+          {scenery.label}
+        </span>
+      </div>
+    </motion.div>
+  );
+};
+
 // ============== PHOTO BATTLE COMPONENT ==============
 const PhotoBattle = ({ playerPhoto, opponentPhoto, result, onBattle }) => {
   const [isAnimating, setIsAnimating] = useState(false);
@@ -781,52 +828,6 @@ const PhotoBattle = ({ playerPhoto, opponentPhoto, result, onBattle }) => {
       setIsAnimating(false);
       setShowClash(false);
     }, 2000);
-  };
-  
-  const PhotoCard = ({ photo, isPlayer, effectiveValue }) => {
-    const scenery = SCENERY_CONFIG[photo?.scenery_type] || SCENERY_CONFIG.natural;
-    
-    return (
-      <motion.div
-        className={`relative w-48 rounded-xl overflow-hidden border-4 shadow-2xl ${
-          isPlayer ? 'border-purple-500' : 'border-red-500'
-        }`}
-        animate={isAnimating ? { 
-          x: isPlayer ? [0, 100, 0] : [0, -100, 0],
-          scale: [1, 1.15, 1],
-          rotate: isPlayer ? [0, 5, -5, 0] : [0, -5, 5, 0]
-        } : {}}
-        transition={{ duration: 0.8, repeat: isAnimating ? 2 : 0 }}
-      >
-        <div className={`aspect-square bg-gradient-to-br ${scenery.color}`}>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <motion.span 
-              className="text-7xl opacity-50"
-              animate={isAnimating ? { scale: [1, 1.3, 1], rotate: [0, 360] } : {}}
-              transition={{ duration: 1 }}
-            >
-              {scenery.icon}
-            </motion.span>
-          </div>
-        </div>
-        
-        <div className="absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-sm p-3">
-          <p className="text-white font-bold truncate">{photo?.name || 'Photo'}</p>
-          <motion.p 
-            className="text-yellow-400 font-bold text-lg"
-            animate={result && effectiveValue ? { scale: [1, 1.2, 1] } : {}}
-          >
-            {formatDollarValue(effectiveValue || photo?.dollar_value)}
-          </motion.p>
-        </div>
-        
-        <div className="absolute top-2 left-2">
-          <span className={`px-2 py-0.5 rounded text-xs font-bold bg-gradient-to-r ${scenery.color} text-white`}>
-            {scenery.label}
-          </span>
-        </div>
-      </motion.div>
-    );
   };
   
   useEffect(() => {
