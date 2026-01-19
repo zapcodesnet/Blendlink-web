@@ -138,6 +138,9 @@ class EditedPhoto(BaseModel):
     created_at: str
     updated_at: str
 
+class FinalizePhotosRequest(BaseModel):
+    photo_ids: List[str]
+
 # ============== HELPER FUNCTIONS ==============
 
 async def get_current_user(request: Request):
