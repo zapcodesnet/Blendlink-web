@@ -929,8 +929,8 @@ export default function AIListingCreator() {
         {step === 3 && (
           <div className="space-y-6">
             <LocationShippingSection 
-              location={location}
-              setLocation={setLocation}
+              location={userLocation}
+              setLocation={setUserLocation}
               shippingData={shippingData}
               setShippingData={setShippingData}
               weight={weight}
