@@ -247,6 +247,7 @@ export default function SellerDashboardScreen({ navigation }) {
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsContainer}>
         <TabButton label="Overview" icon="📊" active={activeTab === 'overview'} onPress={() => setActiveTab('overview')} />
         <TabButton label="AI Create" icon="✨" active={activeTab === 'create'} onPress={() => setActiveTab('create')} />
+        <TabButton label="Photo Editor" icon="🖼️" active={activeTab === 'photos'} onPress={() => navigation.navigate('PhotoEditor')} />
         <TabButton label="Listings" icon="📦" active={activeTab === 'listings'} onPress={() => setActiveTab('listings')} />
         <TabButton label="Shipping" icon="🚚" active={activeTab === 'shipping'} onPress={() => setActiveTab('shipping')} />
       </ScrollView>
