@@ -418,6 +418,7 @@ const MatchmakingView = ({ onMatchFound, onCancel, selectedPhoto, onPhotoSelect,
     try {
       setStatus('searching');
       setElapsed(0);
+      auctionSounds.paddleRaise();
       
       const response = await photoGameAPI.findMatch({
         bet_amount: parseInt(betAmount) || 0,
@@ -425,26 +426,31 @@ const MatchmakingView = ({ onMatchFound, onCancel, selectedPhoto, onPhotoSelect,
         use_bot_fallback: useBotFallback,
       });
       
-      if (response.status === 'matched') {
+      if (response.status === 'matched' || response.status === 'in_match') {
         setStatus('matched');
-        Vibration.vibrate([100, 100, 100]);
+        auctionSounds.matchFound();
         onMatchFound?.(response);
-      } else if (response.status === 'searching') {
+      } else if (response.status === 'searching' || response.status === 'already_searching') {
         intervalRef.current = setInterval(async () => {
           try {
             const statusRes = await photoGameAPI.checkMatchStatus();
             setElapsed(statusRes.elapsed_seconds || 0);
+            auctionSounds.tick();
             
             if (statusRes.status === 'matched') {
               clearInterval(intervalRef.current);
               setStatus('matched');
-              Vibration.vibrate([100, 100, 100]);
+              auctionSounds.matchFound();
               onMatchFound?.(statusRes);
+            } else if (statusRes.status === 'not_searching' || statusRes.status === 'not_in_queue') {
+              clearInterval(intervalRef.current);
+              setStatus('photo_select');
+              setError('Matchmaking expired. Please try again.');
             }
           } catch (err) {
             console.error('Match status check failed:', err);
           }
-        }, 2000);
+        }, 800);
       }
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to start matchmaking');
