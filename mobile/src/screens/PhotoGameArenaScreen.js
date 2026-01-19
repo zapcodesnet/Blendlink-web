@@ -273,7 +273,7 @@ const RPSChoiceButton = ({ choice, onPress, selected, disabled, colors }) => {
       Animated.timing(scaleAnim, { toValue: 0.9, duration: 100, useNativeDriver: true }),
       Animated.timing(scaleAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
     ]).start();
-    Vibration.vibrate(50);
+    auctionSounds.selectionConfirm();
     onPress(choice.id);
   };
 
