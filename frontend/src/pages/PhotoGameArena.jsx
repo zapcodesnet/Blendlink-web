@@ -991,7 +991,9 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect }) => {
         if (isMountedRef.current) {
           setQueueStatus(res.data);
         }
-      } catch (err) {}
+      } catch (err) {
+        // Silently ignore queue status polling errors
+      }
     }, 5000);
     return () => {
       isMountedRef.current = false;
