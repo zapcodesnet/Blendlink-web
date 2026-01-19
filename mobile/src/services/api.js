@@ -1090,9 +1090,18 @@ export const photoGameAPI = {
     return response.data;
   },
 
-  // Play RPS round
+  // Play RPS round (legacy)
   playRPS: async (sessionId, choice) => {
     const response = await api.post(`/photo-game/session/${sessionId}/rps`, { choice });
+    return response.data;
+  },
+
+  // Play RPS Auction round (new Million Dollar RPS)
+  playRPSAuction: async (sessionId, choice, bidAmount) => {
+    const response = await api.post(`/photo-game/session/${sessionId}/rps-auction`, { 
+      choice,
+      bid_amount: bidAmount,
+    });
     return response.data;
   },
 
