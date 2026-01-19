@@ -184,16 +184,31 @@ auctionSounds.matchFound()      // Match notification
 ## UPCOMING TASKS
 
 ### P1 - High Priority
-- **Stripe Price ID Integration** - Connect real Stripe products to subscriptions
+- ✅ **Stripe Price ID Integration** - COMPLETED (Products created, checkout working)
+- ✅ **Mobile Sound Effects** - COMPLETED (Haptic feedback via expo-av)
+- More immersive auction animations (gavel slam, coin transfers)
 
 ### P2 - Medium Priority
-- Mobile app sound effects (React Native Audio)
-- Ranked matchmaking tiers & tournaments
+- Live selfie matching bonus for photo minting
+- Ranked matchmaking tiers & tournament modes
 - Tournament bracket visualization
+- 8% marketplace fee implementation & distribution
+- 24-hour "public" lock on rewarded content
+
+### P3 - Future
+- Season rewards distribution
+- PKO Poker UI/UX improvements
 
 ---
 
 ## CHANGELOG
+
+### January 19, 2026 (Session 14)
+- ✅ Fixed minting bug (mobile FormData string booleans)
+- ✅ Fixed matchmaking UI polling (stale closure, added status handlers)
+- ✅ Created Stripe products and added Price IDs
+- ✅ Added mobile sound effects via expo-av (haptic feedback)
+- ✅ Integrated sounds into PhotoGameArenaScreen.js
 
 ### January 19, 2026 (Session 13 - Part 2)
 - ✅ Added auction house sound effects via Web Audio API
