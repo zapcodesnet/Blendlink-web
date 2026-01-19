@@ -859,7 +859,25 @@ async def get_listing_performance(
     
     for listing in listings:
         listing_id = listing["listing_id"]
-        created_at = datetime.fromisoformat(listing.get("created_at", datetime.now(timezone.utc).isoformat()))
+        
+        # Handle created_at - could be string, datetime, or None
+        created_at_raw = listing.get("created_at")
+        if created_at_raw is None:
+            created_at = datetime.now(timezone.utc)
+        elif isinstance(created_at_raw, str):
+            try:
+                created_at = datetime.fromisoformat(created_at_raw.replace('Z', '+00:00'))
+            except (ValueError, AttributeError):
+                created_at = datetime.now(timezone.utc)
+        elif isinstance(created_at_raw, datetime):
+            created_at = created_at_raw
+        else:
+            created_at = datetime.now(timezone.utc)
+        
+        # Ensure timezone aware
+        if created_at.tzinfo is None:
+            created_at = created_at.replace(tzinfo=timezone.utc)
+        
         days_listed = max(1, (datetime.now(timezone.utc) - created_at).days)
         
         views = await db.listing_views.count_documents({"listing_id": listing_id})
