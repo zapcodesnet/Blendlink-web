@@ -289,13 +289,14 @@ def composite_image_on_background(
 
 @photo_editor_router.post("/upload", response_model=List[PhotoUploadResponse])
 async def upload_photos(
-    photos: List[str] = [],  # Base64 encoded images
+    request: PhotoUploadRequest,
     current_user: dict = Depends(get_current_user)
 ):
     """
     Upload multiple photos for editing (up to 10, max 60MB each)
     Photos are stored as base64 in the database
     """
+    photos = request.photos
     if not photos:
         raise HTTPException(status_code=400, detail="No photos provided")
     
