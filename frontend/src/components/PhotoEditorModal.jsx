@@ -648,9 +648,11 @@ export default function PhotoEditorModal({ isOpen, onClose, onComplete }) {
                       <Wand2 className="w-4 h-4 text-purple-500" />
                       AI Background Removal
                     </h4>
+                    
+                    {/* Single photo removal */}
                     <Button
                       onClick={handleRemoveBackground}
-                      disabled={isProcessing || selectedPhoto?.has_background_removed}
+                      disabled={isProcessing || isBatchProcessing || selectedPhoto?.has_background_removed}
                       className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
                       data-testid="remove-bg-btn"
                     >
@@ -666,6 +668,47 @@ export default function PhotoEditorModal({ isOpen, onClose, onComplete }) {
                         </>
                       )}
                     </Button>
+                    
+                    {/* Batch removal - show if multiple photos */}
+                    {photos.length > 1 && (
+                      <div className="mt-3 p-3 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg border border-purple-500/20">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-medium text-purple-300">
+                            Batch Process All Photos
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {photosNeedingBgRemoval} remaining
+                          </span>
+                        </div>
+                        <Button
+                          onClick={handleBatchRemoveBackgrounds}
+                          disabled={isProcessing || isBatchProcessing || photosNeedingBgRemoval === 0}
+                          variant="outline"
+                          className="w-full border-purple-500/50 hover:bg-purple-500/20"
+                          data-testid="batch-remove-bg-btn"
+                        >
+                          {isBatchProcessing ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Processing...
+                            </>
+                          ) : photosNeedingBgRemoval === 0 ? (
+                            <>
+                              <Check className="w-4 h-4 mr-2" />
+                              All Done!
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-4 h-4 mr-2" />
+                              Remove All Backgrounds ({photosNeedingBgRemoval})
+                            </>
+                          )}
+                        </Button>
+                        <p className="text-xs text-muted-foreground mt-2 text-center">
+                          One click to process all photos
+                        </p>
+                      </div>
+                    )}
                   </div>
                   
                   {/* Adjustments */}
