@@ -457,14 +457,20 @@ class MintingService:
         scenery_type = analysis.get("scenery_type", "natural")
         scenery_info = SCENERY_TYPES.get(scenery_type, SCENERY_TYPES["natural"])
         
+        # Get light info
+        light_type = analysis.get("light_type", "sunlight_fire")
+        light_info = LIGHT_TYPES.get(light_type, LIGHT_TYPES["sunlight_fire"])
+        
         # Calculate dollar value
         ratings = analysis.get("ratings", {})
         has_face = analysis.get("has_face", False)
         selfie_bonus = random.randint(1, 20) if has_face else 0  # Hidden bonus
         dollar_value = calculate_dollar_value(ratings, has_face, selfie_bonus)
         
-        # Calculate overall score
-        overall_score = sum(ratings.values()) / len(ratings) if ratings else 50.0
+        # Calculate overall score (weighted average)
+        total_weighted = sum(ratings.get(c, 50) * w for c, w in RATING_CRITERIA.items())
+        total_weight = sum(RATING_CRITERIA.values())
+        overall_score = total_weighted / total_weight if total_weight > 0 else 50.0
         
         # Create minted photo
         photo = MintedPhoto(
@@ -473,8 +479,11 @@ class MintingService:
             description=description,
             image_url=f"data:{mime_type};base64,{image_base64[:100]}...",  # Store reference
             scenery_type=scenery_type,
+            light_type=light_type,
             strength_vs=scenery_info["strong_vs"],
             weakness_vs=scenery_info["weak_vs"],
+            light_strength_vs=light_info["strong_vs"],
+            light_weakness_vs=light_info["weak_vs"],
             ratings=ratings,
             overall_score=overall_score,
             dollar_value=dollar_value,
