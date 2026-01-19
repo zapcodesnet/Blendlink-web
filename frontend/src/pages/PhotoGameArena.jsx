@@ -943,10 +943,11 @@ const PhotoBattle = ({ playerPhoto, opponentPhoto, result, onBattle }) => {
 };
 
 // ============== MATCHMAKING COMPONENT ==============
-const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect }) => {
+const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect, onPracticeStart }) => {
   const [status, setStatus] = useState('photo_select');
   const [betAmount, setBetAmount] = useState(0);
   const [useBotFallback, setUseBotFallback] = useState(true);
+  const [practiceMode, setPracticeMode] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [queueStatus, setQueueStatus] = useState(null);
   const [battlePhotos, setBattlePhotos] = useState([]);
