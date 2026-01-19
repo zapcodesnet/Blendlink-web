@@ -121,9 +121,10 @@ async def start_game(
     """
     Start a new game session
     
-    - Requires stamina
-    - Optional BL coin bet
+    - Requires stamina (unless practice_mode=True)
+    - Optional BL coin bet (disabled in practice_mode)
     - Select a minted photo for battle
+    - practice_mode: No BL bet, no stamina loss, no rewards - pure practice vs bot
     """
     if not _game_service:
         raise HTTPException(status_code=500, detail="Game service not initialized")
@@ -133,6 +134,7 @@ async def start_game(
         opponent_id=data.opponent_id,
         bet_amount=data.bet_amount,
         player_photo_id=data.photo_id,
+        practice_mode=data.practice_mode,
     )
     
     if not result["success"]:
