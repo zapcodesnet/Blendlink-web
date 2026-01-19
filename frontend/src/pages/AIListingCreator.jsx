@@ -474,7 +474,7 @@ const LocationShippingSection = ({ location, setLocation, shippingData, setShipp
         <div className="flex gap-2">
           <Input 
             value={location?.zip || ''}
-            onChange={(e) => setUserLocation({ ...location, zip: e.target.value })}
+            onChange={(e) => setLocation({ ...location, zip: e.target.value })}
             placeholder="Enter ZIP code"
             className="flex-1"
           />
