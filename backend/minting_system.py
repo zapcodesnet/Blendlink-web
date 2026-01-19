@@ -186,6 +186,7 @@ async def analyze_photo_with_ai(image_base64: str, mime_type: str = "image/jpeg"
             return get_fallback_analysis()
         
         # Initialize chat with GPT-4o Vision
+        # Note: Using gpt-4o for vision capabilities
         chat = LlmChat(
             api_key=api_key,
             session_id=f"photo_analysis_{uuid.uuid4().hex[:8]}",
@@ -194,10 +195,9 @@ Analyze photos and provide structured ratings. Be fair but varied in your assess
 Return ONLY valid JSON without any markdown formatting or code blocks."""
         ).with_model("openai", "gpt-4o")
         
-        # Create image content with base64 data (with data URL prefix)
-        # The ImageContent expects a full data URL
-        image_data_url = f"data:{mime_type};base64,{image_base64}"
-        image_content = ImageContent(image_base64=image_data_url)
+        # Create image content - pass just the base64 data WITHOUT the data URL prefix
+        # The library will add the prefix automatically in _add_user_message
+        image_content = ImageContent(image_base64=image_base64)
         
         analysis_prompt = """Analyze this photo and return a JSON object with these exact fields:
 
