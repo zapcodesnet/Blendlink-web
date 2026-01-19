@@ -305,11 +305,27 @@ def get_fallback_analysis() -> Dict[str, Any]:
 
 def calculate_dollar_value(ratings: Dict[str, int], has_face: bool, selfie_bonus: int = 0) -> int:
     """
-    Calculate dollar value based on ratings
+    Calculate dollar value based on weighted ratings
     Range: $1M to $1B
+    
+    Weights:
+    - Originality (12%), Innovation (12%), Uniqueness (12%)
+    - Focus/Sharpness (10%), Exposure/Tonal Range (10%), Composition (10%), Narrative/Emotion (10%)
+    - Color Accuracy (8%), Subject Clarity (8%), Captivating/Mesmerizing (8%)
     """
-    # Average rating (1-100)
-    avg_rating = sum(ratings.values()) / len(ratings) if ratings else 50
+    if not ratings:
+        return 1_000_000
+    
+    # Calculate weighted average
+    total_weighted = 0
+    total_weight = 0
+    
+    for criterion, weight in RATING_CRITERIA.items():
+        if criterion in ratings:
+            total_weighted += ratings[criterion] * weight
+            total_weight += weight
+    
+    avg_rating = total_weighted / total_weight if total_weight > 0 else 50
     
     # Base value: exponential scale from $1M to $1B
     # Rating 50 = ~$10M, Rating 100 = $1B
@@ -322,11 +338,12 @@ def calculate_dollar_value(ratings: Dict[str, int], has_face: bool, selfie_bonus
     if has_face:
         base_value = int(base_value * 1.10)
     
-    # Selfie bonus (+1% to +20%)
+    # Selfie bonus (+1% to +20%, hidden)
     if selfie_bonus > 0:
         base_value = int(base_value * (1 + selfie_bonus / 100))
     
-    return base_value
+    # Final cap at $1B
+    return min(base_value, 1_000_000_000)
 
 
 def calculate_level_xp(level: int) -> int:
