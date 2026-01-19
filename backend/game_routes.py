@@ -51,6 +51,7 @@ class StartGameRequest(BaseModel):
     opponent_id: str = "bot"  # "bot" for bot games
     bet_amount: int = 0
     photo_id: Optional[str] = None
+    practice_mode: bool = False  # NEW: Practice mode - no BL bet, no stamina loss, no rewards
 
 
 class RPSMoveRequest(BaseModel):
