@@ -77,6 +77,9 @@ BACKGROUND_PATTERNS = [
 
 # ============== MODELS ==============
 
+class PhotoUploadRequest(BaseModel):
+    photos: List[str]  # Base64 encoded images
+
 class PhotoUploadResponse(BaseModel):
     photo_id: str
     original_url: str
