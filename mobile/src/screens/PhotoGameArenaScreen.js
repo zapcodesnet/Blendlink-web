@@ -353,7 +353,7 @@ const PhotoCard = ({ photo, isPlayer, effectiveValue, isAnimating, colors }) => 
 };
 
 // ============== MATCHMAKING VIEW ==============
-const MatchmakingView = ({ onMatchFound, onCancel, selectedPhoto, onPhotoSelect, colors }) => {
+const MatchmakingView = ({ onMatchFound, onCancel, onPracticeStart, selectedPhoto, onPhotoSelect, colors }) => {
   const [status, setStatus] = useState('photo_select');
   const [betAmount, setBetAmount] = useState('0');
   const [useBotFallback, setUseBotFallback] = useState(true);
@@ -405,6 +405,35 @@ const MatchmakingView = ({ onMatchFound, onCancel, selectedPhoto, onPhotoSelect,
       setQueueStatus(data);
     } catch (err) {
       console.error('Failed to fetch queue status:', err);
+    }
+  };
+
+  // Start Practice Mode - instant bot battle, no BL bet, no stamina loss
+  const startPracticeMode = async () => {
+    if (!selectedPhoto) {
+      setError('Please select a photo first!');
+      return;
+    }
+
+    setError(null);
+    try {
+      auctionSounds.paddleRaise();
+      
+      const response = await photoGameAPI.startGame({
+        opponent_id: 'bot',
+        bet_amount: 0,
+        photo_id: selectedPhoto.mint_id,
+        practice_mode: true,
+      });
+      
+      if (response.success) {
+        auctionSounds.matchFound();
+        onPracticeStart?.(response);
+      } else {
+        setError(response.error || 'Failed to start practice');
+      }
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to start practice mode');
     }
   };
 
