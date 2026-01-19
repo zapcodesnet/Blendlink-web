@@ -37,19 +37,29 @@ SCENERY_TYPES = {
     "manmade": {"name": "Man-made/Mixed", "strong_vs": "natural", "weak_vs": "water"},
 }
 
-# Photo rating criteria
-RATING_CRITERIA = [
-    "originality",
-    "innovation", 
-    "uniqueness",
-    "focus_sharpness",
-    "exposure_tonal_range",
-    "color_accuracy",
-    "subject_clarity",
-    "composition",
-    "narrative_emotion",
-    "captivating_mesmerizing",
-]
+# Light condition types and their strength/weakness relationships
+LIGHT_TYPES = {
+    "sunlight_fire": {"name": "Sunlight/Fire", "strong_vs": "darkness_night", "weak_vs": "rain_snow_ice"},
+    "rain_snow_ice": {"name": "Rain/Snow/Ice", "strong_vs": "sunlight_fire", "weak_vs": "darkness_night"},
+    "darkness_night": {"name": "Darkness/Night/Interior", "strong_vs": "rain_snow_ice", "weak_vs": "sunlight_fire"},
+}
+
+# Photo rating criteria with weights (totals 100%)
+RATING_CRITERIA = {
+    "originality": 12,
+    "innovation": 12, 
+    "uniqueness": 12,
+    "focus_sharpness": 10,
+    "exposure_tonal_range": 10,
+    "color_accuracy": 8,
+    "subject_clarity": 8,
+    "composition": 10,
+    "narrative_emotion": 10,
+    "captivating_mesmerizing": 8,
+}
+
+# Legacy list for backward compatibility
+RATING_CRITERIA_LIST = list(RATING_CRITERIA.keys())
 
 # ============== MODELS ==============
 class MintedPhoto(BaseModel):
