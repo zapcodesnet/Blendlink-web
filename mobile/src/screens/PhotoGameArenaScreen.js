@@ -925,6 +925,16 @@ export default function PhotoGameArenaScreen() {
     auctionSounds.selectionConfirm();
   };
 
+  // Handle practice mode start (direct bot battle, no matchmaking)
+  const handlePracticeStart = (gameData) => {
+    if (gameData.success) {
+      setSession(gameData.session);
+      setGameState('rps');
+      auctionSounds.gavelSlam();
+      // Could add a toast/alert here: "Practice mode - No risk, just fun!"
+    }
+  };
+
   const handleMatchFound = async (matchInfo) => {
     setMatchData(matchInfo);
     
