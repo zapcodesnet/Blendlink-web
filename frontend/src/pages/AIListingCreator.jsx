@@ -720,7 +720,7 @@ export default function AIListingCreator() {
       return;
     }
     
-    if (!location?.zip) {
+    if (!userLocation?.zip) {
       toast.error('Please enter your location ZIP code');
       setStep(3);
       return;
