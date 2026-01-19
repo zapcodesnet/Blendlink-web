@@ -653,6 +653,7 @@ export default function PhotoEditorModal({ isOpen, onClose, onComplete }) {
               {[
                 { id: 'edit', label: 'Edit', icon: Wand2 },
                 { id: 'background', label: 'Background', icon: Layers },
+                { id: 'ai-listing', label: 'AI Listing', icon: Sparkles },
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -678,6 +679,7 @@ export default function PhotoEditorModal({ isOpen, onClose, onComplete }) {
                   <div>
                     <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
                       <Wand2 className="w-4 h-4 text-purple-500" />
+
                       AI Background Removal
                     </h4>
                     
