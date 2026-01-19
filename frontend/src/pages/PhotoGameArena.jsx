@@ -1125,6 +1125,39 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect, onPracticeSta
     setStatus('photo_select');
   };
   
+  // Start Practice Mode - instant bot battle, no BL bet, no stamina loss
+  const startPracticeMode = async () => {
+    if (!selectedPhoto) {
+      toast.error('Please select a photo first!');
+      return;
+    }
+    
+    try {
+      setError(null);
+      auctionSounds.paddleRaise();
+      
+      // Start game directly with practice_mode=true
+      const response = await api.post('/photo-game/start', {
+        opponent_id: 'bot',
+        bet_amount: 0,
+        photo_id: selectedPhoto.mint_id,
+        practice_mode: true,
+      });
+      
+      if (response.data.success) {
+        auctionSounds.matchFound();
+        onPracticeStart?.(response.data);
+      } else {
+        setError(response.data.error || 'Failed to start practice');
+        toast.error(response.data.error || 'Failed to start practice');
+      }
+    } catch (err) {
+      const errorMsg = err.response?.data?.detail || 'Failed to start practice mode';
+      setError(errorMsg);
+      toast.error(errorMsg);
+    }
+  };
+  
   useEffect(() => {
     return () => {
       if (intervalRef.current) {
