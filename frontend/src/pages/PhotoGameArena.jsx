@@ -659,7 +659,7 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect }) => {
         </motion.div>
         
         <h3 className="text-xl font-bold text-white mb-2">Searching for Opponent...</h3>
-        <p className="text-gray-400 mb-4">{Math.round(elapsed)}s / 30s</p>
+        <p className="text-gray-400 mb-4">{Math.round(elapsed)}s / 5s</p>
         
         {selectedPhoto && (
           <p className="text-purple-400 mb-4">
