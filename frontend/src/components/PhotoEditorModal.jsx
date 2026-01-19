@@ -441,6 +441,38 @@ export default function PhotoEditorModal({ isOpen, onClose, onComplete }) {
     }
   };
   
+  // Generate AI Listing from photos
+  const [aiListingResult, setAiListingResult] = useState(null);
+  const [isGeneratingListing, setIsGeneratingListing] = useState(false);
+  
+  const handleGenerateAIListing = async () => {
+    if (photos.length === 0) {
+      toast.error("Upload photos first");
+      return;
+    }
+    
+    setIsGeneratingListing(true);
+    setProcessingAction('Generating AI Listing...');
+    
+    try {
+      const response = await apiRequest('/photo-editor/generate-ai-listing', {
+        method: 'POST',
+        body: JSON.stringify({
+          photo_ids: photos.map(p => p.photo_id),
+          condition: 'like_new',
+        }),
+      });
+      
+      setAiListingResult(response.listing_data);
+      toast.success("AI Listing generated!");
+    } catch (error) {
+      toast.error(error.message || "Failed to generate AI listing");
+    } finally {
+      setIsGeneratingListing(false);
+      setProcessingAction('');
+    }
+  };
+  
   // Save background preference
   const handleSavePreference = async () => {
     if (!selectedBackground) return;
