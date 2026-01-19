@@ -739,6 +739,29 @@ export default function PhotoEditorModal({ isOpen, onClose, onComplete }) {
             
             {/* Tab content */}
             <div className="p-4 space-y-6">
+              {activeTab === 'edit' && !selectedPhoto && (
+                <div className="text-center py-8">
+                  <Wand2 className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                  <h4 className="font-semibold mb-2">No Photo Selected</h4>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Upload photos to start editing
+                  </p>
+                  <label className="cursor-pointer">
+                    <Button>
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload Photos
+                    </Button>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={handleFileUpload}
+                      ref={fileInputRef}
+                    />
+                  </label>
+                </div>
+              )}
               {activeTab === 'edit' && selectedPhoto && (
                 <>
                   {/* Background Removal */}
