@@ -1416,6 +1416,361 @@ async def generate_ai_listing(
         logger.error(f"AI listing generation failed: {e}")
         raise HTTPException(status_code=500, detail=f"AI listing generation failed: {str(e)}")
 
+# ============== POST-LISTING EDITING ==============
+
+class ListingPhotoEditRequest(BaseModel):
+    listing_id: str
+    photo_index: int  # Which photo in the listing to edit (0-based)
+
+@photo_editor_router.post("/listing/{listing_id}/load-photo")
+async def load_listing_photo_for_edit(
+    listing_id: str,
+    photo_index: int = 0,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Load a photo from an existing live listing into the photo editor.
+    This allows sellers to re-edit photos for listings that are already published.
+    """
+    user_id = current_user["user_id"]
+    
+    # Get the listing
+    listing = await db.listings.find_one(
+        {"listing_id": listing_id, "user_id": user_id},
+        {"_id": 0}
+    )
+    
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    
+    # Get photos from listing
+    photos = listing.get("images", listing.get("photos", []))
+    
+    if not photos:
+        raise HTTPException(status_code=400, detail="Listing has no photos")
+    
+    if photo_index < 0 or photo_index >= len(photos):
+        raise HTTPException(status_code=400, detail=f"Invalid photo index. Listing has {len(photos)} photos")
+    
+    photo_url = photos[photo_index]
+    
+    # Create an edited_photos entry for this listing photo
+    photo_id = f"listing_{listing_id}_photo_{photo_index}_{uuid.uuid4().hex[:8]}"
+    
+    photo_doc = {
+        "photo_id": photo_id,
+        "user_id": user_id,
+        "listing_id": listing_id,  # Link to the live listing
+        "listing_photo_index": photo_index,
+        "original_url": photo_url,
+        "current_url": photo_url,
+        "thumbnail_url": photo_url,  # Use same URL for thumbnail
+        "width": 0,  # Unknown for existing photos
+        "height": 0,
+        "size_bytes": 0,
+        "has_background_removed": False,
+        "processed_url": None,
+        "current_background": None,
+        "adjustments": {},
+        "edit_history": [],
+        "is_listing_edit": True,  # Flag to indicate this is editing a live listing
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.edited_photos.insert_one(photo_doc)
+    
+    return {
+        "success": True,
+        "photo_id": photo_id,
+        "listing_id": listing_id,
+        "photo_index": photo_index,
+        "original_url": photo_url,
+        "message": "Photo loaded for editing. Use standard edit endpoints, then call /apply-to-listing to save."
+    }
+
+@photo_editor_router.get("/listing/{listing_id}/photos")
+async def get_listing_photos_for_edit(
+    listing_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get all photos from a live listing for potential editing.
+    Returns both the listing photos and any currently being edited.
+    """
+    user_id = current_user["user_id"]
+    
+    # Get the listing
+    listing = await db.listings.find_one(
+        {"listing_id": listing_id, "user_id": user_id},
+        {"_id": 0}
+    )
+    
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    
+    # Get photos from listing
+    photos = listing.get("images", listing.get("photos", []))
+    
+    # Get any photos currently being edited for this listing
+    editing_photos = await db.edited_photos.find(
+        {"user_id": user_id, "listing_id": listing_id},
+        {"_id": 0, "original_url": 0, "current_url": 0}  # Exclude large data
+    ).to_list(100)
+    
+    return {
+        "listing_id": listing_id,
+        "listing_title": listing.get("title", "Untitled"),
+        "listing_status": listing.get("status", "unknown"),
+        "photos": [
+            {
+                "index": i,
+                "url": url,
+                "is_being_edited": any(ep.get("listing_photo_index") == i for ep in editing_photos)
+            }
+            for i, url in enumerate(photos)
+        ],
+        "total_photos": len(photos),
+        "currently_editing": editing_photos
+    }
+
+class ApplyToListingRequest(BaseModel):
+    photo_id: str  # The edited photo in edited_photos collection
+
+@photo_editor_router.post("/apply-to-listing")
+async def apply_edited_photo_to_listing(
+    request: ApplyToListingRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Apply an edited photo back to its original live listing.
+    This updates the listing instantly for both web and mobile.
+    """
+    user_id = current_user["user_id"]
+    
+    # Get the edited photo
+    edited_photo = await db.edited_photos.find_one(
+        {"photo_id": request.photo_id, "user_id": user_id},
+        {"_id": 0}
+    )
+    
+    if not edited_photo:
+        raise HTTPException(status_code=404, detail="Edited photo not found")
+    
+    if not edited_photo.get("is_listing_edit"):
+        raise HTTPException(status_code=400, detail="This photo is not from a live listing")
+    
+    listing_id = edited_photo.get("listing_id")
+    photo_index = edited_photo.get("listing_photo_index")
+    
+    if listing_id is None or photo_index is None:
+        raise HTTPException(status_code=400, detail="Missing listing reference")
+    
+    # Verify the listing still exists and belongs to user
+    listing = await db.listings.find_one(
+        {"listing_id": listing_id, "user_id": user_id},
+        {"_id": 0}
+    )
+    
+    if not listing:
+        raise HTTPException(status_code=404, detail="Original listing not found")
+    
+    # Get current photos
+    photos = listing.get("images", listing.get("photos", []))
+    
+    if photo_index >= len(photos):
+        raise HTTPException(status_code=400, detail="Photo index no longer valid in listing")
+    
+    # Get the edited photo URL
+    new_photo_url = edited_photo["current_url"]
+    
+    # Update the listing with the new photo
+    photos[photo_index] = new_photo_url
+    
+    # Determine which field to update (images or photos)
+    photo_field = "images" if "images" in listing else "photos"
+    
+    await db.listings.update_one(
+        {"listing_id": listing_id},
+        {
+            "$set": {
+                photo_field: photos,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "last_photo_edit": {
+                    "photo_index": photo_index,
+                    "edited_at": datetime.now(timezone.utc).isoformat(),
+                    "edit_history_count": len(edited_photo.get("edit_history", []))
+                }
+            }
+        }
+    )
+    
+    # Mark the edited photo as applied
+    await db.edited_photos.update_one(
+        {"photo_id": request.photo_id},
+        {
+            "$set": {
+                "applied_to_listing": True,
+                "applied_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    return {
+        "success": True,
+        "listing_id": listing_id,
+        "photo_index": photo_index,
+        "message": "Photo updated in live listing. Changes are now visible on web and mobile.",
+        "listing_title": listing.get("title", "Untitled")
+    }
+
+@photo_editor_router.post("/listing/{listing_id}/load-all-photos")
+async def load_all_listing_photos_for_edit(
+    listing_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Load ALL photos from an existing live listing into the photo editor.
+    Convenient for batch editing all listing photos at once.
+    """
+    user_id = current_user["user_id"]
+    
+    # Get the listing
+    listing = await db.listings.find_one(
+        {"listing_id": listing_id, "user_id": user_id},
+        {"_id": 0}
+    )
+    
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    
+    # Get photos from listing
+    photos = listing.get("images", listing.get("photos", []))
+    
+    if not photos:
+        raise HTTPException(status_code=400, detail="Listing has no photos")
+    
+    loaded_photos = []
+    
+    for index, photo_url in enumerate(photos):
+        photo_id = f"listing_{listing_id}_photo_{index}_{uuid.uuid4().hex[:8]}"
+        
+        photo_doc = {
+            "photo_id": photo_id,
+            "user_id": user_id,
+            "listing_id": listing_id,
+            "listing_photo_index": index,
+            "original_url": photo_url,
+            "current_url": photo_url,
+            "thumbnail_url": photo_url,
+            "width": 0,
+            "height": 0,
+            "size_bytes": 0,
+            "has_background_removed": False,
+            "processed_url": None,
+            "current_background": None,
+            "adjustments": {},
+            "edit_history": [],
+            "is_listing_edit": True,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.edited_photos.insert_one(photo_doc)
+        
+        loaded_photos.append({
+            "photo_id": photo_id,
+            "photo_index": index,
+            "original_url": photo_url
+        })
+    
+    return {
+        "success": True,
+        "listing_id": listing_id,
+        "listing_title": listing.get("title", "Untitled"),
+        "photos_loaded": len(loaded_photos),
+        "photos": loaded_photos,
+        "message": f"All {len(loaded_photos)} photos loaded for editing"
+    }
+
+@photo_editor_router.post("/listing/{listing_id}/apply-all")
+async def apply_all_edited_photos_to_listing(
+    listing_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Apply ALL edited photos back to the live listing at once.
+    """
+    user_id = current_user["user_id"]
+    
+    # Get all edited photos for this listing
+    edited_photos = await db.edited_photos.find(
+        {
+            "user_id": user_id,
+            "listing_id": listing_id,
+            "is_listing_edit": True
+        },
+        {"_id": 0}
+    ).to_list(100)
+    
+    if not edited_photos:
+        raise HTTPException(status_code=404, detail="No edited photos found for this listing")
+    
+    # Get the listing
+    listing = await db.listings.find_one(
+        {"listing_id": listing_id, "user_id": user_id},
+        {"_id": 0}
+    )
+    
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    
+    # Get current photos
+    photos = listing.get("images", listing.get("photos", []))
+    photo_field = "images" if "images" in listing else "photos"
+    
+    # Update each photo
+    applied_count = 0
+    for edited_photo in edited_photos:
+        photo_index = edited_photo.get("listing_photo_index")
+        if photo_index is not None and photo_index < len(photos):
+            photos[photo_index] = edited_photo["current_url"]
+            applied_count += 1
+            
+            # Mark as applied
+            await db.edited_photos.update_one(
+                {"photo_id": edited_photo["photo_id"]},
+                {
+                    "$set": {
+                        "applied_to_listing": True,
+                        "applied_at": datetime.now(timezone.utc).isoformat()
+                    }
+                }
+            )
+    
+    # Update listing
+    await db.listings.update_one(
+        {"listing_id": listing_id},
+        {
+            "$set": {
+                photo_field: photos,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "last_batch_photo_edit": {
+                    "photos_updated": applied_count,
+                    "edited_at": datetime.now(timezone.utc).isoformat()
+                }
+            }
+        }
+    )
+    
+    return {
+        "success": True,
+        "listing_id": listing_id,
+        "photos_applied": applied_count,
+        "total_photos": len(photos),
+        "message": f"Applied {applied_count} edited photos to live listing"
+    }
+
 # Export router
 def get_photo_editor_router():
     return photo_editor_router
