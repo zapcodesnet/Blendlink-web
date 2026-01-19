@@ -862,7 +862,7 @@ const PhotoBattle = ({ playerPhoto, opponentPhoto, result, onBattle }) => {
         <p className="text-gray-400 mb-8">Highest effective value wins the auction!</p>
         
         <div className="flex items-center justify-center gap-8 mb-8">
-          <PhotoCard photo={playerPhoto} isPlayer={true} effectiveValue={result?.player1_value} />
+          <BattlePhotoCard photo={playerPhoto} isPlayer={true} effectiveValue={result?.player1_value} isAnimating={isAnimating} hasResult={!!result} />
           
           <div className="flex flex-col items-center">
             <AnimatePresence>
@@ -903,7 +903,7 @@ const PhotoBattle = ({ playerPhoto, opponentPhoto, result, onBattle }) => {
             )}
           </div>
           
-          <PhotoCard photo={opponentPhoto} isPlayer={false} effectiveValue={result?.player2_value} />
+          <BattlePhotoCard photo={opponentPhoto} isPlayer={false} effectiveValue={result?.player2_value} isAnimating={isAnimating} hasResult={!!result} />
         </div>
         
         <AnimatePresence>
