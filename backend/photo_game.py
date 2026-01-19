@@ -1,11 +1,14 @@
 """
-Blendlink Photo Game System
-- Rock-Paper-Scissors mini-game
-- Photo auction battles
-- Stamina system
-- XP/Level progression
-- Leaderboards
-- Bot opponents
+Blendlink Photo Game System v2.0
+Million Dollar RPS Bidding Auction + Photo Dollar Auction Clash
+
+Game Flow:
+1. Photo Upload → AI rates permanent Dollar value ($1M-$1B)
+2. Stage 1: Million Dollar RPS Bidding Auction (race to 3)
+3. Stage 2: Photo Dollar Auction Clash
+4. Stage 3: RPS Tiebreaker (if split)
+
+Stamina: 100% = 24 battles, recovers 1/hour, defeats drain 25% faster
 """
 
 import os
@@ -22,12 +25,18 @@ logger = logging.getLogger(__name__)
 # ============== CONSTANTS ==============
 MAX_STAMINA = 100
 BATTLES_PER_FULL_STAMINA = 24
-STAMINA_PER_BATTLE = MAX_STAMINA // BATTLES_PER_FULL_STAMINA  # ~4.16
-STAMINA_REGEN_PER_HOUR = MAX_STAMINA / 24  # Full regen in 24 hours = 1 battle per hour
+STAMINA_PER_BATTLE = MAX_STAMINA / BATTLES_PER_FULL_STAMINA  # ~4.16%
+STAMINA_REGEN_PER_HOUR = MAX_STAMINA / 24  # Full regen in 24 hours
 DEFEAT_STAMINA_PENALTY = 1.25  # 25% more stamina loss on defeat
 
 # Stamina percentage per battle (for display)
 STAMINA_PERCENT_PER_BATTLE = 100 / BATTLES_PER_FULL_STAMINA  # ~4.16%
+
+# Million Dollar RPS Constants
+STARTING_BANKROLL = 10_000_000  # $10M starting bankroll
+MIN_BID = 1_000_000  # $1M minimum bid
+MAX_BID = 5_000_000  # $5M maximum bid
+BID_INCREMENT = 1_000_000  # $1M increments
 
 # Win streak multipliers
 WIN_STREAK_MULTIPLIERS = {
@@ -37,7 +46,22 @@ WIN_STREAK_MULTIPLIERS = {
     6: 2.00,  # 6+ wins
 }
 
-# Strength/Weakness multiplier
+# Scenery strength/weakness (expanded system)
+# Light conditions
+LIGHT_TYPES = {
+    "sunlight_fire": {"name": "Sunlight/Fire", "strong_vs": "darkness_night", "weak_vs": "rain_snow_ice"},
+    "rain_snow_ice": {"name": "Rain/Snow/Ice", "strong_vs": "sunlight_fire", "weak_vs": "darkness_night"},
+    "darkness_night": {"name": "Darkness/Night/Interior", "strong_vs": "rain_snow_ice", "weak_vs": "sunlight_fire"},
+}
+
+# Scenery types
+SCENERY_TYPES = {
+    "natural": {"name": "Natural Scenery", "strong_vs": "water", "weak_vs": "manmade"},
+    "water": {"name": "Water Scenery", "strong_vs": "manmade", "weak_vs": "natural"},
+    "manmade": {"name": "Man-made/Mixed", "strong_vs": "natural", "weak_vs": "water"},
+}
+
+# Strength multiplier
 STRENGTH_MULTIPLIER = 1.25  # +25% value for strong matchups
 
 
@@ -48,9 +72,9 @@ class RPSChoice(str, Enum):
 
 
 class GamePhase(str, Enum):
-    RPS_GAME = "rps"
-    PHOTO_BATTLE = "photo_battle"
-    TIEBREAKER = "tiebreaker"
+    RPS_AUCTION = "rps_auction"  # Stage 1: Million Dollar RPS Bidding
+    PHOTO_BATTLE = "photo_battle"  # Stage 2: Photo Dollar Clash
+    TIEBREAKER = "tiebreaker"  # Stage 3: RPS Tiebreaker
     COMPLETED = "completed"
 
 
@@ -83,31 +107,37 @@ class PlayerStats(BaseModel):
 
 
 class GameSession(BaseModel):
-    """Active game session"""
+    """Active game session with Million Dollar RPS"""
     session_id: str = Field(default_factory=lambda: f"game_{uuid.uuid4().hex[:12]}")
     player1_id: str
     player2_id: str  # "bot" for bot games
     
-    bet_amount: int = 0
+    bet_amount: int = 0  # BL coin bet (separate from RPS bankroll)
     
     # Photo selections
     player1_photo_id: Optional[str] = None
     player2_photo_id: Optional[str] = None
     
     # Game state
-    phase: GamePhase = GamePhase.RPS_GAME
-    rps_game_number: int = 1  # 1 = first RPS, 2 = photo battle, 3 = tiebreaker
+    phase: GamePhase = GamePhase.RPS_AUCTION
+    stage_number: int = 1  # 1 = first RPS, 2 = photo battle, 3 = tiebreaker
     
-    # RPS state
+    # Million Dollar RPS Bankrolls
+    player1_bankroll: int = STARTING_BANKROLL
+    player2_bankroll: int = STARTING_BANKROLL
+    
+    # RPS Auction state
     player1_rps_wins: int = 0
     player2_rps_wins: int = 0
     current_rps_round: int = 1
-    player1_rps_choice: Optional[str] = None
-    player2_rps_choice: Optional[str] = None
     rps_rounds: List[Dict] = Field(default_factory=list)
     
+    # Stage winners
+    stage1_winner: Optional[str] = None  # RPS Auction winner
+    stage2_winner: Optional[str] = None  # Photo battle winner
+    
     # Photo battle result
-    photo_battle_winner: Optional[str] = None
+    photo_battle_result: Optional[Dict] = None
     
     # Overall result
     winner_id: Optional[str] = None
@@ -145,11 +175,11 @@ def calculate_photo_battle_value(
 ) -> float:
     """
     Calculate effective dollar value for photo battle
-    Applies strength/weakness multipliers and win streak bonuses
+    Core Stats + Location multiplier + Legacy (Age + Likes)
     """
     base_value = photo.get("dollar_value", 1_000_000)
     
-    # Apply strength/weakness multiplier
+    # Apply scenery strength/weakness multiplier
     photo_type = photo.get("scenery_type", "natural")
     opponent_type = opponent_photo.get("scenery_type", "natural")
     
@@ -157,6 +187,31 @@ def calculate_photo_battle_value(
         base_value = int(base_value * STRENGTH_MULTIPLIER)
     elif photo.get("weakness_vs") == opponent_type:
         base_value = int(base_value / STRENGTH_MULTIPLIER)
+    
+    # Apply light condition strength/weakness
+    photo_light = photo.get("light_type")
+    opponent_light = opponent_photo.get("light_type")
+    if photo_light and opponent_light:
+        light_info = LIGHT_TYPES.get(photo_light, {})
+        if light_info.get("strong_vs") == opponent_light:
+            base_value = int(base_value * 1.15)  # +15% for light advantage
+        elif light_info.get("weak_vs") == opponent_light:
+            base_value = int(base_value / 1.15)  # -15% for light disadvantage
+    
+    # Legacy bonus: Age (0.1% per day since minting)
+    created_at = photo.get("created_at")
+    if created_at:
+        if isinstance(created_at, str):
+            created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+        days_old = (datetime.now(timezone.utc) - created_at).days
+        age_bonus = 1 + (days_old * 0.001)  # 0.1% per day
+        base_value = int(base_value * age_bonus)
+    
+    # Legacy bonus: Likes (0.05% per like)
+    likes = photo.get("likes_count", 0)
+    if likes > 0:
+        likes_bonus = 1 + (likes * 0.0005)  # 0.05% per like
+        base_value = int(base_value * likes_bonus)
     
     # Apply win streak multiplier
     if player_stats:
@@ -175,13 +230,12 @@ def calculate_photo_battle_value(
 
 def generate_bot_photo() -> Dict:
     """Generate a random bot photo for battles"""
-    import random
+    scenery = random.choice(["natural", "water", "manmade"])
+    light = random.choice(["sunlight_fire", "rain_snow_ice", "darkness_night"])
     
-    scenery_types = ["natural", "water", "manmade"]
-    scenery = random.choice(scenery_types)
-    
-    from minting_system import SCENERY_TYPES, RATING_CRITERIA
+    from minting_system import RATING_CRITERIA
     scenery_info = SCENERY_TYPES[scenery]
+    light_info = LIGHT_TYPES[light]
     
     # Generate random ratings (bot has moderate stats)
     ratings = {criterion: random.randint(40, 75) for criterion in RATING_CRITERIA}
@@ -196,14 +250,19 @@ def generate_bot_photo() -> Dict:
         "name": f"Bot Photo #{random.randint(1000, 9999)}",
         "user_id": "bot",
         "scenery_type": scenery,
+        "light_type": light,
         "strength_vs": scenery_info["strong_vs"],
         "weakness_vs": scenery_info["weak_vs"],
+        "light_strength_vs": light_info["strong_vs"],
+        "light_weakness_vs": light_info["weak_vs"],
         "ratings": ratings,
         "overall_score": avg_rating,
         "dollar_value": dollar_value,
         "has_face": random.random() > 0.7,
         "power": random.randint(80, 120),
         "level": random.randint(1, 30),
+        "likes_count": random.randint(0, 100),
+        "created_at": datetime.now(timezone.utc).isoformat(),
     }
 
 
@@ -224,13 +283,11 @@ class PhotoGameService:
             stats_dict = new_stats.model_dump()
             stats_dict["last_stamina_update"] = stats_dict["last_stamina_update"].isoformat()
             await self.db.player_stats.insert_one(stats_dict)
-            # Re-fetch without _id to avoid ObjectId issues
             stats = await self.db.player_stats.find_one({"user_id": user_id}, {"_id": 0})
         else:
             # Update stamina based on time passed
             stats = await self._regenerate_stamina(stats)
         
-        # Ensure no ObjectId in response
         if stats and "_id" in stats:
             del stats["_id"]
         
@@ -263,23 +320,46 @@ class PhotoGameService:
         
         return stats
     
+    async def regenerate_photo_stamina(self, photo: Dict) -> Dict:
+        """Regenerate stamina for a specific photo"""
+        last_battle = photo.get("last_battle_at")
+        current_stamina = photo.get("stamina", 100)
+        
+        if last_battle and current_stamina < 100:
+            if isinstance(last_battle, str):
+                last_battle = datetime.fromisoformat(last_battle.replace("Z", "+00:00"))
+            
+            now = datetime.now(timezone.utc)
+            hours_passed = (now - last_battle).total_seconds() / 3600
+            
+            # Regenerate ~4.16% per hour (1 battle per hour)
+            stamina_gained = hours_passed * STAMINA_REGEN_PER_HOUR
+            new_stamina = min(100, current_stamina + stamina_gained)
+            
+            if new_stamina > current_stamina:
+                await self.db.minted_photos.update_one(
+                    {"mint_id": photo["mint_id"]},
+                    {"$set": {"stamina": new_stamina}}
+                )
+                photo["stamina"] = new_stamina
+        
+        return photo
+    
     async def start_game(
         self,
         player_id: str,
         opponent_id: str = "bot",
         bet_amount: int = 0,
         player_photo_id: Optional[str] = None,
-        skip_bet_deduction: bool = False,  # Used when bet was already deducted in PvP matchmaking
+        skip_bet_deduction: bool = False,
     ) -> Dict[str, Any]:
-        """Start a new game session"""
-        # Check stamina
+        """Start a new game session with Million Dollar RPS"""
+        # Check player stamina
         stats = await self.get_player_stats(player_id)
-        stamina_cost = STAMINA_PER_BATTLE
-        
-        if stats.get("stamina", 0) < stamina_cost:
+        if stats.get("stamina", 0) < STAMINA_PER_BATTLE:
             return {
                 "success": False,
-                "error": f"Insufficient stamina. Need {stamina_cost}, have {stats.get('stamina', 0):.1f}",
+                "error": f"Insufficient stamina. Need {STAMINA_PER_BATTLE:.1f}%, have {stats.get('stamina', 0):.1f}%",
                 "stamina": stats.get("stamina", 0),
             }
         
@@ -287,7 +367,7 @@ class PhotoGameService:
         if bet_amount > 0 and not skip_bet_deduction:
             user = await self.db.users.find_one({"user_id": player_id}, {"bl_coins": 1})
             if not user or user.get("bl_coins", 0) < bet_amount:
-                return {"success": False, "error": "Insufficient BL coins for bet"}
+                return {"success": False, "error": f"Insufficient BL coins. Need {bet_amount}, have {user.get('bl_coins', 0) if user else 0}"}
         
         # Get player's photo - REQUIRED for battle
         player_photo = None
@@ -299,10 +379,19 @@ class PhotoGameService:
             if not player_photo:
                 return {"success": False, "error": "Photo not found or not owned"}
             
-            # Check if photo has stamina (stamina stored as percentage 0-100)
+            # Regenerate photo stamina
+            player_photo = await self.regenerate_photo_stamina(player_photo)
+            
+            # Check if photo has stamina
             photo_stamina = player_photo.get("stamina", 100)
             if photo_stamina <= 0:
-                return {"success": False, "error": "This photo has no stamina. Wait for it to recover."}
+                return {
+                    "success": False, 
+                    "error": "This photo has no stamina. Wait at least 1 hour for it to recover.",
+                    "photo_stamina": photo_stamina
+                }
+        else:
+            return {"success": False, "error": "Photo selection is required for battle"}
         
         # Generate bot photo if playing against bot
         opponent_photo = None
@@ -316,6 +405,8 @@ class PhotoGameService:
             bet_amount=bet_amount,
             player1_photo_id=player_photo_id,
             player2_photo_id=opponent_photo["mint_id"] if opponent_photo else None,
+            player1_bankroll=STARTING_BANKROLL,
+            player2_bankroll=STARTING_BANKROLL,
         )
         
         session_dict = session.model_dump()
@@ -332,20 +423,19 @@ class PhotoGameService:
         # Deduct stamina from player stats
         await self.db.player_stats.update_one(
             {"user_id": player_id},
-            {"$inc": {"stamina": -stamina_cost}}
+            {"$inc": {"stamina": -STAMINA_PER_BATTLE}}
         )
         
-        # Deduct stamina from photo (one battle = ~4.16% stamina)
-        if player_photo_id:
-            await self.db.minted_photos.update_one(
-                {"mint_id": player_photo_id},
-                {
-                    "$inc": {"stamina": -STAMINA_PERCENT_PER_BATTLE},
-                    "$set": {"last_battle_at": datetime.now(timezone.utc).isoformat()}
-                }
-            )
+        # Deduct stamina from photo
+        await self.db.minted_photos.update_one(
+            {"mint_id": player_photo_id},
+            {
+                "$inc": {"stamina": -STAMINA_PERCENT_PER_BATTLE},
+                "$set": {"last_battle_at": datetime.now(timezone.utc).isoformat()}
+            }
+        )
         
-        # Deduct bet amount (only if not already deducted in PvP flow)
+        # Deduct BL bet amount (only if not already deducted in PvP flow)
         if bet_amount > 0 and not skip_bet_deduction:
             await self.db.users.update_one(
                 {"user_id": player_id},
@@ -355,19 +445,37 @@ class PhotoGameService:
         return {
             "success": True,
             "session": session_dict,
-            "phase": "rps",
-            "instructions": "Play Rock-Paper-Scissors - first to 3 wins!",
+            "phase": "rps_auction",
+            "stage": 1,
+            "bankroll": STARTING_BANKROLL,
+            "min_bid": MIN_BID,
+            "max_bid": MAX_BID,
+            "instructions": "Stage 1: Million Dollar RPS Auction - First to 3 wins! Choose RPS + bid amount ($1M-$5M)",
         }
     
-    async def play_rps_round(
+    async def play_rps_auction_round(
         self,
         session_id: str,
         player_id: str,
         choice: str,
+        bid_amount: int,
     ) -> Dict[str, Any]:
-        """Play a round of Rock-Paper-Scissors"""
+        """
+        Play a round of Million Dollar RPS Bidding Auction
+        - Each player chooses RPS + bid ($1M-$5M)
+        - Winner of RPS takes the pot
+        - If tie RPS, higher bid wins
+        - First to 3 wins takes Stage 1
+        """
         if choice not in ["rock", "paper", "scissors"]:
-            return {"success": False, "error": "Invalid choice"}
+            return {"success": False, "error": "Invalid RPS choice"}
+        
+        # Validate bid
+        if bid_amount < MIN_BID or bid_amount > MAX_BID:
+            return {"success": False, "error": f"Bid must be between ${MIN_BID:,} and ${MAX_BID:,}"}
+        
+        if bid_amount % BID_INCREMENT != 0:
+            return {"success": False, "error": f"Bid must be in ${BID_INCREMENT:,} increments"}
         
         session = await self.db.game_sessions.find_one(
             {"session_id": session_id},
@@ -377,71 +485,127 @@ class PhotoGameService:
         if not session:
             return {"success": False, "error": "Session not found"}
         
-        if session.get("phase") not in ["rps", "tiebreaker"]:
-            return {"success": False, "error": "Not in RPS phase"}
+        if session.get("phase") not in ["rps_auction", "tiebreaker"]:
+            return {"success": False, "error": "Not in RPS Auction phase"}
         
         if session["player1_id"] != player_id:
             return {"success": False, "error": "Not your game"}
         
-        # Bot makes random choice
-        bot_choice = random.choice(["rock", "paper", "scissors"])
+        # Check player has enough bankroll
+        p1_bankroll = session.get("player1_bankroll", STARTING_BANKROLL)
+        if bid_amount > p1_bankroll:
+            return {"success": False, "error": f"Insufficient bankroll. Have ${p1_bankroll:,}, trying to bid ${bid_amount:,}"}
         
-        # Determine winner
-        result = determine_rps_winner(choice, bot_choice)
+        # Bot makes choice and bid
+        bot_choice = random.choice(["rock", "paper", "scissors"])
+        p2_bankroll = session.get("player2_bankroll", STARTING_BANKROLL)
+        max_bot_bid = min(MAX_BID, p2_bankroll)
+        bot_bid = random.choice([MIN_BID, MIN_BID * 2, MIN_BID * 3, max_bot_bid]) if max_bot_bid >= MIN_BID else 0
+        
+        # Determine RPS result
+        rps_result = determine_rps_winner(choice, bot_choice)
+        
+        # Calculate pot and determine round winner
+        total_pot = bid_amount + bot_bid
+        round_winner = None
+        
+        if rps_result == 1:
+            # Player wins RPS, takes pot
+            round_winner = "player1"
+            p1_bankroll = p1_bankroll - bid_amount + total_pot
+            p2_bankroll = p2_bankroll - bot_bid
+        elif rps_result == 2:
+            # Bot wins RPS, takes pot
+            round_winner = "player2"
+            p1_bankroll = p1_bankroll - bid_amount
+            p2_bankroll = p2_bankroll - bot_bid + total_pot
+        else:
+            # Tie RPS - higher bid wins
+            if bid_amount > bot_bid:
+                round_winner = "player1"
+                p1_bankroll = p1_bankroll - bid_amount + total_pot
+                p2_bankroll = p2_bankroll - bot_bid
+            elif bot_bid > bid_amount:
+                round_winner = "player2"
+                p1_bankroll = p1_bankroll - bid_amount
+                p2_bankroll = p2_bankroll - bot_bid + total_pot
+            else:
+                # Same bid, true tie - split pot (no change)
+                round_winner = "tie"
         
         round_data = {
             "round": session.get("current_rps_round", 1),
             "player1_choice": choice,
+            "player1_bid": bid_amount,
             "player2_choice": bot_choice,
-            "winner": "player1" if result == 1 else ("player2" if result == 2 else "tie"),
+            "player2_bid": bot_bid,
+            "rps_result": "player1" if rps_result == 1 else ("player2" if rps_result == 2 else "tie"),
+            "total_pot": total_pot,
+            "winner": round_winner,
+            "player1_bankroll_after": p1_bankroll,
+            "player2_bankroll_after": p2_bankroll,
         }
         
-        # Update session
-        updates = {
-            "$push": {"rps_rounds": round_data},
-            "$inc": {"current_rps_round": 1},
-        }
-        
+        # Update win counts
         p1_wins = session.get("player1_rps_wins", 0)
         p2_wins = session.get("player2_rps_wins", 0)
         
-        if result == 1:
+        if round_winner == "player1":
             p1_wins += 1
-            updates["$inc"]["player1_rps_wins"] = 1
-        elif result == 2:
+        elif round_winner == "player2":
             p2_wins += 1
-            updates["$inc"]["player2_rps_wins"] = 1
         
-        # Check if RPS game is over (first to 3)
-        rps_winner = None
+        # Check for bankruptcy (automatic loss)
+        bankrupt_loser = None
+        if p1_bankroll < MIN_BID and p1_wins < 3:
+            bankrupt_loser = "player1"
+            p2_wins = 3  # Auto win for opponent
+        elif p2_bankroll < MIN_BID and p2_wins < 3:
+            bankrupt_loser = "player2"
+            p1_wins = 3  # Auto win for opponent
+        
+        if bankrupt_loser:
+            round_data["bankruptcy"] = bankrupt_loser
+        
+        # Build update
+        updates = {
+            "$push": {"rps_rounds": round_data},
+            "$inc": {"current_rps_round": 1},
+            "$set": {
+                "player1_bankroll": p1_bankroll,
+                "player2_bankroll": p2_bankroll,
+                "player1_rps_wins": p1_wins,
+                "player2_rps_wins": p2_wins,
+            }
+        }
+        
+        # Check if Stage 1 (or tiebreaker) is complete
+        stage_winner = None
+        next_phase = session.get("phase")
+        
         if p1_wins >= 3:
-            rps_winner = session["player1_id"]
+            stage_winner = session["player1_id"]
         elif p2_wins >= 3:
-            rps_winner = session["player2_id"]
+            stage_winner = session["player2_id"]
         
-        if rps_winner:
-            game_number = session.get("rps_game_number", 1)
+        if stage_winner:
+            stage_num = session.get("stage_number", 1)
             
-            if game_number == 1:
-                # First RPS done, move to photo battle
-                updates["$set"] = {
-                    "phase": "photo_battle",
-                    "rps_game_number": 2,
-                    "player1_rps_wins": 0,
-                    "player2_rps_wins": 0,
-                    "current_rps_round": 1,
-                }
-                round_data["rps_winner"] = "player1" if rps_winner == session["player1_id"] else "player2"
+            if stage_num == 1:
+                # Stage 1 complete - move to photo battle
+                updates["$set"]["stage1_winner"] = stage_winner
+                updates["$set"]["phase"] = "photo_battle"
+                updates["$set"]["stage_number"] = 2
+                round_data["stage_winner"] = "player1" if stage_winner == session["player1_id"] else "player2"
                 round_data["next_phase"] = "photo_battle"
-            elif game_number == 3:
-                # Tiebreaker done, determine overall winner
-                overall_winner = rps_winner
-                updates["$set"] = {
-                    "phase": "completed",
-                    "winner_id": overall_winner,
-                    "completed_at": datetime.now(timezone.utc).isoformat(),
-                }
-                round_data["overall_winner"] = "player1" if overall_winner == session["player1_id"] else "player2"
+                next_phase = "photo_battle"
+            elif stage_num == 3:
+                # Tiebreaker complete - determine overall winner
+                updates["$set"]["phase"] = "completed"
+                updates["$set"]["winner_id"] = stage_winner
+                updates["$set"]["completed_at"] = datetime.now(timezone.utc).isoformat()
+                round_data["overall_winner"] = "player1" if stage_winner == session["player1_id"] else "player2"
+                next_phase = "completed"
         
         await self.db.game_sessions.update_one({"session_id": session_id}, updates)
         
@@ -452,7 +616,7 @@ class PhotoGameService:
         )
         
         # Process winnings if game completed
-        if updated_session.get("phase") == "completed":
+        if next_phase == "completed":
             await self._process_game_result(updated_session)
         
         return {
@@ -460,12 +624,29 @@ class PhotoGameService:
             "round": round_data,
             "player1_wins": p1_wins,
             "player2_wins": p2_wins,
-            "phase": updated_session.get("phase"),
+            "player1_bankroll": p1_bankroll,
+            "player2_bankroll": p2_bankroll,
+            "phase": next_phase,
             "session": updated_session,
         }
     
+    # Keep legacy play_rps_round for backward compatibility
+    async def play_rps_round(
+        self,
+        session_id: str,
+        player_id: str,
+        choice: str,
+    ) -> Dict[str, Any]:
+        """Legacy RPS round - uses default bid of $1M"""
+        return await self.play_rps_auction_round(
+            session_id=session_id,
+            player_id=player_id,
+            choice=choice,
+            bid_amount=MIN_BID,
+        )
+    
     async def play_photo_battle(self, session_id: str, player_id: str) -> Dict[str, Any]:
-        """Execute the photo battle phase"""
+        """Execute the photo battle phase (Stage 2)"""
         session = await self.db.game_sessions.find_one(
             {"session_id": session_id},
             {"_id": 0}
@@ -491,7 +672,7 @@ class PhotoGameService:
             )
         
         if not p1_photo:
-            p1_photo = generate_bot_photo()  # Fallback
+            p1_photo = generate_bot_photo()
         if not p2_photo:
             p2_photo = generate_bot_photo()
         
@@ -520,45 +701,36 @@ class PhotoGameService:
             "player1_photo": {
                 "name": p1_photo.get("name"),
                 "scenery_type": p1_photo.get("scenery_type"),
+                "light_type": p1_photo.get("light_type"),
                 "base_value": p1_photo.get("dollar_value"),
+                "likes": p1_photo.get("likes_count", 0),
             },
             "player2_photo": {
                 "name": p2_photo.get("name"),
                 "scenery_type": p2_photo.get("scenery_type"),
+                "light_type": p2_photo.get("light_type"),
                 "base_value": p2_photo.get("dollar_value"),
+                "likes": p2_photo.get("likes_count", 0),
             },
             "winner": "player1" if photo_winner == session["player1_id"] else "player2",
         }
         
-        # Check overall game state
-        # Count who won RPS and who won photo battle
-        rps_rounds = session.get("rps_rounds", [])
-        rps_winner = None
-        for r in rps_rounds:
-            if r.get("rps_winner"):
-                rps_winner = session["player1_id"] if r["rps_winner"] == "player1" else session["player2_id"]
-                break
+        # Get Stage 1 winner
+        stage1_winner = session.get("stage1_winner")
         
-        if not rps_winner:
-            # Determine from wins
-            if session.get("player1_rps_wins", 0) >= 3:
-                rps_winner = session["player1_id"]
-            else:
-                rps_winner = session["player2_id"]
-        
-        # If same player won both, they win overall
-        if rps_winner == photo_winner:
-            overall_winner = rps_winner
+        # If same player won both stages, they win overall
+        if stage1_winner == photo_winner:
+            overall_winner = stage1_winner
             next_phase = "completed"
         else:
-            # Split - need tiebreaker
+            # Split - need tiebreaker (Stage 3)
             overall_winner = None
             next_phase = "tiebreaker"
         
         updates = {
             "$set": {
                 "photo_battle_result": battle_result,
-                "photo_battle_winner": photo_winner,
+                "stage2_winner": photo_winner,
                 "phase": next_phase,
             }
         }
@@ -567,10 +739,13 @@ class PhotoGameService:
             updates["$set"]["winner_id"] = overall_winner
             updates["$set"]["completed_at"] = datetime.now(timezone.utc).isoformat()
         elif next_phase == "tiebreaker":
-            updates["$set"]["rps_game_number"] = 3
+            # Reset for tiebreaker
+            updates["$set"]["stage_number"] = 3
             updates["$set"]["player1_rps_wins"] = 0
             updates["$set"]["player2_rps_wins"] = 0
             updates["$set"]["current_rps_round"] = 1
+            updates["$set"]["player1_bankroll"] = STARTING_BANKROLL
+            updates["$set"]["player2_bankroll"] = STARTING_BANKROLL
         
         await self.db.game_sessions.update_one({"session_id": session_id}, updates)
         
@@ -587,6 +762,8 @@ class PhotoGameService:
             "success": True,
             "battle_result": battle_result,
             "phase": next_phase,
+            "stage1_winner": "player1" if stage1_winner == session["player1_id"] else "player2",
+            "stage2_winner": battle_result["winner"],
             "overall_winner": "player1" if overall_winner == session["player1_id"] else ("player2" if overall_winner else None),
             "session": updated_session,
         }
@@ -626,20 +803,19 @@ class PhotoGameService:
                     {"$set": {"best_win_streak": stats["current_win_streak"]}}
                 )
             
-            # Add winnings (bet * 2 - they get their bet back plus opponent's bet)
+            # Add winnings
             if bet_amount > 0:
                 await self.db.users.update_one(
                     {"user_id": winner_id},
                     {"$inc": {"bl_coins": bet_amount * 2}}
                 )
                 
-                # Record transaction
                 from referral_system import record_transaction, TransactionType, Currency
                 await record_transaction(
                     user_id=winner_id,
                     transaction_type=TransactionType.BATTLE_WIN,
                     currency=Currency.BL,
-                    amount=bet_amount,  # Net profit
+                    amount=bet_amount,
                     reference_id=session["session_id"],
                     details={"opponent": loser_id, "total_pot": bet_amount * 2}
                 )
@@ -653,7 +829,6 @@ class PhotoGameService:
         
         # Update loser stats
         if loser_id and loser_id != "bot":
-            # Extra stamina penalty for loss (player stats)
             extra_stamina_loss = STAMINA_PER_BATTLE * (DEFEAT_STAMINA_PENALTY - 1)
             
             await self.db.player_stats.update_one(
@@ -669,7 +844,7 @@ class PhotoGameService:
                 }
             )
             
-            # Extra stamina penalty for photo on loss (25% faster drain)
+            # Extra stamina penalty for photo on loss
             loser_photo_id = None
             if session["player1_id"] == loser_id:
                 loser_photo_id = session.get("player1_photo_id")
@@ -683,7 +858,6 @@ class PhotoGameService:
                     {"$inc": {"stamina": -extra_photo_stamina_loss}}
                 )
             
-            # Record loss transaction
             if bet_amount > 0:
                 from referral_system import record_transaction, TransactionType, Currency
                 await record_transaction(
@@ -695,7 +869,6 @@ class PhotoGameService:
                     details={"opponent": winner_id}
                 )
             
-            # Add loss to photo stats
             if session.get("player1_photo_id") and loser_id == session["player1_id"]:
                 await self.db.minted_photos.update_one(
                     {"mint_id": session["player1_photo_id"]},
@@ -710,7 +883,7 @@ class PhotoGameService:
     
     async def get_leaderboard(
         self,
-        period: str = "24h",  # 24h, 7d, 30d, 1y
+        period: str = "24h",
         limit: int = 20
     ) -> List[Dict]:
         """Get leaderboard for specified period"""
@@ -728,7 +901,6 @@ class PhotoGameService:
             {"_id": 0}
         ).sort(field, -1).limit(limit).to_list(limit)
         
-        # Fetch user info
         if stats:
             user_ids = [s["user_id"] for s in stats]
             users = await self.db.users.find(
@@ -748,15 +920,11 @@ class PhotoGameService:
         limit: int = 20
     ) -> List[Dict]:
         """Get leaderboard for most liked minted photos"""
-        # For now, just get by likes_count
-        # TODO: Add time-based filtering
-        
         photos = await self.db.minted_photos.find(
             {"is_private": False},
             {"_id": 0, "image_data": 0}
         ).sort("likes_count", -1).limit(limit).to_list(limit)
         
-        # Fetch user info
         if photos:
             user_ids = list(set(p["user_id"] for p in photos))
             users = await self.db.users.find(
