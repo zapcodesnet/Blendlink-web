@@ -1018,8 +1018,13 @@ export default function SellerDashboard() {
                     size="sm"
                     className="mt-2"
                     onClick={() => {
-                      // TODO: Pass to AI Listing Creator
-                      toast.info("Use these photos in AI Listing Creator");
+                      // Navigate to AI Listing Creator with photos
+                      navigate('/ai-listing-creator', { 
+                        state: { 
+                          photos: editedPhotos.map(p => p.final_url || p.thumbnail_url),
+                          fromPhotoEditor: true 
+                        }
+                      });
                     }}
                   >
                     <Sparkles className="w-4 h-4 mr-2" />
