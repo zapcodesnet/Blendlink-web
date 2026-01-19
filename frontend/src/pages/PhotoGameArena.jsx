@@ -1363,6 +1363,19 @@ const PhotoGameArena = () => {
     }
   };
   
+  // Handle practice mode start (direct bot battle, no matchmaking)
+  const handlePracticeStart = (gameData) => {
+    if (gameData.success) {
+      setSession(gameData.session);
+      setPlayerBankroll(gameData.session?.player1_bankroll || STARTING_BANKROLL);
+      setOpponentBankroll(gameData.session?.player2_bankroll || STARTING_BANKROLL);
+      setRpsWins({ player: 0, opponent: 0 });
+      setGameState('rps_auction');
+      auctionSounds.gavelSlam();
+      toast.success('🎯 Practice mode started! No risk, just fun.');
+    }
+  };
+  
   const handleMatchFound = async (matchInfo) => {
     setMatchData(matchInfo);
     
