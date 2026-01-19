@@ -788,6 +788,14 @@ class PhotoGameService:
         if session.get("winnings_distributed"):
             return
         
+        # Skip all rewards/stats in practice mode
+        if session.get("practice_mode"):
+            await self.db.game_sessions.update_one(
+                {"session_id": session["session_id"]},
+                {"$set": {"winnings_distributed": True, "practice_mode_result": True}}
+            )
+            return
+        
         winner_id = session.get("winner_id")
         loser_id = session["player1_id"] if winner_id == session["player2_id"] else session["player2_id"]
         bet_amount = session.get("bet_amount", 0)
