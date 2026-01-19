@@ -147,7 +147,7 @@ async def play_rps(
     current_user: dict = Depends(get_current_user_from_request)
 ):
     """
-    Play a Rock-Paper-Scissors round
+    Play a Rock-Paper-Scissors round (legacy - uses $1M default bid)
     
     First to 3 wins advances to next phase
     """
@@ -158,6 +158,37 @@ async def play_rps(
         session_id=session_id,
         player_id=current_user["user_id"],
         choice=data.choice.lower(),
+    )
+    
+    if not result["success"]:
+        raise HTTPException(status_code=400, detail=result.get("error"))
+    
+    return result
+
+
+@game_router.post("/session/{session_id}/rps-auction")
+async def play_rps_auction(
+    session_id: str,
+    data: RPSAuctionMoveRequest,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """
+    Play a Million Dollar RPS Bidding Auction round
+    
+    - Choose RPS (rock/paper/scissors) + bid amount ($1M-$5M)
+    - Winner of RPS takes the pot
+    - If tie RPS, higher bid wins
+    - First to 3 wins takes Stage 1
+    - Bankrupt ($0 balance) = automatic loss
+    """
+    if not _game_service:
+        raise HTTPException(status_code=500, detail="Game service not initialized")
+    
+    result = await _game_service.play_rps_auction_round(
+        session_id=session_id,
+        player_id=current_user["user_id"],
+        choice=data.choice.lower(),
+        bid_amount=data.bid_amount,
     )
     
     if not result["success"]:
