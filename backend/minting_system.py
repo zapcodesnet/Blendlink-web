@@ -76,8 +76,11 @@ class MintedPhoto(BaseModel):
     
     # AI Analysis Results
     scenery_type: str = "natural"  # natural, water, manmade
+    light_type: str = "sunlight_fire"  # sunlight_fire, rain_snow_ice, darkness_night
     strength_vs: str = ""
     weakness_vs: str = ""
+    light_strength_vs: str = ""
+    light_weakness_vs: str = ""
     
     # Rating scores (1-100 scale)
     ratings: Dict[str, int] = Field(default_factory=dict)
