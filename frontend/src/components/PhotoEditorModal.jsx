@@ -207,7 +207,7 @@ export default function PhotoEditorModal({ isOpen, onClose, onComplete }) {
     }
   };
   
-  // Remove background
+  // Remove background (single photo)
   const handleRemoveBackground = async () => {
     if (!selectedPhoto) return;
     
@@ -227,6 +227,46 @@ export default function PhotoEditorModal({ isOpen, onClose, onComplete }) {
       toast.error(error.message || "Background removal failed");
     } finally {
       setIsProcessing(false);
+      setProcessingAction('');
+    }
+  };
+  
+  // Batch remove backgrounds from ALL photos
+  const handleBatchRemoveBackgrounds = async () => {
+    const photosToProcess = photos.filter(p => !p.has_background_removed);
+    
+    if (photosToProcess.length === 0) {
+      toast.info("All photos already have backgrounds removed");
+      return;
+    }
+    
+    setIsBatchProcessing(true);
+    setBatchProgress({ current: 0, total: photosToProcess.length });
+    setProcessingAction(`Removing backgrounds (0/${photosToProcess.length})...`);
+    
+    try {
+      const response = await apiRequest('/photo-editor/remove-background-batch', {
+        method: 'POST',
+        body: JSON.stringify({ 
+          photo_ids: photosToProcess.map(p => p.photo_id) 
+        }),
+      });
+      
+      const { total_processed, total_failed, total_time_ms } = response;
+      
+      if (total_failed === 0) {
+        toast.success(`All ${total_processed} backgrounds removed in ${(total_time_ms / 1000).toFixed(1)}s`);
+      } else {
+        toast.warning(`${total_processed} succeeded, ${total_failed} failed`);
+      }
+      
+      await loadPhotos();
+      setActiveTab('background');
+    } catch (error) {
+      toast.error(error.message || "Batch processing failed");
+    } finally {
+      setIsBatchProcessing(false);
+      setBatchProgress({ current: 0, total: 0 });
       setProcessingAction('');
     }
   };
