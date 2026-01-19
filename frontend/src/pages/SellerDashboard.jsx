@@ -742,6 +742,8 @@ export default function SellerDashboard() {
   const [listings, setListings] = useState([]);
   const [performance, setPerformance] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPhotoEditorOpen, setIsPhotoEditorOpen] = useState(false);
+  const [editedPhotos, setEditedPhotos] = useState([]);
 
   const loadData = useCallback(async () => {
     try {
@@ -777,11 +779,17 @@ export default function SellerDashboard() {
     }
   };
 
+  const handlePhotoEditorComplete = (photos) => {
+    setEditedPhotos(photos);
+    toast.success(`${photos.length} edited photo(s) ready for AI listing!`);
+    // Optionally switch to AI Create tab or show them in the listing creator
+  };
+
   const tabs = [
     { id: "overview", label: "Overview", icon: BarChart3 },
     { id: "create", label: "AI Create Listing", icon: Sparkles, externalLink: "https://blendlink.net/ai-listing-creator" },
     { id: "listings", label: "My Listings", icon: Package },
-    { id: "background", label: "Photo Editor", icon: Palette },
+    { id: "photo-editor", label: "Photo Editor", icon: Image },
     { id: "shipping", label: "Shipping", icon: Truck },
   ];
 
@@ -795,6 +803,13 @@ export default function SellerDashboard() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
+      {/* Photo Editor Modal */}
+      <PhotoEditorModal
+        isOpen={isPhotoEditorOpen}
+        onClose={() => setIsPhotoEditorOpen(false)}
+        onComplete={handlePhotoEditorComplete}
+      />
+      
       <div className="max-w-6xl mx-auto px-4 py-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
