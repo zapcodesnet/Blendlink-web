@@ -484,6 +484,126 @@ async def remove_background(
         logger.error(f"Background removal failed: {e}")
         raise HTTPException(status_code=500, detail=f"Background removal failed: {str(e)}")
 
+@photo_editor_router.post("/remove-background-batch")
+async def remove_background_batch(
+    request: BatchBackgroundRemovalRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Batch remove backgrounds from multiple photos using rembg AI.
+    Processes all photos in sequence and returns results for each.
+    """
+    import time
+    total_start_time = time.time()
+    
+    user_id = current_user["user_id"]
+    
+    if not request.photo_ids:
+        raise HTTPException(status_code=400, detail="No photo IDs provided")
+    
+    if len(request.photo_ids) > 10:
+        raise HTTPException(status_code=400, detail="Maximum 10 photos per batch")
+    
+    # Import rembg once for batch
+    from rembg import remove
+    
+    results = []
+    processed_count = 0
+    failed_count = 0
+    
+    for photo_id in request.photo_ids:
+        photo_start_time = time.time()
+        
+        try:
+            # Get photo from database
+            photo = await db.edited_photos.find_one(
+                {"photo_id": photo_id, "user_id": user_id},
+                {"_id": 0}
+            )
+            
+            if not photo:
+                results.append({
+                    "photo_id": photo_id,
+                    "success": False,
+                    "error": "Photo not found",
+                    "processing_time_ms": 0
+                })
+                failed_count += 1
+                continue
+            
+            # Skip if already processed
+            if photo.get("has_background_removed"):
+                results.append({
+                    "photo_id": photo_id,
+                    "success": True,
+                    "skipped": True,
+                    "message": "Background already removed",
+                    "processing_time_ms": 0
+                })
+                processed_count += 1
+                continue
+            
+            # Convert base64 to image
+            image = base64_to_image(photo["current_url"])
+            
+            # Remove background
+            output = remove(image)
+            
+            # Convert back to base64
+            processed_base64 = image_to_base64(output, "PNG")
+            
+            # Calculate processing time
+            photo_processing_time = int((time.time() - photo_start_time) * 1000)
+            
+            # Update database
+            edit_entry = {
+                "action": "remove_background",
+                "params": {"batch": True},
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "result_url": processed_base64[:100] + "..."
+            }
+            
+            await db.edited_photos.update_one(
+                {"photo_id": photo_id},
+                {
+                    "$set": {
+                        "processed_url": processed_base64,
+                        "current_url": processed_base64,
+                        "has_background_removed": True,
+                        "updated_at": datetime.now(timezone.utc).isoformat()
+                    },
+                    "$push": {"edit_history": edit_entry}
+                }
+            )
+            
+            results.append({
+                "photo_id": photo_id,
+                "success": True,
+                "has_transparency": True,
+                "processing_time_ms": photo_processing_time
+            })
+            processed_count += 1
+            
+        except Exception as e:
+            logger.error(f"Batch background removal failed for {photo_id}: {e}")
+            results.append({
+                "photo_id": photo_id,
+                "success": False,
+                "error": str(e),
+                "processing_time_ms": int((time.time() - photo_start_time) * 1000)
+            })
+            failed_count += 1
+    
+    total_time_ms = int((time.time() - total_start_time) * 1000)
+    
+    return {
+        "total_requested": len(request.photo_ids),
+        "total_processed": processed_count,
+        "total_failed": failed_count,
+        "total_time_ms": total_time_ms,
+        "results": results
+    }
+
 @photo_editor_router.post("/adjust")
 async def adjust_photo(
     request: AdjustmentsRequest,
