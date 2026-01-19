@@ -594,8 +594,40 @@ export default function PhotoEditorScreen({ navigation }) {
               </View>
             )}
 
-            {/* Adjustments */}
-            <Text style={styles.sectionTitle}>☀️ Adjustments</Text>
+            {/* AI Auto-Enhance */}
+            <Text style={styles.sectionTitle}>⚡ AI Auto-Enhance</Text>
+            
+            <View style={styles.autoEnhanceSection}>
+              <Text style={styles.autoEnhanceDesc}>
+                Let AI analyze and optimize brightness, contrast, saturation & sharpness
+              </Text>
+              <TouchableOpacity
+                style={[
+                  styles.aiButton,
+                  (selectedPhoto?.auto_enhanced || !selectedPhoto) && styles.buttonDisabled,
+                ]}
+                onPress={handleAutoEnhance}
+                disabled={selectedPhoto?.auto_enhanced || !selectedPhoto}
+              >
+                <Text style={styles.aiButtonText}>
+                  {selectedPhoto?.auto_enhanced ? '✓ Already Enhanced' : '⚡ Auto-Enhance This Photo'}
+                </Text>
+              </TouchableOpacity>
+
+              {photos.length > 1 && (
+                <TouchableOpacity
+                  style={[styles.secondaryButton, { marginTop: 8 }]}
+                  onPress={handleBatchAutoEnhance}
+                >
+                  <Text style={styles.secondaryButtonText}>
+                    ⚡ Auto-Enhance All ({photos.filter((p) => !p.auto_enhanced).length})
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {/* Manual Adjustments */}
+            <Text style={styles.sectionTitle}>☀️ Manual Adjustments</Text>
 
             <View style={styles.sliderRow}>
               <Text style={styles.sliderLabel}>Brightness</Text>
