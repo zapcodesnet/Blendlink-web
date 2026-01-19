@@ -88,6 +88,8 @@ async def get_minting_config():
         "mint_cost_bl": MINT_COST_BL,
         "daily_limits": SUBSCRIPTION_LIMITS,
         "scenery_types": SCENERY_TYPES,
+        "light_types": LIGHT_TYPES,
+        "rating_criteria": RATING_CRITERIA,
         "supported_types": ["photo", "video", "music"],
     }
 
