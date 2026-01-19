@@ -1802,6 +1802,10 @@ from seller_dashboard import get_seller_routers
 for router in get_seller_routers():
     api_router.include_router(router)
 
+# Import and include photo editor router
+from photo_editor import get_photo_editor_router
+api_router.include_router(get_photo_editor_router())
+
 # Import and include album system router
 from album_system import get_album_router
 api_router.include_router(get_album_router())
