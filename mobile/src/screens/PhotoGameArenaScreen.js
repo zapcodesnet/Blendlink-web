@@ -747,13 +747,20 @@ const PhotoBattleView = ({ session, onBattle, colors }) => {
 
   const handleBattle = async () => {
     setIsAnimating(true);
-    Vibration.vibrate([100, 50, 100, 50, 100]);
+    auctionSounds.paddleRaise();
     
     try {
       const battleResult = await onBattle();
       setTimeout(() => {
         setIsAnimating(false);
         setResult(battleResult?.battle_result);
+        // Play sound based on result
+        if (battleResult?.battle_result?.winner === 'player1') {
+          auctionSounds.roundWin();
+        } else {
+          auctionSounds.roundLose();
+        }
+        auctionSounds.photoClash();
       }, 2000);
     } catch (err) {
       console.error('Photo battle failed:', err);
@@ -817,7 +824,7 @@ const ResultView = ({ session, onPlayAgain, user, colors }) => {
   useEffect(() => {
     Animated.spring(scaleAnim, { toValue: 1, friction: 3, useNativeDriver: true }).start();
     if (isWinner) {
-      Vibration.vibrate([100, 100, 100, 100, 100]);
+      auctionSounds.battleVictory();
     }
   }, [isWinner]);
 
