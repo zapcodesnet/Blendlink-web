@@ -1,134 +1,114 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 19, 2026 (Session 15 - Part 2)
+## Latest Update: January 19, 2026 (Session 15 - Part 3)
+
+---
+
+## SESSION 15 - PART 3 SUMMARY ✅
+
+### P1 COMPLETE: AI Auto-Enhancement + Post-Listing Editing
+
+#### 1. AI-Powered Auto-Enhancement ✅
+- **Single Photo**: `POST /api/photo-editor/auto-enhance`
+- **Batch Processing**: `POST /api/photo-editor/auto-enhance-batch` (up to 10 photos)
+- **Algorithm**: Uses numpy histogram analysis to calculate optimal adjustments:
+  - Brightness: Analyzes average luminance (target ~128)
+  - Contrast: Analyzes standard deviation of luminance
+  - Saturation: Analyzes RGB channel differences
+  - Sharpness: Always applies moderate sharpening (1.2x) for product photos
+- **Response**: Returns applied adjustments + analysis metrics (avg_brightness, std_dev, saturation_level)
+
+#### 2. Post-Listing Photo Editing ✅
+- **Load Single Photo**: `POST /api/photo-editor/listing/{id}/load-photo`
+- **Load All Photos**: `POST /api/photo-editor/listing/{id}/load-all-photos`
+- **View Photos**: `GET /api/photo-editor/listing/{id}/photos`
+- **Apply Single**: `POST /api/photo-editor/apply-to-listing`
+- **Apply All**: `POST /api/photo-editor/listing/{id}/apply-all`
+- **Features**:
+  - Load photos from live listings into editor
+  - Edit using all existing tools (BG removal, adjustments, backgrounds)
+  - Apply changes instantly to live listings
+  - Full web/mobile synchronization
+  - Edit history tracking per photo
+
+#### Testing Status:
+- **iteration_40.json**: 27/27 backend tests passed (100%)
+- All endpoints validated with proper auth, validation, error handling
 
 ---
 
 ## SESSION 15 - PART 2 SUMMARY ✅
 
-### PHASE 1 COMPLETE: Photo Editor with Batch Processing & AI Listing
-
-#### New Features Added (P1):
+### Batch Processing & AI Listing Integration
 
 1. **Batch Background Removal** ✅
-   - One-click removal of backgrounds from ALL photos (up to 10)
-   - Progress tracking with total time
-   - Skips already-processed photos automatically
-   - New endpoint: `POST /api/photo-editor/remove-background-batch`
+   - One-click removal from ALL photos (up to 10)
+   - `POST /api/photo-editor/remove-background-batch`
 
 2. **AI Listing Integration** ✅
-   - Generate complete listings from photos using GPT-4o Vision
-   - Returns: title, description, dimensions, weight, price suggestions
-   - New endpoint: `POST /api/photo-editor/generate-ai-listing`
-   - New tab in Photo Editor modal: "AI Listing"
+   - GPT-4o Vision generates listings (title, description, dimensions, price)
+   - `POST /api/photo-editor/generate-ai-listing`
 
 3. **Mobile Photo Editor** ✅
-   - Full Photo Editor screen for React Native/Expo
-   - Features: upload, background removal, adjustments, AI listing
-   - Navigation from Seller Dashboard
-   - New file: `/app/mobile/src/screens/PhotoEditorScreen.js`
-   - Dependency added: `@react-native-community/slider`
-
-#### Testing Status:
-- **iteration_39.json**: 19/19 backend tests passed (100%)
-- All 3 frontend tabs verified (Edit, Background, AI Listing)
+   - Full React Native screen with all features
+   - `/app/mobile/src/screens/PhotoEditorScreen.js`
 
 ---
 
-## SESSION 15 - PART 1 SUMMARY ✅
+## COMPLETE API REFERENCE
 
-### NEW FEATURE: Photo Editor for Seller Dashboard
+### Photo Editor Endpoints (21 total):
 
-#### Overview
-Implemented a comprehensive Photo Editor feature within the Seller Dashboard. Allows sellers to upload, edit, remove backgrounds, and customize product photos before creating listings.
-
-#### Key Features Implemented:
-1. **Multi-Photo Upload** (up to 10 photos, 60MB each)
-   - Base64 image upload with preview thumbnails
-   - File size validation
-   - Progress tracking
-
-2. **AI Background Removal** (using `rembg` library)
-   - Automatic background removal with transparency
-   - Processing time tracking
-   - High-quality PNG output
-
-3. **Image Adjustments**
-   - Brightness (0.5x - 2.0x)
-   - Contrast (0.5x - 2.0x)
-   - Saturation (0.5x - 2.0x)
-   - Sharpness (0.5x - 2.0x)
-
-4. **Background Customization** (20 presets)
-   - **Solid Colors** (8): White, Black, Gray, Cream, Blue, Pink, Mint, Lavender
-   - **Gradients** (5): Sunset, Ocean, Forest, Purple Haze, Peach Dream
-   - **Patterns** (4): Polka Dots, Diagonal Lines, Grid, Chevron
-   - **Textures** (3): Marble, Wood, Concrete
-   - **Custom**: Upload your own background image
-   - Background scale and positioning
-
-5. **Edit Controls**
-   - Undo last edit
-   - Reset to original
-   - Save background preference (persists for future sessions)
-
-6. **Integration**
-   - Finalize edited photos for AI Listing Creator
-   - "Generate AI Listing from These Photos" button
-
-#### Complete API Endpoints:
-| Endpoint | Method | Auth | Description |
-|----------|--------|------|-------------|
-| `/api/photo-editor/backgrounds` | GET | No | Get 20 background presets |
-| `/api/photo-editor/upload` | POST | Yes | Upload photos for editing |
-| `/api/photo-editor/photos` | GET | Yes | Get user's edited photos |
-| `/api/photo-editor/photos/{id}` | GET | Yes | Get single photo details |
-| `/api/photo-editor/photos/{id}` | DELETE | Yes | Delete a photo |
-| `/api/photo-editor/remove-background` | POST | Yes | Remove background with AI |
-| `/api/photo-editor/remove-background-batch` | POST | Yes | **NEW** Batch remove (up to 10) |
-| `/api/photo-editor/adjust` | POST | Yes | Apply image adjustments |
-| `/api/photo-editor/apply-background` | POST | Yes | Apply new background |
-| `/api/photo-editor/undo/{id}` | POST | Yes | Undo last edit |
-| `/api/photo-editor/reset/{id}` | POST | Yes | Reset to original |
-| `/api/photo-editor/save-preference` | POST | Yes | Save background preference |
-| `/api/photo-editor/preference` | GET | Yes | Get saved preferences |
-| `/api/photo-editor/finalize` | POST | Yes | Finalize for listing |
-| `/api/photo-editor/generate-ai-listing` | POST | Yes | **NEW** AI listing generation |
-
-#### Files Created/Modified:
-- **Backend**: `/app/backend/photo_editor.py` (all editing endpoints)
-- **Frontend**: `/app/frontend/src/components/PhotoEditorModal.jsx` (modal UI)
-- **Frontend**: `/app/frontend/src/pages/SellerDashboard.jsx` (integration)
-- **Mobile**: `/app/mobile/src/screens/PhotoEditorScreen.js` (full mobile editor)
-- **Mobile**: `/app/mobile/src/navigation/index.js` (navigation)
-- **Mobile**: `/app/mobile/src/screens/SellerDashboardScreen.js` (Photo Editor tab)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/photo-editor/backgrounds` | GET | Get 20 background presets |
+| `/api/photo-editor/upload` | POST | Upload photos (up to 10) |
+| `/api/photo-editor/photos` | GET | Get user's photos |
+| `/api/photo-editor/photos/{id}` | GET | Get single photo |
+| `/api/photo-editor/photos/{id}` | DELETE | Delete photo |
+| `/api/photo-editor/remove-background` | POST | AI remove background (single) |
+| `/api/photo-editor/remove-background-batch` | POST | AI remove backgrounds (batch) |
+| `/api/photo-editor/auto-enhance` | POST | **AI auto-enhance (single)** |
+| `/api/photo-editor/auto-enhance-batch` | POST | **AI auto-enhance (batch)** |
+| `/api/photo-editor/adjust` | POST | Manual adjustments |
+| `/api/photo-editor/apply-background` | POST | Apply new background |
+| `/api/photo-editor/undo/{id}` | POST | Undo last edit |
+| `/api/photo-editor/reset/{id}` | POST | Reset to original |
+| `/api/photo-editor/save-preference` | POST | Save background preference |
+| `/api/photo-editor/preference` | GET | Get saved preferences |
+| `/api/photo-editor/finalize` | POST | Finalize for listing |
+| `/api/photo-editor/generate-ai-listing` | POST | Generate AI listing |
+| `/api/photo-editor/listing/{id}/load-photo` | POST | **Load listing photo** |
+| `/api/photo-editor/listing/{id}/load-all-photos` | POST | **Load all listing photos** |
+| `/api/photo-editor/listing/{id}/photos` | GET | **Get listing photos** |
+| `/api/photo-editor/apply-to-listing` | POST | **Apply to live listing** |
+| `/api/photo-editor/listing/{id}/apply-all` | POST | **Apply all to listing** |
 
 ---
 
-## TESTING STATUS ✅
+## FILES CREATED/MODIFIED
 
-**Latest Test Run: iteration_39.json**
-- Backend: 19/19 pytest tests passed (100%)
-- Frontend: All UI elements verified (100%)
+**Backend:**
+- `/app/backend/photo_editor.py` - Complete photo editor module (~1800 lines)
 
-**Previous Test Run: iteration_38.json**
-- Backend: 28/28 pytest tests passed (100%)
+**Frontend:**
+- `/app/frontend/src/components/PhotoEditorModal.jsx` - Modal with 3 tabs
+- `/app/frontend/src/pages/SellerDashboard.jsx` - Integration
 
----
-
-## REMAINING P1 TASKS
-
-1. **Post-Listing Editing** (Not Started)
-   - Allow re-editing photos for live listings
-   - Changes propagate instantly to web and mobile
+**Mobile:**
+- `/app/mobile/src/screens/PhotoEditorScreen.js` - Full mobile editor
+- `/app/mobile/src/navigation/index.js` - Navigation
+- `/app/mobile/src/screens/SellerDashboardScreen.js` - Photo Editor tab
 
 ---
 
 ## P2 - FUTURE/BACKLOG
 
-- More immersive auction animations (gavel slam, coin transfers)
-- Ranked matchmaking tiers & tournament modes
+- Auction animations (gavel slam, coin transfers)
+- Ranked matchmaking tiers & tournaments
 - Live selfie matching bonus for photo minting
+- More background textures/patterns
+- AI-suggested crop/composition
 - Frontend: All UI elements verified (100%)
 
 **Key Features Verified:**
