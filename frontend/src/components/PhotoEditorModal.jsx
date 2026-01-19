@@ -986,6 +986,108 @@ export default function PhotoEditorModal({ isOpen, onClose, onComplete }) {
                   )}
                 </>
               )}
+              
+              {/* AI Listing Tab */}
+              {activeTab === 'ai-listing' && (
+                <div className="space-y-4">
+                  <div className="text-center p-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-lg border border-amber-500/20">
+                    <Sparkles className="w-10 h-10 mx-auto text-amber-500 mb-3" />
+                    <h4 className="font-semibold mb-2">AI Listing Generator</h4>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Let AI analyze your photos and generate a complete listing with title, description, dimensions, and price suggestions
+                    </p>
+                    
+                    <Button
+                      onClick={handleGenerateAIListing}
+                      disabled={photos.length === 0 || isGeneratingListing || isProcessing}
+                      className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
+                      data-testid="generate-ai-listing-btn"
+                    >
+                      {isGeneratingListing ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Analyzing Photos...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4 mr-2" />
+                          Generate AI Listing ({photos.length} photo{photos.length !== 1 ? 's' : ''})
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  
+                  {/* AI Result Display */}
+                  {aiListingResult && (
+                    <div className="space-y-3 p-4 bg-muted/30 rounded-lg">
+                      <h5 className="font-semibold text-sm flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-500" />
+                        AI Generated Listing
+                      </h5>
+                      
+                      {aiListingResult.title && (
+                        <div>
+                          <label className="text-xs text-muted-foreground">Title</label>
+                          <p className="font-medium text-sm">{aiListingResult.title}</p>
+                        </div>
+                      )}
+                      
+                      {aiListingResult.description && (
+                        <div>
+                          <label className="text-xs text-muted-foreground">Description</label>
+                          <p className="text-sm whitespace-pre-wrap">{aiListingResult.description}</p>
+                        </div>
+                      )}
+                      
+                      {aiListingResult.price_suggestion && (
+                        <div>
+                          <label className="text-xs text-muted-foreground">Suggested Price</label>
+                          <p className="font-bold text-green-500">{aiListingResult.price_suggestion}</p>
+                        </div>
+                      )}
+                      
+                      {aiListingResult.dimensions && (
+                        <div>
+                          <label className="text-xs text-muted-foreground">Dimensions</label>
+                          <p className="text-sm">{aiListingResult.dimensions}</p>
+                        </div>
+                      )}
+                      
+                      {aiListingResult.weight && (
+                        <div>
+                          <label className="text-xs text-muted-foreground">Weight</label>
+                          <p className="text-sm">{aiListingResult.weight}</p>
+                        </div>
+                      )}
+                      
+                      {aiListingResult.category && (
+                        <div>
+                          <label className="text-xs text-muted-foreground">Category</label>
+                          <p className="text-sm">{aiListingResult.category}</p>
+                        </div>
+                      )}
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full mt-2"
+                        onClick={() => {
+                          // Copy to clipboard
+                          const text = `Title: ${aiListingResult.title || ''}\n\nDescription: ${aiListingResult.description || ''}\n\nPrice: ${aiListingResult.price_suggestion || ''}\n\nDimensions: ${aiListingResult.dimensions || ''}\nWeight: ${aiListingResult.weight || ''}`;
+                          navigator.clipboard.writeText(text);
+                          toast.success("Listing copied to clipboard!");
+                        }}
+                      >
+                        Copy to Clipboard
+                      </Button>
+                    </div>
+                  )}
+                  
+                  <div className="text-xs text-muted-foreground text-center">
+                    AI analysis uses GPT-4o Vision for accurate product detection
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
