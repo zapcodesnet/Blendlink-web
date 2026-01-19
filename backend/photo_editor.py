@@ -851,11 +851,12 @@ async def delete_photo(
 
 @photo_editor_router.post("/finalize")
 async def finalize_photos(
-    photo_ids: List[str],
+    request: FinalizePhotosRequest,
     current_user: dict = Depends(get_current_user)
 ):
     """Finalize edited photos and prepare for listing creation"""
     user_id = current_user["user_id"]
+    photo_ids = request.photo_ids
     
     finalized = []
     for photo_id in photo_ids:
