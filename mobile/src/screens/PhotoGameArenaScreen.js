@@ -15,7 +15,6 @@ import {
   ActivityIndicator,
   TextInput,
   Switch,
-  Vibration,
   FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -23,6 +22,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { photoGameAPI } from '../services/api';
+import auctionSounds from '../utils/auctionSounds';
 
 const { width } = Dimensions.get('window');
 
