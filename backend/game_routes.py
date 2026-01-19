@@ -77,6 +77,13 @@ async def get_game_config():
             "6+": 2.00,
         },
         "strength_multiplier": 1.25,
+        # Million Dollar RPS Auction config
+        "rps_auction": {
+            "starting_bankroll": STARTING_BANKROLL,
+            "min_bid": MIN_BID,
+            "max_bid": MAX_BID,
+            "bid_increment": BID_INCREMENT,
+        }
     }
 
 
