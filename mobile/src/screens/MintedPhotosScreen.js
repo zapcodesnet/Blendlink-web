@@ -503,9 +503,9 @@ export default function MintedPhotosScreen() {
         name: 'photo.jpg',
       });
       formData.append('name', data.name);
-      formData.append('description', data.description);
-      formData.append('is_private', data.is_private);
-      formData.append('show_in_feed', !data.is_private);
+      formData.append('description', data.description || '');
+      formData.append('is_private', data.is_private ? 'true' : 'false');
+      formData.append('show_in_feed', data.is_private ? 'false' : 'true');
 
       await mintingAPI.uploadPhoto(formData);
     } catch (err) {
