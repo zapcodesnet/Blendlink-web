@@ -141,8 +141,8 @@ async def mint_photo(
 async def mint_photo_upload(
     name: str = Form(...),
     description: str = Form(""),
-    is_private: bool = Form(False),
-    show_in_feed: bool = Form(True),
+    is_private: str = Form("false"),  # Accept as string, convert below
+    show_in_feed: str = Form("true"),  # Accept as string, convert below
     album_id: Optional[str] = Form(None),
     file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user_from_request)
@@ -153,35 +153,57 @@ async def mint_photo_upload(
     if not _minting_service:
         raise HTTPException(status_code=500, detail="Minting service not initialized")
     
+    # Convert string booleans to actual booleans
+    is_private_bool = str(is_private).lower() in ('true', '1', 'yes')
+    show_in_feed_bool = str(show_in_feed).lower() in ('true', '1', 'yes')
+    
     # Validate file type
-    allowed_types = ["image/jpeg", "image/png", "image/webp"]
-    if file.content_type not in allowed_types:
+    allowed_types = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+    content_type = file.content_type or "image/jpeg"
+    if content_type not in allowed_types:
+        logger.error(f"Unsupported image type: {content_type}")
         raise HTTPException(
             status_code=400, 
-            detail=f"Unsupported image type. Allowed: {', '.join(allowed_types)}"
+            detail=f"Unsupported image type: {content_type}. Allowed: {', '.join(allowed_types)}"
         )
     
     # Read and encode file
-    content = await file.read()
-    if len(content) > 10 * 1024 * 1024:  # 10MB limit
-        raise HTTPException(status_code=400, detail="Image too large. Max 10MB.")
+    try:
+        content = await file.read()
+        logger.info(f"File uploaded: {file.filename}, size: {len(content)} bytes, type: {content_type}")
+    except Exception as e:
+        logger.error(f"Failed to read file: {e}")
+        raise HTTPException(status_code=400, detail=f"Failed to read file: {str(e)}")
+    
+    if len(content) > 60 * 1024 * 1024:  # 60MB limit as per user requirement
+        raise HTTPException(status_code=400, detail="Image too large. Max 60MB.")
+    
+    if len(content) == 0:
+        raise HTTPException(status_code=400, detail="Empty file uploaded")
     
     image_base64 = base64.b64encode(content).decode("utf-8")
     
-    result = await _minting_service.mint_photo(
-        user_id=current_user["user_id"],
-        image_base64=image_base64,
-        name=name,
-        description=description,
-        is_private=is_private,
-        show_in_feed=show_in_feed,
-        album_id=album_id,
-        mime_type=file.content_type,
-    )
+    try:
+        result = await _minting_service.mint_photo(
+            user_id=current_user["user_id"],
+            image_base64=image_base64,
+            name=name,
+            description=description,
+            is_private=is_private_bool,
+            show_in_feed=show_in_feed_bool,
+            album_id=album_id,
+            mime_type=content_type,
+        )
+    except Exception as e:
+        logger.error(f"Minting service error: {e}")
+        raise HTTPException(status_code=500, detail=f"Minting failed: {str(e)}")
     
-    if not result["success"]:
-        raise HTTPException(status_code=400, detail=result.get("error", "Minting failed"))
+    if not result.get("success"):
+        error_msg = result.get("error", "Minting failed")
+        logger.error(f"Minting failed: {error_msg}")
+        raise HTTPException(status_code=400, detail=error_msg)
     
+    logger.info(f"Photo minted successfully: {result.get('photo', {}).get('mint_id')}")
     return result
 
 
