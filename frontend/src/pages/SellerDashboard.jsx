@@ -966,19 +966,91 @@ export default function SellerDashboard() {
           </div>
         )}
 
-        {activeTab === "background" && (
+        {activeTab === "photo-editor" && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Palette className="w-5 h-5 text-pink-500" />
-                AI Photo Background Removal
+                <Image className="w-5 h-5 text-pink-500" />
+                Professional Photo Editor
               </CardTitle>
               <CardDescription>
-                Remove cluttered backgrounds and replace with professional studio backgrounds
+                Upload photos, remove backgrounds with AI, apply custom backgrounds, and enhance your product images
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <AIBackgroundRemoval />
+            <CardContent className="space-y-6">
+              {/* Feature highlights */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="p-4 bg-muted/50 rounded-lg text-center">
+                  <Upload className="w-8 h-8 mx-auto text-blue-500 mb-2" />
+                  <h4 className="text-sm font-medium">Multi Upload</h4>
+                  <p className="text-xs text-muted-foreground">Up to 10 photos</p>
+                </div>
+                <div className="p-4 bg-muted/50 rounded-lg text-center">
+                  <Wand2 className="w-8 h-8 mx-auto text-purple-500 mb-2" />
+                  <h4 className="text-sm font-medium">AI Background</h4>
+                  <p className="text-xs text-muted-foreground">Auto removal</p>
+                </div>
+                <div className="p-4 bg-muted/50 rounded-lg text-center">
+                  <Palette className="w-8 h-8 mx-auto text-pink-500 mb-2" />
+                  <h4 className="text-sm font-medium">Custom BG</h4>
+                  <p className="text-xs text-muted-foreground">Colors & patterns</p>
+                </div>
+                <div className="p-4 bg-muted/50 rounded-lg text-center">
+                  <Sparkles className="w-8 h-8 mx-auto text-amber-500 mb-2" />
+                  <h4 className="text-sm font-medium">Enhance</h4>
+                  <p className="text-xs text-muted-foreground">Brightness & more</p>
+                </div>
+              </div>
+
+              {/* Edited photos preview */}
+              {editedPhotos.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-semibold mb-3">Edited Photos Ready</h4>
+                  <div className="flex gap-2 overflow-x-auto pb-2">
+                    {editedPhotos.map((photo, i) => (
+                      <div key={i} className="flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden bg-muted">
+                        <img src={photo.thumbnail_url || photo.final_url} alt={`Edited ${i+1}`} className="w-full h-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={() => {
+                      // TODO: Pass to AI Listing Creator
+                      toast.info("Use these photos in AI Listing Creator");
+                    }}
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Generate AI Listing from These Photos
+                  </Button>
+                </div>
+              )}
+
+              {/* Open Editor Button */}
+              <Button
+                onClick={() => setIsPhotoEditorOpen(true)}
+                className="w-full py-8 text-lg bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700"
+                data-testid="open-photo-editor-btn"
+              >
+                <Image className="w-6 h-6 mr-3" />
+                Open Photo Editor
+              </Button>
+
+              {/* Quick tips */}
+              <div className="bg-muted/30 rounded-lg p-4">
+                <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-amber-500" />
+                  Tips for Best Results
+                </h4>
+                <ul className="text-xs text-muted-foreground space-y-1">
+                  <li>• Use high-quality photos with good lighting</li>
+                  <li>• Products on plain backgrounds work best for AI removal</li>
+                  <li>• White/light gray backgrounds are most professional for marketplace</li>
+                  <li>• Your background preference is saved for future sessions</li>
+                </ul>
+              </div>
             </CardContent>
           </Card>
         )}
