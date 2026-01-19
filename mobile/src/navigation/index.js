@@ -19,6 +19,7 @@ import NotificationsScreen from '../screens/NotificationsScreen';
 import AnalyticsDashboardScreen from '../screens/AnalyticsDashboardScreen';
 import AICreateScreen from '../screens/AICreateScreen';
 import SellerDashboardScreen from '../screens/SellerDashboardScreen';
+import PhotoEditorScreen from '../screens/PhotoEditorScreen';
 import MarketplaceScreen from '../screens/MarketplaceScreen';
 import GamesScreen from '../screens/GamesScreen';
 import CasinoScreen from '../screens/CasinoScreen';
