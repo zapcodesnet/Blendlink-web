@@ -572,6 +572,7 @@ const LocationShippingSection = ({ location, setLocation, shippingData, setShipp
 // Main AI Listing Creator Component
 export default function AIListingCreator() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useContext(AuthContext);
   
   const [step, setStep] = useState(0);
@@ -584,11 +585,27 @@ export default function AIListingCreator() {
   const [userPrice, setUserPrice] = useState('');
   const [weight, setWeight] = useState(null);
   const [dimensions, setDimensions] = useState(null);
-  const [location, setLocation] = useState({ zip: '', lat: null, lng: null });
+  const [userLocation, setUserLocation] = useState({ zip: '', lat: null, lng: null });
   const [shippingData, setShippingData] = useState(null);
   const [selectedShipping, setSelectedShipping] = useState(null);
   const [isPublishing, setIsPublishing] = useState(false);
   const [error, setError] = useState(null);
+  
+  // Handle photos passed from Photo Editor
+  useEffect(() => {
+    if (location.state?.fromPhotoEditor && location.state?.photos) {
+      const photosFromEditor = location.state.photos;
+      const newImages = photosFromEditor.map((photoUrl, index) => ({
+        id: `photo-editor-${Date.now()}-${index}`,
+        base64: photoUrl,
+        preview: photoUrl
+      }));
+      setImages(newImages);
+      toast.success(`Loaded ${newImages.length} photo(s) from Photo Editor`);
+      // Clear state to prevent re-loading on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
   
   const steps = [
     { title: 'Photos', icon: Camera },
