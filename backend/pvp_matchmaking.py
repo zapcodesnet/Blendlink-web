@@ -16,7 +16,7 @@ from collections import defaultdict
 logger = logging.getLogger(__name__)
 
 # ============== CONSTANTS ==============
-MATCHMAKING_TIMEOUT_SECONDS = 30  # Time to wait for opponent before bot
+MATCHMAKING_TIMEOUT_SECONDS = 5  # Time to wait for opponent before bot (reduced for better UX)
 TURN_TIMEOUT_SECONDS = 30  # Time for each turn
 BOT_DELAY_SECONDS = 1.5  # Delay for bot responses
 
