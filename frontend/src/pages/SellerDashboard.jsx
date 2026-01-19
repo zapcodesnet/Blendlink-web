@@ -7,6 +7,7 @@ import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
 import { toast } from "sonner";
 import { AuthContext } from "../App";
+import PhotoEditorModal from "../components/PhotoEditorModal";
 import {
   Store,
   Package,
@@ -37,6 +38,7 @@ import {
   Box,
   RotateCcw,
   ArrowLeft,
+  Image,
 } from "lucide-react";
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
