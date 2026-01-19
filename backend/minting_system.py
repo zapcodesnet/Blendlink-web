@@ -178,7 +178,7 @@ async def analyze_photo_with_ai(image_base64: str, mime_type: str = "image/jpeg"
     Returns scenery type, light type, ratings, face detection, etc.
     """
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage, FileContent
+        from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
         
         api_key = os.environ.get("EMERGENT_LLM_KEY")
         if not api_key:
@@ -194,11 +194,10 @@ Analyze photos and provide structured ratings. Be fair but varied in your assess
 Return ONLY valid JSON without any markdown formatting or code blocks."""
         ).with_model("openai", "gpt-4o")
         
-        # Create file content for image - use proper content type and base64 data
-        file_content = FileContent(
-            content_type=mime_type,
-            file_content_base64=image_base64
-        )
+        # Create image content with base64 data (with data URL prefix)
+        # The ImageContent expects a full data URL
+        image_data_url = f"data:{mime_type};base64,{image_base64}"
+        image_content = ImageContent(image_base64=image_data_url)
         
         analysis_prompt = """Analyze this photo and return a JSON object with these exact fields:
 
@@ -239,7 +238,7 @@ Return ONLY the JSON object, no other text."""
 
         user_message = UserMessage(
             text=analysis_prompt,
-            file_contents=[file_content]
+            file_contents=[image_content]
         )
         
         # Send message and get response
