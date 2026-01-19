@@ -1,6 +1,41 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 19, 2026 (Session 15 - Part 3)
+## Latest Update: January 19, 2026 (Session 15 - Part 4)
+
+---
+
+## SESSION 15 - PART 4: BUG FIXES ✅
+
+### Photo Editor Bug Fixes Complete
+
+**Issues Reported:**
+1. Photo selection/upload not working (buttons unresponsive)
+2. Background removal not performing actual pixel-level removal
+3. Photos not transferring to AI Listing Creator
+
+**Root Causes Found & Fixed:**
+
+| Issue | Root Cause | Fix |
+|-------|-----------|-----|
+| Edit tools not showing | `activeTab` defaulted to `'upload'` but no tab content existed for it | Changed to `'edit'` |
+| 50 photos showing instead of 10 | `loadPhotos()` used `limit=50` | Changed to `limit=10` |
+| No "Upload photos" message | No UI when `selectedPhoto` is undefined | Added upload prompt in Edit tab |
+| AI Listing integration | Button only showed toast.info instead of navigating | Added `navigate('/ai-listing-creator', { state: { photos, fromPhotoEditor: true }})` |
+| AI Listing Creator not receiving photos | No `useLocation` hook | Added `useLocation` and `useEffect` to load photos from state |
+
+**Files Modified:**
+- `/app/frontend/src/components/PhotoEditorModal.jsx` - Fixed activeTab, limit, added upload prompt
+- `/app/frontend/src/pages/SellerDashboard.jsx` - Fixed navigation to AI Listing Creator
+- `/app/frontend/src/pages/AIListingCreator.jsx` - Added useLocation to receive photos
+- `/app/mobile/src/screens/PhotoEditorScreen.js` - Fixed limit=10 for mobile sync
+
+**Background Removal Status:**
+✅ **WORKING** - Uses `rembg` library for actual pixel-level background removal. Returns `has_transparency=True` and creates transparent PNG.
+
+**Testing Status:**
+- **iteration_41.json**: 21/21 tests passed (100%)
+- All frontend interactivity verified via Playwright
+- AI Listing integration verified
 
 ---
 
