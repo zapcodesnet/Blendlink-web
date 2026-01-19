@@ -624,6 +624,18 @@ const MatchmakingView = ({ onMatchFound, onCancel, onPracticeStart, selectedPhot
         </TouchableOpacity>
       )}
       
+      {/* Practice Mode Button */}
+      {selectedPhoto && (
+        <TouchableOpacity
+          style={[styles.practiceButton, { borderColor: colors.gold }]}
+          onPress={startPracticeMode}
+          activeOpacity={0.8}
+        >
+          <Text style={[styles.practiceButtonText, { color: colors.gold }]}>🎯 Practice vs Bot (No Risk)</Text>
+          <Text style={[styles.practiceSubtext, { color: colors.textMuted }]}>No BL bet, no stamina loss, no rewards</Text>
+        </TouchableOpacity>
+      )}
+      
       <View style={styles.quickMatchRow}>
         <TouchableOpacity
           style={[styles.quickMatchButton, { backgroundColor: colors.card, borderColor: colors.border, opacity: selectedPhoto ? 1 : 0.5 }]}
