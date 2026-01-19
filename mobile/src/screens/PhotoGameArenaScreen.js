@@ -631,15 +631,24 @@ const RPSBattleView = ({ session, onChoice, isTiebreaker, colors }) => {
     
     setIsSubmitting(true);
     setPlayerChoice(choice);
-    Vibration.vibrate(100);
+    auctionSounds.bidPlaced();
     
     try {
       const result = await onChoice(choice);
       
       if (result?.round) {
         setOpponentChoice(result.round.player2_choice);
-        setRoundResult(result.round.winner === 'player1' ? 'win' : result.round.winner === 'player2' ? 'lose' : 'tie');
+        const isWin = result.round.winner === 'player1';
+        const isLose = result.round.winner === 'player2';
+        setRoundResult(isWin ? 'win' : isLose ? 'lose' : 'tie');
         setScore({ player: result.player1_wins, opponent: result.player2_wins });
+        
+        // Play appropriate sound
+        if (isWin) {
+          auctionSounds.roundWin();
+        } else if (isLose) {
+          auctionSounds.roundLose();
+        }
         
         setTimeout(() => {
           setPlayerChoice(null);
