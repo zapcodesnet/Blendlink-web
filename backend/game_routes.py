@@ -53,6 +53,11 @@ class RPSMoveRequest(BaseModel):
     choice: str  # rock, paper, scissors
 
 
+class RPSAuctionMoveRequest(BaseModel):
+    choice: str  # rock, paper, scissors
+    bid_amount: int  # $1M to $5M in $1M increments
+
+
 # ============== ROUTES ==============
 @game_router.get("/config")
 async def get_game_config():
