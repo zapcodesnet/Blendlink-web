@@ -460,6 +460,10 @@ export default function PhotoEditorModal({ isOpen, onClose, onComplete }) {
     }
   };
   
+  // Calculate stats for batch processing
+  const photosWithBgRemoved = photos.filter(p => p.has_background_removed).length;
+  const photosNeedingBgRemoval = photos.length - photosWithBgRemoved;
+  
   if (!isOpen) return null;
   
   return (
@@ -472,7 +476,7 @@ export default function PhotoEditorModal({ isOpen, onClose, onComplete }) {
             <div>
               <h2 className="text-xl font-bold">Photo Editor</h2>
               <p className="text-sm text-muted-foreground">
-                {photos.length}/10 photos • {activeTab === 'upload' ? 'Upload' : activeTab === 'edit' ? 'Edit' : 'Background'}
+                {photos.length}/10 photos • {photosWithBgRemoved} backgrounds removed
               </p>
             </div>
           </div>
@@ -482,11 +486,24 @@ export default function PhotoEditorModal({ isOpen, onClose, onComplete }) {
         </div>
         
         {/* Processing overlay */}
-        {isProcessing && (
+        {(isProcessing || isBatchProcessing) && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-background p-6 rounded-xl flex flex-col items-center gap-3">
+            <div className="bg-background p-6 rounded-xl flex flex-col items-center gap-3 min-w-[300px]">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              <p className="text-sm">{processingAction}</p>
+              <p className="text-sm font-medium">{processingAction}</p>
+              {isBatchProcessing && batchProgress.total > 0 && (
+                <div className="w-full">
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-primary transition-all duration-300"
+                      style={{ width: `${(batchProgress.current / batchProgress.total) * 100}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground text-center mt-1">
+                    {batchProgress.current} of {batchProgress.total}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}
