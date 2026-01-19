@@ -398,7 +398,7 @@ const LocationShippingSection = ({ location, setLocation, shippingData, setShipp
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setLocation({
+          setUserLocation({
             lat: position.coords.latitude,
             lng: position.coords.longitude,
             detected: true,
@@ -435,8 +435,8 @@ const LocationShippingSection = ({ location, setLocation, shippingData, setShipp
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          origin_zip: location.zip,
-          origin_location: location.lat ? { lat: location.lat, lng: location.lng } : null,
+          origin_zip: userLocation.zip,
+          origin_location: userLocation.lat ? { lat: userLocation.lat, lng: userLocation.lng } : null,
           manual_weight: weight?.value || 2,
           manual_dimensions: {
             length: dimensions?.length || 12,
@@ -474,7 +474,7 @@ const LocationShippingSection = ({ location, setLocation, shippingData, setShipp
         <div className="flex gap-2">
           <Input 
             value={location?.zip || ''}
-            onChange={(e) => setLocation({ ...location, zip: e.target.value })}
+            onChange={(e) => setUserLocation({ ...location, zip: e.target.value })}
             placeholder="Enter ZIP code"
             className="flex-1"
           />
@@ -763,7 +763,7 @@ export default function AIListingCreator() {
           condition: aiData.condition,
           images: uploadedImages.length > 0 ? uploadedImages : images.map(i => i.preview),
           tags: aiData.tags,
-          location: location.zip,
+          location: userLocation.zip,
           weight: weight,
           dimensions: dimensions,
           shipping_method: selectedShipping || shippingData?.shipping_options?.[0] || null
