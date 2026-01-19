@@ -694,10 +694,10 @@ export default function PhotoEditorModal({ isOpen, onClose, onComplete }) {
                     <p className="text-sm text-muted-foreground mb-4">
                       Drag & drop or click to upload up to 10 photos (max 60MB each)
                     </p>
-                    <Button>
+                    <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2">
                       <ImageIcon className="w-4 h-4 mr-2" />
                       Select Photos
-                    </Button>
+                    </div>
                   </div>
                   <input
                     type="file"
@@ -706,6 +706,7 @@ export default function PhotoEditorModal({ isOpen, onClose, onComplete }) {
                     className="hidden"
                     onChange={handleFileUpload}
                     disabled={isUploading}
+                    ref={fileInputRef}
                   />
                 </label>
               </div>
