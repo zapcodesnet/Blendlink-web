@@ -45,13 +45,14 @@ def auth_headers(auth_token):
     }
 
 
-def create_test_image_base64(width=200, height=200, color=(255, 0, 0)):
+def create_test_image_base64(width=100, height=100, color=(255, 0, 0)):
     """Create a simple test image and return as base64"""
     img = Image.new('RGB', (width, height), color=color)
     buffer = BytesIO()
     img.save(buffer, format='JPEG', quality=85)
     buffer.seek(0)
-    return f"data:image/jpeg;base64,{base64.b64encode(buffer.getvalue()).decode()}"
+    b64_data = base64.b64encode(buffer.getvalue()).decode()
+    return f"data:image/jpeg;base64,{b64_data}"
 
 
 class TestPhotoEditorBackgrounds:
