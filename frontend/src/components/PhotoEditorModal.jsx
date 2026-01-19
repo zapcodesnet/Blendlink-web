@@ -811,11 +811,58 @@ export default function PhotoEditorModal({ isOpen, onClose, onComplete }) {
                     )}
                   </div>
                   
-                  {/* Adjustments */}
+                  {/* AI Auto-Enhance Section */}
+                  <div>
+                    <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-amber-500" />
+                      AI Auto-Enhance
+                    </h4>
+                    
+                    <div className="p-3 bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-lg border border-amber-500/20 mb-3">
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Let AI analyze your photo and automatically optimize brightness, contrast, saturation, and sharpness for product photography.
+                      </p>
+                      
+                      <Button
+                        onClick={handleAutoEnhance}
+                        disabled={isProcessing || isBatchProcessing || !selectedPhoto || selectedPhoto?.auto_enhanced}
+                        className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
+                        data-testid="auto-enhance-btn"
+                      >
+                        {selectedPhoto?.auto_enhanced ? (
+                          <>
+                            <Check className="w-4 h-4 mr-2" />
+                            Already Enhanced
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-4 h-4 mr-2" />
+                            Auto-Enhance This Photo
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    
+                    {/* Batch Auto-Enhance */}
+                    {photos.length > 1 && (
+                      <Button
+                        onClick={handleBatchAutoEnhance}
+                        disabled={isProcessing || isBatchProcessing}
+                        variant="outline"
+                        className="w-full border-amber-500/50 hover:bg-amber-500/20"
+                        data-testid="batch-auto-enhance-btn"
+                      >
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Auto-Enhance All Photos ({photos.filter(p => !p.auto_enhanced).length})
+                      </Button>
+                    )}
+                  </div>
+                  
+                  {/* Manual Adjustments */}
                   <div>
                     <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
                       <Sun className="w-4 h-4 text-yellow-500" />
-                      Adjustments
+                      Manual Adjustments
                     </h4>
                     
                     <div className="space-y-4">
