@@ -881,6 +881,7 @@ export default function PhotoGameArenaScreen() {
 
   const handlePhotoSelect = (photo) => {
     setSelectedPhoto(photo);
+    auctionSounds.selectionConfirm();
   };
 
   const handleMatchFound = async (matchInfo) => {
@@ -892,7 +893,7 @@ export default function PhotoGameArenaScreen() {
       if (response.success) {
         setSession(response.session);
         setGameState('rps');
-        Vibration.vibrate([100, 100, 100]);
+        auctionSounds.gavelSlam();
       }
     } catch (err) {
       console.error('Failed to start game:', err);
