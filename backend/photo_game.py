@@ -352,19 +352,30 @@ class PhotoGameService:
         bet_amount: int = 0,
         player_photo_id: Optional[str] = None,
         skip_bet_deduction: bool = False,
+        practice_mode: bool = False,
     ) -> Dict[str, Any]:
-        """Start a new game session with Million Dollar RPS"""
-        # Check player stamina
-        stats = await self.get_player_stats(player_id)
-        if stats.get("stamina", 0) < STAMINA_PER_BATTLE:
-            return {
-                "success": False,
-                "error": f"Insufficient stamina. Need {STAMINA_PER_BATTLE:.1f}%, have {stats.get('stamina', 0):.1f}%",
-                "stamina": stats.get("stamina", 0),
-            }
+        """Start a new game session with Million Dollar RPS
         
-        # Check BL coins for bet (only if not already deducted)
-        if bet_amount > 0 and not skip_bet_deduction:
+        Args:
+            practice_mode: If True, no BL bet, no stamina loss, no rewards - pure practice
+        """
+        # In practice mode, force no bet and always bot opponent
+        if practice_mode:
+            bet_amount = 0
+            opponent_id = "bot"
+        
+        # Check player stamina (skip in practice mode)
+        if not practice_mode:
+            stats = await self.get_player_stats(player_id)
+            if stats.get("stamina", 0) < STAMINA_PER_BATTLE:
+                return {
+                    "success": False,
+                    "error": f"Insufficient stamina. Need {STAMINA_PER_BATTLE:.1f}%, have {stats.get('stamina', 0):.1f}%",
+                    "stamina": stats.get("stamina", 0),
+                }
+        
+        # Check BL coins for bet (only if not already deducted and not practice mode)
+        if bet_amount > 0 and not skip_bet_deduction and not practice_mode:
             user = await self.db.users.find_one({"user_id": player_id}, {"bl_coins": 1})
             if not user or user.get("bl_coins", 0) < bet_amount:
                 return {"success": False, "error": f"Insufficient BL coins. Need {bet_amount}, have {user.get('bl_coins', 0) if user else 0}"}
@@ -382,14 +393,15 @@ class PhotoGameService:
             # Regenerate photo stamina
             player_photo = await self.regenerate_photo_stamina(player_photo)
             
-            # Check if photo has stamina
-            photo_stamina = player_photo.get("stamina", 100)
-            if photo_stamina <= 0:
-                return {
-                    "success": False, 
-                    "error": "This photo has no stamina. Wait at least 1 hour for it to recover.",
-                    "photo_stamina": photo_stamina
-                }
+            # Check if photo has stamina (skip in practice mode)
+            if not practice_mode:
+                photo_stamina = player_photo.get("stamina", 100)
+                if photo_stamina <= 0:
+                    return {
+                        "success": False, 
+                        "error": "This photo has no stamina. Wait at least 1 hour for it to recover.",
+                        "photo_stamina": photo_stamina
+                    }
         else:
             return {"success": False, "error": "Photo selection is required for battle"}
         
@@ -413,6 +425,7 @@ class PhotoGameService:
         session_dict["created_at"] = session_dict["created_at"].isoformat()
         session_dict["player1_photo"] = player_photo
         session_dict["player2_photo"] = opponent_photo
+        session_dict["practice_mode"] = practice_mode  # Track practice mode
         
         await self.db.game_sessions.insert_one(session_dict)
         
@@ -420,23 +433,25 @@ class PhotoGameService:
         if "_id" in session_dict:
             del session_dict["_id"]
         
-        # Deduct stamina from player stats
-        await self.db.player_stats.update_one(
-            {"user_id": player_id},
-            {"$inc": {"stamina": -STAMINA_PER_BATTLE}}
-        )
+        # Deduct stamina from player stats (skip in practice mode)
+        if not practice_mode:
+            await self.db.player_stats.update_one(
+                {"user_id": player_id},
+                {"$inc": {"stamina": -STAMINA_PER_BATTLE}}
+            )
         
-        # Deduct stamina from photo
-        await self.db.minted_photos.update_one(
-            {"mint_id": player_photo_id},
-            {
-                "$inc": {"stamina": -STAMINA_PERCENT_PER_BATTLE},
-                "$set": {"last_battle_at": datetime.now(timezone.utc).isoformat()}
-            }
-        )
+        # Deduct stamina from photo (skip in practice mode)
+        if not practice_mode:
+            await self.db.minted_photos.update_one(
+                {"mint_id": player_photo_id},
+                {
+                    "$inc": {"stamina": -STAMINA_PERCENT_PER_BATTLE},
+                    "$set": {"last_battle_at": datetime.now(timezone.utc).isoformat()}
+                }
+            )
         
-        # Deduct BL bet amount (only if not already deducted in PvP flow)
-        if bet_amount > 0 and not skip_bet_deduction:
+        # Deduct BL bet amount (only if not already deducted in PvP flow, skip in practice mode)
+        if bet_amount > 0 and not skip_bet_deduction and not practice_mode:
             await self.db.users.update_one(
                 {"user_id": player_id},
                 {"$inc": {"bl_coins": -bet_amount}}
