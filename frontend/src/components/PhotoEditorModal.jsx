@@ -114,7 +114,7 @@ export default function PhotoEditorModal({ isOpen, onClose, onComplete }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
   const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
-  const [activeTab, setActiveTab] = useState('upload'); // upload, edit, background
+  const [activeTab, setActiveTab] = useState('edit'); // edit, background, ai-listing
   const [processingAction, setProcessingAction] = useState('');
   
   // Adjustment sliders
