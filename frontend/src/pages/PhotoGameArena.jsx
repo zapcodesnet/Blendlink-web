@@ -668,7 +668,7 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect }) => {
         )}
         
         <div className="w-48 mx-auto h-2 bg-gray-700 rounded-full overflow-hidden mb-6">
-          <motion.div className="h-full bg-purple-500" animate={{ width: `${(elapsed / 30) * 100}%` }} />
+          <motion.div className="h-full bg-purple-500" animate={{ width: `${(elapsed / 5) * 100}%` }} />
         </div>
         
         <Button variant="outline" onClick={cancelMatchmaking}>
