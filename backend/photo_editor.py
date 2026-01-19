@@ -698,7 +698,6 @@ def analyze_image_for_enhancement(image: Image.Image) -> Dict[str, float]:
     Analyze image and calculate optimal enhancement values.
     Uses histogram analysis to determine brightness, contrast, saturation needs.
     """
-    import numpy as np
     
     # Convert to RGB if needed
     if image.mode == 'RGBA':
