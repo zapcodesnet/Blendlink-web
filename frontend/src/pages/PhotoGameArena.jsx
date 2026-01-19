@@ -5,14 +5,14 @@ import {
   Hand, Scissors, FileText, Sparkles, Crown,
   Shield, Target, TrendingUp, Coins, RefreshCw,
   X, Check, AlertCircle, Loader2, Image, ChevronRight,
-  DollarSign, Gavel, Banknote
+  DollarSign, Gavel, Banknote, Volume2, VolumeX
 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../services/api';
 import { AuthContext } from '../App';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Slider } from '../components/ui/slider';
+import auctionSounds from '../utils/auctionSounds';
 
 // ============== CONSTANTS ==============
 const RPS_CHOICES = [
@@ -27,13 +27,6 @@ const SCENERY_CONFIG = {
   manmade: { color: 'from-orange-500 to-red-600', icon: '🏙️', label: 'Man-made', strong: 'natural', weak: 'water' },
 };
 
-const LIGHT_CONFIG = {
-  sunlight_fire: { icon: '☀️', label: 'Sunlight/Fire', strong: 'darkness_night', weak: 'rain_snow_ice' },
-  rain_snow_ice: { icon: '❄️', label: 'Rain/Snow/Ice', strong: 'sunlight_fire', weak: 'darkness_night' },
-  darkness_night: { icon: '🌙', label: 'Night/Interior', strong: 'rain_snow_ice', weak: 'sunlight_fire' },
-};
-
-// Million Dollar RPS Constants
 const STARTING_BANKROLL = 10_000_000;
 const MIN_BID = 1_000_000;
 const MAX_BID = 5_000_000;
@@ -52,7 +45,87 @@ const formatBankroll = (value) => {
   return `$${value?.toLocaleString()}`;
 };
 
-// ============== HELPER COMPONENTS ==============
+// ============== ANIMATED COMPONENTS ==============
+
+// Animated Gavel Component
+const AnimatedGavel = ({ isSlaming }) => {
+  return (
+    <motion.div
+      className="relative"
+      animate={isSlaming ? {
+        rotate: [-45, 0, -45],
+        y: [0, 20, 0],
+      } : {}}
+      transition={{ duration: 0.3, times: [0, 0.5, 1] }}
+    >
+      <span className="text-6xl">🔨</span>
+    </motion.div>
+  );
+};
+
+// Animated Auction Paddle
+const AuctionPaddle = ({ number, isRaised, color = "purple" }) => {
+  return (
+    <motion.div
+      className="relative flex flex-col items-center"
+      animate={isRaised ? { y: -30, scale: 1.1 } : { y: 0, scale: 1 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+    >
+      {/* Paddle */}
+      <motion.div 
+        className={`w-20 h-24 rounded-t-full bg-gradient-to-b ${
+          color === "purple" ? "from-purple-400 to-purple-600" : "from-red-400 to-red-600"
+        } flex items-center justify-center shadow-lg border-4 border-yellow-400`}
+        animate={isRaised ? { rotate: [0, -10, 10, 0] } : {}}
+        transition={{ duration: 0.5 }}
+      >
+        <span className="text-2xl font-bold text-white drop-shadow-lg">
+          {formatBankroll(number)}
+        </span>
+      </motion.div>
+      {/* Handle */}
+      <div className={`w-3 h-16 ${color === "purple" ? "bg-amber-700" : "bg-amber-800"} rounded-b-lg`} />
+    </motion.div>
+  );
+};
+
+// Flying Coins Animation
+const FlyingCoins = ({ from, to, amount, onComplete }) => {
+  const coins = Array(Math.min(5, Math.ceil(amount / 1_000_000))).fill(0);
+  
+  return (
+    <AnimatePresence>
+      {coins.map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute text-3xl z-50"
+          initial={{ 
+            x: from?.x || 0, 
+            y: from?.y || 0,
+            opacity: 1,
+            scale: 0.5
+          }}
+          animate={{ 
+            x: to?.x || 0, 
+            y: to?.y || 0,
+            opacity: [1, 1, 0],
+            scale: [0.5, 1.2, 0.8]
+          }}
+          transition={{ 
+            duration: 0.6, 
+            delay: i * 0.1,
+            ease: "easeOut"
+          }}
+          onAnimationComplete={() => i === coins.length - 1 && onComplete?.()}
+        >
+          💰
+        </motion.div>
+      ))}
+    </AnimatePresence>
+  );
+};
+
+// Stamina Bar with animation
 const StaminaBar = ({ stamina, maxStamina = 100, showLabel = true }) => {
   const percent = (stamina / maxStamina) * 100;
   return (
@@ -63,6 +136,7 @@ const StaminaBar = ({ stamina, maxStamina = 100, showLabel = true }) => {
           className={`h-full ${percent > 20 ? 'bg-gradient-to-r from-yellow-500 to-orange-500' : 'bg-red-500'}`}
           initial={{ width: 0 }}
           animate={{ width: `${percent}%` }}
+          transition={{ duration: 0.5 }}
         />
       </div>
       {showLabel && <span className="text-sm text-gray-400">{Math.round(stamina)}/{maxStamina}</span>}
@@ -70,21 +144,62 @@ const StaminaBar = ({ stamina, maxStamina = 100, showLabel = true }) => {
   );
 };
 
-const BankrollDisplay = ({ bankroll, isPlayer }) => {
+// Bankroll Display with coin animation
+const BankrollDisplay = ({ bankroll, isPlayer, showChange, changeAmount }) => {
+  const [displayValue, setDisplayValue] = useState(bankroll);
+  
+  useEffect(() => {
+    // Animate value change
+    const start = displayValue;
+    const end = bankroll;
+    const duration = 500;
+    const startTime = Date.now();
+    
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const current = Math.round(start + (end - start) * progress);
+      setDisplayValue(current);
+      
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+    
+    animate();
+  }, [bankroll]);
+  
   return (
     <motion.div 
-      className={`flex items-center gap-2 px-4 py-2 rounded-lg ${isPlayer ? 'bg-purple-900/50' : 'bg-red-900/50'}`}
-      animate={{ scale: [1, 1.02, 1] }}
+      className={`relative flex items-center gap-2 px-4 py-2 rounded-lg ${isPlayer ? 'bg-purple-900/50' : 'bg-red-900/50'}`}
+      animate={showChange ? { scale: [1, 1.1, 1] } : {}}
       transition={{ duration: 0.3 }}
     >
       <Banknote className={`w-5 h-5 ${isPlayer ? 'text-purple-400' : 'text-red-400'}`} />
-      <span className={`font-bold ${isPlayer ? 'text-purple-300' : 'text-red-300'}`}>
-        {formatBankroll(bankroll)}
+      <span className={`font-bold tabular-nums ${isPlayer ? 'text-purple-300' : 'text-red-300'}`}>
+        {formatBankroll(displayValue)}
       </span>
+      
+      {/* Change indicator */}
+      <AnimatePresence>
+        {showChange && changeAmount !== 0 && (
+          <motion.span
+            initial={{ opacity: 0, y: 0 }}
+            animate={{ opacity: 1, y: -20 }}
+            exit={{ opacity: 0, y: -40 }}
+            className={`absolute -top-2 right-0 text-sm font-bold ${
+              changeAmount > 0 ? 'text-green-400' : 'text-red-400'
+            }`}
+          >
+            {changeAmount > 0 ? '+' : ''}{formatBankroll(changeAmount)}
+          </motion.span>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
 
+// Win Streak Badge
 const WinStreakBadge = ({ streak }) => {
   if (streak < 3) return null;
   const multiplier = streak >= 6 ? 2 : streak >= 5 ? 1.75 : streak >= 4 ? 1.5 : 1.25;
@@ -97,6 +212,23 @@ const WinStreakBadge = ({ streak }) => {
       <Trophy className="w-3 h-3" />
       {streak} Win Streak! ({multiplier}x)
     </motion.div>
+  );
+};
+
+// Sound Toggle Button
+const SoundToggle = ({ enabled, onToggle }) => {
+  return (
+    <button
+      onClick={onToggle}
+      className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors"
+      title={enabled ? "Mute sounds" : "Enable sounds"}
+    >
+      {enabled ? (
+        <Volume2 className="w-5 h-5 text-purple-400" />
+      ) : (
+        <VolumeX className="w-5 h-5 text-gray-500" />
+      )}
+    </button>
   );
 };
 
@@ -130,6 +262,11 @@ const PhotoSelectionScreen = ({ photos, loading, onSelectPhoto, selectedPhotoId 
   const availablePhotos = photos.filter(p => p.is_available);
   const unavailablePhotos = photos.filter(p => !p.is_available);
 
+  const handlePhotoClick = (photo) => {
+    auctionSounds.selectionConfirm();
+    onSelectPhoto(photo);
+  };
+
   return (
     <div className="space-y-6">
       <div className="text-center mb-6">
@@ -140,7 +277,6 @@ const PhotoSelectionScreen = ({ photos, loading, onSelectPhoto, selectedPhotoId 
         </p>
       </div>
 
-      {/* Available Photos */}
       {availablePhotos.length > 0 && (
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-green-400 flex items-center gap-2">
@@ -155,22 +291,27 @@ const PhotoSelectionScreen = ({ photos, loading, onSelectPhoto, selectedPhotoId 
               return (
                 <motion.button
                   key={photo.mint_id}
-                  onClick={() => onSelectPhoto(photo)}
+                  onClick={() => handlePhotoClick(photo)}
                   className={`relative flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left ${
                     isSelected 
                       ? 'bg-purple-900/50 border-purple-500 ring-2 ring-purple-400' 
                       : 'bg-gray-800/50 border-gray-700/50 hover:border-purple-500/50'
                   }`}
-                  whileHover={{ scale: 1.01 }}
+                  whileHover={{ scale: 1.01, x: 5 }}
                   whileTap={{ scale: 0.99 }}
+                  onHoverStart={() => auctionSounds.buttonHover()}
                   data-testid={`photo-select-${photo.mint_id}`}
                 >
-                  {/* Thumbnail */}
                   <div className={`w-16 h-16 rounded-lg overflow-hidden bg-gradient-to-br ${scenery.color} flex items-center justify-center flex-shrink-0`}>
-                    <span className="text-2xl">{scenery.icon}</span>
+                    <motion.span 
+                      className="text-2xl"
+                      animate={isSelected ? { rotate: [0, -10, 10, 0] } : {}}
+                      transition={{ duration: 0.5 }}
+                    >
+                      {scenery.icon}
+                    </motion.span>
                   </div>
                   
-                  {/* Photo Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h4 className="font-semibold text-white truncate">{photo.name}</h4>
@@ -189,7 +330,6 @@ const PhotoSelectionScreen = ({ photos, loading, onSelectPhoto, selectedPhotoId 
                       </span>
                     </div>
                     
-                    {/* Stamina Bar */}
                     <div className="mt-2 flex items-center gap-2">
                       <div className="flex-1 max-w-32">
                         <StaminaBar stamina={photo.stamina} showLabel={false} />
@@ -200,12 +340,15 @@ const PhotoSelectionScreen = ({ photos, loading, onSelectPhoto, selectedPhotoId 
                     </div>
                   </div>
                   
-                  {/* Selection indicator */}
-                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                    isSelected ? 'bg-purple-500 border-purple-500' : 'border-gray-600'
-                  }`}>
+                  <motion.div 
+                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                      isSelected ? 'bg-purple-500 border-purple-500' : 'border-gray-600'
+                    }`}
+                    animate={isSelected ? { scale: [1, 1.2, 1] } : {}}
+                    transition={{ duration: 0.2 }}
+                  >
                     {isSelected && <Check className="w-4 h-4 text-white" />}
-                  </div>
+                  </motion.div>
                 </motion.button>
               );
             })}
@@ -213,7 +356,6 @@ const PhotoSelectionScreen = ({ photos, loading, onSelectPhoto, selectedPhotoId 
         </div>
       )}
 
-      {/* Unavailable Photos (Grayed Out) */}
       {unavailablePhotos.length > 0 && (
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-gray-500 flex items-center gap-2">
@@ -266,21 +408,82 @@ const RPSAuctionBattle = ({
   const [bidAmount, setBidAmount] = useState(MIN_BID);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showResult, setShowResult] = useState(false);
+  const [showGavel, setShowGavel] = useState(false);
+  const [playerPaddleRaised, setPlayerPaddleRaised] = useState(false);
+  const [opponentPaddleRaised, setOpponentPaddleRaised] = useState(false);
+  const [bankrollChange, setBankrollChange] = useState({ player: 0, opponent: 0, show: false });
 
   useEffect(() => {
     if (lastRound) {
-      setShowResult(true);
+      // Raise paddles
+      setPlayerPaddleRaised(true);
+      auctionSounds.paddleRaise();
+      
+      setTimeout(() => {
+        setOpponentPaddleRaised(true);
+        auctionSounds.paddleRaise();
+      }, 300);
+      
+      // Show result
+      setTimeout(() => {
+        setShowResult(true);
+        auctionSounds.bidPlaced();
+        
+        // Calculate bankroll changes
+        const playerChange = lastRound.player1_bankroll_after - (playerBankroll + (lastRound.winner === 'player1' ? 0 : lastRound.player1_bid));
+        const opponentChange = lastRound.player2_bankroll_after - (opponentBankroll + (lastRound.winner === 'player2' ? 0 : lastRound.player2_bid));
+        
+        setBankrollChange({ 
+          player: lastRound.winner === 'player1' ? lastRound.total_pot : -lastRound.player1_bid,
+          opponent: lastRound.winner === 'player2' ? lastRound.total_pot : -lastRound.player2_bid,
+          show: true 
+        });
+        
+        // Gavel slam
+        setTimeout(() => {
+          setShowGavel(true);
+          auctionSounds.gavelSlam();
+        }, 500);
+        
+        // Play win/lose sound
+        setTimeout(() => {
+          if (lastRound.winner === 'player1') {
+            auctionSounds.roundWin();
+            auctionSounds.coinsCount();
+          } else if (lastRound.winner === 'player2') {
+            auctionSounds.roundLose();
+          }
+        }, 800);
+      }, 600);
+      
+      // Reset
       const timer = setTimeout(() => {
         setShowResult(false);
+        setShowGavel(false);
+        setPlayerPaddleRaised(false);
+        setOpponentPaddleRaised(false);
         setSelectedChoice(null);
-      }, 2000);
+        setBankrollChange({ player: 0, opponent: 0, show: false });
+      }, 2500);
+      
       return () => clearTimeout(timer);
     }
   }, [lastRound]);
 
+  const handleChoiceSelect = (choiceId) => {
+    auctionSounds.selectionConfirm();
+    setSelectedChoice(choiceId);
+  };
+
+  const handleBidSelect = (bid) => {
+    auctionSounds.buttonHover();
+    setBidAmount(bid);
+  };
+
   const handleSubmit = async () => {
     if (!selectedChoice || isSubmitting) return;
     setIsSubmitting(true);
+    auctionSounds.paddleRaise();
     
     try {
       await onMove(selectedChoice, bidAmount);
@@ -296,149 +499,263 @@ const RPSAuctionBattle = ({
   }
 
   return (
-    <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700/50">
-      {/* Header */}
-      <div className="text-center mb-6">
-        {isTiebreaker && (
-          <div className="inline-flex items-center gap-2 bg-yellow-500/20 text-yellow-400 px-4 py-2 rounded-full text-sm font-bold mb-4">
-            <Gavel className="w-4 h-4" />
-            TIEBREAKER ROUND
-          </div>
-        )}
-        <h3 className="text-2xl font-bold text-white mb-2 flex items-center justify-center gap-2">
-          <DollarSign className="w-6 h-6 text-yellow-400" />
-          Million Dollar RPS Auction
-        </h3>
-        <p className="text-gray-400">Choose RPS + Bid Amount. First to 3 wins!</p>
+    <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700/50 relative overflow-hidden">
+      {/* Auction house background pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-4 left-4 text-6xl">🏛️</div>
+        <div className="absolute bottom-4 right-4 text-6xl">💎</div>
       </div>
+      
+      <div className="relative z-10">
+        {/* Header */}
+        <div className="text-center mb-6">
+          {isTiebreaker && (
+            <motion.div 
+              className="inline-flex items-center gap-2 bg-yellow-500/20 text-yellow-400 px-4 py-2 rounded-full text-sm font-bold mb-4"
+              animate={{ scale: [1, 1.05, 1] }}
+              transition={{ duration: 1, repeat: Infinity }}
+            >
+              <Gavel className="w-4 h-4" />
+              ⚡ TIEBREAKER ROUND ⚡
+            </motion.div>
+          )}
+          <h3 className="text-2xl font-bold text-white mb-2 flex items-center justify-center gap-2">
+            <motion.span
+              animate={{ rotate: [0, -10, 10, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              🔨
+            </motion.span>
+            <span className="bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
+              Million Dollar RPS Auction
+            </span>
+            <motion.span
+              animate={{ rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              💰
+            </motion.span>
+          </h3>
+          <p className="text-gray-400">Choose RPS + Bid Amount. First to 3 wins!</p>
+        </div>
 
-      {/* Bankrolls Display */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="text-center">
-          <p className="text-sm text-gray-400 mb-1">Your Bankroll</p>
-          <BankrollDisplay bankroll={playerBankroll} isPlayer={true} />
-        </div>
-        
-        {/* Score */}
-        <div className="flex items-center gap-4">
-          <div className="text-center">
-            <span className="text-3xl font-bold text-purple-400">{playerWins}</span>
+        {/* Auction Paddles & Bankrolls */}
+        <div className="flex justify-between items-end mb-8 px-8">
+          <div className="flex flex-col items-center gap-4">
+            <p className="text-sm text-gray-400">Your Bankroll</p>
+            <BankrollDisplay 
+              bankroll={playerBankroll} 
+              isPlayer={true} 
+              showChange={bankrollChange.show}
+              changeAmount={bankrollChange.player}
+            />
+            <AuctionPaddle 
+              number={bidAmount} 
+              isRaised={playerPaddleRaised} 
+              color="purple"
+            />
+            <p className="text-xs text-purple-400 font-bold">YOU</p>
           </div>
-          <span className="text-gray-500 text-xl">-</span>
-          <div className="text-center">
-            <span className="text-3xl font-bold text-red-400">{opponentWins}</span>
+          
+          {/* Score Display */}
+          <div className="flex flex-col items-center">
+            <div className="flex items-center gap-6 mb-4">
+              <motion.span 
+                className="text-4xl font-bold text-purple-400"
+                animate={playerWins > 0 ? { scale: [1, 1.3, 1] } : {}}
+                key={playerWins}
+              >
+                {playerWins}
+              </motion.span>
+              <span className="text-gray-500 text-2xl">-</span>
+              <motion.span 
+                className="text-4xl font-bold text-red-400"
+                animate={opponentWins > 0 ? { scale: [1, 1.3, 1] } : {}}
+                key={opponentWins}
+              >
+                {opponentWins}
+              </motion.span>
+            </div>
+            <p className="text-sm text-gray-500">First to 3</p>
+            
+            {/* Gavel Animation */}
+            <AnimatePresence>
+              {showGavel && (
+                <motion.div
+                  initial={{ scale: 0, rotate: -45 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  className="mt-4"
+                >
+                  <AnimatedGavel isSlaming={true} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+          
+          <div className="flex flex-col items-center gap-4">
+            <p className="text-sm text-gray-400">Opponent</p>
+            <BankrollDisplay 
+              bankroll={opponentBankroll} 
+              isPlayer={false}
+              showChange={bankrollChange.show}
+              changeAmount={bankrollChange.opponent}
+            />
+            <AuctionPaddle 
+              number={lastRound?.player2_bid || MIN_BID} 
+              isRaised={opponentPaddleRaised} 
+              color="red"
+            />
+            <p className="text-xs text-red-400 font-bold">OPPONENT</p>
           </div>
         </div>
-        
-        <div className="text-center">
-          <p className="text-sm text-gray-400 mb-1">Opponent</p>
-          <BankrollDisplay bankroll={opponentBankroll} isPlayer={false} />
-        </div>
-      </div>
 
-      {/* Last Round Result */}
-      <AnimatePresence>
-        {showResult && lastRound && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            className="mb-6 p-4 bg-gray-900/50 rounded-xl"
-          >
-            <div className="flex items-center justify-center gap-8 mb-3">
-              <div className="text-center">
-                <p className="text-xs text-gray-400">You</p>
-                <span className="text-4xl">{RPS_CHOICES.find(c => c.id === lastRound.player1_choice)?.icon}</span>
-                <p className="text-yellow-400 font-bold">{formatBankroll(lastRound.player1_bid)}</p>
+        {/* Last Round Result */}
+        <AnimatePresence>
+          {showResult && lastRound && (
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.9 }}
+              className="mb-6 p-6 bg-gradient-to-r from-gray-900/80 to-gray-800/80 rounded-xl border border-yellow-500/30"
+            >
+              <div className="flex items-center justify-center gap-12 mb-4">
+                <motion.div 
+                  className="text-center"
+                  animate={{ x: [-10, 10, -10, 0] }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <p className="text-xs text-gray-400 mb-1">You</p>
+                  <motion.span 
+                    className="text-5xl block"
+                    animate={{ scale: [1, 1.3, 1] }}
+                  >
+                    {RPS_CHOICES.find(c => c.id === lastRound.player1_choice)?.icon}
+                  </motion.span>
+                  <p className="text-yellow-400 font-bold mt-1">{formatBankroll(lastRound.player1_bid)}</p>
+                </motion.div>
+                
+                <motion.div 
+                  className="text-3xl font-bold"
+                  animate={{ scale: [1, 1.5, 1], rotate: [0, 360] }}
+                  transition={{ duration: 0.5 }}
+                >
+                  ⚔️
+                </motion.div>
+                
+                <motion.div 
+                  className="text-center"
+                  animate={{ x: [10, -10, 10, 0] }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <p className="text-xs text-gray-400 mb-1">Opponent</p>
+                  <motion.span 
+                    className="text-5xl block"
+                    animate={{ scale: [1, 1.3, 1] }}
+                  >
+                    {RPS_CHOICES.find(c => c.id === lastRound.player2_choice)?.icon}
+                  </motion.span>
+                  <p className="text-yellow-400 font-bold mt-1">{formatBankroll(lastRound.player2_bid)}</p>
+                </motion.div>
               </div>
-              <div className="text-2xl font-bold text-gray-400">VS</div>
-              <div className="text-center">
-                <p className="text-xs text-gray-400">Opponent</p>
-                <span className="text-4xl">{RPS_CHOICES.find(c => c.id === lastRound.player2_choice)?.icon}</span>
-                <p className="text-yellow-400 font-bold">{formatBankroll(lastRound.player2_bid)}</p>
+              
+              <motion.div 
+                className={`text-center text-xl font-bold ${
+                  lastRound.winner === 'player1' ? 'text-green-400' : 
+                  lastRound.winner === 'player2' ? 'text-red-400' : 'text-yellow-400'
+                }`}
+                animate={{ scale: [1, 1.1, 1] }}
+              >
+                {lastRound.winner === 'player1' 
+                  ? `🎉 You won ${formatBankroll(lastRound.total_pot)}!` 
+                  : lastRound.winner === 'player2' 
+                    ? `😢 Lost ${formatBankroll(lastRound.player1_bid)}` 
+                    : '🤝 Tie - No pot change!'}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* RPS Choice & Bid Selection */}
+        {!showResult && (
+          <>
+            <div className="mb-6">
+              <p className="text-sm text-gray-400 mb-3 text-center">Choose your move:</p>
+              <div className="flex justify-center gap-4">
+                {RPS_CHOICES.map((choice) => (
+                  <motion.button
+                    key={choice.id}
+                    onClick={() => handleChoiceSelect(choice.id)}
+                    className={`w-28 h-28 rounded-2xl flex flex-col items-center justify-center transition-all shadow-lg ${
+                      selectedChoice === choice.id 
+                        ? 'bg-purple-600 ring-4 ring-purple-400 ring-offset-2 ring-offset-gray-900' 
+                        : 'bg-gray-700 hover:bg-gray-600'
+                    }`}
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    whileTap={{ scale: 0.95 }}
+                    data-testid={`rps-choice-${choice.id}`}
+                  >
+                    <motion.span 
+                      className="text-5xl mb-1"
+                      animate={selectedChoice === choice.id ? { rotate: [0, -10, 10, 0] } : {}}
+                      transition={{ duration: 0.3 }}
+                    >
+                      {choice.icon}
+                    </motion.span>
+                    <span className="text-xs text-gray-300">{choice.label}</span>
+                  </motion.button>
+                ))}
               </div>
             </div>
-            <div className={`text-center font-bold text-lg ${
-              lastRound.winner === 'player1' ? 'text-green-400' : 
-              lastRound.winner === 'player2' ? 'text-red-400' : 'text-yellow-400'
-            }`}>
-              {lastRound.winner === 'player1' ? `🎉 You won ${formatBankroll(lastRound.total_pot)}!` : 
-               lastRound.winner === 'player2' ? `😢 Lost ${formatBankroll(lastRound.total_pot)}` : '🤝 Tie!'}
+
+            <div className="mb-6">
+              <p className="text-sm text-gray-400 mb-3 text-center">Set your bid:</p>
+              <div className="flex flex-wrap justify-center gap-3">
+                {bidOptions.map((bid) => (
+                  <motion.button
+                    key={bid}
+                    onClick={() => handleBidSelect(bid)}
+                    className={`px-5 py-3 rounded-xl font-bold transition-all shadow-md ${
+                      bidAmount === bid 
+                        ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-black scale-110' 
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    }`}
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    data-testid={`bid-${bid}`}
+                  >
+                    💵 {formatBankroll(bid)}
+                  </motion.button>
+                ))}
+              </div>
             </div>
-          </motion.div>
+
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button
+                onClick={handleSubmit}
+                disabled={!selectedChoice || isSubmitting || playerBankroll < MIN_BID}
+                className="w-full bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 text-black font-bold text-lg py-6 shadow-lg"
+                size="lg"
+                data-testid="submit-rps-auction"
+              >
+                {isSubmitting ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : playerBankroll < MIN_BID ? (
+                  <span className="flex items-center gap-2">
+                    💸 Bankrupt! Game Over
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <Gavel className="w-6 h-6" />
+                    Place Bid: {selectedChoice?.toUpperCase() || '???'} + {formatBankroll(bidAmount)}
+                    <span className="text-2xl">🎯</span>
+                  </span>
+                )}
+              </Button>
+            </motion.div>
+          </>
         )}
-      </AnimatePresence>
-
-      {/* RPS Choice */}
-      {!showResult && (
-        <>
-          <div className="mb-6">
-            <p className="text-sm text-gray-400 mb-3 text-center">Choose your move:</p>
-            <div className="flex justify-center gap-4">
-              {RPS_CHOICES.map((choice) => (
-                <motion.button
-                  key={choice.id}
-                  onClick={() => setSelectedChoice(choice.id)}
-                  className={`w-24 h-24 rounded-2xl flex flex-col items-center justify-center transition-all ${
-                    selectedChoice === choice.id 
-                      ? 'bg-purple-600 ring-4 ring-purple-400' 
-                      : 'bg-gray-700 hover:bg-gray-600'
-                  }`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  data-testid={`rps-choice-${choice.id}`}
-                >
-                  <span className="text-4xl mb-1">{choice.icon}</span>
-                  <span className="text-xs text-gray-300">{choice.label}</span>
-                </motion.button>
-              ))}
-            </div>
-          </div>
-
-          {/* Bid Amount */}
-          <div className="mb-6">
-            <p className="text-sm text-gray-400 mb-3 text-center">Set your bid:</p>
-            <div className="flex flex-wrap justify-center gap-2">
-              {bidOptions.map((bid) => (
-                <motion.button
-                  key={bid}
-                  onClick={() => setBidAmount(bid)}
-                  className={`px-4 py-2 rounded-lg font-bold transition-all ${
-                    bidAmount === bid 
-                      ? 'bg-yellow-500 text-black' 
-                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                  }`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  data-testid={`bid-${bid}`}
-                >
-                  {formatBankroll(bid)}
-                </motion.button>
-              ))}
-            </div>
-          </div>
-
-          {/* Submit Button */}
-          <Button
-            onClick={handleSubmit}
-            disabled={!selectedChoice || isSubmitting || playerBankroll < MIN_BID}
-            className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-black font-bold"
-            size="lg"
-            data-testid="submit-rps-auction"
-          >
-            {isSubmitting ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : playerBankroll < MIN_BID ? (
-              'Bankrupt! 😢'
-            ) : (
-              <>
-                <Gavel className="w-5 h-5 mr-2" />
-                Place Bid: {selectedChoice?.toUpperCase()} + {formatBankroll(bidAmount)}
-              </>
-            )}
-          </Button>
-        </>
-      )}
+      </div>
     </div>
   );
 };
@@ -446,11 +763,24 @@ const RPSAuctionBattle = ({
 // ============== PHOTO BATTLE COMPONENT ==============
 const PhotoBattle = ({ playerPhoto, opponentPhoto, result, onBattle }) => {
   const [isAnimating, setIsAnimating] = useState(false);
+  const [showClash, setShowClash] = useState(false);
   
   const handleBattle = async () => {
     setIsAnimating(true);
+    auctionSounds.paddleRaise();
+    
+    // Clash animation
+    setTimeout(() => {
+      setShowClash(true);
+      auctionSounds.photoClash();
+    }, 800);
+    
     await onBattle();
-    setTimeout(() => setIsAnimating(false), 2000);
+    
+    setTimeout(() => {
+      setIsAnimating(false);
+      setShowClash(false);
+    }, 2000);
   };
   
   const PhotoCard = ({ photo, isPlayer, effectiveValue }) => {
@@ -458,24 +788,36 @@ const PhotoBattle = ({ playerPhoto, opponentPhoto, result, onBattle }) => {
     
     return (
       <motion.div
-        className={`relative w-48 rounded-xl overflow-hidden border-4 ${
+        className={`relative w-48 rounded-xl overflow-hidden border-4 shadow-2xl ${
           isPlayer ? 'border-purple-500' : 'border-red-500'
         }`}
-        animate={isAnimating ? { x: isPlayer ? [0, 50, 0] : [0, -50, 0], scale: [1, 1.1, 1] } : {}}
-        transition={{ duration: 0.5, repeat: isAnimating ? Infinity : 0 }}
+        animate={isAnimating ? { 
+          x: isPlayer ? [0, 100, 0] : [0, -100, 0],
+          scale: [1, 1.15, 1],
+          rotate: isPlayer ? [0, 5, -5, 0] : [0, -5, 5, 0]
+        } : {}}
+        transition={{ duration: 0.8, repeat: isAnimating ? 2 : 0 }}
       >
         <div className={`aspect-square bg-gradient-to-br ${scenery.color}`}>
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-6xl opacity-50">{scenery.icon}</span>
+            <motion.span 
+              className="text-7xl opacity-50"
+              animate={isAnimating ? { scale: [1, 1.3, 1], rotate: [0, 360] } : {}}
+              transition={{ duration: 1 }}
+            >
+              {scenery.icon}
+            </motion.span>
           </div>
         </div>
         
-        <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-2">
-          <p className="text-white font-bold text-sm truncate">{photo?.name || 'Photo'}</p>
-          <p className="text-yellow-400 font-bold">{formatDollarValue(photo?.dollar_value)}</p>
-          {effectiveValue && effectiveValue !== photo?.dollar_value && (
-            <p className="text-green-400 text-xs">Effective: {formatDollarValue(effectiveValue)}</p>
-          )}
+        <div className="absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-sm p-3">
+          <p className="text-white font-bold truncate">{photo?.name || 'Photo'}</p>
+          <motion.p 
+            className="text-yellow-400 font-bold text-lg"
+            animate={result && effectiveValue ? { scale: [1, 1.2, 1] } : {}}
+          >
+            {formatDollarValue(effectiveValue || photo?.dollar_value)}
+          </motion.p>
         </div>
         
         <div className="absolute top-2 left-2">
@@ -487,67 +829,114 @@ const PhotoBattle = ({ playerPhoto, opponentPhoto, result, onBattle }) => {
     );
   };
   
+  useEffect(() => {
+    if (result) {
+      setTimeout(() => {
+        if (result.winner === 'player1') {
+          auctionSounds.roundWin();
+        } else {
+          auctionSounds.roundLose();
+        }
+        auctionSounds.gavelSlam();
+      }, 500);
+    }
+  }, [result]);
+  
   return (
-    <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700/50 text-center">
-      <h3 className="text-2xl font-bold text-white mb-2 flex items-center justify-center gap-2">
-        <DollarSign className="w-6 h-6 text-yellow-400" />
-        Photo Dollar Auction Clash
-      </h3>
-      <p className="text-gray-400 mb-6">Highest effective value wins!</p>
-      
-      <div className="flex items-center justify-center gap-8 mb-8">
-        <PhotoCard photo={playerPhoto} isPlayer={true} effectiveValue={result?.player1_value} />
-        
-        <div className="flex flex-col items-center">
-          <motion.div
-            className="text-4xl font-bold text-white mb-4"
-            animate={isAnimating ? { scale: [1, 1.3, 1] } : {}}
-            transition={{ duration: 0.5, repeat: isAnimating ? Infinity : 0 }}
-          >
-            ⚔️
-          </motion.div>
-          
-          {!result && !isAnimating && (
-            <Button 
-              onClick={handleBattle}
-              className="bg-gradient-to-r from-purple-600 to-pink-600"
-              data-testid="battle-button"
-            >
-              <Gavel className="w-4 h-4 mr-2" />
-              Start Auction!
-            </Button>
-          )}
-        </div>
-        
-        <PhotoCard photo={opponentPhoto} isPlayer={false} effectiveValue={result?.player2_value} />
+    <div className="bg-gray-800/50 rounded-2xl p-8 border border-gray-700/50 text-center relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-10 left-10 text-8xl">💎</div>
+        <div className="absolute bottom-10 right-10 text-8xl">👑</div>
       </div>
       
-      <AnimatePresence>
-        {result && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="space-y-4"
-          >
-            <div className={`text-2xl font-bold ${
-              result.winner === 'player1' ? 'text-green-400' : 'text-red-400'
-            }`}>
-              {result.winner === 'player1' ? '🏆 Your Photo Wins!' : '😢 Opponent Wins!'}
-            </div>
+      <div className="relative z-10">
+        <h3 className="text-2xl font-bold text-white mb-2 flex items-center justify-center gap-2">
+          <span className="text-3xl">🖼️</span>
+          <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+            Photo Dollar Auction Clash
+          </span>
+          <span className="text-3xl">💰</span>
+        </h3>
+        <p className="text-gray-400 mb-8">Highest effective value wins the auction!</p>
+        
+        <div className="flex items-center justify-center gap-8 mb-8">
+          <PhotoCard photo={playerPhoto} isPlayer={true} effectiveValue={result?.player1_value} />
+          
+          <div className="flex flex-col items-center">
+            <AnimatePresence>
+              {showClash && (
+                <motion.div
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: [1, 2, 1], rotate: [0, 180, 360] }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  className="text-6xl mb-4"
+                >
+                  💥
+                </motion.div>
+              )}
+            </AnimatePresence>
             
-            <div className="flex justify-center gap-8 text-sm">
-              <div>
-                <p className="text-gray-400">Your Value</p>
-                <p className="text-yellow-400 font-bold">{formatDollarValue(result.player1_value)}</p>
+            {!result && !isAnimating && (
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button 
+                  onClick={handleBattle}
+                  className="bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 text-white font-bold px-8 py-4 text-lg shadow-lg"
+                  data-testid="battle-button"
+                >
+                  <Gavel className="w-5 h-5 mr-2" />
+                  Start Auction!
+                  <span className="ml-2 text-xl">⚔️</span>
+                </Button>
+              </motion.div>
+            )}
+            
+            {isAnimating && !result && (
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                className="text-5xl"
+              >
+                ⚔️
+              </motion.div>
+            )}
+          </div>
+          
+          <PhotoCard photo={opponentPhoto} isPlayer={false} effectiveValue={result?.player2_value} />
+        </div>
+        
+        <AnimatePresence>
+          {result && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5, y: 50 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className="space-y-4"
+            >
+              <motion.div 
+                className={`text-3xl font-bold ${
+                  result.winner === 'player1' ? 'text-green-400' : 'text-red-400'
+                }`}
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 0.5, repeat: 2 }}
+              >
+                {result.winner === 'player1' ? '🏆 Your Photo Wins! 🎉' : '😢 Opponent Wins!'}
+              </motion.div>
+              
+              <div className="flex justify-center gap-12 text-sm bg-gray-900/50 rounded-xl p-4">
+                <div>
+                  <p className="text-gray-400 mb-1">Your Value</p>
+                  <p className="text-yellow-400 font-bold text-xl">{formatDollarValue(result.player1_value)}</p>
+                </div>
+                <div className="w-px bg-gray-700" />
+                <div>
+                  <p className="text-gray-400 mb-1">Opponent Value</p>
+                  <p className="text-yellow-400 font-bold text-xl">{formatDollarValue(result.player2_value)}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-gray-400">Opponent Value</p>
-                <p className="text-yellow-400 font-bold">{formatDollarValue(result.player2_value)}</p>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 };
@@ -575,13 +964,11 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect }) => {
         setBattlePhotos(photosRes.data.photos || []);
         setQueueStatus(queueRes.data);
       } catch (err) {
-        console.error('Failed to fetch data:', err);
         setError('Failed to load your photos');
       } finally {
         setLoadingPhotos(false);
       }
     };
-    
     fetchData();
     const interval = setInterval(async () => {
       try {
@@ -589,7 +976,6 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect }) => {
         setQueueStatus(res.data);
       } catch (err) {}
     }, 5000);
-    
     return () => clearInterval(interval);
   }, []);
   
@@ -603,6 +989,7 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect }) => {
       setStatus('searching');
       setElapsed(0);
       setError(null);
+      auctionSounds.paddleRaise();
       
       const response = await api.post('/photo-game/pvp/find-match', {
         bet_amount: betAmount,
@@ -612,20 +999,23 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect }) => {
       
       if (response.data.status === 'matched') {
         setStatus('matched');
+        auctionSounds.matchFound();
         onMatchFound?.(response.data);
       } else if (response.data.status === 'searching') {
         intervalRef.current = setInterval(async () => {
           try {
             const statusRes = await api.get('/photo-game/pvp/match-status');
             setElapsed(statusRes.data.elapsed_seconds || 0);
+            auctionSounds.tick();
             
             if (statusRes.data.status === 'matched') {
               clearInterval(intervalRef.current);
               setStatus('matched');
+              auctionSounds.matchFound();
               onMatchFound?.(statusRes.data);
             }
           } catch (err) {}
-        }, 2000);
+        }, 1000);
       }
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Failed to start matchmaking');
@@ -651,27 +1041,39 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect }) => {
     return (
       <div className="text-center py-12">
         <motion.div
-          className="w-24 h-24 mx-auto mb-6 rounded-full bg-purple-600/20 flex items-center justify-center"
-          animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+          className="w-32 h-32 mx-auto mb-6 rounded-full bg-purple-600/20 flex items-center justify-center border-4 border-purple-500/50"
+          animate={{ 
+            scale: [1, 1.1, 1],
+            borderColor: ['rgba(168, 85, 247, 0.5)', 'rgba(168, 85, 247, 1)', 'rgba(168, 85, 247, 0.5)']
+          }}
           transition={{ duration: 1.5, repeat: Infinity }}
         >
-          <Users className="w-12 h-12 text-purple-400" />
+          <motion.span
+            className="text-5xl"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          >
+            🔍
+          </motion.span>
         </motion.div>
         
-        <h3 className="text-xl font-bold text-white mb-2">Searching for Opponent...</h3>
-        <p className="text-gray-400 mb-4">{Math.round(elapsed)}s / 5s</p>
+        <h3 className="text-2xl font-bold text-white mb-2">Searching for Opponent...</h3>
+        <p className="text-gray-400 mb-2">{Math.round(elapsed)}s / 5s</p>
         
         {selectedPhoto && (
-          <p className="text-purple-400 mb-4">
-            Fighting with: <span className="font-bold">{selectedPhoto.name}</span>
+          <p className="text-purple-400 mb-4 font-semibold">
+            ⚔️ Fighting with: {selectedPhoto.name}
           </p>
         )}
         
-        <div className="w-48 mx-auto h-2 bg-gray-700 rounded-full overflow-hidden mb-6">
-          <motion.div className="h-full bg-purple-500" animate={{ width: `${(elapsed / 5) * 100}%` }} />
+        <div className="w-64 mx-auto h-3 bg-gray-700 rounded-full overflow-hidden mb-6">
+          <motion.div 
+            className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
+            animate={{ width: `${(elapsed / 5) * 100}%` }}
+          />
         </div>
         
-        <Button variant="outline" onClick={cancelMatchmaking}>
+        <Button variant="outline" onClick={cancelMatchmaking} className="border-gray-600">
           <X className="w-4 h-4 mr-2" /> Cancel
         </Button>
       </div>
@@ -732,7 +1134,11 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect }) => {
                 onClick={() => setUseBotFallback(!useBotFallback)}
                 className={`relative w-12 h-6 rounded-full transition-colors ${useBotFallback ? 'bg-purple-600' : 'bg-gray-700'}`}
               >
-                <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${useBotFallback ? 'left-7' : 'left-1'}`} />
+                <motion.span 
+                  className="absolute top-1 w-4 h-4 rounded-full bg-white"
+                  animate={{ left: useBotFallback ? 28 : 4 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                />
               </button>
             </div>
           </div>
@@ -742,15 +1148,18 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect }) => {
       )}
       
       {selectedPhoto && (
-        <Button 
-          onClick={startMatchmaking} 
-          className="w-full bg-gradient-to-r from-purple-600 to-pink-600"
-          size="lg"
-          data-testid="find-match-btn"
-        >
-          <Swords className="w-5 h-5 mr-2" />
-          Find Match with {selectedPhoto.name}
-        </Button>
+        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <Button 
+            onClick={startMatchmaking} 
+            className="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 py-6 text-lg font-bold shadow-lg"
+            size="lg"
+            data-testid="find-match-btn"
+          >
+            <Swords className="w-6 h-6 mr-2" />
+            Find Match with {selectedPhoto.name}
+            <span className="ml-2 text-2xl">⚔️</span>
+          </Button>
+        </motion.div>
       )}
     </div>
   );
@@ -765,6 +1174,7 @@ const PhotoGameArena = () => {
   const [matchData, setMatchData] = useState(null);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState(true);
   
   // RPS Auction state
   const [playerBankroll, setPlayerBankroll] = useState(STARTING_BANKROLL);
@@ -774,6 +1184,11 @@ const PhotoGameArena = () => {
   
   // Photo battle state
   const [photoBattleResult, setPhotoBattleResult] = useState(null);
+  
+  useEffect(() => {
+    auctionSounds.init();
+    auctionSounds.setEnabled(soundEnabled);
+  }, [soundEnabled]);
   
   useEffect(() => {
     const fetchStats = async () => {
@@ -789,6 +1204,15 @@ const PhotoGameArena = () => {
     fetchStats();
   }, []);
   
+  const handleSoundToggle = () => {
+    const newValue = !soundEnabled;
+    setSoundEnabled(newValue);
+    auctionSounds.setEnabled(newValue);
+    if (newValue) {
+      auctionSounds.selectionConfirm();
+    }
+  };
+  
   const handleMatchFound = async (matchInfo) => {
     setMatchData(matchInfo);
     
@@ -801,7 +1225,8 @@ const PhotoGameArena = () => {
         setOpponentBankroll(response.data.session?.player2_bankroll || STARTING_BANKROLL);
         setRpsWins({ player: 0, opponent: 0 });
         setGameState('rps_auction');
-        toast.success(matchInfo.mode === 'bot' ? 'Bot match started!' : 'Match found!');
+        auctionSounds.gavelSlam();
+        toast.success(matchInfo.mode === 'bot' ? '🤖 Bot match started!' : '⚔️ Match found!');
       }
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Failed to start game');
@@ -826,21 +1251,27 @@ const PhotoGameArena = () => {
       setOpponentBankroll(player2_bankroll);
       
       setTimeout(() => {
+        setLastRound(null);
+        
         if (phase === 'photo_battle') {
           setGameState('photo_battle');
           setRpsWins({ player: 0, opponent: 0 });
-          setLastRound(null);
         } else if (phase === 'tiebreaker') {
           setGameState('tiebreaker');
           setPlayerBankroll(STARTING_BANKROLL);
           setOpponentBankroll(STARTING_BANKROLL);
           setRpsWins({ player: 0, opponent: 0 });
-          setLastRound(null);
+          auctionSounds.gavelSlam();
         } else if (phase === 'completed') {
           setGameState('result');
           setSession(response.data.session);
+          if (response.data.session?.winner_id === user?.user_id) {
+            auctionSounds.battleVictory();
+          } else {
+            auctionSounds.battleDefeat();
+          }
         }
-      }, 2000);
+      }, 2500);
       
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Failed to submit move');
@@ -861,9 +1292,15 @@ const PhotoGameArena = () => {
           setPlayerBankroll(STARTING_BANKROLL);
           setOpponentBankroll(STARTING_BANKROLL);
           setPhotoBattleResult(null);
+          auctionSounds.gavelSlam();
         } else if (response.data.phase === 'completed') {
           setGameState('result');
           setSession(response.data.session);
+          if (response.data.session?.winner_id === user?.user_id) {
+            auctionSounds.battleVictory();
+          } else {
+            auctionSounds.battleDefeat();
+          }
         }
       }, 3000);
       
@@ -882,8 +1319,6 @@ const PhotoGameArena = () => {
     setPhotoBattleResult(null);
     setPlayerBankroll(STARTING_BANKROLL);
     setOpponentBankroll(STARTING_BANKROLL);
-    
-    // Refresh stats
     api.get('/photo-game/stats').then(res => setStats(res.data)).catch(() => {});
   };
   
@@ -898,17 +1333,26 @@ const PhotoGameArena = () => {
   return (
     <div className="min-h-screen bg-gray-900 pb-24" data-testid="photo-game-arena">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-900/50 to-pink-900/50 border-b border-gray-700/50">
+      <div className="bg-gradient-to-r from-purple-900/50 via-pink-900/30 to-orange-900/50 border-b border-gray-700/50">
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                <Gavel className="w-6 h-6 text-yellow-400" />
-                Dollar Auction Arena
+                <motion.span animate={{ rotate: [0, -10, 10, 0] }} transition={{ duration: 2, repeat: Infinity }}>
+                  🔨
+                </motion.span>
+                <span className="bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
+                  Dollar Auction Arena
+                </span>
               </h1>
-              <p className="text-gray-400 mt-1">Million Dollar RPS + Photo Battles</p>
+              <p className="text-gray-400 mt-1 flex items-center gap-1">
+                <span>💰</span> Million Dollar RPS + Photo Battles <span>💎</span>
+              </p>
             </div>
-            {stats && <WinStreakBadge streak={stats.current_win_streak} />}
+            <div className="flex items-center gap-3">
+              <SoundToggle enabled={soundEnabled} onToggle={handleSoundToggle} />
+              {stats && <WinStreakBadge streak={stats.current_win_streak} />}
+            </div>
           </div>
           
           {stats && (
@@ -947,7 +1391,7 @@ const PhotoGameArena = () => {
           )}
           
           {(gameState === 'rps_auction' || gameState === 'tiebreaker') && session && (
-            <motion.div key="rps_auction" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <motion.div key="rps_auction" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <RPSAuctionBattle
                 session={session}
                 onMove={handleRPSAuctionMove}
@@ -962,7 +1406,7 @@ const PhotoGameArena = () => {
           )}
           
           {gameState === 'photo_battle' && session && (
-            <motion.div key="photo_battle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <motion.div key="photo_battle" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <PhotoBattle
                 playerPhoto={session?.player1_photo}
                 opponentPhoto={session?.player2_photo}
@@ -977,41 +1421,79 @@ const PhotoGameArena = () => {
               key="result"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-gray-800/50 rounded-2xl p-8 border border-gray-700/50 text-center"
+              className="bg-gradient-to-b from-gray-800/50 to-gray-900/50 rounded-2xl p-8 border border-gray-700/50 text-center relative overflow-hidden"
             >
-              {session.winner_id === user?.user_id ? (
-                <>
-                  <motion.div
-                    animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
-                    transition={{ duration: 0.5, repeat: 3 }}
-                    className="text-6xl mb-4"
-                  >
-                    🏆
-                  </motion.div>
-                  <h2 className="text-3xl font-bold text-green-400 mb-2">Victory!</h2>
-                  {session.bet_amount > 0 && (
-                    <p className="text-yellow-400 text-xl mb-4">+{session.bet_amount * 2} BL Coins</p>
-                  )}
-                </>
-              ) : (
-                <>
-                  <div className="text-6xl mb-4">😢</div>
-                  <h2 className="text-3xl font-bold text-red-400 mb-2">Defeat</h2>
-                  {session.bet_amount > 0 && (
-                    <p className="text-gray-400 text-xl mb-4">-{session.bet_amount} BL Coins</p>
-                  )}
-                </>
+              {/* Confetti effect for win */}
+              {session.winner_id === user?.user_id && (
+                <div className="absolute inset-0 pointer-events-none">
+                  {[...Array(20)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="absolute text-2xl"
+                      initial={{ 
+                        top: -20, 
+                        left: `${Math.random() * 100}%`,
+                        rotate: 0
+                      }}
+                      animate={{ 
+                        top: '110%',
+                        rotate: 360,
+                      }}
+                      transition={{ 
+                        duration: 2 + Math.random() * 2,
+                        delay: Math.random() * 0.5,
+                        repeat: 3
+                      }}
+                    >
+                      {['🎉', '✨', '💰', '🏆', '💎'][Math.floor(Math.random() * 5)]}
+                    </motion.div>
+                  ))}
+                </div>
               )}
               
-              <Button
-                onClick={handlePlayAgain}
-                className="bg-gradient-to-r from-purple-600 to-pink-600"
-                size="lg"
-                data-testid="play-again-btn"
-              >
-                <RefreshCw className="w-5 h-5 mr-2" />
-                Play Again
-              </Button>
+              <div className="relative z-10">
+                {session.winner_id === user?.user_id ? (
+                  <>
+                    <motion.div
+                      animate={{ scale: [1, 1.3, 1], rotate: [0, 10, -10, 0] }}
+                      transition={{ duration: 0.5, repeat: 5 }}
+                      className="text-8xl mb-4"
+                    >
+                      🏆
+                    </motion.div>
+                    <h2 className="text-4xl font-bold text-green-400 mb-4">Victory!</h2>
+                    {session.bet_amount > 0 && (
+                      <motion.p 
+                        className="text-yellow-400 text-2xl mb-6"
+                        animate={{ scale: [1, 1.2, 1] }}
+                      >
+                        +{session.bet_amount * 2} BL Coins 💰
+                      </motion.p>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div className="text-8xl mb-4">😢</div>
+                    <h2 className="text-4xl font-bold text-red-400 mb-4">Defeat</h2>
+                    {session.bet_amount > 0 && (
+                      <p className="text-gray-400 text-2xl mb-6">-{session.bet_amount} BL Coins</p>
+                    )}
+                  </>
+                )}
+                
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    onClick={handlePlayAgain}
+                    className="bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 px-12 py-6 text-xl font-bold shadow-lg"
+                    size="lg"
+                    data-testid="play-again-btn"
+                  >
+                    <RefreshCw className="w-6 h-6 mr-2" />
+                    Play Again
+                    <span className="ml-2 text-2xl">🎮</span>
+                  </Button>
+                </motion.div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
