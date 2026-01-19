@@ -693,6 +693,335 @@ async def adjust_photo(
         logger.error(f"Adjustment failed: {e}")
         raise HTTPException(status_code=500, detail=f"Adjustment failed: {str(e)}")
 
+def analyze_image_for_enhancement(image: Image.Image) -> Dict[str, float]:
+    """
+    Analyze image and calculate optimal enhancement values.
+    Uses histogram analysis to determine brightness, contrast, saturation needs.
+    """
+    import numpy as np
+    
+    # Convert to RGB if needed
+    if image.mode == 'RGBA':
+        rgb_image = Image.new('RGB', image.size, (255, 255, 255))
+        rgb_image.paste(image, mask=image.split()[3])
+    else:
+        rgb_image = image.convert('RGB')
+    
+    # Get image as numpy array
+    img_array = np.array(rgb_image)
+    
+    # Calculate brightness (average luminance)
+    # Using perceived luminance formula: 0.299*R + 0.587*G + 0.114*B
+    luminance = 0.299 * img_array[:,:,0] + 0.587 * img_array[:,:,1] + 0.114 * img_array[:,:,2]
+    avg_brightness = np.mean(luminance)
+    
+    # Target brightness is around 128 (middle of 0-255)
+    # Calculate adjustment factor
+    if avg_brightness < 80:
+        brightness_factor = 1.3  # Image is too dark
+    elif avg_brightness < 110:
+        brightness_factor = 1.15  # Slightly dark
+    elif avg_brightness > 180:
+        brightness_factor = 0.85  # Image is too bright
+    elif avg_brightness > 150:
+        brightness_factor = 0.95  # Slightly bright
+    else:
+        brightness_factor = 1.0  # Good brightness
+    
+    # Calculate contrast (standard deviation of luminance)
+    std_dev = np.std(luminance)
+    if std_dev < 40:
+        contrast_factor = 1.25  # Low contrast, increase
+    elif std_dev < 55:
+        contrast_factor = 1.1  # Slightly low
+    elif std_dev > 85:
+        contrast_factor = 0.9  # High contrast, reduce
+    else:
+        contrast_factor = 1.0  # Good contrast
+    
+    # Calculate saturation (difference between max and min RGB channels)
+    max_rgb = np.max(img_array, axis=2)
+    min_rgb = np.min(img_array, axis=2)
+    saturation_level = np.mean(max_rgb - min_rgb)
+    
+    if saturation_level < 30:
+        saturation_factor = 1.3  # Very desaturated
+    elif saturation_level < 50:
+        saturation_factor = 1.15  # Slightly desaturated
+    elif saturation_level > 120:
+        saturation_factor = 0.9  # Over-saturated
+    else:
+        saturation_factor = 1.05  # Slight boost usually helps product photos
+    
+    # Sharpness - always apply slight sharpening for product photos
+    sharpness_factor = 1.2  # Moderate sharpening
+    
+    return {
+        "brightness": round(brightness_factor, 2),
+        "contrast": round(contrast_factor, 2),
+        "saturation": round(saturation_factor, 2),
+        "sharpness": round(sharpness_factor, 2),
+        "analysis": {
+            "avg_brightness": round(float(avg_brightness), 1),
+            "std_dev": round(float(std_dev), 1),
+            "saturation_level": round(float(saturation_level), 1)
+        }
+    }
+
+class AutoEnhanceRequest(BaseModel):
+    photo_id: str
+
+@photo_editor_router.post("/auto-enhance")
+async def auto_enhance_photo(
+    request: AutoEnhanceRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    AI-powered auto-enhancement that automatically adjusts brightness, 
+    contrast, saturation, and sharpness to optimal levels for product photos.
+    Uses histogram analysis to determine the best adjustments.
+    """
+    import time
+    start_time = time.time()
+    
+    user_id = current_user["user_id"]
+    
+    # Get photo
+    photo = await db.edited_photos.find_one(
+        {"photo_id": request.photo_id, "user_id": user_id},
+        {"_id": 0}
+    )
+    
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    
+    try:
+        # Get source image
+        source_url = photo.get("processed_url") or photo.get("current_url") or photo["original_url"]
+        image = base64_to_image(source_url)
+        
+        # Analyze image and get optimal enhancement values
+        enhancements = analyze_image_for_enhancement(image)
+        
+        # Apply enhancements
+        if enhancements["brightness"] != 1.0:
+            enhancer = ImageEnhance.Brightness(image)
+            image = enhancer.enhance(enhancements["brightness"])
+        
+        if enhancements["contrast"] != 1.0:
+            enhancer = ImageEnhance.Contrast(image)
+            image = enhancer.enhance(enhancements["contrast"])
+        
+        if enhancements["saturation"] != 1.0:
+            if image.mode == 'RGBA':
+                rgb = image.convert('RGB')
+                alpha = image.split()[3]
+                enhancer = ImageEnhance.Color(rgb)
+                rgb = enhancer.enhance(enhancements["saturation"])
+                image = rgb.convert('RGBA')
+                image.putalpha(alpha)
+            else:
+                enhancer = ImageEnhance.Color(image)
+                image = enhancer.enhance(enhancements["saturation"])
+        
+        if enhancements["sharpness"] != 1.0:
+            enhancer = ImageEnhance.Sharpness(image)
+            image = enhancer.enhance(enhancements["sharpness"])
+        
+        # Convert back to base64
+        format = "PNG" if image.mode == 'RGBA' else "JPEG"
+        enhanced_base64 = image_to_base64(image, format)
+        
+        processing_time_ms = int((time.time() - start_time) * 1000)
+        
+        # Update database
+        adjustments = {
+            "brightness": enhancements["brightness"],
+            "contrast": enhancements["contrast"],
+            "saturation": enhancements["saturation"],
+            "sharpness": enhancements["sharpness"]
+        }
+        
+        edit_entry = {
+            "action": "auto_enhance",
+            "params": {**adjustments, "analysis": enhancements["analysis"]},
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "result_url": enhanced_base64[:100] + "..."
+        }
+        
+        await db.edited_photos.update_one(
+            {"photo_id": request.photo_id},
+            {
+                "$set": {
+                    "current_url": enhanced_base64,
+                    "adjustments": adjustments,
+                    "auto_enhanced": True,
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                },
+                "$push": {"edit_history": edit_entry}
+            }
+        )
+        
+        return {
+            "photo_id": request.photo_id,
+            "enhanced_url": enhanced_base64,
+            "adjustments_applied": adjustments,
+            "analysis": enhancements["analysis"],
+            "processing_time_ms": processing_time_ms
+        }
+        
+    except Exception as e:
+        logger.error(f"Auto-enhance failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Auto-enhance failed: {str(e)}")
+
+class BatchAutoEnhanceRequest(BaseModel):
+    photo_ids: List[str]
+
+@photo_editor_router.post("/auto-enhance-batch")
+async def auto_enhance_batch(
+    request: BatchAutoEnhanceRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Batch auto-enhance multiple photos with AI-powered adjustments.
+    """
+    import time
+    total_start_time = time.time()
+    
+    user_id = current_user["user_id"]
+    
+    if not request.photo_ids:
+        raise HTTPException(status_code=400, detail="No photo IDs provided")
+    
+    if len(request.photo_ids) > 10:
+        raise HTTPException(status_code=400, detail="Maximum 10 photos per batch")
+    
+    results = []
+    processed_count = 0
+    failed_count = 0
+    
+    for photo_id in request.photo_ids:
+        photo_start_time = time.time()
+        
+        try:
+            photo = await db.edited_photos.find_one(
+                {"photo_id": photo_id, "user_id": user_id},
+                {"_id": 0}
+            )
+            
+            if not photo:
+                results.append({
+                    "photo_id": photo_id,
+                    "success": False,
+                    "error": "Photo not found"
+                })
+                failed_count += 1
+                continue
+            
+            # Skip if already auto-enhanced
+            if photo.get("auto_enhanced"):
+                results.append({
+                    "photo_id": photo_id,
+                    "success": True,
+                    "skipped": True,
+                    "message": "Already auto-enhanced"
+                })
+                processed_count += 1
+                continue
+            
+            # Get source image
+            source_url = photo.get("processed_url") or photo.get("current_url") or photo["original_url"]
+            image = base64_to_image(source_url)
+            
+            # Analyze and enhance
+            enhancements = analyze_image_for_enhancement(image)
+            
+            # Apply enhancements
+            if enhancements["brightness"] != 1.0:
+                enhancer = ImageEnhance.Brightness(image)
+                image = enhancer.enhance(enhancements["brightness"])
+            
+            if enhancements["contrast"] != 1.0:
+                enhancer = ImageEnhance.Contrast(image)
+                image = enhancer.enhance(enhancements["contrast"])
+            
+            if enhancements["saturation"] != 1.0:
+                if image.mode == 'RGBA':
+                    rgb = image.convert('RGB')
+                    alpha = image.split()[3]
+                    enhancer = ImageEnhance.Color(rgb)
+                    rgb = enhancer.enhance(enhancements["saturation"])
+                    image = rgb.convert('RGBA')
+                    image.putalpha(alpha)
+                else:
+                    enhancer = ImageEnhance.Color(image)
+                    image = enhancer.enhance(enhancements["saturation"])
+            
+            if enhancements["sharpness"] != 1.0:
+                enhancer = ImageEnhance.Sharpness(image)
+                image = enhancer.enhance(enhancements["sharpness"])
+            
+            # Convert to base64
+            format = "PNG" if image.mode == 'RGBA' else "JPEG"
+            enhanced_base64 = image_to_base64(image, format)
+            
+            processing_time_ms = int((time.time() - photo_start_time) * 1000)
+            
+            # Update database
+            adjustments = {
+                "brightness": enhancements["brightness"],
+                "contrast": enhancements["contrast"],
+                "saturation": enhancements["saturation"],
+                "sharpness": enhancements["sharpness"]
+            }
+            
+            edit_entry = {
+                "action": "auto_enhance",
+                "params": {**adjustments, "batch": True},
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "result_url": enhanced_base64[:100] + "..."
+            }
+            
+            await db.edited_photos.update_one(
+                {"photo_id": photo_id},
+                {
+                    "$set": {
+                        "current_url": enhanced_base64,
+                        "adjustments": adjustments,
+                        "auto_enhanced": True,
+                        "updated_at": datetime.now(timezone.utc).isoformat()
+                    },
+                    "$push": {"edit_history": edit_entry}
+                }
+            )
+            
+            results.append({
+                "photo_id": photo_id,
+                "success": True,
+                "adjustments": adjustments,
+                "processing_time_ms": processing_time_ms
+            })
+            processed_count += 1
+            
+        except Exception as e:
+            logger.error(f"Batch auto-enhance failed for {photo_id}: {e}")
+            results.append({
+                "photo_id": photo_id,
+                "success": False,
+                "error": str(e)
+            })
+            failed_count += 1
+    
+    total_time_ms = int((time.time() - total_start_time) * 1000)
+    
+    return {
+        "total_requested": len(request.photo_ids),
+        "total_processed": processed_count,
+        "total_failed": failed_count,
+        "total_time_ms": total_time_ms,
+        "results": results
+    }
+
 @photo_editor_router.post("/apply-background")
 async def apply_background(
     request: ApplyBackgroundRequest,
