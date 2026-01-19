@@ -1010,6 +1010,83 @@ async def finalize_photos(
         "count": len(finalized)
     }
 
+class GenerateAIListingRequest(BaseModel):
+    photo_ids: List[str]
+    condition: str = "like_new"  # new, like_new, good, fair, poor
+
+@photo_editor_router.post("/generate-ai-listing")
+async def generate_ai_listing(
+    request: GenerateAIListingRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Generate AI listing from edited photos.
+    Sends photos to AI analysis to generate title, description, dimensions, weight, price suggestions.
+    """
+    user_id = current_user["user_id"]
+    
+    if not request.photo_ids:
+        raise HTTPException(status_code=400, detail="No photo IDs provided")
+    
+    # Get photos from database
+    images = []
+    for photo_id in request.photo_ids:
+        photo = await db.edited_photos.find_one(
+            {"photo_id": photo_id, "user_id": user_id},
+            {"_id": 0}
+        )
+        if photo:
+            images.append(photo["current_url"])
+    
+    if not images:
+        raise HTTPException(status_code=404, detail="No photos found")
+    
+    try:
+        # Import the AI analysis function from seller_dashboard
+        from seller_dashboard import analyze_images_with_ai
+        
+        system_prompt = """You are an expert e-commerce listing creator specializing in marketplace sales.
+        Analyze product images and generate:
+        1. An attention-grabbing title (max 80 chars)
+        2. A detailed, benefit-focused description
+        3. Estimated dimensions (length x width x height in inches)
+        4. Estimated weight (in lbs)
+        5. Suggested price range based on condition and market value
+        6. Category suggestions
+        7. Key features/highlights as bullet points
+        
+        Be thorough in identifying product features, condition indicators, brand, model, and any visible flaws.
+        Create descriptions that highlight benefits and drive purchase intent."""
+        
+        result = await analyze_images_with_ai(
+            images=images,
+            condition=request.condition,
+            system_prompt=system_prompt
+        )
+        
+        # Store the analysis result
+        analysis_doc = {
+            "analysis_id": f"listing_analysis_{uuid.uuid4().hex[:12]}",
+            "user_id": user_id,
+            "photo_ids": request.photo_ids,
+            "condition": request.condition,
+            "analysis_result": result,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.listing_analyses.insert_one(analysis_doc)
+        
+        return {
+            "success": True,
+            "analysis_id": analysis_doc["analysis_id"],
+            "listing_data": result,
+            "photo_count": len(images)
+        }
+        
+    except Exception as e:
+        logger.error(f"AI listing generation failed: {e}")
+        raise HTTPException(status_code=500, detail=f"AI listing generation failed: {str(e)}")
+
 # Export router
 def get_photo_editor_router():
     return photo_editor_router
