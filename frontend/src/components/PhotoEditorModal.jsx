@@ -747,18 +747,17 @@ export default function PhotoEditorModal({ isOpen, onClose, onComplete }) {
                   <p className="text-sm text-muted-foreground mb-4">
                     Upload photos to start editing
                   </p>
-                  <label className="cursor-pointer">
-                    <Button>
+                  <label className="cursor-pointer inline-block">
+                    <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2">
                       <Upload className="w-4 h-4 mr-2" />
                       Upload Photos
-                    </Button>
+                    </div>
                     <input
                       type="file"
                       accept="image/*"
                       multiple
                       className="hidden"
                       onChange={handleFileUpload}
-                      ref={fileInputRef}
                     />
                   </label>
                 </div>
