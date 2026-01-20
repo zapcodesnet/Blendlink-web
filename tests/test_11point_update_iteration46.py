@@ -316,10 +316,12 @@ class TestCheckoutCountries:
         response = requests.get(f"{BASE_URL}/api/shippo/carriers")
         assert response.status_code == 200
         data = response.json()
-        assert isinstance(data, list)
+        # Response can be a list or dict with 'carriers' key
+        carriers = data.get("carriers", data) if isinstance(data, dict) else data
+        assert isinstance(carriers, list)
         # Should have at least USPS, UPS, FedEx
-        carrier_names = [c.get("name", "").lower() for c in data]
-        assert any("usps" in name for name in carrier_names) or len(data) > 0
+        carrier_names = [c.get("name", "").lower() for c in carriers]
+        assert any("usps" in name for name in carrier_names) or len(carriers) > 0
 
 
 class TestSellerDashboard:
