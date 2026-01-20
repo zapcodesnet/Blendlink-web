@@ -210,7 +210,7 @@ export default function PhotoEditorScreen({ navigation }) {
     }
   };
 
-  // Batch remove backgrounds
+  // Batch remove backgrounds - with real-time progress
   const handleBatchRemoveBackgrounds = async () => {
     const photosToProcess = photos.filter((p) => !p.has_background_removed);
 
@@ -220,26 +220,43 @@ export default function PhotoEditorScreen({ navigation }) {
     }
 
     setIsProcessing(true);
-    setProcessingMessage(`Removing ${photosToProcess.length} backgrounds...`);
+    setBatchProgress({ current: 0, total: photosToProcess.length });
+    
+    const startTime = Date.now();
+    let successCount = 0;
+    let failCount = 0;
 
-    try {
-      const response = await api.post('/photo-editor/remove-background-batch', {
-        photo_ids: photosToProcess.map((p) => p.photo_id),
-      });
+    // Process photos one-by-one for real-time progress
+    for (let i = 0; i < photosToProcess.length; i++) {
+      const photo = photosToProcess[i];
+      const photoNum = i + 1;
+      
+      setBatchProgress({ current: i, total: photosToProcess.length });
+      setProcessingMessage(`Removing background ${photoNum} of ${photosToProcess.length}...`);
 
-      const { total_processed, total_failed, total_time_ms } = response.data;
-      Alert.alert(
-        'Batch Complete',
-        `${total_processed} succeeded, ${total_failed} failed\nTotal time: ${(total_time_ms / 1000).toFixed(1)}s`
-      );
-      await loadPhotos();
-      setActiveTab('background');
-    } catch (error) {
-      Alert.alert('Error', error.message || 'Batch processing failed');
-    } finally {
-      setIsProcessing(false);
-      setProcessingMessage('');
+      try {
+        await api.post('/photo-editor/remove-background', {
+          photo_id: photo.photo_id,
+        });
+        successCount++;
+        setBatchProgress({ current: photoNum, total: photosToProcess.length });
+      } catch (error) {
+        console.error(`Failed to remove background for photo ${photo.photo_id}:`, error);
+        failCount++;
+      }
     }
+
+    const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+    
+    Alert.alert(
+      'Batch Complete',
+      `${successCount} succeeded, ${failCount} failed\nTotal time: ${totalTime}s`
+    );
+    await loadPhotos();
+    setActiveTab('background');
+    setIsProcessing(false);
+    setBatchProgress({ current: 0, total: 0 });
+    setProcessingMessage('');
   };
 
   // AI Auto-Enhance (single photo)
