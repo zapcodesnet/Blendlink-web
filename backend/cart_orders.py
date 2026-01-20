@@ -9,6 +9,8 @@ Blendlink Cart & Order System
 import os
 import logging
 import httpx
+import asyncio
+import resend
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
 from fastapi import APIRouter, HTTPException, Depends, Request
@@ -21,6 +23,10 @@ logger = logging.getLogger(__name__)
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
 SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "orders@blendlink.net")
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "https://blendlink.net")
+
+# Initialize Resend
+if RESEND_API_KEY:
+    resend.api_key = RESEND_API_KEY
 
 # Router
 cart_router = APIRouter(prefix="/cart", tags=["Cart"])
