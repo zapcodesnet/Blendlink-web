@@ -5,13 +5,17 @@ import api from "../services/api";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import ComingSoonPlaceholder from "../components/ComingSoonPlaceholder";
+import CartIcon from "../components/CartIcon";
 import { toast } from "sonner";
 import { 
   Search, Plus, Filter, Smartphone, Shirt, Home, Car, 
   Dumbbell, Download, Wrench, Package, ChevronRight, ShoppingBag,
   Sparkles, Store, Watch, Palette, Heart, Gamepad2, Building2,
-  PawPrint, Baby, Gift, Ticket, ThumbsUp, Share2
+  PawPrint, Baby, Gift, Ticket, ThumbsUp, Share2, ShoppingCart,
+  CreditCard, Loader2
 } from "lucide-react";
+
+const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
 const categoryIcons = {
   electronics: Smartphone,
