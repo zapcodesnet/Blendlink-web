@@ -13,7 +13,7 @@ import requests
 import os
 import base64
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://profile-enhance-13.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://ecomm-bridge-2.preview.emergentagent.com')
 
 # Test credentials
 TEST_EMAIL = "test@example.com"

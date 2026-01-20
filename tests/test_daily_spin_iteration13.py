@@ -11,7 +11,7 @@ import requests
 import os
 from datetime import datetime, timezone
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://profile-enhance-13.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://ecomm-bridge-2.preview.emergentagent.com')
 
 # Expected rewards as per user specification
 EXPECTED_REWARDS = [1000, 5000, 15000, 35000, 80000, 200000]
