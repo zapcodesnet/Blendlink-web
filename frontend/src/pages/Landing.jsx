@@ -330,16 +330,17 @@ const RecentlyViewedSection = ({ onViewDetails }) => {
 
 export default function Landing() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const features = [
     { icon: Users, title: "Social Network", desc: "Connect with friends, share posts & stories" },
-    { icon: ShoppingBag, title: "Marketplace", desc: "Buy & sell items with zero fees" },
-    { icon: Home, title: "Property Rentals", desc: "Find your perfect home" },
-    { icon: Briefcase, title: "Services", desc: "Hire professionals or offer your skills" },
-    { icon: Gamepad2, title: "Games", desc: "Play & win BL Coins" },
+    { icon: ShoppingBag, title: t('nav.marketplace') || "Marketplace", desc: "Buy & sell items with zero fees" },
+    { icon: Home, title: t('nav.rentals') || "Property Rentals", desc: "Find your perfect home" },
+    { icon: Briefcase, title: t('nav.services') || "Services", desc: "Hire professionals or offer your skills" },
+    { icon: Gamepad2, title: t('nav.games') || "Games", desc: "Play & win BL Coins" },
     { icon: Gift, title: "Raffles", desc: "Enter contests for big prizes" },
-    { icon: Coins, title: "BL Coins", desc: "Earn rewards for every activity" },
-    { icon: Share2, title: "Referrals", desc: "Invite friends & earn together" },
+    { icon: Coins, title: t('wallet.bl_coins') || "BL Coins", desc: "Earn rewards for every activity" },
+    { icon: Share2, title: t('nav.referrals') || "Referrals", desc: "Invite friends & earn together" },
   ];
   
   // Handle viewing item details - works for all users including guests
@@ -376,7 +377,7 @@ export default function Landing() {
                 onClick={() => navigate("/login")}
                 data-testid="login-btn"
               >
-                Login
+                {t('auth.login') || 'Login'}
               </Button>
               <Button 
                 onClick={() => navigate("/register")}
