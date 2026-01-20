@@ -1251,7 +1251,7 @@ async def get_listing_comments(listing_id: str, skip: int = 0, limit: int = 50):
         user_ids = list(set(c["user_id"] for c in comments if c.get("user_id")))
         users = await db.users.find(
             {"user_id": {"$in": user_ids}},
-            {"_id": 0, "password_hash": 0, "user_id": 1, "username": 1, "name": 1, "avatar": 1}
+            {"_id": 0, "password_hash": 0}
         ).to_list(len(user_ids))
         users_map = {u["user_id"]: u for u in users}
         
