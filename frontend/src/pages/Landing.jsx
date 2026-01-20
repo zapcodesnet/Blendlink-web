@@ -384,7 +384,7 @@ export default function Landing() {
                 className="rounded-full"
                 data-testid="get-started-btn"
               >
-                Get Started
+                {t('auth.get_started') || 'Get Started'}
               </Button>
             </div>
           </div>
@@ -407,7 +407,7 @@ export default function Landing() {
         <div className="max-w-3xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
             <Zap className="w-4 h-4" />
-            Your All-in-One Super App
+            {t('landing.super_app') || 'Your All-in-One Super App'}
           </div>
           
           {/* Browse Marketplace Link */}
@@ -419,7 +419,7 @@ export default function Landing() {
               data-testid="browse-marketplace-link"
             >
               <ShoppingCart className="w-4 h-4 mr-2" />
-              Browse the Marketplace
+              {t('landing.browse_marketplace') || 'Browse the Marketplace'}
             </Button>
           </div>
         </div>
@@ -431,12 +431,11 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 relative">
           <div className="text-center max-w-3xl mx-auto animate-slide-up">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
-              Social, Shop, Play &<br />
-              <span className="bl-coin-text">Earn Rewards</span>
+              {t('landing.hero_title') || 'Social, Shop, Play &'}<br />
+              <span className="bl-coin-text">{t('landing.hero_highlight') || 'Earn Rewards'}</span>
             </h1>
             <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Connect with friends, buy & sell items, find rentals, hire services, 
-              play games, and earn BL Coins — all in one app.
+              {t('landing.hero_subtitle') || 'Connect with friends, buy & sell items, find rentals, hire services, play games, and earn BL Coins — all in one app.'}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
@@ -445,7 +444,7 @@ export default function Landing() {
                 onClick={() => navigate("/register")}
                 data-testid="hero-cta-btn"
               >
-                Start Earning Today
+                {t('landing.start_earning') || 'Start Earning Today'}
                 <ChevronRight className="ml-2 w-5 h-5" />
               </Button>
               <Button 
