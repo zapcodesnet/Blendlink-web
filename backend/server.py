@@ -2442,6 +2442,117 @@ try:
 except ImportError as e:
     logger.warning(f"Could not load push notifications: {e}")
 
+# ============== URL PREVIEW UTILITY ==============
+class URLPreviewRequest(BaseModel):
+    url: str
+
+@utils_router.post("/url-preview")
+async def get_url_preview(data: URLPreviewRequest):
+    """Fetch metadata from a URL for link preview cards"""
+    import re
+    from urllib.parse import urlparse
+    
+    url = data.url.strip()
+    
+    # Validate URL
+    if not url.startswith(('http://', 'https://')):
+        url = 'https://' + url
+    
+    try:
+        parsed = urlparse(url)
+        if not parsed.netloc:
+            raise HTTPException(status_code=400, detail="Invalid URL")
+        
+        async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
+            response = await client.get(url, headers={
+                'User-Agent': 'Mozilla/5.0 (compatible; BlendlinkBot/1.0)'
+            })
+            
+            if response.status_code != 200:
+                return {
+                    "success": False,
+                    "url": url,
+                    "title": parsed.netloc,
+                    "description": None,
+                    "image": None,
+                    "siteName": parsed.netloc
+                }
+            
+            html = response.text
+            
+            # Extract metadata using regex (simpler than BeautifulSoup)
+            def get_meta(property_name, content_attr="content"):
+                patterns = [
+                    rf'<meta[^>]*property=["\']og:{property_name}["\'][^>]*{content_attr}=["\']([^"\']+)["\']',
+                    rf'<meta[^>]*{content_attr}=["\']([^"\']+)["\'][^>]*property=["\']og:{property_name}["\']',
+                    rf'<meta[^>]*name=["\']twitter:{property_name}["\'][^>]*{content_attr}=["\']([^"\']+)["\']',
+                    rf'<meta[^>]*{content_attr}=["\']([^"\']+)["\'][^>]*name=["\']twitter:{property_name}["\']',
+                ]
+                for pattern in patterns:
+                    match = re.search(pattern, html, re.IGNORECASE)
+                    if match:
+                        return match.group(1)
+                return None
+            
+            # Get title
+            title = get_meta("title")
+            if not title:
+                title_match = re.search(r'<title[^>]*>([^<]+)</title>', html, re.IGNORECASE)
+                title = title_match.group(1).strip() if title_match else parsed.netloc
+            
+            # Get description
+            description = get_meta("description")
+            if not description:
+                desc_match = re.search(r'<meta[^>]*name=["\']description["\'][^>]*content=["\']([^"\']+)["\']', html, re.IGNORECASE)
+                if not desc_match:
+                    desc_match = re.search(r'<meta[^>]*content=["\']([^"\']+)["\'][^>]*name=["\']description["\']', html, re.IGNORECASE)
+                description = desc_match.group(1) if desc_match else None
+            
+            # Get image
+            image = get_meta("image")
+            if image and not image.startswith('http'):
+                # Make relative URLs absolute
+                if image.startswith('//'):
+                    image = 'https:' + image
+                elif image.startswith('/'):
+                    image = f"{parsed.scheme}://{parsed.netloc}{image}"
+            
+            # Get site name
+            site_name = get_meta("site_name") or parsed.netloc
+            
+            return {
+                "success": True,
+                "url": url,
+                "title": title[:200] if title else parsed.netloc,
+                "description": description[:300] if description else None,
+                "image": image,
+                "siteName": site_name
+            }
+            
+    except httpx.TimeoutException:
+        return {
+            "success": False,
+            "url": url,
+            "title": urlparse(url).netloc,
+            "description": None,
+            "image": None,
+            "siteName": urlparse(url).netloc,
+            "error": "Request timed out"
+        }
+    except Exception as e:
+        logger.error(f"URL preview error: {e}")
+        return {
+            "success": False,
+            "url": url,
+            "title": urlparse(url).netloc if url else "Unknown",
+            "description": None,
+            "image": None,
+            "siteName": urlparse(url).netloc if url else "Unknown"
+        }
+
+# Include utils router
+api_router.include_router(utils_router)
+
 app.include_router(api_router)
 
 app.add_middleware(
