@@ -1225,6 +1225,19 @@ export default function SellerDashboard() {
         onComplete={handlePhotoEditorComplete}
       />
       
+      {/* Edit Listing Modal */}
+      <EditListingModal
+        listing={editingListing}
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingListing(null);
+        }}
+        onSave={handleSaveEditedListing}
+        isUploading={isUploading}
+        setIsUploading={setIsUploading}
+      />
+      
       <div className="max-w-6xl mx-auto px-4 py-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
