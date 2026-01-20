@@ -586,35 +586,71 @@ export default function Checkout() {
                     
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="text-sm text-muted-foreground">ZIP Code *</label>
+                        <label className="text-sm text-muted-foreground">ZIP/Postal Code *</label>
                         <Input
                           value={shippingAddress.zip}
-                          onChange={(e) => setShippingAddress({ ...shippingAddress, zip: e.target.value.replace(/\D/g, '').slice(0, 5) })}
+                          onChange={(e) => setShippingAddress({ ...shippingAddress, zip: e.target.value.slice(0, 10) })}
                           placeholder="10001"
-                          maxLength={5}
+                          maxLength={10}
                           data-testid="shipping-zip"
                         />
                       </div>
                       <div>
-                        <label className="text-sm text-muted-foreground">Country</label>
-                        <Input
+                        <label className="text-sm text-muted-foreground flex items-center gap-1">
+                          <Globe className="w-3 h-3" /> Country *
+                        </label>
+                        <select
                           value={shippingAddress.country}
-                          disabled
-                          className="bg-muted"
-                        />
+                          onChange={(e) => setShippingAddress({ ...shippingAddress, country: e.target.value })}
+                          className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+                          data-testid="shipping-country"
+                        >
+                          {allowedCountries.map(c => (
+                            <option key={c.code} value={c.code}>
+                              {c.flag} {c.name}
+                            </option>
+                          ))}
+                        </select>
+                        {allowedCountries.length < ALL_COUNTRIES.length && (
+                          <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                            <Info className="w-3 h-3" />
+                            Based on seller's shipping destinations
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Shipping Options */}
-                {shippingAddress.zip?.length === 5 && (
+                {shippingAddress.zip?.length >= 3 && (
                   <div className="space-y-4">
                     <h3 className="font-semibold">Select Shipping</h3>
                     
+                    {/* Extra fees notice */}
+                    <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                      <p className="text-sm text-blue-600 flex items-start gap-2">
+                        <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                        <span>
+                          Shipping costs are estimated. Sellers may contact you for additional fees 
+                          for remote locations or special handling after purchase.
+                        </span>
+                      </p>
+                    </div>
+                    
                     {cart.filter(item => !item.is_digital).map((item) => (
                       <div key={item.listing_id} className="bg-card rounded-xl border p-4">
-                        <p className="font-medium text-sm mb-3">{item.title}</p>
+                        <div className="flex justify-between items-start mb-3">
+                          <p className="font-medium text-sm">{item.title}</p>
+                          {/* Show item weight/dimensions if available */}
+                          {(item.weight || item.dimensions) && (
+                            <span className="text-xs text-muted-foreground">
+                              {item.weight?.value && `${item.weight.value}${item.weight.unit || 'lbs'}`}
+                              {item.weight && item.dimensions && ' • '}
+                              {item.dimensions && `${item.dimensions.length}×${item.dimensions.width}×${item.dimensions.height}${item.dimensions.unit || 'in'}`}
+                            </span>
+                          )}
+                        </div>
                         
                         {loadingShipping[item.listing_id] ? (
                           <div className="flex items-center gap-2 text-muted-foreground">
