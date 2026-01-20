@@ -744,6 +744,9 @@ export default function SellerDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [isPhotoEditorOpen, setIsPhotoEditorOpen] = useState(false);
   const [editedPhotos, setEditedPhotos] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [generatingLabel, setGeneratingLabel] = useState(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -762,9 +765,84 @@ export default function SellerDashboard() {
     }
   }, []);
 
+  const loadOrders = useCallback(async () => {
+    setOrdersLoading(true);
+    try {
+      const data = await apiRequest('/orders/seller/list');
+      setOrders(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Failed to load orders:", error);
+      // Don't show error if no orders endpoint yet
+    } finally {
+      setOrdersLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    if (activeTab === "orders") {
+      loadOrders();
+    }
+  }, [activeTab, loadOrders]);
+
+  const handlePrintLabel = async (order) => {
+    setGeneratingLabel(order.order_id);
+    try {
+      // Get seller's address (mock - should come from user profile)
+      const sellerAddress = {
+        name: user?.name || "Seller",
+        street1: "123 Seller Street",
+        city: "Los Angeles",
+        state: "CA",
+        zip: user?.zip || "90001",
+        country: "US"
+      };
+
+      const response = await fetch(`${API_BASE_URL}/api/shippo/create-label`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('blendlink_token')}`
+        },
+        body: JSON.stringify({
+          from_address: sellerAddress,
+          to_address: order.shipping_address,
+          parcel: {
+            length: 6,
+            width: 4,
+            height: 2,
+            weight: 1,
+            distance_unit: "in",
+            mass_unit: "lb"
+          },
+          carrier: order.shipping_option?.carrier?.toLowerCase() || "usps",
+          service_level: order.shipping_option?.service_token || "usps_priority",
+          order_id: order.order_id
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.label_url) {
+        // Open label PDF in new tab
+        window.open(data.label_url, '_blank');
+        toast.success("Shipping label generated! Check your new tab to print.");
+        
+        // Refresh orders to show updated tracking
+        loadOrders();
+      } else {
+        throw new Error(data.detail || "Failed to generate label");
+      }
+    } catch (error) {
+      console.error("Label generation error:", error);
+      toast.error(error.message || "Failed to generate shipping label");
+    } finally {
+      setGeneratingLabel(null);
+    }
+  };
 
   const handleImprove = async (listingId) => {
     try {
