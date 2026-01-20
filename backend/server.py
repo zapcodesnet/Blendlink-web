@@ -2196,6 +2196,23 @@ try:
 except ImportError as e:
     logger.warning(f"Could not load BL rewards: {e}")
 
+# Load Shipping System
+try:
+    from shipping_system import shipping_router
+    api_router.include_router(shipping_router)
+    logger.info("Shipping System loaded (Shippo integration)")
+except ImportError as e:
+    logger.warning(f"Could not load shipping system: {e}")
+
+# Load Cart & Orders System
+try:
+    from cart_orders import cart_router, orders_router
+    api_router.include_router(cart_router)
+    api_router.include_router(orders_router)
+    logger.info("Cart & Orders System loaded (Guest checkout, Order management)")
+except ImportError as e:
+    logger.warning(f"Could not load cart/orders system: {e}")
+
 # Load Subscription & Ranked System
 try:
     from subscription_tiers import subscription_router, setup_subscription_routes
