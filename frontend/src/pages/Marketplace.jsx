@@ -248,31 +248,39 @@ export default function Marketplace() {
             {listings.map((listing) => (
               <div
                 key={listing.listing_id}
-                className="bg-card rounded-xl overflow-hidden card-hover cursor-pointer border border-border/50"
-                onClick={() => navigate(`/marketplace/${listing.listing_id}`)}
+                className="bg-card rounded-xl overflow-hidden card-hover border border-border/50"
                 data-testid={`listing-${listing.listing_id}`}
               >
-                <div className="aspect-square bg-muted">
-                  {listing.images?.[0] ? (
-                    <img 
-                      src={listing.images[0]} 
-                      alt={listing.title}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Package className="w-12 h-12 text-muted-foreground" />
-                    </div>
-                  )}
+                <div 
+                  className="cursor-pointer"
+                  onClick={() => navigate(`/marketplace/${listing.listing_id}`)}
+                >
+                  <div className="aspect-square bg-muted">
+                    {listing.images?.[0] ? (
+                      <img 
+                        src={listing.images[0]} 
+                        alt={listing.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Package className="w-12 h-12 text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-3">
+                    <h3 className="font-medium text-sm truncate">{listing.title}</h3>
+                    <p className="text-lg font-bold text-primary mt-1">
+                      ${listing.price?.toLocaleString()}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1 truncate">
+                      {listing.seller?.name}
+                    </p>
+                  </div>
                 </div>
-                <div className="p-3">
-                  <h3 className="font-medium text-sm truncate">{listing.title}</h3>
-                  <p className="text-lg font-bold text-primary mt-1">
-                    ${listing.price?.toLocaleString()}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1 truncate">
-                    {listing.seller?.name}
-                  </p>
+                {/* Social Actions - Like & Share (visible to all, comments hidden) */}
+                <div className="px-3 pb-3">
+                  <ListingSocialActions listing={listing} user={user} />
                 </div>
               </div>
             ))}
