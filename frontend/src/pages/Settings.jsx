@@ -125,6 +125,8 @@ export default function Settings() {
                       onCheckedChange={item.onChange}
                       data-testid={`toggle-${item.label.toLowerCase().replace(/\s/g, '-')}`}
                     />
+                  ) : item.custom ? (
+                    item.component
                   ) : (
                     <Button variant="ghost" size="icon" onClick={item.onClick}>
                       <ChevronRight className="w-5 h-5" />
