@@ -1050,18 +1050,31 @@ async def create_listing(data: CreateListing, current_user: dict = Depends(get_c
     await db.listings.insert_one(listing_dict.copy())
     return listing_dict
 
+# Master category list - single source of truth for all marketplace categories
+MARKETPLACE_CATEGORIES = [
+    {"id": "electronics", "name": "Electronics", "icon": "Smartphone"},
+    {"id": "fashion", "name": "Fashion", "icon": "Shirt"},
+    {"id": "home", "name": "Home & Garden", "icon": "Home"},
+    {"id": "vehicles", "name": "Vehicles", "icon": "Car"},
+    {"id": "sports", "name": "Sports", "icon": "Dumbbell"},
+    {"id": "digital", "name": "Digital Goods & NFTs", "icon": "Download"},
+    {"id": "services", "name": "Services", "icon": "Wrench"},
+    {"id": "jewelry", "name": "Jewelry & Watches", "icon": "Watch"},
+    {"id": "collectibles", "name": "Collectibles & Art", "icon": "Palette"},
+    {"id": "health", "name": "Health & Beauty", "icon": "Heart"},
+    {"id": "toys", "name": "Toys & Hobbies", "icon": "Gamepad2"},
+    {"id": "business", "name": "Business & Industrial", "icon": "Building2"},
+    {"id": "pets", "name": "Pet Supplies", "icon": "PawPrint"},
+    {"id": "baby", "name": "Baby Essentials", "icon": "Baby"},
+    {"id": "giftcards", "name": "Gift Cards & Coupons", "icon": "Gift"},
+    {"id": "tickets", "name": "Tickets & Travel", "icon": "Ticket"},
+    {"id": "general", "name": "General", "icon": "Package"},
+]
+
 @marketplace_router.get("/categories")
 async def get_categories():
-    return [
-        {"id": "electronics", "name": "Electronics", "icon": "Smartphone"},
-        {"id": "fashion", "name": "Fashion", "icon": "Shirt"},
-        {"id": "home", "name": "Home & Garden", "icon": "Home"},
-        {"id": "vehicles", "name": "Vehicles", "icon": "Car"},
-        {"id": "sports", "name": "Sports", "icon": "Dumbbell"},
-        {"id": "digital", "name": "Digital Goods", "icon": "Download"},
-        {"id": "services", "name": "Services", "icon": "Wrench"},
-        {"id": "other", "name": "Other", "icon": "Package"}
-    ]
+    """Return the master list of marketplace categories"""
+    return MARKETPLACE_CATEGORIES
 
 class GuestCheckoutRequest(BaseModel):
     items: List[dict]
