@@ -116,6 +116,7 @@ export default function PhotoEditorScreen({ navigation }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingMessage, setProcessingMessage] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
 
   // Adjustments
   const [brightness, setBrightness] = useState(1.0);
