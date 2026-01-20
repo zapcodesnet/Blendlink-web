@@ -178,10 +178,10 @@ export default function Checkout() {
     window.dispatchEvent(new Event('cart-updated'));
   };
 
-  // Get shipping estimate for an item
+  // Get shipping estimate for an item - includes weight/dimensions automatically
   const getShippingEstimate = async (item) => {
     if (item.is_digital) return;
-    if (!shippingAddress.zip || shippingAddress.zip.length < 5) return;
+    if (!shippingAddress.zip || shippingAddress.zip.length < 3) return;
 
     setLoadingShipping(prev => ({ ...prev, [item.listing_id]: true }));
 
@@ -190,12 +190,14 @@ export default function Checkout() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          origin_zip: item.location || "10001",
+          origin_zip: item.location || item.seller_zip || "10001",
           destination_zip: shippingAddress.zip,
-          weight: item.weight?.value || null,
-          length: item.dimensions?.length || null,
-          width: item.dimensions?.width || null,
-          height: item.dimensions?.height || null,
+          destination_country: shippingAddress.country || "US",
+          // Include weight and dimensions from listing (AI-estimated or manual)
+          weight: item.weight?.value || item.estimated_weight || 2,
+          length: item.dimensions?.length || item.estimated_dimensions?.length || 12,
+          width: item.dimensions?.width || item.estimated_dimensions?.width || 9,
+          height: item.dimensions?.height || item.estimated_dimensions?.height || 6,
           is_digital: item.is_digital
         })
       });
@@ -218,16 +220,16 @@ export default function Checkout() {
     }
   };
 
-  // Fetch shipping for all physical items when ZIP changes
+  // Fetch shipping for all physical items when ZIP or country changes
   useEffect(() => {
-    if (shippingAddress.zip?.length === 5 && step === 2) {
+    if (shippingAddress.zip?.length >= 3 && step === 2) {
       cart.forEach(item => {
         if (!item.is_digital) {
           getShippingEstimate(item);
         }
       });
     }
-  }, [shippingAddress.zip, step]);
+  }, [shippingAddress.zip, shippingAddress.country, step]);
 
   // Calculate totals
   const subtotal = cart.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0);
