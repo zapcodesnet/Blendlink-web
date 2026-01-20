@@ -488,12 +488,29 @@ export default function PhotoEditorScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Processing Modal */}
+      {/* Processing Modal - Enhanced with real-time progress */}
       <Modal visible={isProcessing} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.processingModal}>
             <ActivityIndicator size="large" color="#8B5CF6" />
             <Text style={styles.processingText}>{processingMessage}</Text>
+            
+            {/* Progress bar for batch operations */}
+            {batchProgress.total > 0 && (
+              <View style={styles.progressContainer}>
+                <View style={styles.progressBarBg}>
+                  <View 
+                    style={[
+                      styles.progressBarFill, 
+                      { width: `${(batchProgress.current / batchProgress.total) * 100}%` }
+                    ]} 
+                  />
+                </View>
+                <Text style={styles.progressText}>
+                  {batchProgress.current} of {batchProgress.total} ({Math.round((batchProgress.current / batchProgress.total) * 100)}%)
+                </Text>
+              </View>
+            )}
           </View>
         </View>
       </Modal>
