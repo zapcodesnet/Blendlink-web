@@ -1,10 +1,53 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 20, 2026 (Session 18)
+## Latest Update: January 20, 2026 (Session 18 - Part 2)
 
 ---
 
-## SESSION 18: 11-POINT COMPREHENSIVE UPDATE ✅
+## SESSION 18 PART 2: RECENTLY VIEWED & i18n ENHANCEMENTS ✅
+
+### Features Implemented
+
+1. ✅ **Recently Viewed Section on Landing Page**
+   - Auto-stores viewed listings in localStorage (max 10 items)
+   - Shows thumbnail, price, title, category
+   - Horizontal scrollable carousel with navigation arrows
+   - "Clear History" button to reset
+   - Only appears when there are viewed items
+
+2. ✅ **Enhanced i18n Translation Coverage**
+   - Extended to 14 fully supported languages: EN, ES, FR, DE, NL, AR, ZH-CN, JA, KO, RU, PT, IT, HE
+   - Added 100+ translation keys covering:
+     - Common UI terms
+     - Navigation labels  
+     - Auth flow
+     - Landing page text
+     - Marketplace labels
+     - Cart/Checkout
+     - Feed social interactions
+     - Wallet/earnings
+     - Settings
+     - Error messages
+   
+3. ✅ **RTL (Right-to-Left) Support**
+   - Arabic (ar), Hebrew (he), Urdu (ur) marked as RTL languages
+   - `document.documentElement.dir` updated on language change
+   - RTL flag in SUPPORTED_LANGUAGES array
+
+4. ✅ **Mobile Language Selector**
+   - Full dropdown on mobile (below header)
+   - Compact globe icon on desktop
+   - Search functionality in dropdown
+
+**Key Files Modified:**
+- `frontend/src/pages/Landing.jsx` - Added RecentlyViewedSection component
+- `frontend/src/pages/ListingDetail.jsx` - Stores viewed items to localStorage
+- `frontend/src/i18n.js` - Extended translations, added 100+ keys
+- `frontend/src/components/LanguageSelector.jsx` - RTL direction support
+
+---
+
+## SESSION 18 PART 1: 11-POINT COMPREHENSIVE UPDATE ✅
 
 ### All 11 Features Implemented and Verified
 
