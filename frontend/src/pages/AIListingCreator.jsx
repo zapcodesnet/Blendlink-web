@@ -601,6 +601,42 @@ export default function AIListingCreator() {
   const [selectedShipping, setSelectedShipping] = useState(null);
   const [isPublishing, setIsPublishing] = useState(false);
   const [error, setError] = useState(null);
+  const [categories, setCategories] = useState([]);
+  
+  // Fetch categories on mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/marketplace/categories`);
+        if (response.ok) {
+          const cats = await response.json();
+          setCategories(cats);
+        }
+      } catch (err) {
+        // Fallback categories if fetch fails
+        setCategories([
+          { id: 'electronics', name: 'Electronics' },
+          { id: 'fashion', name: 'Fashion' },
+          { id: 'home', name: 'Home & Garden' },
+          { id: 'vehicles', name: 'Vehicles' },
+          { id: 'sports', name: 'Sports' },
+          { id: 'digital', name: 'Digital Goods & NFTs' },
+          { id: 'services', name: 'Services' },
+          { id: 'jewelry', name: 'Jewelry & Watches' },
+          { id: 'collectibles', name: 'Collectibles & Art' },
+          { id: 'health', name: 'Health & Beauty' },
+          { id: 'toys', name: 'Toys & Hobbies' },
+          { id: 'business', name: 'Business & Industrial' },
+          { id: 'pets', name: 'Pet Supplies' },
+          { id: 'baby', name: 'Baby Essentials' },
+          { id: 'giftcards', name: 'Gift Cards & Coupons' },
+          { id: 'tickets', name: 'Tickets & Travel' },
+          { id: 'general', name: 'General' },
+        ]);
+      }
+    };
+    fetchCategories();
+  }, []);
   
   // Handle photos passed from Photo Editor
   useEffect(() => {
