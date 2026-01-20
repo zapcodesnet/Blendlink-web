@@ -1031,6 +1031,11 @@ class CreateListing(BaseModel):
     images: List[str] = []
     condition: str = "new"
     is_digital: bool = False
+    target_countries: List[str] = ["US"]  # Target market countries
+    weight: Optional[Dict] = None  # e.g., {"value": 2.5, "unit": "lbs"}
+    dimensions: Optional[Dict] = None  # e.g., {"length": 12, "width": 9, "height": 6, "unit": "in"}
+    tags: List[str] = []
+    location: Optional[str] = None  # Seller's ZIP code
 
 @marketplace_router.post("/listings")
 async def create_listing(data: CreateListing, current_user: dict = Depends(get_current_user)):
