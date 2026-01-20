@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import ComingSoonPlaceholder from "../components/ComingSoonPlaceholder";
+import LinkPreview, { extractUrls } from "../components/LinkPreview";
 import { 
   Heart, MessageCircle, Share2, Plus, MoreHorizontal,
   Home as HomeIcon, Building, Briefcase, Settings, Bell, Search,
