@@ -175,6 +175,300 @@ const ListingCard = ({ listing, onImprove, onEdit }) => {
   );
 };
 
+// Edit Listing Modal Component
+const EditListingModal = ({ listing, isOpen, onClose, onSave, isUploading, setIsUploading }) => {
+  const [editData, setEditData] = useState({
+    title: '',
+    description: '',
+    price: '',
+    category: '',
+    condition: 'new',
+    images: [],
+    status: 'active'
+  });
+  const [newImages, setNewImages] = useState([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showPhotoEditor, setShowPhotoEditor] = useState(false);
+  const fileInputRef = React.useRef(null);
+
+  // Initialize form when listing changes
+  useEffect(() => {
+    if (listing) {
+      setEditData({
+        title: listing.title || '',
+        description: listing.description || '',
+        price: listing.price?.toString() || '',
+        category: listing.category || '',
+        condition: listing.condition || 'new',
+        images: listing.images || (listing.image ? [listing.image] : []),
+        status: listing.status || 'active'
+      });
+      setNewImages([]);
+    }
+  }, [listing]);
+
+  const handleImageUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (editData.images.length + newImages.length + files.length > 10) {
+      toast.error("Maximum 10 images allowed");
+      return;
+    }
+
+    setIsUploading(true);
+    
+    // Convert files to base64 for preview and upload
+    const newImagePromises = files.map(file => {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          resolve({
+            preview: event.target.result,
+            file: file,
+            isNew: true
+          });
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+
+    const uploadedImages = await Promise.all(newImagePromises);
+    setNewImages(prev => [...prev, ...uploadedImages]);
+    setIsUploading(false);
+    toast.success(`${files.length} photo(s) added`);
+  };
+
+  const removeImage = (index, isNew) => {
+    if (isNew) {
+      setNewImages(prev => prev.filter((_, i) => i !== index));
+    } else {
+      setEditData(prev => ({
+        ...prev,
+        images: prev.images.filter((_, i) => i !== index)
+      }));
+    }
+  };
+
+  const handleSave = async () => {
+    if (!editData.title.trim()) {
+      toast.error("Title is required");
+      return;
+    }
+    if (!editData.price || parseFloat(editData.price) <= 0) {
+      toast.error("Valid price is required");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      // Combine existing and new images
+      const allImages = [
+        ...editData.images,
+        ...newImages.map(img => img.preview)
+      ];
+
+      const updatePayload = {
+        title: editData.title,
+        description: editData.description,
+        price: parseFloat(editData.price),
+        category: editData.category,
+        condition: editData.condition,
+        images: allImages,
+        status: editData.status
+      };
+
+      await onSave(listing.listing_id, updatePayload);
+      toast.success("Listing updated successfully!");
+      onClose();
+    } catch (err) {
+      toast.error(err.message || "Failed to update listing");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (!isOpen || !listing) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-background rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="sticky top-0 bg-background border-b p-4 flex items-center justify-between">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <FileText className="w-5 h-5 text-primary" />
+            Edit Listing
+          </h2>
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
+
+        {/* Form */}
+        <div className="p-4 space-y-6">
+          {/* Images Section */}
+          <div>
+            <Label className="text-sm font-medium mb-2 block">Photos ({editData.images.length + newImages.length}/10)</Label>
+            <div className="grid grid-cols-5 gap-2 mb-3">
+              {/* Existing images */}
+              {editData.images.map((img, i) => (
+                <div key={`existing-${i}`} className="relative aspect-square rounded-lg overflow-hidden bg-muted group">
+                  <img src={img} alt={`Photo ${i+1}`} className="w-full h-full object-cover" />
+                  <button
+                    onClick={() => removeImage(i, false)}
+                    className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+              
+              {/* New images */}
+              {newImages.map((img, i) => (
+                <div key={`new-${i}`} className="relative aspect-square rounded-lg overflow-hidden bg-muted group border-2 border-primary">
+                  <img src={img.preview} alt={`New photo ${i+1}`} className="w-full h-full object-cover" />
+                  <span className="absolute bottom-1 left-1 text-xs bg-primary text-white px-1 rounded">New</span>
+                  <button
+                    onClick={() => removeImage(i, true)}
+                    className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+              
+              {/* Add more button */}
+              {editData.images.length + newImages.length < 10 && (
+                <label className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/30 hover:border-primary cursor-pointer flex flex-col items-center justify-center text-muted-foreground hover:text-primary transition-colors">
+                  {isUploading ? (
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  ) : (
+                    <>
+                      <ImagePlus className="w-6 h-6 mb-1" />
+                      <span className="text-xs">Add</span>
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleImageUpload}
+                    disabled={isUploading}
+                    ref={fileInputRef}
+                  />
+                </label>
+              )}
+            </div>
+            
+            {/* Photo Editor Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowPhotoEditor(true)}
+              className="text-xs"
+            >
+              <Wand2 className="w-3 h-3 mr-1" /> Edit Photos with AI
+            </Button>
+          </div>
+
+          {/* Title */}
+          <div>
+            <Label htmlFor="edit-title">Title *</Label>
+            <Input
+              id="edit-title"
+              value={editData.title}
+              onChange={(e) => setEditData(prev => ({ ...prev, title: e.target.value }))}
+              placeholder="Product title"
+              data-testid="edit-listing-title"
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <Label htmlFor="edit-description">Description</Label>
+            <Textarea
+              id="edit-description"
+              value={editData.description}
+              onChange={(e) => setEditData(prev => ({ ...prev, description: e.target.value }))}
+              placeholder="Describe your item..."
+              rows={4}
+              data-testid="edit-listing-description"
+            />
+          </div>
+
+          {/* Price */}
+          <div>
+            <Label htmlFor="edit-price">Price ($) *</Label>
+            <Input
+              id="edit-price"
+              type="number"
+              step="0.01"
+              min="0"
+              value={editData.price}
+              onChange={(e) => setEditData(prev => ({ ...prev, price: e.target.value }))}
+              placeholder="0.00"
+              data-testid="edit-listing-price"
+            />
+          </div>
+
+          {/* Condition */}
+          <div>
+            <Label>Condition</Label>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {['new', 'like_new', 'good', 'fair', 'poor'].map(cond => (
+                <button
+                  key={cond}
+                  onClick={() => setEditData(prev => ({ ...prev, condition: cond }))}
+                  className={`px-3 py-1.5 rounded-lg text-sm capitalize ${
+                    editData.condition === cond ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                  }`}
+                >
+                  {cond.replace('_', ' ')}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Status */}
+          <div>
+            <Label>Status</Label>
+            <div className="flex gap-2 mt-2">
+              {['active', 'paused', 'sold'].map(status => (
+                <button
+                  key={status}
+                  onClick={() => setEditData(prev => ({ ...prev, status }))}
+                  className={`px-4 py-2 rounded-lg text-sm capitalize ${
+                    editData.status === status 
+                      ? status === 'active' ? 'bg-green-500 text-white'
+                        : status === 'sold' ? 'bg-blue-500 text-white'
+                        : 'bg-amber-500 text-white'
+                      : 'bg-muted'
+                  }`}
+                >
+                  {status}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="sticky bottom-0 bg-background border-t p-4 flex gap-2">
+          <Button variant="outline" onClick={onClose} className="flex-1">
+            Cancel
+          </Button>
+          <Button onClick={handleSave} disabled={isSaving} className="flex-1">
+            {isSaving ? (
+              <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Saving...</>
+            ) : (
+              <><CheckCircle2 className="w-4 h-4 mr-2" /> Save Changes</>
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // AI Listing Generator Component
 const AIListingGenerator = ({ onComplete }) => {
   const [images, setImages] = useState([]);
