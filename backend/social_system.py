@@ -195,6 +195,8 @@ class CreatePostRequest(BaseModel):
     privacy: str = PostPrivacy.PUBLIC
     group_id: Optional[str] = None
     page_id: Optional[str] = None
+    listing_id: Optional[str] = None  # For marketplace listings
+    is_marketplace_share: bool = False  # Flag to indicate this is a marketplace share
 
 class CreateStoryRequest(BaseModel):
     media_type: str = MediaType.IMAGE
