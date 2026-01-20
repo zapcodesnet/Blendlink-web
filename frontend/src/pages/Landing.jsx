@@ -226,6 +226,7 @@ const FeaturedListingsCarousel = ({ onViewDetails }) => {
 
 // Recently Viewed Section
 const RecentlyViewedSection = ({ onViewDetails }) => {
+  const { t } = useTranslation();
   const [recentItems, setRecentItems] = useState([]);
   const scrollRef = useRef(null);
 
@@ -258,14 +259,14 @@ const RecentlyViewedSection = ({ onViewDetails }) => {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Eye className="w-5 h-5 text-primary" />
-            <h2 className="text-xl font-bold">Recently Viewed</h2>
+            <h2 className="text-xl font-bold">{t('landing.recently_viewed') || 'Recently Viewed'}</h2>
             <span className="text-sm text-muted-foreground">({recentItems.length})</span>
           </div>
           <button 
             onClick={clearHistory}
             className="text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
-            Clear History
+            {t('landing.clear_history') || 'Clear History'}
           </button>
         </div>
         
