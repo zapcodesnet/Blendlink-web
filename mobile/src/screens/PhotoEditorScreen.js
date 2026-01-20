@@ -287,7 +287,7 @@ export default function PhotoEditorScreen({ navigation }) {
     }
   };
 
-  // Batch AI Auto-Enhance
+  // Batch AI Auto-Enhance - with real-time progress
   const handleBatchAutoEnhance = async () => {
     const photosToEnhance = photos.filter((p) => !p.auto_enhanced);
 
@@ -297,26 +297,42 @@ export default function PhotoEditorScreen({ navigation }) {
     }
 
     setIsProcessing(true);
-    setProcessingMessage(`Auto-enhancing ${photosToEnhance.length} photos...`);
+    setBatchProgress({ current: 0, total: photosToEnhance.length });
+    
+    const startTime = Date.now();
+    let successCount = 0;
+    let failCount = 0;
 
-    try {
-      const response = await api.post('/photo-editor/auto-enhance-batch', {
-        photo_ids: photosToEnhance.map((p) => p.photo_id),
-      });
+    // Process photos one-by-one for real-time progress
+    for (let i = 0; i < photosToEnhance.length; i++) {
+      const photo = photosToEnhance[i];
+      const photoNum = i + 1;
+      
+      setBatchProgress({ current: i, total: photosToEnhance.length });
+      setProcessingMessage(`Enhancing photo ${photoNum} of ${photosToEnhance.length}...`);
 
-      const { total_processed, total_failed, total_time_ms } = response.data;
-
-      Alert.alert(
-        'Auto-Enhance Complete',
-        `${total_processed} enhanced, ${total_failed} failed\nTotal time: ${(total_time_ms / 1000).toFixed(1)}s`
-      );
-      await loadPhotos();
-    } catch (error) {
-      Alert.alert('Error', error.message || 'Batch auto-enhance failed');
-    } finally {
-      setIsProcessing(false);
-      setProcessingMessage('');
+      try {
+        await api.post('/photo-editor/auto-enhance', {
+          photo_id: photo.photo_id,
+        });
+        successCount++;
+        setBatchProgress({ current: photoNum, total: photosToEnhance.length });
+      } catch (error) {
+        console.error(`Failed to enhance photo ${photo.photo_id}:`, error);
+        failCount++;
+      }
     }
+
+    const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+
+    Alert.alert(
+      'Auto-Enhance Complete',
+      `${successCount} enhanced, ${failCount} failed\nTotal time: ${totalTime}s`
+    );
+    await loadPhotos();
+    setIsProcessing(false);
+    setBatchProgress({ current: 0, total: 0 });
+    setProcessingMessage('');
   };
 
   // Apply adjustments
