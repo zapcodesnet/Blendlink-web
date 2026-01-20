@@ -1,6 +1,59 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 20, 2026 (Session 16)
+## Latest Update: January 20, 2026 (Session 17)
+
+---
+
+## SESSION 17: COMPREHENSIVE MARKETPLACE ENHANCEMENTS ✅
+
+### All 4 Major Features Implemented and Verified
+
+**Features Implemented:**
+1. ✅ **Social Engagement Notifications** - Sellers receive real-time notifications when someone likes, comments, or shares their listings
+2. ✅ **Item Listing Page Enhancements** - Photo gallery with zoom/pan, shipping cost estimation via Shippo API
+3. ✅ **Buy It Now / Add to Cart + Guest Checkout** - Full cart system with localStorage persistence, guest-friendly checkout
+4. ✅ **Checkout with Shipping + Seller Dashboard Orders** - Real-time shipping calculation, email confirmations, Print Shipping Label
+
+**New Backend Modules:**
+- `backend/shipping_system.py` - Shippo API integration for shipping estimates and label generation
+- `backend/cart_orders.py` - Cart management, checkout, and order processing with Resend email
+
+**New Frontend Pages:**
+- `frontend/src/pages/Checkout.jsx` - 3-step checkout flow (Cart → Shipping → Payment)
+- `frontend/src/pages/ListingDetail.jsx` - Enhanced with photo gallery, zoom controls, shipping estimator
+- `frontend/src/components/CartIcon.jsx` - Cart badge component for header
+
+**New Backend Endpoints:**
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/shippo/estimate` | POST | Get shipping rates from Shippo (USPS, UPS, FedEx) |
+| `/api/shippo/create-label` | POST | Generate shipping label PDF |
+| `/api/shippo/carriers` | GET | List available carriers |
+| `/api/cart` | GET | Get user's cart |
+| `/api/cart/add` | POST | Add item to cart |
+| `/api/cart/remove/{id}` | DELETE | Remove item from cart |
+| `/api/orders/checkout` | POST | Process checkout (guest or logged-in) |
+| `/api/orders/{id}` | GET | Get order details |
+| `/api/orders/seller/list` | GET | Get seller's orders |
+| `/api/marketplace/listings/{id}/share` | POST | Track listing share |
+| `/api/marketplace/listings/{id}/comments` | GET/POST | Get/add comments |
+
+**New Notification Types:**
+- `LISTING_LIKED` - When someone likes a listing
+- `LISTING_COMMENTED` - When someone comments on a listing
+- `LISTING_SHARED` - When someone shares a listing
+- `ORDER_RECEIVED` - When seller receives a new order
+
+**User Choices Applied:**
+- Shippo API key: `shippo_test_0d3793b656351c9ae14c07a94339e8f6ec70ac17` (test mode)
+- Email service: Resend (already configured)
+- Missing weight/dimensions: "Contact seller for shipping"
+- Cart persistence: localStorage for guests
+
+**Testing Status:**
+- ✅ **iteration_45.json**: 21/21 backend tests passed (100%)
+- ✅ All frontend features verified
+- ✅ 2 bugs fixed during testing (MongoDB _id serialization in comment endpoints)
 
 ---
 
