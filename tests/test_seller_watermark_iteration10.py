@@ -14,7 +14,7 @@ import requests
 import os
 import base64
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://imgproedit.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://bugzapper-51.preview.emergentagent.com')
 
 # Test credentials
 TEST_EMAIL = "test@test.com"
