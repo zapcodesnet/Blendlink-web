@@ -1,11 +1,13 @@
 import React, { useContext, useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Home, ShoppingBag, Bell, Coins, User } from "lucide-react";
 import { AuthContext } from "../App";
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
 export const BottomNav = () => {
+  const { t } = useTranslation();
   const location = useLocation();
   const { user } = useContext(AuthContext);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -36,11 +38,11 @@ export const BottomNav = () => {
   }, []);
 
   const navItems = [
-    { path: "/feed", icon: Home, label: "Home" },
-    { path: "/marketplace", icon: ShoppingBag, label: "Market" },
-    { path: "/notifications", icon: Bell, label: "Alerts", badge: unreadCount },
-    { path: "/wallet", icon: Coins, label: "Wallet" },
-    { path: "/profile", icon: User, label: "Profile" },
+    { path: "/feed", icon: Home, label: t('nav.home'), fallback: "Home" },
+    { path: "/marketplace", icon: ShoppingBag, label: t('nav.marketplace'), fallback: "Market" },
+    { path: "/notifications", icon: Bell, label: t('notifications.title') || "Alerts", badge: unreadCount },
+    { path: "/wallet", icon: Coins, label: t('nav.wallet'), fallback: "Wallet" },
+    { path: "/profile", icon: User, label: t('nav.profile'), fallback: "Profile" },
   ];
 
   // Hide on certain pages
