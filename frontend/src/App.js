@@ -197,7 +197,7 @@ function AppRouter() {
       <Route path="/marketplace/guest" element={<GuestMarketplace />} />
       <Route path="/feed" element={<ProtectedRoute><SocialFeed /></ProtectedRoute>} />
       <Route path="/social" element={<ProtectedRoute><SocialFeed /></ProtectedRoute>} />
-      <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
+      <Route path="/marketplace" element={<Marketplace />} /> {/* Public - guests can browse */}
       <Route path="/marketplace/:id" element={<ListingDetail />} /> {/* Public route for guest viewing */}
       <Route path="/marketplace/create" element={<ProtectedRoute><CreateListing /></ProtectedRoute>} />
       <Route path="/rentals" element={<ProtectedRoute><Rentals /></ProtectedRoute>} />
