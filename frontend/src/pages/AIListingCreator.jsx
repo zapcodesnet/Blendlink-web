@@ -694,10 +694,23 @@ export default function AIListingCreator() {
       
       const result = await response.json();
       
+      // Validate AI suggested category against our predefined list
+      const validCategoryIds = categories.map(c => c.id.toLowerCase());
+      let suggestedCategory = (result.category || 'general').toLowerCase();
+      
+      // Check if AI suggestion matches any valid category
+      if (!validCategoryIds.includes(suggestedCategory)) {
+        // Try to find a partial match
+        const partialMatch = validCategoryIds.find(id => 
+          suggestedCategory.includes(id) || id.includes(suggestedCategory)
+        );
+        suggestedCategory = partialMatch || 'general';
+      }
+      
       setAiData({
         title: result.title,
         description: result.description,
-        category: result.category,
+        category: suggestedCategory,
         condition: result.detected_condition || condition,
         tags: result.suggested_tags || [],
         flaws: result.flaws_detected || [],
@@ -746,7 +759,7 @@ export default function AIListingCreator() {
       setAiData({
         title: 'Sample Product Listing',
         description: 'This is a demo listing. In production, this would be AI-generated based on your photos.',
-        category: 'General',
+        category: 'general',
         condition: condition,
         tags: ['sample', 'demo'],
         flaws: condition === 'used' ? ['Minor wear visible'] : []
