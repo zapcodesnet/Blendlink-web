@@ -821,14 +821,15 @@ export default function AIListingCreator() {
           title: aiData.title,
           description: aiData.description,
           price: parseFloat(userPrice),
-          category: aiData.category?.toLowerCase() || 'other',
+          category: aiData.category?.toLowerCase() || 'general',
           condition: aiData.condition,
           images: uploadedImages.length > 0 ? uploadedImages : images.map(i => i.preview),
           tags: aiData.tags,
           location: userLocation.zip,
           weight: weight,
           dimensions: dimensions,
-          shipping_method: selectedShipping || shippingData?.shipping_options?.[0] || null
+          shipping_method: selectedShipping || shippingData?.shipping_options?.[0] || null,
+          share_to_feed: shareToFeed
         })
       });
       
@@ -837,6 +838,31 @@ export default function AIListingCreator() {
       }
       
       const listing = await listingResponse.json();
+      
+      // If share to feed is enabled, create a social post
+      if (shareToFeed) {
+        try {
+          await fetch(`${API_BASE_URL}/api/posts`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              content: `🛒 New listing: ${aiData.title}\n\n${aiData.description?.slice(0, 200)}${aiData.description?.length > 200 ? '...' : ''}\n\n💰 Price: $${parseFloat(userPrice).toFixed(2)}`,
+              media_urls: uploadedImages.length > 0 ? uploadedImages : images.map(i => i.preview),
+              media_type: 'image',
+              privacy: 'public',
+              listing_id: listing.listing_id || listing.id,
+              is_marketplace_share: true
+            })
+          });
+          toast.success('Listing shared to your social feed!');
+        } catch (feedErr) {
+          console.error('Failed to share to feed:', feedErr);
+          // Don't fail the listing creation if feed share fails
+        }
+      }
       
       toast.success('Listing published successfully!');
       setStep(4);
