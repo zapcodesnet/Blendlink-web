@@ -68,6 +68,7 @@ import MyTeam from "./pages/MyTeam";
 import MintedPhotos from "./pages/MintedPhotos";
 import PhotoGameArena from "./pages/PhotoGameArena";
 import SubscriptionTiers from "./pages/SubscriptionTiers";
+import Checkout from "./pages/Checkout";
 
 // Components
 import BottomNav from "./components/BottomNav";
