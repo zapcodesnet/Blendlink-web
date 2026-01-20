@@ -8,7 +8,8 @@ import ComingSoonPlaceholder from "../components/ComingSoonPlaceholder";
 import { 
   Search, Plus, Filter, Smartphone, Shirt, Home, Car, 
   Dumbbell, Download, Wrench, Package, ChevronRight, ShoppingBag,
-  Sparkles, Store
+  Sparkles, Store, Watch, Palette, Heart, Gamepad2, Building2,
+  PawPrint, Baby, Gift, Ticket
 } from "lucide-react";
 
 const categoryIcons = {
@@ -19,6 +20,16 @@ const categoryIcons = {
   sports: Dumbbell,
   digital: Download,
   services: Wrench,
+  jewelry: Watch,
+  collectibles: Palette,
+  health: Heart,
+  toys: Gamepad2,
+  business: Building2,
+  pets: PawPrint,
+  baby: Baby,
+  giftcards: Gift,
+  tickets: Ticket,
+  general: Package,
   other: Package
 };
 
