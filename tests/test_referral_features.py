@@ -11,7 +11,7 @@ import os
 import uuid
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://bugzapper-51.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://profile-enhance-13.preview.emergentagent.com')
 
 # Test credentials
 TEST_EMAIL = "test@test.com"
