@@ -235,7 +235,7 @@ export default function Marketplace() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       {/* Header */}
       <header className="glass sticky top-0 z-40 border-b border-border/50 safe-top">
         <div className="max-w-6xl mx-auto px-4 py-3">
@@ -243,35 +243,61 @@ export default function Marketplace() {
             <h1 className="text-xl font-bold">Marketplace</h1>
             <div className="flex items-center gap-2">
               <CartIcon />
-              <Button 
-                variant="outline"
-                onClick={() => navigate("/seller-dashboard")}
-                className="rounded-full"
-                data-testid="seller-tools-btn"
-              >
-                <Sparkles className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">AI Seller Tools</span>
-                <span className="sm:hidden">AI Tools</span>
-              </Button>
-              <Button 
-                onClick={() => navigate("/marketplace/create")}
-                className="rounded-full"
-                data-testid="create-listing-btn"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Sell
-              </Button>
+              {user ? (
+                <>
+                  <Button 
+                    variant="outline"
+                    onClick={() => navigate("/seller-dashboard")}
+                    className="rounded-full"
+                    data-testid="seller-tools-btn"
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    <span className="hidden sm:inline">AI Seller Tools</span>
+                    <span className="sm:hidden">AI Tools</span>
+                  </Button>
+                  <Button 
+                    onClick={() => navigate("/marketplace/create")}
+                    className="rounded-full"
+                    data-testid="create-listing-btn"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Sell
+                  </Button>
+                </>
+              ) : (
+                <Button 
+                  onClick={() => navigate("/register")}
+                  className="rounded-full"
+                  data-testid="signup-to-sell-btn"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Sign Up to Sell
+                </Button>
+              )}
             </div>
           </div>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <Input
-              placeholder="Search items..."
-              className="pl-10 h-11 rounded-full"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              data-testid="search-input"
-            />
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Input
+                placeholder="Search items..."
+                className="pl-10 h-11 rounded-full"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                data-testid="search-input"
+              />
+            </div>
+            {/* Sort Dropdown */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="h-11 px-3 rounded-full border border-input bg-background text-sm min-w-[140px]"
+              data-testid="sort-dropdown"
+            >
+              <option value="newest">Newest</option>
+              <option value="price_low">Price: Low to High</option>
+              <option value="price_high">Price: High to Low</option>
+            </select>
           </div>
         </div>
       </header>
