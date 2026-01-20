@@ -1234,7 +1234,8 @@ async def comment_on_listing(listing_id: str, data: ListingCommentRequest, reque
         except Exception as e:
             logger.warning(f"Failed to send comment notification: {e}")
     
-    # Return comment with user info
+    # Return comment with user info (exclude MongoDB _id)
+    comment.pop("_id", None)
     comment["user"] = {"user_id": user_id, "username": username, "name": user.get("name"), "avatar": user.get("avatar")}
     return comment
 
