@@ -43,6 +43,7 @@ const ListingSocialActions = ({ listing, user, onLike }) => {
   const [likes, setLikes] = useState(listing.likes_count || 0);
   const [isLiked, setIsLiked] = useState(listing.user_has_liked || false);
   const [isLiking, setIsLiking] = useState(false);
+  const [addingToCart, setAddingToCart] = useState(false);
 
   const handleLike = async (e) => {
     e.stopPropagation(); // Prevent navigation to listing detail
@@ -88,28 +89,84 @@ const ListingSocialActions = ({ listing, user, onLike }) => {
     }
   };
 
+  const handleAddToCart = async (e) => {
+    e.stopPropagation(); // Prevent navigation to listing detail
+    
+    setAddingToCart(true);
+    try {
+      // Store in localStorage for cart functionality
+      const cart = JSON.parse(localStorage.getItem('blendlink_cart') || '[]');
+      const existingIndex = cart.findIndex(item => item.listing_id === listing.listing_id);
+      
+      if (existingIndex >= 0) {
+        cart[existingIndex].quantity += 1;
+      } else {
+        cart.push({
+          listing_id: listing.listing_id,
+          title: listing.title,
+          price: listing.price,
+          image: listing.images?.[0] || null,
+          seller: listing.seller,
+          quantity: 1,
+          is_digital: listing.is_digital || false
+        });
+      }
+      
+      localStorage.setItem('blendlink_cart', JSON.stringify(cart));
+      window.dispatchEvent(new Event('cart-updated'));
+      
+      toast.success("Added to cart!", {
+        action: { 
+          label: "View Cart", 
+          onClick: () => window.location.href = "/checkout" 
+        }
+      });
+    } catch (err) {
+      toast.error("Failed to add to cart");
+    } finally {
+      setAddingToCart(false);
+    }
+  };
+
   return (
-    <div className="flex items-center gap-2 pt-2 border-t border-border/50 mt-2">
+    <div className="space-y-2">
+      <div className="flex items-center gap-2 pt-2 border-t border-border/50 mt-2">
+        <button
+          onClick={handleLike}
+          disabled={isLiking}
+          className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full transition-colors ${
+            isLiked 
+              ? "bg-primary/10 text-primary" 
+              : "bg-muted hover:bg-muted/80 text-muted-foreground"
+          }`}
+          data-testid={`like-btn-${listing.listing_id}`}
+        >
+          <ThumbsUp className={`w-3 h-3 ${isLiked ? "fill-current" : ""}`} />
+          <span>{likes}</span>
+        </button>
+        <button
+          onClick={handleShare}
+          className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground transition-colors"
+          data-testid={`share-btn-${listing.listing_id}`}
+        >
+          <Share2 className="w-3 h-3" />
+          <span>Share</span>
+        </button>
+      </div>
       <button
-        onClick={handleLike}
-        disabled={isLiking}
-        className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full transition-colors ${
-          isLiked 
-            ? "bg-primary/10 text-primary" 
-            : "bg-muted hover:bg-muted/80 text-muted-foreground"
-        }`}
-        data-testid={`like-btn-${listing.listing_id}`}
+        onClick={handleAddToCart}
+        disabled={addingToCart}
+        className="w-full flex items-center justify-center gap-2 text-xs px-3 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+        data-testid={`add-to-cart-btn-${listing.listing_id}`}
       >
-        <ThumbsUp className={`w-3 h-3 ${isLiked ? "fill-current" : ""}`} />
-        <span>{likes}</span>
-      </button>
-      <button
-        onClick={handleShare}
-        className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground transition-colors"
-        data-testid={`share-btn-${listing.listing_id}`}
-      >
-        <Share2 className="w-3 h-3" />
-        <span>Share</span>
+        {addingToCart ? (
+          <Loader2 className="w-3 h-3 animate-spin" />
+        ) : (
+          <>
+            <ShoppingCart className="w-3 h-3" />
+            <span>Add to Cart</span>
+          </>
+        )}
       </button>
     </div>
   );
