@@ -1335,7 +1335,7 @@ export default function SellerDashboard() {
 
                 <div className="grid gap-4 md:grid-cols-2">
                   {listings.slice(0, 4).map(listing => (
-                    <ListingCard key={listing.listing_id} listing={listing} onImprove={handleImprove} />
+                    <ListingCard key={listing.listing_id} listing={listing} onImprove={handleImprove} onEdit={handleEditListing} />
                   ))}
                 </div>
               </CardContent>
