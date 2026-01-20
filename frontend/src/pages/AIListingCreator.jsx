@@ -780,7 +780,7 @@ export default function AIListingCreator() {
         body: JSON.stringify({
           images: images.map(img => img.base64),
           condition: condition,
-          target_countries: [targetCountry]
+          target_countries: targetCountries
         })
       });
       
@@ -829,7 +829,7 @@ export default function AIListingCreator() {
           title: result.title,
           description: result.description,
           condition: condition,
-          target_countries: [targetCountry]
+          target_countries: targetCountries
         })
       });
       
