@@ -2550,6 +2550,112 @@ async def get_url_preview(data: URLPreviewRequest):
             "siteName": urlparse(url).netloc if url else "Unknown"
         }
 
+# ============== LANGUAGE DETECTION ==============
+# Country code to language mapping
+COUNTRY_TO_LANGUAGE = {
+    # English
+    "US": "en", "GB": "en", "AU": "en", "CA": "en", "NZ": "en", "IE": "en",
+    # European languages
+    "ES": "es", "MX": "es", "AR": "es", "CO": "es", "CL": "es", "PE": "es",
+    "FR": "fr", "BE": "fr", "CH": "fr",
+    "DE": "de", "AT": "de",
+    "IT": "it",
+    "PT": "pt", "BR": "pt",
+    "NL": "nl",
+    "SE": "sv",
+    "PL": "pl",
+    "NO": "no",
+    "DK": "da",
+    "FI": "fi",
+    "RO": "ro",
+    "CZ": "cs",
+    "GR": "el",
+    "HU": "hu",
+    "UA": "uk",
+    "RU": "ru",
+    "RS": "sr",
+    "BG": "bg",
+    "HR": "hr",
+    "SK": "sk",
+    "LT": "lt",
+    "LV": "lv",
+    "EE": "et",
+    "SI": "sl",
+    "LU": "lb",
+    "MT": "mt",
+    "IS": "is",
+    "AL": "sq",
+    "MK": "mk",
+    "BA": "bs",
+    "ME": "sr",  # Montenegro uses Serbian
+    # Asian languages
+    "CN": "zh-CN",
+    "TW": "zh-TW",
+    "HK": "zh-HK",
+    "JP": "ja",
+    "KR": "ko",
+    "IN": "hi",
+    "ID": "id",
+    "PH": "tl",
+    "MY": "ms",
+    "TH": "th",
+    "VN": "vi",
+    "MN": "mn",
+    "NP": "ne",
+    "LK": "si",
+    "PK": "ur",
+    "BD": "bn",
+    # Middle East
+    "IL": "he",
+    "SA": "ar", "AE": "ar", "EG": "ar", "MA": "ar",
+    # Africa
+    "ZA": "af",
+}
+
+@utils_router.get("/detect-language")
+async def detect_language(request: Request):
+    """Detect user's language based on IP geolocation"""
+    # Get client IP
+    forwarded = request.headers.get("X-Forwarded-For")
+    client_ip = forwarded.split(",")[0].strip() if forwarded else request.client.host
+    
+    # Skip detection for localhost/private IPs
+    if client_ip in ("127.0.0.1", "localhost") or client_ip.startswith(("10.", "192.168.", "172.")):
+        return {
+            "detected_country": "US",
+            "detected_language": "en",
+            "ip": client_ip,
+            "source": "default"
+        }
+    
+    try:
+        # Use free ipapi.co service
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            response = await client.get(f"https://ipapi.co/{client_ip}/json/")
+            
+            if response.status_code == 200:
+                data = response.json()
+                country_code = data.get("country_code", "US")
+                language = COUNTRY_TO_LANGUAGE.get(country_code, "en")
+                
+                return {
+                    "detected_country": country_code,
+                    "detected_language": language,
+                    "country_name": data.get("country_name"),
+                    "ip": client_ip,
+                    "source": "ipapi.co"
+                }
+    except Exception as e:
+        logger.error(f"Language detection error: {e}")
+    
+    # Fallback to English
+    return {
+        "detected_country": "US",
+        "detected_language": "en",
+        "ip": client_ip,
+        "source": "fallback"
+    }
+
 # Include utils router
 api_router.include_router(utils_router)
 
