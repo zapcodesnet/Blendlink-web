@@ -286,7 +286,7 @@ export default function Landing() {
       {/* Featured Listings Carousel - TOP OF PAGE */}
       <FeaturedListingsCarousel onViewDetails={handleViewDetails} />
 
-      {/* Super App Badge + Browse as Guest Section */}
+      {/* Super App Badge + Browse Marketplace Section */}
       <section className="py-8 px-4">
         <div className="max-w-3xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
@@ -294,16 +294,16 @@ export default function Landing() {
             Your All-in-One Super App
           </div>
           
-          {/* Browse as Guest Link */}
+          {/* Browse Marketplace Link */}
           <div>
             <Button 
               variant="link" 
               className="text-muted-foreground hover:text-primary"
-              onClick={() => navigate('/marketplace/guest')}
-              data-testid="browse-guest-link"
+              onClick={() => navigate('/marketplace')}
+              data-testid="browse-marketplace-link"
             >
               <ShoppingCart className="w-4 h-4 mr-2" />
-              Or browse as guest without an account
+              Browse the Marketplace
             </Button>
           </div>
         </div>
