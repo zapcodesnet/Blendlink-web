@@ -1496,7 +1496,7 @@ export default function SellerDashboard() {
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               {listings.map(listing => (
-                <ListingCard key={listing.listing_id} listing={listing} onImprove={handleImprove} />
+                <ListingCard key={listing.listing_id} listing={listing} onImprove={handleImprove} onEdit={handleEditListing} />
               ))}
             </div>
             {listings.length === 0 && (
