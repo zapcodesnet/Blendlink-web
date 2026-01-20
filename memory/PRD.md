@@ -1,6 +1,57 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 19, 2026 (Session 15 - Part 5)
+## Latest Update: January 20, 2026 (Session 16)
+
+---
+
+## SESSION 16: MARKETPLACE UPDATE & SOCIAL FEATURES ✅
+
+### All 5 User Requirements Implemented and Verified
+
+**Requirements:**
+1. ✅ Hide AI Listing button on Profile page
+2. ✅ Update marketplace categories with expanded list
+3. ✅ Change "Digital Goods" to "Digital Goods & NFTs"
+4. ✅ Add category dropdown to AI Listing Creator with predefined categories
+5. ✅ Add social feed integration with share-to-feed toggle and Like/Share buttons
+
+**Implementation Details:**
+
+| Requirement | Implementation | Files Modified |
+|-------------|----------------|----------------|
+| Hide AI Listing button | Wrapped in `{false && (...)}` to hide but preserve code | `frontend/src/pages/Profile.jsx` |
+| Update categories | Added 9 new categories (17 total) in backend constant | `backend/server.py` |
+| "Digital Goods & NFTs" | Changed `name` in MARKETPLACE_CATEGORIES | `backend/server.py` |
+| Category dropdown | Added dropdown in AIContentPreview + validation logic | `frontend/src/pages/AIListingCreator.jsx` |
+| Social feed toggle | Added "Share to Social Feed" toggle (ON by default) | `frontend/src/pages/AIListingCreator.jsx` |
+| Like/Share buttons | Added ListingSocialActions component to listings | `frontend/src/pages/Marketplace.jsx` |
+
+**New Categories Added:**
+- Jewelry & Watches
+- Collectibles & Art
+- Health & Beauty
+- Toys & Hobbies
+- Business & Industrial
+- Pet Supplies
+- Baby Essentials
+- Gift Cards & Coupons
+- Tickets & Travel
+- General
+
+**New Backend Endpoint:**
+- `POST /api/marketplace/listings/{id}/like` - Toggle like status (requires auth)
+  - Returns: `{liked: bool, likes_count: int}`
+  - Non-authenticated users receive 401
+
+**User Choices Applied:**
+- Categories: Merged with existing (not replaced)
+- Share to Feed toggle: ON by default
+- Guest Like: Prompts to sign up
+- Guest Share: Allowed without login
+
+**Testing Status:**
+- ✅ **iteration_44.json**: 8/8 backend tests passed (100%)
+- ✅ All frontend E2E tests passed (100%)
 
 ---
 
