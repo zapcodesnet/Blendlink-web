@@ -3,12 +3,13 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../App";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
+import { Switch } from "../components/ui/switch";
 import { toast } from "sonner";
 import { 
   Camera, Upload, Sparkles, DollarSign, Tag, FileText, 
   ChevronRight, ChevronLeft, Check, Loader2, Image as ImageIcon,
   RefreshCw, ShoppingBag, AlertCircle, Wand2, Globe, X, Package,
-  MapPin, Truck, Scale, Ruler, Edit2, Save, Printer, Navigation
+  MapPin, Truck, Scale, Ruler, Edit2, Save, Printer, Navigation, Share2
 } from "lucide-react";
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
