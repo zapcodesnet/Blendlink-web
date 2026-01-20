@@ -1052,7 +1052,86 @@ async def create_listing(data: CreateListing, current_user: dict = Depends(get_c
     listing_dict = listing.model_dump()
     listing_dict["created_at"] = listing_dict["created_at"].isoformat()
     
+    # Add extended fields
+    listing_dict["target_countries"] = data.target_countries
+    listing_dict["weight"] = data.weight
+    listing_dict["dimensions"] = data.dimensions
+    listing_dict["tags"] = data.tags
+    listing_dict["location"] = data.location
+    listing_dict["likes"] = []
+    listing_dict["shares"] = 0
+    
     await db.listings.insert_one(listing_dict.copy())
+    
+    # Award BL coins for creating a marketplace listing (100 coins)
+    user_id = current_user["user_id"]
+    bl_reward = 100  # ACTIVITY_REWARDS["marketplace_listing"]
+    reward_reason = f"Created marketplace listing: {data.title[:50]}"
+    
+    try:
+        # Award to the listing creator
+        await db.users.update_one(
+            {"user_id": user_id},
+            {"$inc": {"bl_coins": bl_reward}}
+        )
+        
+        # Log the BL transaction
+        await db.bl_transactions.insert_one({
+            "transaction_id": f"bltxn_{uuid.uuid4().hex[:16]}",
+            "user_id": user_id,
+            "amount": bl_reward,
+            "type": "reward",
+            "reason": reward_reason,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        # Award upline bonuses using the existing referral structure
+        # L1 upline gets 3% of the BL coins (3 coins), L2 gets 1% (1 coin)
+        user = await db.users.find_one({"user_id": user_id})
+        
+        if user and user.get("l1_recruiter_id"):
+            l1_bonus = int(bl_reward * 0.03)  # 3% for L1
+            if l1_bonus > 0:
+                await db.users.update_one(
+                    {"user_id": user["l1_recruiter_id"]},
+                    {"$inc": {"bl_coins": l1_bonus}}
+                )
+                await db.bl_transactions.insert_one({
+                    "transaction_id": f"bltxn_{uuid.uuid4().hex[:16]}",
+                    "user_id": user["l1_recruiter_id"],
+                    "amount": l1_bonus,
+                    "type": "referral_bonus",
+                    "reason": f"L1 bonus from {current_user.get('name', 'user')}'s listing",
+                    "from_user_id": user_id,
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                })
+            
+            # L2 upline gets 1%
+            l1_user = await db.users.find_one({"user_id": user["l1_recruiter_id"]})
+            if l1_user and l1_user.get("l1_recruiter_id"):
+                l2_bonus = int(bl_reward * 0.01)  # 1% for L2
+                if l2_bonus > 0:
+                    await db.users.update_one(
+                        {"user_id": l1_user["l1_recruiter_id"]},
+                        {"$inc": {"bl_coins": l2_bonus}}
+                    )
+                    await db.bl_transactions.insert_one({
+                        "transaction_id": f"bltxn_{uuid.uuid4().hex[:16]}",
+                        "user_id": l1_user["l1_recruiter_id"],
+                        "amount": l2_bonus,
+                        "type": "referral_bonus",
+                        "reason": f"L2 bonus from {current_user.get('name', 'user')}'s listing",
+                        "from_user_id": user_id,
+                        "created_at": datetime.now(timezone.utc).isoformat()
+                    })
+        
+        listing_dict["bl_coins_earned"] = bl_reward
+        logger.info(f"Awarded {bl_reward} BL coins to user {user_id} for listing creation")
+        
+    except Exception as e:
+        logger.error(f"Failed to award BL coins for listing: {e}")
+        # Continue even if reward fails
+    
     return listing_dict
 
 # Master category list - single source of truth for all marketplace categories
