@@ -1076,6 +1076,47 @@ async def get_categories():
     """Return the master list of marketplace categories"""
     return MARKETPLACE_CATEGORIES
 
+@marketplace_router.post("/listings/{listing_id}/like")
+async def like_listing(listing_id: str, request: Request):
+    """Like or unlike a marketplace listing"""
+    try:
+        user = await get_current_user(request)
+        user_id = user["user_id"]
+    except:
+        raise HTTPException(status_code=401, detail="Login required to like")
+    
+    # Check if listing exists
+    listing = await db.listings.find_one({"listing_id": listing_id})
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    
+    # Check if user already liked
+    existing_like = await db.listing_likes.find_one({
+        "listing_id": listing_id,
+        "user_id": user_id
+    })
+    
+    if existing_like:
+        # Unlike
+        await db.listing_likes.delete_one({"_id": existing_like["_id"]})
+        await db.listings.update_one(
+            {"listing_id": listing_id},
+            {"$inc": {"likes_count": -1}}
+        )
+        return {"liked": False, "likes_count": max(0, (listing.get("likes_count", 0) - 1))}
+    else:
+        # Like
+        await db.listing_likes.insert_one({
+            "listing_id": listing_id,
+            "user_id": user_id,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        await db.listings.update_one(
+            {"listing_id": listing_id},
+            {"$inc": {"likes_count": 1}}
+        )
+        return {"liked": True, "likes_count": (listing.get("likes_count", 0) + 1)}
+
 class GuestCheckoutRequest(BaseModel):
     items: List[dict]
     customer: dict
