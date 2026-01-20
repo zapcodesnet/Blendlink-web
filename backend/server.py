@@ -8,7 +8,7 @@ import os
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Dict
 import uuid
 import base64
 from datetime import datetime, timezone, timedelta
