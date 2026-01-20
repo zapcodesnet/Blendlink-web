@@ -343,3 +343,201 @@ input:focus, textarea:focus, select:focus {
   0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
   40% { transform: scale(1); opacity: 1; }
 }
+
+/* ============================================
+   RTL (Right-to-Left) Language Support
+   ============================================ */
+
+/* Global RTL adjustments */
+[dir="rtl"] {
+  text-align: right;
+}
+
+[dir="rtl"] .flex {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .flex-row {
+  flex-direction: row-reverse;
+}
+
+/* Keep flex-col as column in RTL */
+[dir="rtl"] .flex-col {
+  flex-direction: column;
+}
+
+/* Reverse margins and paddings for RTL */
+[dir="rtl"] .ml-auto {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+[dir="rtl"] .mr-auto {
+  margin-right: 0;
+  margin-left: auto;
+}
+
+[dir="rtl"] .ml-1, [dir="rtl"] .ml-2, [dir="rtl"] .ml-3, [dir="rtl"] .ml-4 {
+  margin-left: 0;
+}
+
+[dir="rtl"] .mr-1, [dir="rtl"] .mr-2, [dir="rtl"] .mr-3, [dir="rtl"] .mr-4 {
+  margin-right: 0;
+}
+
+/* Reverse left/right positioning */
+[dir="rtl"] .left-0 {
+  left: auto;
+  right: 0;
+}
+
+[dir="rtl"] .right-0 {
+  right: auto;
+  left: 0;
+}
+
+[dir="rtl"] .left-4 {
+  left: auto;
+  right: 1rem;
+}
+
+[dir="rtl"] .right-4 {
+  right: auto;
+  left: 1rem;
+}
+
+/* Reverse text alignment */
+[dir="rtl"] .text-left {
+  text-align: right;
+}
+
+[dir="rtl"] .text-right {
+  text-align: left;
+}
+
+/* Keep text-center centered */
+[dir="rtl"] .text-center {
+  text-align: center;
+}
+
+/* Reverse space-x for RTL */
+[dir="rtl"] .space-x-1 > :not([hidden]) ~ :not([hidden]),
+[dir="rtl"] .space-x-2 > :not([hidden]) ~ :not([hidden]),
+[dir="rtl"] .space-x-3 > :not([hidden]) ~ :not([hidden]),
+[dir="rtl"] .space-x-4 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 1;
+}
+
+/* Reverse gap direction (gap-x stays same but items reverse) */
+[dir="rtl"] .gap-1, [dir="rtl"] .gap-2, [dir="rtl"] .gap-3, [dir="rtl"] .gap-4 {
+  /* gap works both ways, handled by flex-direction */
+}
+
+/* Reverse icons that have directional meaning */
+[dir="rtl"] .rtl-flip {
+  transform: scaleX(-1);
+}
+
+/* Message bubbles for RTL */
+[dir="rtl"] .message-sent {
+  border-radius: 18px 18px 18px 4px;
+}
+
+[dir="rtl"] .message-received {
+  border-radius: 18px 18px 4px 18px;
+}
+
+/* Bottom nav for RTL */
+[dir="rtl"] nav.fixed.bottom-0 {
+  direction: rtl;
+}
+
+/* Form inputs text direction */
+[dir="rtl"] input,
+[dir="rtl"] textarea,
+[dir="rtl"] select {
+  text-align: right;
+}
+
+/* Keep numbers LTR in RTL context */
+[dir="rtl"] .ltr-numbers {
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
+/* Price and currency display */
+[dir="rtl"] .price,
+[dir="rtl"] [data-price] {
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
+/* Scrollbar position for RTL */
+[dir="rtl"] .overflow-y-auto,
+[dir="rtl"] .overflow-y-scroll {
+  direction: rtl;
+}
+
+[dir="rtl"] .overflow-y-auto > *,
+[dir="rtl"] .overflow-y-scroll > * {
+  direction: rtl;
+}
+
+/* Cards grid stays same layout */
+[dir="rtl"] .grid {
+  direction: rtl;
+}
+
+/* Carousel navigation */
+[dir="rtl"] .carousel-next {
+  left: 0;
+  right: auto;
+}
+
+[dir="rtl"] .carousel-prev {
+  right: 0;
+  left: auto;
+}
+
+/* Progress bars */
+[dir="rtl"] .progress-bar {
+  transform-origin: right;
+}
+
+/* Checkboxes and radios */
+[dir="rtl"] input[type="checkbox"],
+[dir="rtl"] input[type="radio"] {
+  margin-left: 0.5rem;
+  margin-right: 0;
+}
+
+/* Icons in buttons */
+[dir="rtl"] button .lucide,
+[dir="rtl"] a .lucide {
+  margin-left: 0.5rem;
+  margin-right: 0;
+}
+
+/* Fix specific components */
+[dir="rtl"] .bottom-nav {
+  flex-direction: row-reverse;
+}
+
+/* Animations that need RTL awareness */
+[dir="rtl"] .slide-in-right {
+  animation-name: slideInLeft;
+}
+
+[dir="rtl"] .slide-in-left {
+  animation-name: slideInRight;
+}
+
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
