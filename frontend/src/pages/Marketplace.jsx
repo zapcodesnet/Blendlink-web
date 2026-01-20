@@ -186,12 +186,16 @@ export default function Marketplace() {
   useEffect(() => {
     fetchCategories();
     fetchListings();
-  }, [selectedCategory, search]);
+  }, [selectedCategory, search, sortBy]);
 
   const fetchCategories = async () => {
     try {
-      const cats = await api.marketplace.getCategories();
-      setCategories(cats);
+      // Use fetch for public access (no auth needed)
+      const response = await fetch(`${API_BASE_URL}/api/marketplace/categories`);
+      if (response.ok) {
+        const cats = await response.json();
+        setCategories(cats);
+      }
     } catch (error) {
       console.error("Categories error:", error);
     }
@@ -200,8 +204,28 @@ export default function Marketplace() {
   const fetchListings = async () => {
     setLoading(true);
     try {
-      const data = await api.marketplace.getListings(selectedCategory, search);
-      setListings(Array.isArray(data) ? data : []);
+      // Build query params
+      const params = new URLSearchParams();
+      if (selectedCategory) params.append('category', selectedCategory);
+      if (search) params.append('search', search);
+      if (sortBy) params.append('sort', sortBy);
+      
+      // Use fetch for public access (no auth needed)
+      const response = await fetch(`${API_BASE_URL}/api/marketplace/listings?${params}`);
+      if (response.ok) {
+        let data = await response.json();
+        
+        // Client-side sorting if needed
+        if (sortBy === 'price_low') {
+          data = data.sort((a, b) => (a.price || 0) - (b.price || 0));
+        } else if (sortBy === 'price_high') {
+          data = data.sort((a, b) => (b.price || 0) - (a.price || 0));
+        }
+        
+        setListings(Array.isArray(data) ? data : []);
+      } else {
+        setListings([]);
+      }
     } catch (error) {
       console.error("Listings error:", error);
       setListings([]);
