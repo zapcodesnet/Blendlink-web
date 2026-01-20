@@ -946,7 +946,7 @@ export default function AIListingCreator() {
         {/* Step 1: AI Analysis Results */}
         {step === 1 && aiData && (
           <div className="space-y-6">
-            <AIContentPreview data={aiData} onEdit={setAiData} />
+            <AIContentPreview data={aiData} onEdit={setAiData} categories={categories} />
             <WeightDimensionsEditor 
               weight={weight}
               dimensions={dimensions}
