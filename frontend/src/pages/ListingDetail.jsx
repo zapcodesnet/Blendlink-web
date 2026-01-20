@@ -421,8 +421,10 @@ const ShippingEstimator = ({ listing }) => {
 };
 
 export default function ListingDetail() {
-  const { user } = useContext(AuthContext);
-  const { addToCart } = useContext(CartContext) || {};
+  const authContext = useContext(AuthContext);
+  const cartContext = useContext(CartContext);
+  const user = authContext?.user;
+  const addToCart = cartContext?.addToCart;
   const { id } = useParams();
   const navigate = useNavigate();
   const [listing, setListing] = useState(null);
