@@ -79,6 +79,9 @@ export const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 // Auth context
 export const AuthContext = createContext(null);
 
+// Cart context for global cart state
+export const CartContext = createContext(null);
+
 // Re-export api for backward compatibility
 export { api };
 
