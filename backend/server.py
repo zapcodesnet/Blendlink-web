@@ -1160,6 +1160,80 @@ async def get_categories():
     """Return the master list of marketplace categories"""
     return MARKETPLACE_CATEGORIES
 
+class UpdateListing(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    price: Optional[float] = None
+    category: Optional[str] = None
+    images: Optional[List[str]] = None
+    condition: Optional[str] = None
+    status: Optional[str] = None
+    target_countries: Optional[List[str]] = None
+    weight: Optional[Dict] = None
+    dimensions: Optional[Dict] = None
+    tags: Optional[List[str]] = None
+
+@marketplace_router.put("/listings/{listing_id}")
+async def update_listing(listing_id: str, data: UpdateListing, current_user: dict = Depends(get_current_user)):
+    """Update a listing - only owner can update"""
+    # Check if listing exists and belongs to user
+    listing = await db.listings.find_one({"listing_id": listing_id})
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    
+    if listing.get("user_id") != current_user["user_id"]:
+        raise HTTPException(status_code=403, detail="You can only edit your own listings")
+    
+    # Build update dict with only provided fields
+    update_data = {}
+    if data.title is not None:
+        update_data["title"] = data.title
+    if data.description is not None:
+        update_data["description"] = data.description
+    if data.price is not None:
+        update_data["price"] = data.price
+    if data.category is not None:
+        update_data["category"] = data.category
+    if data.images is not None:
+        update_data["images"] = data.images
+    if data.condition is not None:
+        update_data["condition"] = data.condition
+    if data.status is not None:
+        update_data["status"] = data.status
+    if data.target_countries is not None:
+        update_data["target_countries"] = data.target_countries
+    if data.weight is not None:
+        update_data["weight"] = data.weight
+    if data.dimensions is not None:
+        update_data["dimensions"] = data.dimensions
+    if data.tags is not None:
+        update_data["tags"] = data.tags
+    
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    if update_data:
+        await db.listings.update_one(
+            {"listing_id": listing_id},
+            {"$set": update_data}
+        )
+    
+    # Fetch and return updated listing
+    updated_listing = await db.listings.find_one({"listing_id": listing_id}, {"_id": 0})
+    return updated_listing
+
+@marketplace_router.delete("/listings/{listing_id}")
+async def delete_listing(listing_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a listing - only owner can delete"""
+    listing = await db.listings.find_one({"listing_id": listing_id})
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    
+    if listing.get("user_id") != current_user["user_id"]:
+        raise HTTPException(status_code=403, detail="You can only delete your own listings")
+    
+    await db.listings.delete_one({"listing_id": listing_id})
+    return {"success": True, "message": "Listing deleted"}
+
 @marketplace_router.post("/listings/{listing_id}/like")
 async def like_listing(listing_id: str, request: Request):
     """Like or unlike a marketplace listing"""
