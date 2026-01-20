@@ -1082,6 +1082,7 @@ async def like_listing(listing_id: str, request: Request):
     try:
         user = await get_current_user(request)
         user_id = user["user_id"]
+        username = user.get("username") or user.get("name", "Someone")
     except:
         raise HTTPException(status_code=401, detail="Login required to like")
     
@@ -1089,6 +1090,8 @@ async def like_listing(listing_id: str, request: Request):
     listing = await db.listings.find_one({"listing_id": listing_id})
     if not listing:
         raise HTTPException(status_code=404, detail="Listing not found")
+    
+    seller_id = listing.get("user_id")
     
     # Check if user already liked
     existing_like = await db.listing_likes.find_one({
@@ -1115,6 +1118,20 @@ async def like_listing(listing_id: str, request: Request):
             {"listing_id": listing_id},
             {"$inc": {"likes_count": 1}}
         )
+        
+        # Send notification to seller (if not self-like)
+        if seller_id and seller_id != user_id:
+            try:
+                from notifications_system import notify_listing_liked
+                await notify_listing_liked(
+                    seller_id=seller_id,
+                    liker_username=username,
+                    listing_id=listing_id,
+                    listing_title=listing.get("title", "Your listing")
+                )
+            except Exception as e:
+                logger.warning(f"Failed to send like notification: {e}")
+        
         return {"liked": True, "likes_count": (listing.get("likes_count", 0) + 1)}
 
 class GuestCheckoutRequest(BaseModel):
