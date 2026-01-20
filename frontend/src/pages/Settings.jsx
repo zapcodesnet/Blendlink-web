@@ -6,9 +6,10 @@ import { toast } from "sonner";
 import { Button } from "../components/ui/button";
 import { Switch } from "../components/ui/switch";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
+import LanguageSelector from "../components/LanguageSelector";
 import { 
   ArrowLeft, User, Bell, Moon, Shield, HelpCircle, 
-  LogOut, ChevronRight, Camera
+  LogOut, ChevronRight, Camera, Globe
 } from "lucide-react";
 
 export default function Settings() {
