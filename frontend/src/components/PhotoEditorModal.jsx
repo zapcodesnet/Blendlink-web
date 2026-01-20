@@ -231,7 +231,7 @@ export default function PhotoEditorModal({ isOpen, onClose, onComplete }) {
     }
   };
   
-  // Batch remove backgrounds from ALL photos
+  // Batch remove backgrounds from ALL photos - with real-time progress
   const handleBatchRemoveBackgrounds = async () => {
     const photosToProcess = photos.filter(p => !p.has_background_removed);
     
@@ -241,34 +241,57 @@ export default function PhotoEditorModal({ isOpen, onClose, onComplete }) {
     }
     
     setIsBatchProcessing(true);
-    setBatchProgress({ current: 0, total: photosToProcess.length });
-    setProcessingAction(`Removing backgrounds (0/${photosToProcess.length})...`);
+    setBatchProgress({ current: 0, total: photosToProcess.length, currentPhotoName: '' });
     
-    try {
-      const response = await apiRequest('/photo-editor/remove-background-batch', {
-        method: 'POST',
-        body: JSON.stringify({ 
-          photo_ids: photosToProcess.map(p => p.photo_id) 
-        }),
+    const startTime = Date.now();
+    let successCount = 0;
+    let failCount = 0;
+    
+    // Process photos one-by-one for real-time progress
+    for (let i = 0; i < photosToProcess.length; i++) {
+      const photo = photosToProcess[i];
+      const photoNum = i + 1;
+      
+      // Update progress with current photo info
+      setBatchProgress({ 
+        current: i, 
+        total: photosToProcess.length, 
+        currentPhotoName: `Photo ${photoNum}` 
       });
+      setProcessingAction(`Removing background from photo ${photoNum} of ${photosToProcess.length}...`);
       
-      const { total_processed, total_failed, total_time_ms } = response;
-      
-      if (total_failed === 0) {
-        toast.success(`All ${total_processed} backgrounds removed in ${(total_time_ms / 1000).toFixed(1)}s`);
-      } else {
-        toast.warning(`${total_processed} succeeded, ${total_failed} failed`);
+      try {
+        await apiRequest('/photo-editor/remove-background', {
+          method: 'POST',
+          body: JSON.stringify({ photo_id: photo.photo_id }),
+        });
+        successCount++;
+        
+        // Update progress after each successful removal
+        setBatchProgress({ 
+          current: photoNum, 
+          total: photosToProcess.length,
+          currentPhotoName: photoNum < photosToProcess.length ? `Photo ${photoNum + 1}` : 'Complete!'
+        });
+      } catch (error) {
+        console.error(`Failed to remove background for photo ${photo.photo_id}:`, error);
+        failCount++;
       }
-      
-      await loadPhotos();
-      setActiveTab('background');
-    } catch (error) {
-      toast.error(error.message || "Batch processing failed");
-    } finally {
-      setIsBatchProcessing(false);
-      setBatchProgress({ current: 0, total: 0 });
-      setProcessingAction('');
     }
+    
+    const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+    
+    if (failCount === 0) {
+      toast.success(`All ${successCount} backgrounds removed in ${totalTime}s`);
+    } else {
+      toast.warning(`${successCount} succeeded, ${failCount} failed`);
+    }
+    
+    await loadPhotos();
+    setActiveTab('background');
+    setIsBatchProcessing(false);
+    setBatchProgress({ current: 0, total: 0, currentPhotoName: '' });
+    setProcessingAction('');
   };
   
   // AI Auto-Enhance (single photo)
