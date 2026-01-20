@@ -388,7 +388,7 @@ export default function Marketplace() {
                       ${listing.price?.toLocaleString()}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1 truncate">
-                      {listing.seller?.name}
+                      @{listing.seller?.username || listing.seller?.name?.split(' ')[0] || 'Seller'}
                     </p>
                   </div>
                 </div>
