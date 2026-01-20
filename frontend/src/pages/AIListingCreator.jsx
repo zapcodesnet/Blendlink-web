@@ -590,7 +590,8 @@ export default function AIListingCreator() {
   const [step, setStep] = useState(0);
   const [images, setImages] = useState([]);
   const [condition, setCondition] = useState('used');
-  const [targetCountry, setTargetCountry] = useState('US');
+  const [targetCountries, setTargetCountries] = useState(['US']); // Multi-select for target markets
+  const [showAllCountries, setShowAllCountries] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiData, setAiData] = useState(null);
   const [priceData, setPriceData] = useState(null);
@@ -605,6 +606,100 @@ export default function AIListingCreator() {
   const [categories, setCategories] = useState([]);
   const [shareToFeed, setShareToFeed] = useState(true); // ON by default per user preference
   
+  // Comprehensive list of target market countries (as requested by user)
+  const TARGET_MARKET_COUNTRIES = [
+    // Popular markets (shown by default)
+    { code: 'US', name: 'United States', flag: '🇺🇸', popular: true },
+    { code: 'CA', name: 'Canada', flag: '🇨🇦', popular: true },
+    { code: 'GB', name: 'United Kingdom', flag: '🇬🇧', popular: true },
+    { code: 'AU', name: 'Australia', flag: '🇦🇺', popular: true },
+    { code: 'DE', name: 'Germany', flag: '🇩🇪', popular: true },
+    { code: 'FR', name: 'France', flag: '🇫🇷', popular: true },
+    // Europe
+    { code: 'NL', name: 'Netherlands', flag: '🇳🇱' },
+    { code: 'ES', name: 'Spain', flag: '🇪🇸' },
+    { code: 'IT', name: 'Italy', flag: '🇮🇹' },
+    { code: 'SE', name: 'Sweden', flag: '🇸🇪' },
+    { code: 'PL', name: 'Poland', flag: '🇵🇱' },
+    { code: 'NO', name: 'Norway', flag: '🇳🇴' },
+    { code: 'DK', name: 'Denmark', flag: '🇩🇰' },
+    { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
+    { code: 'RO', name: 'Romania', flag: '🇷🇴' },
+    { code: 'CZ', name: 'Czech Republic', flag: '🇨🇿' },
+    { code: 'GR', name: 'Greece', flag: '🇬🇷' },
+    { code: 'HU', name: 'Hungary', flag: '🇭🇺' },
+    { code: 'UA', name: 'Ukraine', flag: '🇺🇦' },
+    { code: 'BE', name: 'Belgium', flag: '🇧🇪' },
+    { code: 'RS', name: 'Serbia', flag: '🇷🇸' },
+    { code: 'BG', name: 'Bulgaria', flag: '🇧🇬' },
+    { code: 'HR', name: 'Croatia', flag: '🇭🇷' },
+    { code: 'SK', name: 'Slovakia', flag: '🇸🇰' },
+    { code: 'LT', name: 'Lithuania', flag: '🇱🇹' },
+    { code: 'LV', name: 'Latvia', flag: '🇱🇻' },
+    { code: 'EE', name: 'Estonia', flag: '🇪🇪' },
+    { code: 'SI', name: 'Slovenia', flag: '🇸🇮' },
+    { code: 'FI', name: 'Finland', flag: '🇫🇮' },
+    { code: 'LU', name: 'Luxembourg', flag: '🇱🇺' },
+    { code: 'MT', name: 'Malta', flag: '🇲🇹' },
+    { code: 'IS', name: 'Iceland', flag: '🇮🇸' },
+    { code: 'AL', name: 'Albania', flag: '🇦🇱' },
+    { code: 'MK', name: 'North Macedonia', flag: '🇲🇰' },
+    { code: 'BA', name: 'Bosnia', flag: '🇧🇦' },
+    { code: 'ME', name: 'Montenegro', flag: '🇲🇪' },
+    { code: 'RU', name: 'Russia', flag: '🇷🇺' },
+    { code: 'CH', name: 'Switzerland', flag: '🇨🇭' },
+    { code: 'AT', name: 'Austria', flag: '🇦🇹' },
+    { code: 'IE', name: 'Ireland', flag: '🇮🇪' },
+    // Asia
+    { code: 'JP', name: 'Japan', flag: '🇯🇵' },
+    { code: 'KR', name: 'South Korea', flag: '🇰🇷' },
+    { code: 'CN', name: 'China (Mandarin)', flag: '🇨🇳' },
+    { code: 'HK', name: 'Hong Kong (Cantonese)', flag: '🇭🇰' },
+    { code: 'TW', name: 'Taiwan', flag: '🇹🇼' },
+    { code: 'IN', name: 'India', flag: '🇮🇳' },
+    { code: 'ID', name: 'Indonesia', flag: '🇮🇩' },
+    { code: 'PH', name: 'Philippines', flag: '🇵🇭' },
+    { code: 'MY', name: 'Malaysia', flag: '🇲🇾' },
+    { code: 'SG', name: 'Singapore', flag: '🇸🇬' },
+    { code: 'TH', name: 'Thailand', flag: '🇹🇭' },
+    { code: 'VN', name: 'Vietnam', flag: '🇻🇳' },
+    { code: 'MN', name: 'Mongolia', flag: '🇲🇳' },
+    { code: 'NP', name: 'Nepal', flag: '🇳🇵' },
+    { code: 'LK', name: 'Sri Lanka', flag: '🇱🇰' },
+    { code: 'PK', name: 'Pakistan', flag: '🇵🇰' },
+    { code: 'BD', name: 'Bangladesh', flag: '🇧🇩' },
+    // Middle East
+    { code: 'AE', name: 'UAE', flag: '🇦🇪' },
+    { code: 'SA', name: 'Saudi Arabia', flag: '🇸🇦' },
+    { code: 'IL', name: 'Israel', flag: '🇮🇱' },
+    { code: 'TR', name: 'Turkey', flag: '🇹🇷' },
+    // Americas
+    { code: 'MX', name: 'Mexico', flag: '🇲🇽' },
+    { code: 'BR', name: 'Brazil', flag: '🇧🇷' },
+    // Africa
+    { code: 'ZA', name: 'South Africa', flag: '🇿🇦' },
+    // Oceania
+    { code: 'NZ', name: 'New Zealand', flag: '🇳🇿' },
+  ];
+  
+  // Toggle country selection
+  const toggleCountry = (code) => {
+    setTargetCountries(prev => 
+      prev.includes(code) 
+        ? prev.filter(c => c !== code)
+        : [...prev, code]
+    );
+  };
+  
+  // Select/deselect all countries
+  const selectAllCountries = () => {
+    if (targetCountries.length === TARGET_MARKET_COUNTRIES.length) {
+      setTargetCountries(['US']); // Reset to just US
+    } else {
+      setTargetCountries(TARGET_MARKET_COUNTRIES.map(c => c.code));
+    }
+  };
+
   // Fetch categories on mount
   useEffect(() => {
     const fetchCategories = async () => {
