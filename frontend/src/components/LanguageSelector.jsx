@@ -27,6 +27,12 @@ export default function LanguageSelector({ className = "", compact = false }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Set RTL direction on initial load based on current language
+  useEffect(() => {
+    const langInfo = SUPPORTED_LANGUAGES.find(l => l.code === i18n.language);
+    document.documentElement.dir = langInfo?.rtl ? 'rtl' : 'ltr';
+  }, [i18n.language]);
+
   // Auto-detect language on first visit
   useEffect(() => {
     const hasVisited = localStorage.getItem('blendlink_visited');
