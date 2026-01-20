@@ -1,6 +1,52 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 20, 2026 (Session 17)
+## Latest Update: January 20, 2026 (Session 18)
+
+---
+
+## SESSION 18: 11-POINT COMPREHENSIVE UPDATE ✅
+
+### All 11 Features Implemented and Verified
+
+**Features Implemented:**
+
+1. ✅ **Fix Landing Page Listing View for Guests** - View button now navigates to `/marketplace/{id}` for all users including guests
+2. ✅ **Fix Cart Icon Link** - Removed "browse as guest" text, now shows "Browse the Marketplace" with correct link
+3. ✅ **Fix Checkout Page Country Selection** - Added country dropdown filtered by seller's target markets, shows weight/dimensions, extra fees notice
+4. ✅ **Fix Photo Editor Upload Spinner** - Added animated uploading overlay with spinner during photo uploads
+5. ✅ **Fix My Listings Edit Functionality** - Implemented full EditListingModal with photo management, title/description/price editing
+6. ✅ **Fix Share to Social Feed Toggle** - Updated backend to include listing_id in posts for marketplace shares
+7. ✅ **Add BL Coins for Listings** - 100 BL coins awarded for creating listings + upline bonuses (3%/1%)
+8. ✅ **Add URL Link Preview on Feed** - Auto-displays embedded content cards for URLs posted in feed
+9. ✅ **Add More Target Market Countries** - Expanded to 65+ countries in AI Listing Creator
+10. ✅ **Add Automatic Language Detection** - IP-based detection with 50+ languages, persistent language selector
+
+**New Backend Endpoints:**
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/utils/url-preview` | POST | Fetch URL metadata for link preview cards |
+| `/api/utils/detect-language` | GET | IP-based country/language detection |
+| `/api/marketplace/listings/{id}` | PUT | Update existing listing (owner only) |
+| `/api/marketplace/listings/{id}` | DELETE | Delete listing (owner only) |
+
+**New Frontend Components:**
+- `frontend/src/components/LinkPreview.jsx` - URL preview card component
+- `frontend/src/components/LanguageSelector.jsx` - Language dropdown with search
+- `frontend/src/i18n.js` - i18n configuration with 50+ language support
+
+**Key Changes:**
+- Route `/marketplace/:id` is now public (no ProtectedRoute) for guest viewing
+- AI Listing Creator has multi-select for target countries (65 countries)
+- Checkout page filters countries based on seller's target_countries
+- BL coin transactions logged with upline bonus distribution
+- ListingDetail.jsx updated for guest-safe context consumption
+
+**Testing Status:**
+- ✅ **iteration_46.json**: 19/19 backend tests passed (100%)
+- ✅ All frontend features verified via Playwright
+- ✅ 2 bugs fixed during testing:
+  1. Missing onEdit prop in ListingCard (fixed by testing agent)
+  2. Guest viewing failed due to protected route (fixed by main agent)
 
 ---
 
