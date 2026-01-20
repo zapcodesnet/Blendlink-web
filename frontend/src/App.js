@@ -77,6 +77,7 @@ import Checkout from "./pages/Checkout";
 import BottomNav from "./components/BottomNav";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import LanguageSelector from "./components/LanguageSelector";
+import LanguageTour, { useLanguageTour } from "./components/LanguageTour";
 
 // API base URL - connected to internal backend
 export const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
