@@ -631,25 +631,57 @@ export default function PhotoEditorModal({ isOpen, onClose, onComplete }) {
           </Button>
         </div>
         
-        {/* Processing overlay */}
+        {/* Processing overlay - Enhanced with real-time progress */}
         {(isProcessing || isBatchProcessing) && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-background p-6 rounded-xl flex flex-col items-center gap-3 min-w-[300px]">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              <p className="text-sm font-medium">{processingAction}</p>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-background p-8 rounded-2xl flex flex-col items-center gap-4 min-w-[350px] shadow-2xl border border-border">
+              {/* Animated spinner with gradient */}
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full blur-xl opacity-30 animate-pulse" />
+                <Loader2 className="w-12 h-12 animate-spin text-primary relative z-10" />
+              </div>
+              
+              {/* Action text */}
+              <p className="text-base font-semibold text-center">{processingAction}</p>
+              
+              {/* Progress section for batch operations */}
               {isBatchProcessing && batchProgress.total > 0 && (
-                <div className="w-full">
-                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                <div className="w-full space-y-3">
+                  {/* Progress bar with gradient */}
+                  <div className="h-3 bg-muted rounded-full overflow-hidden">
                     <div 
-                      className="h-full bg-primary transition-all duration-300"
+                      className="h-full bg-gradient-to-r from-purple-600 to-pink-600 transition-all duration-500 ease-out"
                       style={{ width: `${(batchProgress.current / batchProgress.total) * 100}%` }}
                     />
                   </div>
-                  <p className="text-xs text-muted-foreground text-center mt-1">
-                    {batchProgress.current} of {batchProgress.total}
-                  </p>
+                  
+                  {/* Progress stats */}
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground">
+                      {batchProgress.current} of {batchProgress.total} complete
+                    </span>
+                    <span className="font-mono text-primary">
+                      {Math.round((batchProgress.current / batchProgress.total) * 100)}%
+                    </span>
+                  </div>
+                  
+                  {/* Current photo indicator */}
+                  {batchProgress.currentPhotoName && (
+                    <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground bg-muted/50 py-2 px-3 rounded-lg">
+                      <Sparkles className="w-3 h-3 text-primary animate-pulse" />
+                      <span>Processing: <span className="font-medium text-foreground">{batchProgress.currentPhotoName}</span></span>
+                    </div>
+                  )}
                 </div>
               )}
+              
+              {/* Tip text */}
+              <p className="text-xs text-muted-foreground text-center max-w-[250px]">
+                {isBatchProcessing 
+                  ? "AI is analyzing and processing each photo individually for best results"
+                  : "This may take a moment..."
+                }
+              </p>
             </div>
           </div>
         )}
