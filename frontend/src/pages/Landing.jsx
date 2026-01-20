@@ -265,6 +265,7 @@ export default function Landing() {
               <span className="font-bold text-2xl">Blendlink</span>
             </div>
             <div className="flex items-center gap-3">
+              <LanguageSelector compact className="hidden sm:block" />
               <Button 
                 variant="ghost" 
                 onClick={() => navigate("/login")}
@@ -283,6 +284,11 @@ export default function Landing() {
           </div>
         </div>
       </header>
+
+      {/* Mobile Language Selector */}
+      <div className="sm:hidden px-4 py-2 flex justify-center">
+        <LanguageSelector />
+      </div>
 
       {/* Featured Listings Carousel - TOP OF PAGE */}
       <FeaturedListingsCarousel onViewDetails={handleViewDetails} />
