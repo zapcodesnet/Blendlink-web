@@ -437,6 +437,33 @@ export default function ListingDetail() {
     fetchListing();
   }, [id]);
 
+  // Store recently viewed listing in localStorage
+  useEffect(() => {
+    if (listing && listing.listing_id) {
+      const recentlyViewed = JSON.parse(localStorage.getItem('blendlink_recently_viewed') || '[]');
+      
+      // Remove if already exists (to move to front)
+      const filtered = recentlyViewed.filter(item => item.listing_id !== listing.listing_id);
+      
+      // Add to front
+      const newItem = {
+        listing_id: listing.listing_id,
+        title: listing.title,
+        price: listing.price,
+        image: listing.images?.[0] || listing.image,
+        category: listing.category,
+        viewed_at: new Date().toISOString()
+      };
+      
+      filtered.unshift(newItem);
+      
+      // Keep only last 10 items
+      const trimmed = filtered.slice(0, 10);
+      
+      localStorage.setItem('blendlink_recently_viewed', JSON.stringify(trimmed));
+    }
+  }, [listing]);
+
   const fetchListing = async () => {
     try {
       const data = await api.marketplace.getListing(id);
