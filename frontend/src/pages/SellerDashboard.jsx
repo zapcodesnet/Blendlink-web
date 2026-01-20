@@ -1060,6 +1060,11 @@ export default function SellerDashboard() {
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [generatingLabel, setGeneratingLabel] = useState(null);
+  
+  // Edit listing state
+  const [editingListing, setEditingListing] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
