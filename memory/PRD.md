@@ -1,6 +1,50 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 20, 2026 (Session 18 - Part 2)
+## Latest Update: January 20, 2026 (Session 18 - Part 3)
+
+---
+
+## SESSION 18 PART 3: LANGUAGE TOUR & RTL IMPLEMENTATION ✅
+
+### Features Implemented
+
+1. ✅ **Language Tour Feature**
+   - Shows interactive modal when switching to new language for first time
+   - Step-by-step showcase of key translations (Home, Marketplace, Login, etc.)
+   - Progress dots navigation between translation examples
+   - "View all translations" option to see grouped list
+   - Uses localStorage to remember toured languages
+   - Skips tour for English (default language)
+
+2. ✅ **useTranslation() Integration**
+   - Integrated into BottomNav component (Home, Market, Wallet, Profile labels)
+   - Integrated into Landing page (hero text, buttons, Recently Viewed section)
+   - Dynamic translation via `t()` function with fallbacks
+
+3. ✅ **RTL CSS Support**
+   - 100+ lines of RTL CSS rules added to index.css
+   - Flex direction reversal for `[dir="rtl"]`
+   - Margin/padding swapping
+   - Left/right position swapping  
+   - Text alignment adjustments
+   - Message bubble direction swap
+   - Input text alignment
+   - Carousel navigation swaps
+
+4. ✅ **RTL Direction Auto-Set**
+   - LanguageSelector sets `document.documentElement.dir` on language change
+   - Initial load checks current language and sets direction
+   - Arabic (ar), Hebrew (he), Urdu (ur) marked as RTL
+
+**New Files Created:**
+- `frontend/src/components/LanguageTour.jsx` - Tour modal + useLanguageTour hook
+
+**Files Modified:**
+- `frontend/src/App.js` - Added LanguageTour component
+- `frontend/src/components/LanguageSelector.jsx` - RTL direction on load
+- `frontend/src/components/BottomNav.jsx` - useTranslation integration
+- `frontend/src/pages/Landing.jsx` - useTranslation integration
+- `frontend/src/index.css` - RTL CSS rules
 
 ---
 
