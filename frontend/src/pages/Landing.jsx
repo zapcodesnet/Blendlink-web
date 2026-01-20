@@ -223,6 +223,110 @@ const FeaturedListingsCarousel = ({ onViewDetails }) => {
   );
 };
 
+// Recently Viewed Section
+const RecentlyViewedSection = ({ onViewDetails }) => {
+  const [recentItems, setRecentItems] = useState([]);
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    // Load recently viewed from localStorage
+    const stored = JSON.parse(localStorage.getItem('blendlink_recently_viewed') || '[]');
+    setRecentItems(stored);
+  }, []);
+
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const scrollAmount = 280;
+      scrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const clearHistory = () => {
+    localStorage.removeItem('blendlink_recently_viewed');
+    setRecentItems([]);
+  };
+
+  if (recentItems.length === 0) return null;
+
+  return (
+    <section className="py-6 px-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Eye className="w-5 h-5 text-primary" />
+            <h2 className="text-xl font-bold">Recently Viewed</h2>
+            <span className="text-sm text-muted-foreground">({recentItems.length})</span>
+          </div>
+          <button 
+            onClick={clearHistory}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Clear History
+          </button>
+        </div>
+        
+        <div className="relative">
+          <div 
+            ref={scrollRef}
+            className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 snap-x snap-mandatory"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {recentItems.map((item, i) => (
+              <div
+                key={`recent-${item.listing_id}-${i}`}
+                className="flex-shrink-0 w-48 bg-card rounded-xl overflow-hidden shadow hover:shadow-lg transition-all duration-300 cursor-pointer group snap-start"
+                onClick={() => onViewDetails({ id: item.listing_id }, 'product')}
+                data-testid={`recent-${item.listing_id}`}
+              >
+                <div className="relative h-32 overflow-hidden bg-muted">
+                  {item.image ? (
+                    <img 
+                      src={item.image} 
+                      alt={item.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <ShoppingBag className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                    <p className="text-white font-bold">${item.price?.toLocaleString()}</p>
+                  </div>
+                </div>
+                <div className="p-3">
+                  <h3 className="font-medium text-sm truncate">{item.title}</h3>
+                  <p className="text-xs text-muted-foreground capitalize">{item.category || 'Item'}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {recentItems.length > 4 && (
+            <>
+              <button 
+                onClick={() => scroll('left')}
+                className="absolute left-0 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm rounded-full p-1.5 shadow-lg hover:bg-background transition hidden md:block"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button 
+                onClick={() => scroll('right')}
+                className="absolute right-0 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm rounded-full p-1.5 shadow-lg hover:bg-background transition hidden md:block"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+};
+
 export default function Landing() {
   const navigate = useNavigate();
 
