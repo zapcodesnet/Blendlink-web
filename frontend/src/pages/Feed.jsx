@@ -229,6 +229,14 @@ export default function Feed() {
                 {/* Post Content */}
                 <p className="mb-3 whitespace-pre-wrap">{post.content}</p>
 
+                {/* URL Link Preview */}
+                {(() => {
+                  const urls = extractUrls(post.content);
+                  return urls.length > 0 ? (
+                    <LinkPreview url={urls[0]} className="mb-3" />
+                  ) : null;
+                })()}
+
                 {/* Post Images */}
                 {post.images?.length > 0 && (
                   <div className="mb-3 rounded-xl overflow-hidden">
