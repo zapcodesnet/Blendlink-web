@@ -323,7 +323,7 @@ export default function PhotoEditorModal({ isOpen, onClose, onComplete }) {
     }
   };
   
-  // Batch AI Auto-Enhance
+  // Batch AI Auto-Enhance - with real-time progress
   const handleBatchAutoEnhance = async () => {
     const photosToEnhance = photos.filter(p => !p.auto_enhanced);
     
@@ -333,31 +333,56 @@ export default function PhotoEditorModal({ isOpen, onClose, onComplete }) {
     }
     
     setIsBatchProcessing(true);
-    setProcessingAction(`Auto-enhancing ${photosToEnhance.length} photos...`);
+    setBatchProgress({ current: 0, total: photosToEnhance.length, currentPhotoName: '' });
     
-    try {
-      const response = await apiRequest('/photo-editor/auto-enhance-batch', {
-        method: 'POST',
-        body: JSON.stringify({
-          photo_ids: photosToEnhance.map(p => p.photo_id),
-        }),
+    const startTime = Date.now();
+    let successCount = 0;
+    let failCount = 0;
+    
+    // Process photos one-by-one for real-time progress
+    for (let i = 0; i < photosToEnhance.length; i++) {
+      const photo = photosToEnhance[i];
+      const photoNum = i + 1;
+      
+      // Update progress with current photo info
+      setBatchProgress({ 
+        current: i, 
+        total: photosToEnhance.length, 
+        currentPhotoName: `Photo ${photoNum}` 
       });
+      setProcessingAction(`Enhancing photo ${photoNum} of ${photosToEnhance.length}...`);
       
-      const { total_processed, total_failed, total_time_ms } = response;
-      
-      if (total_failed === 0) {
-        toast.success(`All ${total_processed} photos enhanced in ${(total_time_ms / 1000).toFixed(1)}s`);
-      } else {
-        toast.warning(`${total_processed} enhanced, ${total_failed} failed`);
+      try {
+        await apiRequest('/photo-editor/auto-enhance', {
+          method: 'POST',
+          body: JSON.stringify({ photo_id: photo.photo_id }),
+        });
+        successCount++;
+        
+        // Update progress after each successful enhancement
+        setBatchProgress({ 
+          current: photoNum, 
+          total: photosToEnhance.length,
+          currentPhotoName: photoNum < photosToEnhance.length ? `Photo ${photoNum + 1}` : 'Complete!'
+        });
+      } catch (error) {
+        console.error(`Failed to enhance photo ${photo.photo_id}:`, error);
+        failCount++;
       }
-      
-      await loadPhotos();
-    } catch (error) {
-      toast.error(error.message || "Batch auto-enhance failed");
-    } finally {
-      setIsBatchProcessing(false);
-      setProcessingAction('');
     }
+    
+    const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+    
+    if (failCount === 0) {
+      toast.success(`All ${successCount} photos enhanced in ${totalTime}s`);
+    } else {
+      toast.warning(`${successCount} enhanced, ${failCount} failed`);
+    }
+    
+    await loadPhotos();
+    setIsBatchProcessing(false);
+    setBatchProgress({ current: 0, total: 0, currentPhotoName: '' });
+    setProcessingAction('');
   };
   
   // Apply adjustments
