@@ -1241,11 +1241,33 @@ const styles = StyleSheet.create({
     padding: 32,
     borderRadius: 16,
     alignItems: 'center',
-    minWidth: 200,
+    minWidth: 280,
   },
   processingText: {
     color: '#fff',
     marginTop: 16,
     fontSize: 14,
+    textAlign: 'center',
+  },
+  progressContainer: {
+    width: '100%',
+    marginTop: 16,
+  },
+  progressBarBg: {
+    height: 8,
+    backgroundColor: '#374151',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#8B5CF6',
+    borderRadius: 4,
+  },
+  progressText: {
+    color: '#9CA3AF',
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 8,
   },
 });
