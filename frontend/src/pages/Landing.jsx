@@ -236,22 +236,16 @@ export default function Landing() {
     { icon: Share2, title: "Referrals", desc: "Invite friends & earn together" },
   ];
   
-  // Handle viewing item details or browsing as guest
+  // Handle viewing item details - works for all users including guests
   const handleViewDetails = (item, type) => {
-    if (type === 'browse') {
-      // Navigate to guest marketplace
-      navigate('/marketplace/guest');
-      return;
-    }
-    
-    // Navigate to item detail page based on type
+    // Navigate to item detail page based on type - public marketplace for all
     if (item) {
       const routes = {
-        product: `/marketplace/item/${item.id}`,
+        product: `/marketplace/${item.id}`,
         rental: `/rentals/${item.id}`,
         service: `/services/${item.id}`
       };
-      navigate(routes[type] || '/marketplace/guest');
+      navigate(routes[type] || '/marketplace');
     }
   };
 
