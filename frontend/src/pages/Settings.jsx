@@ -48,6 +48,7 @@ export default function Settings() {
       title: "Preferences",
       items: [
         { icon: Moon, label: "Dark Mode", toggle: true, value: darkMode, onChange: toggleDarkMode },
+        { icon: Globe, label: "Language", custom: true, component: <LanguageSelector className="ml-auto" /> },
       ]
     },
     {
