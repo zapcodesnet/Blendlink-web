@@ -603,6 +603,7 @@ export default function AIListingCreator() {
   const [isPublishing, setIsPublishing] = useState(false);
   const [error, setError] = useState(null);
   const [categories, setCategories] = useState([]);
+  const [shareToFeed, setShareToFeed] = useState(true); // ON by default per user preference
   
   // Fetch categories on mount
   useEffect(() => {
