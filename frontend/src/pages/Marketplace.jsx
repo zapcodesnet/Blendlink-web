@@ -159,6 +159,7 @@ export default function Marketplace() {
           <div className="flex items-center justify-between mb-3">
             <h1 className="text-xl font-bold">Marketplace</h1>
             <div className="flex items-center gap-2">
+              <CartIcon />
               <Button 
                 variant="outline"
                 onClick={() => navigate("/seller-dashboard")}
