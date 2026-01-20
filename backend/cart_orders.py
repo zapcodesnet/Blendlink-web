@@ -66,26 +66,17 @@ async def send_email(to: str, subject: str, html: str) -> bool:
         return False
     
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.post(
-                "https://api.resend.com/emails",
-                headers={
-                    "Authorization": f"Bearer {RESEND_API_KEY}",
-                    "Content-Type": "application/json"
-                },
-                json={
-                    "from": f"Blendlink <{SENDER_EMAIL}>",
-                    "to": [to],
-                    "subject": subject,
-                    "html": html
-                }
-            )
-            
-            if response.status_code >= 400:
-                logger.error(f"Resend API error: {response.status_code} - {response.text}")
-                return False
-            
-            return True
+        params = {
+            "from": f"Blendlink <{SENDER_EMAIL}>",
+            "to": [to],
+            "subject": subject,
+            "html": html
+        }
+        
+        # Run sync SDK in thread to keep FastAPI non-blocking
+        email = await asyncio.to_thread(resend.Emails.send, params)
+        logger.info(f"Email sent to {to}, id: {email.get('id')}")
+        return True
     except Exception as e:
         logger.error(f"Email send error: {e}")
         return False
