@@ -245,6 +245,9 @@ function AppRouter() {
       {/* AI Listing Creator Route */}
       <Route path="/ai-listing-creator" element={<ProtectedRoute><AIListingCreator /></ProtectedRoute>} />
       
+      {/* Checkout Route - Accessible to guests */}
+      <Route path="/checkout" element={<Checkout />} />
+      
       {/* Casino Routes */}
       <Route path="/casino" element={<ProtectedRoute><Casino /></ProtectedRoute>} />
       <Route path="/poker" element={<ProtectedRoute><PokerLobby /></ProtectedRoute>} />
