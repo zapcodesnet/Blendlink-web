@@ -31,6 +31,14 @@ class NotificationType(str, Enum):
     DIAMOND_PROMOTION = "diamond_promotion"
     DIAMOND_WARNING = "diamond_warning"
     SYSTEM = "system"
+    # Social engagement notifications for marketplace
+    LISTING_LIKED = "listing_liked"
+    LISTING_COMMENTED = "listing_commented"
+    LISTING_SHARED = "listing_shared"
+    # Order notifications
+    ORDER_RECEIVED = "order_received"
+    ORDER_SHIPPED = "order_shipped"
+    ORDER_DELIVERED = "order_delivered"
 
 class NotificationPriority(str, Enum):
     LOW = "low"
