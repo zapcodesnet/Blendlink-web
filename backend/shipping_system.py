@@ -20,8 +20,8 @@ logger = logging.getLogger(__name__)
 SHIPPO_API_KEY = os.environ.get("SHIPPO_API_KEY", "")
 SHIPPO_BASE_URL = "https://api.goshippo.com"
 
-# Router
-shipping_router = APIRouter(prefix="/shipping", tags=["Shipping"])
+# Router - using unique prefix to avoid conflict with seller_dashboard shipping_router
+shipping_router = APIRouter(prefix="/shippo", tags=["Shipping (Shippo)"])
 
 # ============== MODELS ==============
 
