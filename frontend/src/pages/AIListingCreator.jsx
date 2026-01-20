@@ -1038,6 +1038,26 @@ export default function AIListingCreator() {
               </div>
             </div>
             
+            {/* Share to Social Feed Toggle */}
+            <div className="bg-card rounded-xl border p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Share2 className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Share to Social Feed</p>
+                    <p className="text-xs text-muted-foreground">Automatically post this listing to your feed for more visibility</p>
+                  </div>
+                </div>
+                <Switch 
+                  checked={shareToFeed} 
+                  onCheckedChange={setShareToFeed}
+                  data-testid="share-to-feed-toggle"
+                />
+              </div>
+            </div>
+            
             <Button 
               onClick={publishListing}
               disabled={isPublishing}
