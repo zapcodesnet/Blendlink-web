@@ -1134,6 +1134,132 @@ async def like_listing(listing_id: str, request: Request):
         
         return {"liked": True, "likes_count": (listing.get("likes_count", 0) + 1)}
 
+@marketplace_router.post("/listings/{listing_id}/share")
+async def share_listing(listing_id: str, request: Request):
+    """Track when a listing is shared and notify seller"""
+    # Get user info if logged in (optional for sharing)
+    user_id = None
+    username = "Someone"
+    try:
+        user = await get_current_user(request)
+        user_id = user["user_id"]
+        username = user.get("username") or user.get("name", "Someone")
+    except:
+        pass  # Allow anonymous shares
+    
+    # Check if listing exists
+    listing = await db.listings.find_one({"listing_id": listing_id})
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    
+    seller_id = listing.get("user_id")
+    
+    # Track the share
+    await db.listing_shares.insert_one({
+        "listing_id": listing_id,
+        "user_id": user_id,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Increment share count
+    await db.listings.update_one(
+        {"listing_id": listing_id},
+        {"$inc": {"shares_count": 1}}
+    )
+    
+    # Notify seller (if not self-share and user is logged in)
+    if seller_id and user_id and seller_id != user_id:
+        try:
+            from notifications_system import notify_listing_shared
+            await notify_listing_shared(
+                seller_id=seller_id,
+                sharer_username=username,
+                listing_id=listing_id,
+                listing_title=listing.get("title", "Your listing")
+            )
+        except Exception as e:
+            logger.warning(f"Failed to send share notification: {e}")
+    
+    return {"shared": True, "shares_count": (listing.get("shares_count", 0) + 1)}
+
+class ListingCommentRequest(BaseModel):
+    content: str
+
+@marketplace_router.post("/listings/{listing_id}/comments")
+async def comment_on_listing(listing_id: str, data: ListingCommentRequest, request: Request):
+    """Add a comment to a listing and notify seller"""
+    try:
+        user = await get_current_user(request)
+        user_id = user["user_id"]
+        username = user.get("username") or user.get("name", "Someone")
+    except:
+        raise HTTPException(status_code=401, detail="Login required to comment")
+    
+    # Check if listing exists
+    listing = await db.listings.find_one({"listing_id": listing_id})
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    
+    seller_id = listing.get("user_id")
+    
+    # Create comment
+    comment_id = f"comment_{uuid.uuid4().hex[:12]}"
+    comment = {
+        "comment_id": comment_id,
+        "listing_id": listing_id,
+        "user_id": user_id,
+        "content": data.content,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.listing_comments.insert_one(comment)
+    
+    # Update comment count
+    await db.listings.update_one(
+        {"listing_id": listing_id},
+        {"$inc": {"comments_count": 1}}
+    )
+    
+    # Notify seller (if not self-comment)
+    if seller_id and seller_id != user_id:
+        try:
+            from notifications_system import notify_listing_commented
+            await notify_listing_commented(
+                seller_id=seller_id,
+                commenter_username=username,
+                listing_id=listing_id,
+                listing_title=listing.get("title", "Your listing"),
+                comment_preview=data.content
+            )
+        except Exception as e:
+            logger.warning(f"Failed to send comment notification: {e}")
+    
+    # Return comment with user info
+    comment["user"] = {"user_id": user_id, "username": username, "name": user.get("name"), "avatar": user.get("avatar")}
+    return comment
+
+@marketplace_router.get("/listings/{listing_id}/comments")
+async def get_listing_comments(listing_id: str, skip: int = 0, limit: int = 50):
+    """Get comments for a listing"""
+    comments = await db.listing_comments.find(
+        {"listing_id": listing_id},
+        {"_id": 0}
+    ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    # Batch fetch user info
+    if comments:
+        user_ids = list(set(c["user_id"] for c in comments if c.get("user_id")))
+        users = await db.users.find(
+            {"user_id": {"$in": user_ids}},
+            {"_id": 0, "password_hash": 0, "user_id": 1, "username": 1, "name": 1, "avatar": 1}
+        ).to_list(len(user_ids))
+        users_map = {u["user_id"]: u for u in users}
+        
+        for comment in comments:
+            comment["user"] = users_map.get(comment.get("user_id"))
+    
+    return comments
+
 class GuestCheckoutRequest(BaseModel):
     items: List[dict]
     customer: dict
