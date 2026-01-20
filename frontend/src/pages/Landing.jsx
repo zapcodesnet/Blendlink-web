@@ -397,6 +397,9 @@ export default function Landing() {
       {/* Featured Listings Carousel - TOP OF PAGE */}
       <FeaturedListingsCarousel onViewDetails={handleViewDetails} />
 
+      {/* Recently Viewed Section */}
+      <RecentlyViewedSection onViewDetails={handleViewDetails} />
+
       {/* Super App Badge + Browse Marketplace Section */}
       <section className="py-8 px-4">
         <div className="max-w-3xl mx-auto text-center">
