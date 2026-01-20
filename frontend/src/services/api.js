@@ -398,16 +398,25 @@ export const marketplaceAPI = {
     try {
       return await apiRequest('/marketplace/categories');
     } catch {
-      // Return default categories
+      // Return default categories matching backend
       return [
         { id: 'electronics', name: 'Electronics', icon: 'Smartphone' },
         { id: 'fashion', name: 'Fashion', icon: 'Shirt' },
         { id: 'home', name: 'Home & Garden', icon: 'Home' },
         { id: 'vehicles', name: 'Vehicles', icon: 'Car' },
         { id: 'sports', name: 'Sports', icon: 'Dumbbell' },
-        { id: 'digital', name: 'Digital Goods', icon: 'Download' },
+        { id: 'digital', name: 'Digital Goods & NFTs', icon: 'Download' },
         { id: 'services', name: 'Services', icon: 'Wrench' },
-        { id: 'other', name: 'Other', icon: 'Package' },
+        { id: 'jewelry', name: 'Jewelry & Watches', icon: 'Watch' },
+        { id: 'collectibles', name: 'Collectibles & Art', icon: 'Palette' },
+        { id: 'health', name: 'Health & Beauty', icon: 'Heart' },
+        { id: 'toys', name: 'Toys & Hobbies', icon: 'Gamepad2' },
+        { id: 'business', name: 'Business & Industrial', icon: 'Building2' },
+        { id: 'pets', name: 'Pet Supplies', icon: 'PawPrint' },
+        { id: 'baby', name: 'Baby Essentials', icon: 'Baby' },
+        { id: 'giftcards', name: 'Gift Cards & Coupons', icon: 'Gift' },
+        { id: 'tickets', name: 'Tickets & Travel', icon: 'Ticket' },
+        { id: 'general', name: 'General', icon: 'Package' },
       ];
     }
   },
