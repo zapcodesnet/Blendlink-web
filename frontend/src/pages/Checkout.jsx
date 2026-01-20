@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../App";
 import api from "../services/api";
@@ -7,10 +7,58 @@ import { Input } from "../components/ui/input";
 import { toast } from "sonner";
 import { 
   ArrowLeft, ShoppingCart, CreditCard, Truck, Trash2, Package,
-  Loader2, MapPin, User, Phone, Mail, Home, Check, AlertCircle
+  Loader2, MapPin, User, Phone, Mail, Home, Check, AlertCircle, Globe, Info
 } from "lucide-react";
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+
+// Comprehensive list of countries
+const ALL_COUNTRIES = [
+  { code: "US", name: "United States", flag: "🇺🇸" },
+  { code: "CA", name: "Canada", flag: "🇨🇦" },
+  { code: "GB", name: "United Kingdom", flag: "🇬🇧" },
+  { code: "AU", name: "Australia", flag: "🇦🇺" },
+  { code: "DE", name: "Germany", flag: "🇩🇪" },
+  { code: "FR", name: "France", flag: "🇫🇷" },
+  { code: "NL", name: "Netherlands", flag: "🇳🇱" },
+  { code: "ES", name: "Spain", flag: "🇪🇸" },
+  { code: "IT", name: "Italy", flag: "🇮🇹" },
+  { code: "SE", name: "Sweden", flag: "🇸🇪" },
+  { code: "PL", name: "Poland", flag: "🇵🇱" },
+  { code: "NO", name: "Norway", flag: "🇳🇴" },
+  { code: "DK", name: "Denmark", flag: "🇩🇰" },
+  { code: "PT", name: "Portugal", flag: "🇵🇹" },
+  { code: "BE", name: "Belgium", flag: "🇧🇪" },
+  { code: "CH", name: "Switzerland", flag: "🇨🇭" },
+  { code: "AT", name: "Austria", flag: "🇦🇹" },
+  { code: "IE", name: "Ireland", flag: "🇮🇪" },
+  { code: "NZ", name: "New Zealand", flag: "🇳🇿" },
+  { code: "JP", name: "Japan", flag: "🇯🇵" },
+  { code: "KR", name: "South Korea", flag: "🇰🇷" },
+  { code: "CN", name: "China", flag: "🇨🇳" },
+  { code: "HK", name: "Hong Kong", flag: "🇭🇰" },
+  { code: "SG", name: "Singapore", flag: "🇸🇬" },
+  { code: "MX", name: "Mexico", flag: "🇲🇽" },
+  { code: "BR", name: "Brazil", flag: "🇧🇷" },
+  { code: "IN", name: "India", flag: "🇮🇳" },
+  { code: "PH", name: "Philippines", flag: "🇵🇭" },
+  { code: "MY", name: "Malaysia", flag: "🇲🇾" },
+  { code: "TH", name: "Thailand", flag: "🇹🇭" },
+  { code: "VN", name: "Vietnam", flag: "🇻🇳" },
+  { code: "ID", name: "Indonesia", flag: "🇮🇩" },
+  { code: "ZA", name: "South Africa", flag: "🇿🇦" },
+  { code: "AE", name: "United Arab Emirates", flag: "🇦🇪" },
+  { code: "SA", name: "Saudi Arabia", flag: "🇸🇦" },
+  { code: "IL", name: "Israel", flag: "🇮🇱" },
+  { code: "TR", name: "Turkey", flag: "🇹🇷" },
+  { code: "RU", name: "Russia", flag: "🇷🇺" },
+  { code: "UA", name: "Ukraine", flag: "🇺🇦" },
+  { code: "CZ", name: "Czech Republic", flag: "🇨🇿" },
+  { code: "GR", name: "Greece", flag: "🇬🇷" },
+  { code: "HU", name: "Hungary", flag: "🇭🇺" },
+  { code: "RO", name: "Romania", flag: "🇷🇴" },
+  { code: "FI", name: "Finland", flag: "🇫🇮" },
+];
 
 export default function Checkout() {
   const { user } = useContext(AuthContext) || {};
@@ -43,6 +91,36 @@ export default function Checkout() {
   });
 
   const [step, setStep] = useState(1); // 1: Cart, 2: Shipping, 3: Payment
+
+  // Calculate allowed countries from seller's target markets
+  const allowedCountries = useMemo(() => {
+    // Get all target_countries from all items in cart
+    const allTargetCountries = new Set();
+    cart.forEach(item => {
+      const targets = item.target_countries || item.target_market_countries || ["US"];
+      targets.forEach(c => allTargetCountries.add(c));
+    });
+    
+    // If no specific targets, allow all countries
+    if (allTargetCountries.size === 0) {
+      return ALL_COUNTRIES;
+    }
+    
+    // Find intersection of all items' target countries
+    let intersection = null;
+    cart.forEach(item => {
+      const targets = new Set(item.target_countries || item.target_market_countries || ["US"]);
+      if (intersection === null) {
+        intersection = targets;
+      } else {
+        intersection = new Set([...intersection].filter(c => targets.has(c)));
+      }
+    });
+    
+    // Filter to only allowed countries
+    const allowed = ALL_COUNTRIES.filter(c => intersection?.has(c.code));
+    return allowed.length > 0 ? allowed : ALL_COUNTRIES;
+  }, [cart]);
 
   // Load cart on mount
   useEffect(() => {
