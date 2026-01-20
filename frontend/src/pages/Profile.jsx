@@ -262,15 +262,18 @@ export default function Profile() {
                 <FolderOpen className="w-6 h-6 text-purple-500" />
                 <span>My Albums</span>
               </Button>
-              <Button 
-                variant="outline" 
-                className="h-auto py-4 flex-col gap-2"
-                onClick={() => navigate("/ai-listing-creator")}
-                data-testid="ai-listing-btn"
-              >
-                <Sparkles className="w-6 h-6 text-amber-500" />
-                <span>AI Listing</span>
-              </Button>
+              {/* AI Listing button hidden per user request - code preserved */}
+              {false && (
+                <Button 
+                  variant="outline" 
+                  className="h-auto py-4 flex-col gap-2"
+                  onClick={() => navigate("/ai-listing-creator")}
+                  data-testid="ai-listing-btn"
+                >
+                  <Sparkles className="w-6 h-6 text-amber-500" />
+                  <span>AI Listing</span>
+                </Button>
+              )}
               <Button 
                 variant="outline" 
                 className="h-auto py-4 flex-col gap-2"
