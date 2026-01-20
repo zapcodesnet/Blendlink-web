@@ -787,6 +787,7 @@ export default function SellerDashboard() {
 
   const tabs = [
     { id: "overview", label: "Overview", icon: BarChart3 },
+    { id: "orders", label: "Orders", icon: Package },
     { id: "create", label: "AI Create Listing", icon: Sparkles, externalLink: "https://blendlink.net/ai-listing-creator" },
     { id: "listings", label: "My Listings", icon: Package },
     { id: "photo-editor", label: "Photo Editor", icon: Image },
