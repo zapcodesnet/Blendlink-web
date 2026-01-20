@@ -426,11 +426,15 @@ async def remove_background(
     request: BackgroundRemovalRequest,
     current_user: dict = Depends(get_current_user)
 ):
-    """Remove background from a photo using rembg AI"""
+    """Remove background from a photo using remove.bg cloud API"""
     import time
     start_time = time.time()
     
     user_id = current_user["user_id"]
+    
+    # Check API key
+    if not REMOVE_BG_API_KEY:
+        raise HTTPException(status_code=500, detail="Background removal service not configured")
     
     # Get photo from database
     photo = await db.edited_photos.find_one(
@@ -442,49 +446,94 @@ async def remove_background(
         raise HTTPException(status_code=404, detail="Photo not found")
     
     try:
-        # Import rembg
-        from rembg import remove
+        # Get the image data
+        image_data = photo["current_url"]
         
-        # Convert base64 to image
-        image = base64_to_image(photo["current_url"])
+        # Extract base64 data (remove data URL prefix if present)
+        if "," in image_data:
+            image_base64 = image_data.split(",")[1]
+        else:
+            image_base64 = image_data
         
-        # Remove background
-        output = remove(image)
+        # Decode to bytes
+        image_bytes = base64.b64decode(image_base64)
         
-        # Convert back to base64
-        processed_base64 = image_to_base64(output, "PNG")
-        
-        # Calculate processing time
-        processing_time_ms = int((time.time() - start_time) * 1000)
-        
-        # Update database
-        edit_entry = {
-            "action": "remove_background",
-            "params": {},
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "result_url": processed_base64[:100] + "..."
-        }
-        
-        await db.edited_photos.update_one(
-            {"photo_id": request.photo_id},
-            {
-                "$set": {
-                    "processed_url": processed_base64,
-                    "current_url": processed_base64,
-                    "has_background_removed": True,
-                    "updated_at": datetime.now(timezone.utc).isoformat()
+        # Call remove.bg API
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(
+                REMOVE_BG_API_URL,
+                headers={
+                    "X-Api-Key": REMOVE_BG_API_KEY,
                 },
-                "$push": {"edit_history": edit_entry}
+                data={
+                    "size": "auto",
+                    "format": "png",
+                },
+                files={
+                    "image_file": ("image.png", image_bytes, "image/png")
+                }
+            )
+        
+        # Handle API response
+        if response.status_code == 200:
+            # Success - convert result to base64
+            result_bytes = response.content
+            processed_base64 = f"data:image/png;base64,{base64.b64encode(result_bytes).decode('utf-8')}"
+            
+            # Calculate processing time
+            processing_time_ms = int((time.time() - start_time) * 1000)
+            
+            # Update database
+            edit_entry = {
+                "action": "remove_background",
+                "params": {"api": "remove.bg"},
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "result_url": processed_base64[:100] + "..."
             }
-        )
+            
+            await db.edited_photos.update_one(
+                {"photo_id": request.photo_id},
+                {
+                    "$set": {
+                        "processed_url": processed_base64,
+                        "current_url": processed_base64,
+                        "has_background_removed": True,
+                        "updated_at": datetime.now(timezone.utc).isoformat()
+                    },
+                    "$push": {"edit_history": edit_entry}
+                }
+            )
+            
+            return {
+                "photo_id": request.photo_id,
+                "processed_url": processed_base64,
+                "has_transparency": True,
+                "processing_time_ms": processing_time_ms
+            }
         
-        return {
-            "photo_id": request.photo_id,
-            "processed_url": processed_base64,
-            "has_transparency": True,
-            "processing_time_ms": processing_time_ms
-        }
+        elif response.status_code == 402:
+            # Quota exceeded
+            logger.error("Remove.bg API quota exceeded")
+            raise HTTPException(
+                status_code=429, 
+                detail="Background removal quota exceeded. Please try again later or contact support."
+            )
+        elif response.status_code == 400:
+            error_data = response.json() if response.headers.get("content-type", "").startswith("application/json") else {}
+            error_msg = error_data.get("errors", [{}])[0].get("title", "Invalid image")
+            raise HTTPException(status_code=400, detail=f"Background removal failed: {error_msg}")
+        else:
+            logger.error(f"Remove.bg API error: {response.status_code} - {response.text[:200]}")
+            raise HTTPException(
+                status_code=500, 
+                detail="Background removal failed. Please try again or contact support."
+            )
         
+    except httpx.TimeoutException:
+        logger.error("Remove.bg API timeout")
+        raise HTTPException(status_code=504, detail="Background removal timed out. Please try with a smaller image.")
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Background removal failed: {e}")
         raise HTTPException(status_code=500, detail=f"Background removal failed: {str(e)}")
