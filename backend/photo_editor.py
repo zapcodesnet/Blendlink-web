@@ -544,7 +544,7 @@ async def remove_background_batch(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Batch remove backgrounds from multiple photos using rembg AI.
+    Batch remove backgrounds from multiple photos using remove.bg cloud API.
     Processes all photos in sequence and returns results for each.
     """
     import time
@@ -558,95 +558,156 @@ async def remove_background_batch(
     if len(request.photo_ids) > 10:
         raise HTTPException(status_code=400, detail="Maximum 10 photos per batch")
     
-    # Import rembg once for batch
-    from rembg import remove
+    # Check API key
+    if not REMOVE_BG_API_KEY:
+        raise HTTPException(status_code=500, detail="Background removal service not configured")
     
     results = []
     processed_count = 0
     failed_count = 0
     
-    for photo_id in request.photo_ids:
-        photo_start_time = time.time()
-        
-        try:
-            # Get photo from database
-            photo = await db.edited_photos.find_one(
-                {"photo_id": photo_id, "user_id": user_id},
-                {"_id": 0}
-            )
+    async with httpx.AsyncClient(timeout=60.0) as http_client:
+        for photo_id in request.photo_ids:
+            photo_start_time = time.time()
             
-            if not photo:
+            try:
+                # Get photo from database
+                photo = await db.edited_photos.find_one(
+                    {"photo_id": photo_id, "user_id": user_id},
+                    {"_id": 0}
+                )
+                
+                if not photo:
+                    results.append({
+                        "photo_id": photo_id,
+                        "success": False,
+                        "error": "Photo not found",
+                        "processing_time_ms": 0
+                    })
+                    failed_count += 1
+                    continue
+                
+                # Skip if already processed
+                if photo.get("has_background_removed"):
+                    results.append({
+                        "photo_id": photo_id,
+                        "success": True,
+                        "skipped": True,
+                        "message": "Background already removed",
+                        "processing_time_ms": 0
+                    })
+                    processed_count += 1
+                    continue
+                
+                # Get the image data
+                image_data = photo["current_url"]
+                
+                # Extract base64 data (remove data URL prefix if present)
+                if "," in image_data:
+                    image_base64 = image_data.split(",")[1]
+                else:
+                    image_base64 = image_data
+                
+                # Decode to bytes
+                image_bytes = base64.b64decode(image_base64)
+                
+                # Call remove.bg API
+                response = await http_client.post(
+                    REMOVE_BG_API_URL,
+                    headers={
+                        "X-Api-Key": REMOVE_BG_API_KEY,
+                    },
+                    data={
+                        "size": "auto",
+                        "format": "png",
+                    },
+                    files={
+                        "image_file": ("image.png", image_bytes, "image/png")
+                    }
+                )
+                
+                if response.status_code == 200:
+                    # Success - convert result to base64
+                    result_bytes = response.content
+                    processed_base64 = f"data:image/png;base64,{base64.b64encode(result_bytes).decode('utf-8')}"
+                    
+                    # Calculate processing time
+                    photo_processing_time = int((time.time() - photo_start_time) * 1000)
+                    
+                    # Update database
+                    edit_entry = {
+                        "action": "remove_background",
+                        "params": {"batch": True, "api": "remove.bg"},
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                        "result_url": processed_base64[:100] + "..."
+                    }
+                    
+                    await db.edited_photos.update_one(
+                        {"photo_id": photo_id},
+                        {
+                            "$set": {
+                                "processed_url": processed_base64,
+                                "current_url": processed_base64,
+                                "has_background_removed": True,
+                                "updated_at": datetime.now(timezone.utc).isoformat()
+                            },
+                            "$push": {"edit_history": edit_entry}
+                        }
+                    )
+                    
+                    results.append({
+                        "photo_id": photo_id,
+                        "success": True,
+                        "has_transparency": True,
+                        "processing_time_ms": photo_processing_time
+                    })
+                    processed_count += 1
+                    
+                elif response.status_code == 402:
+                    # Quota exceeded - stop processing
+                    results.append({
+                        "photo_id": photo_id,
+                        "success": False,
+                        "error": "API quota exceeded",
+                        "processing_time_ms": int((time.time() - photo_start_time) * 1000)
+                    })
+                    failed_count += 1
+                    # Stop processing remaining photos
+                    for remaining_id in request.photo_ids[request.photo_ids.index(photo_id)+1:]:
+                        results.append({
+                            "photo_id": remaining_id,
+                            "success": False,
+                            "error": "Skipped due to quota limit",
+                            "processing_time_ms": 0
+                        })
+                        failed_count += 1
+                    break
+                else:
+                    results.append({
+                        "photo_id": photo_id,
+                        "success": False,
+                        "error": f"API error: {response.status_code}",
+                        "processing_time_ms": int((time.time() - photo_start_time) * 1000)
+                    })
+                    failed_count += 1
+                
+            except httpx.TimeoutException:
                 results.append({
                     "photo_id": photo_id,
                     "success": False,
-                    "error": "Photo not found",
-                    "processing_time_ms": 0
+                    "error": "Request timed out",
+                    "processing_time_ms": int((time.time() - photo_start_time) * 1000)
                 })
                 failed_count += 1
-                continue
-            
-            # Skip if already processed
-            if photo.get("has_background_removed"):
+            except Exception as e:
+                logger.error(f"Batch background removal failed for {photo_id}: {e}")
                 results.append({
                     "photo_id": photo_id,
-                    "success": True,
-                    "skipped": True,
-                    "message": "Background already removed",
-                    "processing_time_ms": 0
+                    "success": False,
+                    "error": str(e),
+                    "processing_time_ms": int((time.time() - photo_start_time) * 1000)
                 })
-                processed_count += 1
-                continue
-            
-            # Convert base64 to image
-            image = base64_to_image(photo["current_url"])
-            
-            # Remove background
-            output = remove(image)
-            
-            # Convert back to base64
-            processed_base64 = image_to_base64(output, "PNG")
-            
-            # Calculate processing time
-            photo_processing_time = int((time.time() - photo_start_time) * 1000)
-            
-            # Update database
-            edit_entry = {
-                "action": "remove_background",
-                "params": {"batch": True},
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "result_url": processed_base64[:100] + "..."
-            }
-            
-            await db.edited_photos.update_one(
-                {"photo_id": photo_id},
-                {
-                    "$set": {
-                        "processed_url": processed_base64,
-                        "current_url": processed_base64,
-                        "has_background_removed": True,
-                        "updated_at": datetime.now(timezone.utc).isoformat()
-                    },
-                    "$push": {"edit_history": edit_entry}
-                }
-            )
-            
-            results.append({
-                "photo_id": photo_id,
-                "success": True,
-                "has_transparency": True,
-                "processing_time_ms": photo_processing_time
-            })
-            processed_count += 1
-            
-        except Exception as e:
-            logger.error(f"Batch background removal failed for {photo_id}: {e}")
-            results.append({
-                "photo_id": photo_id,
-                "success": False,
-                "error": str(e),
-                "processing_time_ms": int((time.time() - photo_start_time) * 1000)
-            })
-            failed_count += 1
+                failed_count += 1
     
     total_time_ms = int((time.time() - total_start_time) * 1000)
     
