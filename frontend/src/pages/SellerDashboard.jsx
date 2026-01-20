@@ -994,6 +994,125 @@ export default function SellerDashboard() {
           </div>
         )}
 
+        {/* Orders Tab */}
+        {activeTab === "orders" && (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Package className="w-5 h-5" />
+                  Your Orders
+                </CardTitle>
+                <CardDescription>
+                  Manage orders and print shipping labels
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {ordersLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                  </div>
+                ) : orders.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Package className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-muted-foreground">No orders yet</p>
+                    <p className="text-sm text-muted-foreground mt-1">When customers purchase your items, they'll appear here</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {orders.map((order) => (
+                      <Card key={order.order_id} className="border-border/50">
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <p className="font-medium">Order #{order.order_id}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(order.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <span className={`text-xs px-2 py-1 rounded-full ${
+                              order.order_status === 'confirmed' ? 'bg-green-500/10 text-green-500' :
+                              order.order_status === 'shipped' ? 'bg-blue-500/10 text-blue-500' :
+                              'bg-yellow-500/10 text-yellow-500'
+                            }`}>
+                              {order.order_status}
+                            </span>
+                          </div>
+
+                          {/* Items */}
+                          <div className="border-t border-b border-border/50 py-3 mb-3">
+                            {order.items?.filter(item => item.seller_id === user?.user_id).map((item, idx) => (
+                              <div key={idx} className="flex items-center gap-3">
+                                {item.image && (
+                                  <img src={item.image} alt={item.title} className="w-12 h-12 rounded object-cover" />
+                                )}
+                                <div>
+                                  <p className="text-sm font-medium">{item.title}</p>
+                                  <p className="text-sm text-primary">${item.price}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Buyer Info */}
+                          <div className="text-sm mb-3">
+                            <p className="text-muted-foreground">Ship to:</p>
+                            <p className="font-medium">{order.shipping_address?.name || order.customer_name}</p>
+                            <p>{order.shipping_address?.street1}</p>
+                            <p>{order.shipping_address?.city}, {order.shipping_address?.state} {order.shipping_address?.zip}</p>
+                          </div>
+
+                          {/* Tracking Info */}
+                          {order.tracking_number && (
+                            <div className="bg-green-500/10 p-2 rounded mb-3">
+                              <p className="text-xs text-green-500">
+                                Tracking: {order.tracking_number}
+                                {order.tracking_url && (
+                                  <a href={order.tracking_url} target="_blank" rel="noopener noreferrer" className="ml-2 underline">
+                                    Track Package
+                                  </a>
+                                )}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Actions */}
+                          <div className="flex gap-2">
+                            {!order.tracking_number && !order.items?.every(i => i.is_digital) && (
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => handlePrintLabel(order)}
+                                disabled={generatingLabel === order.order_id}
+                                data-testid={`print-label-${order.order_id}`}
+                              >
+                                {generatingLabel === order.order_id ? (
+                                  <><Loader2 className="w-4 h-4 animate-spin mr-1" /> Generating...</>
+                                ) : (
+                                  <><Truck className="w-4 h-4 mr-1" /> Print Shipping Label</>
+                                )}
+                              </Button>
+                            )}
+                            {order.label_url && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => window.open(order.label_url, '_blank')}
+                              >
+                                <Truck className="w-4 h-4 mr-1" /> View Label
+                              </Button>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {activeTab === "create" && (
           <Card>
             <CardHeader>
