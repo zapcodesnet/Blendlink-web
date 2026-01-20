@@ -98,7 +98,7 @@ const StatCard = ({ title, value, icon: Icon, color = "text-primary", subtitle, 
 );
 
 // Listing Performance Card
-const ListingCard = ({ listing, onImprove }) => {
+const ListingCard = ({ listing, onImprove, onEdit }) => {
   const scoreColor = listing.performance_score >= 70 ? 'text-green-500' : 
                      listing.performance_score >= 40 ? 'text-yellow-500' : 'text-red-500';
   
@@ -133,6 +133,28 @@ const ListingCard = ({ listing, onImprove }) => {
             </span>
           </div>
         </div>
+        
+        {/* Action buttons */}
+        <div className="mt-3 pt-3 border-t border-border flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex-1 text-xs h-8" 
+            onClick={() => onEdit(listing)}
+            data-testid={`edit-listing-${listing.listing_id}`}
+          >
+            <FileText className="w-3 h-3 mr-1" /> Edit Listing
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="flex-1 text-xs h-8" 
+            onClick={() => onImprove(listing.listing_id)}
+          >
+            <Wand2 className="w-3 h-3 mr-1" /> AI Improve
+          </Button>
+        </div>
+        
         {listing.ai_recommendations && listing.ai_recommendations.length > 0 && (
           <div className="mt-3 pt-3 border-t border-border">
             <p className="text-xs font-medium text-amber-500 mb-1 flex items-center gap-1">
@@ -146,9 +168,6 @@ const ListingCard = ({ listing, onImprove }) => {
                 </li>
               ))}
             </ul>
-            <Button variant="ghost" size="sm" className="mt-2 text-xs h-7" onClick={() => onImprove(listing.listing_id)}>
-              <Wand2 className="w-3 h-3 mr-1" /> Get Full AI Analysis
-            </Button>
           </div>
         )}
       </CardContent>
