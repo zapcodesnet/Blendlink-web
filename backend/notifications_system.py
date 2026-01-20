@@ -186,6 +186,79 @@ async def notify_diamond_warning(user_id: str, days_left: int, missing: List[str
         priority=NotificationPriority.HIGH,
     )
 
+# ============== SOCIAL ENGAGEMENT NOTIFICATIONS ==============
+
+async def notify_listing_liked(seller_id: str, liker_username: str, listing_id: str, listing_title: str):
+    """Notify seller when someone likes their listing"""
+    await create_notification(
+        user_id=seller_id,
+        notification_type=NotificationType.LISTING_LIKED,
+        title="Someone liked your listing! ❤️",
+        body=f"@{liker_username} liked your listing: {listing_title}",
+        data={
+            "listing_id": listing_id,
+            "listing_title": listing_title,
+            "liker_username": liker_username,
+            "action": "liked",
+            "link": f"/marketplace/{listing_id}"
+        },
+        priority=NotificationPriority.NORMAL,
+    )
+
+async def notify_listing_commented(seller_id: str, commenter_username: str, listing_id: str, listing_title: str, comment_preview: str = ""):
+    """Notify seller when someone comments on their listing"""
+    await create_notification(
+        user_id=seller_id,
+        notification_type=NotificationType.LISTING_COMMENTED,
+        title="New comment on your listing! 💬",
+        body=f"@{commenter_username} commented on {listing_title}: \"{comment_preview[:50]}{'...' if len(comment_preview) > 50 else ''}\"",
+        data={
+            "listing_id": listing_id,
+            "listing_title": listing_title,
+            "commenter_username": commenter_username,
+            "comment_preview": comment_preview,
+            "action": "commented",
+            "link": f"/marketplace/{listing_id}"
+        },
+        priority=NotificationPriority.NORMAL,
+    )
+
+async def notify_listing_shared(seller_id: str, sharer_username: str, listing_id: str, listing_title: str):
+    """Notify seller when someone shares their listing"""
+    await create_notification(
+        user_id=seller_id,
+        notification_type=NotificationType.LISTING_SHARED,
+        title="Your listing was shared! 🔗",
+        body=f"@{sharer_username} shared your listing: {listing_title}",
+        data={
+            "listing_id": listing_id,
+            "listing_title": listing_title,
+            "sharer_username": sharer_username,
+            "action": "shared",
+            "link": f"/marketplace/{listing_id}"
+        },
+        priority=NotificationPriority.NORMAL,
+    )
+
+async def notify_order_received(seller_id: str, order_id: str, buyer_name: str, listing_title: str, total_amount: float, shipping_cost: float):
+    """Notify seller when they receive a new order"""
+    await create_notification(
+        user_id=seller_id,
+        notification_type=NotificationType.ORDER_RECEIVED,
+        title="New Order Received! 🛒",
+        body=f"{buyer_name} purchased {listing_title} for ${total_amount:.2f} (includes ${shipping_cost:.2f} shipping)",
+        data={
+            "order_id": order_id,
+            "buyer_name": buyer_name,
+            "listing_title": listing_title,
+            "total_amount": total_amount,
+            "shipping_cost": shipping_cost,
+            "action": "order_received",
+            "link": f"/seller-dashboard/orders/{order_id}"
+        },
+        priority=NotificationPriority.HIGH,
+    )
+
 # ============== SCHEDULED REMINDER JOBS ==============
 
 async def check_and_send_daily_reminders():
