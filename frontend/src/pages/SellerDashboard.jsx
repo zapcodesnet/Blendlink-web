@@ -1175,6 +1175,24 @@ export default function SellerDashboard() {
     }
   };
 
+  // Handle opening the edit modal
+  const handleEditListing = (listing) => {
+    setEditingListing(listing);
+    setIsEditModalOpen(true);
+  };
+
+  // Handle saving edited listing
+  const handleSaveEditedListing = async (listingId, updateData) => {
+    const response = await apiRequest(`/marketplace/listings/${listingId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updateData),
+    });
+    
+    // Refresh listings after save
+    await loadData();
+    return response;
+  };
+
   const handlePhotoEditorComplete = (photos) => {
     setEditedPhotos(photos);
     toast.success(`${photos.length} edited photo(s) ready for AI listing!`);
