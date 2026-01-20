@@ -438,6 +438,11 @@ async def create_post(
     post_dict["created_at"] = post_dict["created_at"].isoformat()
     post_dict["updated_at"] = post_dict["updated_at"].isoformat()
     
+    # Add marketplace listing info if this is a listing share
+    if request.listing_id:
+        post_dict["listing_id"] = request.listing_id
+        post_dict["is_marketplace_share"] = request.is_marketplace_share
+    
     await db.social_posts.insert_one(post_dict.copy())
     
     # Award BL coins
