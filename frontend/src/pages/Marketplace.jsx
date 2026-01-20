@@ -5,11 +5,12 @@ import api from "../services/api";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import ComingSoonPlaceholder from "../components/ComingSoonPlaceholder";
+import { toast } from "sonner";
 import { 
   Search, Plus, Filter, Smartphone, Shirt, Home, Car, 
   Dumbbell, Download, Wrench, Package, ChevronRight, ShoppingBag,
   Sparkles, Store, Watch, Palette, Heart, Gamepad2, Building2,
-  PawPrint, Baby, Gift, Ticket
+  PawPrint, Baby, Gift, Ticket, ThumbsUp, Share2
 } from "lucide-react";
 
 const categoryIcons = {
@@ -31,6 +32,83 @@ const categoryIcons = {
   tickets: Ticket,
   general: Package,
   other: Package
+};
+
+// Social interaction component for listings
+const ListingSocialActions = ({ listing, user, onLike }) => {
+  const [likes, setLikes] = useState(listing.likes_count || 0);
+  const [isLiked, setIsLiked] = useState(listing.user_has_liked || false);
+  const [isLiking, setIsLiking] = useState(false);
+
+  const handleLike = async (e) => {
+    e.stopPropagation(); // Prevent navigation to listing detail
+    
+    if (!user) {
+      toast.info("Sign up to like this listing!", {
+        action: {
+          label: "Sign Up",
+          onClick: () => window.location.href = "/register"
+        }
+      });
+      return;
+    }
+    
+    setIsLiking(true);
+    try {
+      const response = await api.post(`/marketplace/listings/${listing.listing_id}/like`);
+      setIsLiked(response.data?.liked ?? !isLiked);
+      setLikes(prev => response.data?.liked ? prev + 1 : prev - 1);
+      if (onLike) onLike(listing.listing_id, response.data?.liked);
+    } catch (err) {
+      // Toggle locally if API doesn't exist yet
+      setIsLiked(!isLiked);
+      setLikes(prev => !isLiked ? prev + 1 : prev - 1);
+    } finally {
+      setIsLiking(false);
+    }
+  };
+
+  const handleShare = (e) => {
+    e.stopPropagation();
+    const shareUrl = `${window.location.origin}/marketplace/${listing.listing_id}`;
+    
+    if (navigator.share) {
+      navigator.share({
+        title: listing.title,
+        text: `Check out ${listing.title} for $${listing.price?.toLocaleString()}!`,
+        url: shareUrl
+      }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(shareUrl);
+      toast.success("Link copied to clipboard!");
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2 pt-2 border-t border-border/50 mt-2">
+      <button
+        onClick={handleLike}
+        disabled={isLiking}
+        className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full transition-colors ${
+          isLiked 
+            ? "bg-primary/10 text-primary" 
+            : "bg-muted hover:bg-muted/80 text-muted-foreground"
+        }`}
+        data-testid={`like-btn-${listing.listing_id}`}
+      >
+        <ThumbsUp className={`w-3 h-3 ${isLiked ? "fill-current" : ""}`} />
+        <span>{likes}</span>
+      </button>
+      <button
+        onClick={handleShare}
+        className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground transition-colors"
+        data-testid={`share-btn-${listing.listing_id}`}
+      >
+        <Share2 className="w-3 h-3" />
+        <span>Share</span>
+      </button>
+    </div>
+  );
 };
 
 export default function Marketplace() {
