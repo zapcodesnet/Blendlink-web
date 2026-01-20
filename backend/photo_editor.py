@@ -2,7 +2,7 @@
 Photo Editor Module for Seller Dashboard
 Features:
 - Multi-photo upload (up to 10 photos, 60MB each)
-- AI Background Removal using rembg
+- AI Background Removal using remove.bg API (cloud-based)
 - Brightness/Contrast adjustments
 - Background customization (solid colors, patterns, custom uploads)
 - Undo/Redo functionality
@@ -14,6 +14,7 @@ import uuid
 import base64
 import io
 import logging
+import httpx
 from datetime import datetime, timezone
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Request
@@ -46,6 +47,10 @@ JWT_SECRET = os.environ.get('JWT_SECRET')
 if not JWT_SECRET:
     raise ValueError("JWT_SECRET environment variable is required")
 JWT_ALGORITHM = 'HS256'
+
+# Remove.bg API Config
+REMOVE_BG_API_KEY = os.environ.get('REMOVE_BG_API_KEY')
+REMOVE_BG_API_URL = "https://api.remove.bg/v1.0/removebg"
 
 # Max file size: 60MB
 MAX_FILE_SIZE = 60 * 1024 * 1024
