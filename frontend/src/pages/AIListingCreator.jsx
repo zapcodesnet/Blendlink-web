@@ -1027,23 +1027,49 @@ export default function AIListingCreator() {
                 </div>
                 
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Target Market</label>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      { code: 'US', name: 'USA' },
-                      { code: 'CA', name: 'Canada' },
-                      { code: 'UK', name: 'UK' },
-                      { code: 'EU', name: 'Europe' }
-                    ].map(country => (
+                  <label className="text-sm font-medium mb-2 block">Target Market Countries</label>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Select countries where buyers can purchase your item. This affects shipping and pricing.
+                  </p>
+                  
+                  {/* Quick selection buttons */}
+                  <div className="flex gap-2 mb-3">
+                    <button
+                      onClick={selectAllCountries}
+                      className="text-xs px-3 py-1 rounded-full bg-muted hover:bg-muted/80"
+                    >
+                      {targetCountries.length === TARGET_MARKET_COUNTRIES.length ? 'Deselect All' : 'Select All'}
+                    </button>
+                    <button
+                      onClick={() => setShowAllCountries(!showAllCountries)}
+                      className="text-xs px-3 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20"
+                    >
+                      {showAllCountries ? 'Show Less' : `Show All (${TARGET_MARKET_COUNTRIES.length})`}
+                    </button>
+                  </div>
+                  
+                  {/* Selected count */}
+                  <p className="text-xs text-primary mb-2">
+                    {targetCountries.length} country(s) selected
+                  </p>
+                  
+                  {/* Country buttons - show popular or all */}
+                  <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
+                    {(showAllCountries 
+                      ? TARGET_MARKET_COUNTRIES 
+                      : TARGET_MARKET_COUNTRIES.filter(c => c.popular || targetCountries.includes(c.code))
+                    ).map(country => (
                       <button
                         key={country.code}
-                        onClick={() => setTargetCountry(country.code)}
-                        className={`px-4 py-2 rounded-lg text-sm flex items-center gap-1 ${
-                          targetCountry === country.code ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                        onClick={() => toggleCountry(country.code)}
+                        className={`px-3 py-1.5 rounded-lg text-sm flex items-center gap-1 transition-colors ${
+                          targetCountries.includes(country.code) 
+                            ? 'bg-primary text-primary-foreground' 
+                            : 'bg-muted hover:bg-muted/80'
                         }`}
                       >
-                        <Globe className="w-4 h-4" />
-                        {country.name}
+                        <span>{country.flag}</span>
+                        <span>{country.code}</span>
                       </button>
                     ))}
                   </div>
@@ -1051,7 +1077,7 @@ export default function AIListingCreator() {
                 
                 <Button 
                   onClick={analyzeWithAI}
-                  disabled={isAnalyzing}
+                  disabled={isAnalyzing || targetCountries.length === 0}
                   className="w-full h-12"
                   data-testid="analyze-with-ai-btn"
                 >
