@@ -173,13 +173,15 @@ const ListingSocialActions = ({ listing, user, onLike }) => {
 };
 
 export default function Marketplace() {
-  const { user } = useContext(AuthContext);
+  const authContext = useContext(AuthContext);
+  const user = authContext?.user; // Null-safe for guests
   const navigate = useNavigate();
   const [listings, setListings] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [sortBy, setSortBy] = useState("newest"); // Add sorting state
 
   useEffect(() => {
     fetchCategories();
