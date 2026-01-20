@@ -244,7 +244,7 @@ const WeightDimensionsEditor = ({ weight, dimensions, onWeightChange, onDimensio
 };
 
 // AI Generated Content Preview with Edit
-const AIContentPreview = ({ data, onEdit }) => (
+const AIContentPreview = ({ data, onEdit, categories }) => (
   <div className="space-y-4 bg-card rounded-xl p-6 border">
     <div className="flex items-center gap-2 text-primary mb-4">
       <Sparkles className="w-5 h-5" />
@@ -274,12 +274,23 @@ const AIContentPreview = ({ data, onEdit }) => (
     
     <div className="grid grid-cols-2 gap-4">
       <div>
-        <label className="text-sm text-muted-foreground">Category</label>
-        <Input 
-          value={data.category || ''}
+        <label className="text-sm text-muted-foreground flex items-center gap-2">
+          <Tag className="w-4 h-4" /> Category
+          <span className="text-xs text-primary">(AI Suggested)</span>
+        </label>
+        <select
+          value={data.category || 'general'}
           onChange={(e) => onEdit({ ...data, category: e.target.value })}
-          className="mt-1"
-        />
+          className="w-full mt-1 p-2 rounded-lg border bg-background"
+          data-testid="category-select"
+        >
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {cat.name}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-muted-foreground mt-1">Override AI suggestion if needed</p>
       </div>
       <div>
         <label className="text-sm text-muted-foreground">Condition</label>
