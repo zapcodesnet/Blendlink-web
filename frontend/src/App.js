@@ -3,6 +3,9 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from
 import { Toaster } from "./components/ui/sonner";
 import api, { getToken, getStoredUser, setStoredUser } from "./services/api";
 
+// i18n initialization
+import './i18n';
+
 // Pages
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
