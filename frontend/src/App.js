@@ -277,6 +277,9 @@ function AppRouter() {
       {/* Seller Dashboard Routes */}
       <Route path="/seller-dashboard" element={<ProtectedRoute><SellerDashboard /></ProtectedRoute>} />
       
+      {/* Marketplace Offers */}
+      <Route path="/marketplace-offers" element={<ProtectedRoute><MarketplaceOffers /></ProtectedRoute>} />
+      
       {/* Admin System - Secure Login */}
       <Route path="/admin/login" element={<AdminLogin />} />
       
