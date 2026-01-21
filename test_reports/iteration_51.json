@@ -1,0 +1,62 @@
+{
+  "summary": "Completed testing of iteration 51 features: Profile page BL Coins hidden, MyTeam page Daily BL Claim hidden, AuctionSettingsForm toggle labels, AuctionBidPanel localStorage token, share_to_feed feed posts, and seller privacy. All features verified working correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/tests/test_iteration51_features.py",
+    "/app/test_reports/pytest/pytest_iteration51.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/tests/test_iteration51_features.py"
+  ],
+  "success_rate": {
+    "backend": "100% (13 passed, 1 skipped)",
+    "frontend": "100% (all features verified)"
+  },
+  "test_credentials": {
+    "test_user": "test@example.com / Test123!"
+  },
+  "seed_data_creation": "Created test listings with share_to_feed=true for feed post testing",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All iteration 51 features verified working: 1) Profile page BL Coins card and View Wallet button are hidden (commented out in code), 2) MyTeam page Daily BL Claim section is hidden and stats row shows only 2 columns (Direct L1 and Indirect L2), 3) AuctionSettingsForm has 'Fixed Price' and 'Auction' labels on either side of toggle, 4) AuctionBidPanel uses localStorage.getItem('blendlink_token') for Bearer token auth, 5) POST /api/marketplace/listings with share_to_feed=true creates feed_post_id, 6) Seller privacy shows @username on all marketplace listings instead of real names",
+  "features_verified": {
+    "feature_1_profile_bl_coins_hidden": {
+      "status": "PASS",
+      "details": "BL Coins card and View Wallet button are commented out in Profile.jsx (lines 196-219). UI test confirmed they are not visible."
+    },
+    "feature_2_myteam_daily_claim_hidden": {
+      "status": "PASS",
+      "details": "DailyClaimSection is commented out in MyTeam.jsx (lines 477-485). Stats row shows only 2 columns (grid-cols-2) for Direct L1 and Indirect L2."
+    },
+    "feature_3_auction_toggle_labels": {
+      "status": "PASS",
+      "details": "AuctionSettingsForm.jsx has 'Fixed Price' label before Switch and 'Auction' label after Switch (lines 65-75). Code review confirmed correct structure."
+    },
+    "feature_4_auction_bid_localstorage_token": {
+      "status": "PASS",
+      "details": "AuctionBidPanel.jsx uses localStorage.getItem('blendlink_token') in handlePlaceBid function (line 179) and passes it as Bearer token in Authorization header (line 206)."
+    },
+    "feature_5_share_to_feed_creates_post": {
+      "status": "PASS",
+      "details": "Backend API test confirmed: POST /api/marketplace/listings with share_to_feed=true returns feed_post_id. Without share_to_feed, no feed_post_id is returned."
+    },
+    "feature_6_feed_marketplace_listing_posts": {
+      "status": "PASS",
+      "details": "Feed.jsx has marketplace_listing post type rendering with listing card UI (lines 233-260). Shows Gavel icon for auctions, ShoppingBag for fixed price."
+    },
+    "feature_7_seller_privacy_username_only": {
+      "status": "PASS",
+      "details": "Marketplace listings show @username (e.g., @testuser) instead of real names. Backend applies privacy filter based on is_real_name_private setting."
+    }
+  }
+}
