@@ -550,6 +550,7 @@ export default function Notifications() {
                         notification={notification}
                         onMarkRead={handleMarkRead}
                         onDelete={handleDelete}
+                        navigate={navigate}
                       />
                     </div>
                   ))}
