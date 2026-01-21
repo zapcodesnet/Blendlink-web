@@ -550,10 +550,14 @@ export default function Landing() {
                 variant="outline" 
                 className="rounded-full text-lg px-8"
                 onClick={() => navigate("/login")}
+                data-testid="have-account-btn"
               >
                 I Have an Account
               </Button>
             </div>
+            
+            {/* Video Hero - Below CTA buttons */}
+            <VideoHero />
           </div>
         </div>
       </section>
