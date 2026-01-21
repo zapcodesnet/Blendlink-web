@@ -882,7 +882,11 @@ export default function AIListingCreator() {
   };
   
   const publishListing = async () => {
-    if (!aiData || !userPrice) {
+    const effectivePrice = auctionSettings.is_auction 
+      ? (auctionSettings.starting_bid || userPrice)
+      : userPrice;
+      
+    if (!aiData || !effectivePrice) {
       toast.error('Please complete all steps');
       return;
     }
@@ -915,6 +919,35 @@ export default function AIListingCreator() {
         }
       }
       
+      // Build listing data
+      const listingData = {
+        title: aiData.title,
+        description: aiData.description,
+        price: parseFloat(effectivePrice),
+        category: aiData.category?.toLowerCase() || 'general',
+        condition: aiData.condition,
+        images: uploadedImages.length > 0 ? uploadedImages : images.map(i => i.preview),
+        tags: aiData.tags,
+        location: userLocation.zip,
+        weight: weight,
+        dimensions: dimensions,
+        shipping_method: selectedShipping || shippingData?.shipping_options?.[0] || null,
+        share_to_feed: shareToFeed
+      };
+      
+      // Add auction settings if enabled
+      if (auctionSettings.is_auction) {
+        listingData.auction = {
+          is_auction: true,
+          duration: auctionSettings.duration,
+          starting_bid: parseFloat(auctionSettings.starting_bid || effectivePrice) || 0,
+          reserve_price: auctionSettings.reserve_price ? parseFloat(auctionSettings.reserve_price) : null,
+          buy_it_now_price: auctionSettings.buy_it_now_price ? parseFloat(auctionSettings.buy_it_now_price) : null,
+          auto_relist: auctionSettings.auto_relist,
+          auto_extend: auctionSettings.auto_extend
+        };
+      }
+      
       // Create listing
       const listingResponse = await fetch(`${API_BASE_URL}/api/marketplace/listings`, {
         method: 'POST',
@@ -922,20 +955,7 @@ export default function AIListingCreator() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          title: aiData.title,
-          description: aiData.description,
-          price: parseFloat(userPrice),
-          category: aiData.category?.toLowerCase() || 'general',
-          condition: aiData.condition,
-          images: uploadedImages.length > 0 ? uploadedImages : images.map(i => i.preview),
-          tags: aiData.tags,
-          location: userLocation.zip,
-          weight: weight,
-          dimensions: dimensions,
-          shipping_method: selectedShipping || shippingData?.shipping_options?.[0] || null,
-          share_to_feed: shareToFeed
-        })
+        body: JSON.stringify(listingData)
       });
       
       if (!listingResponse.ok) {
