@@ -118,7 +118,7 @@ const getTimeAgo = (dateString) => {
 };
 
 // Single Notification Item Component (Facebook-style)
-const NotificationItem = ({ notification, onMarkRead, onDelete }) => {
+const NotificationItem = ({ notification, onMarkRead, onDelete, navigate }) => {
   const config = NOTIFICATION_CONFIG[notification.type] || NOTIFICATION_CONFIG.system;
   const Icon = config.icon;
   const isUnread = !notification.is_read;
@@ -130,16 +130,80 @@ const NotificationItem = ({ notification, onMarkRead, onDelete }) => {
     
     // Navigate based on notification type and data
     const data = notification.data || {};
-    if (data.post_id) {
-      window.location.href = `/feed#post-${data.post_id}`;
-    } else if (data.user_id || data.from_user_id) {
-      window.location.href = `/profile/${data.user_id || data.from_user_id}`;
+    const type = notification.type;
+    
+    // Marketplace-related notifications
+    if (data.listing_id) {
+      navigate(`/marketplace/${data.listing_id}`);
+      return;
     }
+    
+    // Order-related notifications
+    if (data.order_id) {
+      navigate('/seller-dashboard?tab=orders');
+      return;
+    }
+    
+    // Offer-related notifications
+    if (data.offer_id) {
+      navigate('/marketplace-offers');
+      return;
+    }
+    
+    // Auction-related notifications
+    if (data.auction_id || type === 'auction_bid' || type === 'auction_won' || type === 'auction_ended') {
+      navigate(`/marketplace/${data.listing_id || data.auction_id}`);
+      return;
+    }
+    
+    // Post/Feed notifications
+    if (data.post_id) {
+      navigate(`/feed#post-${data.post_id}`);
+      return;
+    }
+    
+    // User/Profile notifications
+    if (data.user_id || data.from_user_id) {
+      navigate(`/profile/${data.user_id || data.from_user_id}`);
+      return;
+    }
+    
+    // Message notifications
+    if (type === 'message' || data.message_id) {
+      navigate(`/messages/${data.sender_id || data.from_user_id || ''}`);
+      return;
+    }
+    
+    // BL Coins notifications
+    if (type === 'bl_coins_earned' || type === 'referral_bonus') {
+      navigate('/wallet');
+      return;
+    }
+    
+    // Friend request notifications
+    if (type === 'friend_request' || type === 'friend_accepted') {
+      navigate(`/profile/${data.from_user_id || data.user_id}`);
+      return;
+    }
+    
+    // Game-related notifications
+    if (type === 'game_result' || data.game_id) {
+      navigate('/games');
+      return;
+    }
+    
+    // Diamond status notifications
+    if (type === 'diamond_status') {
+      navigate('/referrals');
+      return;
+    }
+    
+    // Default - just mark as read
   };
 
   return (
     <div
-      className={`flex items-start gap-3 p-4 rounded-lg cursor-pointer transition-colors ${
+      className={`group flex items-start gap-3 p-4 rounded-lg cursor-pointer transition-colors ${
         isUnread ? 'bg-primary/5 hover:bg-primary/10' : 'hover:bg-muted/50'
       }`}
       onClick={handleClick}
