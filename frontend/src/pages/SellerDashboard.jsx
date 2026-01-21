@@ -8,6 +8,7 @@ import { Textarea } from "../components/ui/textarea";
 import { toast } from "sonner";
 import { AuthContext } from "../App";
 import PhotoEditorModal from "../components/PhotoEditorModal";
+import AuctionSettingsForm from "../components/AuctionSettingsForm";
 import {
   Store,
   Package,
@@ -39,6 +40,7 @@ import {
   RotateCcw,
   ArrowLeft,
   Image,
+  Gavel,
 } from "lucide-react";
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
