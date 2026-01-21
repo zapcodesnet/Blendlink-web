@@ -323,7 +323,7 @@ const ShippingEstimator = ({ listing }) => {
           <span className="font-medium">Digital Delivery</span>
         </div>
         <p className="text-sm text-muted-foreground mt-1">
-          This is a digital item. No shipping required - you'll receive instant access after purchase.
+          This is a digital item. No shipping required - you&apos;ll receive instant access after purchase.
         </p>
       </div>
     );
