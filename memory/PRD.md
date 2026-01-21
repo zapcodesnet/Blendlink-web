@@ -1,6 +1,76 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 21, 2026 (Session 19)
+## Latest Update: January 21, 2026 (Session 19 - Part 2)
+
+---
+
+## SESSION 19 PART 2: AUCTION LISTING FEATURE ✅
+
+### Features Implemented
+
+1. ✅ **Fixed Price / Auction Toggle**
+   - Added toggle in seller dashboard's AI Listing Generator
+   - Sellers can choose between fixed price or auction listings
+   - Clear visual distinction with Gavel icon for auctions
+
+2. ✅ **Auction Settings Form**
+   - Duration options: 1h, 3h, 6h, 12h, 1d, 2d, 3d, 5d, 7d
+   - Starting bid (required)
+   - Reserve price (optional) - minimum price to sell
+   - Buy It Now price (optional) - instant purchase option
+   - Auto-extend toggle - extends 5 min if bid in last 5 minutes
+   - Auto-relist toggle - automatically relist if no bids
+
+3. ✅ **Real-Time Bidding System**
+   - WebSocket connection for live bid updates
+   - Bid history with timestamps
+   - Current bid display with countdown timer
+   - "You're winning!" indicator for leading bidder
+   - Outbid notifications
+   - Reserve met/not met indicator
+
+4. ✅ **Auction Status Management**
+   - Active, sold, reserve_not_met, ended_no_bids states
+   - Time remaining countdown (seconds precision)
+   - Extension tracking (count and status)
+   - Post-auction offer to losing bidders
+
+5. ✅ **Auction Bid Panel Component**
+   - Integrated into ListingDetail page
+   - Bid input with quick increment buttons (+$1, +$5, +$10)
+   - Buy It Now button for instant purchase
+   - Bid history toggle with full history
+   - Real-time updates via WebSocket
+
+**New Backend Module:**
+- `backend/auction_system.py` - Full auction system
+
+**New Frontend Components:**
+- `frontend/src/components/AuctionSettingsForm.jsx` - Auction settings form
+- `frontend/src/components/AuctionBidPanel.jsx` - Bidding UI panel
+
+**New Backend Endpoints:**
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/auctions/listing/{id}/bid` | POST | Place a bid on auction |
+| `/api/auctions/listing/{id}/bids` | GET | Get bid history |
+| `/api/auctions/listing/{id}/status` | GET | Get auction status & time |
+| `/api/auctions/active` | GET | Get all active auctions |
+| `/api/auctions/my-bids` | GET | Get user's bid history |
+| `/api/auctions/listing/{id}/end` | POST | End auction (seller) |
+| `/api/auctions/listing/{id}/offer-to-bidders` | POST | Offer to losing bidders |
+| `/api/auctions/listing/{id}/relist` | POST | Relist ended auction |
+| `/api/auctions/ws/{listing_id}` | WS | Real-time auction updates |
+
+**Updated Models:**
+- `CreateListing` now accepts `auction` field with `AuctionSettingsModel`
+- Listings have `listing_type` field: "fixed_price" or "auction"
+
+**Testing Status:**
+- ✅ **iteration_48.json**: 18/18 backend tests passed (100%)
+- ✅ 2 bugs fixed by testing agent (NoneType comparison errors)
+- ✅ All duration options validated
+- ✅ WebSocket endpoint documented and functional
 
 ---
 
