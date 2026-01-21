@@ -388,7 +388,9 @@ async def get_auction_status(listing_id: str):
     
     auction = listing["auction"]
     time_remaining = calculate_time_remaining(auction["end_time"])
-    reserve_met = auction.get("current_bid", 0) >= (auction.get("reserve_price") or 0)
+    current_bid = auction.get("current_bid") or 0
+    reserve_price = auction.get("reserve_price") or 0
+    reserve_met = current_bid >= reserve_price
     
     return {
         "listing_id": listing_id,
