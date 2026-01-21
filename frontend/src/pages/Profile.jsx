@@ -193,7 +193,8 @@ export default function Profile() {
           )}
         </div>
 
-        {/* BL Coins & Referral (own profile only) */}
+        {/* BL Coins & Referral - HIDDEN per user request */}
+        {/* 
         {isOwnProfile && (
           <>
             <div className="bl-coin-gradient rounded-xl p-4 text-white mb-4 flex items-center justify-between">
@@ -215,7 +216,10 @@ export default function Profile() {
                 View Wallet
               </Button>
             </div>
+        */}
 
+        {isOwnProfile && (
+          <>
             {/* Referral Code */}
             {profile?.referral_code && (
               <div className="bg-muted/50 rounded-xl p-4 mb-6">
