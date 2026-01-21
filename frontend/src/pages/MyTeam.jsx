@@ -460,8 +460,8 @@ export default function MyTeam() {
           </p>
         </div>
 
-        {/* Stats Row */}
-        <div className="grid grid-cols-3 gap-3">
+        {/* Stats Row - BL Coins hidden per user request */}
+        <div className="grid grid-cols-2 gap-3">
           <div className="bg-card rounded-xl p-4 border border-border/50 text-center">
             <Users className="w-5 h-5 mx-auto mb-1 text-blue-500" />
             <p className="text-2xl font-bold">{level1.length}</p>
@@ -472,20 +472,17 @@ export default function MyTeam() {
             <p className="text-2xl font-bold">{level2.length}</p>
             <p className="text-xs text-muted-foreground">Indirect (L2)</p>
           </div>
-          <div className="bg-card rounded-xl p-4 border border-border/50 text-center">
-            <Coins className="w-5 h-5 mx-auto mb-1 text-yellow-500" />
-            <p className="text-2xl font-bold">{(user?.bl_coins || 0).toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground">BL Coins</p>
-          </div>
         </div>
 
-        {/* Daily Claim */}
+        {/* Daily Claim - HIDDEN per user request */}
+        {/* 
         <DailyClaimSection 
           onClaim={handleDailyClaim}
           nextClaimAt={nextClaimAt}
           isDiamond={diamondStatus?.is_diamond}
           loading={claimLoading}
         />
+        */}
 
         {/* Diamond Status */}
         <DiamondStatusSection 
