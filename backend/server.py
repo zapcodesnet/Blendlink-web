@@ -1072,6 +1072,38 @@ async def create_listing(data: CreateListing, current_user: dict = Depends(get_c
     listing_dict["likes"] = []
     listing_dict["shares"] = 0
     
+    # Handle auction settings
+    if data.auction and data.auction.is_auction:
+        from auction_system import get_auction_end_time, DURATION_MAP
+        
+        # Validate duration
+        if data.auction.duration not in DURATION_MAP:
+            raise HTTPException(status_code=400, detail="Invalid auction duration")
+        
+        # Calculate end time
+        end_time = get_auction_end_time(data.auction.duration)
+        
+        listing_dict["auction"] = {
+            "is_auction": True,
+            "duration": data.auction.duration,
+            "starting_bid": data.auction.starting_bid or data.price,
+            "reserve_price": data.auction.reserve_price,
+            "buy_it_now_price": data.auction.buy_it_now_price,
+            "auto_relist": data.auction.auto_relist,
+            "auto_extend": data.auction.auto_extend,
+            "current_bid": None,
+            "current_bidder_id": None,
+            "current_bidder_name": None,
+            "bid_count": 0,
+            "status": "active",
+            "end_time": end_time.isoformat(),
+            "extended": False,
+            "extension_count": 0
+        }
+        listing_dict["listing_type"] = "auction"
+    else:
+        listing_dict["listing_type"] = "fixed_price"
+    
     await db.listings.insert_one(listing_dict.copy())
     
     # Award BL coins for creating a marketplace listing (100 coins)
