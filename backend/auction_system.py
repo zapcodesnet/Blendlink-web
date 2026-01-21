@@ -361,17 +361,19 @@ async def get_auction_bids(listing_id: str, limit: int = 50):
     # Get auction status
     auction = listing["auction"]
     time_remaining = calculate_time_remaining(auction["end_time"])
+    current_bid = auction.get("current_bid") or auction.get("starting_bid") or 0
+    reserve_price = auction.get("reserve_price") or 0
     
     return {
         "listing_id": listing_id,
         "bids": bids,
-        "current_bid": auction.get("current_bid", auction.get("starting_bid", 0)),
+        "current_bid": current_bid,
         "bid_count": auction.get("bid_count", 0),
         "starting_bid": auction.get("starting_bid"),
         "reserve_price": auction.get("reserve_price"),
         "buy_it_now_price": auction.get("buy_it_now_price"),
         "time_remaining": time_remaining,
-        "reserve_met": auction.get("current_bid", 0) >= (auction.get("reserve_price") or 0)
+        "reserve_met": current_bid >= reserve_price
     }
 
 @auction_router.get("/listing/{listing_id}/status")
