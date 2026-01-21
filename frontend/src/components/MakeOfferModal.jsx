@@ -489,7 +489,7 @@ export function OfferNegotiationModal({ isOpen, onClose, offer, user, token, onU
                   </div>
                   <p className="capitalize">{event.action.replace('_', ' ')}</p>
                   {event.amount && <p className="font-bold">${event.amount.toLocaleString()}</p>}
-                  {event.message && <p className="text-muted-foreground mt-1 italic">"{event.message}"</p>}
+                  {event.message && <p className="text-muted-foreground mt-1 italic">&ldquo;{event.message}&rdquo;</p>}
                 </div>
               ))}
             </div>
