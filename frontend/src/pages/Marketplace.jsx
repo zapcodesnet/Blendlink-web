@@ -242,7 +242,17 @@ export default function Marketplace() {
       <header className="glass sticky top-0 z-40 border-b border-border/50 safe-top">
         <div className="max-w-6xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between mb-3">
-            <h1 className="text-xl font-bold">Marketplace</h1>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => navigate(-1)}
+                data-testid="marketplace-back-btn"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+              <h1 className="text-xl font-bold">{t('marketplace.title')}</h1>
+            </div>
             <div className="flex items-center gap-2">
               <CartIcon />
               {user ? (
