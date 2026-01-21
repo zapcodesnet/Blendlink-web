@@ -5,11 +5,12 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Switch } from "../components/ui/switch";
 import { toast } from "sonner";
+import AuctionSettingsForm from "../components/AuctionSettingsForm";
 import { 
   Camera, Upload, Sparkles, DollarSign, Tag, FileText, 
   ChevronRight, ChevronLeft, Check, Loader2, Image as ImageIcon,
   RefreshCw, ShoppingBag, AlertCircle, Wand2, Globe, X, Package,
-  MapPin, Truck, Scale, Ruler, Edit2, Save, Printer, Navigation, Share2
+  MapPin, Truck, Scale, Ruler, Edit2, Save, Printer, Navigation, Share2, Gavel
 } from "lucide-react";
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
