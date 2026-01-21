@@ -324,14 +324,15 @@ const FeaturedListingsCarousel = ({ onViewDetails }) => {
 // Recently Viewed Section
 const RecentlyViewedSection = ({ onViewDetails }) => {
   const { t } = useTranslation();
-  const [recentItems, setRecentItems] = useState([]);
+  const [recentItems, setRecentItems] = useState(() => {
+    // Initialize from localStorage
+    try {
+      return JSON.parse(localStorage.getItem('blendlink_recently_viewed') || '[]');
+    } catch {
+      return [];
+    }
+  });
   const scrollRef = useRef(null);
-
-  useEffect(() => {
-    // Load recently viewed from localStorage
-    const stored = JSON.parse(localStorage.getItem('blendlink_recently_viewed') || '[]');
-    setRecentItems(stored);
-  }, []);
 
   const scroll = (direction) => {
     if (scrollRef.current) {
