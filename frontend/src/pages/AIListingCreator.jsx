@@ -1062,14 +1062,15 @@ export default function AIListingCreator() {
                       <button
                         key={country.code}
                         onClick={() => toggleCountry(country.code)}
-                        className={`px-3 py-1.5 rounded-lg text-sm flex items-center gap-1 transition-colors ${
+                        className={`px-3 py-1.5 rounded-lg text-sm flex items-center gap-1.5 transition-colors ${
                           targetCountries.includes(country.code) 
                             ? 'bg-primary text-primary-foreground' 
                             : 'bg-muted hover:bg-muted/80'
                         }`}
+                        data-testid={`country-btn-${country.code}`}
                       >
                         <span>{country.flag}</span>
-                        <span>{country.code}</span>
+                        <span className="truncate max-w-[120px]">{country.name}</span>
                       </button>
                     ))}
                   </div>
