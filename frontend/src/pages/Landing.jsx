@@ -455,31 +455,34 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="glass sticky top-0 z-50 border-b border-border/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
+    <div className="min-h-screen bg-background overflow-x-hidden">
+      {/* Header - Mobile Optimized */}
+      <header className="glass sticky top-0 z-50 border-b border-border/50 safe-top">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14 sm:h-16">
+            <div className="flex items-center gap-2">
               <img 
                 src="/blendlink-logo.png" 
                 alt="Blendlink" 
-                className="h-14 w-auto object-contain"
+                className="h-10 sm:h-14 w-auto object-contain"
               />
-              <span className="font-bold text-2xl">Blendlink</span>
+              <span className="font-bold text-xl sm:text-2xl hidden xs:inline">Blendlink</span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <LanguageSelector compact className="hidden sm:block" />
               <Button 
                 variant="ghost" 
+                size="sm"
                 onClick={() => navigate("/login")}
                 data-testid="login-btn"
+                className="text-sm sm:text-base px-2 sm:px-4"
               >
                 {t('auth.login') || 'Login'}
               </Button>
               <Button 
                 onClick={() => navigate("/register")}
-                className="rounded-full"
+                size="sm"
+                className="rounded-full text-sm sm:text-base px-3 sm:px-4"
                 data-testid="get-started-btn"
               >
                 {t('auth.get_started') || 'Get Started'}
@@ -501,10 +504,10 @@ export default function Landing() {
       <RecentlyViewedSection onViewDetails={handleViewDetails} />
 
       {/* Super App Badge + Browse Marketplace Section */}
-      <section className="py-8 px-4">
+      <section className="py-6 sm:py-8 px-4">
         <div className="max-w-3xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
-            <Zap className="w-4 h-4" />
+          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-medium mb-4">
+            <Zap className="w-3 h-3 sm:w-4 sm:h-4" />
             {t('landing.super_app') || 'Your All-in-One Super App'}
           </div>
           
@@ -512,7 +515,7 @@ export default function Landing() {
           <div>
             <Button 
               variant="link" 
-              className="text-muted-foreground hover:text-primary"
+              className="text-muted-foreground hover:text-primary text-sm sm:text-base"
               onClick={() => navigate('/marketplace')}
               data-testid="browse-marketplace-link"
             >
@@ -523,32 +526,32 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Hero Section */}
+      {/* Hero Section - Mobile Optimized */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-20 relative">
           <div className="text-center max-w-3xl mx-auto animate-slide-up">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4 sm:mb-6 leading-tight">
               {t('landing.hero_title') || 'Social, Shop, Play &'}<br />
               <span className="bl-coin-text">{t('landing.hero_highlight') || 'Earn Rewards'}</span>
             </h1>
-            <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-2">
               {t('landing.hero_subtitle') || 'Connect with friends, buy & sell items, find rentals, hire services, play games, and earn BL Coins — all in one app.'}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4 sm:px-0">
               <Button 
                 size="lg" 
-                className="rounded-full text-lg px-8 shadow-lg shadow-primary/25"
+                className="rounded-full text-base sm:text-lg px-6 sm:px-8 shadow-lg shadow-primary/25 w-full sm:w-auto"
                 onClick={() => navigate("/register")}
                 data-testid="hero-cta-btn"
               >
                 {t('landing.start_earning') || 'Start Earning Today'}
-                <ChevronRight className="ml-2 w-5 h-5" />
+                <ChevronRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="rounded-full text-lg px-8"
+                className="rounded-full text-base sm:text-lg px-6 sm:px-8 w-full sm:w-auto"
                 onClick={() => navigate("/login")}
                 data-testid="have-account-btn"
               >
