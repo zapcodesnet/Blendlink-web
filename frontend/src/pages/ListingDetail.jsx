@@ -9,8 +9,10 @@ import { toast } from "sonner";
 import { 
   ArrowLeft, Heart, Share2, MessageCircle, MapPin, Package, 
   ShoppingCart, CreditCard, Truck, ChevronLeft, ChevronRight,
-  ZoomIn, ZoomOut, X, Loader2, MapPinned, Info, AlertCircle
+  ZoomIn, ZoomOut, X, Loader2, MapPinned, Info, AlertCircle,
+  Gavel, Tag
 } from "lucide-react";
+import MakeOfferModal from "../components/MakeOfferModal";
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
