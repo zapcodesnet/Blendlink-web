@@ -471,7 +471,7 @@ async def respond_to_offer(offer_id: str, data: OfferResponse, request: Request)
         if remaining <= 0:
             raise HTTPException(
                 status_code=400, 
-                detail=f"You have no counter-offers remaining. You can only accept or reject."
+                detail="You have no counter-offers remaining. You can only accept or reject."
             )
         
         if not data.counter_amount or data.counter_amount <= 0:
