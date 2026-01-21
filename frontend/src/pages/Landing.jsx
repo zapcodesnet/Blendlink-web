@@ -49,12 +49,13 @@ const VideoHero = () => {
             className="absolute inset-0 w-full h-full object-cover"
             src={VIDEO_URL}
             poster={POSTER_URL}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
+            autoPlay={true}
+            muted={true}
+            loop={true}
+            playsInline={true}
+            preload="auto"
             onLoadedData={() => setIsLoaded(true)}
+            onCanPlay={() => setIsLoaded(true)}
             data-testid="hero-video"
           >
             <source src={VIDEO_URL} type="video/mp4" />
