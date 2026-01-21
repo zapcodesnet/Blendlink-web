@@ -706,30 +706,51 @@ export default function ListingDetail() {
       {/* Fixed Bottom Actions */}
       {!isOwnListing && listing.status === 'active' && (
         <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border p-4 safe-bottom z-50">
-          <div className="max-w-2xl mx-auto flex gap-3">
+          <div className="max-w-2xl mx-auto">
+            {/* Primary Actions Row */}
+            <div className="flex gap-2 mb-2">
+              <Button 
+                className="flex-1 h-12 rounded-xl bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90"
+                onClick={handleBuyNow}
+                data-testid="buy-now-btn"
+              >
+                <Tag className="w-5 h-5 mr-2" />
+                Buy It Now
+              </Button>
+              <Button 
+                variant="outline"
+                className="flex-1 h-12 rounded-xl border-amber-500 text-amber-600 hover:bg-amber-500/10"
+                onClick={() => {
+                  if (!user) {
+                    toast.info("Please sign in to make an offer", {
+                      action: { label: "Sign In", onClick: () => navigate("/login") }
+                    });
+                    return;
+                  }
+                  setShowOfferModal(true);
+                }}
+                data-testid="make-offer-btn"
+              >
+                <Gavel className="w-5 h-5 mr-2" />
+                Make an Offer
+              </Button>
+            </div>
+            {/* Secondary Action */}
             <Button 
-              variant="outline"
-              className="flex-1 h-12 rounded-xl"
+              variant="ghost"
+              className="w-full h-10 rounded-xl text-muted-foreground"
               onClick={handleAddToCart}
               disabled={addingToCart}
               data-testid="add-to-cart-btn"
             >
               {addingToCart ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
-                  <ShoppingCart className="w-5 h-5 mr-2" />
+                  <ShoppingCart className="w-4 h-4 mr-2" />
                   Add to Cart
                 </>
               )}
-            </Button>
-            <Button 
-              className="flex-1 h-12 rounded-xl"
-              onClick={handleBuyNow}
-              data-testid="buy-now-btn"
-            >
-              <CreditCard className="w-5 h-5 mr-2" />
-              Buy Now
             </Button>
           </div>
         </div>
@@ -743,6 +764,15 @@ export default function ListingDetail() {
           </div>
         </div>
       )}
+
+      {/* Make Offer Modal */}
+      <MakeOfferModal
+        isOpen={showOfferModal}
+        onClose={() => setShowOfferModal(false)}
+        listing={listing}
+        user={user}
+        token={api.getToken()}
+      />
     </div>
   );
 }
