@@ -10,7 +10,7 @@ import LinkPreview, { extractUrls } from "../components/LinkPreview";
 import { 
   Heart, MessageCircle, Share2, Plus, MoreHorizontal,
   Home as HomeIcon, Building, Briefcase, Settings, Bell, Search,
-  RefreshCw, Coins, Users
+  RefreshCw, Coins, Users, ShoppingBag, Gavel, ExternalLink
 } from "lucide-react";
 
 export default function Feed() {
