@@ -390,31 +390,30 @@ class TestAuctionSettingsFormLabels:
         # Check for 'Fixed Price' label
         assert "Fixed Price" in content, "AuctionSettingsForm should have 'Fixed Price' label"
         
-        # Check for 'Auction' label
-        assert "Auction" in content, "AuctionSettingsForm should have 'Auction' label"
+        # Check for 'Auction' label (standalone, not as part of variable names)
+        assert ">Auction<" in content or ">\n              Auction\n" in content or \
+               "Auction</span>" in content or ">Auction" in content, \
+            "AuctionSettingsForm should have 'Auction' label"
         
         # Check that labels are near the Switch component
-        assert "Switch" in content, "AuctionSettingsForm should have Switch component"
+        assert "<Switch" in content, "AuctionSettingsForm should have Switch component"
         
-        # Verify the toggle structure (labels on either side)
-        lines = content.split('\n')
-        found_fixed_price = False
-        found_auction = False
-        found_switch = False
+        # Verify the toggle structure (labels on either side of Switch)
+        # Look for pattern: Fixed Price ... Switch ... Auction
+        fixed_price_idx = content.find("Fixed Price")
+        switch_idx = content.find("<Switch")
+        auction_label_idx = content.find("Auction</span>")
         
-        for i, line in enumerate(lines):
-            if "Fixed Price" in line:
-                found_fixed_price = True
-            if "Auction" in line and "is_auction" not in line.lower():
-                found_auction = True
-            if "Switch" in line and "checked" in line:
-                found_switch = True
+        assert fixed_price_idx > 0, "Should have 'Fixed Price' label"
+        assert switch_idx > 0, "Should have Switch component"
+        assert auction_label_idx > 0, "Should have 'Auction' label"
         
-        assert found_fixed_price, "Should have 'Fixed Price' label"
-        assert found_auction, "Should have 'Auction' label"
-        assert found_switch, "Should have Switch component"
+        # Verify order: Fixed Price comes before Switch, Switch comes before Auction label
+        assert fixed_price_idx < switch_idx < auction_label_idx, \
+            "Labels should be in order: Fixed Price, Switch, Auction"
         
         print("✓ AuctionSettingsForm has correct toggle labels: 'Fixed Price' and 'Auction'")
+        print("✓ Labels are correctly positioned on either side of the toggle")
 
 
 class TestProfilePageBLCoinsHidden:
