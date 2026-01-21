@@ -480,6 +480,16 @@ const AIListingGenerator = ({ onComplete }) => {
   const [result, setResult] = useState(null);
   const [priceData, setPriceData] = useState(null);
   const [isPricingLoading, setIsPricingLoading] = useState(false);
+  const [auctionSettings, setAuctionSettings] = useState({
+    is_auction: false,
+    duration: "1d",
+    starting_bid: "",
+    reserve_price: "",
+    buy_it_now_price: "",
+    auto_relist: false,
+    auto_extend: true
+  });
+  const [fixedPrice, setFixedPrice] = useState("");
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
