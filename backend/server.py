@@ -2390,6 +2390,14 @@ try:
 except ImportError as e:
     logger.warning(f"Could not load marketplace offers system: {e}")
 
+# Load Auction System
+try:
+    from auction_system import auction_router
+    api_router.include_router(auction_router)
+    logger.info("Auction System loaded (Bidding, Auto-extend, Real-time updates)")
+except ImportError as e:
+    logger.warning(f"Could not load auction system: {e}")
+
 # Load WebSocket Notifications
 try:
     from websocket_notifications import ws_manager, WebSocketNotification, NotificationType
