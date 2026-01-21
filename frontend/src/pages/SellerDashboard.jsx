@@ -1177,7 +1177,18 @@ export default function SellerDashboard() {
         })
       });
 
-      const data = await response.json();
+      // Read body as text first to avoid "body stream already read" errors
+      const responseText = await response.text();
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        throw new Error("Invalid response from server");
+      }
+      
+      if (!response.ok) {
+        throw new Error(data.detail || "Failed to generate label");
+      }
       
       if (data.label_url) {
         // Open label PDF in new tab
@@ -1187,7 +1198,7 @@ export default function SellerDashboard() {
         // Refresh orders to show updated tracking
         loadOrders();
       } else {
-        throw new Error(data.detail || "Failed to generate label");
+        throw new Error(data.detail || data.error || "Failed to generate label");
       }
     } catch (error) {
       console.error("Label generation error:", error);
