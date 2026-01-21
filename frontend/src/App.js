@@ -72,6 +72,8 @@ import MintedPhotos from "./pages/MintedPhotos";
 import PhotoGameArena from "./pages/PhotoGameArena";
 import SubscriptionTiers from "./pages/SubscriptionTiers";
 import Checkout from "./pages/Checkout";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 
 // Components
 import BottomNav from "./components/BottomNav";
@@ -252,6 +254,10 @@ function AppRouter() {
       
       {/* Checkout Route - Accessible to guests */}
       <Route path="/checkout" element={<Checkout />} />
+      
+      {/* Legal Pages - Public */}
+      <Route path="/privacypolicy" element={<PrivacyPolicy />} />
+      <Route path="/termsofservice" element={<TermsOfService />} />
       
       {/* Casino Routes */}
       <Route path="/casino" element={<ProtectedRoute><Casino /></ProtectedRoute>} />

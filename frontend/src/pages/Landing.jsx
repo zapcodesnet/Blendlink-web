@@ -585,17 +585,35 @@ export default function Landing() {
 
       {/* Footer */}
       <footer className="border-t border-border py-8 px-4">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <img 
-              src="/blendlink-logo.png" 
-              alt="Blendlink" 
-              className="h-12 w-auto object-contain"
-            />
-            <span className="font-semibold text-lg">Blendlink</span>
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-4">
+            <div className="flex items-center gap-3">
+              <img 
+                src="/blendlink-logo.png" 
+                alt="Blendlink" 
+                className="h-12 w-auto object-contain"
+              />
+              <span className="font-semibold text-lg">Blendlink</span>
+            </div>
+            <div className="flex items-center gap-6 text-sm">
+              <Link 
+                to="/privacypolicy" 
+                className="text-muted-foreground hover:text-primary transition-colors"
+                data-testid="footer-privacy-link"
+              >
+                Privacy Policy
+              </Link>
+              <Link 
+                to="/termsofservice" 
+                className="text-muted-foreground hover:text-primary transition-colors"
+                data-testid="footer-terms-link"
+              >
+                Terms of Service
+              </Link>
+            </div>
           </div>
-          <p className="text-sm text-muted-foreground">
-            © 2024 Blendlink. All rights reserved.
+          <p className="text-sm text-muted-foreground text-center md:text-left">
+            © 2026 Blendlink. All rights reserved.
           </p>
         </div>
       </footer>
