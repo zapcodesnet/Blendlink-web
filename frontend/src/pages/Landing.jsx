@@ -18,7 +18,8 @@ const VideoHero = () => {
   const [isMuted, setIsMuted] = useState(true);
   const [isLoaded, setIsLoaded] = useState(false);
   
-  const VIDEO_URL = "https://customer-assets.emergentagent.com/job_user-privacy-ctrl/artifacts/mru5m27g_YouCut_20260121_141805694.mp4";
+  // Local video file for better performance and no CORS issues
+  const VIDEO_URL = "/blendlink-promo.mp4";
   const POSTER_URL = "/blendlink-logo.png"; // Fallback poster
   
   const togglePlay = () => {
