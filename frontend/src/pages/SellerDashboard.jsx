@@ -818,6 +818,14 @@ const AIListingGenerator = ({ onComplete }) => {
               </div>
             )}
 
+            {/* Auction Settings */}
+            <AuctionSettingsForm
+              auctionSettings={auctionSettings}
+              setAuctionSettings={setAuctionSettings}
+              fixedPrice={priceData?.recommended_price}
+              setFixedPrice={setFixedPrice}
+            />
+
             {/* Action Buttons */}
             <div className="flex gap-3 pt-4">
               <Button variant="outline" className="flex-1">
