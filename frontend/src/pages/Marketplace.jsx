@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../App";
+import { useTranslation } from "react-i18next";
 import api from "../services/api";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -12,7 +13,7 @@ import {
   Dumbbell, Download, Wrench, Package, ChevronRight, ShoppingBag,
   Sparkles, Store, Watch, Palette, Heart, Gamepad2, Building2,
   PawPrint, Baby, Gift, Ticket, ThumbsUp, Share2, ShoppingCart,
-  CreditCard, Loader2
+  CreditCard, Loader2, ArrowLeft
 } from "lucide-react";
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
@@ -173,6 +174,7 @@ const ListingSocialActions = ({ listing, user, onLike }) => {
 };
 
 export default function Marketplace() {
+  const { t } = useTranslation();
   const authContext = useContext(AuthContext);
   const user = authContext?.user; // Null-safe for guests
   const navigate = useNavigate();
