@@ -565,49 +565,49 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Features Grid */}
-      <section className="py-20 px-4">
+      {/* Features Grid - Mobile Optimized */}
+      <section className="py-12 sm:py-20 px-4">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Everything You Need</h2>
-            <p className="text-muted-foreground text-lg">One app, endless possibilities</p>
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">Everything You Need</h2>
+            <p className="text-muted-foreground text-base sm:text-lg">One app, endless possibilities</p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 stagger-children">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 stagger-children">
             {features.map((feature, i) => (
               <div 
                 key={i} 
-                className="glass-card p-6 rounded-2xl card-hover"
+                className="glass-card p-4 sm:p-6 rounded-xl sm:rounded-2xl card-hover"
                 data-testid={`feature-${feature.title.toLowerCase().replace(/\s/g, '-')}`}
               >
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                  <feature.icon className="w-6 h-6 text-primary" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-primary/10 flex items-center justify-center mb-3 sm:mb-4">
+                  <feature.icon className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                 </div>
-                <h3 className="font-semibold mb-1">{feature.title}</h3>
-                <p className="text-sm text-muted-foreground">{feature.desc}</p>
+                <h3 className="font-semibold mb-1 text-sm sm:text-base">{feature.title}</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground">{feature.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* BL Coins Section */}
-      <section className="py-20 px-4 bg-gradient-to-b from-transparent via-primary/5 to-transparent">
+      {/* BL Coins Section - Mobile Optimized */}
+      <section className="py-12 sm:py-20 px-4 bg-gradient-to-b from-transparent via-primary/5 to-transparent">
         <div className="max-w-5xl mx-auto">
-          <div className="glass-card p-8 md:p-12 rounded-3xl">
-            <div className="grid md:grid-cols-2 gap-8 items-center">
+          <div className="glass-card p-5 sm:p-8 md:p-12 rounded-2xl sm:rounded-3xl">
+            <div className="grid md:grid-cols-2 gap-6 sm:gap-8 items-center">
               <div>
-                <div className="w-16 h-16 rounded-2xl bl-coin-gradient flex items-center justify-center mb-6 animate-pulse-glow">
-                  <Coins className="w-8 h-8 text-white" />
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bl-coin-gradient flex items-center justify-center mb-4 sm:mb-6 animate-pulse-glow">
+                  <Coins className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                 </div>
-                <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
                   Earn <span className="text-green-500">Real Cash</span> and <span className="bl-coin-text">BL Coins</span>
                 </h2>
-                <p className="text-muted-foreground mb-6">
+                <p className="text-muted-foreground mb-4 sm:mb-6 text-sm sm:text-base">
                   Get rewarded for everything you do. Sell in Marketplace to earn real cash. 
                   Post content, like, share, comment, create page, invite friends, play games, 
                   and complete tasks to earn BL Coins you can spend in-app.
                 </p>
-                <ul className="space-y-3">
+                <ul className="space-y-2 sm:space-y-3">
                   {[
                     "50,000 BL Coins welcome bonus",
                     "50,000 BL Coins when you invite a friend and joined",
@@ -615,19 +615,19 @@ export default function Landing() {
                     "3% - 4% per Level 1 referral",
                     "1% - 2% per Level 2 referral"
                   ].map((item, i) => (
-                    <li key={i} className="flex items-center gap-3">
-                      <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
-                        <ChevronRight className="w-4 h-4 text-green-500" />
+                    <li key={i} className="flex items-center gap-2 sm:gap-3 text-sm sm:text-base">
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
+                        <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
                       </div>
                       <span>{item}</span>
                     </li>
                   ))}
                 </ul>
               </div>
-              <div className="relative">
+              <div className="relative hidden md:block">
                 <div className="aspect-square max-w-sm mx-auto bg-gradient-to-br from-primary/20 to-amber-500/20 rounded-3xl flex items-center justify-center">
-                  <div className="w-32 h-32 bl-coin-gradient rounded-full flex items-center justify-center shadow-2xl">
-                    <span className="text-white font-bold text-4xl">BL</span>
+                  <div className="w-28 h-28 sm:w-32 sm:h-32 bl-coin-gradient rounded-full flex items-center justify-center shadow-2xl">
+                    <span className="text-white font-bold text-3xl sm:text-4xl">BL</span>
                   </div>
                 </div>
               </div>
@@ -636,49 +636,49 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* PWA Section */}
-      <section className="py-20 px-4">
+      {/* PWA Section - Mobile Optimized */}
+      <section className="py-12 sm:py-20 px-4">
         <div className="max-w-5xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 text-green-600 text-sm font-medium mb-6">
-            <Smartphone className="w-4 h-4" />
+          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-green-500/10 text-green-600 text-xs sm:text-sm font-medium mb-4 sm:mb-6">
+            <Smartphone className="w-3 h-3 sm:w-4 sm:h-4" />
             Install as App
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
             Works Like a Native App
           </h2>
-          <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-base sm:text-lg mb-6 sm:mb-8 max-w-2xl mx-auto px-2">
             Add Blendlink to your home screen for the best experience. 
             Fast, offline-capable, and always at your fingertips.
           </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted">
-              <Bell className="w-4 h-4" />
+          <div className="flex flex-wrap justify-center gap-2 sm:gap-4">
+            <div className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-muted text-xs sm:text-sm">
+              <Bell className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>Push Notifications</span>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted">
-              <Zap className="w-4 h-4" />
+            <div className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-muted text-xs sm:text-sm">
+              <Zap className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>Instant Loading</span>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted">
-              <Smartphone className="w-4 h-4" />
+            <div className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-muted text-xs sm:text-sm">
+              <Smartphone className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>Home Screen Icon</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 px-4">
+      {/* CTA Section - Mobile Optimized */}
+      <section className="py-12 sm:py-20 px-4">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
             Ready to Join?
           </h2>
-          <p className="text-muted-foreground text-lg mb-8">
+          <p className="text-muted-foreground text-base sm:text-lg mb-6 sm:mb-8 px-2">
             Create your free account and start earning BL Coins today.
           </p>
           <Button 
             size="lg" 
-            className="rounded-full text-lg px-10 shadow-lg shadow-primary/25"
+            className="rounded-full text-base sm:text-lg px-8 sm:px-10 shadow-lg shadow-primary/25 w-full sm:w-auto"
             onClick={() => navigate("/register")}
             data-testid="bottom-cta-btn"
           >
