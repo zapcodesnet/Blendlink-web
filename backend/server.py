@@ -1183,6 +1183,7 @@ class CreateListing(BaseModel):
     tags: List[str] = []
     location: Optional[str] = None  # Seller's ZIP code
     auction: Optional[AuctionSettingsModel] = None  # Auction settings
+    share_to_feed: bool = False  # Share listing to social feed
 
 @marketplace_router.post("/listings")
 async def create_listing(data: CreateListing, current_user: dict = Depends(get_current_user)):
