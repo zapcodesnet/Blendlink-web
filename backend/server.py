@@ -1081,7 +1081,7 @@ async def clear_typing_status(user_id: str, current_user: dict = Depends(get_cur
 
 # ============== MARKETPLACE ROUTES ==============
 @marketplace_router.get("/listings")
-async def get_listings(category: Optional[str] = None, search: Optional[str] = None, skip: int = 0, limit: int = 20):
+async def get_listings(request: Request, category: Optional[str] = None, search: Optional[str] = None, skip: int = 0, limit: int = 20):
     query = {"status": "active"}
     if category:
         query["category"] = category
@@ -1093,23 +1093,70 @@ async def get_listings(category: Optional[str] = None, search: Optional[str] = N
     
     listings = await db.listings.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
     
+    # Get viewer ID for privacy check
+    viewer_id = None
+    try:
+        viewer = await get_current_user(request)
+        viewer_id = viewer.get("user_id")
+    except:
+        pass  # Anonymous viewer
+    
     # Batch fetch all users to avoid N+1 queries
     if listings:
         user_ids = list(set(listing["user_id"] for listing in listings))
         users = await db.users.find({"user_id": {"$in": user_ids}}, {"_id": 0, "password_hash": 0}).to_list(len(user_ids))
         users_map = {u["user_id"]: u for u in users}
+        
         for listing in listings:
-            listing["seller"] = users_map.get(listing["user_id"])
+            seller = users_map.get(listing["user_id"])
+            if seller:
+                # Apply privacy filter
+                is_friend = False
+                if viewer_id:
+                    is_friend = await check_if_friends(listing["user_id"], viewer_id)
+                
+                seller_copy = seller.copy()
+                if seller.get("is_real_name_private", False) and not is_friend:
+                    seller_copy["display_name"] = seller.get("username") or f"user_{listing['user_id'][:8]}"
+                    seller_copy["name_hidden"] = True
+                else:
+                    seller_copy["display_name"] = seller.get("name")
+                    seller_copy["name_hidden"] = False
+                listing["seller"] = seller_copy
+            else:
+                listing["seller"] = None
     
     return listings
 
 @marketplace_router.get("/listings/{listing_id}")
-async def get_listing(listing_id: str):
+async def get_listing(listing_id: str, request: Request):
     listing = await db.listings.find_one({"listing_id": listing_id}, {"_id": 0})
     if not listing:
         raise HTTPException(status_code=404, detail="Listing not found")
     
     user = await db.users.find_one({"user_id": listing["user_id"]}, {"_id": 0, "password_hash": 0})
+    
+    # Get viewer ID for privacy check
+    viewer_id = None
+    try:
+        viewer = await get_current_user(request)
+        viewer_id = viewer.get("user_id")
+    except:
+        pass  # Anonymous viewer
+    
+    if user:
+        # Apply privacy filter
+        is_friend = False
+        if viewer_id:
+            is_friend = await check_if_friends(listing["user_id"], viewer_id)
+        
+        if user.get("is_real_name_private", False) and not is_friend:
+            user["display_name"] = user.get("username") or f"user_{listing['user_id'][:8]}"
+            user["name_hidden"] = True
+        else:
+            user["display_name"] = user.get("name")
+            user["name_hidden"] = False
+    
     listing["seller"] = user
     return listing
 
