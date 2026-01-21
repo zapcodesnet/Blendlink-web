@@ -434,6 +434,7 @@ export default function ListingDetail() {
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
   const [addingToCart, setAddingToCart] = useState(false);
+  const [showOfferModal, setShowOfferModal] = useState(false);
 
   useEffect(() => {
     fetchListing();
