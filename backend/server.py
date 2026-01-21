@@ -1312,6 +1312,53 @@ async def create_listing(data: CreateListing, current_user: dict = Depends(get_c
         logger.error(f"Failed to award BL coins for listing: {e}")
         # Continue even if reward fails
     
+    # Share to feed if requested
+    if data.share_to_feed:
+        try:
+            # Create a social post linking to the listing
+            post_id = f"post_{uuid.uuid4().hex[:12]}"
+            listing_url = f"/marketplace/{listing_dict['listing_id']}"
+            
+            # Format price display
+            if data.auction and data.auction.is_auction:
+                price_text = f"Starting bid: ${data.price:.2f}"
+                if data.auction.buy_it_now_price:
+                    price_text += f" | Buy Now: ${data.auction.buy_it_now_price:.2f}"
+                listing_type_text = "🔨 New Auction Listing"
+            else:
+                price_text = f"Price: ${data.price:.2f}"
+                listing_type_text = "🛒 New Marketplace Listing"
+            
+            # Create post content
+            post_content = f"{listing_type_text}\n\n{data.title}\n\n{price_text}\n\n{data.description[:200]}{'...' if len(data.description) > 200 else ''}\n\n🔗 View listing"
+            
+            feed_post = {
+                "post_id": post_id,
+                "user_id": user_id,
+                "content": post_content,
+                "images": data.images[:4] if data.images else [],  # Max 4 images for feed
+                "post_type": "marketplace_listing",
+                "listing_id": listing_dict["listing_id"],
+                "listing_url": listing_url,
+                "listing_title": data.title,
+                "listing_price": data.price,
+                "listing_category": data.category,
+                "is_auction": data.auction.is_auction if data.auction else False,
+                "likes": [],
+                "comments": [],
+                "shares": 0,
+                "visibility": "public",
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+            await db.posts.insert_one(feed_post.copy())
+            listing_dict["feed_post_id"] = post_id
+            logger.info(f"Created feed post {post_id} for listing {listing_dict['listing_id']}")
+            
+        except Exception as e:
+            logger.error(f"Failed to create feed post for listing: {e}")
+            # Continue even if feed post fails
+    
     return listing_dict
 
 # Master category list - single source of truth for all marketplace categories
