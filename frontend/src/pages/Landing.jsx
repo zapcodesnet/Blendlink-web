@@ -47,15 +47,16 @@ const VideoHero = () => {
           <video
             ref={videoRef}
             className="absolute inset-0 w-full h-full object-cover"
-            src={VIDEO_URL}
             poster={POSTER_URL}
-            autoPlay={true}
-            muted={true}
-            loop={true}
-            playsInline={true}
+            autoPlay
+            muted
+            loop
+            playsInline
             preload="auto"
+            crossOrigin="anonymous"
             onLoadedData={() => setIsLoaded(true)}
             onCanPlay={() => setIsLoaded(true)}
+            onError={(e) => console.error('Video error:', e.target.error)}
             data-testid="hero-video"
           >
             <source src={VIDEO_URL} type="video/mp4" />
