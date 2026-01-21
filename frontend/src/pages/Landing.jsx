@@ -53,7 +53,6 @@ const VideoHero = () => {
             loop
             playsInline
             preload="auto"
-            crossOrigin="anonymous"
             onLoadedData={() => setIsLoaded(true)}
             onCanPlay={() => setIsLoaded(true)}
             onError={(e) => console.error('Video error:', e.target.error)}
