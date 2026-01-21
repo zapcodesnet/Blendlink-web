@@ -300,7 +300,7 @@ export default function MakeOfferModal({ isOpen, onClose, listing, user, token }
                   <Shield className="w-4 h-4 text-amber-600 mt-0.5" />
                   <div className="text-xs text-amber-700 dark:text-amber-400">
                     <strong>Refundable $1 deposit required.</strong> This is held to ensure serious offers. 
-                    If rejected or expired, you'll be fully refunded. If accepted, it's applied to your purchase.
+                    If rejected or expired, you&apos;ll be fully refunded. If accepted, it&apos;s applied to your purchase.
                   </div>
                 </div>
               </div>
@@ -343,7 +343,7 @@ export default function MakeOfferModal({ isOpen, onClose, listing, user, token }
               <h3 className="text-xl font-bold mb-2">Offer Submitted!</h3>
               <p className="text-muted-foreground mb-6">
                 Your offer of <span className="font-bold text-primary">${parseFloat(offerAmount).toLocaleString()}</span> has been sent to the seller.
-                You'll be notified when they respond.
+                You&apos;ll be notified when they respond.
               </p>
               
               <div className="p-4 bg-muted/50 rounded-lg mb-6 text-left">
@@ -361,7 +361,7 @@ export default function MakeOfferModal({ isOpen, onClose, listing, user, token }
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary">•</span>
-                    You'll get a notification with their response
+                    You&apos;ll get a notification with their response
                   </li>
                 </ul>
               </div>
