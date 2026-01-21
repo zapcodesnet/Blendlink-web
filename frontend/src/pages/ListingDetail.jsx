@@ -629,9 +629,19 @@ export default function ListingDetail() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold">{listing.title}</h1>
-              <p className="text-3xl font-bold text-primary mt-2">
-                ${listing.price?.toLocaleString()}
-              </p>
+              {/* Show auction badge or fixed price */}
+              {listing.auction?.is_auction ? (
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="px-2 py-1 bg-amber-500/10 text-amber-600 rounded-full text-xs font-medium flex items-center gap-1">
+                    <Gavel className="w-3 h-3" />
+                    Auction
+                  </span>
+                </div>
+              ) : (
+                <p className="text-3xl font-bold text-primary mt-2">
+                  ${listing.price?.toLocaleString()}
+                </p>
+              )}
             </div>
             <button
               onClick={handleLike}
@@ -644,6 +654,19 @@ export default function ListingDetail() {
               <span className="text-sm font-medium">{likesCount}</span>
             </button>
           </div>
+
+          {/* Auction Bid Panel - Only for auction listings */}
+          {listing.auction?.is_auction && (
+            <div className="mt-4">
+              <AuctionBidPanel 
+                listing={listing} 
+                onBidPlaced={() => {
+                  // Refresh listing data
+                  fetchListing();
+                }}
+              />
+            </div>
+          )}
 
           {/* Details */}
           <div className="flex items-center gap-4 mt-4 text-sm text-muted-foreground">
