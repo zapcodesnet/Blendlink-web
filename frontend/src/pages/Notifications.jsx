@@ -92,10 +92,89 @@ const NOTIFICATION_CONFIG = {
     color: "text-amber-500",
     bgColor: "bg-amber-500/10",
   },
+  referral_bonus: {
+    icon: Coins,
+    color: "text-amber-500",
+    bgColor: "bg-amber-500/10",
+  },
   diamond_status: {
     icon: Sparkles,
     color: "text-cyan-500",
     bgColor: "bg-cyan-500/10",
+  },
+  // Marketplace notifications
+  listing_liked: {
+    icon: ThumbsUp,
+    color: "text-pink-500",
+    bgColor: "bg-pink-500/10",
+  },
+  listing_shared: {
+    icon: Share2,
+    color: "text-blue-500",
+    bgColor: "bg-blue-500/10",
+  },
+  listing_commented: {
+    icon: MessageCircle,
+    color: "text-green-500",
+    bgColor: "bg-green-500/10",
+  },
+  order_received: {
+    icon: Bell,
+    color: "text-emerald-500",
+    bgColor: "bg-emerald-500/10",
+  },
+  // Offer notifications
+  offer_received: {
+    icon: Bell,
+    color: "text-orange-500",
+    bgColor: "bg-orange-500/10",
+  },
+  offer_accepted: {
+    icon: Check,
+    color: "text-green-500",
+    bgColor: "bg-green-500/10",
+  },
+  offer_rejected: {
+    icon: Bell,
+    color: "text-red-500",
+    bgColor: "bg-red-500/10",
+  },
+  offer_countered: {
+    icon: Bell,
+    color: "text-amber-500",
+    bgColor: "bg-amber-500/10",
+  },
+  // Auction notifications
+  auction_bid: {
+    icon: Bell,
+    color: "text-purple-500",
+    bgColor: "bg-purple-500/10",
+  },
+  auction_outbid: {
+    icon: Bell,
+    color: "text-red-500",
+    bgColor: "bg-red-500/10",
+  },
+  auction_won: {
+    icon: Sparkles,
+    color: "text-green-500",
+    bgColor: "bg-green-500/10",
+  },
+  auction_ended: {
+    icon: Bell,
+    color: "text-gray-500",
+    bgColor: "bg-gray-500/10",
+  },
+  // Game notifications
+  game_result: {
+    icon: Sparkles,
+    color: "text-violet-500",
+    bgColor: "bg-violet-500/10",
+  },
+  message: {
+    icon: MessageCircle,
+    color: "text-blue-500",
+    bgColor: "bg-blue-500/10",
   },
   system: {
     icon: Bell,
