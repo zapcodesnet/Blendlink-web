@@ -1242,8 +1242,30 @@ export default function AIListingCreator() {
                 <img src={images[0].preview} alt="" className="w-full h-48 object-cover" />
               )}
               <div className="p-4">
-                <h3 className="font-bold text-lg">{aiData?.title}</h3>
-                <p className="text-2xl font-bold text-primary mt-1">${parseFloat(userPrice).toFixed(2)}</p>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-lg">{aiData?.title}</h3>
+                  {auctionSettings.is_auction && (
+                    <span className="px-2 py-1 bg-amber-500/10 text-amber-700 dark:text-amber-400 rounded-full text-xs flex items-center gap-1">
+                      <Gavel className="w-3 h-3" />
+                      Auction
+                    </span>
+                  )}
+                </div>
+                
+                {auctionSettings.is_auction ? (
+                  <div className="mt-2">
+                    <p className="text-sm text-muted-foreground">Starting Bid</p>
+                    <p className="text-2xl font-bold text-amber-600">${parseFloat(auctionSettings.starting_bid || userPrice).toFixed(2)}</p>
+                    <div className="flex flex-wrap gap-2 mt-2 text-xs text-muted-foreground">
+                      <span>Duration: {auctionSettings.duration}</span>
+                      {auctionSettings.reserve_price && <span>• Reserve: ${parseFloat(auctionSettings.reserve_price).toFixed(2)}</span>}
+                      {auctionSettings.buy_it_now_price && <span>• Buy Now: ${parseFloat(auctionSettings.buy_it_now_price).toFixed(2)}</span>}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-2xl font-bold text-primary mt-1">${parseFloat(userPrice).toFixed(2)}</p>
+                )}
+                
                 <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{aiData?.description}</p>
                 
                 <div className="flex flex-wrap gap-2 mt-3">
