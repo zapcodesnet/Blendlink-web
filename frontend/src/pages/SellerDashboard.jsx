@@ -568,13 +568,28 @@ const AIListingGenerator = ({ onComplete }) => {
 
   const handleCreateListing = () => {
     if (result) {
-      onComplete({
+      const listingData = {
         ...result,
         images,
         condition,
         price: priceData?.recommended_price || 0,
         priceData,
-      });
+      };
+      
+      // Add auction settings if enabled
+      if (auctionSettings.is_auction) {
+        listingData.auction = {
+          is_auction: true,
+          duration: auctionSettings.duration,
+          starting_bid: parseFloat(auctionSettings.starting_bid) || priceData?.recommended_price || 0,
+          reserve_price: auctionSettings.reserve_price ? parseFloat(auctionSettings.reserve_price) : null,
+          buy_it_now_price: auctionSettings.buy_it_now_price ? parseFloat(auctionSettings.buy_it_now_price) : null,
+          auto_relist: auctionSettings.auto_relist,
+          auto_extend: auctionSettings.auto_extend
+        };
+      }
+      
+      onComplete(listingData);
     }
   };
 
