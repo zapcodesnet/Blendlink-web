@@ -2382,6 +2382,14 @@ try:
 except ImportError as e:
     logger.warning(f"Could not load subscription routes: {e}")
 
+# Load Marketplace Offers System
+try:
+    from marketplace_offers import offer_router
+    api_router.include_router(offer_router)
+    logger.info("Marketplace Offers System loaded (Make an Offer, Counter-offers, Deposits)")
+except ImportError as e:
+    logger.warning(f"Could not load marketplace offers system: {e}")
+
 # Load WebSocket Notifications
 try:
     from websocket_notifications import ws_manager, WebSocketNotification, NotificationType
