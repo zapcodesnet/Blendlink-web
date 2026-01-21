@@ -229,6 +229,36 @@ export default function Feed() {
                 {/* Post Content */}
                 <p className="mb-3 whitespace-pre-wrap">{post.content}</p>
 
+                {/* Marketplace Listing Card - for listing posts */}
+                {post.post_type === 'marketplace_listing' && post.listing_id && (
+                  <div 
+                    className="mb-3 p-4 bg-muted/30 rounded-xl border border-border cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => navigate(`/marketplace/${post.listing_id}`)}
+                    data-testid={`listing-card-${post.listing_id}`}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      {post.is_auction ? (
+                        <Gavel className="w-4 h-4 text-amber-500" />
+                      ) : (
+                        <ShoppingBag className="w-4 h-4 text-primary" />
+                      )}
+                      <span className="text-xs font-medium text-muted-foreground">
+                        {post.is_auction ? 'Auction Listing' : 'Marketplace Listing'}
+                      </span>
+                    </div>
+                    <h3 className="font-semibold mb-1">{post.listing_title}</h3>
+                    <p className="text-lg font-bold text-primary">
+                      {post.is_auction ? 'Starting at ' : ''}${post.listing_price?.toFixed(2) || '0.00'}
+                    </p>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-xs text-muted-foreground capitalize">{post.listing_category}</span>
+                      <span className="text-xs text-primary flex items-center gap-1">
+                        View Listing <ExternalLink className="w-3 h-3" />
+                      </span>
+                    </div>
+                  </div>
+                )}
+
                 {/* URL Link Preview */}
                 {(() => {
                   const urls = extractUrls(post.content);
