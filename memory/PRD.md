@@ -1,6 +1,50 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 21, 2026 (Session 20 - Part 2)
+## Latest Update: January 21, 2026 (Session 20 - Part 3)
+
+---
+
+## SESSION 20 PART 3: MULTIPLE FEATURES & BUG FIXES ✅
+
+### Features Implemented
+
+1. ✅ **Profile Page - BL Coins Hidden**
+   - BL Coins card and "View Wallet" button removed from Profile page
+   - Referral code section remains visible
+   - All other profile features intact
+
+2. ✅ **MyTeam Page - Daily BL Claim Hidden**
+   - Daily BL Claim section completely hidden
+   - BL coins count removed from stats row
+   - Stats row now shows only Direct (L1) and Indirect (L2) counts
+
+3. ✅ **AI Listing Creator - Toggle Labels Improved**
+   - AuctionSettingsForm toggle now shows "Fixed Price" and "Auction" labels on either side
+   - Clear visual indication of which mode is selected
+
+4. ✅ **Bidding Fix for Logged-in Members**
+   - AuctionBidPanel now uses localStorage token directly
+   - Fixed authentication flow for placing bids
+
+5. ✅ **Public Listing Visibility in Feed**
+   - Backend `POST /api/marketplace/listings` now accepts `share_to_feed` parameter
+   - When `share_to_feed=true`, automatically creates a social feed post
+   - Feed posts include listing card UI with price, category, and link
+   - Works for both fixed price and auction listings
+
+6. ✅ **Seller Identity Privacy**
+   - Previously implemented: username shown instead of real name
+   - Privacy toggle controls visibility across marketplace
+
+7. ✅ **Feed Page - Marketplace Listing Cards**
+   - Feed.jsx now renders special UI for `marketplace_listing` posts
+   - Shows listing card with title, price, category, and "View Listing" link
+   - Different icons for fixed price vs auction listings
+
+**Testing Status:**
+- ✅ **iteration_51.json**: 13/13 backend tests passed (1 skipped)
+- ✅ All frontend features verified
+- ✅ Profile page BL coins hidden verified via screenshot
 
 ---
 
