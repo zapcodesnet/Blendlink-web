@@ -727,8 +727,8 @@ export default function ListingDetail() {
         </div>
       </main>
 
-      {/* Fixed Bottom Actions */}
-      {!isOwnListing && listing.status === 'active' && (
+      {/* Fixed Bottom Actions - Only for fixed price listings */}
+      {!isOwnListing && listing.status === 'active' && !listing.auction?.is_auction && (
         <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border p-4 safe-bottom z-50">
           <div className="max-w-2xl mx-auto">
             {/* Primary Actions Row */}
