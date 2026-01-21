@@ -695,6 +695,75 @@ async def get_following(user_id: str):
     following_ids = [f["following_id"] for f in follows]
     return following_ids
 
+# ============== PRIVACY SETTINGS ==============
+class PrivacySettingsUpdate(BaseModel):
+    is_real_name_private: bool
+
+@users_router.put("/privacy-settings")
+async def update_privacy_settings(data: PrivacySettingsUpdate, current_user: dict = Depends(get_current_user)):
+    """Update user's privacy settings - specifically the real name visibility"""
+    await db.users.update_one(
+        {"user_id": current_user["user_id"]},
+        {"$set": {
+            "is_real_name_private": data.is_real_name_private,
+            "privacy_updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {
+        "success": True,
+        "is_real_name_private": data.is_real_name_private,
+        "message": "Privacy settings updated successfully"
+    }
+
+@users_router.get("/{user_id}/friends")
+async def get_user_friends(user_id: str, current_user: dict = Depends(get_current_user)):
+    """Get list of approved friends for a user"""
+    # Friends are mutual followers (both follow each other)
+    user_following = await db.follows.find({"follower_id": user_id}, {"_id": 0}).to_list(1000)
+    following_ids = set(f["following_id"] for f in user_following)
+    
+    user_followers = await db.follows.find({"following_id": user_id}, {"_id": 0}).to_list(1000)
+    follower_ids = set(f["follower_id"] for f in user_followers)
+    
+    # Mutual followers = friends
+    friend_ids = following_ids.intersection(follower_ids)
+    return list(friend_ids)
+
+async def check_if_friends(user_id: str, viewer_id: str) -> bool:
+    """Check if two users are mutual friends (both follow each other)"""
+    if user_id == viewer_id:
+        return True  # User can see their own name
+    
+    # Check if viewer follows user
+    viewer_follows = await db.follows.find_one({
+        "follower_id": viewer_id,
+        "following_id": user_id
+    })
+    if not viewer_follows:
+        return False
+    
+    # Check if user follows viewer back (mutual)
+    user_follows_back = await db.follows.find_one({
+        "follower_id": user_id,
+        "following_id": viewer_id
+    })
+    return user_follows_back is not None
+
+def get_display_name(user: dict, is_friend: bool = False) -> str:
+    """Get the appropriate display name based on privacy settings and friendship"""
+    if not user:
+        return "Unknown User"
+    
+    is_private = user.get("is_real_name_private", False)
+    
+    if is_private and not is_friend:
+        # Return username for non-friends when privacy is enabled
+        return user.get("username") or f"user_{user.get('user_id', '')[:8]}"
+    
+    # Return real name
+    return user.get("name") or user.get("username") or "User"
+
 # ============== POST ROUTES ==============
 @posts_router.get("/feed")
 async def get_feed(skip: int = 0, limit: int = 20, current_user: dict = Depends(get_current_user)):
