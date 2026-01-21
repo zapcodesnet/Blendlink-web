@@ -643,10 +643,30 @@ async def logout(response: Response):
 
 # ============== USER ROUTES ==============
 @users_router.get("/{user_id}")
-async def get_user(user_id: str):
+async def get_user(user_id: str, request: Request):
     user = await db.users.find_one({"user_id": user_id}, {"_id": 0, "password_hash": 0})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    
+    # Check if viewer is authenticated and if they're friends
+    is_friend = False
+    viewer_id = None
+    try:
+        viewer = await get_current_user(request)
+        viewer_id = viewer.get("user_id")
+        if viewer_id:
+            is_friend = await check_if_friends(user_id, viewer_id)
+    except:
+        pass  # Anonymous viewer
+    
+    # Apply privacy filter if user has privacy enabled
+    if user.get("is_real_name_private", False) and not is_friend:
+        user["display_name"] = user.get("username") or f"user_{user_id[:8]}"
+        user["name_hidden"] = True
+    else:
+        user["display_name"] = user.get("name")
+        user["name_hidden"] = False
+    
     return user
 
 @users_router.get("/{user_id}/posts")
