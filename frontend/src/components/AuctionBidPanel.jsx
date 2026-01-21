@@ -176,7 +176,9 @@ export default function AuctionBidPanel({ listing, onBidPlaced }) {
   };
 
   const handlePlaceBid = async () => {
-    if (!user) {
+    const token = localStorage.getItem('blendlink_token');
+    
+    if (!user || !token) {
       toast.info("Please sign in to place a bid", {
         action: { label: "Sign In", onClick: () => navigate("/login") }
       });
@@ -201,7 +203,7 @@ export default function AuctionBidPanel({ listing, onBidPlaced }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${api.getToken()}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ amount })
       });
