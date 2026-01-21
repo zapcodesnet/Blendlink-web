@@ -1128,17 +1128,62 @@ export default function AIListingCreator() {
         {/* Step 2: Pricing */}
         {step === 2 && (
           <div className="space-y-6">
-            <PriceSuggestion 
-              priceData={priceData}
-              onPriceChange={setUserPrice}
-              currentPrice={userPrice}
+            {/* Auction Settings */}
+            <AuctionSettingsForm
+              auctionSettings={auctionSettings}
+              setAuctionSettings={setAuctionSettings}
+              fixedPrice={userPrice}
+              setFixedPrice={setUserPrice}
             />
+            
+            {/* Only show price suggestion for fixed price */}
+            {!auctionSettings.is_auction && (
+              <PriceSuggestion 
+                priceData={priceData}
+                onPriceChange={setUserPrice}
+                currentPrice={userPrice}
+              />
+            )}
+            
+            {/* Starting bid input for auctions */}
+            {auctionSettings.is_auction && (
+              <div className="bg-card rounded-xl border p-4">
+                <h3 className="font-medium mb-4 flex items-center gap-2">
+                  <Gavel className="w-4 h-4 text-amber-600" />
+                  Starting Bid
+                </h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  AI Suggested: ${priceData?.recommended_price?.toFixed(2) || '0.00'}
+                  {priceData?.price_range && (
+                    <span> (Range: ${priceData.price_range.low} - ${priceData.price_range.high})</span>
+                  )}
+                </p>
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    type="number"
+                    placeholder="Starting bid amount"
+                    value={auctionSettings.starting_bid || userPrice}
+                    onChange={(e) => {
+                      setAuctionSettings(prev => ({...prev, starting_bid: e.target.value}));
+                      setUserPrice(e.target.value);
+                    }}
+                    className="pl-8"
+                    data-testid="starting-bid-input"
+                  />
+                </div>
+              </div>
+            )}
             
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
                 <ChevronLeft className="w-4 h-4 mr-2" /> Back
               </Button>
-              <Button onClick={() => setStep(3)} className="flex-1" disabled={!userPrice}>
+              <Button 
+                onClick={() => setStep(3)} 
+                className="flex-1" 
+                disabled={!userPrice && !auctionSettings.starting_bid}
+              >
                 Continue <ChevronRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
