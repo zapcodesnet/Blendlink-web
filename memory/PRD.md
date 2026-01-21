@@ -1,6 +1,72 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 20, 2026 (Session 18 - Part 3)
+## Latest Update: January 21, 2026 (Session 19)
+
+---
+
+## SESSION 19: GUEST CHECKOUT, OFFER SYSTEM & LEGAL PAGES ✅
+
+### Features Implemented
+
+1. ✅ **Legal Pages Implementation**
+   - Created `/privacypolicy` route with full Privacy Policy content
+   - Created `/termsofservice` route with full Terms of Service content
+   - Added footer links to both pages on Landing page
+   - Updated copyright year to 2026
+
+2. ✅ **"Buy It Now" & "Make an Offer" Buttons**
+   - Redesigned listing detail action bar with prominent buttons
+   - "Buy It Now" (blue gradient) - navigates to checkout
+   - "Make an Offer" (amber outline) - opens offer modal
+   - "Add to Cart" moved to secondary ghost button
+
+3. ✅ **Complete Offer Negotiation System**
+   - $1 refundable deposit via Stripe (held via PaymentIntent)
+   - Counter-offer flow: max 2 offers from buyer + 2 from seller
+   - Accept/Reject/Counter actions
+   - Deposit captured on acceptance, released on rejection/expiry
+   - Full payment checkout for accepted offers
+   - Real-time notifications via WebSocket
+
+4. ✅ **Marketplace Offers Page**
+   - `/marketplace-offers` route (protected)
+   - Tabs: All / Offers I Made / Offers Received
+   - Status filters: All / Pending / Accepted / Rejected / Expired
+   - Offer cards with status badges and turn indicator
+   - Offer negotiation modal for responding
+
+5. ✅ **Guest Checkout with Stripe**
+   - Existing checkout flow verified working
+   - Updated PaymentSuccess page to handle marketplace orders
+   - Updated PaymentCancel page for marketplace orders
+   - Stripe test keys configured in backend
+
+**New Backend Module:**
+- `backend/marketplace_offers.py` - Full offer system with Stripe deposits
+
+**New Frontend Pages & Components:**
+- `frontend/src/pages/PrivacyPolicy.jsx` - Privacy Policy page
+- `frontend/src/pages/TermsOfService.jsx` - Terms of Service page
+- `frontend/src/pages/MarketplaceOffers.jsx` - My Offers dashboard
+- `frontend/src/components/MakeOfferModal.jsx` - Offer modal with Stripe Elements
+
+**New Backend Endpoints:**
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/offers` | POST | Create new offer with $1 deposit |
+| `/api/offers/my-offers` | GET | Get user's offers (as buyer/seller) |
+| `/api/offers/{id}` | GET | Get offer details |
+| `/api/offers/{id}/confirm-deposit` | POST | Confirm deposit payment |
+| `/api/offers/{id}/respond` | POST | Accept/Reject/Counter offer |
+| `/api/offers/{id}/complete-purchase` | POST | Pay for accepted offer |
+| `/api/offers/listing/{id}` | GET | Get offers for a listing (seller) |
+
+**Testing Status:**
+- ✅ **iteration_47.json**: 15/15 backend tests passed (100%)
+- ✅ All 12 frontend features verified via Playwright
+- ✅ Legal pages accessible publicly
+- ✅ Offers API requires authentication
+- ✅ Make an Offer requires login (shows toast for guests)
 
 ---
 
