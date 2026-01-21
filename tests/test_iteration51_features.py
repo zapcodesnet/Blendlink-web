@@ -391,9 +391,16 @@ class TestAuctionSettingsFormLabels:
         assert "Fixed Price" in content, "AuctionSettingsForm should have 'Fixed Price' label"
         
         # Check for 'Auction' label (standalone, not as part of variable names)
-        assert ">Auction<" in content or ">\n              Auction\n" in content or \
-               "Auction</span>" in content or ">Auction" in content, \
-            "AuctionSettingsForm should have 'Auction' label"
+        # Line 74 has just "Auction" as the label text
+        lines = content.split('\n')
+        has_auction_label = False
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            if stripped == "Auction":
+                has_auction_label = True
+                break
+        
+        assert has_auction_label, "AuctionSettingsForm should have standalone 'Auction' label"
         
         # Check that labels are near the Switch component
         assert "<Switch" in content, "AuctionSettingsForm should have Switch component"
@@ -402,7 +409,14 @@ class TestAuctionSettingsFormLabels:
         # Look for pattern: Fixed Price ... Switch ... Auction
         fixed_price_idx = content.find("Fixed Price")
         switch_idx = content.find("<Switch")
-        auction_label_idx = content.find("Auction</span>")
+        
+        # Find the standalone "Auction" label (line 74)
+        auction_label_idx = -1
+        for i, line in enumerate(lines):
+            if line.strip() == "Auction":
+                # Calculate character position
+                auction_label_idx = sum(len(l) + 1 for l in lines[:i])
+                break
         
         assert fixed_price_idx > 0, "Should have 'Fixed Price' label"
         assert switch_idx > 0, "Should have Switch component"
