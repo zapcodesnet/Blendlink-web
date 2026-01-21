@@ -13,6 +13,7 @@ import {
   Gavel, Tag
 } from "lucide-react";
 import MakeOfferModal from "../components/MakeOfferModal";
+import AuctionBidPanel from "../components/AuctionBidPanel";
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
