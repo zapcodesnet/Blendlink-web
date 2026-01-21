@@ -60,7 +60,7 @@ const DepositPaymentForm = ({ clientSecret, onSuccess, onCancel }) => {
         </div>
         <p className="text-xs text-muted-foreground">
           This $1.00 deposit will be held until the offer is resolved. If your offer is rejected or expires, 
-          you'll receive a full refund. If accepted, this amount is applied to your purchase.
+          you&apos;ll receive a full refund. If accepted, this amount is applied to your purchase.
         </p>
       </div>
 
