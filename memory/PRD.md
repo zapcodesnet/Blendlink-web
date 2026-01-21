@@ -1,6 +1,50 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 21, 2026 (Session 19 - Part 2)
+## Latest Update: January 21, 2026 (Session 20)
+
+---
+
+## SESSION 20: SELLER NAME PRIVACY TOGGLE ✅
+
+### Features Implemented
+
+1. ✅ **Privacy Settings Endpoint**
+   - `PUT /api/users/privacy-settings` - Toggle `is_real_name_private` field
+   - Requires authentication
+   - Returns success status and updated setting
+
+2. ✅ **User Profile Privacy Filter**
+   - `GET /api/users/{user_id}` now returns `display_name` and `name_hidden` fields
+   - Non-friends see username when privacy is enabled
+   - Friends (mutual followers) see real name
+   - User can always see their own real name
+
+3. ✅ **Marketplace Privacy Integration**
+   - `GET /api/marketplace/listings` respects seller privacy settings
+   - `GET /api/marketplace/listings/{listing_id}` respects seller privacy settings
+   - Seller info includes `display_name` and `name_hidden` fields
+
+4. ✅ **Friends System**
+   - `GET /api/users/{user_id}/friends` - Get list of mutual followers
+   - `check_if_friends()` helper function for privacy checks
+
+5. ✅ **Frontend UI**
+   - Settings page toggle with `data-testid="toggle-real-name-privacy"`
+   - Privacy banner when enabled showing explanation
+   - Toast notifications on toggle change
+   - Profile header shows username when privacy enabled
+
+**New Backend Endpoints:**
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/users/privacy-settings` | PUT | Toggle real name privacy setting |
+| `/api/users/{user_id}/friends` | GET | Get list of mutual followers |
+
+**Testing Status:**
+- ✅ **iteration_49.json**: 15/15 backend tests passed (100%)
+- ✅ All frontend UI tests passed (100%)
+- ✅ Privacy persists after being set
+- ✅ Marketplace listings respect privacy
 
 ---
 
