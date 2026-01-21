@@ -1,10 +1,57 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 21, 2026 (Session 20)
+## Latest Update: January 21, 2026 (Session 20 - Part 2)
 
 ---
 
-## SESSION 20: SELLER NAME PRIVACY TOGGLE ✅
+## SESSION 20 PART 2: MULTIPLE FEATURE IMPLEMENTATION ✅
+
+### Features Implemented
+
+1. ✅ **Marketplace Back Button**
+   - Added ArrowLeft back button in marketplace header
+   - `data-testid="marketplace-back-btn"` for testing
+   - Navigates using `navigate(-1)`
+
+2. ✅ **Marketplace i18n Integration**
+   - Added `useTranslation` hook to Marketplace.jsx
+   - Title uses `t('marketplace.title')`
+
+3. ✅ **Target Market Countries - Full Names**
+   - Country buttons now show full names with flags
+   - Example: "🇺🇸 United States" instead of "US"
+   - Added `data-testid` for each country button
+
+4. ✅ **Auction Feature in AI Listing Creator**
+   - Integrated AuctionSettingsForm in Step 2 (Pricing)
+   - Fields: duration, starting bid, reserve price, buy it now
+   - Auto-extend and auto-relist toggles
+   - Preview card shows auction info
+
+5. ✅ **Fixed "body stream already read" Error**
+   - Shipping label generation now uses `response.text()` before `JSON.parse()`
+   - Prevents double-reading of response body
+   - Proper error handling with parsed response
+
+6. ✅ **Notification Linking & Redirects**
+   - Added 15+ new notification types (marketplace, offers, auctions, games)
+   - NotificationItem now receives `navigate` prop
+   - Click handlers route based on notification data:
+     - `listing_id` → `/marketplace/{id}`
+     - `order_id` → `/seller-dashboard?tab=orders`
+     - `offer_id` → `/marketplace-offers`
+     - `auction_id` → `/marketplace/{id}`
+     - `post_id` → `/feed#post-{id}`
+     - `user_id` → `/profile/{id}`
+     - `game_id` → `/games`
+
+**Testing Status:**
+- ✅ **iteration_50.json**: 100% frontend tests passed
+- ✅ All 6 features verified working
+
+---
+
+## SESSION 20 PART 1: SELLER NAME PRIVACY TOGGLE ✅
 
 ### Features Implemented
 
