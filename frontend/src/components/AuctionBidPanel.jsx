@@ -227,7 +227,9 @@ export default function AuctionBidPanel({ listing, onBidPlaced }) {
   };
 
   const handleBuyItNow = async () => {
-    if (!user) {
+    const token = localStorage.getItem('blendlink_token');
+    
+    if (!user || !token) {
       toast.info("Please sign in to purchase", {
         action: { label: "Sign In", onClick: () => navigate("/login") }
       });
@@ -242,7 +244,7 @@ export default function AuctionBidPanel({ listing, onBidPlaced }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${api.getToken()}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ amount: buyNowPrice })
       });
