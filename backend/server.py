@@ -1024,10 +1024,19 @@ async def get_listing(listing_id: str):
     listing["seller"] = user
     return listing
 
+class AuctionSettingsModel(BaseModel):
+    is_auction: bool = False
+    duration: str = "1d"  # 1h, 3h, 6h, 12h, 1d, 2d, 3d, 5d, 7d
+    starting_bid: Optional[float] = None
+    reserve_price: Optional[float] = None
+    buy_it_now_price: Optional[float] = None
+    auto_relist: bool = False
+    auto_extend: bool = True
+
 class CreateListing(BaseModel):
     title: str
     description: str
-    price: float
+    price: float  # For fixed price OR starting bid for auctions
     category: str
     images: List[str] = []
     condition: str = "new"
@@ -1037,6 +1046,7 @@ class CreateListing(BaseModel):
     dimensions: Optional[Dict] = None  # e.g., {"length": 12, "width": 9, "height": 6, "unit": "in"}
     tags: List[str] = []
     location: Optional[str] = None  # Seller's ZIP code
+    auction: Optional[AuctionSettingsModel] = None  # Auction settings
 
 @marketplace_router.post("/listings")
 async def create_listing(data: CreateListing, current_user: dict = Depends(get_current_user)):
