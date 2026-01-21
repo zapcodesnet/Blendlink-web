@@ -54,18 +54,26 @@ export default function AuctionSettingsForm({
                 <Tag className="w-5 h-5 text-primary" />
               )}
             </div>
-            <div>
-              <p className="font-medium">{isAuction ? "Auction Listing" : "Fixed Price"}</p>
+            <div className="flex-1">
+              <p className="font-medium">{isAuction ? "Auction Listing" : "Fixed Price Listing"}</p>
               <p className="text-xs text-muted-foreground">
                 {isAuction ? "Let buyers bid on your item" : "Set a fixed price for immediate purchase"}
               </p>
             </div>
           </div>
-          <Switch 
-            checked={isAuction}
-            onCheckedChange={handleToggle}
-            data-testid="auction-toggle"
-          />
+          <div className="flex items-center gap-3">
+            <span className={`text-sm font-medium ${!isAuction ? 'text-primary' : 'text-muted-foreground'}`}>
+              Fixed Price
+            </span>
+            <Switch 
+              checked={isAuction}
+              onCheckedChange={handleToggle}
+              data-testid="auction-toggle"
+            />
+            <span className={`text-sm font-medium ${isAuction ? 'text-amber-600' : 'text-muted-foreground'}`}>
+              Auction
+            </span>
+          </div>
         </div>
       </div>
 
