@@ -606,6 +606,15 @@ export default function AIListingCreator() {
   const [error, setError] = useState(null);
   const [categories, setCategories] = useState([]);
   const [shareToFeed, setShareToFeed] = useState(true); // ON by default per user preference
+  const [auctionSettings, setAuctionSettings] = useState({
+    is_auction: false,
+    duration: "1d",
+    starting_bid: "",
+    reserve_price: "",
+    buy_it_now_price: "",
+    auto_relist: false,
+    auto_extend: true
+  });
   
   // Comprehensive list of target market countries (as requested by user)
   const TARGET_MARKET_COUNTRIES = [
