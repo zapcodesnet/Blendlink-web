@@ -74,6 +74,7 @@ import SubscriptionTiers from "./pages/SubscriptionTiers";
 import Checkout from "./pages/Checkout";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
+import MarketplaceOffers from "./pages/MarketplaceOffers";
 
 // Components
 import BottomNav from "./components/BottomNav";
