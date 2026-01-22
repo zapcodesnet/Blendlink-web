@@ -1355,7 +1355,7 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect, onPracticeSta
           loading={loadingPhotos}
           onSelectPhoto={onPhotoSelect}
           selectedPhotoId={selectedPhoto?.mint_id}
-          onViewPhoto={setLightboxPhoto}
+          onViewPhoto={onViewPhoto}
         />
       </div>
       
