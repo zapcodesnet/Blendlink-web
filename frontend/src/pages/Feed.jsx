@@ -350,13 +350,15 @@ export default function Feed() {
                   ) : null;
                 })()}
 
-                {/* Post Images */}
+                {/* Post Images - Lazy loaded */}
                 {post.images?.length > 0 && (
                   <div className="mb-3 rounded-xl overflow-hidden">
                     <img 
                       src={post.images[0]} 
                       alt="Post" 
                       className="w-full object-cover max-h-96"
+                      loading="lazy"
+                      decoding="async"
                     />
                   </div>
                 )}
