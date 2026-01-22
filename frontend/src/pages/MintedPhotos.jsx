@@ -284,63 +284,56 @@ const PhotoCard = ({ photo, onSelect, onUpdate, viewMode, onViewFull }) => {
             </div>
           )}
           
-          {/* Overlay badges */}
-          <div className="absolute top-2 left-2 flex gap-1">
+          {/* Click to view full image icon - only shows on hover */}
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <div className="bg-white/20 backdrop-blur-sm rounded-full p-3">
+              <Maximize2 className="w-6 h-6 text-white" />
+            </div>
+          </div>
+        </div>
+        
+        {/* ALL INFO BELOW THE IMAGE - Clean, no overlays on photo */}
+        <div className="p-3 space-y-2">
+          {/* Name and privacy */}
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-white truncate flex-1">{photo.name}</h3>
+            {photo.is_private ? (
+              <Lock className="w-4 h-4 text-gray-500 ml-2" />
+            ) : (
+              <Globe className="w-4 h-4 text-green-500 ml-2" />
+            )}
+          </div>
+          
+          {/* Dollar value and type */}
+          <div className="flex items-center justify-between">
+            <span className="text-yellow-400 font-bold text-lg">
+              {formatDollarValue(photo.dollar_value)}
+            </span>
             <span className={`px-2 py-0.5 rounded-full text-xs font-bold bg-gradient-to-r ${scenery.color} text-white`}>
               {scenery.label}
             </span>
           </div>
           
-          <div className="absolute top-2 right-2">
-            {photo.is_private ? (
-              <Lock className="w-5 h-5 text-gray-400" />
-            ) : (
-              <Globe className="w-5 h-5 text-green-400" />
-            )}
-          </div>
-          
-          {/* Value badge */}
-          <div className="absolute bottom-2 left-2 right-2">
-            <div className="bg-black/70 backdrop-blur-sm rounded-lg p-2">
-              <div className="flex items-center justify-between">
-                <span className="text-yellow-400 font-bold text-lg">
-                  {formatDollarValue(photo.dollar_value)}
-                </span>
-                <div className="flex items-center gap-1 text-purple-400">
-                  <Zap className="w-4 h-4" />
-                  <span className="font-bold">{photo.power?.toFixed(0) || 100}</span>
-                </div>
-              </div>
+          {/* Power and Level */}
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-1 text-purple-400">
+              <Zap className="w-4 h-4" />
+              <span className="font-bold">{photo.power?.toFixed(0) || 100}</span>
             </div>
-          </div>
-          
-          {/* Hover overlay */}
-          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <Button className="bg-purple-600 hover:bg-purple-700">
-              <Swords className="w-4 h-4 mr-2" />
-              Battle
-            </Button>
-          </div>
-        </div>
-        
-        {/* Info */}
-        <div className="p-3">
-          <h3 className="font-semibold text-white truncate mb-1">{photo.name}</h3>
-          <div className="flex items-center justify-between text-sm text-gray-400">
-            <span>Lvl {photo.level || 1}</span>
-            <span className="flex items-center gap-1">
+            <span className="text-gray-400">Lvl {photo.level || 1}</span>
+            <span className="flex items-center gap-1 text-gray-400">
               <Trophy className="w-3 h-3" />
-              {photo.battles_won || 0}W / {photo.battles_lost || 0}L
+              {photo.battles_won || 0}W/{photo.battles_lost || 0}L
             </span>
           </div>
           
           {/* Strength/Weakness */}
-          <div className="mt-2 flex gap-2 text-xs">
+          <div className="flex gap-2 text-xs flex-wrap">
             <span className="px-2 py-0.5 rounded bg-green-500/20 text-green-400">
-              +25% vs {SCENERY_CONFIG[photo.strength_vs]?.label || 'Water'}
+              +25% {SCENERY_CONFIG[photo.strength_vs]?.label || 'Water'}
             </span>
             <span className="px-2 py-0.5 rounded bg-red-500/20 text-red-400">
-              -25% vs {SCENERY_CONFIG[photo.weakness_vs]?.label || 'Man-made'}
+              -25% {SCENERY_CONFIG[photo.weakness_vs]?.label || 'Man-made'}
             </span>
           </div>
         </div>
