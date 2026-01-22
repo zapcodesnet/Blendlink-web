@@ -787,62 +787,82 @@ def get_display_name(user: dict, is_friend: bool = False) -> str:
 # ============== POST ROUTES ==============
 @posts_router.get("/feed")
 async def get_feed(skip: int = 0, limit: int = 20, current_user: dict = Depends(get_current_user)):
-    following = await db.follows.find({"follower_id": current_user["user_id"]}, {"_id": 0}).to_list(1000)
+    """Optimized feed endpoint with efficient querying"""
+    # Get following list with projection for faster query
+    following = await db.follows.find(
+        {"follower_id": current_user["user_id"]}, 
+        {"_id": 0, "following_id": 1}
+    ).to_list(500)  # Reasonable limit
     following_ids = [f["following_id"] for f in following]
     following_ids.append(current_user["user_id"])
     
+    # Fetch posts with optimized query
     posts = await db.posts.find(
-        {"user_id": {"$in": following_ids}, "is_story": False},
+        {"user_id": {"$in": following_ids}, "is_story": {"$ne": True}},
         {"_id": 0}
     ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
     
-    # Batch fetch user data and likes to avoid N+1 queries
-    if posts:
-        user_ids = list(set(post["user_id"] for post in posts))
-        users = await db.users.find(
-            {"user_id": {"$in": user_ids}}, 
-            {"_id": 0, "password_hash": 0}
-        ).to_list(len(user_ids))
-        users_map = {u["user_id"]: u for u in users}
-        
-        post_ids = [post["post_id"] for post in posts]
-        likes = await db.likes.find({
-            "post_id": {"$in": post_ids},
-            "user_id": current_user["user_id"]
-        }, {"_id": 0}).to_list(len(post_ids))
-        liked_posts = {like["post_id"] for like in likes}
-        
-        for post in posts:
-            post["user"] = users_map.get(post["user_id"])
-            post["liked"] = post["post_id"] in liked_posts
+    if not posts:
+        return []
+    
+    # Batch fetch user data and likes in parallel-ish manner
+    user_ids = list(set(post["user_id"] for post in posts))
+    post_ids = [post["post_id"] for post in posts]
+    
+    # Fetch users and likes concurrently
+    users_task = db.users.find(
+        {"user_id": {"$in": user_ids}}, 
+        {"_id": 0, "user_id": 1, "name": 1, "username": 1, "avatar": 1, "is_real_name_private": 1}
+    ).to_list(len(user_ids))
+    
+    likes_task = db.likes.find({
+        "post_id": {"$in": post_ids},
+        "user_id": current_user["user_id"]
+    }, {"_id": 0, "post_id": 1}).to_list(len(post_ids))
+    
+    users, likes = await asyncio.gather(users_task, likes_task)
+    
+    users_map = {u["user_id"]: u for u in users}
+    liked_posts = {like["post_id"] for like in likes}
+    
+    for post in posts:
+        post["user"] = users_map.get(post["user_id"])
+        post["liked"] = post["post_id"] in liked_posts
     
     return posts
 
 @posts_router.get("/explore")
 async def explore_posts(skip: int = 0, limit: int = 20):
+    """Optimized explore endpoint"""
     posts = await db.posts.find(
-        {"is_story": False},
+        {"is_story": {"$ne": True}},
         {"_id": 0}
     ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
     
-    # Batch fetch user data to avoid N+1 queries
-    if posts:
-        user_ids = list(set(post["user_id"] for post in posts))
-        users = await db.users.find(
-            {"user_id": {"$in": user_ids}}, 
-            {"_id": 0, "password_hash": 0}
-        ).to_list(len(user_ids))
-        users_map = {u["user_id"]: u for u in users}
-        
-        for post in posts:
-            post["user"] = users_map.get(post["user_id"])
+    if not posts:
+        return []
+    
+    # Batch fetch user data
+    user_ids = list(set(post["user_id"] for post in posts))
+    users = await db.users.find(
+        {"user_id": {"$in": user_ids}}, 
+        {"_id": 0, "user_id": 1, "name": 1, "username": 1, "avatar": 1}
+    ).to_list(len(user_ids))
+    users_map = {u["user_id"]: u for u in users}
+    
+    for post in posts:
+        post["user"] = users_map.get(post["user_id"])
     
     return posts
 
 @posts_router.get("/stories")
 async def get_stories(current_user: dict = Depends(get_current_user)):
-    following = await db.follows.find({"follower_id": current_user["user_id"]}, {"_id": 0}).to_list(1000)
-    following_ids = [f["following_id"] for f in following]
+    """Optimized stories endpoint"""
+    # Get following with minimal projection
+    following = await db.follows.find(
+        {"follower_id": current_user["user_id"]}, 
+        {"_id": 0, "following_id": 1}
+    ).to_list(500)
     following_ids.append(current_user["user_id"])
     
     now = datetime.now(timezone.utc)
