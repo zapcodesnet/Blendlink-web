@@ -74,8 +74,12 @@ div[class*="emergent"] {
 }
 
 html {
-  scroll-behavior: smooth;
+  /* Removed scroll-behavior: smooth as it can cause lag on mobile */
   -webkit-tap-highlight-color: transparent;
+  /* Enable smooth momentum scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
+  /* Allow natural touch scrolling */
+  touch-action: manipulation;
 }
 
 body {
@@ -86,7 +90,13 @@ body {
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
   min-height: -webkit-fill-available;
-  overscroll-behavior-y: none;
+  /* Allow natural overscroll for smooth mobile scrolling */
+  overscroll-behavior-y: auto;
+  /* Enable momentum scrolling */
+  -webkit-overflow-scrolling: touch;
+  /* Ensure scrolling works */
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 h1, h2, h3, h4, h5, h6 {
