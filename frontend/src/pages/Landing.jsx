@@ -462,9 +462,6 @@ export default function Landing() {
                 I Have an Account
               </Button>
             </div>
-            
-            {/* Video Hero - Below CTA buttons */}
-            <VideoHero />
           </div>
         </div>
       </section>
