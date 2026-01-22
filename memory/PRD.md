@@ -1,6 +1,71 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 22, 2026 (Session 20 - Part 8)
+## Latest Update: January 22, 2026 (Session 20 - Part 9)
+
+---
+
+## SESSION 20 PART 9: COMPLETE MINTING FIX + IMAGE QUALITY IMPROVEMENTS ✅
+
+### Critical Fixes Applied
+
+1. ✅ **"Minting Failed" Bug - COMPLETELY FIXED**
+   - **Root Cause #1**: `api.js` was JSON.stringify-ing FormData, causing 422 errors
+   - **Root Cause #2**: Large images exceeded MongoDB 16MB BSON limit
+   - **Fixes**:
+     - Updated `api.post()` to handle FormData properly without stringification
+     - Added automatic image resizing (max 2048px dimension)
+     - Added automatic JPEG compression for large images
+   - **Result**: All image sizes now mint successfully (tested with 29MB image)
+
+2. ✅ **Image Display/Quality Bug - COMPLETELY FIXED**
+   - **Clean Image Display**: Removed ALL overlays from photos
+   - **Stats Below Image**: All info (dollar value, type, power, etc.) now displayed BELOW the photo
+   - **Original Quality Preserved**: No markings, numbers, letters, watermarks on images
+   - **Full Image Lightbox**: Click any photo to view full-size in modal
+
+3. ✅ **Use as Profile Picture Feature - ADDED**
+   - New endpoint: `PUT /api/users/me/profile-picture`
+   - Users can set any minted photo as their profile picture
+   - Profile picture synced across all pages
+
+### Code Changes
+
+**api.js - FormData Handling Fix:**
+```javascript
+// Now properly handles FormData uploads without JSON stringification
+if (data instanceof FormData) {
+  const headers = { Authorization: Bearer ${token} };
+  const response = await fetch(url, { method: 'POST', headers, body: data });
+  // ... proper error handling
+}
+```
+
+**minting_routes.py - Large Image Compression:**
+```python
+# Auto-resize large images
+if width > MAX_DIMENSION or height > MAX_DIMENSION:
+    ratio = min(MAX_DIMENSION / width, MAX_DIMENSION / height)
+    img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
+# Auto-compress if too large for MongoDB
+if estimated_base64_size > MAX_BASE64_SIZE:
+    img.save(buffer, format='JPEG', quality=85, optimize=True)
+```
+
+**MintedPhotos.jsx - Clean Card Design:**
+- Image displayed without ANY overlays
+- All stats (dollar value, type, power, level, strength/weakness) below image
+- Click-to-view-full-image lightbox with "Use as Profile Picture" button
+
+### Testing Results
+- ✅ E2E Test passed: Photo minted, BL deducted, image displays correctly
+- ✅ Large image (29MB) compressed and minted successfully
+- ✅ User's "Ocean view" photo minted with $163.1M value
+- ✅ Lightbox opens on click, shows full image with all stats below
+- ✅ "Use as Profile Picture" button functional
+
+### Daily Limit Updated
+- Changed from 3 to 10 mints/day for free users
 
 ---
 
