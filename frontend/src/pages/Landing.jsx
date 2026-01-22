@@ -6,7 +6,7 @@ import LanguageSelector from "../components/LanguageSelector";
 import { 
   Users, ShoppingBag, Home, Briefcase, Gamepad2, Gift, 
   Coins, Share2, ChevronRight, Smartphone, Bell, Zap,
-  ChevronLeft, Eye, ShoppingCart, Play, Pause, Volume2, VolumeX
+  ChevronLeft, Eye, ShoppingCart
 } from "lucide-react";
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
