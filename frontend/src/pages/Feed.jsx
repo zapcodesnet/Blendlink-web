@@ -213,13 +213,22 @@ export default function Feed() {
               <span className="text-xs mt-1 text-muted-foreground">Add Story</span>
             </button>
             
+            {/* Story Skeletons while loading */}
+            {storiesLoading && (
+              <>
+                <StorySkeleton />
+                <StorySkeleton />
+                <StorySkeleton />
+              </>
+            )}
+            
             {/* User Stories */}
-            {stories.map((story) => (
+            {!storiesLoading && stories.map((story) => (
               <div key={story.post_id} className="flex flex-col items-center flex-shrink-0">
                 <div className="story-ring">
                   <div className="story-ring-inner">
                     <Avatar className="w-14 h-14">
-                      <AvatarImage src={story.user?.avatar || story.user?.picture} />
+                      <AvatarImage src={story.user?.avatar || story.user?.picture} loading="lazy" />
                       <AvatarFallback>{story.user?.name?.[0]}</AvatarFallback>
                     </Avatar>
                   </div>
@@ -249,11 +258,27 @@ export default function Feed() {
           </div>
         </div>
 
+        {/* Refresh Button */}
+        <div className="px-4 py-2 flex justify-center">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="text-muted-foreground"
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Refreshing...' : 'Refresh Feed'}
+          </Button>
+        </div>
+
         {/* Posts */}
         <div className="divide-y divide-border/50">
           {loading ? (
-            <div className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <div className="p-4 space-y-4">
+              <PostSkeleton />
+              <PostSkeleton />
+              <PostSkeleton />
             </div>
           ) : posts.length === 0 ? (
             <ComingSoonPlaceholder
