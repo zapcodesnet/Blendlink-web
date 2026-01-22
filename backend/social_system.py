@@ -343,39 +343,38 @@ async def get_social_feed(
     limit: int = 20,
     current_user: dict = Depends(get_current_user)
 ):
-    """Get personalized social feed - posts from friends, groups, pages"""
+    """Get personalized social feed - optimized with batch queries"""
     user_id = current_user["user_id"]
     
-    # Get user's friends
-    friendships = await db.friendships.find({
+    # Batch fetch all relationship data in parallel
+    friendships_task = db.friendships.find({
         "$or": [{"user_id_1": user_id}, {"user_id_2": user_id}]
-    }).to_list(1000)
+    }, {"_id": 0, "user_id_1": 1, "user_id_2": 1}).to_list(500)
     
-    friend_ids = []
-    for f in friendships:
-        friend_ids.append(f["user_id_1"] if f["user_id_2"] == user_id else f["user_id_2"])
+    page_subs_task = db.page_subscriptions.find(
+        {"user_id": user_id}, {"_id": 0, "page_id": 1}
+    ).to_list(50)
     
-    # Get subscribed pages
-    page_subs = await db.page_subscriptions.find({"user_id": user_id}).to_list(100)
+    group_memberships_task = db.group_members.find(
+        {"user_id": user_id}, {"_id": 0, "group_id": 1}
+    ).to_list(50)
+    
+    friendships, page_subs, group_memberships = await asyncio.gather(
+        friendships_task, page_subs_task, group_memberships_task
+    )
+    
+    friend_ids = [f["user_id_1"] if f["user_id_2"] == user_id else f["user_id_2"] for f in friendships]
     page_ids = [s["page_id"] for s in page_subs]
-    
-    # Get joined groups
-    group_memberships = await db.group_members.find({"user_id": user_id}).to_list(100)
     group_ids = [m["group_id"] for m in group_memberships]
     
     # Build query for feed posts
     feed_query = {
         "$or": [
-            # Own posts
             {"user_id": user_id},
-            # Friends' public/friends-only posts
             {"user_id": {"$in": friend_ids}, "privacy": {"$in": [PostPrivacy.PUBLIC, PostPrivacy.FRIENDS]}},
-            # Public posts from others
             {"privacy": PostPrivacy.PUBLIC},
-            # Posts from subscribed pages
-            {"page_id": {"$in": page_ids}},
-            # Posts from joined groups
-            {"group_id": {"$in": group_ids}}
+            {"page_id": {"$in": page_ids}} if page_ids else {"page_id": None},
+            {"group_id": {"$in": group_ids}} if group_ids else {"group_id": None}
         ]
     }
     
@@ -384,21 +383,34 @@ async def get_social_feed(
         {"_id": 0}
     ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
     
-    # Enrich posts with user info and check if current user reacted
-    enriched_posts = []
-    for post in posts:
-        post = await enrich_post_with_user(post)
-        
-        # Check if user has reacted
-        user_reaction = await db.reactions.find_one({
-            "post_id": post["post_id"],
-            "user_id": user_id
-        }, {"_id": 0})
-        post["user_reaction"] = user_reaction.get("reaction_type") if user_reaction else None
-        
-        enriched_posts.append(post)
+    if not posts:
+        return []
     
-    return enriched_posts
+    # Batch fetch user data and reactions
+    post_user_ids = list(set(post.get("user_id") for post in posts if post.get("user_id")))
+    post_ids = [post["post_id"] for post in posts]
+    
+    users_task = db.users.find(
+        {"user_id": {"$in": post_user_ids}},
+        {"_id": 0, "user_id": 1, "name": 1, "username": 1, "avatar": 1}
+    ).to_list(len(post_user_ids))
+    
+    reactions_task = db.reactions.find(
+        {"post_id": {"$in": post_ids}, "user_id": user_id},
+        {"_id": 0, "post_id": 1, "reaction_type": 1}
+    ).to_list(len(post_ids))
+    
+    users, reactions = await asyncio.gather(users_task, reactions_task)
+    
+    users_map = {u["user_id"]: u for u in users}
+    reactions_map = {r["post_id"]: r.get("reaction_type") for r in reactions}
+    
+    # Enrich posts
+    for post in posts:
+        post["user"] = users_map.get(post.get("user_id"))
+        post["user_reaction"] = reactions_map.get(post["post_id"])
+    
+    return posts
 
 @social_router.post("/posts")
 async def create_post(
