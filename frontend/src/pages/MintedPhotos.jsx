@@ -159,8 +159,8 @@ const formatDollarValue = (value) => {
   return `$${value.toLocaleString()}`;
 };
 
-// Photo Card Component
-const PhotoCard = ({ photo, onSelect, onUpdate, viewMode }) => {
+// Photo Card Component - Clean image display, all stats below
+const PhotoCard = ({ photo, onSelect, onUpdate, viewMode, onViewFull }) => {
   const [showMenu, setShowMenu] = useState(false);
   const scenery = SCENERY_CONFIG[photo.scenery_type] || SCENERY_CONFIG.natural;
   
