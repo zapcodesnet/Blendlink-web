@@ -536,15 +536,36 @@ const MintPhotoDialog = ({ isOpen, onClose, onMint, mintStatus }) => {
 
 // Main Component
 const MintedPhotos = () => {
-  const { user } = useContext(AuthContext);
+  const { user, setUser } = useContext(AuthContext);
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('grid');
   const [mintDialogOpen, setMintDialogOpen] = useState(false);
   const [mintStatus, setMintStatus] = useState(null);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [lightboxPhoto, setLightboxPhoto] = useState(null);  // For full image view
   
   const { isAnimating, startAnimation, handleComplete, MintAnimationComponent } = useMintAnimation();
+  
+  // Handle setting photo as profile picture
+  const handleSetProfilePicture = async (photo) => {
+    try {
+      const response = await api.put('/users/me/profile-picture', { 
+        image_url: photo.image_url,
+        mint_id: photo.mint_id 
+      });
+      if (response.data) {
+        toast.success('Profile picture updated!');
+        // Update local user context
+        if (setUser && user) {
+          setUser({ ...user, profile_picture: photo.image_url });
+        }
+        setLightboxPhoto(null);
+      }
+    } catch (err) {
+      toast.error(err.message || 'Failed to update profile picture');
+    }
+  };
   
   const fetchPhotos = async () => {
     try {
