@@ -394,7 +394,7 @@ const PhotoSelectionScreen = ({ photos, loading, onSelectPhoto, selectedPhotoId,
                   data-testid={`photo-select-${photo.mint_id}`}
                 >
                   {/* Photo thumbnail - show actual image if available */}
-                  <div className={`w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 ${!photo.image_url ? `bg-gradient-to-br ${scenery.color}` : 'bg-gray-900'}`}>
+                  <div className={`relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 ${!photo.image_url ? `bg-gradient-to-br ${scenery.color}` : 'bg-gray-900'}`}>
                     {photo.image_url ? (
                       <img 
                         src={photo.image_url} 
