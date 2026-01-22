@@ -67,11 +67,15 @@ class TestMintingPhotoDisplay:
         
         data = response.json()
         assert "can_mint" in data, "Should have can_mint field"
-        assert "bl_coins" in data, "Should have bl_coins field"
         assert "mints_today" in data, "Should have mints_today field"
         assert "daily_limit" in data, "Should have daily_limit field"
         
-        print(f"✓ Minting status: can_mint={data['can_mint']}, bl_coins={data['bl_coins']}, mints_today={data['mints_today']}/{data['daily_limit']}")
+        # bl_coins is only returned when can_mint is true
+        if data.get("can_mint"):
+            assert "bl_coins" in data, "Should have bl_coins field when can_mint is true"
+            print(f"✓ Minting status: can_mint={data['can_mint']}, bl_coins={data['bl_coins']}, mints_today={data['mints_today']}/{data['daily_limit']}")
+        else:
+            print(f"✓ Minting status: can_mint={data['can_mint']}, reason={data.get('reason')}, mints_today={data['mints_today']}/{data['daily_limit']}")
     
     def test_03_get_user_photos_endpoint(self):
         """Test getting user's minted photos"""
