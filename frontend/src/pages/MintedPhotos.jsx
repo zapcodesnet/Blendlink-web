@@ -4,7 +4,7 @@ import {
   Camera, Sparkles, Upload, Image, Coins, Trophy, 
   Zap, Lock, Globe, FolderPlus, MoreVertical,
   Edit2, Trash2, Share2, Eye, EyeOff, Grid, List,
-  ChevronRight, Star, Swords, TrendingUp
+  ChevronRight, Star, Swords, TrendingUp, X, User, Maximize2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../services/api';
@@ -16,6 +16,134 @@ import { Label } from '../components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+
+// Full Image Lightbox Modal Component
+const ImageLightbox = ({ photo, isOpen, onClose, onSetProfilePic }) => {
+  if (!isOpen || !photo) return null;
+  
+  const scenery = SCENERY_CONFIG[photo.scenery_type] || SCENERY_CONFIG.natural;
+  
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.9, opacity: 0 }}
+          className="relative max-w-4xl w-full max-h-[90vh] bg-gray-900 rounded-2xl overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
+          >
+            <X className="w-6 h-6 text-white" />
+          </button>
+          
+          {/* Full-size image - NO overlays, clean display */}
+          <div className="relative bg-black flex items-center justify-center" style={{ maxHeight: '60vh' }}>
+            {photo.image_url ? (
+              <img 
+                src={photo.image_url} 
+                alt={photo.name}
+                className="max-w-full max-h-[60vh] object-contain"
+              />
+            ) : (
+              <div className={`w-full h-64 bg-gradient-to-br ${scenery.color} flex items-center justify-center`}>
+                <span className="text-8xl opacity-50">{scenery.icon}</span>
+              </div>
+            )}
+          </div>
+          
+          {/* All info BELOW the image */}
+          <div className="p-6 space-y-4">
+            {/* Title and privacy */}
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-white">{photo.name}</h2>
+              <div className="flex items-center gap-2">
+                {photo.is_private ? (
+                  <span className="flex items-center gap-1 text-gray-400 text-sm">
+                    <Lock className="w-4 h-4" /> Private
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 text-green-400 text-sm">
+                    <Globe className="w-4 h-4" /> Public
+                  </span>
+                )}
+              </div>
+            </div>
+            
+            {/* Stats row */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-gray-800 rounded-lg p-3 text-center">
+                <p className="text-xs text-gray-400 mb-1">Dollar Value</p>
+                <p className="text-xl font-bold text-yellow-400">{formatDollarValue(photo.dollar_value)}</p>
+              </div>
+              <div className="bg-gray-800 rounded-lg p-3 text-center">
+                <p className="text-xs text-gray-400 mb-1">Type</p>
+                <p className={`text-lg font-bold bg-gradient-to-r ${scenery.color} bg-clip-text text-transparent`}>
+                  {scenery.label}
+                </p>
+              </div>
+              <div className="bg-gray-800 rounded-lg p-3 text-center">
+                <p className="text-xs text-gray-400 mb-1">Power</p>
+                <p className="text-xl font-bold text-purple-400">{photo.power?.toFixed(0) || 100}</p>
+              </div>
+              <div className="bg-gray-800 rounded-lg p-3 text-center">
+                <p className="text-xs text-gray-400 mb-1">Level</p>
+                <p className="text-xl font-bold text-white">{photo.level || 1}</p>
+              </div>
+            </div>
+            
+            {/* Strength/Weakness */}
+            <div className="flex flex-wrap gap-3">
+              <span className="px-3 py-1.5 rounded-lg bg-green-500/20 text-green-400 text-sm font-medium">
+                +25% vs {SCENERY_CONFIG[photo.strength_vs]?.label || 'Water'}
+              </span>
+              <span className="px-3 py-1.5 rounded-lg bg-red-500/20 text-red-400 text-sm font-medium">
+                -25% vs {SCENERY_CONFIG[photo.weakness_vs]?.label || 'Man-made'}
+              </span>
+            </div>
+            
+            {/* Battle stats */}
+            <div className="flex items-center gap-4 text-sm text-gray-400">
+              <span className="flex items-center gap-1">
+                <Trophy className="w-4 h-4" />
+                {photo.battles_won || 0}W / {photo.battles_lost || 0}L
+              </span>
+            </div>
+            
+            {/* Action buttons */}
+            <div className="flex flex-wrap gap-3 pt-2">
+              <Button
+                onClick={() => onSetProfilePic?.(photo)}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+              >
+                <User className="w-4 h-4 mr-2" />
+                Use as Profile Picture
+              </Button>
+              <Button variant="outline" className="border-gray-600">
+                <Swords className="w-4 h-4 mr-2" />
+                Battle
+              </Button>
+              <Button variant="outline" className="border-gray-600">
+                <Share2 className="w-4 h-4 mr-2" />
+                Share
+              </Button>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
 
 // Scenery type colors and icons
 const SCENERY_CONFIG = {
