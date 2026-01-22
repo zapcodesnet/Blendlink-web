@@ -556,9 +556,14 @@ const MintedPhotos = () => {
       });
       if (response.data) {
         toast.success('Profile picture updated!');
-        // Update local user context
+        // Update local user context with mint_id reference only (not the full base64)
+        // The actual image will be fetched from the server when needed
         if (setUser && user) {
-          setUser({ ...user, profile_picture: photo.image_url });
+          setUser({ 
+            ...user, 
+            profile_picture_mint_id: photo.mint_id,
+            profile_picture_stored: false // Flag to fetch from server
+          });
         }
         setLightboxPhoto(null);
       }
