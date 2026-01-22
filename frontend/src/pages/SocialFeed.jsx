@@ -28,6 +28,21 @@ import {
   Image as ImageIcon,
   Video,
   Music,
+  Send,
+  X,
+  Globe,
+  Users,
+  Lock,
+  Sparkles,
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+  Coins,
+  Camera,
+  Loader2,
+} from "lucide-react";
+
+const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
 // Post loading skeleton for better perceived performance
 const PostSkeleton = () => (
@@ -61,21 +76,6 @@ const StorySkeleton = () => (
     <div className="h-3 w-12 bg-muted rounded"></div>
   </div>
 );
-  Send,
-  X,
-  Globe,
-  Users,
-  Lock,
-  Sparkles,
-  Plus,
-  ChevronLeft,
-  ChevronRight,
-  Coins,
-  Camera,
-  Loader2,
-} from "lucide-react";
-
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
 // Privacy options
 const PRIVACY_OPTIONS = [
