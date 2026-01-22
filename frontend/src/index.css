@@ -154,10 +154,12 @@ button:active, a:active {
   transform: scale(0.97);
 }
 
-/* Touch-friendly targets */
+/* Touch-friendly targets - IMPORTANT: Don't block scrolling */
 .touch-target {
   min-height: 44px;
   min-width: 44px;
+  /* Allow vertical scrolling to pass through */
+  touch-action: manipulation;
 }
 
 /* Story circle */
