@@ -11,7 +11,7 @@ import {
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
-// Video Hero Component
+// Video Hero Component - Full video display without cropping
 const VideoHero = () => {
   const videoRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -42,18 +42,24 @@ const VideoHero = () => {
   
   return (
     <div className="w-full max-w-4xl mx-auto px-4 mt-8 md:mt-12">
-      <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-primary/10 bg-black/5">
-        {/* Video container with aspect ratio */}
-        <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+      <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-primary/10 bg-black">
+        {/* Video container - natural aspect ratio, no cropping */}
+        <div className="relative w-full">
           <video
             ref={videoRef}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="w-full h-auto block"
+            style={{ 
+              maxHeight: '70vh',
+              objectFit: 'contain',
+              backgroundColor: '#000'
+            }}
             poster={POSTER_URL}
             autoPlay
             muted
             loop
             playsInline
             preload="auto"
+            controls
             onLoadedData={() => setIsLoaded(true)}
             onCanPlay={() => setIsLoaded(true)}
             onError={(e) => console.error('Video error:', e.target.error)}
@@ -65,43 +71,41 @@ const VideoHero = () => {
           
           {/* Loading overlay */}
           {!isLoaded && (
-            <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
+            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
               <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
           )}
           
-          {/* Video controls overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300">
-            <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center justify-between">
-              <button
-                onClick={togglePlay}
-                className="p-2 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors"
-                data-testid="video-play-btn"
-              >
-                {isPlaying ? (
-                  <Pause className="w-5 h-5 text-white" />
-                ) : (
-                  <Play className="w-5 h-5 text-white" />
-                )}
-              </button>
-              <button
-                onClick={toggleMute}
-                className="p-2 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors"
-                data-testid="video-mute-btn"
-              >
-                {isMuted ? (
-                  <VolumeX className="w-5 h-5 text-white" />
-                ) : (
-                  <Volume2 className="w-5 h-5 text-white" />
-                )}
-              </button>
-            </div>
+          {/* Custom controls overlay - only show when no native controls */}
+          <div className="absolute bottom-0 left-0 right-0 p-3 flex items-center justify-between bg-gradient-to-t from-black/60 to-transparent pointer-events-none">
+            <button
+              onClick={togglePlay}
+              className="p-2 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors pointer-events-auto"
+              data-testid="video-play-btn"
+            >
+              {isPlaying ? (
+                <Pause className="w-5 h-5 text-white" />
+              ) : (
+                <Play className="w-5 h-5 text-white" />
+              )}
+            </button>
+            <button
+              onClick={toggleMute}
+              className="p-2 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors pointer-events-auto"
+              data-testid="video-mute-btn"
+            >
+              {isMuted ? (
+                <VolumeX className="w-5 h-5 text-white" />
+              ) : (
+                <Volume2 className="w-5 h-5 text-white" />
+              )}
+            </button>
           </div>
         </div>
         
         {/* Caption below video */}
-        <div className="p-4 bg-gradient-to-r from-primary/5 to-amber-500/5 text-center">
-          <p className="text-sm text-muted-foreground">
+        <div className="p-3 sm:p-4 bg-gradient-to-r from-primary/5 to-amber-500/5 text-center">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             🚀 See Blendlink in action — Social, Shop, Play & Earn!
           </p>
         </div>
