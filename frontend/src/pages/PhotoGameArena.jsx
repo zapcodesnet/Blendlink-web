@@ -413,6 +413,16 @@ const PhotoSelectionScreen = ({ photos, loading, onSelectPhoto, selectedPhotoId,
                         </motion.span>
                       </div>
                     )}
+                    {/* View full image button overlay */}
+                    {photo.image_url && (
+                      <button
+                        onClick={(e) => handleViewFullImage(e, photo)}
+                        className="absolute inset-0 bg-black/0 hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 hover:opacity-100"
+                        title="View full image"
+                      >
+                        <Maximize2 className="w-5 h-5 text-white" />
+                      </button>
+                    )}
                   </div>
                   
                   <div className="flex-1 min-w-0">
