@@ -1690,6 +1690,7 @@ const PhotoGameArena = () => {
                 selectedPhoto={selectedPhoto}
                 onPhotoSelect={setSelectedPhoto}
                 onPracticeStart={handlePracticeStart}
+                onViewPhoto={setLightboxPhoto}
               />
             </motion.div>
           )}
