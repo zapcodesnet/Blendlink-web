@@ -1,6 +1,75 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 22, 2026 (Session 20 - Part 9)
+## Latest Update: January 22, 2026 (Session 20 - Part 10)
+
+---
+
+## SESSION 20 PART 10: PHOTO GAME IMAGE DISPLAY + LOCALSTORAGE FIX ✅
+
+### Bug Fixes Applied
+
+1. ✅ **Battle Selection Photo Thumbnails - FIXED**
+   - **Root Cause**: `PhotoGameArena.jsx` was always rendering gradient placeholders with emoji icons instead of using `photo.image_url`
+   - **Fix**: Updated `PhotoSelectionScreen` component to render actual `<img>` tags when `photo.image_url` exists
+   - **Result**: Minted photos now display their actual images in battle selection
+
+2. ✅ **Battle Card Photo Display - FIXED**
+   - **Root Cause**: `BattlePhotoCard` component rendered only gradients, never actual images
+   - **Fix**: Updated to render `<img>` tag when `photo.image_url` is available
+   - **Result**: Photos display correctly during battles
+
+3. ✅ **Full Image Lightbox - ADDED**
+   - Added `PhotoLightbox` component for viewing full-size images on click
+   - Shows all photo stats below the image (Dollar value, Power, Stamina, Type, Strength/Weakness)
+   - Close button to dismiss modal
+
+4. ✅ **localStorage Quota Error - FIXED**
+   - **Root Cause**: Setting profile picture stored full base64 image (~MB) in localStorage, exceeding quota
+   - **Fix**: Updated `setStoredUser` in `api.js` to:
+     - Detect large base64 strings and exclude them from localStorage
+     - Store only `profile_picture_mint_id` reference instead of full image
+     - Added fallback to store minimal user data if quota still exceeded
+   - **Result**: "Use as Profile Picture" no longer throws quota error
+
+### Code Changes
+
+**PhotoGameArena.jsx:**
+```jsx
+// Before (broken - always showed gradient)
+<div className={`bg-gradient-to-br ${scenery.color}`}>
+  <span>{scenery.icon}</span>
+</div>
+
+// After (fixed - shows actual image)
+{photo.image_url ? (
+  <img src={photo.image_url} alt={photo.name} className="w-full h-full object-cover" />
+) : (
+  <div className={`bg-gradient-to-br ${scenery.color}`}>
+    <span>{scenery.icon}</span>
+  </div>
+)}
+```
+
+**api.js - localStorage Fix:**
+```javascript
+export const setStoredUser = (user) => {
+  const userToStore = { ...user };
+  // If profile_picture is a large base64, don't store it
+  if (isLargeBase64(userToStore.profile_picture)) {
+    userToStore.profile_picture_stored = false;
+    userToStore.profile_picture = null;
+  }
+  try {
+    localStorage.setItem(USER_KEY, JSON.stringify(userToStore));
+  } catch (e) {
+    // Store minimal user data on quota error
+    localStorage.setItem(USER_KEY, JSON.stringify(minimalUser));
+  }
+};
+```
+
+### Note on Old Photos
+Photos minted before the backend image fix still show as broken/placeholder because they have truncated image data. Only photos minted AFTER the fix display correctly.
 
 ---
 
