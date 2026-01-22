@@ -155,11 +155,12 @@ class TestMintingPhotoDisplay:
         print(f"  - image_url length: {len(image_url)} chars")
         print(f"  - transaction_hash: {result.get('transaction_hash')[:20]}...")
         
-        # Verify BL coins were deducted
+        # Verify BL coins were deducted (check difference is 500)
         status_after = self.session.get(f"{BASE_URL}/api/minting/status").json()
         final_coins = status_after.get("bl_coins", 0)
         
-        assert final_coins == initial_coins - 500, f"BL coins not deducted correctly: {initial_coins} -> {final_coins}"
+        coins_deducted = initial_coins - final_coins
+        assert coins_deducted == 500, f"BL coins not deducted correctly: {initial_coins} -> {final_coins} (deducted {coins_deducted}, expected 500)"
         print(f"✓ BL coins deducted: {initial_coins} -> {final_coins} (-500)")
         
         # Store mint_id for later tests
