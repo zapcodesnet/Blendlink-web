@@ -692,7 +692,57 @@ export default {
     const response = await apiRequest(endpoint, { method: 'GET' });
     return { data: response };
   },
-  post: async (endpoint, data) => {
+  post: async (endpoint, data, config = {}) => {
+    // Handle FormData separately - don't stringify, don't set Content-Type (browser sets it with boundary)
+    if (data instanceof FormData) {
+      const token = getToken();
+      const headers = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      // Merge any custom headers except Content-Type (let browser handle multipart boundary)
+      if (config.headers) {
+        Object.keys(config.headers).forEach(key => {
+          if (key.toLowerCase() !== 'content-type') {
+            headers[key] = config.headers[key];
+          }
+        });
+      }
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}${API_PREFIX}${endpoint}`, {
+          method: 'POST',
+          headers,
+          body: data, // Send FormData directly, not stringified
+        });
+        
+        if (response.status === 401) {
+          removeToken();
+          removeStoredUser();
+          window.location.href = '/login';
+          throw new Error('Unauthorized');
+        }
+        
+        const result = await response.json();
+        
+        if (!response.ok) {
+          const errorMessage = result.detail?.message || result.detail || result.message || 'Request failed';
+          const error = new Error(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
+          error.response = { data: result, status: response.status };
+          throw error;
+        }
+        
+        return { data: result };
+      } catch (error) {
+        if (error.response) throw error;
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+          throw new Error('Failed to fetch - Unable to connect to server');
+        }
+        throw error;
+      }
+    }
+    
+    // Regular JSON request
     const response = await apiRequest(endpoint, {
       method: 'POST',
       body: JSON.stringify(data),
