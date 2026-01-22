@@ -167,7 +167,7 @@ async def mint_photo_upload(
             detail=f"Unsupported image type: {content_type}. Allowed: {', '.join(allowed_types)}"
         )
     
-    # Read and encode file
+    # Read file
     try:
         content = await file.read()
         logger.info(f"File uploaded: {file.filename}, size: {len(content)} bytes, type: {content_type}")
@@ -175,13 +175,80 @@ async def mint_photo_upload(
         logger.error(f"Failed to read file: {e}")
         raise HTTPException(status_code=400, detail=f"Failed to read file: {str(e)}")
     
-    if len(content) > 60 * 1024 * 1024:  # 60MB limit as per user requirement
+    if len(content) > 60 * 1024 * 1024:  # 60MB limit
         raise HTTPException(status_code=400, detail="Image too large. Max 60MB.")
     
     if len(content) == 0:
         raise HTTPException(status_code=400, detail="Empty file uploaded")
     
+    # Resize large images to prevent MongoDB BSON size limit (16MB)
+    # If base64 would exceed ~10MB, resize the image
+    from PIL import Image
+    import io
+    
+    MAX_BASE64_SIZE = 10 * 1024 * 1024  # 10MB base64 limit (leaves room for other document fields)
+    MAX_DIMENSION = 2048  # Max width or height
+    
+    try:
+        img = Image.open(io.BytesIO(content))
+        original_format = img.format or 'JPEG'
+        
+        # Convert RGBA to RGB for JPEG
+        if img.mode == 'RGBA' and content_type == 'image/jpeg':
+            img = img.convert('RGB')
+        
+        # Check if resize needed
+        needs_resize = False
+        width, height = img.size
+        
+        # Resize if dimensions too large
+        if width > MAX_DIMENSION or height > MAX_DIMENSION:
+            needs_resize = True
+            ratio = min(MAX_DIMENSION / width, MAX_DIMENSION / height)
+            new_width = int(width * ratio)
+            new_height = int(height * ratio)
+            img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            logger.info(f"Resized image from {width}x{height} to {new_width}x{new_height}")
+        
+        # Check estimated base64 size (base64 is ~4/3 of binary size)
+        estimated_base64_size = len(content) * 4 / 3
+        
+        # If too large, compress with lower quality
+        if estimated_base64_size > MAX_BASE64_SIZE or needs_resize:
+            buffer = io.BytesIO()
+            
+            # Determine output format
+            if content_type == 'image/png':
+                # Convert large PNGs to JPEG for better compression
+                if estimated_base64_size > MAX_BASE64_SIZE:
+                    if img.mode == 'RGBA':
+                        img = img.convert('RGB')
+                    img.save(buffer, format='JPEG', quality=85, optimize=True)
+                    content_type = 'image/jpeg'
+                else:
+                    img.save(buffer, format='PNG', optimize=True)
+            else:
+                # JPEG - use quality based on size
+                quality = 85 if estimated_base64_size < MAX_BASE64_SIZE * 2 else 70
+                if img.mode == 'RGBA':
+                    img = img.convert('RGB')
+                img.save(buffer, format='JPEG', quality=quality, optimize=True)
+                content_type = 'image/jpeg'
+            
+            content = buffer.getvalue()
+            logger.info(f"Compressed image to {len(content)} bytes")
+    except Exception as e:
+        logger.warning(f"Image processing failed, using original: {e}")
+        # Continue with original content if processing fails
+    
     image_base64 = base64.b64encode(content).decode("utf-8")
+    
+    # Final check - if still too large, reject
+    if len(image_base64) > 12 * 1024 * 1024:  # 12MB base64 hard limit
+        raise HTTPException(
+            status_code=400, 
+            detail="Image too large after compression. Please use a smaller image (under 5MB recommended)."
+        )
     
     try:
         result = await _minting_service.mint_photo(
