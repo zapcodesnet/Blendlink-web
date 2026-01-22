@@ -13,7 +13,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://user-privacy-ctrl.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://bugs-performance.preview.emergentagent.com')
 
 # Test credentials
 TEST_EMAIL = "test@example.com"
