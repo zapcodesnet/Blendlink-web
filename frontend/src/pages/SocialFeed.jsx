@@ -28,6 +28,39 @@ import {
   Image as ImageIcon,
   Video,
   Music,
+
+// Post loading skeleton for better perceived performance
+const PostSkeleton = () => (
+  <div className="bg-card rounded-xl shadow-sm mb-4 animate-pulse">
+    <div className="p-4">
+      <div className="flex items-center space-x-3 mb-4">
+        <div className="w-10 h-10 rounded-full bg-muted"></div>
+        <div className="flex-1">
+          <div className="h-4 w-24 bg-muted rounded mb-2"></div>
+          <div className="h-3 w-16 bg-muted rounded"></div>
+        </div>
+      </div>
+      <div className="space-y-2 mb-4">
+        <div className="h-4 w-full bg-muted rounded"></div>
+        <div className="h-4 w-3/4 bg-muted rounded"></div>
+      </div>
+      <div className="h-48 bg-muted rounded-lg mb-4"></div>
+      <div className="flex gap-4 pt-2 border-t">
+        <div className="h-8 w-20 bg-muted rounded"></div>
+        <div className="h-8 w-20 bg-muted rounded"></div>
+        <div className="h-8 w-20 bg-muted rounded"></div>
+      </div>
+    </div>
+  </div>
+);
+
+// Story loading skeleton
+const StorySkeleton = () => (
+  <div className="flex-shrink-0 flex flex-col items-center gap-1 animate-pulse">
+    <div className="w-16 h-16 rounded-full bg-muted"></div>
+    <div className="h-3 w-12 bg-muted rounded"></div>
+  </div>
+);
   Send,
   X,
   Globe,
