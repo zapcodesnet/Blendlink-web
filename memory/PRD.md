@@ -1,6 +1,64 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 22, 2026 (Session 20 - Part 5)
+## Latest Update: January 22, 2026 (Session 20 - Part 6)
+
+---
+
+## SESSION 20 PART 6: VIDEO REMOVAL & SCROLL FIX ✅
+
+### Critical Changes Made
+
+1. ✅ **Video Completely Removed**
+   - Deleted entire `VideoHero` component from Landing.jsx
+   - Removed video element, wrapper div, and caption
+   - Removed unused imports (Play, Pause, Volume2, VolumeX)
+   - No trace of video remains on landing page
+   - Hero section now clean: Buttons → Features Grid
+
+2. ✅ **Mobile Scrolling Fixes Enhanced**
+   - Applied `touch-action: pan-y` to html, body, and all interactive elements
+   - Added `-webkit-overflow-scrolling: touch` with `!important`
+   - Set `overflow-y: scroll` on html/body
+   - Added `overflow-x: hidden !important` to prevent horizontal scroll
+   - All elements now allow vertical scroll passthrough
+
+### Code Changes
+
+**Landing.jsx - Video Removed:**
+```jsx
+// REMOVED: VideoHero component (lines 14-115)
+// REMOVED: VideoHero usage in hero section
+// Hero section now goes directly to Features Grid
+```
+
+**index.css - Scroll Fixes:**
+```css
+html {
+  touch-action: pan-y;
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
+}
+
+body {
+  touch-action: pan-y;
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: auto;
+}
+
+button, a, div, section {
+  touch-action: pan-y;
+}
+```
+
+**Testing Status:**
+- ✅ **iteration_54.json**: 100% pass rate (8/8 requirements)
+- ✅ Video completely removed - verified
+- ✅ No video caption text present
+- ✅ Hero buttons preserved
+- ✅ Touch scrolling CSS applied
+- ✅ No horizontal overflow
+- ✅ All hero text preserved
 
 ---
 
