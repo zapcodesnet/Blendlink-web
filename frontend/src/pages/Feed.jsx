@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../App";
 import api from "../services/api";
@@ -13,45 +13,103 @@ import {
   RefreshCw, Coins, Users, ShoppingBag, Gavel, ExternalLink
 } from "lucide-react";
 
+// Loading skeleton component for posts
+const PostSkeleton = () => (
+  <div className="bg-card rounded-xl border border-border/50 animate-pulse">
+    <div className="p-4">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-10 h-10 rounded-full bg-muted"></div>
+        <div className="flex-1">
+          <div className="h-4 w-24 bg-muted rounded mb-2"></div>
+          <div className="h-3 w-16 bg-muted rounded"></div>
+        </div>
+      </div>
+      <div className="space-y-2 mb-4">
+        <div className="h-4 w-full bg-muted rounded"></div>
+        <div className="h-4 w-3/4 bg-muted rounded"></div>
+      </div>
+      <div className="h-48 bg-muted rounded-lg mb-4"></div>
+      <div className="flex gap-4">
+        <div className="h-8 w-16 bg-muted rounded"></div>
+        <div className="h-8 w-16 bg-muted rounded"></div>
+        <div className="h-8 w-16 bg-muted rounded"></div>
+      </div>
+    </div>
+  </div>
+);
+
+// Story skeleton
+const StorySkeleton = () => (
+  <div className="flex-shrink-0 flex flex-col items-center gap-1 animate-pulse">
+    <div className="w-16 h-16 rounded-full bg-muted"></div>
+    <div className="h-3 w-12 bg-muted rounded"></div>
+  </div>
+);
+
 export default function Feed() {
   const { user, setUser } = useContext(AuthContext);
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [storiesLoading, setStoriesLoading] = useState(true);
   const [claiming, setClaiming] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    fetchFeed();
-    fetchStories();
-  }, []);
-
-  const fetchFeed = async () => {
+  // Fetch feed data with error handling
+  const fetchFeed = useCallback(async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     try {
       const feedPosts = await api.posts.getFeed();
-      if (Array.isArray(feedPosts)) {
+      if (Array.isArray(feedPosts) && feedPosts.length > 0) {
         setPosts(feedPosts);
       } else {
-        // If feed is empty or not available, try explore
+        // Fallback to explore if feed is empty
         const explorePosts = await api.posts.getExplore();
         setPosts(Array.isArray(explorePosts) ? explorePosts : []);
       }
     } catch (error) {
       console.error("Feed error:", error);
-      setPosts([]);
+      // Try explore on error
+      try {
+        const explorePosts = await api.posts.getExplore();
+        setPosts(Array.isArray(explorePosts) ? explorePosts : []);
+      } catch {
+        setPosts([]);
+      }
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  };
+  }, []);
 
-  const fetchStories = async () => {
+  // Fetch stories separately (non-blocking)
+  const fetchStories = useCallback(async () => {
+    setStoriesLoading(true);
     try {
       const storiesData = await api.posts.getStories();
       setStories(Array.isArray(storiesData) ? storiesData : []);
     } catch (error) {
       console.error("Stories error:", error);
       setStories([]);
+    } finally {
+      setStoriesLoading(false);
     }
+  }, []);
+
+  // Initial load - fetch feed first, then stories
+  useEffect(() => {
+    fetchFeed();
+    // Defer stories loading slightly
+    const timer = setTimeout(fetchStories, 100);
+    return () => clearTimeout(timer);
+  }, [fetchFeed, fetchStories]);
+
+  // Pull to refresh
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchFeed(false);
+    fetchStories();
   };
 
   const handleLike = async (postId) => {
