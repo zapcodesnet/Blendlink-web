@@ -18,7 +18,51 @@ export const getStoredUser = () => {
     return null;
   }
 };
-export const setStoredUser = (user) => localStorage.setItem(USER_KEY, JSON.stringify(user));
+
+// Helper to check if a string is a base64 data URL (large)
+const isLargeBase64 = (str) => {
+  return typeof str === 'string' && str.startsWith('data:') && str.length > 1000;
+};
+
+// Store user but exclude large base64 images to prevent quota errors
+export const setStoredUser = (user) => {
+  if (!user) {
+    localStorage.removeItem(USER_KEY);
+    return;
+  }
+  
+  // Create a copy without large base64 data
+  const userToStore = { ...user };
+  
+  // If profile_picture is a large base64, store only a flag that it exists
+  // The actual image will be fetched from the server when needed
+  if (isLargeBase64(userToStore.profile_picture)) {
+    userToStore.profile_picture_stored = false; // Flag that we need to fetch it
+    userToStore.profile_picture = null; // Don't store the large base64
+  }
+  
+  try {
+    localStorage.setItem(USER_KEY, JSON.stringify(userToStore));
+  } catch (e) {
+    // If storage still fails (quota exceeded), try storing minimal user data
+    console.warn('localStorage quota exceeded, storing minimal user data');
+    const minimalUser = {
+      user_id: user.user_id,
+      email: user.email,
+      username: user.username,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      bl_coins: user.bl_coins,
+      profile_picture_mint_id: user.profile_picture_mint_id,
+      profile_picture_stored: false,
+    };
+    try {
+      localStorage.setItem(USER_KEY, JSON.stringify(minimalUser));
+    } catch (e2) {
+      console.error('Failed to store even minimal user data:', e2);
+    }
+  }
+};
 export const removeStoredUser = () => localStorage.removeItem(USER_KEY);
 
 // API request helper with robust error handling
