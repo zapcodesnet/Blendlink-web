@@ -317,7 +317,7 @@ const SoundToggle = ({ enabled, onToggle }) => {
 };
 
 // ============== PHOTO SELECTION COMPONENT ==============
-const PhotoSelectionScreen = ({ photos, loading, onSelectPhoto, selectedPhotoId }) => {
+const PhotoSelectionScreen = ({ photos, loading, onSelectPhoto, selectedPhotoId, onViewPhoto }) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -349,6 +349,13 @@ const PhotoSelectionScreen = ({ photos, loading, onSelectPhoto, selectedPhotoId 
   const handlePhotoClick = (photo) => {
     auctionSounds.selectionConfirm();
     onSelectPhoto(photo);
+  };
+  
+  const handleViewFullImage = (e, photo) => {
+    e.stopPropagation(); // Don't select the photo, just view it
+    if (onViewPhoto) {
+      onViewPhoto(photo);
+    }
   };
 
   return (
