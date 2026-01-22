@@ -1,6 +1,65 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 21, 2026 (Session 20 - Part 4)
+## Latest Update: January 22, 2026 (Session 20 - Part 5)
+
+---
+
+## SESSION 20 PART 5: CRITICAL SCROLL & VIDEO FIXES ✅
+
+### Issues Fixed
+
+1. ✅ **Mobile Scrolling Lag Fix**
+   - **Root Cause**: `scroll-behavior: smooth` and `overscroll-behavior-y: none` in CSS were blocking smooth touch scrolling
+   - **Fixes Applied**:
+     - Removed `scroll-behavior: smooth` from html
+     - Changed `overscroll-behavior-y: none` to `auto`
+     - Added `-webkit-overflow-scrolling: touch` for iOS momentum scrolling
+     - Added `touch-action: manipulation` to html, buttons, and interactive elements
+     - Added `overflow-y: auto` to body
+     - Ensured all scrollable elements have proper touch handling
+
+2. ✅ **Video Cropping Fix**
+   - **Root Cause**: Video used `object-fit: cover` with fixed 16:9 aspect ratio container, which cropped the video
+   - **Fixes Applied**:
+     - Changed from `object-fit: cover` to `object-fit: contain`
+     - Removed fixed aspect ratio container (`padding-bottom: 56.25%`)
+     - Video now uses natural dimensions with `width: 100%; height: auto`
+     - Added `max-height: 70vh` to prevent oversized videos on mobile
+     - Added black background for letterboxing
+     - Enabled native video `controls` attribute for better UX
+
+### CSS Changes Summary
+```css
+/* Before (problematic) */
+html { scroll-behavior: smooth; }
+body { overscroll-behavior-y: none; }
+video { object-fit: cover; }
+
+/* After (fixed) */
+html { 
+  -webkit-overflow-scrolling: touch;
+  touch-action: manipulation;
+}
+body { 
+  overscroll-behavior-y: auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+video { 
+  object-fit: contain;
+  width: 100%;
+  height: auto;
+  max-height: 70vh;
+}
+```
+
+**Testing Status:**
+- ✅ **iteration_53.json**: 95% pass rate
+- ✅ Mobile scrolling: Smooth and responsive
+- ✅ No horizontal overflow
+- ✅ Video: Full content visible, not cropped
+- ✅ Video controls: Native controls visible
+- ✅ Aspect ratio preserved
 
 ---
 
