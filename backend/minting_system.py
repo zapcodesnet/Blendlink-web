@@ -478,7 +478,8 @@ class MintingService:
             user_id=user_id,
             name=name,
             description=description,
-            image_url=f"data:{mime_type};base64,{image_base64[:100]}...",  # Store reference
+            image_url=f"data:{mime_type};base64,{image_base64}",  # Full base64 data URL
+            thumbnail_url=f"data:{mime_type};base64,{image_base64}",  # Same for thumbnail
             scenery_type=scenery_type,
             light_type=light_type,
             strength_vs=scenery_info["strong_vs"],
@@ -496,9 +497,10 @@ class MintingService:
             album_id=album_id,
         )
         
-        # Store full image data
+        # Store photo data
         photo_dict = photo.model_dump()
-        photo_dict["image_data"] = image_base64  # Full base64 image
+        photo_dict["image_data"] = image_base64  # Also keep raw base64 for backward compatibility
+        photo_dict["mime_type"] = mime_type  # Store mime type
         photo_dict["created_at"] = photo_dict["created_at"].isoformat()
         photo_dict["minted_at"] = photo_dict["minted_at"].isoformat()
         
