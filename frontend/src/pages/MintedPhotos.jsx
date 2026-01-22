@@ -70,8 +70,13 @@ const PhotoCard = ({ photo, onSelect, onUpdate, viewMode }) => {
         onClick={() => onSelect?.(photo)}
       >
         <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-          {photo.image_url?.startsWith('data:') ? (
-            <div className={`w-full h-full bg-gradient-to-br ${scenery.color}`} />
+          {photo.image_url ? (
+            <img 
+              src={photo.image_url} 
+              alt={photo.name}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
           ) : (
             <div className={`w-full h-full bg-gradient-to-br ${scenery.color}`} />
           )}
