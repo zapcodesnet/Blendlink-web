@@ -146,11 +146,11 @@ h1, h2, h3, h4, h5, h6 {
   padding-bottom: calc(0.5rem + var(--safe-area-inset-bottom));
 }
 
-/* Smooth transitions for interactive elements - Don't block scrolling */
+/* Smooth transitions for interactive elements - Allow scroll passthrough */
 button, a, input, textarea, select {
   transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
-  /* Allow scrolling to pass through */
-  touch-action: manipulation;
+  /* Critical: Allow vertical scrolling to pass through */
+  touch-action: pan-y;
 }
 
 button:active, a:active {
