@@ -91,8 +91,9 @@ class TestMintingPhotoDisplay:
             image_url = photo.get("image_url", "")
             # Verify image_url is a proper data URL (not truncated)
             assert image_url.startswith("data:image/"), f"image_url should be a data URL, got: {image_url[:50]}"
-            # Check it's not truncated (should be more than 100 chars for a real image)
-            assert len(image_url) > 200, f"image_url appears truncated: {len(image_url)} chars"
+            # Check it's a valid base64 image (can be small for test images)
+            # Minimum valid PNG is ~70 bytes = ~100 chars in base64
+            assert len(image_url) > 100, f"image_url too short: {len(image_url)} chars"
             print(f"  - {photo.get('mint_id')}: image_url length={len(image_url)} chars ✓")
     
     def test_04_photo_minting_upload_flow(self):
