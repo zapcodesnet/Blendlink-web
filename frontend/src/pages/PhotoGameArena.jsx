@@ -302,14 +302,26 @@ const PhotoSelectionScreen = ({ photos, loading, onSelectPhoto, selectedPhotoId 
                   onHoverStart={() => auctionSounds.buttonHover()}
                   data-testid={`photo-select-${photo.mint_id}`}
                 >
-                  <div className={`w-16 h-16 rounded-lg overflow-hidden bg-gradient-to-br ${scenery.color} flex items-center justify-center flex-shrink-0`}>
-                    <motion.span 
-                      className="text-2xl"
-                      animate={isSelected ? { rotate: [0, -10, 10, 0] } : {}}
-                      transition={{ duration: 0.5 }}
-                    >
-                      {scenery.icon}
-                    </motion.span>
+                  {/* Photo thumbnail - show actual image if available */}
+                  <div className={`w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 ${!photo.image_url ? `bg-gradient-to-br ${scenery.color}` : 'bg-gray-900'}`}>
+                    {photo.image_url ? (
+                      <img 
+                        src={photo.image_url} 
+                        alt={photo.name}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className={`w-full h-full bg-gradient-to-br ${scenery.color} flex items-center justify-center`}>
+                        <motion.span 
+                          className="text-2xl"
+                          animate={isSelected ? { rotate: [0, -10, 10, 0] } : {}}
+                          transition={{ duration: 0.5 }}
+                        >
+                          {scenery.icon}
+                        </motion.span>
+                      </div>
+                    )}
                   </div>
                   
                   <div className="flex-1 min-w-0">
