@@ -800,18 +800,30 @@ const BattlePhotoCard = ({ photo, isPlayer, effectiveValue, isAnimating, hasResu
       } : {}}
       transition={{ duration: 0.8, repeat: isAnimating ? 2 : 0 }}
     >
-      <div className={`aspect-square bg-gradient-to-br ${scenery.color}`}>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <motion.span 
-            className="text-7xl opacity-50"
-            animate={isAnimating ? { scale: [1, 1.3, 1], rotate: [0, 360] } : {}}
-            transition={{ duration: 1 }}
-          >
-            {scenery.icon}
-          </motion.span>
-        </div>
+      {/* Photo image - show actual photo if available */}
+      <div className="aspect-square relative">
+        {photo?.image_url ? (
+          <img 
+            src={photo.image_url} 
+            alt={photo.name || 'Photo'}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className={`w-full h-full bg-gradient-to-br ${scenery.color}`}>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <motion.span 
+                className="text-7xl opacity-50"
+                animate={isAnimating ? { scale: [1, 1.3, 1], rotate: [0, 360] } : {}}
+                transition={{ duration: 1 }}
+              >
+                {scenery.icon}
+              </motion.span>
+            </div>
+          </div>
+        )}
       </div>
       
+      {/* Info bar at bottom */}
       <div className="absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-sm p-3">
         <p className="text-white font-bold truncate">{photo?.name || 'Photo'}</p>
         <motion.p 
@@ -822,6 +834,7 @@ const BattlePhotoCard = ({ photo, isPlayer, effectiveValue, isAnimating, hasResu
         </motion.p>
       </div>
       
+      {/* Type badge */}
       <div className="absolute top-2 left-2">
         <span className={`px-2 py-0.5 rounded text-xs font-bold bg-gradient-to-r ${scenery.color} text-white`}>
           {scenery.label}
