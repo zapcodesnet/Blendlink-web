@@ -269,11 +269,38 @@ button:active, a:active {
 
 /* ==================== MOBILE-FIRST RESPONSIVE OPTIMIZATIONS ==================== */
 
-/* Prevent horizontal overflow */
+/* Prevent horizontal overflow while maintaining smooth vertical scroll */
 html, body {
   overflow-x: hidden;
   width: 100%;
   max-width: 100vw;
+  /* Critical: Allow smooth vertical scrolling */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure all scrollable containers have momentum scrolling */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Fix for iOS scroll issues */
+@supports (-webkit-touch-callout: none) {
+  body {
+    /* iOS specific: ensure smooth scrolling */
+    position: relative;
+    min-height: 100%;
+    overflow-y: scroll;
+  }
+}
+
+/* Video container - ensure no scroll blocking */
+.video-container,
+video {
+  touch-action: pan-y pinch-zoom;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* Mobile-optimized typography */
