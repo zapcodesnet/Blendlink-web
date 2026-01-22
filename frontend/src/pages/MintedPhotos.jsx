@@ -141,11 +141,20 @@ const PhotoCard = ({ photo, onSelect, onUpdate, viewMode }) => {
       <div className="bg-gray-800/80 rounded-2xl overflow-hidden border border-gray-700/50 hover:border-purple-500/50 transition-all">
         {/* Image */}
         <div className="relative aspect-square">
-          <div className={`w-full h-full bg-gradient-to-br ${scenery.color}`}>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-6xl opacity-50">{scenery.icon}</span>
+          {photo.image_url ? (
+            <img 
+              src={photo.image_url} 
+              alt={photo.name}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          ) : (
+            <div className={`w-full h-full bg-gradient-to-br ${scenery.color}`}>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-6xl opacity-50">{scenery.icon}</span>
+              </div>
             </div>
-          </div>
+          )}
           
           {/* Overlay badges */}
           <div className="absolute top-2 left-2 flex gap-1">
