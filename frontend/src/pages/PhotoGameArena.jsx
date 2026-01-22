@@ -5,7 +5,7 @@ import {
   Hand, Scissors, FileText, Sparkles, Crown,
   Shield, Target, TrendingUp, Coins, RefreshCw,
   X, Check, AlertCircle, Loader2, Image, ChevronRight,
-  DollarSign, Gavel, Banknote, Volume2, VolumeX
+  DollarSign, Gavel, Banknote, Volume2, VolumeX, Maximize2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../services/api';
@@ -13,6 +13,90 @@ import { AuthContext } from '../App';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import auctionSounds from '../utils/auctionSounds';
+
+// ============== PHOTO LIGHTBOX MODAL ==============
+const PhotoLightbox = ({ photo, isOpen, onClose }) => {
+  if (!isOpen || !photo) return null;
+  
+  const scenery = SCENERY_CONFIG[photo.scenery_type] || SCENERY_CONFIG.natural;
+  
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.9, opacity: 0 }}
+          className="relative max-w-3xl w-full max-h-[85vh] bg-gray-900 rounded-2xl overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="absolute top-3 right-3 z-10 p-2 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
+          >
+            <X className="w-5 h-5 text-white" />
+          </button>
+          
+          {/* Full-size image */}
+          <div className="relative bg-black flex items-center justify-center" style={{ maxHeight: '55vh' }}>
+            {photo.image_url ? (
+              <img 
+                src={photo.image_url} 
+                alt={photo.name}
+                className="max-w-full max-h-[55vh] object-contain"
+              />
+            ) : (
+              <div className={`w-full h-64 bg-gradient-to-br ${scenery.color} flex items-center justify-center`}>
+                <span className="text-8xl opacity-50">{scenery.icon}</span>
+              </div>
+            )}
+          </div>
+          
+          {/* Photo info below image */}
+          <div className="p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-white">{photo.name}</h2>
+              <span className={`px-3 py-1 rounded-full text-sm font-bold bg-gradient-to-r ${scenery.color} text-white`}>
+                {scenery.label}
+              </span>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-gray-800 rounded-lg p-3 text-center">
+                <p className="text-xs text-gray-400 mb-1">Dollar Value</p>
+                <p className="text-lg font-bold text-yellow-400">{formatDollarValue(photo.dollar_value)}</p>
+              </div>
+              <div className="bg-gray-800 rounded-lg p-3 text-center">
+                <p className="text-xs text-gray-400 mb-1">Power</p>
+                <p className="text-lg font-bold text-purple-400">{photo.power?.toFixed(0) || 100}</p>
+              </div>
+              <div className="bg-gray-800 rounded-lg p-3 text-center">
+                <p className="text-xs text-gray-400 mb-1">Stamina</p>
+                <p className="text-lg font-bold text-green-400">{Math.round(photo.stamina || 100)}%</p>
+              </div>
+            </div>
+            
+            <div className="flex flex-wrap gap-2">
+              <span className="px-3 py-1 rounded-lg bg-green-500/20 text-green-400 text-sm">
+                +25% vs {SCENERY_CONFIG[photo.strength_vs]?.label || 'Water'}
+              </span>
+              <span className="px-3 py-1 rounded-lg bg-red-500/20 text-red-400 text-sm">
+                -25% vs {SCENERY_CONFIG[photo.weakness_vs]?.label || 'Man-made'}
+              </span>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
 
 // ============== CONSTANTS ==============
 const RPS_CHOICES = [
