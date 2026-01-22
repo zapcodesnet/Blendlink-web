@@ -1446,6 +1446,7 @@ const PhotoGameArena = () => {
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [loading, setLoading] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [lightboxPhoto, setLightboxPhoto] = useState(null); // For viewing full images
   
   // RPS Auction state
   const [playerBankroll, setPlayerBankroll] = useState(STARTING_BANKROLL);
