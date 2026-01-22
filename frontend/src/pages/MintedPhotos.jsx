@@ -714,7 +714,7 @@ const MintedPhotos = () => {
                 key={photo.mint_id}
                 photo={photo}
                 viewMode="grid"
-                onSelect={setSelectedPhoto}
+                onSelect={() => setLightboxPhoto(photo)}
                 onUpdate={fetchPhotos}
               />
             ))}
@@ -726,13 +726,21 @@ const MintedPhotos = () => {
                 key={photo.mint_id}
                 photo={photo}
                 viewMode="list"
-                onSelect={setSelectedPhoto}
+                onSelect={() => setLightboxPhoto(photo)}
                 onUpdate={fetchPhotos}
               />
             ))}
           </div>
         )}
       </div>
+      
+      {/* Full Image Lightbox Modal */}
+      <ImageLightbox
+        photo={lightboxPhoto}
+        isOpen={!!lightboxPhoto}
+        onClose={() => setLightboxPhoto(null)}
+        onSetProfilePic={handleSetProfilePicture}
+      />
       
       {/* Mint Dialog */}
       <MintPhotoDialog
