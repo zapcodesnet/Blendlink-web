@@ -1784,6 +1784,13 @@ const PhotoGameArena = () => {
           )}
         </AnimatePresence>
       </div>
+      
+      {/* Photo Lightbox for viewing full images */}
+      <PhotoLightbox
+        photo={lightboxPhoto}
+        isOpen={!!lightboxPhoto}
+        onClose={() => setLightboxPhoto(null)}
+      />
     </div>
   );
 };
