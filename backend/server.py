@@ -864,6 +864,7 @@ async def get_stories(current_user: dict = Depends(get_current_user)):
         {"follower_id": current_user["user_id"]}, 
         {"_id": 0, "following_id": 1}
     ).to_list(500)
+    following_ids = [f["following_id"] for f in following]
     following_ids.append(current_user["user_id"])
     
     now = datetime.now(timezone.utc)
