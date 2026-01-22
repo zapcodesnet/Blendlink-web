@@ -720,6 +720,42 @@ async def get_following(user_id: str):
 class PrivacySettingsUpdate(BaseModel):
     is_real_name_private: bool
 
+class ProfilePictureUpdate(BaseModel):
+    image_url: str
+    mint_id: Optional[str] = None
+
+@users_router.put("/me/profile-picture")
+async def update_profile_picture(data: ProfilePictureUpdate, current_user: dict = Depends(get_current_user)):
+    """Update user's profile picture from a minted photo"""
+    # Validate the image_url is not empty
+    if not data.image_url:
+        raise HTTPException(status_code=400, detail="Image URL is required")
+    
+    # If mint_id is provided, verify it belongs to the user
+    if data.mint_id:
+        photo = await db.minted_photos.find_one({
+            "mint_id": data.mint_id,
+            "user_id": current_user["user_id"]
+        }, {"_id": 0})
+        if not photo:
+            raise HTTPException(status_code=404, detail="Photo not found or does not belong to you")
+    
+    # Update the user's profile picture
+    await db.users.update_one(
+        {"user_id": current_user["user_id"]},
+        {"$set": {
+            "profile_picture": data.image_url,
+            "profile_picture_mint_id": data.mint_id,
+            "profile_picture_updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {
+        "success": True,
+        "profile_picture": data.image_url,
+        "message": "Profile picture updated successfully"
+    }
+
 @users_router.put("/privacy-settings")
 async def update_privacy_settings(data: PrivacySettingsUpdate, current_user: dict = Depends(get_current_user)):
     """Update user's privacy settings - specifically the real name visibility"""
