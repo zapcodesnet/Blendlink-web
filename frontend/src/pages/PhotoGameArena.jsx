@@ -383,8 +383,20 @@ const PhotoSelectionScreen = ({ photos, loading, onSelectPhoto, selectedPhotoId 
                   key={photo.mint_id}
                   className="relative flex items-center gap-4 p-4 rounded-xl border border-gray-700/50 bg-gray-800/30 opacity-50 cursor-not-allowed"
                 >
-                  <div className={`w-16 h-16 rounded-lg overflow-hidden bg-gradient-to-br ${scenery.color} flex items-center justify-center flex-shrink-0 grayscale`}>
-                    <span className="text-2xl">{scenery.icon}</span>
+                  {/* Photo thumbnail - show actual image if available */}
+                  <div className={`w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 grayscale ${!photo.image_url ? `bg-gradient-to-br ${scenery.color}` : 'bg-gray-900'}`}>
+                    {photo.image_url ? (
+                      <img 
+                        src={photo.image_url} 
+                        alt={photo.name}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className={`w-full h-full bg-gradient-to-br ${scenery.color} flex items-center justify-center`}>
+                        <span className="text-2xl">{scenery.icon}</span>
+                      </div>
+                    )}
                   </div>
                   
                   <div className="flex-1 min-w-0">
