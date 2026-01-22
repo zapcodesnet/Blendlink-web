@@ -74,12 +74,12 @@ div[class*="emergent"] {
 }
 
 html {
-  /* Removed scroll-behavior: smooth as it can cause lag on mobile */
+  /* Critical for smooth mobile scrolling */
   -webkit-tap-highlight-color: transparent;
-  /* Enable smooth momentum scrolling on iOS */
   -webkit-overflow-scrolling: touch;
-  /* Allow natural touch scrolling */
-  touch-action: manipulation;
+  touch-action: pan-y;
+  overflow-x: hidden;
+  overflow-y: scroll;
 }
 
 body {
@@ -90,13 +90,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
   min-height: -webkit-fill-available;
-  /* Allow natural overscroll for smooth mobile scrolling */
-  overscroll-behavior-y: auto;
-  /* Enable momentum scrolling */
+  /* Critical: Enable smooth momentum scrolling */
   -webkit-overflow-scrolling: touch;
-  /* Ensure scrolling works */
-  overflow-y: auto;
+  overflow-y: scroll;
   overflow-x: hidden;
+  /* Allow natural overscroll behavior */
+  overscroll-behavior: auto;
+  /* Ensure touch scrolling works */
+  touch-action: pan-y;
 }
 
 h1, h2, h3, h4, h5, h6 {
