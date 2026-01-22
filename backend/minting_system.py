@@ -23,9 +23,9 @@ logger = logging.getLogger(__name__)
 
 # ============== CONSTANTS ==============
 MINT_COST_BL = 500  # BL coins per mint
-DAILY_MINT_LIMIT = 3  # Max mints per day (free tier)
+DAILY_MINT_LIMIT = 10  # Max mints per day (free tier)
 SUBSCRIPTION_LIMITS = {
-    "free": 3,
+    "free": 10,
     "basic": 20,  # $4.99/month
     "premium": 50,  # $9.99/month
 }
