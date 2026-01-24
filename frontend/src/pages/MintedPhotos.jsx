@@ -458,19 +458,24 @@ const PhotoCard = ({ photo, onSelect, onUpdate, viewMode, onViewFull }) => {
           </div>
         </div>
         
-        {/* COMPACT BOTTOM SECTION - 50% smaller */}
-        <div className="p-2 space-y-1">
+        {/* COMPACT BOTTOM SECTION - Mobile optimized */}
+        <div className="p-2 space-y-1.5">
           {/* Name */}
           <h3 className="font-semibold text-white text-sm truncate">{photo.name}</h3>
           
-          {/* Dollar Value (Power) + Stamina */}
-          <div className="flex items-center justify-between">
-            <span className="text-yellow-400 font-bold text-base">
-              {formatDollarValue(photo.dollar_value)}
-            </span>
-            <div className="flex items-center gap-1 text-green-400 text-xs">
-              <Zap className="w-3 h-3" />
-              {Math.round(photo.stamina || 100)}%
+          {/* Dollar Value (Power) */}
+          <div className="text-yellow-400 font-bold text-lg">
+            {formatDollarValue(photo.dollar_value)}
+          </div>
+          
+          {/* Level above Stamina */}
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2">
+              <span className="text-purple-400 font-bold">Lvl {photo.level || 1}</span>
+            </div>
+            <div className="flex items-center gap-1 text-green-400">
+              <Zap className="w-3.5 h-3.5" />
+              <span className="font-bold">{Math.round(photo.stamina || 100)}%</span>
             </div>
           </div>
           
@@ -494,12 +499,27 @@ const PhotoCard = ({ photo, onSelect, onUpdate, viewMode, onViewFull }) => {
           </div>
           
           {/* Win/Loss record */}
-          <div className="flex items-center justify-between text-xs text-gray-400">
-            <span className="flex items-center gap-1">
-              <Trophy className="w-3 h-3" />
-              {photo.battles_won || 0}W/{photo.battles_lost || 0}L
-            </span>
-            <span>Lvl {photo.level || 1}</span>
+          <div className="flex items-center text-xs text-gray-400">
+            <Trophy className="w-3 h-3 mr-1" />
+            {photo.battles_won || 0}W/{photo.battles_lost || 0}L
+          </div>
+          
+          {/* ACTION BUTTONS - Auction (center-ish) and Share (right) - Pink/Purple style */}
+          <div className="flex gap-1.5 pt-1">
+            <button
+              onClick={(e) => { e.stopPropagation(); window.location.href = '/photo-game'; }}
+              className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-xs font-medium transition-all active:scale-95"
+            >
+              <Swords className="w-3.5 h-3.5" />
+              Auction
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); /* Share logic */ toast.info('Share coming soon!'); }}
+              className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-xs font-medium transition-all active:scale-95"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              Share
+            </button>
           </div>
         </div>
       </div>
