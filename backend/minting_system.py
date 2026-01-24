@@ -606,18 +606,39 @@ class MintingService:
         light_type = analysis.get("light_type", "sunlight_fire")
         light_info = LIGHT_TYPES.get(light_type, LIGHT_TYPES["sunlight_fire"])
         
-        # Calculate dollar value
+        # Get ratings and face detection info
         ratings = analysis.get("ratings", {})
         has_face = analysis.get("has_face", False)
-        selfie_bonus = random.randint(1, 20) if has_face else 0  # Hidden bonus
-        dollar_value = calculate_dollar_value(ratings, has_face, selfie_bonus)
+        face_detection_score = analysis.get("face_detection_score", 0)
         
-        # Calculate overall score (weighted average)
-        total_weighted = sum(ratings.get(c, 50) * w for c, w in RATING_CRITERIA.items())
-        total_weight = sum(RATING_CRITERIA.values())
+        # Calculate dollar value using new 11-category system
+        dollar_calc = calculate_dollar_value(
+            ratings=ratings,
+            scenery_type=scenery_type,
+            level=1,  # New photo starts at level 1
+            total_upgrades=0
+        )
+        
+        base_dollar_value = dollar_calc["base_value"]
+        dollar_value = dollar_calc["dollar_value"]
+        category_values = dollar_calc["category_values"]
+        
+        # Calculate overall score (weighted average percentage)
+        total_weighted = 0
+        total_weight = 0
+        for criterion, config in RATING_CRITERIA.items():
+            score = ratings.get(criterion, 50)
+            total_weighted += score * config["weight"]
+            total_weight += config["weight"]
         overall_score = total_weighted / total_weight if total_weight > 0 else 50.0
         
-        # Create minted photo
+        # Get strength/weakness (handle neutral type)
+        strength_vs = scenery_info.get("strong_vs", "")
+        weakness_vs = scenery_info.get("weak_vs", "")
+        if scenery_type == "neutral":
+            weakness_vs = "all"  # Neutral is weak against all
+        
+        # Create minted photo with new fields
         photo = MintedPhoto(
             user_id=user_id,
             name=name,
@@ -626,19 +647,27 @@ class MintingService:
             thumbnail_url=f"data:{mime_type};base64,{image_base64}",  # Same for thumbnail
             scenery_type=scenery_type,
             light_type=light_type,
-            strength_vs=scenery_info["strong_vs"],
-            weakness_vs=scenery_info["weak_vs"],
+            strength_vs=strength_vs if strength_vs else "",
+            weakness_vs=weakness_vs if weakness_vs else "",
             light_strength_vs=light_info["strong_vs"],
             light_weakness_vs=light_info["weak_vs"],
             ratings=ratings,
+            category_values=category_values,
             overall_score=overall_score,
+            base_dollar_value=base_dollar_value,
             dollar_value=dollar_value,
             has_face=has_face,
-            face_bonus_percent=10 if has_face else 0,
-            selfie_bonus_percent=selfie_bonus,
+            face_detection_score=face_detection_score,
+            selfie_match_score=0,
+            selfie_match_completed=False,
+            selfie_match_attempts=0,
             is_private=is_private,
             show_in_feed=show_in_feed and not is_private,
             album_id=album_id,
+            level=1,
+            stars=0,
+            has_golden_frame=False,
+            level_bonus_percent=0,
         )
         
         # Store photo data
