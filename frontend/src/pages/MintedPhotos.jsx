@@ -17,11 +17,58 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 
-// Full Image Lightbox Modal Component
-const ImageLightbox = ({ photo, isOpen, onClose, onSetProfilePic }) => {
+// Category labels for the back of card
+const RATING_LABELS = {
+  original: "Original",
+  innovative: "Innovative", 
+  unique: "Unique",
+  rare: "Rare",
+  exposure: "Exposure",
+  color: "Color",
+  clarity: "Clarity",
+  composition: "Composition",
+  narrative: "Narrative",
+  captivating: "Captivating",
+  authenticity: "Authenticity"
+};
+
+// Format dollar value compactly
+const formatValue = (value) => {
+  if (!value) return "$0";
+  if (value >= 1_000_000_000) return `$${(value / 1_000_000_000).toFixed(2)}B`;
+  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `$${(value / 1_000).toFixed(0)}K`;
+  return `$${value.toLocaleString()}`;
+};
+
+// Full Image Lightbox Modal Component - Clean view with flip-to-back
+const ImageLightbox = ({ photo, isOpen, onClose, onSetProfilePic, onDelete }) => {
+  const [showControls, setShowControls] = useState(false);
+  const [showBack, setShowBack] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  
   if (!isOpen || !photo) return null;
   
   const scenery = SCENERY_CONFIG[photo.scenery_type] || SCENERY_CONFIG.natural;
+  const ratings = photo.ratings || {};
+  const categoryValues = photo.category_values || {};
+  
+  // Calculate star display
+  const stars = photo.stars || 0;
+  const hasGoldenFrame = photo.has_golden_frame || false;
+  
+  // Handle image tap to toggle controls
+  const handleImageTap = () => {
+    setShowControls(!showControls);
+  };
+  
+  // Handle delete
+  const handleDelete = async () => {
+    if (onDelete) {
+      await onDelete(photo);
+      onClose();
+    }
+  };
   
   return (
     <AnimatePresence>
@@ -29,45 +76,212 @@ const ImageLightbox = ({ photo, isOpen, onClose, onSetProfilePic }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
-        onClick={onClose}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black"
       >
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          className="relative max-w-4xl w-full max-h-[90vh] bg-gray-900 rounded-2xl overflow-hidden"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
-          >
-            <X className="w-6 h-6 text-white" />
-          </button>
-          
-          {/* Full-size image - NO overlays, clean display */}
-          <div className="relative bg-black flex items-center justify-center" style={{ maxHeight: '60vh' }}>
-            {photo.image_url ? (
-              <img 
-                src={photo.image_url} 
-                alt={photo.name}
-                className="max-w-full max-h-[60vh] object-contain"
-              />
-            ) : (
-              <div className={`w-full h-64 bg-gradient-to-br ${scenery.color} flex items-center justify-center`}>
-                <span className="text-8xl opacity-50">{scenery.icon}</span>
+        <AnimatePresence mode="wait">
+          {!showBack ? (
+            /* FRONT: Clean original photo view */
+            <motion.div
+              key="front"
+              initial={{ rotateY: 180 }}
+              animate={{ rotateY: 0 }}
+              exit={{ rotateY: -180 }}
+              transition={{ duration: 0.4 }}
+              className="relative w-full h-full flex items-center justify-center"
+              onClick={handleImageTap}
+            >
+              {/* Full-size image - absolutely clean, no overlays */}
+              {photo.image_url ? (
+                <img 
+                  src={photo.image_url} 
+                  alt={photo.name}
+                  className={`max-w-full max-h-full object-contain ${hasGoldenFrame ? 'ring-4 ring-yellow-500' : ''}`}
+                />
+              ) : (
+                <div className={`w-96 h-96 bg-gradient-to-br ${scenery.color} flex items-center justify-center rounded-xl`}>
+                  <span className="text-9xl opacity-50">{scenery.icon}</span>
+                </div>
+              )}
+              
+              {/* Controls - only show on tap */}
+              <AnimatePresence>
+                {showControls && (
+                  <>
+                    {/* Top bar - stars */}
+                    <motion.div
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      className="absolute top-0 left-0 right-0 bg-black/50 backdrop-blur-sm p-4 flex items-center justify-center gap-1"
+                    >
+                      {[...Array(5)].map((_, i) => (
+                        <Star 
+                          key={i} 
+                          className={`w-6 h-6 ${i < stars ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'}`} 
+                        />
+                      ))}
+                      {hasGoldenFrame && <span className="ml-2 text-yellow-400 text-sm font-bold">MAX LEVEL</span>}
+                    </motion.div>
+                    
+                    {/* Bottom bar */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 20 }}
+                      className="absolute bottom-0 left-0 right-0 bg-black/50 backdrop-blur-sm p-4 flex items-center justify-between"
+                    >
+                      {/* Left: Delete */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
+                        className="p-3 rounded-full bg-red-500/20 hover:bg-red-500/40 transition-colors"
+                      >
+                        <Trash2 className="w-6 h-6 text-red-400" />
+                      </button>
+                      
+                      {/* Center: Flip to back */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setShowBack(true); setShowControls(false); }}
+                        className="p-3 rounded-full bg-purple-500/20 hover:bg-purple-500/40 transition-colors"
+                      >
+                        <ChevronRight className="w-6 h-6 text-purple-400" />
+                      </button>
+                      
+                      {/* Right: Close */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onClose(); }}
+                        className="p-3 rounded-full bg-gray-500/20 hover:bg-gray-500/40 transition-colors"
+                      >
+                        <X className="w-6 h-6 text-white" />
+                      </button>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+              
+              {/* Delete confirmation dialog */}
+              <AnimatePresence>
+                {confirmDelete && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 bg-black/80 flex items-center justify-center"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="bg-gray-900 rounded-xl p-6 max-w-sm mx-4 text-center">
+                      <p className="text-white text-lg mb-4">This will delete the minted photo forever</p>
+                      <div className="flex gap-3 justify-center">
+                        <Button
+                          onClick={() => setConfirmDelete(false)}
+                          variant="outline"
+                          className="border-gray-600"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={handleDelete}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          ) : (
+            /* BACK: Rating stats view */
+            <motion.div
+              key="back"
+              initial={{ rotateY: -180 }}
+              animate={{ rotateY: 0 }}
+              exit={{ rotateY: 180 }}
+              transition={{ duration: 0.4 }}
+              className="relative w-full max-w-lg mx-4 bg-gray-900 rounded-2xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-4 flex items-center justify-between">
+                <h3 className="text-white font-bold text-lg">{photo.name} - Stats</h3>
+                <button
+                  onClick={() => setShowBack(false)}
+                  className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                >
+                  <ChevronRight className="w-5 h-5 text-white rotate-180" />
+                </button>
               </div>
-            )}
-          </div>
-          
-          {/* All info BELOW the image */}
-          <div className="p-6 space-y-4">
-            {/* Title and privacy */}
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-white">{photo.name}</h2>
-              <div className="flex items-center gap-2">
+              
+              {/* Rating categories */}
+              <div className="p-4 space-y-2 max-h-[60vh] overflow-y-auto">
+                {Object.entries(RATING_LABELS).map(([key, label]) => {
+                  const score = ratings[key] || 0;
+                  const value = categoryValues[key] || 0;
+                  return (
+                    <div key={key} className="flex items-center justify-between py-2 border-b border-gray-800">
+                      <div className="flex items-center gap-3">
+                        <span className="text-gray-300 font-medium">{label}</span>
+                        <span className="text-purple-400 font-bold">{score}%</span>
+                      </div>
+                      <span className="text-yellow-400 font-bold">{formatValue(value)}</span>
+                    </div>
+                  );
+                })}
+                
+                {/* Total */}
+                <div className="flex items-center justify-between py-3 mt-2 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-lg px-3">
+                  <div className="flex items-center gap-3">
+                    <span className="text-white font-bold">Total Core Power</span>
+                    <span className="text-purple-400 font-bold">{photo.overall_score?.toFixed(0) || 0}%</span>
+                  </div>
+                  <span className="text-yellow-400 font-bold text-xl">{formatValue(photo.dollar_value)}</span>
+                </div>
+              </div>
+              
+              {/* Action buttons */}
+              <div className="p-4 border-t border-gray-800 flex flex-wrap gap-2">
+                <Button
+                  onClick={() => onSetProfilePic?.(photo)}
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600"
+                >
+                  <User className="w-4 h-4 mr-2" />
+                  Profile Pic
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1 border-gray-600"
+                  onClick={() => setShowBack(false)}
+                >
+                  <Swords className="w-4 h-4 mr-2" />
+                  Auction
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1 border-gray-600"
+                >
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Share
+                </Button>
+              </div>
+              
+              {/* Close */}
+              <div className="p-4 border-t border-gray-800">
+                <Button
+                  onClick={onClose}
+                  variant="outline"
+                  className="w-full border-gray-600"
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Close
+                </Button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
                 {photo.is_private ? (
                   <span className="flex items-center gap-1 text-gray-400 text-sm">
                     <Lock className="w-4 h-4" /> Private
