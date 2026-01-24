@@ -245,38 +245,52 @@ Return ONLY valid JSON without any markdown formatting or code blocks."""
         analysis_prompt = """Analyze this photo and return a JSON object with these exact fields:
 
 {
-  "scenery_type": "natural" or "water" or "manmade",
+  "scenery_type": "natural" or "water" or "manmade" or "neutral",
   "light_type": "sunlight_fire" or "rain_snow_ice" or "darkness_night",
   "scenery_description": "brief description of dominant background",
   "light_description": "brief description of lighting conditions",
   "has_face": true/false,
   "face_count": number,
+  "face_clarity": 0-100 (how clear/prominent the face is, 0 if no face),
   "ratings": {
-    "originality": 1-100,
-    "innovation": 1-100,
-    "uniqueness": 1-100,
-    "focus_sharpness": 1-100,
-    "exposure_tonal_range": 1-100,
-    "color_accuracy": 1-100,
-    "subject_clarity": 1-100,
-    "composition": 1-100,
-    "narrative_emotion": 1-100,
-    "captivating_mesmerizing": 1-100
+    "original": 0-100,
+    "innovative": 0-100,
+    "unique": 0-100,
+    "rare": 0-100,
+    "exposure": 0-100,
+    "color": 0-100,
+    "clarity": 0-100,
+    "composition": 0-100,
+    "narrative": 0-100,
+    "captivating": 0-100
   }
 }
 
-Scenery types:
+RATING CATEGORIES (score each 0-100):
+1. Original (Originality) - How original is this photo?
+2. Innovative - Is this a super new idea? Not a common photo type?
+3. Unique - New angle, lighting, or technique? Not a normal shot?
+4. Rare - Does this appear to be an original photo (not a copy/screenshot)?
+5. Exposure - Is subject in focus, super sharp, no blur?
+6. Color - Perfect light/dark balance? Not too bright or dark?
+7. Clarity - Are colors natural? No bad filters or over-editing?
+8. Composition - Is main subject easy to see and well-framed?
+9. Narrative - Good layout (rule of thirds, leading lines)? Evokes emotion/story?
+10. Captivating - Does it tell a story or evoke strong emotion?
+
+SCENERY TYPES:
 - "natural": landscapes, forests, mountains, gardens, macro nature, animals
 - "water": oceans, waterfalls, rivers, lakes, rain, underwater, beaches
 - "manmade": cities, buildings, streets, interiors, vehicles, tech, urban
+- "neutral": ID-style photos, transparent background, plain solid color, empty/plain background
 
-Light types:
+LIGHT TYPES:
 - "sunlight_fire": bright daylight, golden hour, fire, warm artificial light
 - "rain_snow_ice": rain, snow, ice, fog, overcast, cold weather
 - "darkness_night": night scenes, dark interiors, low light, shadows
 
-Be generous but realistic. Most photos should score 40-80 range.
-Exceptional photos can score 80-95.
+Be fair and varied. Most photos score 30-70 range. Exceptional photos can score 70-95.
+Penalize screenshots, obvious copies, heavily filtered images in the "rare" category.
 Return ONLY the JSON object, no other text."""
 
         user_message = UserMessage(
