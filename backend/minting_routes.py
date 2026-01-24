@@ -301,7 +301,6 @@ async def get_my_photos(
 
 
 # ============== UPGRADE & ENHANCEMENT ROUTES ==============
-from minting_system import UPGRADE_COSTS, LEVEL_BONUSES, calculate_dollar_value, get_level_stars
 
 class UpgradeDollarValueRequest(BaseModel):
     mint_id: str
