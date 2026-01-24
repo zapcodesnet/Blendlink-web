@@ -907,6 +907,7 @@ const MintedPhotos = () => {
         isOpen={!!lightboxPhoto}
         onClose={() => setLightboxPhoto(null)}
         onSetProfilePic={handleSetProfilePicture}
+        onDelete={handleDeletePhoto}
       />
       
       {/* Mint Dialog */}
