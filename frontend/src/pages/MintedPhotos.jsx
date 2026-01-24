@@ -492,11 +492,6 @@ const PhotoCard = ({ photo, onSelect, onUpdate, viewMode, onViewFull }) => {
     </motion.div>
   );
 };
-        </div>
-      </div>
-    </motion.div>
-  );
-};
 
 // Mint Photo Dialog
 const MintPhotoDialog = ({ isOpen, onClose, onMint, mintStatus }) => {
