@@ -401,6 +401,7 @@ const PhotoCard = ({ photo, onSelect, onUpdate, viewMode, onViewFull }) => {
     );
   }
   
+  // Grid view card - compact bottom section with only essential stats
   return (
     <motion.div
       className="relative group cursor-pointer"
@@ -408,8 +409,8 @@ const PhotoCard = ({ photo, onSelect, onUpdate, viewMode, onViewFull }) => {
       onClick={() => onSelect?.(photo)}
     >
       {/* Card */}
-      <div className="bg-gray-800/80 rounded-2xl overflow-hidden border border-gray-700/50 hover:border-purple-500/50 transition-all">
-        {/* Image */}
+      <div className={`bg-gray-800/80 rounded-xl overflow-hidden border ${hasGoldenFrame ? 'border-yellow-500 ring-2 ring-yellow-500/50' : 'border-gray-700/50 hover:border-purple-500/50'} transition-all`}>
+        {/* Image - Clean, no overlays */}
         <div className="relative aspect-square">
           {photo.image_url ? (
             <img 
@@ -426,7 +427,16 @@ const PhotoCard = ({ photo, onSelect, onUpdate, viewMode, onViewFull }) => {
             </div>
           )}
           
-          {/* Click to view full image icon - only shows on hover */}
+          {/* Stars indicator - below image line */}
+          {stars > 0 && (
+            <div className="absolute bottom-2 left-2 flex gap-0.5">
+              {[...Array(stars)].map((_, i) => (
+                <Star key={i} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+              ))}
+            </div>
+          )}
+          
+          {/* Hover overlay to view full image */}
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
             <div className="bg-white/20 backdrop-blur-sm rounded-full p-3">
               <Maximize2 className="w-6 h-6 text-white" />
@@ -434,50 +444,54 @@ const PhotoCard = ({ photo, onSelect, onUpdate, viewMode, onViewFull }) => {
           </div>
         </div>
         
-        {/* ALL INFO BELOW THE IMAGE - Clean, no overlays on photo */}
-        <div className="p-3 space-y-2">
-          {/* Name and privacy */}
+        {/* COMPACT BOTTOM SECTION - 50% smaller */}
+        <div className="p-2 space-y-1">
+          {/* Name */}
+          <h3 className="font-semibold text-white text-sm truncate">{photo.name}</h3>
+          
+          {/* Dollar Value (Power) + Stamina */}
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-white truncate flex-1">{photo.name}</h3>
-            {photo.is_private ? (
-              <Lock className="w-4 h-4 text-gray-500 ml-2" />
-            ) : (
-              <Globe className="w-4 h-4 text-green-500 ml-2" />
+            <span className="text-yellow-400 font-bold text-base">
+              {formatDollarValue(photo.dollar_value)}
+            </span>
+            <div className="flex items-center gap-1 text-green-400 text-xs">
+              <Zap className="w-3 h-3" />
+              {Math.round(photo.stamina || 100)}%
+            </div>
+          </div>
+          
+          {/* Strength/Weakness - compact */}
+          <div className="flex gap-1 text-xs flex-wrap">
+            {photo.strength_vs && (
+              <span className="px-1.5 py-0.5 rounded bg-green-500/20 text-green-400">
+                +{SCENERY_CONFIG[photo.strength_vs]?.label || 'Water'}
+              </span>
+            )}
+            {photo.weakness_vs && photo.weakness_vs !== 'all' && (
+              <span className="px-1.5 py-0.5 rounded bg-red-500/20 text-red-400">
+                -{SCENERY_CONFIG[photo.weakness_vs]?.label || 'Man-made'}
+              </span>
+            )}
+            {photo.weakness_vs === 'all' && (
+              <span className="px-1.5 py-0.5 rounded bg-red-500/20 text-red-400">
+                -All
+              </span>
             )}
           </div>
           
-          {/* Dollar value and type */}
-          <div className="flex items-center justify-between">
-            <span className="text-yellow-400 font-bold text-lg">
-              {formatDollarValue(photo.dollar_value)}
-            </span>
-            <span className={`px-2 py-0.5 rounded-full text-xs font-bold bg-gradient-to-r ${scenery.color} text-white`}>
-              {scenery.label}
-            </span>
-          </div>
-          
-          {/* Power and Level */}
-          <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center gap-1 text-purple-400">
-              <Zap className="w-4 h-4" />
-              <span className="font-bold">{photo.power?.toFixed(0) || 100}</span>
-            </div>
-            <span className="text-gray-400">Lvl {photo.level || 1}</span>
-            <span className="flex items-center gap-1 text-gray-400">
+          {/* Win/Loss record */}
+          <div className="flex items-center justify-between text-xs text-gray-400">
+            <span className="flex items-center gap-1">
               <Trophy className="w-3 h-3" />
               {photo.battles_won || 0}W/{photo.battles_lost || 0}L
             </span>
+            <span>Lvl {photo.level || 1}</span>
           </div>
-          
-          {/* Strength/Weakness */}
-          <div className="flex gap-2 text-xs flex-wrap">
-            <span className="px-2 py-0.5 rounded bg-green-500/20 text-green-400">
-              +25% {SCENERY_CONFIG[photo.strength_vs]?.label || 'Water'}
-            </span>
-            <span className="px-2 py-0.5 rounded bg-red-500/20 text-red-400">
-              -25% {SCENERY_CONFIG[photo.weakness_vs]?.label || 'Man-made'}
-            </span>
-          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
         </div>
       </div>
     </motion.div>
