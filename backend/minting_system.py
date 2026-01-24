@@ -365,62 +365,130 @@ Return ONLY the JSON object, no other text."""
 
 def get_fallback_analysis() -> Dict[str, Any]:
     """Generate fallback analysis when AI is unavailable"""
-    scenery = random.choice(["natural", "water", "manmade"])
+    scenery = random.choice(["natural", "water", "manmade", "neutral"])
     light = random.choice(["sunlight_fire", "rain_snow_ice", "darkness_night"])
+    has_face = random.random() > 0.7
+    face_clarity = random.randint(60, 100) if has_face else 0
+    
+    ratings = {
+        "original": random.randint(40, 80),
+        "innovative": random.randint(40, 80),
+        "unique": random.randint(40, 80),
+        "rare": random.randint(50, 90),  # Higher default for original photos
+        "exposure": random.randint(40, 80),
+        "color": random.randint(40, 80),
+        "clarity": random.randint(40, 80),
+        "composition": random.randint(40, 80),
+        "narrative": random.randint(40, 80),
+        "captivating": random.randint(40, 80),
+        "authenticity": face_clarity // 2 if has_face else 0,  # Max 50 at mint time
+    }
+    
     return {
         "scenery_type": scenery,
         "light_type": light,
         "scenery_description": "Unable to analyze - using default",
         "light_description": "Unable to analyze - using default",
-        "has_face": random.random() > 0.7,
-        "face_count": 1 if random.random() > 0.7 else 0,
-        "ratings": {
-            criterion: random.randint(50, 85) for criterion in RATING_CRITERIA.keys()
-        }
+        "has_face": has_face,
+        "face_count": 1 if has_face else 0,
+        "face_clarity": face_clarity,
+        "face_detection_score": face_clarity if has_face else 0,
+        "ratings": ratings
     }
 
 
-def calculate_dollar_value(ratings: Dict[str, int], has_face: bool, selfie_bonus: int = 0) -> int:
+def calculate_dollar_value(ratings: Dict[str, int], scenery_type: str = "natural", 
+                          level: int = 1, total_upgrades: int = 0) -> Dict[str, Any]:
     """
-    Calculate dollar value based on weighted ratings
-    Range: $1M to $1B
+    Calculate dollar value based on weighted 11-category ratings
+    Range: $1M to $1B base, with level bonuses and upgrades
     
-    Weights:
-    - Originality (12%), Innovation (12%), Uniqueness (12%)
-    - Focus/Sharpness (10%), Exposure/Tonal Range (10%), Composition (10%), Narrative/Emotion (10%)
-    - Color Accuracy (8%), Subject Clarity (8%), Captivating/Mesmerizing (8%)
+    New 11-Category System:
+    1. Original (8%) = $80M max
+    2. Innovative (10%) = $100M max
+    3. Unique (10%) = $100M max
+    4. Rare (10%) = $100M max
+    5. Exposure (10%) = $100M max
+    6. Color (8%) = $80M max
+    7. Clarity (8%) = $80M max
+    8. Composition (8%) = $80M max
+    9. Narrative (8%) = $80M max
+    10. Captivating (10%) = $100M max
+    11. Authenticity (10%) = $100M max (face 5% + selfie 5%)
+    
+    Total = 100% = $1B max
     """
     if not ratings:
-        return 1_000_000
+        return {
+            "base_value": 1_000_000,
+            "dollar_value": 1_000_000,
+            "category_values": {},
+            "level_bonus": 0,
+            "upgrade_bonus": 0,
+            "scenery_penalty": 0
+        }
     
-    # Calculate weighted average
-    total_weighted = 0
-    total_weight = 0
+    # Calculate each category's dollar value contribution
+    category_values = {}
+    total_value = 0
     
-    for criterion, weight in RATING_CRITERIA.items():
-        if criterion in ratings:
-            total_weighted += ratings[criterion] * weight
-            total_weight += weight
+    for category, config in RATING_CRITERIA.items():
+        score = ratings.get(category, 50)  # Default to 50 if missing
+        # Each category contributes (score/100) * max_value
+        category_dollar = int((score / 100) * config["max_value"])
+        category_values[category] = category_dollar
+        total_value += category_dollar
     
-    avg_rating = total_weighted / total_weight if total_weight > 0 else 50
+    base_value = max(1_000_000, total_value)  # Minimum $1M
     
-    # Base value: exponential scale from $1M to $1B
-    # Rating 50 = ~$10M, Rating 100 = $1B
-    base_value = int(1_000_000 * (2 ** (avg_rating / 10)))
+    # Apply scenery penalty for neutral (-10%)
+    scenery_penalty = 0
+    if scenery_type == "neutral":
+        scenery_penalty = int(base_value * 0.10)
+        base_value = int(base_value * 0.90)
     
-    # Cap at $1B
-    base_value = min(base_value, 1_000_000_000)
+    # Apply level bonus
+    level_bonus_percent = 0
+    for threshold, bonus_info in sorted(LEVEL_BONUSES.items()):
+        if level >= threshold:
+            level_bonus_percent = bonus_info["bonus_percent"]
     
-    # Face bonus (+10%)
-    if has_face:
-        base_value = int(base_value * 1.10)
+    level_bonus = int(base_value * (level_bonus_percent / 100))
     
-    # Selfie bonus (+1% to +20%, hidden)
-    if selfie_bonus > 0:
-        base_value = int(base_value * (1 + selfie_bonus / 100))
+    # Final dollar value = base + level bonus + upgrades
+    dollar_value = base_value + level_bonus + total_upgrades
     
-    # Final cap at $1B
-    return min(base_value, 1_000_000_000)
+    # Cap at $1B (can exceed with upgrades)
+    # Actually, with upgrades you can go higher, so let's not cap
+    
+    return {
+        "base_value": base_value,
+        "dollar_value": dollar_value,
+        "category_values": category_values,
+        "level_bonus": level_bonus,
+        "level_bonus_percent": level_bonus_percent,
+        "upgrade_bonus": total_upgrades,
+        "scenery_penalty": scenery_penalty
+    }
+
+
+def get_level_stars(level: int) -> Dict[str, Any]:
+    """Get stars and bonuses for a given level"""
+    stars = 0
+    bonus_percent = 0
+    has_golden_frame = False
+    
+    for threshold, bonus_info in sorted(LEVEL_BONUSES.items()):
+        if level >= threshold:
+            stars = bonus_info["stars"]
+            bonus_percent = bonus_info["bonus_percent"]
+            has_golden_frame = bonus_info.get("golden_frame", False)
+    
+    return {
+        "stars": stars,
+        "bonus_percent": bonus_percent,
+        "has_golden_frame": has_golden_frame
+    }
 
 
 def calculate_level_xp(level: int) -> int:
