@@ -129,15 +129,14 @@ const ImageLightbox = ({ photo, isOpen, onClose, onSetProfilePic, onDelete }) =>
                 )}
               </div>
               
-              {/* Bottom bar - FIXED at absolute bottom with safe area - ALWAYS VISIBLE AREA */}
+              {/* Bottom bar - FIXED at absolute bottom with extra padding for mobile nav */}
               <AnimatePresence>
                 {showControls && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 20 }}
-                    className="absolute bottom-0 left-0 right-0 z-20 bg-black/70 backdrop-blur-sm px-6 py-4"
-                    style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}
+                    className="absolute bottom-0 left-0 right-0 z-20 bg-black/80 backdrop-blur-md px-6 py-5 pb-20 md:pb-6"
                   >
                     <div className="flex items-center justify-between max-w-md mx-auto">
                       {/* Left: Delete - Pink/Purple style */}
