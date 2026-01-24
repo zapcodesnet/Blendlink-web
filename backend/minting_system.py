@@ -330,9 +330,28 @@ Return ONLY the JSON object, no other text."""
             result["light_type"] = "sunlight_fire"
         if result["light_type"] not in LIGHT_TYPES:
             result["light_type"] = "sunlight_fire"
-            
+        
+        # Ensure all 11 rating categories are present (using new category names)
+        required_ratings = ["original", "innovative", "unique", "rare", "exposure", 
+                          "color", "clarity", "composition", "narrative", "captivating"]
         if "ratings" not in result:
-            result["ratings"] = {criterion: random.randint(50, 75) for criterion in RATING_CRITERIA.keys()}
+            result["ratings"] = {}
+        for category in required_ratings:
+            if category not in result["ratings"]:
+                result["ratings"][category] = random.randint(40, 70)
+        
+        # Calculate authenticity score based on face detection
+        face_clarity = result.get("face_clarity", 0)
+        if result.get("has_face", False) and face_clarity > 0:
+            # Face detection contributes up to 5% (50 out of 100 for the authenticity category)
+            result["face_detection_score"] = min(100, face_clarity)
+        else:
+            result["face_detection_score"] = 0
+        
+        # Authenticity score = face detection (max 50%) + selfie match (max 50%, done later)
+        # For now, authenticity is just the face detection portion
+        result["ratings"]["authenticity"] = result["face_detection_score"] // 2  # Max 50 at mint time
+        
         if "has_face" not in result:
             result["has_face"] = False
             
