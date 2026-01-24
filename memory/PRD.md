@@ -1,10 +1,55 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 24, 2026 (Session 21)
+## Latest Update: January 24, 2026 (Session 21 - Part 2)
 
 ---
 
-## SESSION 21: MAJOR FEATURE UPDATE - 11-CATEGORY VALUATION + UI REDESIGN ✅
+## SESSION 21 PART 2: MOBILE UI/UX FIXES ✅
+
+### Issues Fixed (From User Screenshots)
+
+1. ✅ **Bottom Bar Visibility on Mobile** - FIXED
+   - Increased z-index to z-[100] to ensure it's above navigation
+   - Added extra bottom padding (pb-20) for mobile to account for navigation bar
+   - All 3 control buttons now fully visible: Trash, Arrow, X
+
+2. ✅ **Button Colors Unified** - FIXED
+   - All buttons now use pink/purple gradient (`from-purple-600 to-pink-600`)
+   - Matches the "Profile Pic" button style
+   - Applied to: Trash, Flip, Close, Profile Pic, Auction, Share, Back to Image
+
+3. ✅ **Back of Card X Button** - FIXED
+   - Added visible X button in header
+   - Same pink/purple style as other buttons
+
+4. ✅ **Front Card Layout Updated** - FIXED
+   - **Level above Stamina**: "Lvl 1" displayed separately, then "⚡ 100%"
+   - **Auction & Share buttons** added at bottom of card (pink/purple style)
+   - All buttons fully visible and responsive
+
+5. ✅ **Mobile Safe Areas** - FIXED
+   - Uses `env(safe-area-inset-bottom)` for iOS notch devices
+   - Extra padding at bottom for navigation bar clearance
+
+### Code Changes
+
+**MintedPhotos.jsx:**
+- Lightbox z-index: z-50 → z-[100]
+- Bottom bar: Added `pb-20 md:pb-6` for mobile spacing
+- All buttons: Changed to `bg-gradient-to-r from-purple-600 to-pink-600`
+- Card: Added Auction/Share buttons at bottom
+- Level display: Moved above stamina
+
+### Testing Results
+- ✅ Mobile lightbox controls fully visible
+- ✅ Back of card all categories showing with values
+- ✅ All buttons matching pink/purple style
+- ✅ Card layout with Level, Stamina, Auction, Share buttons
+- ✅ Portrait and landscape orientation support
+
+---
+
+## SESSION 21 PART 1: MAJOR FEATURE UPDATE - 11-CATEGORY VALUATION + UI REDESIGN ✅
 
 ### Phase 1: 11-Category Dollar Value System (COMPLETE)
 
