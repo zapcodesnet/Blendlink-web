@@ -1,6 +1,91 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 22, 2026 (Session 20 - Part 10)
+## Latest Update: January 24, 2026 (Session 21)
+
+---
+
+## SESSION 21: MAJOR FEATURE UPDATE - 11-CATEGORY VALUATION + UI REDESIGN ✅
+
+### Phase 1: 11-Category Dollar Value System (COMPLETE)
+
+**New AI Rating System:**
+1. Original (8%) - $80M max
+2. Innovative (10%) - $100M max  
+3. Unique (10%) - $100M max
+4. Rare (10%) - $100M max
+5. Exposure (10%) - $100M max
+6. Color (8%) - $80M max
+7. Clarity (8%) - $80M max
+8. Composition (8%) - $80M max
+9. Narrative (8%) - $80M max
+10. Captivating (10%) - $100M max
+11. Authenticity (10%) - $100M max (Face 5% + Selfie Match 5%)
+
+**Total: 100% = $1,000,000,000 max value**
+
+**Implementation:**
+- `minting_system.py` - New `RATING_CRITERIA` with weights and max values
+- `calculate_dollar_value()` - Returns per-category dollar values
+- AI prompt updated to score all 11 categories
+- New fields: `base_dollar_value`, `category_values`, `total_upgrade_value`
+
+### Neutral Scenery Type Added
+- New "neutral" type for ID photos, plain backgrounds
+- Neutral is 10% weaker than all other types
+- weakness_vs = "all" for neutral photos
+
+### Phase 2: Card UI Redesign (COMPLETE)
+
+**Compact Bottom Section (50% smaller):**
+- Name
+- Dollar Value (as Core Power) - no "Power 100" shown
+- Stamina percentage
+- Strength/Weakness tags (+Natural, -Water, etc.)
+- Win/Loss record
+- Level
+
+**Stars & Golden Frame:**
+- Level 10: 1 star (+20%)
+- Level 20: 2 stars (+40%)
+- Level 30: 3 stars (+60%)
+- Level 40: 4 stars (+80%)
+- Level 50: 5 stars (+100%)
+- Level 60: 5 stars + golden frame (+150%)
+
+### Clean Lightbox View (COMPLETE)
+- Tap image opens full-screen clean view
+- NO overlays, watermarks, X buttons on image
+- Tap again to show control bars
+- Top bar: Star indicators
+- Bottom bar: Delete (trash), Flip (<), Close (X)
+- Flip shows back of card with all 11 category scores and dollar values
+
+### New API Endpoints
+- `GET /api/minting/rating-criteria` - Get 11-category definitions
+- `GET /api/minting/level-bonuses` - Get level milestone bonuses
+- `POST /api/minting/photos/{mint_id}/upgrade` - Upgrade with BL coins
+- `GET /api/minting/photos/{mint_id}/upgrade-options` - Get available upgrades
+- `DELETE /api/minting/photos/{mint_id}` - Permanently delete photo
+
+### Dollar Value Upgrades
+Upgrade costs: $1M=1M BL, $2M=2M BL... up to $1B=1B BL
+One-time per tier, permanent increase.
+
+### Testing Results
+- ✅ New photo minted with 11-category scoring: $604M value
+- ✅ Per-category dollar values displayed correctly
+- ✅ Back of card shows all 11 categories with values
+- ✅ Compact card design working
+- ✅ Clean lightbox view working
+- ✅ Flip animation working
+
+---
+
+### TODO: Remaining Features
+1. Photo Auction Battle (2nd round after RPS) - tapping mechanic
+2. Face Detection bonus (5%)
+3. Live Video Selfie Match (5% + 3 attempts × 100 BL)
+4. Marketplace gift/trade/sell with royalty fees
 
 ---
 
