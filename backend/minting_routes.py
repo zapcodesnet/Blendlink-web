@@ -296,6 +296,194 @@ async def get_my_photos(
     return {"photos": photos, "count": len(photos)}
 
 
+# ============== UPGRADE & ENHANCEMENT ROUTES ==============
+from minting_system import UPGRADE_COSTS, LEVEL_BONUSES, calculate_dollar_value, get_level_stars
+
+class UpgradeDollarValueRequest(BaseModel):
+    mint_id: str
+    upgrade_amount: int  # Dollar amount to upgrade by (e.g., 1000000 for $1M)
+
+
+@minting_router.post("/photos/{mint_id}/upgrade")
+async def upgrade_photo_dollar_value(
+    mint_id: str,
+    data: UpgradeDollarValueRequest,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """
+    Upgrade a photo's Dollar Value using BL coins.
+    Cost: $1M = 1M BL, $10M = 10M BL, etc.
+    """
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    # Verify photo ownership
+    photo = await _db.minted_photos.find_one(
+        {"mint_id": mint_id, "user_id": current_user["user_id"]},
+        {"_id": 0}
+    )
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found or does not belong to you")
+    
+    # Validate upgrade amount
+    upgrade_amount = data.upgrade_amount
+    if upgrade_amount not in UPGRADE_COSTS:
+        valid_amounts = sorted(UPGRADE_COSTS.keys())
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid upgrade amount. Valid amounts: {[f'${a:,}' for a in valid_amounts]}"
+        )
+    
+    # Check if this upgrade tier was already purchased
+    upgrades_purchased = photo.get("upgrades_purchased", [])
+    if upgrade_amount in upgrades_purchased:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"You've already purchased the ${upgrade_amount:,} upgrade for this photo"
+        )
+    
+    # Check BL coin balance
+    bl_cost = UPGRADE_COSTS[upgrade_amount]
+    user = await _db.users.find_one({"user_id": current_user["user_id"]}, {"_id": 0})
+    if user.get("bl_coins", 0) < bl_cost:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Insufficient BL coins. Need {bl_cost:,} BL, have {user.get('bl_coins', 0):,} BL"
+        )
+    
+    # Deduct BL coins
+    await _db.users.update_one(
+        {"user_id": current_user["user_id"]},
+        {"$inc": {"bl_coins": -bl_cost}}
+    )
+    
+    # Update photo
+    new_total_upgrade = photo.get("total_upgrade_value", 0) + upgrade_amount
+    new_dollar_value = photo.get("base_dollar_value", photo.get("dollar_value", 1000000)) + \
+                       photo.get("level_bonus_percent", 0) * photo.get("base_dollar_value", 1000000) // 100 + \
+                       new_total_upgrade
+    
+    await _db.minted_photos.update_one(
+        {"mint_id": mint_id},
+        {
+            "$push": {"upgrades_purchased": upgrade_amount},
+            "$set": {
+                "total_upgrade_value": new_total_upgrade,
+                "dollar_value": new_dollar_value
+            }
+        }
+    )
+    
+    return {
+        "success": True,
+        "upgrade_amount": upgrade_amount,
+        "bl_spent": bl_cost,
+        "new_dollar_value": new_dollar_value,
+        "total_upgrades": new_total_upgrade
+    }
+
+
+@minting_router.get("/photos/{mint_id}/upgrade-options")
+async def get_upgrade_options(
+    mint_id: str,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """Get available upgrade options for a photo"""
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    photo = await _db.minted_photos.find_one(
+        {"mint_id": mint_id, "user_id": current_user["user_id"]},
+        {"_id": 0}
+    )
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    
+    upgrades_purchased = photo.get("upgrades_purchased", [])
+    user = await _db.users.find_one({"user_id": current_user["user_id"]}, {"_id": 0})
+    bl_balance = user.get("bl_coins", 0)
+    
+    options = []
+    for amount, cost in sorted(UPGRADE_COSTS.items()):
+        options.append({
+            "upgrade_amount": amount,
+            "bl_cost": cost,
+            "already_purchased": amount in upgrades_purchased,
+            "can_afford": bl_balance >= cost
+        })
+    
+    return {
+        "current_dollar_value": photo.get("dollar_value", 0),
+        "base_dollar_value": photo.get("base_dollar_value", photo.get("dollar_value", 0)),
+        "total_upgrades": photo.get("total_upgrade_value", 0),
+        "bl_balance": bl_balance,
+        "options": options
+    }
+
+
+@minting_router.get("/rating-criteria")
+async def get_rating_criteria():
+    """Get the 11-category rating criteria with weights and max values"""
+    from minting_system import RATING_CRITERIA
+    
+    criteria = []
+    for key, config in RATING_CRITERIA.items():
+        criteria.append({
+            "key": key,
+            "label": config["label"],
+            "description": config["description"],
+            "weight": config["weight"],
+            "max_value": config["max_value"]
+        })
+    
+    return {
+        "criteria": criteria,
+        "total_weight": 100,
+        "max_total_value": 1_000_000_000
+    }
+
+
+@minting_router.get("/level-bonuses")
+async def get_level_bonuses():
+    """Get level milestone bonuses"""
+    bonuses = []
+    for level, config in sorted(LEVEL_BONUSES.items()):
+        bonuses.append({
+            "level": level,
+            "stars": config["stars"],
+            "bonus_percent": config["bonus_percent"],
+            "has_golden_frame": config.get("golden_frame", False)
+        })
+    
+    return {"bonuses": bonuses}
+
+
+@minting_router.delete("/photos/{mint_id}")
+async def delete_minted_photo(
+    mint_id: str,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """Permanently delete a minted photo"""
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    # Verify ownership
+    photo = await _db.minted_photos.find_one(
+        {"mint_id": mint_id, "user_id": current_user["user_id"]},
+        {"_id": 0, "mint_id": 1}
+    )
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found or does not belong to you")
+    
+    # Delete the photo
+    result = await _db.minted_photos.delete_one({"mint_id": mint_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=500, detail="Failed to delete photo")
+    
+    return {"success": True, "message": "Photo permanently deleted", "mint_id": mint_id}
+
+
 @minting_router.get("/photos/user/{user_id}")
 async def get_user_photos(
     user_id: str,
