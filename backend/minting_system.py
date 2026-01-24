@@ -35,6 +35,7 @@ SCENERY_TYPES = {
     "natural": {"name": "Natural Scenery", "strong_vs": "water", "weak_vs": "manmade"},
     "water": {"name": "Water Scenery", "strong_vs": "manmade", "weak_vs": "natural"},
     "manmade": {"name": "Man-made/Mixed", "strong_vs": "natural", "weak_vs": "water"},
+    "neutral": {"name": "Neutral/Plain", "strong_vs": None, "weak_vs": "all"},  # 10% weaker than all
 }
 
 # Light condition types and their strength/weakness relationships
@@ -44,18 +45,44 @@ LIGHT_TYPES = {
     "darkness_night": {"name": "Darkness/Night/Interior", "strong_vs": "rain_snow_ice", "weak_vs": "sunlight_fire"},
 }
 
-# Photo rating criteria with weights (totals 100%)
+# NEW 11-Category Rating System with specific weights (totals 100%)
+# Maximum Core Power: 100% = $1,000,000,000 base value
 RATING_CRITERIA = {
-    "originality": 12,
-    "innovation": 12, 
-    "uniqueness": 12,
-    "focus_sharpness": 10,
-    "exposure_tonal_range": 10,
-    "color_accuracy": 8,
-    "subject_clarity": 8,
-    "composition": 10,
-    "narrative_emotion": 10,
-    "captivating_mesmerizing": 8,
+    "original": {"weight": 8, "max_value": 80_000_000, "label": "Original", "description": "Originality of the photo"},
+    "innovative": {"weight": 10, "max_value": 100_000_000, "label": "Innovative", "description": "Super new idea (not a common photo)"},
+    "unique": {"weight": 10, "max_value": 100_000_000, "label": "Unique", "description": "New angle, lighting, or technique (not a normal shot)"},
+    "rare": {"weight": 10, "max_value": 100_000_000, "label": "Rare", "description": "Must use original; penalize duplicates"},
+    "exposure": {"weight": 10, "max_value": 100_000_000, "label": "Exposure", "description": "Subject in focus, super sharp, no blur"},
+    "color": {"weight": 8, "max_value": 80_000_000, "label": "Color", "description": "Perfect light/dark balance (not too bright or dark)"},
+    "clarity": {"weight": 8, "max_value": 80_000_000, "label": "Clarity", "description": "Colors natural (no bad filters/over-editing)"},
+    "composition": {"weight": 8, "max_value": 80_000_000, "label": "Composition", "description": "Main subject easy to see and well-framed"},
+    "narrative": {"weight": 8, "max_value": 80_000_000, "label": "Narrative", "description": "Good layout (rule of thirds, leading lines); evokes emotion/story"},
+    "captivating": {"weight": 10, "max_value": 100_000_000, "label": "Captivating", "description": "Tells a story or evokes strong emotion (happy, sad, dramatic)"},
+    "authenticity": {"weight": 10, "max_value": 100_000_000, "label": "Authenticity", "description": "Face detection (5%) + Live selfie match (5%)"},
+}
+
+# Level/Star bonuses for Dollar Value
+LEVEL_BONUSES = {
+    10: {"stars": 1, "bonus_percent": 20},   # Level 10: 1 star +20%
+    20: {"stars": 2, "bonus_percent": 40},   # Level 20: 2 stars +40% (cumulative)
+    30: {"stars": 3, "bonus_percent": 60},   # Level 30: 3 stars +60%
+    40: {"stars": 4, "bonus_percent": 80},   # Level 40: 4 stars +80%
+    50: {"stars": 5, "bonus_percent": 100},  # Level 50: 5 stars +100%
+    60: {"stars": 5, "bonus_percent": 150, "golden_frame": True},  # Level 60 (max): 5 stars + golden frame +150%
+}
+
+# Dollar Value Upgrade costs (BL coins)
+UPGRADE_COSTS = {
+    1_000_000: 1_000_000,      # $1M = 1M BL
+    2_000_000: 2_000_000,      # $2M = 2M BL
+    3_000_000: 3_000_000,      # $3M = 3M BL
+    5_000_000: 5_000_000,      # $5M = 5M BL
+    10_000_000: 10_000_000,    # $10M = 10M BL
+    20_000_000: 20_000_000,    # $20M = 20M BL
+    50_000_000: 50_000_000,    # $50M = 50M BL
+    100_000_000: 100_000_000,  # $100M = 100M BL
+    500_000_000: 500_000_000,  # $500M = 500M BL
+    1_000_000_000: 1_000_000_000,  # $1B = 1B BL
 }
 
 # Legacy list for backward compatibility
