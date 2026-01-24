@@ -305,35 +305,6 @@ const PhotoCard = ({ photo, onSelect, onUpdate, viewMode, onViewFull }) => {
   const scenery = SCENERY_CONFIG[photo.scenery_type] || SCENERY_CONFIG.natural;
   const stars = photo.stars || 0;
   const hasGoldenFrame = photo.has_golden_frame || false;
-                <Share2 className="w-4 h-4 mr-2" />
-                Share
-              </Button>
-            </div>
-          </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
-  );
-};
-
-// Scenery type colors and icons
-const SCENERY_CONFIG = {
-  natural: { color: 'from-green-500 to-emerald-600', icon: '🌿', label: 'Natural' },
-  water: { color: 'from-blue-500 to-cyan-600', icon: '🌊', label: 'Water' },
-  manmade: { color: 'from-orange-500 to-red-600', icon: '🏙️', label: 'Man-made' },
-};
-
-// Format dollar value
-const formatDollarValue = (value) => {
-  if (value >= 1_000_000_000) return `$${(value / 1_000_000_000).toFixed(2)}B`;
-  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
-  return `$${value.toLocaleString()}`;
-};
-
-// Photo Card Component - Clean image display, all stats below
-const PhotoCard = ({ photo, onSelect, onUpdate, viewMode, onViewFull }) => {
-  const [showMenu, setShowMenu] = useState(false);
-  const scenery = SCENERY_CONFIG[photo.scenery_type] || SCENERY_CONFIG.natural;
   
   const handleRename = async () => {
     const newName = prompt('Enter new name:', photo.name);
@@ -368,7 +339,7 @@ const PhotoCard = ({ photo, onSelect, onUpdate, viewMode, onViewFull }) => {
         whileHover={{ scale: 1.01 }}
         onClick={() => onSelect?.(photo)}
       >
-        <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+        <div className={`w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 ${hasGoldenFrame ? 'ring-2 ring-yellow-500' : ''}`}>
           {photo.image_url ? (
             <img 
               src={photo.image_url} 
