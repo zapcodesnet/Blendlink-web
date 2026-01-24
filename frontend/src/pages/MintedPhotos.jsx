@@ -282,72 +282,29 @@ const ImageLightbox = ({ photo, isOpen, onClose, onSetProfilePic, onDelete }) =>
     </AnimatePresence>
   );
 };
-                {photo.is_private ? (
-                  <span className="flex items-center gap-1 text-gray-400 text-sm">
-                    <Lock className="w-4 h-4" /> Private
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-1 text-green-400 text-sm">
-                    <Globe className="w-4 h-4" /> Public
-                  </span>
-                )}
-              </div>
-            </div>
-            
-            {/* Stats row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-gray-800 rounded-lg p-3 text-center">
-                <p className="text-xs text-gray-400 mb-1">Dollar Value</p>
-                <p className="text-xl font-bold text-yellow-400">{formatDollarValue(photo.dollar_value)}</p>
-              </div>
-              <div className="bg-gray-800 rounded-lg p-3 text-center">
-                <p className="text-xs text-gray-400 mb-1">Type</p>
-                <p className={`text-lg font-bold bg-gradient-to-r ${scenery.color} bg-clip-text text-transparent`}>
-                  {scenery.label}
-                </p>
-              </div>
-              <div className="bg-gray-800 rounded-lg p-3 text-center">
-                <p className="text-xs text-gray-400 mb-1">Power</p>
-                <p className="text-xl font-bold text-purple-400">{photo.power?.toFixed(0) || 100}</p>
-              </div>
-              <div className="bg-gray-800 rounded-lg p-3 text-center">
-                <p className="text-xs text-gray-400 mb-1">Level</p>
-                <p className="text-xl font-bold text-white">{photo.level || 1}</p>
-              </div>
-            </div>
-            
-            {/* Strength/Weakness */}
-            <div className="flex flex-wrap gap-3">
-              <span className="px-3 py-1.5 rounded-lg bg-green-500/20 text-green-400 text-sm font-medium">
-                +25% vs {SCENERY_CONFIG[photo.strength_vs]?.label || 'Water'}
-              </span>
-              <span className="px-3 py-1.5 rounded-lg bg-red-500/20 text-red-400 text-sm font-medium">
-                -25% vs {SCENERY_CONFIG[photo.weakness_vs]?.label || 'Man-made'}
-              </span>
-            </div>
-            
-            {/* Battle stats */}
-            <div className="flex items-center gap-4 text-sm text-gray-400">
-              <span className="flex items-center gap-1">
-                <Trophy className="w-4 h-4" />
-                {photo.battles_won || 0}W / {photo.battles_lost || 0}L
-              </span>
-            </div>
-            
-            {/* Action buttons */}
-            <div className="flex flex-wrap gap-3 pt-2">
-              <Button
-                onClick={() => onSetProfilePic?.(photo)}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-              >
-                <User className="w-4 h-4 mr-2" />
-                Use as Profile Picture
-              </Button>
-              <Button variant="outline" className="border-gray-600">
-                <Swords className="w-4 h-4 mr-2" />
-                Battle
-              </Button>
-              <Button variant="outline" className="border-gray-600">
+
+// Scenery type colors and icons - include neutral
+const SCENERY_CONFIG = {
+  natural: { color: 'from-green-500 to-emerald-600', icon: '🌿', label: 'Natural' },
+  water: { color: 'from-blue-500 to-cyan-600', icon: '🌊', label: 'Water' },
+  manmade: { color: 'from-orange-500 to-red-600', icon: '🏙️', label: 'Man-made' },
+  neutral: { color: 'from-gray-500 to-gray-600', icon: '⚪', label: 'Neutral' },
+};
+
+// Format dollar value
+const formatDollarValue = (value) => {
+  if (!value) return "$0";
+  if (value >= 1_000_000_000) return `$${(value / 1_000_000_000).toFixed(2)}B`;
+  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
+  return `$${value?.toLocaleString() || 0}`;
+};
+
+// Photo Card Component - Clean image display, compact stats below
+const PhotoCard = ({ photo, onSelect, onUpdate, viewMode, onViewFull }) => {
+  const [showMenu, setShowMenu] = useState(false);
+  const scenery = SCENERY_CONFIG[photo.scenery_type] || SCENERY_CONFIG.natural;
+  const stars = photo.stars || 0;
+  const hasGoldenFrame = photo.has_golden_frame || false;
                 <Share2 className="w-4 h-4 mr-2" />
                 Share
               </Button>
