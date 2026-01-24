@@ -723,6 +723,17 @@ const MintedPhotos = () => {
     }
   };
   
+  // Handle deleting a photo
+  const handleDeletePhoto = async (photo) => {
+    try {
+      await api.delete(`/minting/photos/${photo.mint_id}`);
+      toast.success('Photo permanently deleted');
+      fetchPhotos(); // Refresh the list
+    } catch (err) {
+      toast.error(err.message || 'Failed to delete photo');
+    }
+  };
+  
   const fetchPhotos = async () => {
     try {
       const response = await api.get('/minting/photos');
