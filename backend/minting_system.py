@@ -102,29 +102,45 @@ class MintedPhoto(BaseModel):
     transaction_hash: str = Field(default_factory=lambda: f"0x{uuid.uuid4().hex}{uuid.uuid4().hex[:24]}")
     
     # AI Analysis Results
-    scenery_type: str = "natural"  # natural, water, manmade
+    scenery_type: str = "natural"  # natural, water, manmade, neutral
     light_type: str = "sunlight_fire"  # sunlight_fire, rain_snow_ice, darkness_night
     strength_vs: str = ""
     weakness_vs: str = ""
     light_strength_vs: str = ""
     light_weakness_vs: str = ""
     
-    # Rating scores (1-100 scale)
+    # 11-Category Rating scores (0-100 scale, each represents % of max)
     ratings: Dict[str, int] = Field(default_factory=dict)
+    # Individual category dollar values
+    category_values: Dict[str, int] = Field(default_factory=dict)
     overall_score: float = 0.0
     
-    # Dollar value ($1M to $1B based on ratings)
-    dollar_value: int = 1000000
+    # Base Dollar value ($1M to $1B based on ratings) - Core Power
+    base_dollar_value: int = 1_000_000
+    # Total Dollar value (includes level bonuses and upgrades)
+    dollar_value: int = 1_000_000
+    # Dollar value upgrades purchased with BL coins
+    upgrades_purchased: List[int] = Field(default_factory=list)
+    total_upgrade_value: int = 0
     
-    # Bonuses
+    # Authenticity (Face Detection + Selfie Match)
     has_face: bool = False
-    face_bonus_percent: int = 0  # +10% if face detected
-    selfie_bonus_percent: int = 0  # +1% to +20% hidden bonus
+    face_detection_score: int = 0  # 0-100%, contributes up to 5% of authenticity
+    selfie_match_score: int = 0  # 0-100%, contributes up to 5% of authenticity
+    selfie_match_completed: bool = False  # Once done, cannot be redone
+    selfie_match_attempts: int = 0  # Max 3 attempts
     
-    # Power & XP
+    # Legacy fields for backward compatibility
+    face_bonus_percent: int = 0
+    selfie_bonus_percent: int = 0
+    
+    # Power & XP - Level system with star bonuses
     power: float = 100.0
     xp: int = 0
     level: int = 1
+    stars: int = 0  # 0-5 stars based on level milestones
+    has_golden_frame: bool = False  # Level 60 bonus
+    level_bonus_percent: int = 0  # Cumulative level bonus
     
     # Stats
     likes_count: int = 0
