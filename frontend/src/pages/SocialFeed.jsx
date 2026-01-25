@@ -1643,7 +1643,7 @@ export default function SocialFeed() {
         <CreatePostCard user={user} onPostCreated={handlePostCreated} />
         
         {/* SociableKIT Facebook Group Posts Widget */}
-        <SociableKitGroupWidget />
+        <FacebookGroupWidget />
         
         {/* Quick Actions - Mint & Battle */}
         <RewardsQuickActions />
