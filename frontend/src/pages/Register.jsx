@@ -66,7 +66,7 @@ export default function Register() {
       
       const bonus = response.bl_coins_bonus || 50000;
       toast.success(`Account created! You earned ${bonus.toLocaleString()} BL Coins!`);
-      navigate("/feed");
+      navigate("/home");
     } catch (error) {
       toast.error(error.message || "Registration failed");
     } finally {
