@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "../components/ui/button";
 import LanguageSelector from "../components/LanguageSelector";
+import { getToken } from "../services/api";
 import { 
   Users, ShoppingBag, Home, Briefcase, Gamepad2, Gift, 
   Coins, Share2, ChevronRight, Smartphone, Bell, Zap,
