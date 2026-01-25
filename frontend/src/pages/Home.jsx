@@ -204,6 +204,7 @@ const Home = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
         className="max-w-2xl mx-auto px-4"
+        data-testid="facebook-feed-section"
       >
         <div className="bg-gray-800/30 rounded-2xl p-3 md:p-4 border border-gray-700/50">
           {/* Section header */}
@@ -232,7 +233,7 @@ const Home = () => {
             Ready to earn rewards?
           </p>
           <div className="flex gap-2 justify-center">
-            <Link to="/minted-photos">
+            <Link to="/minted-photos" data-testid="bottom-mint-btn">
               <Button 
                 variant="outline" 
                 className="border-purple-500/50 text-purple-400 hover:bg-purple-500/10 text-sm"
@@ -241,7 +242,7 @@ const Home = () => {
                 Mint New
               </Button>
             </Link>
-            <Link to="/photo-game">
+            <Link to="/photo-game" data-testid="bottom-battle-btn">
               <Button 
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-sm"
               >
