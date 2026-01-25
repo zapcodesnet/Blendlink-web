@@ -57,13 +57,17 @@ const FacebookEmbed = ({ pageUrl, height = 700 }) => {
     // Check if the embed actually rendered content after SDK loads
     const checkRender = setTimeout(() => {
       if (containerRef.current) {
+        const fbPage = containerRef.current.querySelector('.fb-page');
         const iframe = containerRef.current.querySelector('iframe');
-        // If no iframe or iframe is empty/blocked, show fallback
-        if (!iframe || iframe.clientHeight < 50) {
+        // Check multiple conditions for failed load
+        const iframeBlocked = iframe && (iframe.clientHeight < 100 || !iframe.contentWindow);
+        const noContent = fbPage && fbPage.clientHeight < 100;
+        
+        if (!iframe || iframeBlocked || noContent) {
           setError(true);
         }
       }
-    }, 6000); // Check after 6 seconds
+    }, 4000); // Check after 4 seconds
 
     return () => clearTimeout(checkRender);
   }, []);
