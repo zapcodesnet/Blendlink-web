@@ -87,7 +87,10 @@ const WidgetSkeleton = () => (
 
 const SociableKitGroupWidget = () => {
   const [isVisible, setIsVisible] = useState(false);
-  const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [scriptLoaded, setScriptLoaded] = useState(() => {
+    // Check if script already exists during initial render
+    return typeof document !== 'undefined' && !!document.querySelector('script[src*="sociablekit.com"]');
+  });
   const [widgetReady, setWidgetReady] = useState(false);
   const [error, setError] = useState(false);
   const containerRef = useRef(null);
@@ -123,13 +126,6 @@ const SociableKitGroupWidget = () => {
   // Load script only when widget becomes visible
   useEffect(() => {
     if (!isVisible || scriptLoaded) return;
-
-    // Check if script already exists
-    const existingScript = document.querySelector('script[src*="sociablekit.com"]');
-    if (existingScript) {
-      setScriptLoaded(true);
-      return;
-    }
 
     // Create and load script asynchronously
     const script = document.createElement('script');
