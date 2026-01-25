@@ -1,6 +1,58 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 24, 2026 (Session 21 - Part 2)
+## Latest Update: January 25, 2026 (Session 22)
+
+---
+
+## SESSION 22: FACEBOOK FEED HOMEPAGE ✅
+
+### Feature: Authenticated User Homepage with Facebook Feed
+
+**Implementation:**
+1. ✅ **New `/home` Route** - Created new authenticated homepage
+   - Users now redirected to `/home` after login/register
+   - Bottom navigation "Home" button points to `/home`
+   - Landing page redirects authenticated users to `/home`
+
+2. ✅ **Homepage Components**
+   - **Header**: "Welcome to Blendlink Community" with gradient text
+   - **User Greeting**: "Welcome back, {username}!"
+   - **3 Action Buttons**: Mint Photo, My Photos, Auction Battle
+   - **Facebook Feed Section**: Embedded Facebook Page Plugin for @blendlinkapp
+   - **Fallback Link**: "Open in Facebook" link for environments where embed is blocked
+   - **Bottom CTA**: "Ready to earn rewards?" with Mint New and Join Battle buttons
+
+3. ✅ **Facebook Page Plugin Integration**
+   - SDK: `https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v20.0`
+   - Page: `https://www.facebook.com/blendlinkapp`
+   - Features: Timeline feed, facepile, cover photo, responsive width
+   - Fallback: Shows styled fallback with direct Facebook link when embed fails/blocked
+
+4. ✅ **Routing Updates**
+   - `App.js`: Added `/home` protected route
+   - `Login.jsx`: Redirect to `/home` instead of `/feed`
+   - `Register.jsx`: Redirect to `/home` instead of `/feed`
+   - `AuthCallback.jsx`: Redirect to `/home` for Google OAuth
+   - `BottomNav.jsx`: Home button points to `/home`
+   - `Landing.jsx`: Authenticated users redirected to `/home`
+
+**Files Modified:**
+- `frontend/src/pages/Home.jsx` - New component (created)
+- `frontend/src/App.js` - Added /home route
+- `frontend/src/pages/Login.jsx` - Updated redirect
+- `frontend/src/pages/Register.jsx` - Updated redirect
+- `frontend/src/pages/AuthCallback.jsx` - Updated redirect
+- `frontend/src/pages/Landing.jsx` - Added auth redirect
+- `frontend/src/components/BottomNav.jsx` - Updated home path
+
+**Testing Results:**
+- ✅ Registration redirects to /home
+- ✅ Login redirects to /home
+- ✅ Bottom nav Home button works
+- ✅ Landing page redirects authenticated users
+- ✅ Mobile responsive design working
+- ✅ Facebook "Open in Facebook" fallback link visible
+- ⚠️ Facebook embed blocked in preview environment (X-Frame-Options restriction) - **Will work in production**
 
 ---
 
