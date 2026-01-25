@@ -47,23 +47,25 @@ import {
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
-// Elfsight Facebook Feed Widget Component
-const ElfsightFacebookWidget = () => {
-  const [loaded, setLoaded] = useState(() => {
-    // Check if script already exists during initial render
-    return typeof document !== 'undefined' && !!document.querySelector('script[src*="elfsight"]');
-  });
+// SociableKIT Facebook Group Posts Widget Component
+const FACEBOOK_GROUP_URL = "https://www.facebook.com/groups/938837402074960";
+
+const SociableKitGroupWidget = () => {
+  const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
   const containerRef = useRef(null);
 
   useEffect(() => {
-    // If already loaded (script exists), nothing to do
-    if (loaded) return;
+    // Check if script already exists
+    const existingScript = document.querySelector('script[src*="sociablekit.com"]');
+    if (existingScript) {
+      setLoaded(true);
+      return;
+    }
 
-    // Load Elfsight script
+    // Load SociableKIT script
     const script = document.createElement('script');
-    script.src = 'https://static.elfsight.com/platform/platform.js';
-    script.async = true;
+    script.src = 'https://widgets.sociablekit.com/facebook-group-posts/widget.js';
     script.defer = true;
     
     script.onload = () => {
@@ -74,11 +76,10 @@ const ElfsightFacebookWidget = () => {
       setError(true);
     };
 
-    document.head.appendChild(script);
+    document.body.appendChild(script);
 
-    // Cleanup - don't remove script on unmount as it may affect other instances
     return () => {};
-  }, [loaded]);
+  }, []);
 
   // Check if widget rendered after a delay
   useEffect(() => {
@@ -86,91 +87,122 @@ const ElfsightFacebookWidget = () => {
     
     const checkRender = setTimeout(() => {
       if (containerRef.current) {
-        const widget = containerRef.current.querySelector('iframe');
-        if (!widget || widget.clientHeight < 50) {
-          // Widget didn't render - might be blocked or failed
+        const widget = containerRef.current.querySelector('.sk-ww-facebook-group-posts');
+        const iframe = widget?.querySelector('iframe');
+        // If no iframe or widget is empty after 15 seconds, show error
+        if (!iframe && widget?.clientHeight < 100) {
           setError(true);
         }
       }
-    }, 10000); // 10 second timeout
+    }, 15000);
 
     return () => clearTimeout(checkRender);
   }, [loaded]);
 
   return (
-    <div className="bg-card rounded-xl shadow-sm mb-4 overflow-hidden" data-testid="facebook-widget-container">
-      {/* Header */}
-      <div className="p-4 border-b flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Facebook className="w-5 h-5 text-blue-500" />
-          <span className="font-semibold text-foreground">Community Updates</span>
+    <div className="bg-card rounded-xl shadow-sm mb-4 overflow-hidden" data-testid="facebook-group-widget-container">
+      {/* Header Section */}
+      <div className="p-4 border-b bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-pink-600/10">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="relative">
+            <div className="absolute inset-0 bg-blue-500/30 rounded-full blur-md"></div>
+            <div className="relative bg-gradient-to-br from-blue-500 to-blue-600 rounded-full w-10 h-10 flex items-center justify-center">
+              <Facebook className="w-5 h-5 text-white" />
+            </div>
+          </div>
+          <div className="flex-1">
+            <h3 className="font-bold text-foreground text-base">Join Blendlink Community Group!</h3>
+          </div>
+          <a 
+            href={FACEBOOK_GROUP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-blue-500 hover:text-blue-400 flex items-center gap-1"
+            data-testid="facebook-group-external-link"
+          >
+            <ExternalLink className="w-4 h-4" />
+            <span className="hidden sm:inline">Open Group</span>
+          </a>
         </div>
-        <a 
-          href="https://www.facebook.com/blendlinkapp"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm text-blue-500 hover:text-blue-400 flex items-center gap-1"
-          data-testid="facebook-external-link"
-        >
-          <ExternalLink className="w-4 h-4" />
-          Open in Facebook
-        </a>
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          <span className="text-yellow-500 font-medium">Like, comment, share posts to earn BL coins.</span>{' '}
+          Post your minted photos directly in the Group for bonuses!
+        </p>
       </div>
 
       {/* Widget Container */}
       <div 
         ref={containerRef}
-        className="min-h-[400px] md:min-h-[500px]"
+        className="relative"
         style={{ 
-          // Prevent CLS (Cumulative Layout Shift)
+          minHeight: '500px',
+          maxHeight: '800px',
+          overflowY: 'auto',
           contain: 'layout',
         }}
       >
         {/* Loading State */}
         {!loaded && !error && (
-          <div className="flex items-center justify-center h-[400px] bg-muted/30">
+          <div className="absolute inset-0 flex items-center justify-center bg-card z-10">
             <div className="text-center">
               <Loader2 className="w-8 h-8 text-blue-500 animate-spin mx-auto mb-2" />
-              <p className="text-muted-foreground text-sm">Loading community feed...</p>
+              <p className="text-muted-foreground text-sm">Loading community posts...</p>
             </div>
           </div>
         )}
 
-        {/* Elfsight Widget - always render the div, let script handle it */}
+        {/* SociableKIT Widget */}
         <div 
-          className="elfsight-app-bb8b04da-2b62-4458-9cda-8cf2604cdc14" 
-          data-elfsight-app-lazy
+          className="sk-ww-facebook-group-posts" 
+          data-embed-id="25647571"
           style={{ 
             width: '100%',
-            minHeight: loaded && !error ? '400px' : '0',
+            minHeight: '500px',
           }}
         />
 
         {/* Error/Fallback State */}
         {error && (
-          <div className="p-6 text-center">
-            <div className="relative mx-auto w-16 h-16 mb-4">
-              <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl"></div>
-              <div className="relative bg-blue-600 rounded-full w-16 h-16 flex items-center justify-center">
-                <Facebook className="w-8 h-8 text-white" />
+          <div className="absolute inset-0 flex items-center justify-center bg-card z-10">
+            <div className="p-6 text-center">
+              <div className="relative mx-auto w-16 h-16 mb-4">
+                <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl"></div>
+                <div className="relative bg-blue-600 rounded-full w-16 h-16 flex items-center justify-center">
+                  <Facebook className="w-8 h-8 text-white" />
+                </div>
               </div>
+              <h3 className="font-semibold text-foreground mb-2">Join Our Community Group</h3>
+              <p className="text-muted-foreground text-sm mb-4 max-w-xs mx-auto">
+                Like, comment, and share posts to earn BL coins!
+              </p>
+              <a 
+                href={FACEBOOK_GROUP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-medium transition-all"
+              >
+                <Facebook className="w-5 h-5" />
+                Visit Group on Facebook
+                <ExternalLink className="w-4 h-4" />
+              </a>
             </div>
-            <h3 className="font-semibold text-foreground mb-2">Join Our Community</h3>
-            <p className="text-muted-foreground text-sm mb-4 max-w-xs mx-auto">
-              Like, comment, and share our posts to earn BL coins!
-            </p>
-            <a 
-              href="https://www.facebook.com/blendlinkapp"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-medium transition-all"
-            >
-              <Facebook className="w-5 h-5" />
-              Visit Blendlink on Facebook
-              <ExternalLink className="w-4 h-4" />
-            </a>
           </div>
         )}
+      </div>
+
+      {/* Post Your Photo Button */}
+      <div className="p-4 border-t bg-gradient-to-r from-purple-600/5 via-pink-600/5 to-blue-600/5">
+        <a 
+          href={FACEBOOK_GROUP_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold transition-all shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30"
+          data-testid="post-photo-in-group-btn"
+        >
+          <Camera className="w-5 h-5" />
+          Post Your Minted Photo in Group
+          <ExternalLink className="w-4 h-4" />
+        </a>
       </div>
 
       {/* Fallback Link */}
@@ -178,12 +210,12 @@ const ElfsightFacebookWidget = () => {
         <p className="text-xs text-muted-foreground">
           If feed does not load,{' '}
           <a 
-            href="https://www.facebook.com/blendlinkapp" 
+            href={FACEBOOK_GROUP_URL}
             target="_blank" 
             rel="noopener noreferrer" 
             className="text-blue-500 hover:text-blue-400 underline"
           >
-            Visit Blendlink Community on Facebook
+            Visit Blendlink Community Group on Facebook
           </a>
         </p>
       </div>
