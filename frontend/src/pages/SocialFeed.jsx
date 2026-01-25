@@ -47,60 +47,156 @@ import {
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
-// SociableKIT Facebook Group Posts Widget Component
+// SociableKIT Facebook Group Posts Widget Component - OPTIMIZED
 const FACEBOOK_GROUP_URL = "https://www.facebook.com/groups/938837402074960";
 
+// Skeleton loader for fast perceived performance
+const WidgetSkeleton = () => (
+  <div className="animate-pulse space-y-4 p-4">
+    {/* Header skeleton */}
+    <div className="flex items-center gap-3">
+      <div className="w-12 h-12 bg-muted rounded-full"></div>
+      <div className="flex-1">
+        <div className="h-4 w-32 bg-muted rounded mb-2"></div>
+        <div className="h-3 w-24 bg-muted rounded"></div>
+      </div>
+    </div>
+    {/* Post skeletons */}
+    {[1, 2].map((i) => (
+      <div key={i} className="border border-border/50 rounded-lg p-4">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 bg-muted rounded-full"></div>
+          <div className="flex-1">
+            <div className="h-4 w-28 bg-muted rounded mb-1"></div>
+            <div className="h-3 w-20 bg-muted rounded"></div>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <div className="h-4 w-full bg-muted rounded"></div>
+          <div className="h-4 w-3/4 bg-muted rounded"></div>
+        </div>
+        <div className="flex gap-4 mt-4 pt-3 border-t border-border/50">
+          <div className="h-8 w-16 bg-muted rounded"></div>
+          <div className="h-8 w-20 bg-muted rounded"></div>
+          <div className="h-8 w-16 bg-muted rounded"></div>
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
 const SociableKitGroupWidget = () => {
-  const [loaded, setLoaded] = useState(() => {
-    // Check if script already exists during initial render
-    return typeof document !== 'undefined' && !!document.querySelector('script[src*="sociablekit.com"]');
-  });
+  const [isVisible, setIsVisible] = useState(false);
+  const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [widgetReady, setWidgetReady] = useState(false);
   const [error, setError] = useState(false);
   const containerRef = useRef(null);
+  const observerRef = useRef(null);
 
+  // Intersection Observer for lazy loading - only load when widget is in viewport
   useEffect(() => {
-    // If already loaded (script exists), nothing to do
-    if (loaded) return;
+    if (!containerRef.current) return;
 
-    // Load SociableKIT script
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          // Disconnect after first intersection
+          observerRef.current?.disconnect();
+        }
+      },
+      {
+        root: null,
+        rootMargin: '100px', // Start loading 100px before visible
+        threshold: 0.1
+      }
+    );
+
+    observerRef.current.observe(containerRef.current);
+
+    return () => {
+      observerRef.current?.disconnect();
+    };
+  }, []);
+
+  // Load script only when widget becomes visible
+  useEffect(() => {
+    if (!isVisible || scriptLoaded) return;
+
+    // Check if script already exists
+    const existingScript = document.querySelector('script[src*="sociablekit.com"]');
+    if (existingScript) {
+      setScriptLoaded(true);
+      return;
+    }
+
+    // Create and load script asynchronously
     const script = document.createElement('script');
     script.src = 'https://widgets.sociablekit.com/facebook-group-posts/widget.js';
+    script.async = true;
     script.defer = true;
     
+    // Add load timeout
+    const loadTimeout = setTimeout(() => {
+      if (!scriptLoaded) {
+        setError(true);
+      }
+    }, 10000); // 10 second timeout
+
     script.onload = () => {
-      setLoaded(true);
+      clearTimeout(loadTimeout);
+      setScriptLoaded(true);
     };
     
     script.onerror = () => {
+      clearTimeout(loadTimeout);
       setError(true);
     };
 
+    // Append to body (non-blocking)
     document.body.appendChild(script);
 
-    return () => {};
-  }, [loaded]);
+    return () => {
+      clearTimeout(loadTimeout);
+    };
+  }, [isVisible, scriptLoaded]);
 
-  // Check if widget rendered after a delay
+  // Check if widget actually rendered content
   useEffect(() => {
-    if (!loaded) return;
-    
-    const checkRender = setTimeout(() => {
+    if (!scriptLoaded) return;
+
+    // Give widget time to render
+    const checkInterval = setInterval(() => {
       if (containerRef.current) {
-        const widget = containerRef.current.querySelector('.sk-ww-facebook-group-posts');
-        const iframe = widget?.querySelector('iframe');
-        // If no iframe or widget is empty after 15 seconds, show error
-        if (!iframe && widget?.clientHeight < 100) {
-          setError(true);
+        const widgetEl = containerRef.current.querySelector('.sk-ww-facebook-group-posts');
+        if (widgetEl) {
+          const hasContent = widgetEl.querySelector('iframe') || widgetEl.querySelector('.sk-feed') || widgetEl.clientHeight > 150;
+          if (hasContent) {
+            setWidgetReady(true);
+            clearInterval(checkInterval);
+          }
         }
       }
-    }, 15000);
+    }, 500);
 
-    return () => clearTimeout(checkRender);
-  }, [loaded]);
+    // Timeout after 12 seconds
+    const timeout = setTimeout(() => {
+      clearInterval(checkInterval);
+      if (!widgetReady) {
+        setError(true);
+      }
+    }, 12000);
+
+    return () => {
+      clearInterval(checkInterval);
+      clearTimeout(timeout);
+    };
+  }, [scriptLoaded, widgetReady]);
 
   return (
     <div className="bg-card rounded-xl shadow-sm mb-4 overflow-hidden" data-testid="facebook-group-widget-container">
-      {/* Header Section */}
+      {/* Header Section - Always visible immediately */}
       <div className="p-4 border-b bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-pink-600/10">
         <div className="flex items-center gap-3 mb-3">
           <div className="relative">
@@ -128,6 +224,97 @@ const SociableKitGroupWidget = () => {
           Post your minted photos directly in the Group for bonuses!
         </p>
       </div>
+
+      {/* Widget Container with lazy loading */}
+      <div 
+        ref={containerRef}
+        className="relative"
+        style={{ 
+          minHeight: '400px',
+          maxHeight: '700px',
+          overflowY: 'auto',
+        }}
+      >
+        {/* Show skeleton while loading */}
+        {(!widgetReady && !error) && (
+          <div className="absolute inset-0 bg-card z-10">
+            <WidgetSkeleton />
+          </div>
+        )}
+
+        {/* SociableKIT Widget - rendered immediately but hidden until ready */}
+        <div 
+          className="sk-ww-facebook-group-posts" 
+          data-embed-id="25647571"
+          style={{ 
+            width: '100%',
+            minHeight: '400px',
+            opacity: widgetReady ? 1 : 0,
+            transition: 'opacity 0.3s ease-in-out',
+          }}
+        />
+
+        {/* Error/Fallback State */}
+        {error && (
+          <div className="absolute inset-0 flex items-center justify-center bg-card z-20">
+            <div className="p-6 text-center">
+              <div className="relative mx-auto w-16 h-16 mb-4">
+                <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl"></div>
+                <div className="relative bg-blue-600 rounded-full w-16 h-16 flex items-center justify-center">
+                  <Facebook className="w-8 h-8 text-white" />
+                </div>
+              </div>
+              <h3 className="font-semibold text-foreground mb-2">Join Our Community Group</h3>
+              <p className="text-muted-foreground text-sm mb-4 max-w-xs mx-auto">
+                Like, comment, and share posts to earn BL coins!
+              </p>
+              <a 
+                href={FACEBOOK_GROUP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-medium transition-all"
+              >
+                <Facebook className="w-5 h-5" />
+                Visit Group on Facebook
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Post Your Photo Button */}
+      <div className="p-4 border-t bg-gradient-to-r from-purple-600/5 via-pink-600/5 to-blue-600/5">
+        <a 
+          href={FACEBOOK_GROUP_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold transition-all shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30"
+          data-testid="post-photo-in-group-btn"
+        >
+          <Camera className="w-5 h-5" />
+          Post Your Minted Photo in Group
+          <ExternalLink className="w-4 h-4" />
+        </a>
+      </div>
+
+      {/* Fallback Link */}
+      <div className="p-3 bg-muted/30 text-center border-t">
+        <p className="text-xs text-muted-foreground">
+          If feed does not load,{' '}
+          <a 
+            href={FACEBOOK_GROUP_URL}
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="text-blue-500 hover:text-blue-400 underline"
+          >
+            Visit Blendlink Community Group on Facebook
+          </a>
+        </p>
+      </div>
+    </div>
+  );
+};
 
       {/* Widget Container */}
       <div 
