@@ -47,6 +47,178 @@ import {
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
+// Elfsight Facebook Feed Widget Component
+const ElfsightFacebookWidget = () => {
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    // Check if script already exists
+    if (document.querySelector('script[src*="elfsightcdn.com"]')) {
+      setLoaded(true);
+      return;
+    }
+
+    // Load Elfsight script
+    const script = document.createElement('script');
+    script.src = 'https://static.elfsight.com/platform/platform.js';
+    script.async = true;
+    script.defer = true;
+    
+    script.onload = () => {
+      setLoaded(true);
+    };
+    
+    script.onerror = () => {
+      setError(true);
+    };
+
+    document.head.appendChild(script);
+
+    // Cleanup - don't remove script on unmount as it may affect other instances
+    return () => {};
+  }, []);
+
+  // Check if widget rendered after a delay
+  useEffect(() => {
+    if (!loaded) return;
+    
+    const checkRender = setTimeout(() => {
+      if (containerRef.current) {
+        const widget = containerRef.current.querySelector('iframe');
+        if (!widget || widget.clientHeight < 50) {
+          // Widget didn't render - might be blocked or failed
+          setError(true);
+        }
+      }
+    }, 10000); // 10 second timeout
+
+    return () => clearTimeout(checkRender);
+  }, [loaded]);
+
+  return (
+    <div className="bg-card rounded-xl shadow-sm mb-4 overflow-hidden" data-testid="facebook-widget-container">
+      {/* Header */}
+      <div className="p-4 border-b flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Facebook className="w-5 h-5 text-blue-500" />
+          <span className="font-semibold text-foreground">Community Updates</span>
+        </div>
+        <a 
+          href="https://www.facebook.com/blendlinkapp"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-blue-500 hover:text-blue-400 flex items-center gap-1"
+          data-testid="facebook-external-link"
+        >
+          <ExternalLink className="w-4 h-4" />
+          Open in Facebook
+        </a>
+      </div>
+
+      {/* Widget Container */}
+      <div 
+        ref={containerRef}
+        className="min-h-[400px] md:min-h-[500px]"
+        style={{ 
+          // Prevent CLS (Cumulative Layout Shift)
+          contain: 'layout',
+        }}
+      >
+        {/* Loading State */}
+        {!loaded && !error && (
+          <div className="flex items-center justify-center h-[400px] bg-muted/30">
+            <div className="text-center">
+              <Loader2 className="w-8 h-8 text-blue-500 animate-spin mx-auto mb-2" />
+              <p className="text-muted-foreground text-sm">Loading community feed...</p>
+            </div>
+          </div>
+        )}
+
+        {/* Elfsight Widget - always render the div, let script handle it */}
+        <div 
+          className="elfsight-app-bb8b04da-2b62-4458-9cda-8cf2604cdc14" 
+          data-elfsight-app-lazy
+          style={{ 
+            width: '100%',
+            minHeight: loaded && !error ? '400px' : '0',
+          }}
+        />
+
+        {/* Error/Fallback State */}
+        {error && (
+          <div className="p-6 text-center">
+            <div className="relative mx-auto w-16 h-16 mb-4">
+              <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl"></div>
+              <div className="relative bg-blue-600 rounded-full w-16 h-16 flex items-center justify-center">
+                <Facebook className="w-8 h-8 text-white" />
+              </div>
+            </div>
+            <h3 className="font-semibold text-foreground mb-2">Join Our Community</h3>
+            <p className="text-muted-foreground text-sm mb-4 max-w-xs mx-auto">
+              Like, comment, and share our posts to earn BL coins!
+            </p>
+            <a 
+              href="https://www.facebook.com/blendlinkapp"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-medium transition-all"
+            >
+              <Facebook className="w-5 h-5" />
+              Visit Blendlink on Facebook
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          </div>
+        )}
+      </div>
+
+      {/* Fallback Link */}
+      <div className="p-3 bg-muted/30 text-center border-t">
+        <p className="text-xs text-muted-foreground">
+          If feed does not load,{' '}
+          <a 
+            href="https://www.facebook.com/blendlinkapp" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="text-blue-500 hover:text-blue-400 underline"
+          >
+            Visit Blendlink Community on Facebook
+          </a>
+        </p>
+      </div>
+    </div>
+  );
+};
+
+// Quick Actions for Rewards Section
+const RewardsQuickActions = () => (
+  <div className="bg-gradient-to-r from-purple-600/10 via-pink-600/10 to-blue-600/10 rounded-xl p-4 mb-4 border border-border/50" data-testid="rewards-quick-actions">
+    <p className="text-center text-muted-foreground text-sm mb-3">
+      Ready to earn rewards?
+    </p>
+    <div className="flex gap-2 justify-center">
+      <Link to="/minted-photos" data-testid="mint-new-btn">
+        <Button 
+          variant="outline" 
+          className="border-purple-500/50 text-purple-500 hover:bg-purple-500/10 text-sm"
+        >
+          <Camera className="w-4 h-4 mr-1" />
+          Mint New
+        </Button>
+      </Link>
+      <Link to="/photo-game" data-testid="join-battle-btn">
+        <Button 
+          className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-sm text-white"
+        >
+          <Swords className="w-4 h-4 mr-1" />
+          Join Battle
+        </Button>
+      </Link>
+    </div>
+  </div>
+);
+
 // Post loading skeleton for better perceived performance
 const PostSkeleton = () => (
   <div className="bg-card rounded-xl shadow-sm mb-4 animate-pulse">
