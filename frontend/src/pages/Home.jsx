@@ -1,48 +1,42 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Camera, Image, Swords, ExternalLink, RefreshCw, Facebook } from 'lucide-react';
+import { Camera, Image, Swords, ExternalLink, RefreshCw, Facebook, Heart, MessageCircle, Share2, Coins } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { AuthContext } from '../App';
 
-// Facebook Page Plugin Component
-const FacebookEmbed = ({ pageUrl, height = 700 }) => {
+// Elfsight Facebook Feed Widget Component
+// To set up: Create free widget at https://elfsight.com/facebook-feed-widget/create/
+// Connect your Facebook page, customize, and copy the widget ID
+const ELFSIGHT_WIDGET_ID = null; // Set to your Elfsight widget ID like "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+const SocialFeedEmbed = ({ pageUrl }) => {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
-  const containerRef = React.useRef(null);
+  const containerRef = useRef(null);
 
   useEffect(() => {
-    // Load Facebook SDK
-    const loadFacebookSDK = () => {
-      // Check if SDK is already loaded
-      if (window.FB) {
-        window.FB.XFBML.parse();
+    // If no widget ID configured, show the promotional fallback
+    if (!ELFSIGHT_WIDGET_ID) {
+      setLoaded(true);
+      return;
+    }
+
+    // Load Elfsight platform script
+    const loadElfsight = () => {
+      if (document.querySelector('script[src*="elfsight.com"]')) {
         setLoaded(true);
         return;
       }
 
-      // Create fb-root if it doesn't exist
-      if (!document.getElementById('fb-root')) {
-        const fbRoot = document.createElement('div');
-        fbRoot.id = 'fb-root';
-        document.body.prepend(fbRoot);
-      }
-
-      // Load SDK script
       const script = document.createElement('script');
-      script.src = 'https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v20.0';
+      script.src = 'https://static.elfsight.com/platform/platform.js';
       script.async = true;
       script.defer = true;
-      script.crossOrigin = 'anonymous';
+      script.setAttribute('data-use-service-core', 'true');
       
       script.onload = () => {
         setLoaded(true);
-        // Parse XFBML after a short delay
-        setTimeout(() => {
-          if (window.FB) {
-            window.FB.XFBML.parse();
-          }
-        }, 500);
       };
       
       script.onerror = () => {
@@ -52,107 +46,149 @@ const FacebookEmbed = ({ pageUrl, height = 700 }) => {
       document.body.appendChild(script);
     };
 
-    loadFacebookSDK();
+    loadElfsight();
 
-    // Check if the embed actually rendered content after SDK loads
+    // Check if widget rendered after timeout
     const checkRender = setTimeout(() => {
       if (containerRef.current) {
-        const fbPage = containerRef.current.querySelector('.fb-page');
-        const iframe = containerRef.current.querySelector('iframe');
-        // Check multiple conditions for failed load
-        const iframeBlocked = iframe && (iframe.clientHeight < 100 || !iframe.contentWindow);
-        const noContent = fbPage && fbPage.clientHeight < 100;
-        
-        if (!iframe || iframeBlocked || noContent) {
+        const widget = containerRef.current.querySelector('.elfsight-app-' + ELFSIGHT_WIDGET_ID);
+        if (widget && widget.clientHeight < 50) {
           setError(true);
         }
       }
-    }, 4000); // Check after 4 seconds
+    }, 8000);
 
     return () => clearTimeout(checkRender);
   }, []);
 
-  // Re-parse when component updates
-  useEffect(() => {
-    if (window.FB && loaded) {
-      window.FB.XFBML.parse();
-    }
-  }, [loaded]);
+  // Show promotional community section when no widget ID is configured
+  if (!ELFSIGHT_WIDGET_ID) {
+    return (
+      <div className="space-y-4">
+        {/* Community Engagement Card */}
+        <div className="bg-gradient-to-br from-blue-900/30 via-purple-900/20 to-pink-900/20 rounded-2xl p-5 border border-blue-500/20">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="relative">
+              <div className="absolute inset-0 bg-blue-500/30 rounded-full blur-lg"></div>
+              <div className="relative bg-gradient-to-br from-blue-500 to-blue-600 rounded-full w-12 h-12 flex items-center justify-center">
+                <Facebook className="w-6 h-6 text-white" />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-white font-bold">Blendlink Community</h3>
+              <p className="text-blue-300 text-xs">@blendlinkapp</p>
+            </div>
+          </div>
+          
+          {/* Engagement CTA */}
+          <div className="bg-gray-800/50 rounded-xl p-4 mb-4">
+            <div className="flex items-center gap-2 text-yellow-400 mb-2">
+              <Coins className="w-5 h-5" />
+              <span className="font-semibold text-sm">Earn BL Coins!</span>
+            </div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              Like, comment, and share our posts to earn rewards. Post your minted photos on Facebook for bonus coins!
+            </p>
+          </div>
 
+          {/* Quick Stats Preview */}
+          <div className="grid grid-cols-3 gap-2 mb-4">
+            <div className="bg-gray-800/40 rounded-lg p-3 text-center">
+              <Heart className="w-5 h-5 text-pink-400 mx-auto mb-1" />
+              <span className="text-xs text-gray-400">Like = 5 BL</span>
+            </div>
+            <div className="bg-gray-800/40 rounded-lg p-3 text-center">
+              <MessageCircle className="w-5 h-5 text-blue-400 mx-auto mb-1" />
+              <span className="text-xs text-gray-400">Comment = 10 BL</span>
+            </div>
+            <div className="bg-gray-800/40 rounded-lg p-3 text-center">
+              <Share2 className="w-5 h-5 text-green-400 mx-auto mb-1" />
+              <span className="text-xs text-gray-400">Share = 25 BL</span>
+            </div>
+          </div>
+
+          {/* Visit Facebook Button */}
+          <a 
+            href={pageUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-medium transition-all shadow-lg shadow-blue-500/20"
+            data-testid="facebook-page-link"
+          >
+            <Facebook className="w-5 h-5" />
+            Visit Blendlink on Facebook
+            <ExternalLink className="w-4 h-4" />
+          </a>
+        </div>
+
+        {/* Fallback text */}
+        <p className="text-center text-gray-500 text-xs">
+          If feed does not load,{' '}
+          <a href={pageUrl} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">
+            visit Blendlink Community on Facebook
+          </a>
+        </p>
+      </div>
+    );
+  }
+
+  // Error state
   if (error) {
     return (
       <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl p-6 text-center border border-gray-700/50" data-testid="facebook-fallback">
-        <div className="relative mx-auto w-20 h-20 mb-4">
+        <div className="relative mx-auto w-16 h-16 mb-4">
           <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl"></div>
-          <div className="relative bg-blue-600 rounded-full w-20 h-20 flex items-center justify-center">
-            <Facebook className="w-10 h-10 text-white" />
+          <div className="relative bg-blue-600 rounded-full w-16 h-16 flex items-center justify-center">
+            <Facebook className="w-8 h-8 text-white" />
           </div>
         </div>
         <h3 className="text-lg font-bold text-white mb-2">Blendlink Community</h3>
         <p className="text-gray-400 text-sm mb-4 max-w-xs mx-auto">
-          Follow us for updates, giveaways, and community highlights!
+          Unable to load feed. Visit our page directly!
         </p>
         <a 
           href={pageUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium transition-all shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30"
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium transition-all"
           data-testid="facebook-page-link"
         >
           <Facebook className="w-5 h-5" />
-          Visit Our Facebook Page
+          Visit Facebook Page
           <ExternalLink className="w-4 h-4" />
         </a>
       </div>
     );
   }
 
+  // Elfsight widget embed
   return (
-    <div className="relative" ref={containerRef}>
+    <div className="space-y-3" ref={containerRef}>
       {/* Loading state */}
       {!loaded && (
-        <div className="flex items-center justify-center bg-gray-800/50 rounded-2xl min-h-[200px]">
+        <div className="flex items-center justify-center bg-gray-800/50 rounded-2xl min-h-[300px]">
           <div className="text-center">
             <RefreshCw className="w-8 h-8 text-purple-400 animate-spin mx-auto mb-2" />
-            <p className="text-gray-400 text-sm">Loading Community Updates...</p>
+            <p className="text-gray-400 text-sm">Loading Community Feed...</p>
           </div>
         </div>
       )}
       
-      {/* Facebook Page Plugin */}
-      <div 
-        className="fb-page rounded-2xl overflow-hidden" 
-        data-href={pageUrl}
-        data-tabs="timeline"
-        data-width=""
-        data-height={height}
-        data-small-header="false"
-        data-adapt-container-width="true"
-        data-hide-cover="false"
-        data-show-facepile="true"
-        data-lazy="true"
-      >
-        <blockquote 
-          cite={pageUrl}
-          className="fb-xfbml-parse-ignore"
-        >
-          <a href={pageUrl}>Blendlink</a>
-        </blockquote>
-      </div>
+      {/* Elfsight Widget Container */}
+      {loaded && ELFSIGHT_WIDGET_ID && (
+        <div 
+          className={`elfsight-app-${ELFSIGHT_WIDGET_ID}`}
+          data-elfsight-app-lazy
+        ></div>
+      )}
       
-      {/* Always show direct link as backup */}
-      <div className="mt-3 text-center">
-        <a 
-          href={pageUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-sm text-blue-400 hover:text-blue-300 transition-colors"
-          data-testid="facebook-direct-link"
-        >
-          <ExternalLink className="w-3.5 h-3.5" />
-          Open in Facebook
+      {/* Fallback link */}
+      <p className="text-center text-gray-500 text-xs">
+        If feed does not load,{' '}
+        <a href={pageUrl} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">
+          visit Blendlink Community on Facebook
         </a>
-      </div>
+      </p>
     </div>
   );
 };
