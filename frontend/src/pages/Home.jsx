@@ -9,6 +9,7 @@ import { AuthContext } from '../App';
 const FacebookEmbed = ({ pageUrl, height = 700 }) => {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
+  const containerRef = React.useRef(null);
 
   useEffect(() => {
     // Load Facebook SDK
@@ -53,15 +54,19 @@ const FacebookEmbed = ({ pageUrl, height = 700 }) => {
 
     loadFacebookSDK();
 
-    // Set timeout for error fallback - shorter since we'll show a nice fallback
-    const timeout = setTimeout(() => {
-      if (!loaded && !window.FB) {
-        setError(true);
+    // Check if the embed actually rendered content after SDK loads
+    const checkRender = setTimeout(() => {
+      if (containerRef.current) {
+        const iframe = containerRef.current.querySelector('iframe');
+        // If no iframe or iframe is empty/blocked, show fallback
+        if (!iframe || iframe.clientHeight < 50) {
+          setError(true);
+        }
       }
-    }, 5000);
+    }, 6000); // Check after 6 seconds
 
-    return () => clearTimeout(timeout);
-  }, [loaded]);
+    return () => clearTimeout(checkRender);
+  }, []);
 
   // Re-parse when component updates
   useEffect(() => {
