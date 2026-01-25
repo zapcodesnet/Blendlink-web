@@ -1,58 +1,68 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 25, 2026 (Session 22)
+## Latest Update: January 25, 2026 (Session 22 - Part 2)
 
 ---
 
-## SESSION 22: FACEBOOK FEED HOMEPAGE ✅
+## SESSION 22 PART 2: ELFSIGHT FACEBOOK FEED INTEGRATION ✅
 
-### Feature: Authenticated User Homepage with Facebook Feed
+### Feature: Facebook Feed Widget on /feed Page
 
 **Implementation:**
-1. ✅ **New `/home` Route** - Created new authenticated homepage
-   - Users now redirected to `/home` after login/register
-   - Bottom navigation "Home" button points to `/home`
-   - Landing page redirects authenticated users to `/home`
+1. ✅ **Elfsight Facebook Feed Widget** - Successfully integrated
+   - Widget ID: `bb8b04da-2b62-4458-9cda-8cf2604cdc14`
+   - Script: `https://static.elfsight.com/platform/platform.js` (async)
+   - Lazy loading enabled with `data-elfsight-app-lazy`
 
-2. ✅ **Homepage Components**
-   - **Header**: "Welcome to Blendlink Community" with gradient text
-   - **User Greeting**: "Welcome back, {username}!"
-   - **3 Action Buttons**: Mint Photo, My Photos, Auction Battle
-   - **Facebook Feed Section**: Embedded Facebook Page Plugin for @blendlinkapp
-   - **Fallback Link**: "Open in Facebook" link for environments where embed is blocked
-   - **Bottom CTA**: "Ready to earn rewards?" with Mint New and Join Battle buttons
+2. ✅ **Widget Placement** on /feed page:
+   - Stories Bar (Your Story)
+   - Create Post Card with **Live Video / Photo/Video / AI Create** buttons
+   - **Elfsight Facebook Feed Widget** (displays BlendLink Facebook page)
+   - **"Ready to earn rewards?"** section with Mint New & Join Battle buttons
+   - User posts feed
+   - Bottom navigation
 
-3. ✅ **Facebook Page Plugin Integration**
-   - SDK: `https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v20.0`
-   - Page: `https://www.facebook.com/blendlinkapp`
-   - Features: Timeline feed, facepile, cover photo, responsive width
-   - Fallback: Shows styled fallback with direct Facebook link when embed fails/blocked
+3. ✅ **Fallback Handling**:
+   - Shows "Join Our Community" with "Visit Blendlink on Facebook" button
+   - Fallback text: "If feed does not load, Visit Blendlink Community on Facebook"
 
-4. ✅ **Routing Updates**
-   - `App.js`: Added `/home` protected route
-   - `Login.jsx`: Redirect to `/home` instead of `/feed`
-   - `Register.jsx`: Redirect to `/home` instead of `/feed`
-   - `AuthCallback.jsx`: Redirect to `/home` for Google OAuth
-   - `BottomNav.jsx`: Home button points to `/home`
-   - `Landing.jsx`: Authenticated users redirected to `/home`
+4. ✅ **Login Redirects** - All auth flows redirect to `/feed`:
+   - Email/Password login → /feed
+   - Registration → /feed
+   - Google OAuth → /feed
+   - Bottom nav Home → /feed
+   - Landing page (authenticated) → /feed
+
+5. ✅ **Mobile Optimization**:
+   - Full-width widget on mobile
+   - Responsive action buttons
+   - CLS prevention with `contain: layout`
+   - Bottom navigation preserved
 
 **Files Modified:**
-- `frontend/src/pages/Home.jsx` - New component (created)
-- `frontend/src/App.js` - Added /home route
-- `frontend/src/pages/Login.jsx` - Updated redirect
-- `frontend/src/pages/Register.jsx` - Updated redirect
-- `frontend/src/pages/AuthCallback.jsx` - Updated redirect
-- `frontend/src/pages/Landing.jsx` - Added auth redirect
-- `frontend/src/components/BottomNav.jsx` - Updated home path
+- `frontend/src/pages/SocialFeed.jsx` - Added ElfsightFacebookWidget & RewardsQuickActions
+- `frontend/src/pages/Login.jsx` - Redirect to /feed
+- `frontend/src/pages/Register.jsx` - Redirect to /feed
+- `frontend/src/pages/AuthCallback.jsx` - Redirect to /feed
+- `frontend/src/pages/Landing.jsx` - Redirect authenticated to /feed
+- `frontend/src/components/BottomNav.jsx` - Home → /feed
 
 **Testing Results:**
-- ✅ Registration redirects to /home
-- ✅ Login redirects to /home
-- ✅ Bottom nav Home button works
-- ✅ Landing page redirects authenticated users
-- ✅ Mobile responsive design working
-- ✅ Facebook "Open in Facebook" fallback link visible
-- ⚠️ Facebook embed blocked in preview environment (X-Frame-Options restriction) - **Will work in production**
+- ✅ Widget loads BlendLink Facebook page content
+- ✅ Shows posts, photos, cover image
+- ✅ Like/Share buttons visible within widget
+- ✅ Mobile responsive
+- ✅ Fallback displays correctly when widget blocked
+- ✅ All login flows redirect to /feed
+
+---
+
+## SESSION 22 PART 1: FACEBOOK HOMEPAGE ATTEMPT
+
+- Initially implemented native Facebook Page Plugin
+- Facebook blocked due to X-Frame-Options
+- Created promotional fallback with BL coins rewards display
+- Superseded by Elfsight integration in Part 2
 
 ---
 
