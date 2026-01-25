@@ -24,7 +24,7 @@ export default function Login() {
     try {
       await api.auth.login(form.email, form.password);
       toast.success("Welcome back!");
-      navigate("/home");
+      navigate("/feed");
     } catch (error) {
       // Handle network errors specifically
       const errorMsg = error.message || "Login failed";

@@ -36,7 +36,7 @@ export default function AuthCallback() {
         await api.auth.handleGoogleCallback(sessionId);
         setStatus("Success! Redirecting...");
         toast.success("Welcome to Blendlink!");
-        navigate("/home", { replace: true });
+        navigate("/feed", { replace: true });
       } catch (error) {
         console.error("AuthCallback: Auth error:", error);
         const errorMsg = error.message || "Authentication failed";

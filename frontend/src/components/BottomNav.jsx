@@ -38,7 +38,7 @@ export const BottomNav = () => {
   }, []);
 
   const navItems = [
-    { path: "/home", icon: Home, label: t('nav.home'), fallback: "Home" },
+    { path: "/feed", icon: Home, label: t('nav.home'), fallback: "Home" },
     { path: "/marketplace", icon: ShoppingBag, label: t('nav.marketplace'), fallback: "Market" },
     { path: "/notifications", icon: Bell, label: t('notifications.title') || "Alerts", badge: unreadCount },
     { path: "/wallet", icon: Coins, label: t('nav.wallet'), fallback: "Wallet" },
