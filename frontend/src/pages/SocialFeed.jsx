@@ -292,8 +292,6 @@ const FacebookGroupWidget = () => {
   );
 };
 
-// FacebookGroupWidget component is defined above
-
 // Quick Actions for Rewards Section
 const RewardsQuickActions = () => (
   <div className="bg-gradient-to-r from-purple-600/10 via-pink-600/10 to-blue-600/10 rounded-xl p-4 mb-4 border border-border/50" data-testid="rewards-quick-actions">
