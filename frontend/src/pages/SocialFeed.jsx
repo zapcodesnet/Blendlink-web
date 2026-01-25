@@ -96,21 +96,17 @@ const WidgetSkeleton = () => (
 
 // Facebook Group Widget Component - Taggbox or Fallback
 const FacebookGroupWidget = () => {
-  const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [scriptLoaded, setScriptLoaded] = useState(() => {
+    // Check if script already exists during initial render
+    return TAGGBOX_WIDGET_ID && typeof document !== 'undefined' && !!document.querySelector('script[src*="taggbox.com"]');
+  });
   const [widgetReady, setWidgetReady] = useState(!TAGGBOX_WIDGET_ID); // Show fallback immediately if no widget ID
   const [error, setError] = useState(false);
   const containerRef = useRef(null);
 
   useEffect(() => {
-    // If no Taggbox widget ID configured, nothing to load
-    if (!TAGGBOX_WIDGET_ID) {
-      return;
-    }
-
-    // Check if Taggbox script already exists
-    const existingScript = document.querySelector('script[src*="taggbox.com"]');
-    if (existingScript) {
-      setScriptLoaded(true);
+    // If no Taggbox widget ID configured or script already loaded, nothing to do
+    if (!TAGGBOX_WIDGET_ID || scriptLoaded) {
       return;
     }
 
@@ -139,7 +135,7 @@ const FacebookGroupWidget = () => {
     document.body.appendChild(script);
 
     return () => clearTimeout(loadTimeout);
-  }, []);
+  }, [scriptLoaded]);
 
   // Show promotional fallback when no widget ID configured
   const showFallback = !TAGGBOX_WIDGET_ID || error;
