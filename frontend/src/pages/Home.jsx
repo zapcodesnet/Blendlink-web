@@ -11,14 +11,13 @@ import { AuthContext } from '../App';
 const ELFSIGHT_WIDGET_ID = null; // Set to your Elfsight widget ID like "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
 const SocialFeedEmbed = ({ pageUrl }) => {
-  const [loaded, setLoaded] = useState(false);
+  const [loaded, setLoaded] = useState(!ELFSIGHT_WIDGET_ID); // Start as loaded if no widget ID
   const [error, setError] = useState(false);
   const containerRef = useRef(null);
 
   useEffect(() => {
-    // If no widget ID configured, show the promotional fallback
+    // If no widget ID configured, already showing promotional fallback
     if (!ELFSIGHT_WIDGET_ID) {
-      setLoaded(true);
       return;
     }
 
