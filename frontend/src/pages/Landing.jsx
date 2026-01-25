@@ -335,6 +335,14 @@ export default function Landing() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
+  // Redirect authenticated users to /home
+  useEffect(() => {
+    const token = getToken();
+    if (token) {
+      navigate('/home', { replace: true });
+    }
+  }, [navigate]);
+
   const features = [
     { icon: Users, title: "Social Network", desc: "Connect with friends, share posts & stories" },
     { icon: ShoppingBag, title: t('nav.marketplace') || "Marketplace", desc: "Buy & sell items with zero fees" },
