@@ -1306,8 +1306,14 @@ export default function SocialFeed() {
           currentUserId={user?.user_id}
         />
         
-        {/* Create Post */}
+        {/* Create Post with Live Video / Photo/Video / AI Create */}
         <CreatePostCard user={user} onPostCreated={handlePostCreated} />
+        
+        {/* Facebook Community Feed Widget */}
+        <ElfsightFacebookWidget />
+        
+        {/* Quick Actions - Mint & Battle */}
+        <RewardsQuickActions />
         
         {/* Posts Feed */}
         {posts.length === 0 ? (
