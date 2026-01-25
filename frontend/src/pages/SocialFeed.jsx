@@ -1341,8 +1341,8 @@ export default function SocialFeed() {
         {/* Create Post with Live Video / Photo/Video / AI Create */}
         <CreatePostCard user={user} onPostCreated={handlePostCreated} />
         
-        {/* Facebook Community Feed Widget */}
-        <ElfsightFacebookWidget />
+        {/* SociableKIT Facebook Group Posts Widget */}
+        <SociableKitGroupWidget />
         
         {/* Quick Actions - Mint & Battle */}
         <RewardsQuickActions />
