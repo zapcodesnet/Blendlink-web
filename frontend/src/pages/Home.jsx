@@ -53,12 +53,12 @@ const FacebookEmbed = ({ pageUrl, height = 700 }) => {
 
     loadFacebookSDK();
 
-    // Set timeout for error fallback
+    // Set timeout for error fallback - shorter since we'll show a nice fallback
     const timeout = setTimeout(() => {
       if (!loaded && !window.FB) {
         setError(true);
       }
-    }, 10000);
+    }, 5000);
 
     return () => clearTimeout(timeout);
   }, [loaded]);
@@ -72,18 +72,26 @@ const FacebookEmbed = ({ pageUrl, height = 700 }) => {
 
   if (error) {
     return (
-      <div className="bg-gray-800/50 rounded-2xl p-8 text-center border border-gray-700">
-        <Facebook className="w-16 h-16 mx-auto text-blue-500 mb-4" />
-        <h3 className="text-xl font-bold text-white mb-2">Unable to load Facebook Feed</h3>
-        <p className="text-gray-400 mb-4">The Facebook embed could not load. Visit our page directly:</p>
+      <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl p-6 text-center border border-gray-700/50" data-testid="facebook-fallback">
+        <div className="relative mx-auto w-20 h-20 mb-4">
+          <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl"></div>
+          <div className="relative bg-blue-600 rounded-full w-20 h-20 flex items-center justify-center">
+            <Facebook className="w-10 h-10 text-white" />
+          </div>
+        </div>
+        <h3 className="text-lg font-bold text-white mb-2">Blendlink Community</h3>
+        <p className="text-gray-400 text-sm mb-4 max-w-xs mx-auto">
+          Follow us for updates, giveaways, and community highlights!
+        </p>
         <a 
           href={pageUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium transition-all"
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium transition-all shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30"
+          data-testid="facebook-page-link"
         >
           <Facebook className="w-5 h-5" />
-          Visit Blendlink on Facebook
+          Visit Our Facebook Page
           <ExternalLink className="w-4 h-4" />
         </a>
       </div>
