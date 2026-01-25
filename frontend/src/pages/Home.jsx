@@ -75,7 +75,7 @@ const FacebookEmbed = ({ pageUrl, height = 700 }) => {
       <div className="bg-gray-800/50 rounded-2xl p-8 text-center border border-gray-700">
         <Facebook className="w-16 h-16 mx-auto text-blue-500 mb-4" />
         <h3 className="text-xl font-bold text-white mb-2">Unable to load Facebook Feed</h3>
-        <p className="text-gray-400 mb-4">The Facebook embed couldn't load. Visit our page directly:</p>
+        <p className="text-gray-400 mb-4">The Facebook embed could not load. Visit our page directly:</p>
         <a 
           href={pageUrl}
           target="_blank"
