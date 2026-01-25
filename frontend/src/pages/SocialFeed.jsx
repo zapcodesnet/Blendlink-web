@@ -239,12 +239,12 @@ const RewardsQuickActions = () => (
           Mint New
         </Button>
       </Link>
-      <Link to="/photo-game" data-testid="join-battle-btn">
+      <Link to="/photo-game" data-testid="join-auction-btn">
         <Button 
           className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-sm text-white"
         >
           <Swords className="w-4 h-4 mr-1" />
-          Join Battle
+          Join Auction
         </Button>
       </Link>
     </div>
