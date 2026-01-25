@@ -104,7 +104,7 @@ const FacebookEmbed = ({ pageUrl, height = 700 }) => {
   }
 
   return (
-    <div className="relative">
+    <div className="relative" ref={containerRef}>
       {/* Loading state */}
       {!loaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-800/50 rounded-2xl">
