@@ -335,11 +335,11 @@ export default function Landing() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  // Redirect authenticated users to /home
+  // Redirect authenticated users to /feed
   useEffect(() => {
     const token = getToken();
     if (token) {
-      navigate('/home', { replace: true });
+      navigate('/feed', { replace: true });
     }
   }, [navigate]);
 
