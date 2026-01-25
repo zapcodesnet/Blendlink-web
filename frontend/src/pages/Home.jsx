@@ -111,10 +111,10 @@ const FacebookEmbed = ({ pageUrl, height = 700 }) => {
     <div className="relative" ref={containerRef}>
       {/* Loading state */}
       {!loaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-800/50 rounded-2xl">
+        <div className="flex items-center justify-center bg-gray-800/50 rounded-2xl min-h-[200px]">
           <div className="text-center">
             <RefreshCw className="w-8 h-8 text-purple-400 animate-spin mx-auto mb-2" />
-            <p className="text-gray-400">Loading Facebook Feed...</p>
+            <p className="text-gray-400 text-sm">Loading Community Updates...</p>
           </div>
         </div>
       )}
@@ -138,6 +138,20 @@ const FacebookEmbed = ({ pageUrl, height = 700 }) => {
         >
           <a href={pageUrl}>Blendlink</a>
         </blockquote>
+      </div>
+      
+      {/* Always show direct link as backup */}
+      <div className="mt-3 text-center">
+        <a 
+          href={pageUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+          data-testid="facebook-direct-link"
+        >
+          <ExternalLink className="w-3.5 h-3.5" />
+          Open in Facebook
+        </a>
       </div>
     </div>
   );
