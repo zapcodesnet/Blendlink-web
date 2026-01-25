@@ -1,59 +1,70 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 25, 2026 (Session 22 - Part 2)
+## Latest Update: January 25, 2026 (Session 22 - Part 3)
 
 ---
 
-## SESSION 22 PART 2: ELFSIGHT FACEBOOK FEED INTEGRATION ✅
+## SESSION 22 PART 3: SOCIABLEKIT FACEBOOK GROUP INTEGRATION ✅
 
-### Feature: Facebook Feed Widget on /feed Page
+### Feature: SociableKIT Facebook Group Posts Widget on /feed
 
 **Implementation:**
-1. ✅ **Elfsight Facebook Feed Widget** - Successfully integrated
-   - Widget ID: `bb8b04da-2b62-4458-9cda-8cf2604cdc14`
-   - Script: `https://static.elfsight.com/platform/platform.js` (async)
-   - Lazy loading enabled with `data-elfsight-app-lazy`
+1. ✅ **Removed Elfsight widget** - Completely replaced with SociableKIT
+2. ✅ **SociableKIT Widget Integrated**
+   - Embed ID: `25647571`
+   - Script: `https://widgets.sociablekit.com/facebook-group-posts/widget.js` (defer)
+   - Group URL: `https://www.facebook.com/groups/938837402074960`
 
-2. ✅ **Widget Placement** on /feed page:
+3. ✅ **Widget Placement** on /feed page:
    - Stories Bar (Your Story)
    - Create Post Card with **Live Video / Photo/Video / AI Create** buttons
-   - **Elfsight Facebook Feed Widget** (displays BlendLink Facebook page)
-   - **"Ready to earn rewards?"** section with Mint New & Join Battle buttons
+   - **SociableKIT Facebook Group Posts Widget** (shows BlendLink.net group)
+   - **"Post Your Minted Photo in Group"** button (purple/pink gradient)
+   - **"Ready to earn rewards?"** section with Mint New & Join Auction buttons
    - User posts feed
    - Bottom navigation
 
-3. ✅ **Fallback Handling**:
-   - Shows "Join Our Community" with "Visit Blendlink on Facebook" button
-   - Fallback text: "If feed does not load, Visit Blendlink Community on Facebook"
+4. ✅ **Header Text Added**:
+   - "Join Blendlink Community Group!" (bold)
+   - "Like, comment, share posts to earn BL coins." (yellow highlight)
+   - "Post your minted photos directly in the Group for bonuses!"
 
-4. ✅ **Login Redirects** - All auth flows redirect to `/feed`:
-   - Email/Password login → /feed
-   - Registration → /feed
-   - Google OAuth → /feed
-   - Bottom nav Home → /feed
-   - Landing page (authenticated) → /feed
+5. ✅ **Fallback Handling**:
+   - Shows "Join Our Community Group" with "Visit Group on Facebook" button
+   - Fallback text: "If feed does not load, Visit Blendlink Community Group on Facebook"
 
-5. ✅ **Mobile Optimization**:
+6. ✅ **Mobile Optimization**:
    - Full-width widget on mobile
-   - Responsive action buttons
+   - Responsive buttons
+   - Scrollable widget container (max 800px height)
    - CLS prevention with `contain: layout`
-   - Bottom navigation preserved
+
+**Widget Features Displayed:**
+- Group name: "BlendLink.net"
+- "Like Us On Facebook" button
+- Group posts with dates and share icons
+- SociableKIT branding link
 
 **Files Modified:**
-- `frontend/src/pages/SocialFeed.jsx` - Added ElfsightFacebookWidget & RewardsQuickActions
-- `frontend/src/pages/Login.jsx` - Redirect to /feed
-- `frontend/src/pages/Register.jsx` - Redirect to /feed
-- `frontend/src/pages/AuthCallback.jsx` - Redirect to /feed
-- `frontend/src/pages/Landing.jsx` - Redirect authenticated to /feed
-- `frontend/src/components/BottomNav.jsx` - Home → /feed
+- `frontend/src/pages/SocialFeed.jsx` - Replaced ElfsightFacebookWidget with SociableKitGroupWidget
 
 **Testing Results:**
-- ✅ Widget loads BlendLink Facebook page content
-- ✅ Shows posts, photos, cover image
-- ✅ Like/Share buttons visible within widget
+- ✅ Widget loads BlendLink.net Facebook Group content
+- ✅ Shows group posts with dates
+- ✅ "Like Us On Facebook" button visible
+- ✅ "Post Your Minted Photo in Group" button works
 - ✅ Mobile responsive
-- ✅ Fallback displays correctly when widget blocked
+- ✅ Fallback displays correctly
 - ✅ All login flows redirect to /feed
+
+---
+
+## SESSION 22 PART 2: ELFSIGHT ATTEMPT (Superseded)
+
+- Integrated Elfsight Facebook Page widget
+- Widget loaded but showed partial content
+- User requested switch to SociableKIT for Facebook Group feed
+- **Superseded by SociableKIT integration in Part 3**
 
 ---
 
@@ -62,7 +73,7 @@
 - Initially implemented native Facebook Page Plugin
 - Facebook blocked due to X-Frame-Options
 - Created promotional fallback with BL coins rewards display
-- Superseded by Elfsight integration in Part 2
+- Superseded by widget integrations
 
 ---
 
