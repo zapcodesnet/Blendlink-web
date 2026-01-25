@@ -97,14 +97,13 @@ const WidgetSkeleton = () => (
 // Facebook Group Widget Component - Taggbox or Fallback
 const FacebookGroupWidget = () => {
   const [scriptLoaded, setScriptLoaded] = useState(false);
-  const [widgetReady, setWidgetReady] = useState(false);
+  const [widgetReady, setWidgetReady] = useState(!TAGGBOX_WIDGET_ID); // Show fallback immediately if no widget ID
   const [error, setError] = useState(false);
   const containerRef = useRef(null);
 
   useEffect(() => {
-    // If no Taggbox widget ID configured, show fallback immediately
+    // If no Taggbox widget ID configured, nothing to load
     if (!TAGGBOX_WIDGET_ID) {
-      setWidgetReady(true);
       return;
     }
 
