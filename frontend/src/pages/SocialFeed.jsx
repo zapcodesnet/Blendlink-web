@@ -51,17 +51,16 @@ const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 const FACEBOOK_GROUP_URL = "https://www.facebook.com/groups/938837402074960";
 
 const SociableKitGroupWidget = () => {
-  const [loaded, setLoaded] = useState(false);
+  const [loaded, setLoaded] = useState(() => {
+    // Check if script already exists during initial render
+    return typeof document !== 'undefined' && !!document.querySelector('script[src*="sociablekit.com"]');
+  });
   const [error, setError] = useState(false);
   const containerRef = useRef(null);
 
   useEffect(() => {
-    // Check if script already exists
-    const existingScript = document.querySelector('script[src*="sociablekit.com"]');
-    if (existingScript) {
-      setLoaded(true);
-      return;
-    }
+    // If already loaded (script exists), nothing to do
+    if (loaded) return;
 
     // Load SociableKIT script
     const script = document.createElement('script');
@@ -79,7 +78,7 @@ const SociableKitGroupWidget = () => {
     document.body.appendChild(script);
 
     return () => {};
-  }, []);
+  }, [loaded]);
 
   // Check if widget rendered after a delay
   useEffect(() => {
