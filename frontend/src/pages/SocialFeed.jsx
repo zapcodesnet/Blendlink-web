@@ -49,16 +49,16 @@ const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
 // Elfsight Facebook Feed Widget Component
 const ElfsightFacebookWidget = () => {
-  const [loaded, setLoaded] = useState(false);
+  const [loaded, setLoaded] = useState(() => {
+    // Check if script already exists during initial render
+    return typeof document !== 'undefined' && !!document.querySelector('script[src*="elfsight"]');
+  });
   const [error, setError] = useState(false);
   const containerRef = useRef(null);
 
   useEffect(() => {
-    // Check if script already exists
-    if (document.querySelector('script[src*="elfsightcdn.com"]')) {
-      setLoaded(true);
-      return;
-    }
+    // If already loaded (script exists), nothing to do
+    if (loaded) return;
 
     // Load Elfsight script
     const script = document.createElement('script');
@@ -78,7 +78,7 @@ const ElfsightFacebookWidget = () => {
 
     // Cleanup - don't remove script on unmount as it may affect other instances
     return () => {};
-  }, []);
+  }, [loaded]);
 
   // Check if widget rendered after a delay
   useEffect(() => {
