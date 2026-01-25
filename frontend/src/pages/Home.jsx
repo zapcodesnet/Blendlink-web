@@ -273,17 +273,21 @@ const Home = () => {
         className="max-w-2xl mx-auto px-4"
         data-testid="facebook-feed-section"
       >
-        <div className="bg-gray-800/30 rounded-2xl p-3 md:p-4 border border-gray-700/50">
-          {/* Section header */}
-          <div className="flex items-center gap-2 mb-3">
-            <Facebook className="w-5 h-5 text-blue-500" />
-            <span className="text-gray-300 font-medium text-sm">Community Updates</span>
+        <div className="bg-gray-800/30 rounded-2xl p-4 md:p-5 border border-gray-700/50">
+          {/* Section header with engagement text */}
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Facebook className="w-5 h-5 text-blue-500" />
+              <span className="text-white font-semibold text-base">Welcome to Blendlink Community!</span>
+            </div>
+            <p className="text-gray-400 text-sm leading-relaxed">
+              Like, comment, and share posts here to earn BL coins. Post your minted photos directly on Facebook for bonuses!
+            </p>
           </div>
           
-          {/* Facebook Page Plugin */}
-          <FacebookEmbed 
+          {/* Social Feed Embed */}
+          <SocialFeedEmbed 
             pageUrl="https://www.facebook.com/blendlinkapp"
-            height={600}
           />
         </div>
       </motion.div>
