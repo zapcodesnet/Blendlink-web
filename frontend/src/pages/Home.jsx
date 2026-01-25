@@ -130,7 +130,7 @@ const Home = () => {
   const { user } = useContext(AuthContext);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 pb-24 md:pb-8">
+    <div data-testid="home-page" className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 pb-24 md:pb-8">
       {/* Hero Header */}
       <div className="relative overflow-hidden">
         {/* Background effects */}
@@ -147,11 +147,11 @@ const Home = () => {
             className="text-center mb-6"
           >
             {user && (
-              <p className="text-purple-400 text-sm font-medium mb-2">
+              <p data-testid="welcome-user-name" className="text-purple-400 text-sm font-medium mb-2">
                 Welcome back, {user.first_name || user.username || 'Member'}!
               </p>
             )}
-            <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
+            <h1 data-testid="home-title" className="text-2xl md:text-3xl font-bold text-white mb-2">
               <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
                 Welcome to Blendlink Community
               </span>
@@ -168,7 +168,7 @@ const Home = () => {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="grid grid-cols-3 gap-2 md:gap-4 mb-6"
           >
-            <Link to="/minted-photos" className="block">
+            <Link to="/minted-photos" className="block" data-testid="mint-photo-btn">
               <Button 
                 className="w-full h-auto py-3 px-2 md:px-4 flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl shadow-lg shadow-purple-500/20 transition-all active:scale-95"
               >
@@ -177,7 +177,7 @@ const Home = () => {
               </Button>
             </Link>
             
-            <Link to="/minted-photos" className="block">
+            <Link to="/minted-photos" className="block" data-testid="my-photos-btn">
               <Button 
                 className="w-full h-auto py-3 px-2 md:px-4 flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-white rounded-xl shadow-lg shadow-pink-500/20 transition-all active:scale-95"
               >
@@ -186,7 +186,7 @@ const Home = () => {
               </Button>
             </Link>
             
-            <Link to="/photo-game" className="block">
+            <Link to="/photo-game" className="block" data-testid="auction-battle-btn">
               <Button 
                 className="w-full h-auto py-3 px-2 md:px-4 flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-xl shadow-lg shadow-blue-500/20 transition-all active:scale-95"
               >
