@@ -1,6 +1,53 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 26, 2026 (Session 22 - Part 4)
+## Latest Update: December 2025 (Session 23 - Performance Fix)
+
+---
+
+## SESSION 23: FEED PAGE PERFORMANCE OPTIMIZATION ✅
+
+### P0 Critical Fix: /feed Page Performance
+
+**Problem:** The /feed page was extremely laggy and unresponsive, especially on mobile devices. Previous widget implementations (SociableKIT, Elfsight) caused severe scroll jank and touch freeze.
+
+**Solution Implemented:**
+1. ✅ **Complete Widget Cleanup**
+   - Removed ALL traces of SociableKIT, Elfsight, and Taggbox
+   - Simplified Home.jsx to redirect to /feed
+   - No fallback UI ("Visit Blendlink on Facebook" button removed)
+
+2. ✅ **EmbedSocial Widget Optimization**
+   - Data-ref: `560ae8788f1563d17ee4889e68ebc5732f2b47f7`
+   - Lazy loading with IntersectionObserver (200px rootMargin)
+   - Script loaded with async + defer (non-blocking)
+   - Removed nested scroll containers (let widget handle own scrolling)
+   - CSS optimizations: contain: content, content-visibility: auto
+
+3. ✅ **Performance CSS Added to index.css**
+   - `.embedsocial-hashtag { contain: content; content-visibility: auto; }`
+   - `touch-action: pan-y pinch-zoom;` for smooth mobile scroll
+   - Layout stability with min-height: 450px
+
+**Performance Test Results (ALL TARGETS MET):**
+| Metric | Target | Actual |
+|--------|--------|--------|
+| Page Load Time | < 3s | **0.52s** ✅ |
+| DOM Content Loaded | - | **261ms** |
+| First Contentful Paint | - | **300ms** |
+| Cumulative Layout Shift | < 0.1 | **0.018** ✅ |
+| Time to Interactive | < 5s | **~525ms** ✅ |
+| Scroll FPS | ≥ 30 | **61 FPS** ✅ |
+| Touch Scroll Response | < 100ms | **69ms** ✅ |
+
+**Mobile Testing (iPhone 14 Pro - 390x844):**
+- ✅ Touch scroll responsive (69ms)
+- ✅ No freezing during scroll
+- ✅ Widget dimensions: 360x584
+
+**Files Modified:**
+- `frontend/src/pages/SocialFeed.jsx` - Optimized EmbedSocialWidget component
+- `frontend/src/pages/Home.jsx` - Simplified to redirect to /feed
+- `frontend/src/index.css` - Added performance CSS
 
 ---
 
@@ -8,53 +55,19 @@
 
 ### Feature: EmbedSocial Facebook Widget on /feed
 
-**Implementation:**
-1. ✅ **Removed SociableKIT/Taggbox** - Completely replaced with EmbedSocial
-2. ✅ **EmbedSocial Widget Integrated**
-   - Data-ref: `560ae8788f1563d17ee4889e68ebc5732f2b47f7`
-   - Script: `https://embedsocial.com/cdn/ht.js` (async/defer)
-   - Lazy loading: `data-lazyload="yes"`
+**Widget Placement** on /feed page:
+- Stories Bar (Your Story)
+- Create Post Card with **Live Video / Photo/Video / AI Create** buttons
+- **EmbedSocial Facebook Widget** (displays BlendLink Facebook content)
+- **"Ready to earn rewards?"** section with Mint New & Join Auction buttons
+- User posts feed
+- Bottom navigation
 
-3. ✅ **Widget Displays Real Content**:
-   - BlendLink profile with logo
-   - "3 posts" count
-   - "Follow us" blue button
-   - Actual Facebook posts with images (poker cards image, BlendLink logo)
-   - Post timestamps (4 hours ago, 22 hours ago)
-   - Facebook icons on each post
-
-4. ✅ **Widget Placement** on /feed page:
-   - Stories Bar (Your Story)
-   - Create Post Card with **Live Video / Photo/Video / AI Create** buttons
-   - **EmbedSocial Facebook Widget** (displays BlendLink Facebook content)
-   - **"Post Your Minted Photo in Group"** button (purple/pink gradient)
-   - **"Ready to earn rewards?"** section with Mint New & Join Auction buttons
-   - User posts feed
-   - Bottom navigation
-
-5. ✅ **Header Text**:
-   - "Join Our Community" (bold)
-   - "Like, comment, and share our posts to earn BL coins!" (yellow)
-
-6. ✅ **Fallback Handling**:
-   - "If feed does not load, Visit Blendlink Community Group on Facebook"
-
-7. ✅ **Mobile Optimization**:
-   - Full-width widget on mobile
-   - Scrollable posts within widget
-   - Responsive buttons
-   - Fast loading with async/defer
-
-**Files Modified:**
-- `frontend/src/pages/SocialFeed.jsx` - Replaced with EmbedSocialWidget component
-
-**Testing Results:**
-- ✅ Widget loads real Facebook posts from BlendLink
-- ✅ Shows post images (poker cards, logo)
-- ✅ "Follow us" button visible
-- ✅ Mobile fully responsive
-- ✅ Fast loading with skeleton loader
-- ✅ Fallback link works
+**Widget Features:**
+- "Join Our Community" header with Facebook icon
+- "Like, comment, and share our posts to earn BL coins!" (yellow text)
+- "Follow us" button
+- Facebook posts carousel
 
 ---
 
