@@ -1,79 +1,68 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 25, 2026 (Session 22 - Part 3)
+## Latest Update: January 26, 2026 (Session 22 - Part 4)
 
 ---
 
-## SESSION 22 PART 3: SOCIABLEKIT FACEBOOK GROUP INTEGRATION ✅
+## SESSION 22 PART 4: EMBEDSOCIAL FACEBOOK WIDGET ✅
 
-### Feature: SociableKIT Facebook Group Posts Widget on /feed
+### Feature: EmbedSocial Facebook Widget on /feed
 
 **Implementation:**
-1. ✅ **Removed Elfsight widget** - Completely replaced with SociableKIT
-2. ✅ **SociableKIT Widget Integrated**
-   - Embed ID: `25647571`
-   - Script: `https://widgets.sociablekit.com/facebook-group-posts/widget.js` (defer)
-   - Group URL: `https://www.facebook.com/groups/938837402074960`
+1. ✅ **Removed SociableKIT/Taggbox** - Completely replaced with EmbedSocial
+2. ✅ **EmbedSocial Widget Integrated**
+   - Data-ref: `560ae8788f1563d17ee4889e68ebc5732f2b47f7`
+   - Script: `https://embedsocial.com/cdn/ht.js` (async/defer)
+   - Lazy loading: `data-lazyload="yes"`
 
-3. ✅ **Widget Placement** on /feed page:
+3. ✅ **Widget Displays Real Content**:
+   - BlendLink profile with logo
+   - "3 posts" count
+   - "Follow us" blue button
+   - Actual Facebook posts with images (poker cards image, BlendLink logo)
+   - Post timestamps (4 hours ago, 22 hours ago)
+   - Facebook icons on each post
+
+4. ✅ **Widget Placement** on /feed page:
    - Stories Bar (Your Story)
    - Create Post Card with **Live Video / Photo/Video / AI Create** buttons
-   - **SociableKIT Facebook Group Posts Widget** (shows BlendLink.net group)
+   - **EmbedSocial Facebook Widget** (displays BlendLink Facebook content)
    - **"Post Your Minted Photo in Group"** button (purple/pink gradient)
    - **"Ready to earn rewards?"** section with Mint New & Join Auction buttons
    - User posts feed
    - Bottom navigation
 
-4. ✅ **Header Text Added**:
-   - "Join Blendlink Community Group!" (bold)
-   - "Like, comment, share posts to earn BL coins." (yellow highlight)
-   - "Post your minted photos directly in the Group for bonuses!"
+5. ✅ **Header Text**:
+   - "Join Our Community" (bold)
+   - "Like, comment, and share our posts to earn BL coins!" (yellow)
 
-5. ✅ **Fallback Handling**:
-   - Shows "Join Our Community Group" with "Visit Group on Facebook" button
-   - Fallback text: "If feed does not load, Visit Blendlink Community Group on Facebook"
+6. ✅ **Fallback Handling**:
+   - "If feed does not load, Visit Blendlink Community Group on Facebook"
 
-6. ✅ **Mobile Optimization**:
+7. ✅ **Mobile Optimization**:
    - Full-width widget on mobile
+   - Scrollable posts within widget
    - Responsive buttons
-   - Scrollable widget container (max 800px height)
-   - CLS prevention with `contain: layout`
-
-**Widget Features Displayed:**
-- Group name: "BlendLink.net"
-- "Like Us On Facebook" button
-- Group posts with dates and share icons
-- SociableKIT branding link
+   - Fast loading with async/defer
 
 **Files Modified:**
-- `frontend/src/pages/SocialFeed.jsx` - Replaced ElfsightFacebookWidget with SociableKitGroupWidget
+- `frontend/src/pages/SocialFeed.jsx` - Replaced with EmbedSocialWidget component
 
 **Testing Results:**
-- ✅ Widget loads BlendLink.net Facebook Group content
-- ✅ Shows group posts with dates
-- ✅ "Like Us On Facebook" button visible
-- ✅ "Post Your Minted Photo in Group" button works
-- ✅ Mobile responsive
-- ✅ Fallback displays correctly
-- ✅ All login flows redirect to /feed
+- ✅ Widget loads real Facebook posts from BlendLink
+- ✅ Shows post images (poker cards, logo)
+- ✅ "Follow us" button visible
+- ✅ Mobile fully responsive
+- ✅ Fast loading with skeleton loader
+- ✅ Fallback link works
 
 ---
 
-## SESSION 22 PART 2: ELFSIGHT ATTEMPT (Superseded)
+## SESSION 22 PART 3: SOCIABLEKIT/TAGGBOX ATTEMPTS (Removed)
 
-- Integrated Elfsight Facebook Page widget
-- Widget loaded but showed partial content
-- User requested switch to SociableKIT for Facebook Group feed
-- **Superseded by SociableKIT integration in Part 3**
-
----
-
-## SESSION 22 PART 1: FACEBOOK HOMEPAGE ATTEMPT
-
-- Initially implemented native Facebook Page Plugin
-- Facebook blocked due to X-Frame-Options
-- Created promotional fallback with BL coins rewards display
-- Superseded by widget integrations
+- Tried SociableKIT - widget didn't show real-time posts
+- Prepared Taggbox integration - user reported issues
+- Both removed and replaced with EmbedSocial
 
 ---
 
