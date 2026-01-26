@@ -862,3 +862,35 @@ input:focus, textarea:focus, select:focus {
   from { transform: translateX(100%); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }
 }
+
+/* EmbedSocial Widget Performance Optimizations */
+.embedsocial-hashtag {
+  contain: content;
+  content-visibility: auto;
+  will-change: auto;
+}
+
+/* Prevent widget from blocking main thread scroll */
+.embedsocial-hashtag,
+.embedsocial-hashtag * {
+  touch-action: pan-y pinch-zoom;
+}
+
+/* Ensure smooth scrolling on mobile */
+.embedsocial-hashtag iframe {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Prevent layout shift from widget loading */
+[data-testid="facebook-widget-container"] {
+  contain: layout style;
+  min-height: 450px;
+}
+
+/* Hide any widget loading overlays that cause jank */
+.embedsocial-hashtag .es-loader,
+.embedsocial-hashtag [class*="loader"],
+.embedsocial-hashtag [class*="loading"] {
+  animation-duration: 0.5s !important;
+}
