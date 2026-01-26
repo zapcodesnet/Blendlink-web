@@ -90,15 +90,15 @@ const EmbedSocialWidget = () => {
   const [scriptLoaded, setScriptLoaded] = useState(() => {
     return typeof document !== 'undefined' && !!document.getElementById('EmbedSocialHashtagScript');
   });
-  const [widgetReady, setWidgetReady] = useState(false);
+  const [widgetReady, setWidgetReady] = useState(() => {
+    return typeof document !== 'undefined' && !!document.getElementById('EmbedSocialHashtagScript');
+  });
   const [error, setError] = useState(false);
   const containerRef = useRef(null);
 
   useEffect(() => {
-    // If script already exists, mark as loaded
-    if (document.getElementById('EmbedSocialHashtagScript')) {
-      setScriptLoaded(true);
-      setWidgetReady(true);
+    // If script already exists, nothing more to do
+    if (scriptLoaded) {
       return;
     }
 
@@ -130,7 +130,7 @@ const EmbedSocialWidget = () => {
     document.head.appendChild(script);
 
     return () => clearTimeout(loadTimeout);
-  }, [widgetReady]);
+  }, [scriptLoaded, widgetReady]);
 
   return (
     <div className="bg-card rounded-xl shadow-sm mb-4 overflow-hidden" data-testid="facebook-widget-container">
