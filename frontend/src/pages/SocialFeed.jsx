@@ -276,7 +276,6 @@ const EmbedSocialWidget = () => {
             </div>
           </div>
         )}
-        )}
       </div>
 
       {/* Post Your Photo Button */}
