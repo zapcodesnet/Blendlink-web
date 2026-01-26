@@ -91,7 +91,9 @@ const EmbedSocialWidget = () => {
   const [scriptLoaded, setScriptLoaded] = useState(() => {
     return typeof document !== 'undefined' && !!document.getElementById('EmbedSocialHashtagScript');
   });
-  const [widgetReady, setWidgetReady] = useState(false);
+  const [widgetReady, setWidgetReady] = useState(() => {
+    return typeof document !== 'undefined' && !!document.getElementById('EmbedSocialHashtagScript');
+  });
   const [error, setError] = useState(false);
   const containerRef = useRef(null);
   const observerRef = useRef(null);
@@ -122,16 +124,9 @@ const EmbedSocialWidget = () => {
     };
   }, [isVisible]);
 
-  // Load script only when widget is visible
+  // Load script only when widget is visible and not already loaded
   useEffect(() => {
     if (!isVisible || scriptLoaded) return;
-
-    // Check if script already exists
-    if (document.getElementById('EmbedSocialHashtagScript')) {
-      setScriptLoaded(true);
-      setTimeout(() => setWidgetReady(true), 500);
-      return;
-    }
 
     // Load EmbedSocial script asynchronously
     const script = document.createElement('script');
