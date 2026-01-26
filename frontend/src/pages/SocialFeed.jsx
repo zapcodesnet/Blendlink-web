@@ -85,24 +85,55 @@ const WidgetSkeleton = () => (
   </div>
 );
 
-// EmbedSocial Facebook Widget Component
+// EmbedSocial Facebook Widget Component - PERFORMANCE OPTIMIZED
 const EmbedSocialWidget = () => {
+  const [isVisible, setIsVisible] = useState(false);
   const [scriptLoaded, setScriptLoaded] = useState(() => {
     return typeof document !== 'undefined' && !!document.getElementById('EmbedSocialHashtagScript');
   });
-  const [widgetReady, setWidgetReady] = useState(() => {
-    return typeof document !== 'undefined' && !!document.getElementById('EmbedSocialHashtagScript');
-  });
+  const [widgetReady, setWidgetReady] = useState(false);
   const [error, setError] = useState(false);
   const containerRef = useRef(null);
+  const observerRef = useRef(null);
 
+  // IntersectionObserver for lazy loading - only load widget when scrolled into view
   useEffect(() => {
-    // If script already exists, nothing more to do
-    if (scriptLoaded) {
+    if (!containerRef.current || isVisible) return;
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observerRef.current?.disconnect();
+        }
+      },
+      {
+        root: null,
+        rootMargin: '200px', // Start loading 200px before visible
+        threshold: 0.01
+      }
+    );
+
+    observerRef.current.observe(containerRef.current);
+
+    return () => {
+      observerRef.current?.disconnect();
+    };
+  }, [isVisible]);
+
+  // Load script only when widget is visible
+  useEffect(() => {
+    if (!isVisible || scriptLoaded) return;
+
+    // Check if script already exists
+    if (document.getElementById('EmbedSocialHashtagScript')) {
+      setScriptLoaded(true);
+      setTimeout(() => setWidgetReady(true), 500);
       return;
     }
 
-    // Load EmbedSocial script
+    // Load EmbedSocial script asynchronously
     const script = document.createElement('script');
     script.id = 'EmbedSocialHashtagScript';
     script.src = 'https://embedsocial.com/cdn/ht.js';
@@ -110,16 +141,14 @@ const EmbedSocialWidget = () => {
     script.defer = true;
     
     const loadTimeout = setTimeout(() => {
-      if (!widgetReady) {
-        setError(true);
-      }
-    }, 15000);
+      setError(true);
+    }, 12000);
 
     script.onload = () => {
       clearTimeout(loadTimeout);
       setScriptLoaded(true);
-      // Give widget time to render
-      setTimeout(() => setWidgetReady(true), 1500);
+      // Shorter delay for widget ready
+      setTimeout(() => setWidgetReady(true), 800);
     };
     
     script.onerror = () => {
@@ -127,97 +156,126 @@ const EmbedSocialWidget = () => {
       setError(true);
     };
 
-    document.head.appendChild(script);
+    // Append to body instead of head for non-blocking
+    document.body.appendChild(script);
 
     return () => clearTimeout(loadTimeout);
-  }, [scriptLoaded, widgetReady]);
+  }, [isVisible, scriptLoaded]);
 
   return (
-    <div className="bg-card rounded-xl shadow-sm mb-4 overflow-hidden" data-testid="facebook-widget-container">
-      {/* Header Section */}
+    <div 
+      className="bg-card rounded-xl shadow-sm mb-4 overflow-hidden" 
+      data-testid="facebook-widget-container"
+      style={{
+        // Prevent layout shift with fixed height
+        minHeight: '500px',
+        // Enable hardware acceleration
+        transform: 'translateZ(0)',
+        willChange: 'transform',
+      }}
+    >
+      {/* Header Section - lightweight, no heavy effects */}
       <div className="p-4 border-b bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-pink-600/10">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="relative">
-            <div className="absolute inset-0 bg-blue-500/30 rounded-full blur-md"></div>
-            <div className="relative bg-gradient-to-br from-blue-500 to-blue-600 rounded-full w-10 h-10 flex items-center justify-center">
-              <Facebook className="w-5 h-5 text-white" />
-            </div>
+        <div className="flex items-center gap-3 mb-2">
+          <div className="bg-blue-600 rounded-full w-9 h-9 flex items-center justify-center flex-shrink-0">
+            <Facebook className="w-4 h-4 text-white" />
           </div>
-          <div className="flex-1">
-            <h3 className="font-bold text-foreground text-base">Join Our Community</h3>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-foreground text-sm">Join Our Community</h3>
           </div>
           <a 
             href={FACEBOOK_GROUP_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-blue-500 hover:text-blue-400 flex items-center gap-1"
+            className="text-xs text-blue-500 hover:text-blue-400 flex items-center gap-1 flex-shrink-0"
             data-testid="facebook-group-external-link"
           >
-            <ExternalLink className="w-4 h-4" />
-            <span className="hidden sm:inline">Open Group</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Open</span>
           </a>
         </div>
-        <p className="text-muted-foreground text-sm leading-relaxed">
-          <span className="text-yellow-500 font-medium">Like, comment, and share our posts to earn BL coins!</span>
+        <p className="text-muted-foreground text-xs">
+          <span className="text-yellow-500 font-medium">Like, comment, share to earn BL coins!</span>
         </p>
       </div>
 
-      {/* Widget Container */}
+      {/* Widget Container - optimized for mobile scrolling */}
       <div 
         ref={containerRef}
         className="relative"
         style={{ 
-          minHeight: '400px',
-          maxHeight: '800px',
+          // Fixed height to prevent layout shift and limit content
+          height: '450px',
+          maxHeight: '450px',
           overflowY: 'auto',
+          overflowX: 'hidden',
+          // Critical for smooth mobile scrolling
+          WebkitOverflowScrolling: 'touch',
+          touchAction: 'pan-y',
+          // Hardware acceleration
+          transform: 'translateZ(0)',
+          willChange: 'scroll-position',
+          // Smooth scroll behavior
+          scrollBehavior: 'smooth',
         }}
       >
-        {/* Show skeleton while loading */}
-        {!widgetReady && !error && (
+        {/* Show skeleton only before widget is visible */}
+        {!isVisible && (
           <div className="absolute inset-0 bg-card z-10">
             <WidgetSkeleton />
           </div>
         )}
 
-        {/* EmbedSocial Widget */}
-        <div 
-          className="embedsocial-hashtag" 
-          data-ref="560ae8788f1563d17ee4889e68ebc5732f2b47f7"
-          data-lazyload="yes"
-          style={{ 
-            width: '100%',
-            minHeight: '400px',
-            opacity: widgetReady ? 1 : 0,
-            transition: 'opacity 0.3s ease-in-out',
-          }}
-        />
+        {/* Loading state while script loads */}
+        {isVisible && !widgetReady && !error && (
+          <div className="absolute inset-0 flex items-center justify-center bg-card z-10">
+            <div className="text-center">
+              <Loader2 className="w-8 h-8 text-blue-500 animate-spin mx-auto mb-2" />
+              <p className="text-muted-foreground text-sm">Loading feed...</p>
+            </div>
+          </div>
+        )}
+
+        {/* EmbedSocial Widget - only render when visible */}
+        {isVisible && (
+          <div 
+            className="embedsocial-hashtag" 
+            data-ref="560ae8788f1563d17ee4889e68ebc5732f2b47f7"
+            data-lazyload="yes"
+            style={{ 
+              width: '100%',
+              minHeight: '400px',
+              opacity: widgetReady ? 1 : 0,
+              transition: 'opacity 0.2s ease-out',
+              // Prevent widget from blocking scroll
+              pointerEvents: widgetReady ? 'auto' : 'none',
+            }}
+          />
+        )}
 
         {/* Error/Fallback State */}
         {error && (
           <div className="absolute inset-0 flex items-center justify-center bg-card z-20">
-            <div className="p-6 text-center">
-              <div className="relative mx-auto w-16 h-16 mb-4">
-                <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl"></div>
-                <div className="relative bg-blue-600 rounded-full w-16 h-16 flex items-center justify-center">
-                  <Facebook className="w-8 h-8 text-white" />
-                </div>
+            <div className="p-4 text-center">
+              <div className="bg-blue-600 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
+                <Facebook className="w-6 h-6 text-white" />
               </div>
-              <h3 className="font-semibold text-foreground mb-2">Join Our Community</h3>
-              <p className="text-muted-foreground text-sm mb-4 max-w-xs mx-auto">
-                Like, comment, and share posts to earn BL coins!
+              <h3 className="font-semibold text-foreground text-sm mb-2">Join Our Community</h3>
+              <p className="text-muted-foreground text-xs mb-3">
+                Like, comment, share to earn BL coins!
               </p>
               <a 
                 href={FACEBOOK_GROUP_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-medium transition-all"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-colors"
               >
-                <Facebook className="w-5 h-5" />
-                Visit Blendlink on Facebook
-                <ExternalLink className="w-4 h-4" />
+                <Facebook className="w-4 h-4" />
+                Visit on Facebook
               </a>
             </div>
           </div>
+        )}
         )}
       </div>
 
