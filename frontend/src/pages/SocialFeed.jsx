@@ -47,92 +47,61 @@ import {
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
-// Facebook Group Widget Configuration
-const FACEBOOK_GROUP_URL = "https://www.facebook.com/groups/938837402074960";
-
-// Skeleton loader for fast perceived performance
-const WidgetSkeleton = () => (
-  <div className="animate-pulse space-y-4 p-4">
-    {/* Header skeleton */}
-    <div className="flex items-center gap-3">
-      <div className="w-12 h-12 bg-muted rounded-full"></div>
-      <div className="flex-1">
-        <div className="h-4 w-32 bg-muted rounded mb-2"></div>
-        <div className="h-3 w-24 bg-muted rounded"></div>
-      </div>
-    </div>
-    {/* Post skeletons */}
-    {[1, 2].map((i) => (
-      <div key={i} className="border border-border/50 rounded-lg p-4">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 bg-muted rounded-full"></div>
-          <div className="flex-1">
-            <div className="h-4 w-28 bg-muted rounded mb-1"></div>
-            <div className="h-3 w-20 bg-muted rounded"></div>
-          </div>
-        </div>
-        <div className="space-y-2">
-          <div className="h-4 w-full bg-muted rounded"></div>
-          <div className="h-4 w-3/4 bg-muted rounded"></div>
-        </div>
-        <div className="flex gap-4 mt-4 pt-3 border-t border-border/50">
-          <div className="h-8 w-16 bg-muted rounded"></div>
-          <div className="h-8 w-20 bg-muted rounded"></div>
-          <div className="h-8 w-16 bg-muted rounded"></div>
-        </div>
-      </div>
-    ))}
-  </div>
-);
-
-// EmbedSocial Facebook Widget Component - ULTRA LIGHTWEIGHT
+// EmbedSocial Facebook Widget Component - PERFORMANCE OPTIMIZED
 const EmbedSocialWidget = () => {
-  const [isVisible, setIsVisible] = useState(false);
-  const [widgetReady, setWidgetReady] = useState(false);
+  const [scriptLoaded, setScriptLoaded] = useState(false);
   const containerRef = useRef(null);
+  const scriptLoadedRef = useRef(false);
 
-  // IntersectionObserver for lazy loading
+  // Load EmbedSocial script with IntersectionObserver for lazy loading
   useEffect(() => {
-    if (!containerRef.current || isVisible) return;
+    if (scriptLoadedRef.current) return;
+    
+    const container = containerRef.current;
+    if (!container) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
+        if (entry.isIntersecting && !scriptLoadedRef.current) {
+          scriptLoadedRef.current = true;
           observer.disconnect();
+          
+          // Check if script already exists
+          if (document.getElementById('EmbedSocialHashtagScript')) {
+            setScriptLoaded(true);
+            return;
+          }
+
+          // Load script asynchronously without blocking
+          const script = document.createElement('script');
+          script.id = 'EmbedSocialHashtagScript';
+          script.src = 'https://embedsocial.com/cdn/ht.js';
+          script.async = true;
+          script.defer = true;
+          script.onload = () => setScriptLoaded(true);
+          script.onerror = () => setScriptLoaded(true); // Still show widget area on error
+          document.head.appendChild(script);
         }
       },
-      { rootMargin: '100px', threshold: 0.01 }
+      { rootMargin: '200px', threshold: 0 }
     );
 
-    observer.observe(containerRef.current);
+    observer.observe(container);
     return () => observer.disconnect();
-  }, [isVisible]);
-
-  // Load EmbedSocial script only when visible
-  useEffect(() => {
-    if (!isVisible) return;
-    if (document.getElementById('EmbedSocialHashtagScript')) {
-      setWidgetReady(true);
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.id = 'EmbedSocialHashtagScript';
-    script.src = 'https://embedsocial.com/cdn/ht.js';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => setTimeout(() => setWidgetReady(true), 500);
-    document.head.appendChild(script);
-  }, [isVisible]);
+  }, []);
 
   return (
     <div 
-      className="bg-card rounded-xl shadow-sm mb-4 overflow-hidden" 
+      ref={containerRef}
+      className="bg-card rounded-xl shadow-sm mb-4"
       data-testid="facebook-widget-container"
-      style={{ minHeight: '400px', contain: 'layout' }}
+      style={{
+        contain: 'content',
+        contentVisibility: 'auto',
+        containIntrinsicSize: '0 450px',
+      }}
     >
-      {/* Header */}
+      {/* Header - Minimal */}
       <div className="p-3 border-b bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-pink-600/10">
         <div className="flex items-center gap-2 mb-1">
           <div className="bg-blue-600 rounded-full w-8 h-8 flex items-center justify-center">
@@ -145,38 +114,29 @@ const EmbedSocialWidget = () => {
         </p>
       </div>
 
-      {/* Widget Container */}
+      {/* Widget Area - Let EmbedSocial handle its own scrolling */}
       <div 
-        ref={containerRef}
-        style={{ 
-          height: '350px',
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          WebkitOverflowScrolling: 'touch',
-          touchAction: 'pan-y',
+        style={{
+          minHeight: '380px',
+          position: 'relative',
         }}
       >
-        {/* Loading */}
-        {!widgetReady && (
-          <div className="flex items-center justify-center h-full">
+        {/* Loading indicator - hidden when script loads */}
+        {!scriptLoaded && (
+          <div className="absolute inset-0 flex items-center justify-center bg-card">
             <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
           </div>
         )}
 
-        {/* EmbedSocial Widget */}
-        {isVisible && (
-          <div 
-            className="embedsocial-hashtag" 
-            data-ref="560ae8788f1563d17ee4889e68ebc5732f2b47f7"
-            data-lazyload="yes"
-            style={{ 
-              width: '100%',
-              minHeight: '300px',
-              opacity: widgetReady ? 1 : 0,
-              pointerEvents: widgetReady ? 'auto' : 'none',
-            }}
-          />
-        )}
+        {/* EmbedSocial Widget - Always render the container for the script to find */}
+        <div 
+          className="embedsocial-hashtag" 
+          data-ref="560ae8788f1563d17ee4889e68ebc5732f2b47f7"
+          style={{
+            width: '100%',
+            minHeight: '380px',
+          }}
+        />
       </div>
     </div>
   );
