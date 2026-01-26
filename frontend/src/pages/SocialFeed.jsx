@@ -85,153 +85,85 @@ const WidgetSkeleton = () => (
   </div>
 );
 
-// EmbedSocial Facebook Widget Component - PERFORMANCE OPTIMIZED
+// EmbedSocial Facebook Widget Component - ULTRA LIGHTWEIGHT
 const EmbedSocialWidget = () => {
   const [isVisible, setIsVisible] = useState(false);
-  const [scriptLoaded, setScriptLoaded] = useState(() => {
-    return typeof document !== 'undefined' && !!document.getElementById('EmbedSocialHashtagScript');
-  });
-  const [widgetReady, setWidgetReady] = useState(() => {
-    return typeof document !== 'undefined' && !!document.getElementById('EmbedSocialHashtagScript');
-  });
-  const [error, setError] = useState(false);
+  const [widgetReady, setWidgetReady] = useState(false);
   const containerRef = useRef(null);
-  const observerRef = useRef(null);
 
-  // IntersectionObserver for lazy loading - only load widget when scrolled into view
+  // IntersectionObserver for lazy loading
   useEffect(() => {
     if (!containerRef.current || isVisible) return;
 
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        const [entry] = entries;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
         if (entry.isIntersecting) {
           setIsVisible(true);
-          observerRef.current?.disconnect();
+          observer.disconnect();
         }
       },
-      {
-        root: null,
-        rootMargin: '200px', // Start loading 200px before visible
-        threshold: 0.01
-      }
+      { rootMargin: '100px', threshold: 0.01 }
     );
 
-    observerRef.current.observe(containerRef.current);
-
-    return () => {
-      observerRef.current?.disconnect();
-    };
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
   }, [isVisible]);
 
-  // Load script only when widget is visible and not already loaded
+  // Load EmbedSocial script only when visible
   useEffect(() => {
-    if (!isVisible || scriptLoaded) return;
+    if (!isVisible) return;
+    if (document.getElementById('EmbedSocialHashtagScript')) {
+      setWidgetReady(true);
+      return;
+    }
 
-    // Load EmbedSocial script asynchronously
     const script = document.createElement('script');
     script.id = 'EmbedSocialHashtagScript';
     script.src = 'https://embedsocial.com/cdn/ht.js';
     script.async = true;
     script.defer = true;
-    
-    const loadTimeout = setTimeout(() => {
-      setError(true);
-    }, 12000);
-
-    script.onload = () => {
-      clearTimeout(loadTimeout);
-      setScriptLoaded(true);
-      // Shorter delay for widget ready
-      setTimeout(() => setWidgetReady(true), 800);
-    };
-    
-    script.onerror = () => {
-      clearTimeout(loadTimeout);
-      setError(true);
-    };
-
-    // Append to body instead of head for non-blocking
-    document.body.appendChild(script);
-
-    return () => clearTimeout(loadTimeout);
-  }, [isVisible, scriptLoaded]);
+    script.onload = () => setTimeout(() => setWidgetReady(true), 500);
+    document.head.appendChild(script);
+  }, [isVisible]);
 
   return (
     <div 
       className="bg-card rounded-xl shadow-sm mb-4 overflow-hidden" 
       data-testid="facebook-widget-container"
-      style={{
-        // Prevent layout shift with fixed height
-        minHeight: '500px',
-        // Enable hardware acceleration
-        transform: 'translateZ(0)',
-        willChange: 'transform',
-      }}
+      style={{ minHeight: '400px', contain: 'layout' }}
     >
-      {/* Header Section - lightweight, no heavy effects */}
-      <div className="p-4 border-b bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-pink-600/10">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="bg-blue-600 rounded-full w-9 h-9 flex items-center justify-center flex-shrink-0">
+      {/* Header */}
+      <div className="p-3 border-b bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-pink-600/10">
+        <div className="flex items-center gap-2 mb-1">
+          <div className="bg-blue-600 rounded-full w-8 h-8 flex items-center justify-center">
             <Facebook className="w-4 h-4 text-white" />
           </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-foreground text-sm">Join Our Community</h3>
-          </div>
-          <a 
-            href={FACEBOOK_GROUP_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-blue-500 hover:text-blue-400 flex items-center gap-1 flex-shrink-0"
-            data-testid="facebook-group-external-link"
-          >
-            <ExternalLink className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Open</span>
-          </a>
+          <h3 className="font-bold text-foreground text-sm">Join Our Community</h3>
         </div>
-        <p className="text-muted-foreground text-xs">
-          <span className="text-yellow-500 font-medium">Like, comment, share to earn BL coins!</span>
+        <p className="text-xs text-yellow-500 font-medium">
+          Like, comment, and share our posts to earn BL coins!
         </p>
       </div>
 
-      {/* Widget Container - optimized for mobile scrolling */}
+      {/* Widget Container */}
       <div 
         ref={containerRef}
-        className="relative"
         style={{ 
-          // Fixed height to prevent layout shift and limit content
-          height: '450px',
-          maxHeight: '450px',
+          height: '350px',
           overflowY: 'auto',
           overflowX: 'hidden',
-          // Critical for smooth mobile scrolling
           WebkitOverflowScrolling: 'touch',
           touchAction: 'pan-y',
-          // Hardware acceleration
-          transform: 'translateZ(0)',
-          willChange: 'scroll-position',
-          // Smooth scroll behavior
-          scrollBehavior: 'smooth',
         }}
       >
-        {/* Show skeleton only before widget is visible */}
-        {!isVisible && (
-          <div className="absolute inset-0 bg-card z-10">
-            <WidgetSkeleton />
+        {/* Loading */}
+        {!widgetReady && (
+          <div className="flex items-center justify-center h-full">
+            <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
           </div>
         )}
 
-        {/* Loading state while script loads */}
-        {isVisible && !widgetReady && !error && (
-          <div className="absolute inset-0 flex items-center justify-center bg-card z-10">
-            <div className="text-center">
-              <Loader2 className="w-8 h-8 text-blue-500 animate-spin mx-auto mb-2" />
-              <p className="text-muted-foreground text-sm">Loading feed...</p>
-            </div>
-          </div>
-        )}
-
-        {/* EmbedSocial Widget - only render when visible */}
+        {/* EmbedSocial Widget */}
         {isVisible && (
           <div 
             className="embedsocial-hashtag" 
@@ -239,68 +171,12 @@ const EmbedSocialWidget = () => {
             data-lazyload="yes"
             style={{ 
               width: '100%',
-              minHeight: '400px',
+              minHeight: '300px',
               opacity: widgetReady ? 1 : 0,
-              transition: 'opacity 0.2s ease-out',
-              // Prevent widget from blocking scroll
               pointerEvents: widgetReady ? 'auto' : 'none',
             }}
           />
         )}
-
-        {/* Error/Fallback State */}
-        {error && (
-          <div className="absolute inset-0 flex items-center justify-center bg-card z-20">
-            <div className="p-4 text-center">
-              <div className="bg-blue-600 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
-                <Facebook className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="font-semibold text-foreground text-sm mb-2">Join Our Community</h3>
-              <p className="text-muted-foreground text-xs mb-3">
-                Like, comment, share to earn BL coins!
-              </p>
-              <a 
-                href={FACEBOOK_GROUP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-colors"
-              >
-                <Facebook className="w-4 h-4" />
-                Visit on Facebook
-              </a>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Post Your Photo Button */}
-      <div className="p-4 border-t bg-gradient-to-r from-purple-600/5 via-pink-600/5 to-blue-600/5">
-        <a 
-          href={FACEBOOK_GROUP_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold transition-all shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30"
-          data-testid="post-photo-in-group-btn"
-        >
-          <Camera className="w-5 h-5" />
-          Post Your Minted Photo in Group
-          <ExternalLink className="w-4 h-4" />
-        </a>
-      </div>
-
-      {/* Fallback Link */}
-      <div className="p-3 bg-muted/30 text-center border-t">
-        <p className="text-xs text-muted-foreground">
-          If feed does not load,{' '}
-          <a 
-            href={FACEBOOK_GROUP_URL}
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="text-blue-500 hover:text-blue-400 underline"
-          >
-            Visit Blendlink Community Group on Facebook
-          </a>
-        </p>
       </div>
     </div>
   );
