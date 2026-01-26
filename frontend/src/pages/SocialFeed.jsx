@@ -50,15 +50,6 @@ const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 // Facebook Group Widget Configuration
 const FACEBOOK_GROUP_URL = "https://www.facebook.com/groups/938837402074960";
 
-// TAGGBOX WIDGET ID - Set this after creating your widget at taggbox.com
-// Instructions: 
-// 1. Go to https://taggbox.com and sign up (free trial)
-// 2. Create a "Social feeds on website" widget
-// 3. Connect your Facebook Group: https://www.facebook.com/groups/938837402074960
-// 4. Customize: dark theme, responsive, enable interactions
-// 5. Get embed code and copy the widget ID from: https://widget.taggbox.com/YOUR_WIDGET_ID
-const TAGGBOX_WIDGET_ID = null; // Example: "12345" - Set your ID here
-
 // Skeleton loader for fast perceived performance
 const WidgetSkeleton = () => (
   <div className="animate-pulse space-y-4 p-4">
@@ -94,30 +85,174 @@ const WidgetSkeleton = () => (
   </div>
 );
 
-// Facebook Group Widget Component - Taggbox or Fallback
-const FacebookGroupWidget = () => {
+// EmbedSocial Facebook Widget Component
+const EmbedSocialWidget = () => {
   const [scriptLoaded, setScriptLoaded] = useState(() => {
-    // Check if script already exists during initial render
-    return TAGGBOX_WIDGET_ID && typeof document !== 'undefined' && !!document.querySelector('script[src*="taggbox.com"]');
+    return typeof document !== 'undefined' && !!document.getElementById('EmbedSocialHashtagScript');
   });
-  const [widgetReady, setWidgetReady] = useState(!TAGGBOX_WIDGET_ID); // Show fallback immediately if no widget ID
+  const [widgetReady, setWidgetReady] = useState(false);
   const [error, setError] = useState(false);
   const containerRef = useRef(null);
 
   useEffect(() => {
-    // If no Taggbox widget ID configured or script already loaded, nothing to do
-    if (!TAGGBOX_WIDGET_ID || scriptLoaded) {
+    // If script already exists, mark as loaded
+    if (document.getElementById('EmbedSocialHashtagScript')) {
+      setScriptLoaded(true);
+      setWidgetReady(true);
       return;
     }
 
-    // Load Taggbox script
+    // Load EmbedSocial script
     const script = document.createElement('script');
-    script.src = `https://widget.taggbox.com/${TAGGBOX_WIDGET_ID}`;
+    script.id = 'EmbedSocialHashtagScript';
+    script.src = 'https://embedsocial.com/cdn/ht.js';
     script.async = true;
     script.defer = true;
     
     const loadTimeout = setTimeout(() => {
+      if (!widgetReady) {
+        setError(true);
+      }
+    }, 15000);
+
+    script.onload = () => {
+      clearTimeout(loadTimeout);
+      setScriptLoaded(true);
+      // Give widget time to render
+      setTimeout(() => setWidgetReady(true), 1500);
+    };
+    
+    script.onerror = () => {
+      clearTimeout(loadTimeout);
       setError(true);
+    };
+
+    document.head.appendChild(script);
+
+    return () => clearTimeout(loadTimeout);
+  }, [widgetReady]);
+
+  return (
+    <div className="bg-card rounded-xl shadow-sm mb-4 overflow-hidden" data-testid="facebook-widget-container">
+      {/* Header Section */}
+      <div className="p-4 border-b bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-pink-600/10">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="relative">
+            <div className="absolute inset-0 bg-blue-500/30 rounded-full blur-md"></div>
+            <div className="relative bg-gradient-to-br from-blue-500 to-blue-600 rounded-full w-10 h-10 flex items-center justify-center">
+              <Facebook className="w-5 h-5 text-white" />
+            </div>
+          </div>
+          <div className="flex-1">
+            <h3 className="font-bold text-foreground text-base">Join Our Community</h3>
+          </div>
+          <a 
+            href={FACEBOOK_GROUP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-blue-500 hover:text-blue-400 flex items-center gap-1"
+            data-testid="facebook-group-external-link"
+          >
+            <ExternalLink className="w-4 h-4" />
+            <span className="hidden sm:inline">Open Group</span>
+          </a>
+        </div>
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          <span className="text-yellow-500 font-medium">Like, comment, and share our posts to earn BL coins!</span>
+        </p>
+      </div>
+
+      {/* Widget Container */}
+      <div 
+        ref={containerRef}
+        className="relative"
+        style={{ 
+          minHeight: '400px',
+          maxHeight: '800px',
+          overflowY: 'auto',
+        }}
+      >
+        {/* Show skeleton while loading */}
+        {!widgetReady && !error && (
+          <div className="absolute inset-0 bg-card z-10">
+            <WidgetSkeleton />
+          </div>
+        )}
+
+        {/* EmbedSocial Widget */}
+        <div 
+          className="embedsocial-hashtag" 
+          data-ref="560ae8788f1563d17ee4889e68ebc5732f2b47f7"
+          data-lazyload="yes"
+          style={{ 
+            width: '100%',
+            minHeight: '400px',
+            opacity: widgetReady ? 1 : 0,
+            transition: 'opacity 0.3s ease-in-out',
+          }}
+        />
+
+        {/* Error/Fallback State */}
+        {error && (
+          <div className="absolute inset-0 flex items-center justify-center bg-card z-20">
+            <div className="p-6 text-center">
+              <div className="relative mx-auto w-16 h-16 mb-4">
+                <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl"></div>
+                <div className="relative bg-blue-600 rounded-full w-16 h-16 flex items-center justify-center">
+                  <Facebook className="w-8 h-8 text-white" />
+                </div>
+              </div>
+              <h3 className="font-semibold text-foreground mb-2">Join Our Community</h3>
+              <p className="text-muted-foreground text-sm mb-4 max-w-xs mx-auto">
+                Like, comment, and share posts to earn BL coins!
+              </p>
+              <a 
+                href={FACEBOOK_GROUP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-medium transition-all"
+              >
+                <Facebook className="w-5 h-5" />
+                Visit Blendlink on Facebook
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Post Your Photo Button */}
+      <div className="p-4 border-t bg-gradient-to-r from-purple-600/5 via-pink-600/5 to-blue-600/5">
+        <a 
+          href={FACEBOOK_GROUP_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold transition-all shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30"
+          data-testid="post-photo-in-group-btn"
+        >
+          <Camera className="w-5 h-5" />
+          Post Your Minted Photo in Group
+          <ExternalLink className="w-4 h-4" />
+        </a>
+      </div>
+
+      {/* Fallback Link */}
+      <div className="p-3 bg-muted/30 text-center border-t">
+        <p className="text-xs text-muted-foreground">
+          If feed does not load,{' '}
+          <a 
+            href={FACEBOOK_GROUP_URL}
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="text-blue-500 hover:text-blue-400 underline"
+          >
+            Visit Blendlink Community Group on Facebook
+          </a>
+        </p>
+      </div>
+    </div>
+  );
+};
     }, 15000);
 
     script.onload = () => {
