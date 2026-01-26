@@ -4,7 +4,7 @@
   "backend_issues": {
     "critical": [
       {
-        "endpoint": "https://photoauction.preview.emergentagent.com/api/*",
+        "endpoint": "https://social-speedup.preview.emergentagent.com/api/*",
         "issue": "External API is DOWN - returns 404 and CORS errors",
         "priority": "CRITICAL",
         "note": "This is an external dependency issue. The API server appears to be offline or misconfigured."
@@ -74,7 +74,7 @@
   ],
 
   "action_items": [
-    "CRITICAL: External API at https://photoauction.preview.emergentagent.com/api is DOWN - needs to be restored or replaced",
+    "CRITICAL: External API at https://social-speedup.preview.emergentagent.com/api is DOWN - needs to be restored or replaced",
     "Once API is available, test actual login/register flows",
     "Once API is available, test Daily Claim functionality",
     "Once API is available, test Wallet balance and transactions"

@@ -14,7 +14,7 @@ import requests
 import os
 import uuid
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://photoauction.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://social-speedup.preview.emergentagent.com')
 
 # Test credentials
 ADMIN_EMAIL = "blendlinknet@gmail.com"

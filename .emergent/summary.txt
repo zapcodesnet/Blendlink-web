@@ -1,150 +1,133 @@
 <analysis>**original_problem_statement:**
-The user's primary goal is to enhance and stabilize the Photo Game feature on the Blendlink.net platform, with a focus on bug fixes, UI/UX improvements, and a major overhaul of the core game mechanics. All changes must be synchronized between the web and mobile app.
+The user's primary goal is to enhance and stabilize the Photo Game feature on the Blendlink.net platform, with a focus on bug fixes, UI/UX improvements, and a major overhaul of the core game mechanics. A critical P0 task has been to create a new authenticated landing page () that integrates a fast and reliable Facebook Group feed to boost community engagement. The user has cycled through multiple third-party embed solutions (Facebook Plugin, Elfsight, SociableKIT) due to performance and functionality issues, and is now insistent on using and optimizing a widget from EmbedSocial.com.
 
 **PRODUCT REQUIREMENTS (from latest user requests):**
 
-1.  **New Authenticated Homepage (P0):**
-    *   After login, redirect users to a new  page.
-    *   This page should feature a header (Welcome to Blendlink Community...) and an embedded live feed from the user's Facebook Page ().
-    *   The feed should be responsive and lazy-loaded.
-    *   Below the feed, add three buttons linking to Mint New Photo, My Minted Photos, and Join Auction Battle.
-    *   The page must match the existing dark/light theme.
-
-2.  **Photo Game Overhaul (P1 - Phased Implementation):**
-    *   **Valuation System:** Implement a new 11-category AI valuation system for minted photos, with specific weights for categories like Originality, Innovation, Uniqueness, etc. The total Dollar Value (Core Power) is a weighted average, maxing out at B. The Authenticity category includes an optional live selfie match feature.
-    *   **Gameplay:** Keep the existing Rock-Paper-Scissors (RPS) mode and add a new Photo Auction Battle as a second round, which is a real-time tapping mechanic.
-    *   **Card UI/UX:** Redesign minted photo cards to be more compact. The front shows only Stamina, Dollar Value, and Strength/Weakness. The back, visible on flip, shows the full 11-category breakdown.
-    *   **Large Photo View:** On click, open a clean, full-screen image. A second tap reveals controls to close, delete, or flip the card. No overlays or watermarks on the image itself.
-    *   **Upgrades & Bonuses:** Allow users to upgrade a photo's Dollar Value with BL coins. Implement a level-up system with star bonuses and a golden frame at the max level (60).
-    *   **Marketplace:** Add features to gift, trade, or sell minted photos with a creator-set royalty fee.
-    *   **Scenery System:** Add a Neutral scenery type.
-
-3.  **Ongoing Bug Fixes:** The user has been very persistent about fixing critical bugs, most of which have now been addressed, including the Minting Failed error, image display issues, and  quota errors.
+1.  **Fix Feed Page Performance (P0 - URGENT):** The  page is extremely laggy and unresponsive to touch/scroll on mobile since the EmbedSocial widget was added. This must be fixed immediately.
+    *   Completely remove all traces of previous widget attempts, especially SociableKIT.
+    *   Re-implement the user-provided EmbedSocial widget cleanly.
+    *   Optimize the widget and the entire page for a load time under 3 seconds and smooth, non-blocking scroll performance.
+    *   Remove the fallback button (Visit Blendlink on Facebook) and associated fallback text message.
+2.  **Photo Game Overhaul (P1 - Phased Implementation):** Once the feed page is fixed and deployed, resume work on the major gameplay overhaul.
+    *   **Core Power / Dollar Value Updates:** Implement the AI valuation system, including the Authenticity/selfie match feature.
+    *   **Auction Battle Mode:** Implement the new real-time tapping game.
+    *   **Marketplace & Upgrades:** Add features for trading, leveling up photos, and BL coin upgrades.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The agent has successfully resolved several critical, persistent bugs and implemented significant portions of the user's feature requests.
--   **Minting Failed Bug Resolved:** The core minting feature is now fully functional. The agent diagnosed and fixed multiple root causes:
-    1.  Incorrect  handling in the frontend API service, which caused  errors.
-    2.  Large base64-encoded images exceeding MongoDB's 16MB BSON document limit, which was resolved by adding server-side image compression and resizing.
--   **Image Display & Quality Bugs Fixed:**
-    -   Placeholder gradients/icons have been replaced with actual photo images on both the  and  pages.
-    -   A  quota error, which occurred when setting a profile picture, was fixed by storing a reference ID instead of the full base64 image data.
--   **Phase 1 & 2 of Photo Game Overhaul Complete:**
-    -   **11-Category Valuation System:** The backend () was completely updated to use the new AI valuation model, including the 11 weighted categories, a new Neutral scenery type, and updated data models.
-    -   **Card UI/UX Redesign:** The  page has been overhauled with a new, compact photo card design and a sophisticated lightbox viewer. The lightbox supports a clean image view and a flip-to-back feature to display the detailed 11-category stats.
--   **Mobile UI/UX Fixes:** Addressed mobile-specific UI issues where control buttons on the lightbox and photo cards were cut off or invisible. All action buttons now use a consistent pink/purple gradient style.
+The agent has successfully implemented and iterated on a social feed feature on the  page. All user authentication and navigation now correctly redirects to . The page structure is in place, featuring a post-creation component, three main action buttons (, , ), and the area for the social feed widget. The current implementation uses an EmbedSocial widget, but it is causing severe performance problems (lag, freezing). The agent had just started a rewrite of the component to optimize it and clean up old code.
 
 **Last working item**:
--   **Last item agent was working**: The agent had just started implementing the user's latest request for a new authenticated homepage with an embedded Facebook feed. It created the new component file () and updated the routing in  to include the  route and redirect logged-in users to it.
+-   **Last item agent was working**: Fixing severe performance issues (lag, unresponsiveness) on the  page caused by the EmbedSocial widget. The agent was in the process of rewriting the  component in  to be lighter, remove a fallback UI as requested by the user, and clean up unused code from previous failed widget attempts.
 -   **Status**: IN PROGRESS
 -   **Agent Testing Done**: N
--   **Which testing method agent to use?**: frontend testing agent
+-   **Which testing method agent to use?**: Frontend testing agent. The primary goal is to test for performance. The agent must verify that the page loads quickly (<3s) and that touch scrolling is smooth and does not freeze on mobile. It should also visually confirm the EmbedSocial widget loads and the old fallback UI is gone.
 -   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Photo Editor Bugs & Performance (P2)**
-    -   This is a carry-over issue from the initial problem statement that has not been addressed yet.
-    -   **Status:** NOT STARTED
--   **Issue 2: Expand i18n Coverage (P2)**
-    -   Another carry-over task to translate all remaining hardcoded text.
-    -   **Status:** NOT STARTED
+-   **Issue 1: Critical Performance Lag on /feed Page (P0)**
+    -   **Description:** The  page is extremely laggy and often freezes, especially on mobile devices, making scrolling and interaction impossible. The user attributes this to the EmbedSocial widget and potential leftover code from previous (SociableKIT) integration attempts.
+    -   **Attempted fixes:** The agent previously implemented lazy loading with  and applied various CSS performance hints (, ). The last action was a rewrite of the widget component to simplify it. These fixes have not been tested yet.
+    -   **Next debug checklist:**
+        1.  Resume the cleanup of . Ensure the unused  component and any other orphaned code are removed.
+        2.  Perform a global search () across the  directory for sociablekit, elfsight, and taggbox to guarantee every trace is removed, including comments, to satisfy the user's concern.
+        3.  After cleanup, take desktop and mobile screenshots of the  page. Crucially, use the  parameter in the screenshot tool to test if the page freezes during scrolling.
+        4.  Analyze browser console logs from the screenshot tool's output for any errors, warnings, or performance bottlenecks.
+        5.  Confirm the fallback button and message (Visit Blendlink on Facebook) have been removed as per the user's last request.
+    -   **Why fix this issue and what will be achieved with the fix?** The  page is the primary landing page for authenticated users. Its poor performance makes the app feel broken and unusable, blocking user engagement. Fixing it is the highest priority.
+    -   **Status:** IN PROGRESS
+    -   **Is recurring issue?** Y
+    -   **Should Test frontend/backend/both after fix?** frontend
+    -   **Blocked on other issue:** None
 
 **In progress Task List**:
--   **Task 1: Complete Facebook Feed Homepage (P0)**
-    -   **Where to resume:** Inside , implement the component logic. This includes adding the Facebook Page Plugin SDK script to the  or dynamically, creating the responsive layout with the header, the Facebook plugin , and the three action buttons below it.
-    -   **What will be achieved with this?** A new landing page for authenticated users, increasing community engagement by showing live Facebook updates.
+-   **Task 1: Finalize High-Performance Feed Integration (P0)**
+    -   **Where to resume:** Continue cleaning up the  file. The agent was about to remove the  component.
+    -   **What will be achieved with this?** A fast, smooth, and functional  page with a working EmbedSocial widget that meets all user requirements, finally resolving this long-standing blocker.
     -   **Status:** IN PROGRESS
     -   **Should Test frontend/backend/both after fix?** frontend
-    -   **Blocked on something:** None.
+    -   **Blocked on something:** This task is directly tied to resolving Issue 1.
 
 **Upcoming and Future Tasks**
--   **Upcoming Tasks (Photo Game Overhaul - Remaining Phases):**
-    *   **(P1) Authenticity Selfie Match:** Implement the live video selfie match feature for the Authenticity category bonus. This involves prompting the user, handling up to 3 paid attempts, and locking the score.
-    *   **(P1) Photo Auction Battle:** Implement the new second-round tapping game, including the anti-cheat tap limit and the proportional bidding threshold logic.
-    *   **(P1) Dollar Value Upgrades:** Implement the feature allowing users to permanently upgrade a photo's value using BL coins, including the backend endpoint and frontend UI.
-    *   **(P1) Level/Star Bonuses:** Implement the level-up system that adds star icons and permanent Dollar Value bonuses to photos, including the max-level golden frame.
-    *   **(P2) Marketplace Features:** Implement functionality to gift, trade, or sell minted photos, including setting and processing creator royalty fees.
--   **Future Tasks:**
-    *   **(P2) Fix Photo Editor Bugs & Performance:** Investigate and fix Failed Fetch errors and other bugs in the .
-    *   **(P2) Expand i18n Coverage:** Integrate  across all remaining components with hardcoded text.
+-   **Upcoming Tasks (Photo Game Overhaul - P1):**
+    *   **Core Power / Dollar Value Updates:** Implement the new 11-category AI valuation system, including the live Authenticity selfie match feature.
+    *   **Photo Auction Battle:** Build the new second-round real-time tapping game mode.
+    *   **Dollar Value Upgrades:** Implement the backend endpoint and frontend UI for upgrading a photo's value using BL coins.
+    *   **Level/Star Bonuses:** Implement the level-up system that adds star icons and permanent bonuses to photos.
+-   **Future Tasks (P2):**
+    *   **Marketplace Features:** Implement functionality to gift, trade, or sell minted photos.
+    *   **Photo Editor Bugs:** Investigate and fix Failed Fetch errors in .
+    *   **i18n Coverage:** Translate all remaining hardcoded text.
 
 **Completed work in this session**
--   **Critical Bug Fix: Minting Failed (DONE):** Resolved all causes of the minting failure, including  handling and the BSON document size limit for large images.
--   **Critical Bug Fix: Image Display (DONE):** Fixed blank/placeholder cards on both  and , ensuring newly minted photos display correctly.
--   **Critical Bug Fix:  Quota (DONE):** Fixed the quota error when setting a profile picture.
--   **Feature: 11-Category Valuation System (DONE):** Implemented the new AI scoring model on the backend.
--   **Feature: Redesigned Photo Card & Lightbox (DONE):** Overhauled the UI on  with a compact card, clean full-screen view, and a flip-to-back mechanism for detailed stats.
--   **UI/UX: Mobile Responsiveness Fixes (DONE):** Ensured all new card and lightbox elements are fully visible and functional on mobile screens.
--   **Deployment:  Fix (DONE):** Resolved a deployment blocker by cleaning up the  file.
+-   Successfully redirected all authenticated user flows (login, registration, Google auth) to .
+-   Iteratively implemented and replaced multiple third-party Facebook feed widgets (Elfsight, SociableKIT, EmbedSocial) on the  page based on user feedback.
+-   Refactored the feed page UI to include the widget, surrounding text, and action buttons as per user specifications.
+-   Attempted several performance optimizations on the widget component, including lazy loading and CSS hardware acceleration hints.
+
+**Earlier issues found/mentioned but not fixed**
+-   **Issue 1: Photo Editor Bugs & Performance**
+    -   **Debug checklist:** Investigate Failed Fetch errors and other bugs reported in .
+    -   **Why to solve this issue and what will be achieved with this?** This is part of the original project scope to improve the core photo features.
+    -   **Should Test frontend/backend/both after fix:** both
+    -   **Is recurring issue?** N
+-   **Issue 2: Expand i18n Coverage**
+    -   **Debug checklist:** Integrate  hook across all remaining components with hardcoded English text.
+    -   **Why to solve this issue and what will be achieved with this?** To make the application accessible to a global audience.
+    -   **Should Test frontend/backend/both after fix:** frontend
+    -   **Is recurring issue?** N
 
 **Known issue recurrence from previous fork**
--   **Issue recurrence in previous fork**: The Minting Failed and associated image display bugs were highly recurrent. Previous attempts only provided partial fixes.
+-   **Issue recurrence in previous fork**: The Minting Failed bug was highly recurrent and is now resolved.
 -   **Recurrence count**: 3+
--   **Status**: RESOLVED. The agent successfully identified and fixed two deep-rooted causes in this session: a frontend  serialization bug and a backend database document size limit. The feature is now stable.
+-   **Status**: RESOLVED
+-   **Note**: Within this session, the issue of the social feed widget is slow/broken has been highly recurrent, leading the user to try four different services. The next agent must be mindful of the user's frustration with this specific feature.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **BSON Document Size Limit:** Solved a critical bug where large base64 images exceeded MongoDB's 16MB document limit by implementing server-side image compression/resizing with the Pillow library.
--   **FormData Handling:** Fixed a  error by modifying the generic API service to correctly handle  objects without -ing them.
--   **LocalStorage Quota Management:** Resolved a quota exceeded error by storing a reference ID () for the user's profile picture instead of the full base64 data.
--   **Complex Frontend UI/UX:** Heavily refactored  to create a new, mobile-first card design and a feature-rich lightbox with flip-card functionality using React and Tailwind CSS.
--   **Modular AI Prompting:** Implemented the new 11-category valuation system by modifying the backend prompt sent to GPT-4o Vision and updating associated Pydantic models and logic.
+-   **Third-Party Widget Integration:** Embedding external JavaScript widgets into a React component dynamically.
+-   **React Performance Optimization:** Using  with  to lazy-load components and scripts only when they enter the viewport.
+-   **CSS for Performance:** Applying CSS properties like , , and  to hint to the browser to use hardware acceleration and improve scroll performance on touch devices.
+-   **Component-Based Fallbacks:** Designing components that show a loading state (skeleton) or an error state, which was later removed at the user's request.
 
 **key DB schema**
--   **minted_photos**:
-    -   : Stores the score for each of the 11 AI rating categories.
-    -   : Now calculated as a sum based on the .
--   **users**:
-    -   : A new field likely used to store a reference to a minted photo instead of the full image URL, preventing  overflow.
+-   No database schema changes were made in this session.
 
 **All files of reference**
--   : The new file for the current task.
--   : Contains routing logic, recently modified to add the  route.
--   : Contains the core logic for the 11-category photo valuation system.
--   : Contains the heavily refactored Photo Card and Lightbox components.
--   : Contains the image upload endpoint with the critical compression fix.
--   : Contains the critical fix for  handling.
--   : Contains the UI for the battle selection screen, where image display was fixed.
+-   : This is the most critical file. It contains all the logic for the feed page, including the problematic widget, and is where the fix needs to be implemented and verified.
+
+**Areas that need refactoring**:
+-   : This file has undergone many rapid, iterative changes and contains commented-out code and remnants of previous approaches. A final cleanup pass after the performance issue is resolved would be beneficial.
+-   : This file is now effectively deprecated since all traffic is routed to . It could be deleted or repurposed.
 
 **Critical Info for New Agent**
--   The immediate priority (P0) is to complete the Facebook Feed Homepage as requested in the latest user message.
--   After completing the homepage, resume work on the large Photo Game Overhaul feature. The backend valuation system (Phase 1) and frontend card UI (Phase 2) are complete, but several major gameplay and marketplace features are still pending. Refer to the  section for the list.
--   The Minting Failed bug was extremely persistent. The final fix involved image compression on the backend () to avoid MongoDB's 16MB document size limit. Be mindful of this if any similar file upload issues occur.
-
-**documents and test reports created in this job**
--   
--    (Continuously updated with completed features and new requirements)
+-   **User Frustration is High:** The user is very frustrated with the  page's performance. Your immediate and only priority is to fix the lag and scrolling issues. Do not get sidetracked.
+-   **The Solution is EmbedSocial:** Do not suggest alternative widgets. The task is to make the existing, user-provided  widget work correctly and performantly.
+-   **SociableKIT is a Keyword for Cleanup:** The user repeatedly blames SociableKIT for the issues. Even if no functional SociableKIT code exists, you must be thorough in removing any mention of it (or other old widgets like Elfsight/Taggbox) from  to build user confidence.
+-   **Remove the Fallback UI:** The user explicitly requested to remove the Visit Blendlink on Facebook button and the associated fallback text. Ensure this is done.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (Msg #55):** Demanded a permanent fix for the Minting Failed bug. (COMPLETED)
-2.  **User (Msg #92):** Reported that the minting bug still occurred in preview. (COMPLETED)
-3.  **User (Msg #115):** Requested UI/UX improvements for minted photos (remove overlays, stats below image, lightbox view). (COMPLETED)
-4.  **User (Msg #172):** Requested a deployment health check. (COMPLETED)
-5.  **User (Msg #188):** Reported an image display bug on the battle screen and a  quota error when setting a profile picture. (COMPLETED)
-6.  **User (Msg #297):** Submitted a massive feature request to overhaul the entire photo game system (11-category valuation, new gameplay, UI changes, etc.). (IN PROGRESS)
-7.  **User (Msg #300):** Provided priority choices for the feature overhaul plan. (COMPLETED)
-8.  **User (Msg #398):** Requested a deployment health check. (COMPLETED)
-9.  **User (Msg #402):** Provided screenshots of mobile UI bugs in the new card design (invisible controls, cut-off buttons). (COMPLETED)
-10. **User (Msg #447):** Requested a new authenticated homepage with an embedded Facebook feed. (IN PROGRESS)
+1.  **User:** Replace SociableKIT with EmbedSocial. (COMPLETED)
+2.  **User:** The  page is super laggy with EmbedSocial. Fix this urgently. (IN PROGRESS)
+3.  **User:** SociableKIT widgets are reappearing and causing lag. Remove them completely. Re-use the EmbedSocial code. Remove the fallback button and text. (IN PROGRESS - THIS IS THE CURRENT TASK)
 
 **Project Health Check:**
--   **Healthy**: The application is stable. The previously Broken core minting feature is now fully functional and robust, handling large image files correctly. The social feed and landing page are performant.
+-   **Broken**: The primary authenticated landing page () is functionally broken due to severe performance issues, making the app unusable after login.
 
 **3rd Party Integrations**
--   **OpenAI GPT-4o Vision**: Used for the 11-category AI photo analysis. (Uses Emergent LLM Key)
--   **Facebook Page Plugin**: To be implemented for the new authenticated homepage.
--   **Stripe**: For payments.
--   **Shippo**: For shipping.
--   **Resend**: For emails.
--   ****: For AI background removal.
--   ****: For geolocation.
+-   **EmbedSocial**: For embedding a Facebook Group feed. This is the source of the current performance problem.
+-   **OpenAI GPT-4o Vision**: Used for the photo valuation system (upcoming task).
+-   **Stripe, Shippo, Resend, remove.bg, ip-api.com**: Existing integrations from the previous state.
 
 **Testing status**
--   **Testing agent used after significant changes**: YES, used  for the initial minting fix and  for health checks.
+-   **Testing agent used after significant changes**: NO (Not in this session for the feed page).
 -   **Troubleshoot agent used after agent stuck in loop**: NO
 -   **Test files created**: None.
--   **Known regressions**: None.</analysis>
+-   **Known regressions**: The performance of the  page has severely regressed after the introduction of third-party widgets.
+
+**What agent forgot to execute**
+-   The agent did not complete the cleanup of . It mentioned it would remove the  component and other unused code but was interrupted.
+-   The agent has not performed any tests (scrolling or otherwise) since the last set of code changes aimed at fixing performance.</analysis>
