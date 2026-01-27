@@ -1517,6 +1517,24 @@ const PhotoGameArena = () => {
     }
   };
   
+  // Handle new Auction Battle mode (with tapping game)
+  const handleAuctionBattleStart = useCallback((gameData) => {
+    if (gameData.success) {
+      setSession(gameData.session);
+      setGameState('auction_battle');
+      auctionSounds.gavelSlam();
+      toast.success('⚔️ Auction Battle started!');
+    }
+  }, []);
+  
+  // Handle Auction Battle completion
+  const handleAuctionBattleComplete = useCallback((winner) => {
+    setGameState('matchmaking');
+    setSession(null);
+    setSelectedPhoto(null);
+    api.get('/photo-game/stats').then(res => setStats(res.data)).catch(() => {});
+  }, []);
+  
   const handleMatchFound = async (matchInfo) => {
     setMatchData(matchInfo);
     
