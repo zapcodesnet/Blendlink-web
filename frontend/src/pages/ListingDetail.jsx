@@ -438,6 +438,15 @@ export default function ListingDetail() {
   const [likesCount, setLikesCount] = useState(0);
   const [addingToCart, setAddingToCart] = useState(false);
   const [showOfferModal, setShowOfferModal] = useState(false);
+  
+  // Check if user is logged in (for nav display when outside ProtectedRoute)
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  
+  useEffect(() => {
+    // Check localStorage for auth token
+    const token = localStorage.getItem('blendlink_token');
+    setIsLoggedIn(!!token);
+  }, []);
 
   useEffect(() => {
     fetchListing();
