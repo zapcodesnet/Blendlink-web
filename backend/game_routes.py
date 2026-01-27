@@ -613,9 +613,9 @@ async def create_auction_battle(
         bet_amount=request.bet_amount,
     )
     
-    # Calculate effective values for display
-    battle_value = {}
-    if request.is_bot_match and bot_photo:
+    # Calculate effective values for display (use pre-calculated if available)
+    battle_value = player_battle_value or {}
+    if request.is_bot_match and bot_photo and not player_battle_value:
         battle_value = calculate_photo_battle_value(player_photo, bot_photo, player_stats, bot_stats)
     
     return {
