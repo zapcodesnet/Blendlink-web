@@ -361,13 +361,6 @@ export const FacebookShareOverlay = ({ isOpen, onClose, onVisitGroup }) => {
                   </button>
                 )}
               </div>
-              
-              {/* Tap hint */}
-              {photos.length > 0 && (
-                <p className="text-xs text-gray-500 text-center mt-2">
-                  Tap a photo to preview & share
-                </p>
-              )}
             </div>
             
             {/* Go to Group button */}
