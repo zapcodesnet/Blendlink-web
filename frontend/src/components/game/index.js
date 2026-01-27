@@ -6,3 +6,4 @@
 export { StreakIndicator, StreakBadge, StarDisplay, calculateStarBonus, calculateXPForLevel, calculateLevelFromXP } from './StreakIndicator';
 export { TappingArena } from './TappingArena';
 export { RPSBidding } from './RPSBidding';
+export { BattleArena } from './BattleArena';
