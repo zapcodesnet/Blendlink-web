@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import MakeOfferModal from "../components/MakeOfferModal";
 import AuctionBidPanel from "../components/AuctionBidPanel";
+import BottomNav from "../components/BottomNav";
+import BackToGroupFAB from "../components/BackToGroupFAB";
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
