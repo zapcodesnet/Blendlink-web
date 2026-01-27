@@ -186,6 +186,15 @@ export default function Marketplace() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [sortBy, setSortBy] = useState("newest"); // Add sorting state
+  
+  // Check if user is logged in (for nav display when outside ProtectedRoute)
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  
+  useEffect(() => {
+    // Check localStorage for auth token
+    const token = localStorage.getItem('blendlink_token');
+    setIsLoggedIn(!!token);
+  }, []);
 
   useEffect(() => {
     fetchCategories();
