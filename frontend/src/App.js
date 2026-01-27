@@ -180,6 +180,7 @@ const ProtectedRoute = ({ children }) => {
       <div className="pb-20 md:pb-0 md:pl-20">
         {children}
         <BottomNav />
+        <BackToGroupFAB />
       </div>
     </AuthContext.Provider>
   );
