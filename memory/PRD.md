@@ -1,6 +1,43 @@
 # Blendlink Platform - PRD
 
-## Latest Update: December 2025 (Session 24 - Navigation Enhancement)
+## Latest Update: December 2025 (Session 24 - Navigation Enhancement v2)
+
+---
+
+## SESSION 24 v2: ENHANCED NAVIGATION TRANSPARENCY & FACEBOOK INTEGRATION ✅
+
+### Updates Made:
+
+1. ✅ **Increased Nav Transparency (~60% opacity)**
+   - Bottom nav: `bg-gray-900/60` (was `bg-gray-900/90`)
+   - More menu: `bg-gray-900/70` (was `bg-gray-900/95`)
+   - Desktop sidebar: `bg-gray-900/60` (was `bg-gray-900/90`)
+   - Border: `border-white/10` (was `border-gray-700/50`)
+   - All with `backdrop-blur-xl` for glass effect
+
+2. ✅ **Nav Visibility on Public Pages**
+   - Marketplace page: Nav shows for logged-in users, hidden for guests
+   - ListingDetail page: Nav shows for logged-in users, hidden for guests
+   - Checks localStorage token directly since outside ProtectedRoute
+
+3. ✅ **Facebook Share Overlay Improvements**
+   - Header updated: "Share to Community" / "Blendlink Facebook Group"
+   - Content: "Share Your Latest Minted Photos"
+   - Photos sorted by `created_at` descending (most recent first)
+   - "Go to Group" opens same tab (window.location.href)
+   - Copy caption to clipboard on share
+
+4. ✅ **Bug Fix** (by Testing Agent)
+   - Fixed BottomNav.jsx: Changed AuthContext destructuring to null-safe access
+   - `const authContext = useContext(AuthContext); const user = authContext?.user;`
+
+**Test Results (iteration_59.json):**
+- ✅ Bottom nav transparency: rgba(17, 24, 39, 0.6)
+- ✅ More menu transparency: rgba(17, 24, 39, 0.7)
+- ✅ Backdrop blur: blur(24px)
+- ✅ Nav hidden for guests on Marketplace
+- ✅ Nav visible for logged-in users on Marketplace
+- ✅ Mobile (390x844) and Desktop (1920x1080) verified
 
 ---
 
