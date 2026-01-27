@@ -934,6 +934,7 @@ const MintedPhotos = () => {
                 viewMode="grid"
                 onSelect={() => setLightboxPhoto(photo)}
                 onUpdate={fetchPhotos}
+                onSelfieMatch={setSelfieMatchPhoto}
               />
             ))}
           </div>
@@ -946,6 +947,7 @@ const MintedPhotos = () => {
                 viewMode="list"
                 onSelect={() => setLightboxPhoto(photo)}
                 onUpdate={fetchPhotos}
+                onSelfieMatch={setSelfieMatchPhoto}
               />
             ))}
           </div>
@@ -959,6 +961,15 @@ const MintedPhotos = () => {
         onClose={() => setLightboxPhoto(null)}
         onSetProfilePic={handleSetProfilePicture}
         onDelete={handleDeletePhoto}
+      />
+      
+      {/* Selfie Match Modal */}
+      <SelfieMatchModal
+        isOpen={!!selfieMatchPhoto}
+        onClose={() => setSelfieMatchPhoto(null)}
+        photo={selfieMatchPhoto}
+        onSuccess={handleSelfieMatchSuccess}
+        userBalance={mintStatus?.bl_coins || 0}
       />
       
       {/* Mint Dialog */}
