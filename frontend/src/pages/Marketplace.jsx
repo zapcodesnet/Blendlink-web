@@ -416,10 +416,18 @@ export default function Marketplace() {
         )}
 
         {/* Sync Notice */}
-        <p className="text-center text-xs text-muted-foreground mt-8">
+        <p className="text-center text-xs text-muted-foreground mt-8 pb-4">
           🔄 Synced with Blendlink mobile app
         </p>
       </main>
+      
+      {/* Show nav for logged-in users only */}
+      {user && (
+        <>
+          <BottomNav />
+          <BackToGroupFAB />
+        </>
+      )}
     </div>
   );
 }
