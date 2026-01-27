@@ -401,7 +401,7 @@ export const TappingArena = ({
       }, 500);
       return () => clearTimeout(startTimeout);
     }
-  }, []);
+  }, [gamePhase]);
   
   // Countdown timer
   useEffect(() => {
