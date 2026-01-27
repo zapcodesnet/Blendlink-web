@@ -328,17 +328,19 @@ const GameResultScreen = ({
 }) => {
   const isWinner = winner === 'player';
   
-  // Use ref for stable random values (initialized once)
-  const confettiRef = useRef(null);
-  if (!confettiRef.current) {
-    confettiRef.current = [...Array(30)].map(() => ({
-      left: Math.random() * 100,
-      duration: 2 + Math.random() * 2,
-      delay: Math.random() * 0.5,
-      emoji: ['🎉', '✨', '💰', '🏆', '💎'][Math.floor(Math.random() * 5)],
-    }));
-  }
-  const confettiParticles = confettiRef.current;
+  // Simple seeded random for deterministic values
+  const seededRandom = (seed) => {
+    const x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
+  };
+  
+  // Generate deterministic values based on index
+  const confettiParticles = [...Array(30)].map((_, i) => ({
+    left: seededRandom(i * 1.1) * 100,
+    duration: 2 + seededRandom(i * 2.2) * 2,
+    delay: seededRandom(i * 3.3) * 0.5,
+    emoji: ['🎉', '✨', '💰', '🏆', '💎'][Math.floor(seededRandom(i * 4.4) * 5)],
+  }));
   
   return (
     <motion.div
