@@ -22,12 +22,12 @@ import {
   DollarSign, Coins, Zap, Target
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Button } from '../components/ui/button';
-import { TappingArena } from '../components/game/TappingArena';
-import { RPSBidding } from '../components/game/RPSBidding';
-import { StreakIndicator, StarDisplay, calculateStarBonus } from '../components/game/StreakIndicator';
+import { Button } from '../ui/button';
+import { TappingArena } from './TappingArena';
+import { RPSBidding } from './RPSBidding';
+import { StreakIndicator, StarDisplay, calculateStarBonus } from './StreakIndicator';
 import auctionSounds from '../../utils/auctionSounds';
-import api from '../services/api';
+import api from '../../services/api';
 
 // Constants
 const STARTING_RPS_MONEY = 5_000_000;
