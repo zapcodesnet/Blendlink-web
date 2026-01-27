@@ -2961,6 +2961,13 @@ api_router.include_router(utils_router)
 
 app.include_router(api_router)
 
+# Root-level health endpoint for Kubernetes health checks
+# This must be at the root level (not under /api) for K8s probes
+@app.get("/health")
+async def kubernetes_health_check():
+    """Root-level health check endpoint for Kubernetes liveness/readiness probes."""
+    return {"status": "ok", "service": "blendlink-api", "timestamp": datetime.now(timezone.utc).isoformat()}
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
