@@ -7,3 +7,4 @@ export { StreakIndicator, StreakBadge, StarDisplay, calculateStarBonus, calculat
 export { TappingArena } from './TappingArena';
 export { RPSBidding } from './RPSBidding';
 export { BattleArena } from './BattleArena';
+export { BotDifficultySelector } from './BotDifficultySelector';
