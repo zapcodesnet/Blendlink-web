@@ -112,9 +112,12 @@ class PlayerStats(BaseModel):
     stamina: float = MAX_STAMINA
     last_stamina_update: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     
-    # Win streaks
+    # Win streaks (🔥 Fire bonus)
     current_win_streak: int = 0
     best_win_streak: int = 0
+    
+    # Lose streaks (🛡 Shield immunity)
+    current_lose_streak: int = 0
     
     # Battle stats
     total_battles: int = 0
@@ -131,6 +134,34 @@ class PlayerStats(BaseModel):
     wins_this_month: int = 0
     wins_this_year: int = 0
     last_win_reset: str = ""
+    
+    def get_win_streak_multiplier(self) -> float:
+        """Get the win streak power multiplier (🔥)"""
+        if self.current_win_streak < 3:
+            return 1.0
+        # Cap at 10 streaks for max 3.0x
+        streak = min(self.current_win_streak, 10)
+        return WIN_STREAK_MULTIPLIERS.get(streak, WIN_STREAK_MULTIPLIERS.get(10, 3.0))
+    
+    def has_shield_immunity(self) -> bool:
+        """Check if player has immunity shield (🛡) from lose streak"""
+        return self.current_lose_streak >= LOSE_STREAK_IMMUNITY_THRESHOLD
+    
+    def on_win(self):
+        """Update stats on win"""
+        self.current_win_streak += 1
+        self.current_lose_streak = 0  # Reset lose streak
+        self.battles_won += 1
+        self.total_battles += 1
+        if self.current_win_streak > self.best_win_streak:
+            self.best_win_streak = self.current_win_streak
+    
+    def on_loss(self):
+        """Update stats on loss"""
+        self.current_win_streak = 0  # Reset win streak
+        self.current_lose_streak += 1
+        self.battles_lost += 1
+        self.total_battles += 1
 
 
 class GameSession(BaseModel):
