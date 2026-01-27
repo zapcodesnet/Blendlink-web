@@ -799,6 +799,14 @@ export default function ListingDetail() {
         user={user}
         token={api.getToken()}
       />
+      
+      {/* Show nav for logged-in users only */}
+      {user && (
+        <>
+          <BottomNav />
+          <BackToGroupFAB />
+        </>
+      )}
     </div>
   );
 }
