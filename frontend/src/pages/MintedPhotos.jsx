@@ -730,8 +730,17 @@ const MintedPhotos = () => {
   const [mintStatus, setMintStatus] = useState(null);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [lightboxPhoto, setLightboxPhoto] = useState(null);  // For full image view
+  const [selfieMatchPhoto, setSelfieMatchPhoto] = useState(null); // For selfie match modal
   
   const { isAnimating, startAnimation, handleComplete, MintAnimationComponent } = useMintAnimation();
+  
+  // Handle selfie match success
+  const handleSelfieMatchSuccess = (data) => {
+    // Refresh photos to get updated authenticity scores
+    fetchPhotos();
+    fetchMintStatus();
+    toast.success(`Authenticity updated! New total: ${data.total_authenticity}%`);
+  };
   
   // Handle setting photo as profile picture
   const handleSetProfilePicture = async (photo) => {
