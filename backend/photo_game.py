@@ -38,15 +38,23 @@ MIN_BID = 1_000_000  # $1M minimum bid
 MAX_BID = 5_000_000  # $5M maximum bid
 BID_INCREMENT = 1_000_000  # $1M increments
 
-# Win streak multipliers
+# Win streak multipliers (🔥 Fire bonus - visible during battles)
+# Bonus affects required bids in Auction battles
 WIN_STREAK_MULTIPLIERS = {
-    3: 1.25,
-    4: 1.50,
-    5: 1.75,
-    6: 2.00,  # 6+ wins
+    3: 1.25,   # 🔥 ×1.25
+    4: 1.50,   # 🔥 ×1.50
+    5: 1.75,   # 🔥 ×1.75
+    6: 2.00,   # 🔥 ×2.00
+    7: 2.25,   # 🔥 ×2.25
+    8: 2.50,   # 🔥 ×2.50
+    9: 2.75,   # 🔥 ×2.75
+    10: 3.00,  # 🔥 ×3.00 (maximum)
 }
 
-# Scenery strength/weakness (expanded system)
+# Lose streak immunity threshold (🛡 Shield - gains immunity at 3+ losses)
+LOSE_STREAK_IMMUNITY_THRESHOLD = 3  # 3 or more losses = 100% immunity vs stronger scenery
+
+# Scenery strength/weakness (expanded system with Neutral)
 # Light conditions
 LIGHT_TYPES = {
     "sunlight_fire": {"name": "Sunlight/Fire", "strong_vs": "darkness_night", "weak_vs": "rain_snow_ice"},
@@ -54,15 +62,34 @@ LIGHT_TYPES = {
     "darkness_night": {"name": "Darkness/Night/Interior", "strong_vs": "rain_snow_ice", "weak_vs": "sunlight_fire"},
 }
 
-# Scenery types
+# Scenery types with Neutral category
 SCENERY_TYPES = {
-    "natural": {"name": "Natural Scenery", "strong_vs": "water", "weak_vs": "manmade"},
-    "water": {"name": "Water Scenery", "strong_vs": "manmade", "weak_vs": "natural"},
-    "manmade": {"name": "Man-made/Mixed", "strong_vs": "natural", "weak_vs": "water"},
+    "natural": {"name": "Natural Scenery", "strong_vs": "water", "weak_vs": "manmade", "neutral_bonus": 1.10},
+    "water": {"name": "Water Scenery", "strong_vs": "manmade", "weak_vs": "natural", "neutral_bonus": 1.10},
+    "manmade": {"name": "Man-made/Mixed", "strong_vs": "natural", "weak_vs": "water", "neutral_bonus": 1.10},
+    "neutral": {"name": "Neutral/Plain", "strong_vs": None, "weak_vs": "all", "neutral_bonus": 1.0},  # 10% weaker vs all
 }
 
-# Strength multiplier
+# Strength/weakness multipliers
 STRENGTH_MULTIPLIER = 1.25  # +25% value for strong matchups
+WEAKNESS_MULTIPLIER = 0.75  # -25% value for weak matchups (1/1.25)
+NEUTRAL_WEAKNESS_MULTIPLIER = 0.90  # Neutral is 10% weaker than all other scenery types
+
+# Auction Bidding Constants
+BASE_BIDS_TO_WIN = 200  # Base number of taps needed if equal power
+MAX_TAPS_PER_SECOND = 10  # Anti-cheat limit
+AUCTION_COUNTDOWN_SECONDS = 10  # Countdown before round starts
+AUCTION_ROUND_DURATION = 15  # Seconds to complete tapping
+
+# Bot Match Constants
+BOT_DIFFICULTY = {
+    "easy": {"win_rate": 0.55, "tap_speed": 5, "strategy": "random"},      # Player wins ~55%
+    "medium": {"win_rate": 0.50, "tap_speed": 7, "strategy": "basic"},     # Player wins ~50%
+    "hard": {"win_rate": 0.40, "tap_speed": 9, "strategy": "adaptive"},    # Player wins ~40%
+}
+BOT_MIN_BET = 1
+BOT_MAX_BET = 500
+BOT_HOUSE_FEE = 0.05  # 5% house fee on winnings
 
 
 class RPSChoice(str, Enum):
