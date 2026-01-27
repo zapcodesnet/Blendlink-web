@@ -1,6 +1,31 @@
 # Blendlink Platform - PRD
 
-## Latest Update: December 2025 (Session 24 - Navigation Enhancement v2)
+## Latest Update: December 2025 (Session 24 - Navigation v3 - Games Added)
+
+---
+
+## SESSION 24 v3: ADDED GAMES TO MORE MENU ✅
+
+### Update: Added "Games" item to "More" menu
+
+**Implementation:**
+- Added `Swords` icon from lucide-react (crossed swords)
+- Games placed first in "More" menu order: **Games → Minted Photos → Community Group**
+- Red/pink gradient icon (`from-red-500 to-pink-600`) to stand out
+- Navigates to `/games` route (existing protected route)
+- Description: "Play & compete"
+
+**Updated "More" Menu Order:**
+1. **Games** - Swords icon, red/pink gradient, navigates to /games
+2. **Minted Photos** - Image icon, purple/pink gradient, navigates to /minted-photos  
+3. **Community Group** - Facebook icon, blue gradient, opens share overlay
+
+**Desktop Sidebar:**
+- Games icon now visible below the divider with other extra nav items
+- Consistent styling across mobile and desktop
+
+**Files Modified:**
+- `frontend/src/components/BottomNav.jsx` - Added Swords import and Games menu item
 
 ---
 
