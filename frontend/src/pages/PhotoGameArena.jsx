@@ -1297,6 +1297,44 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect, onPracticeSta
     }
   };
   
+  // Start new Auction Battle mode (tapping game)
+  const startAuctionBattle = async () => {
+    if (!selectedPhoto) {
+      toast.error('Please select a photo first!');
+      return;
+    }
+    
+    if (battlePhotos.length < 1) {
+      toast.error('You need at least 1 minted photo to play!');
+      return;
+    }
+    
+    try {
+      // For bot matches, we create mock opponent photos
+      const botPhotos = battlePhotos.slice(0, 4).map((p, i) => ({
+        ...p,
+        mint_id: `bot_photo_${i}`,
+        name: `Bot Photo ${i + 1}`,
+        dollar_value: (p.dollar_value || 50000000) * (0.8 + Math.random() * 0.4),
+      }));
+      
+      // Start the battle directly
+      onAuctionBattleStart?.({
+        success: true,
+        session: { session_id: `auction_${Date.now()}` },
+        playerPhotos: battlePhotos.slice(0, 4), // Up to 4 photos
+        opponentPhotos: botPhotos,
+        betAmount: betAmount,
+        isBot: true,
+        botDifficulty: 'medium',
+      });
+      
+      toast.success('🎯 Auction Battle started!');
+    } catch (err) {
+      toast.error('Failed to start auction battle');
+    }
+  };
+  
   useEffect(() => {
     return () => {
       if (intervalRef.current) {
