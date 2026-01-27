@@ -410,21 +410,58 @@ def calculate_auction_bids_required(
 
 
 def generate_bot_photo(difficulty: str = "medium", player_photos: List[Dict] = None) -> Dict:
-    """Generate a random bot photo for battles"""
-    scenery = random.choice(["natural", "water", "manmade"])
+    """
+    Generate a bot photo for battles based on difficulty level.
+    
+    Difficulty affects:
+    - Dollar value range
+    - Scenery selection strategy (can counter player)
+    - Rating scores
+    """
+    from minting_system import RATING_CRITERIA
+    
+    difficulty_config = BOT_DIFFICULTY.get(difficulty, BOT_DIFFICULTY["medium"])
+    
+    # Determine scenery based on difficulty and player photos
+    if difficulty == "hard" and player_photos:
+        # Smart bot: Choose scenery that's strong against player's likely choice
+        player_sceneries = [p.get("scenery_type", "natural") for p in player_photos]
+        most_common = max(set(player_sceneries), key=player_sceneries.count)
+        # Counter the player's most common scenery
+        counter_map = {"natural": "manmade", "water": "natural", "manmade": "water", "neutral": "water"}
+        scenery = counter_map.get(most_common, random.choice(["natural", "water", "manmade"]))
+    elif difficulty == "easy":
+        # Easy bot: May choose neutral (weakest)
+        scenery = random.choice(["natural", "water", "manmade", "neutral"])
+    else:
+        # Medium bot: Standard scenery
+        scenery = random.choice(["natural", "water", "manmade"])
+    
     light = random.choice(["sunlight_fire", "rain_snow_ice", "darkness_night"])
     
-    from minting_system import RATING_CRITERIA
-    scenery_info = SCENERY_TYPES[scenery]
+    scenery_info = SCENERY_TYPES.get(scenery, SCENERY_TYPES["natural"])
     light_info = LIGHT_TYPES[light]
     
-    # Generate random ratings (bot has moderate stats)
-    ratings = {criterion: random.randint(40, 75) for criterion in RATING_CRITERIA}
+    # Generate ratings based on difficulty
+    if difficulty == "easy":
+        ratings = {criterion: random.randint(25, 55) for criterion in RATING_CRITERIA}
+        dollar_range = (1_000_000, 50_000_000)
+    elif difficulty == "hard":
+        ratings = {criterion: random.randint(55, 85) for criterion in RATING_CRITERIA}
+        dollar_range = (100_000_000, 750_000_000)
+    else:  # medium
+        ratings = {criterion: random.randint(40, 70) for criterion in RATING_CRITERIA}
+        dollar_range = (10_000_000, 200_000_000)
+    
     avg_rating = sum(ratings.values()) / len(ratings)
     
-    # Calculate dollar value (bot gets moderate values)
-    dollar_value = int(1_000_000 * (2 ** (avg_rating / 10)))
-    dollar_value = min(dollar_value, 500_000_000)  # Cap at $500M for bots
+    # Calculate dollar value within range
+    rating_factor = avg_rating / 100
+    dollar_value = int(dollar_range[0] + (dollar_range[1] - dollar_range[0]) * rating_factor)
+    
+    # Add some randomness
+    dollar_value = int(dollar_value * random.uniform(0.8, 1.2))
+    dollar_value = max(dollar_range[0], min(dollar_range[1], dollar_value))
     
     return {
         "mint_id": f"bot_photo_{uuid.uuid4().hex[:8]}",
@@ -432,18 +469,49 @@ def generate_bot_photo(difficulty: str = "medium", player_photos: List[Dict] = N
         "user_id": "bot",
         "scenery_type": scenery,
         "light_type": light,
-        "strength_vs": scenery_info["strong_vs"],
-        "weakness_vs": scenery_info["weak_vs"],
+        "strength_vs": scenery_info.get("strong_vs"),
+        "weakness_vs": scenery_info.get("weak_vs") if scenery != "neutral" else "all",
         "light_strength_vs": light_info["strong_vs"],
         "light_weakness_vs": light_info["weak_vs"],
         "ratings": ratings,
         "overall_score": avg_rating,
         "dollar_value": dollar_value,
         "has_face": random.random() > 0.7,
-        "power": random.randint(80, 120),
-        "level": random.randint(1, 30),
-        "likes_count": random.randint(0, 100),
+        "power": int(50 + avg_rating * 0.5),
+        "level": random.randint(1, 30) if difficulty == "easy" else random.randint(10, 50),
+        "likes_count": random.randint(0, 50) if difficulty == "easy" else random.randint(50, 500),
         "created_at": datetime.now(timezone.utc).isoformat(),
+        "is_bot_photo": True,
+        "difficulty": difficulty,
+    }
+
+
+def generate_bot_stats(difficulty: str = "medium") -> Dict:
+    """Generate bot player stats for battles"""
+    difficulty_config = BOT_DIFFICULTY.get(difficulty, BOT_DIFFICULTY["medium"])
+    
+    # Bots can have streaks for realism
+    if difficulty == "easy":
+        win_streak = random.randint(0, 2)
+        lose_streak = random.randint(0, 4)
+    elif difficulty == "hard":
+        win_streak = random.randint(2, 6)
+        lose_streak = random.randint(0, 1)
+    else:
+        win_streak = random.randint(0, 4)
+        lose_streak = random.randint(0, 2)
+    
+    return {
+        "user_id": "bot",
+        "current_win_streak": win_streak,
+        "current_lose_streak": lose_streak,
+        "best_win_streak": max(win_streak, random.randint(3, 8)),
+        "total_battles": random.randint(50, 500),
+        "battles_won": random.randint(20, 250),
+        "battles_lost": random.randint(20, 250),
+        "difficulty": difficulty,
+        "tap_speed": difficulty_config["tap_speed"],
+        "strategy": difficulty_config["strategy"],
     }
 
 
