@@ -349,9 +349,85 @@ export const RPSBidding = ({
   // Warning state
   const [showMaxBidWarning, setShowMaxBidWarning] = useState(false);
   
+  // Ref for submit handler to avoid stale closures
+  const handleSubmitRef = useRef(null);
+  
   // Check if player is bankrupt
   const playerBankrupt = playerMoney < MIN_BID;
   const opponentBankrupt = opponentMoney < MIN_BID;
+  
+  // Generate bot choice - defined early to use in handleSubmit
+  const generateBotChoice = useCallback(() => {
+    const strategies = {
+      easy: () => {
+        const choice = RPS_CHOICES[Math.floor(Math.random() * 3)].id;
+        const bid = Math.min(opponentMoney, MIN_BID * (Math.floor(Math.random() * 2) + 1));
+        return { choice, bid };
+      },
+      medium: () => {
+        const choice = RPS_CHOICES[Math.floor(Math.random() * 3)].id;
+        const maxAffordable = Math.min(opponentMoney, MAX_BID);
+        const affordableBids = BID_OPTIONS.filter(b => b <= maxAffordable);
+        const bid = affordableBids[Math.floor(Math.random() * affordableBids.length)] || MIN_BID;
+        return { choice, bid };
+      },
+      hard: () => {
+        const choice = RPS_CHOICES[Math.floor(Math.random() * 3)].id;
+        const maxAffordable = Math.min(opponentMoney, MAX_BID);
+        const highBids = BID_OPTIONS.filter(b => b <= maxAffordable && b >= 3_000_000);
+        const bid = highBids.length > 0 
+          ? highBids[Math.floor(Math.random() * highBids.length)]
+          : Math.min(opponentMoney, MIN_BID * 2);
+        return { choice, bid };
+      },
+    };
+    return (strategies[botDifficulty] || strategies.medium)();
+  }, [botDifficulty, opponentMoney]);
+  
+  // Handle submit - defined early
+  const handleSubmit = useCallback((timeout = false) => {
+    if (gamePhase !== 'choosing') return;
+    
+    const botMove = isBot ? generateBotChoice() : { choice: 'rock', bid: MIN_BID };
+    setOpponentChoice(botMove.choice);
+    setOpponentBid(botMove.bid);
+    
+    const finalPlayerChoice = timeout ? null : playerChoice;
+    
+    if (!finalPlayerChoice) {
+      setGamePhase('revealing');
+      setShowReveal(true);
+      setRoundResult('player2');
+      return;
+    }
+    
+    const rpsResult = determineWinner(finalPlayerChoice, botMove.choice);
+    
+    if (rpsResult === 'player1') {
+      setRoundResult('player1');
+    } else if (rpsResult === 'player2') {
+      setRoundResult('player2');
+    } else {
+      // Tie - higher bid wins
+      if (playerBid > botMove.bid) {
+        setRoundResult('player1');
+      } else if (botMove.bid > playerBid) {
+        setRoundResult('player2');
+      } else {
+        setRoundResult('tie');
+      }
+    }
+    
+    setGamePhase('revealing');
+    setShowReveal(true);
+    
+    if (soundEnabled) auctionSounds.bidPlaced();
+  }, [gamePhase, playerChoice, playerBid, isBot, generateBotChoice, soundEnabled]);
+  
+  // Keep ref updated
+  useEffect(() => {
+    handleSubmitRef.current = handleSubmit;
+  }, [handleSubmit]);
   
   // Countdown timer
   useEffect(() => {
