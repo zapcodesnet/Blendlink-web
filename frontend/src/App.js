@@ -79,6 +79,7 @@ import MarketplaceOffers from "./pages/MarketplaceOffers";
 
 // Components
 import BottomNav from "./components/BottomNav";
+import BackToGroupFAB from "./components/BackToGroupFAB";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import LanguageSelector from "./components/LanguageSelector";
 import LanguageTour, { useLanguageTour } from "./components/LanguageTour";
