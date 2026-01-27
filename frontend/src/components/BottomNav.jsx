@@ -182,6 +182,8 @@ export const BottomNav = () => {
                                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                                   menuItem.id === 'facebook-group' 
                                     ? 'bg-gradient-to-br from-blue-600 to-blue-700' 
+                                    : menuItem.id === 'games'
+                                    ? 'bg-gradient-to-br from-red-500 to-pink-600'
                                     : 'bg-gradient-to-br from-purple-600 to-pink-600'
                                 }`}>
                                   <menuItem.icon className="w-5 h-5 text-white" />
