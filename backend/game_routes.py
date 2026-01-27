@@ -3,6 +3,7 @@ Blendlink Photo Game API Routes
 - Game sessions
 - RPS battles
 - Photo battles
+- Auction bidding
 - Leaderboards
 """
 
@@ -10,6 +11,7 @@ from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel
 from typing import Optional, List
 import logging
+import uuid
 
 from photo_game import (
     init_game_service,
@@ -20,6 +22,15 @@ from photo_game import (
     MIN_BID,
     MAX_BID,
     BID_INCREMENT,
+    calculate_photo_battle_value,
+    calculate_auction_bids_required,
+    generate_bot_photo,
+    generate_bot_stats,
+    WIN_STREAK_MULTIPLIERS,
+    LOSE_STREAK_IMMUNITY_THRESHOLD,
+    BOT_MIN_BET,
+    BOT_MAX_BET,
+    BOT_HOUSE_FEE,
 )
 
 logger = logging.getLogger(__name__)
