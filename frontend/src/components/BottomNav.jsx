@@ -157,7 +157,7 @@ export const BottomNav = () => {
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 10, scale: 0.95 }}
                             transition={{ duration: 0.15 }}
-                            className="absolute bottom-full mb-2 right-0 w-56 bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-xl shadow-2xl shadow-black/50 overflow-hidden"
+                            className="absolute bottom-full mb-2 right-0 w-56 bg-gray-900/70 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl shadow-black/30 overflow-hidden"
                             data-testid="more-menu"
                           >
                             {moreMenuItems.map((menuItem) => (
