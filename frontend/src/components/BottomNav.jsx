@@ -74,8 +74,19 @@ export const BottomNav = () => {
     { path: "/profile", icon: User, label: t('nav.profile') || "Profile" },
   ];
 
-  // "More" menu items
+  // "More" menu items (order: Games, Minted Photos, Facebook Group)
   const moreMenuItems = [
+    { 
+      id: "games",
+      path: "/games", 
+      icon: Swords, 
+      label: "Games",
+      description: "Play & compete",
+      action: () => {
+        navigate('/games');
+        setShowMoreMenu(false);
+      }
+    },
     { 
       id: "minted-photos",
       path: "/minted-photos", 
