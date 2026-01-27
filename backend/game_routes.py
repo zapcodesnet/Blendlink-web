@@ -505,3 +505,272 @@ async def get_battle_ready_photos(
         "count": len(battle_photos),
         "available_count": sum(1 for p in battle_photos if p["is_available"]),
     }
+
+
+
+# ============== AUCTION BATTLE ENDPOINTS ==============
+class CreateAuctionBattleRequest(BaseModel):
+    """Request to create an auction battle room"""
+    photo_id: str
+    is_bot_match: bool = False
+    bot_difficulty: str = "medium"  # easy, medium, hard
+    bet_amount: int = 0  # BL coins bet (1-500 for bot matches)
+
+
+class JoinAuctionBattleRequest(BaseModel):
+    """Request to join an existing auction battle"""
+    room_id: str
+    photo_id: str
+
+
+@game_router.post("/auction/create")
+async def create_auction_battle(
+    request: CreateAuctionBattleRequest,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """Create a new auction battle room"""
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    from auction_websocket import auction_manager
+    from photo_game import (
+        calculate_photo_battle_value, generate_bot_photo, generate_bot_stats,
+        BOT_MIN_BET, BOT_MAX_BET, BOT_HOUSE_FEE
+    )
+    
+    # Validate bot match bet
+    if request.is_bot_match:
+        if request.bet_amount < BOT_MIN_BET or request.bet_amount > BOT_MAX_BET:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Bot match bet must be between {BOT_MIN_BET} and {BOT_MAX_BET} BL coins"
+            )
+        
+        # Check user balance
+        if current_user.get("bl_coins", 0) < request.bet_amount:
+            raise HTTPException(status_code=400, detail="Insufficient BL coins for bet")
+    
+    # Get player's photo
+    player_photo = await _db.minted_photos.find_one(
+        {"mint_id": request.photo_id, "user_id": current_user["user_id"]},
+        {"_id": 0, "image_data": 0}
+    )
+    
+    if not player_photo:
+        raise HTTPException(status_code=404, detail="Photo not found or not owned by you")
+    
+    # Get player stats
+    player_stats = await _db.game_stats.find_one(
+        {"user_id": current_user["user_id"]},
+        {"_id": 0}
+    )
+    if not player_stats:
+        player_stats = {"user_id": current_user["user_id"], "current_win_streak": 0, "current_lose_streak": 0}
+    
+    # Create game session
+    session_id = f"auction_{uuid.uuid4().hex[:12]}"
+    
+    # Generate bot data if bot match
+    bot_photo = None
+    bot_stats = None
+    if request.is_bot_match:
+        bot_photo = generate_bot_photo(request.bot_difficulty, [player_photo])
+        bot_stats = generate_bot_stats(request.bot_difficulty)
+        
+        # Calculate battle values
+        player_value = calculate_photo_battle_value(player_photo, bot_photo, player_stats, bot_stats)
+        bot_value = calculate_photo_battle_value(bot_photo, player_photo, bot_stats, player_stats)
+        
+        # Deduct bet
+        await _db.users.update_one(
+            {"user_id": current_user["user_id"]},
+            {"$inc": {"bl_coins": -request.bet_amount}}
+        )
+    
+    # Create auction room
+    room_id = await auction_manager.create_room(
+        game_session_id=session_id,
+        round_number=1,
+        player1_data={
+            "user_id": current_user["user_id"],
+            "photo": player_photo,
+            "stats": player_stats,
+        },
+        player2_data={
+            "user_id": "bot",
+            "photo": bot_photo,
+            "stats": bot_stats,
+        } if request.is_bot_match else None,
+        is_bot_match=request.is_bot_match,
+        bot_difficulty=request.bot_difficulty,
+        bet_amount=request.bet_amount,
+    )
+    
+    # Calculate effective values for display
+    battle_value = {}
+    if request.is_bot_match and bot_photo:
+        battle_value = calculate_photo_battle_value(player_photo, bot_photo, player_stats, bot_stats)
+    
+    return {
+        "success": True,
+        "room_id": room_id,
+        "session_id": session_id,
+        "is_bot_match": request.is_bot_match,
+        "bot_difficulty": request.bot_difficulty if request.is_bot_match else None,
+        "bet_amount": request.bet_amount,
+        "player_photo": {
+            "mint_id": player_photo.get("mint_id"),
+            "name": player_photo.get("name"),
+            "dollar_value": player_photo.get("dollar_value"),
+            "scenery_type": player_photo.get("scenery_type"),
+            "effective_value": battle_value.get("effective_value", player_photo.get("dollar_value")),
+            "modifiers": battle_value.get("modifiers_applied", []),
+        },
+        "bot_photo": {
+            "mint_id": bot_photo.get("mint_id") if bot_photo else None,
+            "name": bot_photo.get("name") if bot_photo else None,
+            "dollar_value": bot_photo.get("dollar_value") if bot_photo else None,
+            "scenery_type": bot_photo.get("scenery_type") if bot_photo else None,
+        } if request.is_bot_match else None,
+        "player_stats": {
+            "win_streak": player_stats.get("current_win_streak", 0),
+            "lose_streak": player_stats.get("current_lose_streak", 0),
+            "has_fire": player_stats.get("current_win_streak", 0) >= 3,
+            "has_shield": player_stats.get("current_lose_streak", 0) >= 3,
+        },
+        "websocket_url": f"/ws/auction/{room_id}",
+    }
+
+
+@game_router.post("/auction/result")
+async def record_auction_result(
+    room_id: str,
+    winner_id: str,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """Record the result of an auction battle"""
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    from auction_websocket import auction_manager
+    from photo_game import BOT_HOUSE_FEE
+    
+    room = auction_manager.rooms.get(room_id)
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+    
+    # Verify user is in the room
+    if room.player1 and room.player1.user_id != current_user["user_id"]:
+        if not room.is_bot_match or (room.player2 and room.player2.user_id != current_user["user_id"]):
+            raise HTTPException(status_code=403, detail="Not a participant in this battle")
+    
+    user_id = current_user["user_id"]
+    player_won = winner_id == user_id
+    
+    # Update player stats
+    stats_update = {}
+    if player_won:
+        stats_update = {
+            "$inc": {
+                "current_win_streak": 1,
+                "battles_won": 1,
+                "total_battles": 1,
+            },
+            "$set": {"current_lose_streak": 0}
+        }
+    else:
+        stats_update = {
+            "$inc": {
+                "current_lose_streak": 1,
+                "battles_lost": 1,
+                "total_battles": 1,
+            },
+            "$set": {"current_win_streak": 0}
+        }
+    
+    await _db.game_stats.update_one(
+        {"user_id": user_id},
+        stats_update,
+        upsert=True
+    )
+    
+    # Handle bet winnings
+    winnings = 0
+    if room.bet_amount > 0 and room.is_bot_match:
+        if player_won:
+            # Player wins: gets pot minus house fee
+            pot = room.bet_amount * 2  # Player bet + bot "bet"
+            winnings = int(pot * (1 - BOT_HOUSE_FEE))
+            await _db.users.update_one(
+                {"user_id": user_id},
+                {"$inc": {"bl_coins": winnings}}
+            )
+        # If player loses, they already lost their bet (deducted at creation)
+    
+    # Update photo stats
+    if room.player1 and room.player1.photo:
+        photo_update = {"$inc": {}}
+        if player_won:
+            photo_update["$inc"]["battles_won"] = 1
+            photo_update["$inc"]["xp"] = 100  # XP for winning
+        else:
+            photo_update["$inc"]["battles_lost"] = 1
+            photo_update["$inc"]["xp"] = 25  # Small XP for losing
+        
+        await _db.minted_photos.update_one(
+            {"mint_id": room.player1.photo.get("mint_id")},
+            photo_update
+        )
+    
+    return {
+        "success": True,
+        "player_won": player_won,
+        "winnings": winnings,
+        "new_streak": {
+            "win_streak": 1 if player_won else 0,
+            "lose_streak": 0 if player_won else 1,
+        }
+    }
+
+
+@game_router.get("/auction/streak-info/{user_id}")
+async def get_streak_info(user_id: str):
+    """Get win/lose streak info for a user"""
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    stats = await _db.game_stats.find_one(
+        {"user_id": user_id},
+        {"_id": 0}
+    )
+    
+    if not stats:
+        stats = {
+            "current_win_streak": 0,
+            "current_lose_streak": 0,
+            "best_win_streak": 0,
+            "total_battles": 0,
+        }
+    
+    # Calculate streak bonus
+    from photo_game import WIN_STREAK_MULTIPLIERS, LOSE_STREAK_IMMUNITY_THRESHOLD
+    
+    win_streak = stats.get("current_win_streak", 0)
+    lose_streak = stats.get("current_lose_streak", 0)
+    
+    streak_multiplier = 1.0
+    if win_streak >= 3:
+        capped = min(win_streak, 10)
+        streak_multiplier = WIN_STREAK_MULTIPLIERS.get(capped, 3.0)
+    
+    return {
+        "user_id": user_id,
+        "current_win_streak": win_streak,
+        "current_lose_streak": lose_streak,
+        "best_win_streak": stats.get("best_win_streak", 0),
+        "total_battles": stats.get("total_battles", 0),
+        "has_fire": win_streak >= 3,
+        "fire_multiplier": streak_multiplier,
+        "has_shield": lose_streak >= LOSE_STREAK_IMMUNITY_THRESHOLD,
+        "shield_info": "100% immunity vs stronger scenery" if lose_streak >= LOSE_STREAK_IMMUNITY_THRESHOLD else None,
+    }
