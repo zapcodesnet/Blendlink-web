@@ -13,6 +13,7 @@ import { AuthContext } from '../App';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import auctionSounds from '../utils/auctionSounds';
+import { BattleArena } from '../components/game/BattleArena';
 
 // ============== PHOTO LIGHTBOX MODAL ==============
 const PhotoLightbox = ({ photo, isOpen, onClose }) => {
