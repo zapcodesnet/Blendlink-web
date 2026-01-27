@@ -2733,6 +2733,73 @@ try:
 except Exception as e:
     logger.warning(f"Could not load WebSocket system: {e}")
 
+# Load Auction Bidding WebSocket
+try:
+    from auction_websocket import auction_manager
+    from fastapi import WebSocket, WebSocketDisconnect
+    
+    @app.websocket("/ws/auction/{room_id}/{token}")
+    async def auction_websocket_endpoint(websocket: WebSocket, room_id: str, token: str):
+        """WebSocket endpoint for real-time auction bidding"""
+        import jwt
+        
+        # Verify token
+        try:
+            payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+            user_id = payload.get("user_id") or payload.get("sub")
+        except jwt.ExpiredSignatureError:
+            await websocket.close(code=1008, reason="Token expired")
+            return
+        except jwt.InvalidTokenError:
+            await websocket.close(code=1008, reason="Invalid token")
+            return
+        
+        await websocket.accept()
+        
+        try:
+            while True:
+                data = await websocket.receive_json()
+                action = data.get("action")
+                
+                if action == "join":
+                    # Join the auction room
+                    photo = data.get("photo", {})
+                    stats = data.get("stats", {})
+                    opponent_photo = data.get("opponent_photo", {})
+                    opponent_stats = data.get("opponent_stats", {})
+                    
+                    success = await auction_manager.join_room(
+                        room_id, user_id, websocket,
+                        photo, stats, opponent_photo, opponent_stats
+                    )
+                    
+                    await websocket.send_json({
+                        "type": "join_result",
+                        "success": success,
+                        "room_id": room_id,
+                        "user_id": user_id,
+                    })
+                
+                elif action == "ready":
+                    await auction_manager.player_ready(room_id, user_id)
+                
+                elif action == "tap":
+                    tap_count = data.get("count", 1)
+                    await auction_manager.handle_tap(room_id, user_id, tap_count)
+                
+                elif action == "ping":
+                    await websocket.send_json({"type": "pong"})
+        
+        except WebSocketDisconnect:
+            await auction_manager.disconnect(user_id)
+        except Exception as e:
+            logger.error(f"Auction WebSocket error: {e}")
+            await auction_manager.disconnect(user_id)
+    
+    logger.info("Auction Bidding WebSocket loaded")
+except Exception as e:
+    logger.warning(f"Could not load Auction WebSocket: {e}")
+
 # Load Push Notifications
 try:
     from push_notifications import push_router, setup_push_routes
