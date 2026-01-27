@@ -411,6 +411,11 @@ const PhotoCard = ({ photo, onSelect, onUpdate, viewMode, onViewFull, onSelfieMa
                   <><Lock className="w-4 h-4 mr-2" /> Make Private</>
                 )}
               </DropdownMenuItem>
+              {canDoSelfieMatch && (
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onSelfieMatch?.(photo); }}>
+                  <Shield className="w-4 h-4 mr-2 text-purple-400" /> Selfie Verify
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
