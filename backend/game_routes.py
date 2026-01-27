@@ -580,13 +580,13 @@ async def create_auction_battle(
     # Generate bot data if bot match
     bot_photo = None
     bot_stats = None
+    player_battle_value = None
     if request.is_bot_match:
         bot_photo = generate_bot_photo(request.bot_difficulty, [player_photo])
         bot_stats = generate_bot_stats(request.bot_difficulty)
         
-        # Calculate battle values
-        player_value = calculate_photo_battle_value(player_photo, bot_photo, player_stats, bot_stats)
-        bot_value = calculate_photo_battle_value(bot_photo, player_photo, bot_stats, player_stats)
+        # Calculate battle values for display
+        player_battle_value = calculate_photo_battle_value(player_photo, bot_photo, player_stats, bot_stats)
         
         # Deduct bet
         await _db.users.update_one(
