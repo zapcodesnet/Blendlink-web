@@ -1,6 +1,85 @@
 # Blendlink Platform - PRD
 
-## Latest Update: December 2025 (Session 24 - Navigation v3 - Games Added)
+## Latest Update: December 2025 (Session 25 - Photo Game Overhaul)
+
+---
+
+## SESSION 25: PHOTO GAME VALUATION & AUCTION BIDDING SYSTEM ✅
+
+### Major Backend Updates Implemented:
+
+**1. Complete Dollar Value (Core Power) System**
+- 11-category AI valuation (0-100% each, weighted to 100% total)
+- Maximum: $1,000,000,000 (100% score)
+- Minimum: $1,000,000 (lowest possible)
+- Categories: Original (8%), Innovative (10%), Unique (10%), Rare (10%), Exposure (10%), Color (8%), Clarity (8%), Composition (8%), Narrative (8%), Captivating (10%), Authenticity (10%)
+
+**2. Authenticity System (Face Detection + Selfie Match)**
+- Face detection: Up to 5% bonus (automatic during minting)
+- Selfie match: Up to 5% bonus (100 BL per attempt, max 3 attempts)
+- Uses GPT-4o Vision for face comparison
+- Endpoint: POST `/api/minting/photo/{mint_id}/selfie-match`
+- Once added, Authenticity is locked permanently
+
+**3. Scenery Strength/Weakness with Neutral Category**
+- Natural: +25% vs Water, -25% vs Man-made, +10% vs Neutral
+- Water: +25% vs Man-made, -25% vs Natural, +10% vs Neutral
+- Man-made: +25% vs Natural, -25% vs Water, +10% vs Neutral
+- **Neutral** (NEW): 10% weaker than all other types
+- Same scenery = no bonus/penalty
+
+**4. Win Streaks (🔥 Fire Bonus)**
+- 3 wins: ×1.25
+- 4 wins: ×1.50
+- 5 wins: ×1.75
+- 6 wins: ×2.00
+- 7 wins: ×2.25
+- 8 wins: ×2.50
+- 9 wins: ×2.75
+- 10+ wins: ×3.00 (maximum)
+- Visible to owner, revealed during battles
+
+**5. Lose Streaks (🛡 Shield Immunity)**
+- 3+ consecutive losses = 100% immunity vs stronger scenery
+- Negates weakness multiplier completely
+- Retains own strength bonuses
+- Immunity until streak broken by a win
+
+**6. Real-Time Auction Bidding WebSocket**
+- WebSocket endpoint: `/ws/auction/{room_id}/{token}`
+- Base: 200 taps to win (equal power)
+- Higher power = fewer taps needed
+- Max 10 taps/second (anti-cheat)
+- 10-second countdown, 15-second round duration
+- Dollar meter animation rises with taps
+
+**7. Bot Match System**
+- Difficulty levels: Easy (55% player win), Medium (50%), Hard (40%)
+- Bets: 1-500 BL coins (5% house fee)
+- Bot adapts based on difficulty:
+  - Easy: Slow taps (5/sec), random strategy
+  - Medium: Normal taps (7/sec), basic strategy
+  - Hard: Fast taps (9/sec), adaptive (counters player)
+- Realistic "thinking" delays and animations
+
+### New API Endpoints:
+- `POST /api/photo-game/auction/create` - Create auction battle
+- `POST /api/photo-game/auction/result` - Record battle result
+- `GET /api/photo-game/auction/streak-info/{user_id}` - Get streak info
+- `POST /api/minting/photo/{mint_id}/selfie-match` - Selfie verification
+- `GET /api/minting/photo/{mint_id}/authenticity-status` - Get authenticity status
+
+### Files Created/Modified:
+- `/app/backend/photo_game.py` - Updated with streaks, Neutral scenery, bid calculations
+- `/app/backend/game_routes.py` - Added auction battle endpoints
+- `/app/backend/auction_websocket.py` - NEW: Real-time WebSocket handler
+- `/app/backend/minting_routes.py` - Added selfie match endpoints
+- `/app/backend/server.py` - Added auction WebSocket endpoint
+
+### Testing Status:
+- ✅ Backend endpoints working
+- ✅ WebSocket handler loaded
+- ⏳ Frontend UI updates pending
 
 ---
 
