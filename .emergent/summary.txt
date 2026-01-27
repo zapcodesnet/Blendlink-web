@@ -1,70 +1,85 @@
 <analysis>**original_problem_statement:**
-The user's primary goal is to enhance and stabilize the Photo Game feature on the Blendlink.net platform, with a focus on bug fixes, UI/UX improvements, and a major overhaul of the core game mechanics. A critical P0 task has been to create a new authenticated landing page () that integrates a fast and reliable Facebook Group feed to boost community engagement. The user has cycled through multiple third-party embed solutions (Facebook Plugin, Elfsight, SociableKIT) due to performance and functionality issues, and is now insistent on using and optimizing a widget from EmbedSocial.com.
+The user's primary goal is to enhance and stabilize the Photo Game feature on the Blendlink.net platform, with a focus on bug fixes, UI/UX improvements, and a major overhaul of the core game mechanics. A critical P0 task was to fix severe performance issues on the authenticated landing page (). After fixing the feed, the user has requested a series of significant UI and gameplay enhancements.
 
 **PRODUCT REQUIREMENTS (from latest user requests):**
 
-1.  **Fix Feed Page Performance (P0 - URGENT):** The  page is extremely laggy and unresponsive to touch/scroll on mobile since the EmbedSocial widget was added. This must be fixed immediately.
-    *   Completely remove all traces of previous widget attempts, especially SociableKIT.
-    *   Re-implement the user-provided EmbedSocial widget cleanly.
-    *   Optimize the widget and the entire page for a load time under 3 seconds and smooth, non-blocking scroll performance.
-    *   Remove the fallback button (Visit Blendlink on Facebook) and associated fallback text message.
-2.  **Photo Game Overhaul (P1 - Phased Implementation):** Once the feed page is fixed and deployed, resume work on the major gameplay overhaul.
-    *   **Core Power / Dollar Value Updates:** Implement the AI valuation system, including the Authenticity/selfie match feature.
-    *   **Auction Battle Mode:** Implement the new real-time tapping game.
-    *   **Marketplace & Upgrades:** Add features for trading, leveling up photos, and BL coin upgrades.
+1.  **Photo Game Overhaul (P1 - Phased Implementation):** Implement a comprehensive update to the photo game, including a new AI valuation system, scenery mechanics, win/loss streak bonuses, and a real-time auction bidding battle.
+    *   **Core Power / Dollar Value Updates:** Implement an 11-category AI valuation system using OpenAI GPT-4o Vision, with a base value up to ,000,000,000. This includes an optional Authenticity score based on a live video selfie match.
+    *   **Scenery System:** Introduce a Neutral scenery category and update the strength/weakness calculations between Man-made, Natural, Water, and Neutral backgrounds.
+    *   **Streaks System:** Implement win streaks (🔥) that multiply a photo's power and lose streaks (🛡) that grant immunity to scenery disadvantages.
+    *   **Auction Battle Mode:** Implement a new real-time, WebSocket-based tapping game (Photo Auction Bidding) and a strategic Rock Paper Scissors Bidding mode. This includes detailed rules for calculating required taps based on Dollar Value, scenery, and streaks.
+    *   **Bot Matches:** Implement bot opponents with selectable difficulty levels (Easy, Medium, Hard) that respect player streaks and allow for small BL coin bets.
+    *   **Level & Star Progression:** Implement a permanent XP and leveling system for minted photos, granting star bonuses (★) and a golden frame at the max level, which additively increases the photo's Dollar Value.
+2.  **UI/UX Enhancements (Completed, but must be maintained):**
+    *   A floating, semi-transparent bottom navigation bar, visible on all authenticated pages.
+    *   A More menu in the bottom nav containing links to Games, Minted Photos, and Facebook Group.
+    *   A pre-redirect share overlay for the Facebook Group link, showing recent minted photos.
+    *   A contextual Floating Action Button (FAB) to return to the Facebook group.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The agent has successfully implemented and iterated on a social feed feature on the  page. All user authentication and navigation now correctly redirects to . The page structure is in place, featuring a post-creation component, three main action buttons (, , ), and the area for the social feed widget. The current implementation uses an EmbedSocial widget, but it is causing severe performance problems (lag, freezing). The agent had just started a rewrite of the component to optimize it and clean up old code.
+The application is stable and deployable. All critical performance issues on the  page have been resolved. Significant UI/UX improvements to the core navigation are complete, including a new floating bottom navigation bar with a More menu, a Facebook Group integration flow, and a link to the Games page.
+
+The backend foundation for the **Photo Game Overhaul** is largely complete. This includes:
+*   Updated data models for scenery, win/loss streaks, and player stats in .
+*   Battle calculation logic incorporating scenery advantages, streak bonuses, and dollar value differences.
+*   Backend routes in  to create and manage auction battles.
+*   A WebSocket endpoint () and a dedicated module () for real-time game events.
+*   An API endpoint for the live selfie match ().
+*   Logic for bot matches with difficulty levels.
+
+The frontend UI for these new game mechanics has **not** been started.
 
 **Last working item**:
--   **Last item agent was working**: Fixing severe performance issues (lag, unresponsiveness) on the  page caused by the EmbedSocial widget. The agent was in the process of rewriting the  component in  to be lighter, remove a fallback UI as requested by the user, and clean up unused code from previous failed widget attempts.
--   **Status**: IN PROGRESS
--   **Agent Testing Done**: N
--   **Which testing method agent to use?**: Frontend testing agent. The primary goal is to test for performance. The agent must verify that the page loads quickly (<3s) and that touch scrolling is smooth and does not freeze on mobile. It should also visually confirm the EmbedSocial widget loads and the old fallback UI is gone.
+-   **Last item agent was working**: The agent had just completed the entire backend implementation for the Photo Game Overhaul (streaks, scenery rules, auction bidding logic, WebSockets, bot matches, and selfie match endpoint). It was about to begin the frontend implementation for the Photo Auction Bidding Battle as per the user's very detailed and strict specifications.
+-   **Status**: NOT STARTED
+-   **Agent Testing Done**: N (for the frontend part)
+-   **Which testing method agent to use?**: Frontend testing agent. Testing must verify all UI elements, animations (with FPS counter), real-time updates via WebSockets, and exact implementation of game rules, calculations, and visuals as specified by the user.
 -   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Critical Performance Lag on /feed Page (P0)**
-    -   **Description:** The  page is extremely laggy and often freezes, especially on mobile devices, making scrolling and interaction impossible. The user attributes this to the EmbedSocial widget and potential leftover code from previous (SociableKIT) integration attempts.
-    -   **Attempted fixes:** The agent previously implemented lazy loading with  and applied various CSS performance hints (, ). The last action was a rewrite of the widget component to simplify it. These fixes have not been tested yet.
-    -   **Next debug checklist:**
-        1.  Resume the cleanup of . Ensure the unused  component and any other orphaned code are removed.
-        2.  Perform a global search () across the  directory for sociablekit, elfsight, and taggbox to guarantee every trace is removed, including comments, to satisfy the user's concern.
-        3.  After cleanup, take desktop and mobile screenshots of the  page. Crucially, use the  parameter in the screenshot tool to test if the page freezes during scrolling.
-        4.  Analyze browser console logs from the screenshot tool's output for any errors, warnings, or performance bottlenecks.
-        5.  Confirm the fallback button and message (Visit Blendlink on Facebook) have been removed as per the user's last request.
-    -   **Why fix this issue and what will be achieved with the fix?** The  page is the primary landing page for authenticated users. Its poor performance makes the app feel broken and unusable, blocking user engagement. Fixing it is the highest priority.
-    -   **Status:** IN PROGRESS
-    -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** frontend
-    -   **Blocked on other issue:** None
+There are no outstanding bugs. The primary pending work is the feature implementation outlined below.
 
 **In progress Task List**:
--   **Task 1: Finalize High-Performance Feed Integration (P0)**
-    -   **Where to resume:** Continue cleaning up the  file. The agent was about to remove the  component.
-    -   **What will be achieved with this?** A fast, smooth, and functional  page with a working EmbedSocial widget that meets all user requirements, finally resolving this long-standing blocker.
-    -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** frontend
-    -   **Blocked on something:** This task is directly tied to resolving Issue 1.
+-   **Task 1: Implement Frontend for Photo Game Overhaul (P0)**
+    *   **Description**: Build the entire frontend UI for the new Photo Auction Bidding Battle and Rock Paper Scissors Bidding modes. This is a large task with very specific requirements for UI, animations, and real-time data handling.
+    *   **Where to resume**: Start by creating the new React components specified by the user: , , and  within the  structure.
+    *   **What will be achieved with this?** A fully functional, real-time, engaging photo battle game that aligns with the user's detailed vision.
+    *   **Status:** NOT STARTED
+    *   **Should Test frontend/backend/both after fix?** both (to ensure e2e gameplay)
+    *   **Blocked on something:** Nothing. The backend is ready.
 
 **Upcoming and Future Tasks**
--   **Upcoming Tasks (Photo Game Overhaul - P1):**
-    *   **Core Power / Dollar Value Updates:** Implement the new 11-category AI valuation system, including the live Authenticity selfie match feature.
-    *   **Photo Auction Battle:** Build the new second-round real-time tapping game mode.
-    *   **Dollar Value Upgrades:** Implement the backend endpoint and frontend UI for upgrading a photo's value using BL coins.
-    *   **Level/Star Bonuses:** Implement the level-up system that adds star icons and permanent bonuses to photos.
--   **Future Tasks (P2):**
-    *   **Marketplace Features:** Implement functionality to gift, trade, or sell minted photos.
-    *   **Photo Editor Bugs:** Investigate and fix Failed Fetch errors in .
-    *   **i18n Coverage:** Translate all remaining hardcoded text.
+-   **Upcoming Tasks:**
+    *   **Live Selfie Match UI (P1):** Create the frontend flow for the live video selfie match, allowing users to complete up to 3 tries (costing 100 BL coins each) to add the Authenticity bonus to their minted photos.
+    *   **Bot Match UI (P1):** Build the UI for selecting bot difficulty and playing against AI opponents.
+-   **Future Tasks:**
+    *   **Photo Editor Bugs (P2):** Investigate and fix Failed Fetch errors and other bugs in .
+    *   **Expand i18n Coverage (P2):** Integrate  hook across all remaining components with hardcoded English text.
+    *   **Marketplace Features (P2):** Implement functionality to gift, trade, or sell minted photos.
 
 **Completed work in this session**
--   Successfully redirected all authenticated user flows (login, registration, Google auth) to .
--   Iteratively implemented and replaced multiple third-party Facebook feed widgets (Elfsight, SociableKIT, EmbedSocial) on the  page based on user feedback.
--   Refactored the feed page UI to include the widget, surrounding text, and action buttons as per user specifications.
--   Attempted several performance optimizations on the widget component, including lazy loading and CSS hardware acceleration hints.
+-   **P0 Feed Page Performance Fix:**
+    -   Resolved critical lag and scrolling freezes on the  page.
+    -   Completely removed all traces of old widgets (SociableKIT, Elfsight).
+    -   Optimized the EmbedSocial widget implementation in .
+    -   Verified performance metrics (load time <1s, 60+ FPS scroll) with the testing agent.
+-   **Deployment Fixes:**
+    -   Added a root-level  endpoint in  to satisfy Kubernetes health checks.
+    -   Removed unused  dependency from the root .
+-   **Navigation and UI Overhaul:**
+    -   Implemented a new floating, semi-transparent bottom navigation bar in .
+    -   Created a More menu in the nav bar for Minted Photos and Facebook Group.
+    -   Added a Games link to the More menu with a custom icon.
+    -   Created a pre-redirect  component that shows recent minted photos.
+    -   Implemented a contextual  (Floating Action Button).
+    -   Ensured the floating nav bar is correctly displayed for logged-in users on public pages like .
+-   **Photo Game Backend Foundation:**
+    -   Implemented the complete backend logic for the new Photo Game mechanics, including win/loss streaks, scenery strength/weakness, and updated dollar value calculations in .
+    -   Set up WebSocket infrastructure () and API endpoints () for real-time auction battles.
+    -   Added backend logic for bot matches with difficulty levels.
+    -   Created the  endpoint.
 
 **Earlier issues found/mentioned but not fixed**
 -   **Issue 1: Photo Editor Bugs & Performance**
@@ -79,55 +94,83 @@ The agent has successfully implemented and iterated on a social feed feature on 
     -   **Is recurring issue?** N
 
 **Known issue recurrence from previous fork**
--   **Issue recurrence in previous fork**: The Minting Failed bug was highly recurrent and is now resolved.
--   **Recurrence count**: 3+
+-   **Issue recurrence in previous fork**: The social feed widget is slow/broken was a major recurring issue in the last session.
+-   **Recurrence count**: 4+ (user tried multiple different widgets)
 -   **Status**: RESOLVED
--   **Note**: Within this session, the issue of the social feed widget is slow/broken has been highly recurrent, leading the user to try four different services. The next agent must be mindful of the user's frustration with this specific feature.
+-   **Note**: The feed performance is now stable. The user is sensitive to performance regressions.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Third-Party Widget Integration:** Embedding external JavaScript widgets into a React component dynamically.
--   **React Performance Optimization:** Using  with  to lazy-load components and scripts only when they enter the viewport.
--   **CSS for Performance:** Applying CSS properties like , , and  to hint to the browser to use hardware acceleration and improve scroll performance on touch devices.
--   **Component-Based Fallbacks:** Designing components that show a loading state (skeleton) or an error state, which was later removed at the user's request.
+-   **Real-time Communication:** Using WebSockets for the live auction-bidding tapping game.
+-   **Frontend Performance:** Lazy loading, CSS containment (), and  for optimizing the social feed.
+-   **Advanced UI/UX:** Building a floating, semi-transparent navigation bar and contextual FABs. Using Framer Motion for animations.
+-   **Component-based Architecture:** Creating modular components for UI elements like the Share Overlay, FAB, and upcoming game components (, ).
+-   **Deployment Health Checks:** Understanding and implementing root-level  endpoints for Kubernetes readiness probes.
 
 **key DB schema**
--   No database schema changes were made in this session.
+-   No database schema changes were made in this session. Existing collections in MongoDB like , , and  were used and updated.
 
 **All files of reference**
--   : This is the most critical file. It contains all the logic for the feed page, including the problematic widget, and is where the fix needs to be implemented and verified.
+*   : The primary file to be modified for the next task.
+*   : Contains all the new game logic (streaks, battle calculations).
+*    & : Define the API and real-time communication for the game.
+*   : The implementation of the core navigation.
+*   : Main backend application file, contains the crucial  endpoint fix.
 
 **Areas that need refactoring**:
--   : This file has undergone many rapid, iterative changes and contains commented-out code and remnants of previous approaches. A final cleanup pass after the performance issue is resolved would be beneficial.
--   : This file is now effectively deprecated since all traffic is routed to . It could be deleted or repurposed.
+-   : This file will require a significant rewrite to implement the new, complex game modes (, ). It should be broken down into smaller, manageable components.
+
+**key api endpoints**
+*   : Retrieves win/loss streak info for a user's photos.
+*   : Creates a new auction battle room.
+*   : Allows a player to join an existing auction battle.
+*   : Processes the live selfie match for the Authenticity score.
+*   : Real-time WebSocket endpoint for the auction tapping game.
+*   : **Critical** root-level endpoint for Kubernetes health checks.
 
 **Critical Info for New Agent**
--   **User Frustration is High:** The user is very frustrated with the  page's performance. Your immediate and only priority is to fix the lag and scrolling issues. Do not get sidetracked.
--   **The Solution is EmbedSocial:** Do not suggest alternative widgets. The task is to make the existing, user-provided  widget work correctly and performantly.
--   **SociableKIT is a Keyword for Cleanup:** The user repeatedly blames SociableKIT for the issues. Even if no functional SociableKIT code exists, you must be thorough in removing any mention of it (or other old widgets like Elfsight/Taggbox) from  to build user confidence.
--   **Remove the Fallback UI:** The user explicitly requested to remove the Visit Blendlink on Facebook button and the associated fallback text. Ensure this is done.
+-   **Follow Instructions Exactly:** The user has provided extremely detailed, strict, and non-negotiable requirements for the Minted Photo Auction Bidding Battle. You **must** implement every rule, calculation, UI detail, and animation exactly as specified in the last user message. Do not simplify, modify, or add your own interpretations.
+-   **Phased Approach:** The project is divided into phases. The backend for the game overhaul is **complete**. Your immediate and sole focus is on implementing the **frontend UI** for the new game modes.
+-   **Component Structure:** The user expects new components like , , and . You should build these within the existing  structure.
+-   **Real-time is Key:** The auction tapping game must be implemented using WebSockets for a real-time experience, as confirmed with the user.
+-   **Performance is still a priority**: The user is sensitive to performance. Ensure all new animations are smooth (60 FPS target) and components are optimized.
+
+**documents and test reports created in this job**
+*   
+*   
+*   
+*    (updated multiple times)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Replace SociableKIT with EmbedSocial. (COMPLETED)
-2.  **User:** The  page is super laggy with EmbedSocial. Fix this urgently. (IN PROGRESS)
-3.  **User:** SociableKIT widgets are reappearing and causing lag. Remove them completely. Re-use the EmbedSocial code. Remove the fallback button and text. (IN PROGRESS - THIS IS THE CURRENT TASK)
+1.  **User**: Fix Google Auth failure in the mobile app. (COMPLETED - was a deployment issue).
+2.  **User**: Provided detailed build error logs showing deployment failure. (COMPLETED - fixed by adding /health endpoint).
+3.  **User**: Add a Games section to the bottom navigation bar. (COMPLETED).
+4.  **User**: Enhance navigation transparency and the Facebook integration flow. (COMPLETED).
+5.  **User**: Provided very detailed requirements for the complete Photo Game overhaul (valuation, scenery, streaks, auction bidding). (IN PROGRESS - Backend is DONE, Frontend is NEXT).
+6.  **User (Clarification)**: Confirmed use of OpenAI GPT-4o for vision tasks, WebSockets for the tapping game, and provided detailed requirements for bot match behavior. (Acknowleged, plan updated).
+7.  **User**: Yes continue proceed with the frontend UI updates for the tapping game and next action items. (PENDING - This is the current directive).
+8.  **User**: Provided an extremely strict and detailed implementation request for the Minted Photo Auction Bidding Battle frontend. (PENDING - This is the spec for the current task).
 
 **Project Health Check:**
--   **Broken**: The primary authenticated landing page () is functionally broken due to severe performance issues, making the app unusable after login.
+*   **Live**: The application is healthy and ready for deployment.
+*   **Broken**: Nothing is currently broken.
+*   **Mocked**: No mocked components.
 
 **3rd Party Integrations**
--   **EmbedSocial**: For embedding a Facebook Group feed. This is the source of the current performance problem.
--   **OpenAI GPT-4o Vision**: Used for the photo valuation system (upcoming task).
--   **Stripe, Shippo, Resend, remove.bg, ip-api.com**: Existing integrations from the previous state.
+*   **EmbedSocial**: Used for the Facebook Group feed on .
+*   **OpenAI GPT-4o Vision**: Confirmed for use in the photo valuation and live selfie match system.
+*   **Stripe, Shippo, Resend, remove.bg, ip-api.com**: Existing integrations.
 
 **Testing status**
--   **Testing agent used after significant changes**: NO (Not in this session for the feed page).
+-   **Testing agent used after significant changes**: YES (Used successfully after feed page fix and navigation updates).
 -   **Troubleshoot agent used after agent stuck in loop**: NO
 -   **Test files created**: None.
--   **Known regressions**: The performance of the  page has severely regressed after the introduction of third-party widgets.
+-   **Known regressions**: None. The major performance regression on the  page was fixed.
+
+**Credentials to test flow:**
+-   A test account was created with email . Use the registration flow to create new test users if needed.
 
 **What agent forgot to execute**
--   The agent did not complete the cleanup of . It mentioned it would remove the  component and other unused code but was interrupted.
--   The agent has not performed any tests (scrolling or otherwise) since the last set of code changes aimed at fixing performance.</analysis>
+-   The agent has not forgotten anything. It has completed the backend phase of the current task and is correctly positioned to start the frontend phase, as per the user's instructions.</analysis>
