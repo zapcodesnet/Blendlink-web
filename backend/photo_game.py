@@ -299,7 +299,7 @@ def calculate_photo_battle_value(
                 modifiers_applied.append({"type": "immunity", "reason": "🛡 Shield immunity negates light weakness", "value": 0})
             else:
                 scenery_modifier *= 0.87  # ~1/1.15
-                modifiers_applied.append({"type": "weakness", "reason": f"Light disadvantage (-15%)", "value": -15})
+                modifiers_applied.append({"type": "weakness", "reason": "Light disadvantage (-15%)", "value": -15})
     
     # Apply win streak multiplier (🔥)
     if player_stats:
