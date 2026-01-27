@@ -61,26 +61,36 @@ const calculateRequiredTaps = (playerValue, opponentValue, baseTaps = BASE_TAPS_
 const Confetti = ({ count = 50 }) => {
   const colors = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96E6A1', '#DDA0DD'];
   
+  // Pre-compute random values to avoid impure function calls during render
+  const particles = React.useMemo(() => 
+    [...Array(count)].map((_, i) => ({
+      left: Math.random() * 100,
+      rotate: Math.random() * 720 - 360,
+      duration: 2.5 + Math.random() * 1.5,
+      delay: Math.random() * 0.5,
+    })), [count]
+  );
+  
   return (
     <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
-      {[...Array(count)].map((_, i) => (
+      {particles.map((p, i) => (
         <motion.div
           key={i}
           className="absolute w-3 h-3 rounded-sm"
           style={{
             backgroundColor: colors[i % colors.length],
-            left: `${Math.random() * 100}%`,
+            left: `${p.left}%`,
             top: '-5%',
           }}
           initial={{ y: 0, rotate: 0, opacity: 1 }}
           animate={{
             y: '120vh',
-            rotate: Math.random() * 720 - 360,
+            rotate: p.rotate,
             opacity: [1, 1, 0],
           }}
           transition={{
-            duration: 2.5 + Math.random() * 1.5,
-            delay: Math.random() * 0.5,
+            duration: p.duration,
+            delay: p.delay,
             ease: 'easeIn',
           }}
         />
