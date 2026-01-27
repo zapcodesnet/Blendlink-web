@@ -485,7 +485,7 @@ export const TappingArena = ({
         if (botTimerRef.current) clearInterval(botTimerRef.current);
       };
     }
-  }, [gamePhase, isBot, botDifficulty, opponentRequiredTaps, winner, handleOpponentWin]);
+  }, [gamePhase, isBot, botDifficulty, opponentRequiredTaps, winner]);
   
   // WebSocket message handler
   useEffect(() => {
@@ -499,13 +499,13 @@ export const TappingArena = ({
             
             // Check if opponent wins
             if (data.current_bids >= opponentRequiredTaps && !winner) {
-              handleOpponentWin();
+              handleOpponentWinRef.current?.();
             }
           } else if (data.type === 'auction_end') {
             if (data.winner_id === 'player' || data.winner_id === playerStats?.user_id) {
-              handlePlayerWin();
+              handlePlayerWinRef.current?.();
             } else {
-              handleOpponentWin();
+              handleOpponentWinRef.current?.();
             }
           }
         } catch (e) {
@@ -516,7 +516,7 @@ export const TappingArena = ({
       websocket.addEventListener('message', handleMessage);
       return () => websocket.removeEventListener('message', handleMessage);
     }
-  }, [websocket, isBot, opponentRequiredTaps, winner, playerStats, handleOpponentWin, handlePlayerWin]);
+  }, [websocket, isBot, opponentRequiredTaps, winner, playerStats]);
   
   // Calculate progress percentages
   const playerProgress = Math.min((playerTaps / playerRequiredTaps) * 100, 100);
