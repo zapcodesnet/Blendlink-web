@@ -256,6 +256,10 @@ export const TappingArena = ({
   const tapResetRef = useRef(null);
   const arenaRef = useRef(null);
   
+  // Refs for handlers to avoid stale closure
+  const handlePlayerWinRef = useRef(null);
+  const handleOpponentWinRef = useRef(null);
+  
   // Animation controls
   const shakeControls = useAnimation();
   
