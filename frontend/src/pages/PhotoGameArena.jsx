@@ -1755,6 +1755,29 @@ const PhotoGameArena = () => {
             </motion.div>
           )}
           
+          {/* New Auction Battle Mode (Tapping + RPS Game) */}
+          {gameState === 'auction_battle' && (
+            <motion.div 
+              key="auction_battle" 
+              initial={{ opacity: 0, y: 20 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              exit={{ opacity: 0 }}
+            >
+              <BattleArena
+                playerPhotos={playerBattlePhotos}
+                opponentPhotos={opponentBattlePhotos}
+                session={session}
+                isBot={isAuctionBattleBot}
+                botDifficulty={botDifficulty}
+                betAmount={battleBetAmount}
+                soundEnabled={soundEnabled}
+                websocket={null}
+                onGameComplete={handleAuctionBattleComplete}
+                onExit={() => setGameState('matchmaking')}
+              />
+            </motion.div>
+          )}
+          
           {gameState === 'result' && session && (
             <motion.div
               key="result"
