@@ -304,9 +304,9 @@ export const TappingArena = ({
     // Callback
     if (onTap) onTap(newTaps);
     
-    // Check win condition
+    // Check win condition (use ref to avoid stale closure)
     if (newTaps >= playerRequiredTaps) {
-      handlePlayerWin();
+      handlePlayerWinRef.current?.();
     }
   }, [gamePhase, playerTaps, playerRequiredTaps, tapsThisSecond, soundEnabled, websocket, vibrate, onTap]);
   
@@ -347,6 +347,11 @@ export const TappingArena = ({
       if (onRoundComplete) onRoundComplete('player');
     }, 2500);
   }, [winner, soundEnabled, vibrate, onRoundComplete]);
+  
+  // Keep refs updated
+  useEffect(() => {
+    handlePlayerWinRef.current = handlePlayerWin;
+  }, [handlePlayerWin]);
   
   // Handle opponent win (bot or real player)
   const handleOpponentWin = useCallback(() => {
