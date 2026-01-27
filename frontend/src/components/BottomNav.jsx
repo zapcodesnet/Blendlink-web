@@ -236,9 +236,9 @@ export const BottomNav = () => {
         </div>
       </nav>
 
-      {/* Desktop Sidebar */}
+      {/* Desktop Sidebar - Enhanced transparency */}
       <nav 
-        className="fixed left-0 top-0 bottom-0 w-24 bg-gray-900/90 backdrop-blur-xl border-r border-gray-700/50 hidden md:flex flex-col items-center py-6 z-50"
+        className="fixed left-0 top-0 bottom-0 w-24 bg-gray-900/60 backdrop-blur-xl border-r border-white/10 hidden md:flex flex-col items-center py-6 z-50"
         data-testid="desktop-sidebar"
       >
         {/* Logo */}
