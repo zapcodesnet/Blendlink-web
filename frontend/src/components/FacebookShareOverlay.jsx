@@ -193,8 +193,15 @@ export const FacebookShareOverlay = ({ isOpen, onClose, onVisitGroup }) => {
     setLoading(true);
     try {
       const response = await api.get('/minting/photos');
+      // Sort by most recently minted (created_at descending) and get top 5
+      const allPhotos = response.data || [];
+      const sortedPhotos = allPhotos.sort((a, b) => {
+        const dateA = new Date(a.created_at || 0);
+        const dateB = new Date(b.created_at || 0);
+        return dateB - dateA; // Most recent first
+      });
       // Get the 5 most recent photos
-      const recentPhotos = (response.data || []).slice(0, 5);
+      const recentPhotos = sortedPhotos.slice(0, 5);
       setPhotos(recentPhotos);
     } catch (err) {
       console.error('Failed to fetch photos:', err);
