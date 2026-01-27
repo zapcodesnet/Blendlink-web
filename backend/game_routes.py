@@ -759,8 +759,6 @@ async def get_streak_info(user_id: str):
         }
     
     # Calculate streak bonus
-    from photo_game import WIN_STREAK_MULTIPLIERS, LOSE_STREAK_IMMUNITY_THRESHOLD
-    
     win_streak = stats.get("current_win_streak", 0)
     lose_streak = stats.get("current_lose_streak", 0)
     
