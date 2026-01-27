@@ -660,7 +660,6 @@ async def record_auction_result(
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     from auction_websocket import auction_manager
-    from photo_game import BOT_HOUSE_FEE
     
     room = auction_manager.rooms.get(room_id)
     if not room:
