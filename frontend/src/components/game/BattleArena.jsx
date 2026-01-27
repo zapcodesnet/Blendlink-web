@@ -328,6 +328,16 @@ const GameResultScreen = ({
 }) => {
   const isWinner = winner === 'player';
   
+  // Pre-compute random values for confetti
+  const confettiParticles = React.useMemo(() => 
+    [...Array(30)].map((_, i) => ({
+      left: Math.random() * 100,
+      duration: 2 + Math.random() * 2,
+      delay: Math.random() * 0.5,
+      emoji: ['🎉', '✨', '💰', '🏆', '💎'][Math.floor(Math.random() * 5)],
+    })), []
+  );
+  
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
@@ -337,19 +347,19 @@ const GameResultScreen = ({
       {/* Confetti for win */}
       {isWinner && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {[...Array(30)].map((_, i) => (
+          {confettiParticles.map((p, i) => (
             <motion.div
               key={i}
               className="absolute text-2xl"
-              initial={{ top: -20, left: `${Math.random() * 100}%`, rotate: 0 }}
+              initial={{ top: -20, left: `${p.left}%`, rotate: 0 }}
               animate={{ top: '110%', rotate: 360 }}
               transition={{ 
-                duration: 2 + Math.random() * 2,
-                delay: Math.random() * 0.5,
+                duration: p.duration,
+                delay: p.delay,
                 repeat: Infinity
               }}
             >
-              {['🎉', '✨', '💰', '🏆', '💎'][Math.floor(Math.random() * 5)]}
+              {p.emoji}
             </motion.div>
           ))}
         </div>
