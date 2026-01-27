@@ -383,6 +383,11 @@ export const TappingArena = ({
     }, 2500);
   }, [winner, soundEnabled, vibrate, shakeControls, onRoundComplete]);
   
+  // Keep opponent win ref updated
+  useEffect(() => {
+    handleOpponentWinRef.current = handleOpponentWin;
+  }, [handleOpponentWin]);
+  
   // Start countdown
   useEffect(() => {
     if (gamePhase === 'waiting') {
