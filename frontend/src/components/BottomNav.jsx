@@ -15,7 +15,8 @@ export const BottomNav = () => {
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
+  const authContext = useContext(AuthContext);
+  const user = authContext?.user; // Null-safe for when used outside ProtectedRoute
   const [unreadCount, setUnreadCount] = useState(0);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showFacebookOverlay, setShowFacebookOverlay] = useState(false);
