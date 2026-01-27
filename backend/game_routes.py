@@ -544,8 +544,6 @@ async def create_auction_battle(
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     from auction_websocket import auction_manager
-    from photo_game import (
-    )
     
     # Validate bot match bet
     if request.is_bot_match:
