@@ -1787,6 +1787,7 @@ const PhotoGameArena = () => {
                 onPhotoSelect={setSelectedPhoto}
                 onPracticeStart={handlePracticeStart}
                 onViewPhoto={setLightboxPhoto}
+                onAuctionBattleStart={handleAuctionBattleStart}
               />
             </motion.div>
           )}
