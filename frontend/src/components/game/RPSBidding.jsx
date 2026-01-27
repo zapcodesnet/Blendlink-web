@@ -468,12 +468,12 @@ export const RPSBidding = ({
           if (prev <= 1) {
             clearInterval(timer);
             
-            // Timeout - auto-loss if no choice made
+            // Timeout - auto-loss if no choice made (use ref to avoid stale closure)
             if (!playerChoice) {
               toast.error('Time out! You lose this round.');
-              handleSubmit(true);
+              handleSubmitRef.current?.(true);
             } else {
-              handleSubmit(false);
+              handleSubmitRef.current?.(false);
             }
             return 0;
           }
