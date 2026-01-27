@@ -26,7 +26,7 @@ import { Button } from '../components/ui/button';
 import { TappingArena } from '../components/game/TappingArena';
 import { RPSBidding } from '../components/game/RPSBidding';
 import { StreakIndicator, StarDisplay, calculateStarBonus } from '../components/game/StreakIndicator';
-import auctionSounds from '../utils/auctionSounds';
+import auctionSounds from '../../utils/auctionSounds';
 import api from '../services/api';
 
 // Constants
