@@ -1108,13 +1108,16 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect, onPracticeSta
     const fetchData = async () => {
       try {
         setLoadingPhotos(true);
-        const [photosRes, queueRes] = await Promise.all([
+        const [photosRes, queueRes, statsRes] = await Promise.all([
           api.get('/photo-game/battle-photos'),
-          api.get('/photo-game/pvp/queue-status')
+          api.get('/photo-game/pvp/queue-status'),
+          api.get('/photo-game/stats')
         ]);
         if (isMountedRef.current) {
           setBattlePhotos(photosRes.data.photos || []);
           setQueueStatus(queueRes.data);
+          // Get user's BL balance from wallet or stats
+          setUserBalance(statsRes.data?.bl_coins || 0);
         }
       } catch (err) {
         if (isMountedRef.current) {
