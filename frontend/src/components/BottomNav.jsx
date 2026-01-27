@@ -3,7 +3,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { 
   Home, ShoppingBag, Bell, Coins, User, MoreHorizontal, 
-  Image, Facebook, X, ChevronUp 
+  Image, Facebook, X, ChevronUp, Swords 
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AuthContext } from "../App";
