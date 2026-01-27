@@ -1528,6 +1528,11 @@ const PhotoGameArena = () => {
   const handleAuctionBattleStart = useCallback((gameData) => {
     if (gameData.success) {
       setSession(gameData.session);
+      setPlayerBattlePhotos(gameData.playerPhotos || [gameData.session?.player1_photo]);
+      setOpponentBattlePhotos(gameData.opponentPhotos || [gameData.session?.player2_photo]);
+      setBattleBetAmount(gameData.betAmount || 0);
+      setIsAuctionBattleBot(gameData.isBot || false);
+      setBotDifficulty(gameData.botDifficulty || 'medium');
       setGameState('auction_battle');
       auctionSounds.gavelSlam();
       toast.success('⚔️ Auction Battle started!');
@@ -1539,6 +1544,9 @@ const PhotoGameArena = () => {
     setGameState('matchmaking');
     setSession(null);
     setSelectedPhoto(null);
+    setPlayerBattlePhotos([]);
+    setOpponentBattlePhotos([]);
+    setBattleBetAmount(0);
     api.get('/photo-game/stats').then(res => setStats(res.data)).catch(() => {});
   }, []);
   
