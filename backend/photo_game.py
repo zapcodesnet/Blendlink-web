@@ -293,7 +293,7 @@ def calculate_photo_battle_value(
         light_info = LIGHT_TYPES.get(photo_light, {})
         if light_info.get("strong_vs") == opponent_light:
             scenery_modifier *= 1.15
-            modifiers_applied.append({"type": "strength", "reason": f"Light advantage (+15%)", "value": 15})
+            modifiers_applied.append({"type": "strength", "reason": "Light advantage (+15%)", "value": 15})
         elif light_info.get("weak_vs") == opponent_light:
             if has_immunity:
                 modifiers_applied.append({"type": "immunity", "reason": "🛡 Shield immunity negates light weakness", "value": 0})
