@@ -1470,6 +1470,30 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect, onPracticeSta
             </Button>
           </motion.div>
           
+          {/* NEW: Auction Bidding Battle Mode */}
+          <motion.div 
+            whileHover={{ scale: 1.02 }} 
+            whileTap={{ scale: 0.98 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <Button 
+              onClick={startAuctionBattle}
+              className="w-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 py-6 text-lg font-bold shadow-lg"
+              size="lg"
+              data-testid="auction-battle-btn"
+            >
+              <Zap className="w-6 h-6 mr-2" />
+              Auction Bidding Battle (NEW!)
+              <span className="ml-2 text-2xl">👆</span>
+            </Button>
+          </motion.div>
+          
+          <p className="text-center text-xs text-amber-400 font-medium">
+            ⚡ Tap fast to win! Battle with your photo's Dollar Value!
+          </p>
+          
           <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
             <Button 
               onClick={startPracticeMode}
