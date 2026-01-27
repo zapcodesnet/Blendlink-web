@@ -439,9 +439,9 @@ export const TappingArena = ({
             const opponentProgress = opponentTaps / opponentRequiredTaps;
             
             if (playerProgress >= opponentProgress) {
-              handlePlayerWin();
+              handlePlayerWinRef.current?.();
             } else {
-              handleOpponentWin();
+              handleOpponentWinRef.current?.();
             }
             
             return 0;
@@ -454,7 +454,7 @@ export const TappingArena = ({
         if (gameTimerRef.current) clearInterval(gameTimerRef.current);
       };
     }
-  }, [gamePhase, playerTaps, opponentTaps, playerRequiredTaps, opponentRequiredTaps, soundEnabled, handlePlayerWin, handleOpponentWin]);
+  }, [gamePhase, playerTaps, opponentTaps, playerRequiredTaps, opponentRequiredTaps, soundEnabled]);
   
   // Bot tapping (if bot match)
   useEffect(() => {
@@ -474,7 +474,7 @@ export const TappingArena = ({
           
           // Check if bot wins
           if (newTaps >= opponentRequiredTaps && !winner) {
-            handleOpponentWin();
+            handleOpponentWinRef.current?.();
           }
           
           return newTaps;
