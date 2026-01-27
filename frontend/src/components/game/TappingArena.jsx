@@ -57,21 +57,23 @@ const calculateRequiredTaps = (playerValue, opponentValue, baseTaps = BASE_TAPS_
   return Math.max(50, Math.min(400, requiredTaps));
 };
 
+// Simple seeded random for deterministic values
+const seededRandom = (seed) => {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+};
+
 // Confetti particles for win animation
 const Confetti = ({ count = 50 }) => {
   const colors = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96E6A1', '#DDA0DD'];
   
-  // Use ref for stable random values (initialized once)
-  const particlesRef = useRef(null);
-  if (!particlesRef.current) {
-    particlesRef.current = [...Array(count)].map((_, i) => ({
-      left: Math.random() * 100,
-      rotate: Math.random() * 720 - 360,
-      duration: 2.5 + Math.random() * 1.5,
-      delay: Math.random() * 0.5,
-    }));
-  }
-  const particles = particlesRef.current;
+  // Generate deterministic values based on index
+  const particles = [...Array(count)].map((_, i) => ({
+    left: seededRandom(i * 1.1) * 100,
+    rotate: seededRandom(i * 2.2) * 720 - 360,
+    duration: 2.5 + seededRandom(i * 3.3) * 1.5,
+    delay: seededRandom(i * 4.4) * 0.5,
+  }));
   
   return (
     <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
