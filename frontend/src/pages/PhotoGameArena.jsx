@@ -1476,6 +1476,13 @@ const PhotoGameArena = () => {
   // Photo battle state
   const [photoBattleResult, setPhotoBattleResult] = useState(null);
   
+  // Auction Battle state (new tapping game)
+  const [playerBattlePhotos, setPlayerBattlePhotos] = useState([]);
+  const [opponentBattlePhotos, setOpponentBattlePhotos] = useState([]);
+  const [battleBetAmount, setBattleBetAmount] = useState(0);
+  const [isAuctionBattleBot, setIsAuctionBattleBot] = useState(false);
+  const [botDifficulty, setBotDifficulty] = useState('medium');
+  
   useEffect(() => {
     auctionSounds.init();
     auctionSounds.setEnabled(soundEnabled);
