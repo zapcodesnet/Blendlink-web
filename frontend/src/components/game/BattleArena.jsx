@@ -328,15 +328,17 @@ const GameResultScreen = ({
 }) => {
   const isWinner = winner === 'player';
   
-  // Pre-compute random values for confetti
-  const confettiParticles = React.useMemo(() => 
-    [...Array(30)].map((_, i) => ({
+  // Use ref for stable random values (initialized once)
+  const confettiRef = useRef(null);
+  if (!confettiRef.current) {
+    confettiRef.current = [...Array(30)].map(() => ({
       left: Math.random() * 100,
       duration: 2 + Math.random() * 2,
       delay: Math.random() * 0.5,
       emoji: ['🎉', '✨', '💰', '🏆', '💎'][Math.floor(Math.random() * 5)],
-    })), []
-  );
+    }));
+  }
+  const confettiParticles = confettiRef.current;
   
   return (
     <motion.div
