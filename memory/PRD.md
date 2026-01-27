@@ -71,6 +71,22 @@
 
 ---
 
+## UPCOMING TASKS (P1 - Photo Game Overhaul)
+
+1. **Core Power / Dollar Value Updates** - Implement 11-category AI valuation system
+2. **Authenticity/Selfie Match** - Live photo verification feature
+3. **Photo Auction Battle** - Real-time tapping game mode
+4. **Dollar Value Upgrades** - BL coin upgrade system
+5. **Level/Star Bonuses** - Photo level-up system
+
+## BACKLOG (P2)
+
+- Marketplace features (gift, trade, sell minted photos)
+- Photo Editor bug fixes ("Failed Fetch" errors)
+- i18n coverage expansion
+
+---
+
 ## SESSION 22 PART 3: SOCIABLEKIT/TAGGBOX ATTEMPTS (Removed)
 
 - Tried SociableKIT - widget didn't show real-time posts
