@@ -725,3 +725,252 @@ async def get_minted_photos_feed(skip: int = 0, limit: int = 20):
             photo["user"] = users_map.get(photo["user_id"])
     
     return {"photos": photos, "count": len(photos)}
+
+
+
+# ============== SELFIE MATCH / AUTHENTICITY ROUTES ==============
+class SelfieMatchRequest(BaseModel):
+    """Request for selfie face match"""
+    mint_id: str
+    selfie_base64: str  # Base64 encoded selfie image
+    mime_type: str = "image/jpeg"
+
+
+@minting_router.post("/photo/{mint_id}/selfie-match")
+async def selfie_match(
+    mint_id: str,
+    request: SelfieMatchRequest,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """
+    Match a selfie against the minted photo for Authenticity bonus.
+    
+    - Costs 100 BL coins per attempt (max 3 attempts)
+    - Uses GPT-4o Vision to compare faces
+    - Awards 5% Authenticity bonus if match > 80%
+    - Once added, Authenticity is permanent
+    """
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    SELFIE_MATCH_COST = 100  # BL coins per attempt
+    MAX_ATTEMPTS = 3
+    MATCH_THRESHOLD = 80  # 80% match required for full bonus
+    
+    # Get the photo
+    photo = await _db.minted_photos.find_one(
+        {"mint_id": mint_id},
+        {"_id": 0}
+    )
+    
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    
+    if photo["user_id"] != current_user["user_id"]:
+        raise HTTPException(status_code=403, detail="You can only match your own photos")
+    
+    # Check if authenticity already added
+    if photo.get("selfie_match_score", 0) > 0:
+        raise HTTPException(status_code=400, detail="Authenticity already added to this photo")
+    
+    # Check if photo has face detection
+    if not photo.get("has_face") or photo.get("face_detection_score", 0) < 10:
+        raise HTTPException(status_code=400, detail="Photo must have a clear face for selfie match")
+    
+    # Check attempts
+    attempts = photo.get("selfie_match_attempts", 0)
+    if attempts >= MAX_ATTEMPTS:
+        raise HTTPException(status_code=400, detail=f"Maximum {MAX_ATTEMPTS} attempts reached")
+    
+    # Check user balance
+    if current_user.get("bl_coins", 0) < SELFIE_MATCH_COST:
+        raise HTTPException(status_code=400, detail=f"Insufficient BL coins. Need {SELFIE_MATCH_COST} BL")
+    
+    # Deduct BL coins
+    await _db.users.update_one(
+        {"user_id": current_user["user_id"]},
+        {"$inc": {"bl_coins": -SELFIE_MATCH_COST}}
+    )
+    
+    # Increment attempt count
+    await _db.minted_photos.update_one(
+        {"mint_id": mint_id},
+        {"$inc": {"selfie_match_attempts": 1}}
+    )
+    
+    try:
+        # Use GPT-4o Vision for face comparison
+        from emergentintegrations.llm.chat import chat, ChatConfig, Message
+        import os
+        
+        api_key = os.environ.get("EMERGENT_LLM_KEY")
+        if not api_key:
+            raise HTTPException(status_code=500, detail="AI service not configured")
+        
+        # Get photo image
+        photo_image_data = photo.get("image_data")
+        if not photo_image_data:
+            # Fetch from URL if not stored
+            photo_with_data = await _db.minted_photos.find_one({"mint_id": mint_id})
+            photo_image_data = photo_with_data.get("image_data") if photo_with_data else None
+        
+        if not photo_image_data:
+            raise HTTPException(status_code=500, detail="Photo image not found")
+        
+        # Prepare prompt for face comparison
+        comparison_prompt = """Compare the faces in these two images and provide a face similarity score.
+
+Image 1: The minted photo (may contain one or more faces)
+Image 2: A live selfie for verification
+
+Instructions:
+1. Focus ONLY on facial features (eyes, nose, mouth, face shape, etc.)
+2. Ignore differences in lighting, angle, image quality, or background
+3. Score from 0-100% where:
+   - 90-100%: Definitely the same person
+   - 80-89%: Very likely the same person
+   - 60-79%: Possibly the same person
+   - 40-59%: Unclear/uncertain
+   - 0-39%: Likely different people
+
+Return ONLY a JSON object with this exact format:
+{"match_score": <number>, "confidence": "<high/medium/low>", "notes": "<brief explanation>"}"""
+
+        # Call GPT-4o Vision
+        config = ChatConfig(
+            model="gpt-4o",
+            api_key=api_key,
+            temperature=0.1,
+        )
+        
+        messages = [
+            Message(role="user", content=[
+                {"type": "text", "text": comparison_prompt},
+                {"type": "image_url", "image_url": {"url": f"data:{photo.get('mime_type', 'image/jpeg')};base64,{photo_image_data}"}},
+                {"type": "image_url", "image_url": {"url": f"data:{request.mime_type};base64,{request.selfie_base64}"}},
+            ])
+        ]
+        
+        response = await chat(config, messages)
+        
+        # Parse response
+        import json
+        import re
+        
+        response_text = response.content if hasattr(response, 'content') else str(response)
+        
+        # Extract JSON from response
+        json_match = re.search(r'\{[^}]+\}', response_text)
+        if json_match:
+            result = json.loads(json_match.group())
+            match_score = result.get("match_score", 0)
+            confidence = result.get("confidence", "low")
+            notes = result.get("notes", "")
+        else:
+            # Try to extract just the number
+            num_match = re.search(r'(\d+)', response_text)
+            match_score = int(num_match.group(1)) if num_match else 0
+            confidence = "low"
+            notes = "Score extracted from response"
+        
+        # Calculate authenticity bonus
+        if match_score >= MATCH_THRESHOLD:
+            # Award full 5% bonus (5% of max = 5% of $100M = $5M equivalent, but stored as score)
+            authenticity_bonus = 5.0
+            bonus_message = f"🎉 Face match successful! +{authenticity_bonus}% Authenticity"
+        else:
+            authenticity_bonus = match_score / 20  # Partial bonus: 0-4% based on score
+            bonus_message = f"Face match: {match_score}%. Partial Authenticity bonus: +{authenticity_bonus:.1f}%"
+        
+        # Update photo with match result (only if this is the best attempt)
+        current_best = photo.get("selfie_match_score", 0)
+        if match_score > current_best:
+            # Recalculate dollar value with authenticity bonus
+            base_value = photo.get("base_dollar_value", photo.get("dollar_value", 0))
+            
+            # Face detection gives up to 5%
+            face_detection_score = photo.get("face_detection_score", 0)
+            face_detection_bonus = min(5, face_detection_score / 20)
+            
+            # Selfie match gives up to 5%
+            selfie_match_bonus = authenticity_bonus
+            
+            # Total authenticity (capped at 10%)
+            total_authenticity = min(10, face_detection_bonus + selfie_match_bonus)
+            
+            # Apply to dollar value (10% = $100M max from authenticity)
+            authenticity_value = int(base_value * (total_authenticity / 100))
+            new_dollar_value = base_value + authenticity_value
+            
+            await _db.minted_photos.update_one(
+                {"mint_id": mint_id},
+                {
+                    "$set": {
+                        "selfie_match_score": match_score,
+                        "selfie_match_confidence": confidence,
+                        "selfie_match_notes": notes,
+                        "authenticity_bonus": total_authenticity,
+                        "dollar_value": new_dollar_value,
+                        "authenticity_locked": True,
+                    }
+                }
+            )
+        
+        remaining_attempts = MAX_ATTEMPTS - attempts - 1
+        
+        return {
+            "success": True,
+            "match_score": match_score,
+            "confidence": confidence,
+            "notes": notes,
+            "authenticity_bonus": authenticity_bonus,
+            "message": bonus_message,
+            "remaining_attempts": remaining_attempts,
+            "cost_paid": SELFIE_MATCH_COST,
+            "is_best_score": match_score > current_best,
+        }
+        
+    except Exception as e:
+        logger.error(f"Selfie match error: {e}")
+        # Refund on error
+        await _db.users.update_one(
+            {"user_id": current_user["user_id"]},
+            {"$inc": {"bl_coins": SELFIE_MATCH_COST}}
+        )
+        await _db.minted_photos.update_one(
+            {"mint_id": mint_id},
+            {"$inc": {"selfie_match_attempts": -1}}
+        )
+        raise HTTPException(status_code=500, detail=f"Face matching failed: {str(e)}")
+
+
+@minting_router.get("/photo/{mint_id}/authenticity-status")
+async def get_authenticity_status(mint_id: str):
+    """Get the authenticity status of a minted photo"""
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    photo = await _db.minted_photos.find_one(
+        {"mint_id": mint_id},
+        {"_id": 0, "image_data": 0}
+    )
+    
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    
+    return {
+        "mint_id": mint_id,
+        "has_face": photo.get("has_face", False),
+        "face_detection_score": photo.get("face_detection_score", 0),
+        "selfie_match_score": photo.get("selfie_match_score", 0),
+        "selfie_match_confidence": photo.get("selfie_match_confidence"),
+        "authenticity_bonus": photo.get("authenticity_bonus", 0),
+        "authenticity_locked": photo.get("authenticity_locked", False),
+        "selfie_match_attempts": photo.get("selfie_match_attempts", 0),
+        "max_attempts": 3,
+        "can_add_selfie": (
+            photo.get("has_face", False) and 
+            not photo.get("authenticity_locked", False) and
+            photo.get("selfie_match_attempts", 0) < 3
+        ),
+    }
