@@ -1488,7 +1488,7 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect, onPracticeSta
             transition={{ delay: 0.1 }}
           >
             <Button 
-              onClick={startAuctionBattle}
+              onClick={openAuctionBattleSelector}
               className="w-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 py-6 text-lg font-bold shadow-lg"
               size="lg"
               data-testid="auction-battle-btn"
@@ -1522,6 +1522,16 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect, onPracticeSta
           </p>
         </div>
       )}
+      
+      {/* Bot Difficulty Selector Modal */}
+      <BotDifficultySelector
+        isOpen={showBotSelector}
+        onClose={() => setShowBotSelector(false)}
+        onStart={handleBotBattleStart}
+        selectedPhoto={selectedPhoto}
+        playerPhotos={battlePhotos}
+        userBalance={userBalance}
+      />
     </div>
   );
 };
