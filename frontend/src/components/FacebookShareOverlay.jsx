@@ -217,15 +217,15 @@ export const FacebookShareOverlay = ({ isOpen, onClose, onVisitGroup }) => {
   };
   
   const handleShare = (photo) => {
-    // Create share text
+    // Create share text for the caption
     const scenery = SCENERY_CONFIG[photo.scenery_type] || SCENERY_CONFIG.default;
-    const shareText = encodeURIComponent(
-      `Check out my minted ${formatValue(photo.dollar_value)} ${scenery.label} card! 🎴✨ #Blendlink #MintedPhoto`
-    );
+    const shareCaption = `Check my newly minted ${formatValue(photo.dollar_value)} ${scenery.label} card! 🎴✨ #Blendlink #MintedPhoto`;
     
-    // Open Facebook Group with pre-filled post (limited functionality)
-    // Facebook doesn't support pre-filled posts for groups, so we'll just open the group
-    window.open(FACEBOOK_GROUP_URL, '_blank');
+    // Copy caption to clipboard for easy pasting
+    navigator.clipboard?.writeText(shareCaption).catch(() => {});
+    
+    // Open Facebook Group (same tab preferred for better flow)
+    window.location.href = FACEBOOK_GROUP_URL;
     
     // Mark as visited for contextual FAB
     sessionStorage.setItem('visited_fb_group', 'true');
@@ -239,7 +239,8 @@ export const FacebookShareOverlay = ({ isOpen, onClose, onVisitGroup }) => {
   };
   
   const handleGoToGroup = () => {
-    window.open(FACEBOOK_GROUP_URL, '_blank');
+    // Open Facebook Group (same tab preferred for better flow)
+    window.location.href = FACEBOOK_GROUP_URL;
     
     // Mark as visited for contextual FAB
     sessionStorage.setItem('visited_fb_group', 'true');
