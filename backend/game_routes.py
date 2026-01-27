@@ -545,8 +545,6 @@ async def create_auction_battle(
     
     from auction_websocket import auction_manager
     from photo_game import (
-        calculate_photo_battle_value, generate_bot_photo, generate_bot_stats,
-        BOT_MIN_BET, BOT_MAX_BET, BOT_HOUSE_FEE
     )
     
     # Validate bot match bet
