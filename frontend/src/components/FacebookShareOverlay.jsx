@@ -289,8 +289,8 @@ export const FacebookShareOverlay = ({ isOpen, onClose, onVisitGroup }) => {
                   <Facebook className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-white">Blendlink Community</h3>
-                  <p className="text-xs text-gray-400">Share your minted photos</p>
+                  <h3 className="font-bold text-white">Share to Community</h3>
+                  <p className="text-xs text-gray-400">Blendlink Facebook Group</p>
                 </div>
               </div>
               <button
@@ -305,9 +305,14 @@ export const FacebookShareOverlay = ({ isOpen, onClose, onVisitGroup }) => {
           {/* Content */}
           <div className="p-4 space-y-4">
             {/* Info text */}
-            <p className="text-sm text-gray-300">
-              Select a photo to share with the community and earn BL coins!
-            </p>
+            <div className="text-center">
+              <p className="text-sm font-medium text-white mb-1">
+                Share Your Latest Minted Photos
+              </p>
+              <p className="text-xs text-gray-400">
+                Tap a photo to preview & share to the community
+              </p>
+            </div>
             
             {/* Photo thumbnails carousel */}
             <div className="relative">
