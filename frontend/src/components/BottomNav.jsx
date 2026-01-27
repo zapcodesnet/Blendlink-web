@@ -117,8 +117,8 @@ export const BottomNav = () => {
         data-testid="bottom-nav"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
-        {/* Floating container with glass effect */}
-        <div className="mx-3 mb-2 rounded-2xl bg-gray-900/90 backdrop-blur-xl border border-gray-700/50 shadow-2xl shadow-black/50">
+        {/* Floating container with enhanced glass effect - 60% opacity */}
+        <div className="mx-3 mb-2 rounded-2xl bg-gray-900/60 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/30">
           <div className="flex items-center justify-around h-16 px-1">
             {mainNavItems.map((item, index) => {
               const isActive = location.pathname === item.path || 
