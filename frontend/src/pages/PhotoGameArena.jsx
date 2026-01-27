@@ -1491,7 +1491,7 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect, onPracticeSta
           </motion.div>
           
           <p className="text-center text-xs text-amber-400 font-medium">
-            ⚡ Tap fast to win! Battle with your photo's Dollar Value!
+            ⚡ Tap fast to win! Battle with your photo&apos;s Dollar Value!
           </p>
           
           <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
