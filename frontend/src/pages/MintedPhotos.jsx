@@ -4,7 +4,8 @@ import {
   Camera, Sparkles, Upload, Image, Coins, Trophy, 
   Zap, Lock, Globe, FolderPlus, MoreVertical,
   Edit2, Trash2, Share2, Eye, EyeOff, Grid, List,
-  ChevronRight, Star, Swords, TrendingUp, X, User, Maximize2
+  ChevronRight, Star, Swords, TrendingUp, X, User, Maximize2,
+  Shield
 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../services/api';
@@ -16,6 +17,7 @@ import { Label } from '../components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { SelfieMatchModal } from '../components/minting/SelfieMatchModal';
 
 // Category labels for the back of card
 const RATING_LABELS = {
