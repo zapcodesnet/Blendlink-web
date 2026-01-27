@@ -229,64 +229,187 @@ def determine_rps_winner(choice1: str, choice2: str) -> int:
 def calculate_photo_battle_value(
     photo: Dict,
     opponent_photo: Dict,
-    player_stats: Optional[Dict] = None
-) -> float:
+    player_stats: Optional[Dict] = None,
+    opponent_stats: Optional[Dict] = None
+) -> Dict:
     """
-    Calculate effective dollar value for photo battle
-    Core Stats + Location multiplier + Legacy (Age + Likes)
+    Calculate effective dollar value for photo battle with full streak and scenery system.
+    
+    Returns dict with:
+    - effective_value: Final battle value after all modifiers
+    - base_value: Original dollar value
+    - scenery_modifier: Strength/weakness multiplier applied
+    - streak_modifier: Win streak multiplier
+    - has_immunity: Whether shield immunity negated weakness
+    - modifiers_applied: List of all modifiers for display
     """
     base_value = photo.get("dollar_value", 1_000_000)
+    modifiers_applied = []
+    scenery_modifier = 1.0
+    streak_modifier = 1.0
+    has_immunity = False
     
-    # Apply scenery strength/weakness multiplier
+    # Get scenery types
     photo_type = photo.get("scenery_type", "natural")
     opponent_type = opponent_photo.get("scenery_type", "natural")
     
-    if photo.get("strength_vs") == opponent_type:
-        base_value = int(base_value * STRENGTH_MULTIPLIER)
-    elif photo.get("weakness_vs") == opponent_type:
-        base_value = int(base_value / STRENGTH_MULTIPLIER)
+    # Check if player has shield immunity (🛡) from lose streak
+    if player_stats:
+        lose_streak = player_stats.get("current_lose_streak", 0)
+        has_immunity = lose_streak >= LOSE_STREAK_IMMUNITY_THRESHOLD
     
-    # Apply light condition strength/weakness
+    # Apply scenery strength/weakness multiplier (only if different scenery)
+    if photo_type != opponent_type:
+        photo_scenery = SCENERY_TYPES.get(photo_type, SCENERY_TYPES["natural"])
+        opponent_scenery = SCENERY_TYPES.get(opponent_type, SCENERY_TYPES["natural"])
+        
+        # Handle Neutral scenery (10% weaker vs all)
+        if photo_type == "neutral":
+            # Neutral is 10% weaker against all other types
+            if not has_immunity:
+                scenery_modifier = NEUTRAL_WEAKNESS_MULTIPLIER
+                modifiers_applied.append({"type": "weakness", "reason": "Neutral background (-10%)", "value": -10})
+        elif opponent_type == "neutral":
+            # 10% stronger against Neutral
+            scenery_modifier = 1.0 / NEUTRAL_WEAKNESS_MULTIPLIER  # ~1.11
+            modifiers_applied.append({"type": "strength", "reason": f"{photo_scenery['name']} vs Neutral (+10%)", "value": 10})
+        else:
+            # Standard strength/weakness (25%)
+            if photo_scenery.get("strong_vs") == opponent_type:
+                scenery_modifier = STRENGTH_MULTIPLIER
+                modifiers_applied.append({"type": "strength", "reason": f"{photo_scenery['name']} strong vs {opponent_scenery['name']} (+25%)", "value": 25})
+            elif photo_scenery.get("weak_vs") == opponent_type:
+                if has_immunity:
+                    # Shield immunity negates weakness!
+                    modifiers_applied.append({"type": "immunity", "reason": "🛡 Shield immunity negates weakness", "value": 0})
+                else:
+                    scenery_modifier = WEAKNESS_MULTIPLIER
+                    modifiers_applied.append({"type": "weakness", "reason": f"{photo_scenery['name']} weak vs {opponent_scenery['name']} (-25%)", "value": -25})
+    
+    # Apply light condition strength/weakness (15%)
     photo_light = photo.get("light_type")
     opponent_light = opponent_photo.get("light_type")
-    if photo_light and opponent_light:
+    if photo_light and opponent_light and photo_light != opponent_light:
         light_info = LIGHT_TYPES.get(photo_light, {})
         if light_info.get("strong_vs") == opponent_light:
-            base_value = int(base_value * 1.15)  # +15% for light advantage
+            scenery_modifier *= 1.15
+            modifiers_applied.append({"type": "strength", "reason": f"Light advantage (+15%)", "value": 15})
         elif light_info.get("weak_vs") == opponent_light:
-            base_value = int(base_value / 1.15)  # -15% for light disadvantage
+            if has_immunity:
+                modifiers_applied.append({"type": "immunity", "reason": "🛡 Shield immunity negates light weakness", "value": 0})
+            else:
+                scenery_modifier *= 0.87  # ~1/1.15
+                modifiers_applied.append({"type": "weakness", "reason": f"Light disadvantage (-15%)", "value": -15})
+    
+    # Apply win streak multiplier (🔥)
+    if player_stats:
+        win_streak = player_stats.get("current_win_streak", 0)
+        if win_streak >= 3:
+            # Cap at 10 streaks for max 3.0x
+            capped_streak = min(win_streak, 10)
+            streak_modifier = WIN_STREAK_MULTIPLIERS.get(capped_streak, 3.0)
+            modifiers_applied.append({
+                "type": "streak", 
+                "reason": f"🔥 {win_streak} win streak (×{streak_modifier:.2f})", 
+                "value": int((streak_modifier - 1) * 100)
+            })
     
     # Legacy bonus: Age (0.1% per day since minting)
+    legacy_modifier = 1.0
     created_at = photo.get("created_at")
     if created_at:
         if isinstance(created_at, str):
-            created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
-        days_old = (datetime.now(timezone.utc) - created_at).days
-        age_bonus = 1 + (days_old * 0.001)  # 0.1% per day
-        base_value = int(base_value * age_bonus)
+            try:
+                created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+            except:
+                created_at = None
+        if created_at:
+            days_old = (datetime.now(timezone.utc) - created_at).days
+            if days_old > 0:
+                age_bonus = days_old * 0.001  # 0.1% per day
+                legacy_modifier += age_bonus
+                modifiers_applied.append({"type": "legacy", "reason": f"Age bonus ({days_old} days)", "value": round(age_bonus * 100, 1)})
     
     # Legacy bonus: Likes (0.05% per like)
     likes = photo.get("likes_count", 0)
     if likes > 0:
-        likes_bonus = 1 + (likes * 0.0005)  # 0.05% per like
-        base_value = int(base_value * likes_bonus)
+        likes_bonus = likes * 0.0005  # 0.05% per like
+        legacy_modifier += likes_bonus
+        modifiers_applied.append({"type": "legacy", "reason": f"Likes bonus ({likes} likes)", "value": round(likes_bonus * 100, 1)})
     
-    # Apply win streak multiplier
-    if player_stats:
-        streak = player_stats.get("current_win_streak", 0)
-        if streak >= 6:
-            base_value = int(base_value * WIN_STREAK_MULTIPLIERS[6])
-        elif streak >= 5:
-            base_value = int(base_value * WIN_STREAK_MULTIPLIERS[5])
-        elif streak >= 4:
-            base_value = int(base_value * WIN_STREAK_MULTIPLIERS[4])
-        elif streak >= 3:
-            base_value = int(base_value * WIN_STREAK_MULTIPLIERS[3])
+    # Calculate final effective value
+    effective_value = int(base_value * scenery_modifier * streak_modifier * legacy_modifier)
     
-    return base_value
+    # Ensure minimum value of $1,000,000
+    effective_value = max(effective_value, 1_000_000)
+    
+    return {
+        "effective_value": effective_value,
+        "base_value": base_value,
+        "scenery_modifier": scenery_modifier,
+        "streak_modifier": streak_modifier,
+        "legacy_modifier": legacy_modifier,
+        "has_immunity": has_immunity,
+        "modifiers_applied": modifiers_applied,
+        "photo_type": photo_type,
+        "opponent_type": opponent_type,
+    }
 
 
-def generate_bot_photo() -> Dict:
+def calculate_auction_bids_required(
+    player_value: int,
+    opponent_value: int,
+    base_bids: int = BASE_BIDS_TO_WIN
+) -> Dict:
+    """
+    Calculate required bids (taps) for auction battle based on power difference.
+    
+    Higher dollar value = fewer bids needed to win.
+    Lower dollar value = more bids needed to win.
+    
+    Returns dict with bids_required for each player.
+    """
+    # Calculate power ratio
+    total_power = player_value + opponent_value
+    if total_power == 0:
+        return {"player_bids": base_bids, "opponent_bids": base_bids}
+    
+    player_ratio = player_value / total_power
+    opponent_ratio = opponent_value / total_power
+    
+    # Bids inversely proportional to power ratio
+    # Higher power = lower percentage of base_bids needed
+    # Formula: bids = base_bids * (1 - power_ratio + 0.5)
+    # This gives: 50% power = base_bids, 75% power = 0.75 * base_bids, 25% power = 1.25 * base_bids
+    
+    player_bids = int(base_bids * (1.5 - player_ratio))
+    opponent_bids = int(base_bids * (1.5 - opponent_ratio))
+    
+    # Clamp to reasonable range (50 to 400 bids)
+    player_bids = max(50, min(400, player_bids))
+    opponent_bids = max(50, min(400, opponent_bids))
+    
+    # Calculate advantage percentage
+    if player_bids < opponent_bids:
+        advantage = "player"
+        advantage_percent = int((opponent_bids - player_bids) / opponent_bids * 100)
+    elif opponent_bids < player_bids:
+        advantage = "opponent"
+        advantage_percent = int((player_bids - opponent_bids) / player_bids * 100)
+    else:
+        advantage = "none"
+        advantage_percent = 0
+    
+    return {
+        "player_bids": player_bids,
+        "opponent_bids": opponent_bids,
+        "advantage": advantage,
+        "advantage_percent": advantage_percent,
+        "power_difference": player_value - opponent_value,
+    }
+
+
+def generate_bot_photo(difficulty: str = "medium", player_photos: List[Dict] = None) -> Dict:
     """Generate a random bot photo for battles"""
     scenery = random.choice(["natural", "water", "manmade"])
     light = random.choice(["sunlight_fire", "rain_snow_ice", "darkness_night"])
