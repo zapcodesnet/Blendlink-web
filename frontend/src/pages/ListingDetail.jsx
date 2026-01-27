@@ -809,8 +809,8 @@ export default function ListingDetail() {
         token={api.getToken()}
       />
       
-      {/* Show nav for logged-in users only */}
-      {user && (
+      {/* Show nav for logged-in users only (check token directly since outside ProtectedRoute) */}
+      {(user || isLoggedIn) && (
         <>
           <BottomNav />
           <BackToGroupFAB />
