@@ -7,6 +7,8 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import ComingSoonPlaceholder from "../components/ComingSoonPlaceholder";
 import CartIcon from "../components/CartIcon";
+import BottomNav from "../components/BottomNav";
+import BackToGroupFAB from "../components/BackToGroupFAB";
 import { toast } from "sonner";
 import { 
   Search, Plus, Filter, Smartphone, Shirt, Home, Car, 
