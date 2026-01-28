@@ -919,6 +919,15 @@ export const BattleArena = ({
           </motion.div>
         )}
       </AnimatePresence>
+      
+      {/* Medal Celebration Overlay */}
+      <MedalCelebration
+        isVisible={showMedalCelebration}
+        photoName={celebrationData?.photoName || 'Photo'}
+        totalMedals={celebrationData?.totalMedals || 1}
+        bonusCoins={celebrationData?.bonusCoins || 10000}
+        onComplete={() => setShowMedalCelebration(false)}
+      />
     </div>
   );
 };
