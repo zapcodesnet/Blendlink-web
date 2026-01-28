@@ -1689,25 +1689,39 @@ const PhotoGameArena = () => {
     }
   }, [selectedPhotoIds]);
   
-  const handleGameStart = useCallback((sessionId, gameData) => {
-    // Transition from lobby to actual battle
+  const handleGameStart = useCallback((sessionId, gameData, pvpRoomId) => {
+    // Transition from lobby to actual PVP battle
     // Determine which photos are mine and which are the opponent's
-    const amICreator = gameData?.creator_id === user?.user_id;
+    const amICreator = gameData?.creator_id === user?.user_id || gameData?.player1_id === user?.user_id;
     
     const myPhotos = amICreator 
-      ? (gameData?.creator_photos || selectedPhotosData || [])
-      : (gameData?.opponent_photos || selectedPhotosData || []);
+      ? (gameData?.creator_photos || gameData?.player1_photos || selectedPhotosData || [])
+      : (gameData?.opponent_photos || gameData?.player2_photos || selectedPhotosData || []);
     
     const theirPhotos = amICreator 
-      ? (gameData?.opponent_photos || [])
-      : (gameData?.creator_photos || []);
+      ? (gameData?.opponent_photos || gameData?.player2_photos || [])
+      : (gameData?.creator_photos || gameData?.player1_photos || []);
     
-    setSession({ session_id: sessionId, ...gameData });
+    const opponentId = amICreator
+      ? (gameData?.opponent_id || gameData?.player2_id)
+      : (gameData?.creator_id || gameData?.player1_id);
+    
+    const opponentUsername = amICreator
+      ? (gameData?.opponent_username || 'Opponent')
+      : (gameData?.creator_username || 'Creator');
+    
+    setSession({ session_id: sessionId, ...gameData, pvp_room_id: pvpRoomId });
     setPlayerBattlePhotos(myPhotos);
     setOpponentBattlePhotos(theirPhotos);
     setBattleBetAmount(gameData?.bet_amount || 0);
     setIsAuctionBattleBot(false);
-    setGameState('auction_battle');
+    
+    // Store opponent info for PVP
+    setOpponentInfo({ id: opponentId, username: opponentUsername });
+    setPvpRoomId(pvpRoomId);
+    
+    // Use PVP battle arena for real-time sync
+    setGameState('pvp_battle');
     auctionSounds.gavelSlam();
     toast.success('⚔️ Battle starting!');
   }, [user?.user_id, selectedPhotosData]);
