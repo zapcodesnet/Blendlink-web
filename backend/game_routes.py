@@ -749,12 +749,50 @@ async def record_round_result(
         }
         await _db.photo_stamina.insert_one(stamina_record)
     
+    # Get user's subscription tier for XP multiplier
+    user = await _db.users.find_one({"user_id": current_user["user_id"]}, {"_id": 0, "subscription_tier": 1})
+    subscription_tier = user.get("subscription_tier", "free") if user else "free"
+    
+    # Calculate XP with subscription multiplier
+    base_xp = XP_PER_ROUND  # +1 XP per round (win or loss)
+    xp_gained = calculate_xp_with_subscription(base_xp, subscription_tier)
+    
+    # Calculate stamina cost
+    stamina_cost = STAMINA_COST_WIN if round_won else STAMINA_COST_LOSS  # Win=-1, Loss=-2
+    
+    # Get current stamina with regeneration
+    current_stamina = calculate_current_stamina(
+        stamina_record.get("stamina", MAX_STAMINA_BATTLES),
+        stamina_record.get("last_regen_timestamp"),
+        stamina_record.get("max_stamina", MAX_STAMINA_BATTLES)
+    )
+    new_stamina = max(0, current_stamina - stamina_cost)
+    
     # Update stats
     current_win_streak = stamina_record.get("win_streak", 0)
+    current_xp = stamina_record.get("xp", 0)
     medals = stamina_record.get("medals", {"ten_win_streak": 0})
     medal_earned = False
     bonus_coins = 0
+    level_up = False
+    old_level = stamina_record.get("level", 1)
     MEDAL_BONUS_COINS = 10000  # 10,000 BL coins per medal
+    
+    # Calculate new XP and check for level up
+    new_xp = current_xp + xp_gained
+    new_level = get_level_from_xp(new_xp)
+    
+    if new_level > old_level:
+        level_up = True
+        logger.info(f"Photo {mint_id} leveled up from {old_level} to {new_level}!")
+        
+        # Check for level-up BL coin rewards
+        from minting_system import LEVEL_BONUSES
+        for level_threshold, bonus_info in LEVEL_BONUSES.items():
+            if old_level < level_threshold <= new_level and "bl_coins_reward" in bonus_info:
+                level_bonus_coins = bonus_info["bl_coins_reward"]
+                bonus_coins += level_bonus_coins
+                logger.info(f"Photo {mint_id} reached level {level_threshold}! Bonus: {level_bonus_coins} BL coins")
     
     if round_won:
         # Win: increment streak
@@ -764,34 +802,41 @@ async def record_round_result(
         if new_win_streak >= MEDAL_WIN_STREAK_THRESHOLD and new_win_streak % MEDAL_WIN_STREAK_THRESHOLD == 0:
             medals["ten_win_streak"] = medals.get("ten_win_streak", 0) + 1
             medal_earned = True
-            bonus_coins = MEDAL_BONUS_COINS
-            logger.info(f"Photo {mint_id} earned 10-win streak medal! Total: {medals['ten_win_streak']}. Bonus: {bonus_coins} BL coins")
+            bonus_coins += MEDAL_BONUS_COINS
+            logger.info(f"Photo {mint_id} earned 10-win streak medal! Total: {medals['ten_win_streak']}. Bonus: {MEDAL_BONUS_COINS} BL coins")
         
         update_data = {
             "$set": {
                 "win_streak": new_win_streak,
                 "lose_streak": 0,
                 "medals": medals,
+                "level": new_level,
+                "xp": new_xp,
+                "stamina": new_stamina,
+                "last_regen_timestamp": datetime.now(timezone.utc),
             },
             "$inc": {
                 "total_rounds_played": 1,
                 "rounds_won": 1,
-                "xp": 10,  # XP for winning
             }
         }
     else:
         # Loss: reset streak to 0
         new_win_streak = 0
+        new_lose_streak = stamina_record.get("lose_streak", 0) + 1
         
         update_data = {
             "$set": {
                 "win_streak": 0,
-                "lose_streak": stamina_record.get("lose_streak", 0) + 1,
+                "lose_streak": new_lose_streak,
+                "level": new_level,
+                "xp": new_xp,
+                "stamina": new_stamina,
+                "last_regen_timestamp": datetime.now(timezone.utc),
             },
             "$inc": {
                 "total_rounds_played": 1,
                 "rounds_lost": 1,
-                "xp": 5,  # Smaller XP for losing
             }
         }
     
@@ -801,13 +846,30 @@ async def record_round_result(
         update_data
     )
     
-    # Award bonus coins and update minted_photos if medal earned
-    if medal_earned:
+    # Award bonus coins if any (medal + level up)
+    if bonus_coins > 0:
         # Update medals on minted_photos (for transfer persistence)
-        await _db.minted_photos.update_one(
-            {"mint_id": mint_id},
-            {"$set": {"medals": medals}}
-        )
+        if medal_earned:
+            await _db.minted_photos.update_one(
+                {"mint_id": mint_id},
+                {"$set": {"medals": medals}}
+            )
+        
+        # Update level on minted_photos
+        if level_up:
+            # Get star info from level
+            from minting_system import get_level_stars
+            star_info = get_level_stars(new_level)
+            await _db.minted_photos.update_one(
+                {"mint_id": mint_id},
+                {"$set": {
+                    "level": new_level,
+                    "xp": new_xp,
+                    "stars": star_info["stars"],
+                    "has_golden_frame": star_info["has_golden_frame"],
+                    "level_bonus_percent": star_info["bonus_percent"],
+                }}
+            )
         
         # Award bonus coins to user's wallet
         user_id = current_user["user_id"]
@@ -817,16 +879,16 @@ async def record_round_result(
                 "$inc": {"bl_coins": bonus_coins},
                 "$push": {
                     "coin_transactions": {
-                        "type": "medal_bonus",
+                        "type": "game_bonus",
                         "amount": bonus_coins,
-                        "description": f"🏅 10-Win Streak Medal Bonus for {photo.get('name', 'Photo')}",
+                        "description": f"{'🏅 Medal' if medal_earned else '⬆️ Level Up'} Bonus for {photo.get('name', 'Photo')}",
                         "photo_mint_id": mint_id,
                         "timestamp": datetime.now(timezone.utc).isoformat()
                     }
                 }
             }
         )
-        logger.info(f"User {user_id} received {bonus_coins} BL coins for medal on photo {mint_id}")
+        logger.info(f"User {user_id} received {bonus_coins} BL coins for photo {mint_id}")
     
     return {
         "success": True,
