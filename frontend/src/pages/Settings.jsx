@@ -8,13 +8,185 @@ import { Switch } from "../components/ui/switch";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import LanguageSelector from "../components/LanguageSelector";
 import { useTranslation } from "react-i18next";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   ArrowLeft, User, Bell, Moon, Shield, HelpCircle, 
   LogOut, ChevronRight, Camera, Globe, Eye, EyeOff,
-  Lock, UserX, Users, Loader2
+  Lock, UserX, Users, Loader2, X, Check, Image
 } from "lucide-react";
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+
+// Profile Picture Selector Modal
+const ProfilePictureModal = ({ isOpen, onClose, onSelect, currentUserId }) => {
+  const [photos, setPhotos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [saving, setSaving] = useState(false);
+  
+  useEffect(() => {
+    if (isOpen) {
+      fetchMintedPhotos();
+    }
+  }, [isOpen]);
+  
+  const fetchMintedPhotos = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get('/photo-game/battle-photos');
+      setPhotos(res.data.photos || []);
+    } catch (err) {
+      console.error('Failed to fetch photos:', err);
+      toast.error('Failed to load your minted photos');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleSave = async () => {
+    if (!selectedPhoto) return;
+    
+    try {
+      setSaving(true);
+      const token = localStorage.getItem('blendlink_token');
+      const response = await fetch(`${API_BASE_URL}/api/users/me/profile-picture`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          image_url: selectedPhoto.image_url,
+          mint_id: selectedPhoto.mint_id
+        })
+      });
+      
+      if (response.ok) {
+        toast.success('Profile picture updated!');
+        onSelect(selectedPhoto);
+        onClose();
+      } else {
+        const data = await response.json();
+        toast.error(data.detail || 'Failed to update profile picture');
+      }
+    } catch (err) {
+      toast.error('Failed to update profile picture');
+    } finally {
+      setSaving(false);
+    }
+  };
+  
+  if (!isOpen) return null;
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        onClick={e => e.stopPropagation()}
+        className="w-full max-w-lg max-h-[80vh] bg-gray-900 rounded-2xl overflow-hidden border border-gray-700"
+        data-testid="profile-picture-modal"
+      >
+        {/* Header */}
+        <div className="p-4 border-b border-gray-700 flex items-center justify-between">
+          <h3 className="text-lg font-bold text-white flex items-center gap-2">
+            <Image className="w-5 h-5 text-purple-400" />
+            Choose Profile Picture
+          </h3>
+          <button onClick={onClose} className="p-2 hover:bg-gray-800 rounded-full">
+            <X className="w-5 h-5 text-gray-400" />
+          </button>
+        </div>
+        
+        {/* Photo Grid */}
+        <div className="p-4 overflow-y-auto max-h-[50vh]">
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+            </div>
+          ) : photos.length === 0 ? (
+            <div className="text-center py-12">
+              <Image className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+              <p className="text-gray-400">No minted photos found</p>
+              <p className="text-gray-500 text-sm">Mint some photos first to use as profile picture</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-3">
+              {photos.map((photo) => (
+                <button
+                  key={photo.mint_id}
+                  onClick={() => setSelectedPhoto(photo)}
+                  className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${
+                    selectedPhoto?.mint_id === photo.mint_id
+                      ? 'border-purple-500 ring-2 ring-purple-500/50'
+                      : 'border-gray-700 hover:border-gray-500'
+                  }`}
+                  data-testid={`photo-option-${photo.mint_id}`}
+                >
+                  <img 
+                    src={photo.image_url} 
+                    alt={photo.name}
+                    className="w-full h-full object-cover"
+                  />
+                  {selectedPhoto?.mint_id === photo.mint_id && (
+                    <div className="absolute inset-0 bg-purple-500/30 flex items-center justify-center">
+                      <Check className="w-8 h-8 text-white" />
+                    </div>
+                  )}
+                  {/* Medal display */}
+                  {photo.medals?.ten_win_streak > 0 && (
+                    <div className="absolute top-1 right-1 bg-black/70 rounded-full px-1.5 py-0.5 text-xs">
+                      🏅x{photo.medals.ten_win_streak}
+                    </div>
+                  )}
+                  <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-1">
+                    <p className="text-white text-xs truncate">{photo.name}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        
+        {/* Footer */}
+        <div className="p-4 border-t border-gray-700 flex gap-3">
+          <Button
+            variant="outline"
+            className="flex-1 border-gray-600"
+            onClick={onClose}
+          >
+            Cancel
+          </Button>
+          <Button
+            className="flex-1 bg-purple-600 hover:bg-purple-500"
+            onClick={handleSave}
+            disabled={!selectedPhoto || saving}
+            data-testid="save-profile-picture-btn"
+          >
+            {saving ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Check className="w-4 h-4 mr-2" />
+                Save
+              </>
+            )}
+          </Button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
 
 export default function Settings() {
   const { t } = useTranslation();
@@ -24,6 +196,7 @@ export default function Settings() {
   const [notifications, setNotifications] = useState(true);
   const [isRealNamePrivate, setIsRealNamePrivate] = useState(user?.is_real_name_private || false);
   const [savingPrivacy, setSavingPrivacy] = useState(false);
+  const [showPictureModal, setShowPictureModal] = useState(false);
 
   // Load user's privacy setting on mount
   useEffect(() => {
