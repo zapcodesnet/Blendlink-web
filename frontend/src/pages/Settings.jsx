@@ -326,10 +326,14 @@ export default function Settings() {
         <div className="flex items-center gap-4 mb-8">
           <div className="relative">
             <Avatar className="w-20 h-20">
-              <AvatarImage src={user?.avatar || user?.picture} />
+              <AvatarImage src={user?.profile_picture || user?.avatar || user?.picture} />
               <AvatarFallback className="text-2xl">{user?.name?.[0]}</AvatarFallback>
             </Avatar>
-            <button className="absolute bottom-0 right-0 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center">
+            <button 
+              onClick={() => setShowPictureModal(true)}
+              className="absolute bottom-0 right-0 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center hover:bg-primary/90 transition-colors"
+              data-testid="change-profile-picture-btn"
+            >
               <Camera className="w-4 h-4" />
             </button>
           </div>
