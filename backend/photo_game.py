@@ -82,6 +82,59 @@ BOT_MIN_BET = 1
 BOT_MAX_BET = 500
 BOT_HOUSE_FEE = 0.05  # 5% house fee on winnings
 
+# ============== XP & LEVEL SYSTEM ==============
+# Level progression: L1=0 XP; L2=10 XP; each next level = +50% marginal XP (rounded)
+# Formula: XP_needed(N) = XP_needed(N-1) * 1.5 (rounded)
+XP_PER_ROUND = 1  # +1 XP per round (win or loss)
+
+# Subscription XP multipliers
+SUBSCRIPTION_XP_MULTIPLIERS = {
+    "free": 1,
+    "bronze": 2,
+    "silver": 3,
+    "gold": 4,
+    "platinum": 5,
+}
+
+# Pre-calculate level thresholds (up to level 60)
+def calculate_level_thresholds():
+    """Generate XP thresholds for levels 1-60"""
+    thresholds = {1: 0, 2: 10}  # L1=0, L2=10
+    
+    marginal_xp = 10  # First marginal is 10
+    cumulative_xp = 10  # L2 requires 10 total
+    
+    for level in range(3, 61):
+        marginal_xp = int(marginal_xp * 1.5)  # +50% marginal, rounded
+        cumulative_xp += marginal_xp
+        thresholds[level] = cumulative_xp
+    
+    return thresholds
+
+LEVEL_XP_THRESHOLDS = calculate_level_thresholds()
+
+def get_level_from_xp(xp: int) -> int:
+    """Calculate level from total XP"""
+    level = 1
+    for lvl, threshold in sorted(LEVEL_XP_THRESHOLDS.items()):
+        if xp >= threshold:
+            level = lvl
+        else:
+            break
+    return min(level, 60)  # Max level 60
+
+def get_xp_for_next_level(current_level: int) -> int:
+    """Get XP needed for next level"""
+    if current_level >= 60:
+        return 0  # Max level
+    next_level = current_level + 1
+    return LEVEL_XP_THRESHOLDS.get(next_level, 0)
+
+def calculate_xp_with_subscription(base_xp: int, subscription_tier: str) -> int:
+    """Apply subscription XP multiplier"""
+    multiplier = SUBSCRIPTION_XP_MULTIPLIERS.get(subscription_tier, 1)
+    return base_xp * multiplier
+
 
 class RPSChoice(str, Enum):
     ROCK = "rock"
