@@ -6,7 +6,7 @@ import {
   Shield, Target, TrendingUp, Coins, RefreshCw,
   X, Check, AlertCircle, Loader2, Image, ChevronRight,
   DollarSign, Gavel, Banknote, Volume2, VolumeX, Maximize2,
-  Plus, ArrowLeft
+  Plus, ArrowLeft, History
 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../services/api';
@@ -19,7 +19,8 @@ import {
   BotDifficultySelector, 
   PhotoSelector, 
   OpenGamesBrowser, 
-  GameLobby 
+  GameLobby,
+  MatchHistory
 } from '../components/game';
 
 // ============== PHOTO LIGHTBOX MODAL ==============
