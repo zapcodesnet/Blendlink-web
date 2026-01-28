@@ -438,6 +438,16 @@ const PhotoSelectionScreen = ({ photos, loading, onSelectPhoto, selectedPhotoId,
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h4 className="font-semibold text-white truncate">{photo.name}</h4>
+                      {/* Medal Display */}
+                      {photo?.medals?.ten_win_streak > 0 && (
+                        <span 
+                          className="flex items-center text-yellow-400 text-xs font-bold shrink-0"
+                          title={`${photo.medals.ten_win_streak} x 10-Win Streak Medal(s)`}
+                          data-testid={`medal-display-${photo.mint_id}`}
+                        >
+                          🏅x{photo.medals.ten_win_streak}
+                        </span>
+                      )}
                       <span className={`px-2 py-0.5 rounded text-xs font-bold bg-gradient-to-r ${scenery.color} text-white`}>
                         {scenery.label}
                       </span>
