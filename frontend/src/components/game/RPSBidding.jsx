@@ -24,7 +24,9 @@ import auctionSounds from '../../utils/auctionSounds';
 const STARTING_MONEY = 5_000_000;
 const MIN_BID = 1_000_000;
 const MAX_BID = 5_000_000;
+const ADVANTAGE_BONUS = 1_000_000; // $1M bonus for higher Dollar Value
 const BID_OPTIONS = [1_000_000, 2_000_000, 3_000_000, 4_000_000, 5_000_000];
+const BID_OPTIONS_WITH_ADVANTAGE = [1_000_000, 2_000_000, 3_000_000, 4_000_000, 5_000_000, 6_000_000]; // $6M when player has advantage
 const COUNTDOWN_SECONDS = 10;
 const CHOICE_TIMEOUT_SECONDS = 5;
 
