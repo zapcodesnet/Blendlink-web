@@ -805,6 +805,9 @@ class MintingService:
             description=description,
             image_url=f"data:{mime_type};base64,{image_base64}",  # Full base64 data URL
             thumbnail_url=f"data:{mime_type};base64,{image_base64}",  # Same for thumbnail
+            # Permanent minter metadata (transfers with photo)
+            minted_by_user_id=user_id,
+            minted_by_username=minter_username,
             scenery_type=scenery_type,
             light_type=light_type,
             strength_vs=strength_vs if strength_vs else "",
@@ -828,6 +831,9 @@ class MintingService:
             stars=0,
             has_golden_frame=False,
             level_bonus_percent=0,
+            # Stamina system
+            current_stamina=24,
+            max_stamina=24,
         )
         
         # Store photo data
