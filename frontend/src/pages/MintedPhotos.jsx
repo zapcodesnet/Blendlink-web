@@ -709,7 +709,7 @@ const MintPhotoDialog = ({ isOpen, onClose, onMint, mintStatus }) => {
           
           {/* Privacy */}
           <div className="flex items-center justify-between">
-            <Label className="text-gray-300">Private (won't show in feed)</Label>
+            <Label className="text-gray-300">Private (won&apos;t show in feed)</Label>
             <button
               onClick={() => setIsPrivate(!isPrivate)}
               className={`relative w-12 h-6 rounded-full transition-colors ${
