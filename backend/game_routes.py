@@ -678,6 +678,8 @@ async def record_round_result(
     current_win_streak = stamina_record.get("win_streak", 0)
     medals = stamina_record.get("medals", {"ten_win_streak": 0})
     medal_earned = False
+    bonus_coins = 0
+    MEDAL_BONUS_COINS = 10000  # 10,000 BL coins per medal
     
     if round_won:
         # Win: increment streak
@@ -687,7 +689,8 @@ async def record_round_result(
         if new_win_streak >= MEDAL_WIN_STREAK_THRESHOLD and new_win_streak % MEDAL_WIN_STREAK_THRESHOLD == 0:
             medals["ten_win_streak"] = medals.get("ten_win_streak", 0) + 1
             medal_earned = True
-            logger.info(f"Photo {mint_id} earned 10-win streak medal! Total: {medals['ten_win_streak']}")
+            bonus_coins = MEDAL_BONUS_COINS
+            logger.info(f"Photo {mint_id} earned 10-win streak medal! Total: {medals['ten_win_streak']}. Bonus: {bonus_coins} BL coins")
         
         update_data = {
             "$set": {
@@ -723,8 +726,9 @@ async def record_round_result(
         update_data
     )
     
-    # Also update the medals on the minted_photos collection (for transfer persistence)
+    # Award bonus coins and update minted_photos if medal earned
     if medal_earned:
+        # Update medals on minted_photos (for transfer persistence)
         await _db.minted_photos.update_one(
             {"mint_id": mint_id},
             {"$set": {"medals": medals}}
