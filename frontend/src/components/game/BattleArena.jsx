@@ -583,6 +583,10 @@ export const BattleArena = ({
   // Winner
   const [gameWinner, setGameWinner] = useState(null);
   
+  // Stamina tracking - NEW
+  const [roundResults, setRoundResults] = useState([]); // Track win/loss per round
+  const [staminaChanges, setStaminaChanges] = useState(null);
+  
   // Get current round info
   const currentRound = ROUND_SEQUENCE[currentRoundIndex];
   const WINS_NEEDED = 3;
