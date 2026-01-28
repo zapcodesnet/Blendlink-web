@@ -22,6 +22,7 @@ import {
   GameLobby,
   MatchHistory
 } from '../components/game';
+import PVPBattleArena from '../components/game/PVPBattleArena';
 
 // ============== PHOTO LIGHTBOX MODAL ==============
 const PhotoLightbox = ({ photo, isOpen, onClose }) => {
