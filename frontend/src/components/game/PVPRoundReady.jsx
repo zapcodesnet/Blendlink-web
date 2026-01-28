@@ -157,24 +157,29 @@ const ScoreDisplay = ({ player1Wins, player2Wins, player1Name, player2Name }) =>
 
 // Countdown Overlay
 const CountdownOverlay = ({ seconds, serverTime }) => {
-  const [count, setCount] = useState(seconds);
-  
-  useEffect(() => {
-    // Sync with server time if provided
+  // Calculate initial count based on server time
+  const getInitialCount = useCallback(() => {
     if (serverTime) {
       const serverStart = new Date(serverTime).getTime();
       const now = Date.now();
       const elapsed = Math.floor((now - serverStart) / 1000);
-      const remaining = Math.max(0, seconds - elapsed);
-      setCount(remaining);
+      return Math.max(0, seconds - elapsed);
     }
+    return seconds;
+  }, [serverTime, seconds]);
+  
+  const [count, setCount] = useState(() => getInitialCount());
+  
+  useEffect(() => {
+    // Update count when serverTime changes
+    setCount(getInitialCount());
     
     const timer = setInterval(() => {
       setCount(c => Math.max(0, c - 1));
     }, 1000);
     
     return () => clearInterval(timer);
-  }, [seconds, serverTime]);
+  }, [getInitialCount]);
   
   return (
     <motion.div
