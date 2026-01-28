@@ -473,6 +473,19 @@ async def mark_ready(
     game = await _db.open_games.find_one({"game_id": data.game_id})
     both_ready = game.get("creator_ready") and game.get("opponent_ready")
     
+    # Broadcast ready status via WebSocket (instant notification)
+    try:
+        from lobby_websocket import lobby_manager
+        await lobby_manager.broadcast_ready_status(
+            game_id=data.game_id,
+            user_id=user_id,
+            username=current_user.get("username", "Player"),
+            is_ready=True,
+            is_creator=is_creator
+        )
+    except Exception as e:
+        logger.warning(f"Could not broadcast ready status: {e}")
+    
     if both_ready and game.get("status") != OpenGameStatus.STARTING.value:
         # Start countdown
         await _db.open_games.update_one(
@@ -482,6 +495,13 @@ async def mark_ready(
                 "countdown_started_at": datetime.now(timezone.utc)
             }}
         )
+        
+        # Broadcast countdown start via WebSocket
+        try:
+            from lobby_websocket import lobby_manager
+            await lobby_manager.broadcast_countdown_start(data.game_id, seconds=10)
+        except Exception as e:
+            logger.warning(f"Could not broadcast countdown start: {e}")
     
     game = await _db.open_games.find_one({"game_id": data.game_id})
     game.pop("_id", None)
