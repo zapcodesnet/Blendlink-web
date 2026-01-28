@@ -137,7 +137,19 @@ const SelectablePhotoCard = ({ photo, selected, disabled, onSelect }) => {
       
       {/* Info bar with stamina */}
       <div className="p-2 bg-gray-900">
-        <p className="text-white font-medium text-sm truncate">{photo?.name || 'Photo'}</p>
+        {/* Name with Medal */}
+        <div className="flex items-center gap-1">
+          <p className="text-white font-medium text-sm truncate">{photo?.name || 'Photo'}</p>
+          {/* Medal Display */}
+          {(photo?.medals?.ten_win_streak > 0) && (
+            <span 
+              className="flex items-center text-yellow-400 text-[10px] font-bold shrink-0"
+              title={`${photo.medals.ten_win_streak} x 10-Win Streak Medal(s)`}
+            >
+              🏅x{photo.medals.ten_win_streak}
+            </span>
+          )}
+        </div>
         
         {/* Stamina bar */}
         <div className="mt-2">
