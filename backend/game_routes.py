@@ -955,6 +955,10 @@ async def get_battle_ready_photos(
     user_id = current_user["user_id"]
     logger.info(f"Fetching battle photos for user: {user_id}")
     
+    # Debug: Check collection directly
+    count = await _db.minted_photos.count_documents({"user_id": user_id})
+    logger.info(f"Direct count query found {count} documents")
+    
     # Get all user's minted photos
     photos = await _db.minted_photos.find(
         {"user_id": user_id},
