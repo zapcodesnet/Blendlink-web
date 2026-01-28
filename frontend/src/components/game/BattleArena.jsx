@@ -660,7 +660,27 @@ export const BattleArena = ({
   }, [selectedPlayerPhoto, selectBotPhoto, soundEnabled]);
   
   // Handle round completion
-  const handleRoundComplete = useCallback((winner) => {
+  const handleRoundComplete = useCallback(async (winner) => {
+    // Record the round result for medal tracking
+    if (selectedPlayerPhoto?.mint_id) {
+      try {
+        const res = await api.post('/photo-game/record-round-result', {
+          photo_id: selectedPlayerPhoto.mint_id,
+          round_won: winner === 'player',
+        });
+        
+        // Check if medal was earned
+        if (res.data.medal_earned) {
+          toast.success(
+            `🏅 ${selectedPlayerPhoto.name} earned a 10-Win Streak Medal! Total: ${res.data.total_medals}`,
+            { duration: 5000 }
+          );
+        }
+      } catch (err) {
+        console.error('Failed to record round result:', err);
+      }
+    }
+    
     // Update scores
     if (winner === 'player') {
       const newWins = playerWins + 1;
