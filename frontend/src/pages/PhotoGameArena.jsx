@@ -5,7 +5,8 @@ import {
   Hand, Scissors, FileText, Sparkles, Crown,
   Shield, Target, TrendingUp, Coins, RefreshCw,
   X, Check, AlertCircle, Loader2, Image, ChevronRight,
-  DollarSign, Gavel, Banknote, Volume2, VolumeX, Maximize2
+  DollarSign, Gavel, Banknote, Volume2, VolumeX, Maximize2,
+  Plus, ArrowLeft
 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../services/api';
@@ -13,7 +14,13 @@ import { AuthContext } from '../App';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import auctionSounds from '../utils/auctionSounds';
-import { BattleArena, BotDifficultySelector } from '../components/game';
+import { 
+  BattleArena, 
+  BotDifficultySelector, 
+  PhotoSelector, 
+  OpenGamesBrowser, 
+  GameLobby 
+} from '../components/game';
 
 // ============== PHOTO LIGHTBOX MODAL ==============
 const PhotoLightbox = ({ photo, isOpen, onClose }) => {
