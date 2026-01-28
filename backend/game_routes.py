@@ -556,6 +556,17 @@ async def start_pvp_game(
         }}
     )
     
+    # Broadcast game start via WebSocket
+    try:
+        from lobby_websocket import lobby_manager
+        await lobby_manager.broadcast_game_start(
+            game_id=game_id,
+            session_id=session.session_id,
+            session_data=session.model_dump()
+        )
+    except Exception as e:
+        logger.warning(f"Could not broadcast game start: {e}")
+    
     return {
         "success": True,
         "session_id": session.session_id,
