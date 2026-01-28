@@ -96,12 +96,149 @@ class GamePhase(str, Enum):
     COMPLETED = "completed"
 
 
+class OpenGameStatus(str, Enum):
+    WAITING = "waiting"  # Waiting for opponent
+    READY = "ready"  # Both players joined, waiting for ready confirmation
+    STARTING = "starting"  # Countdown in progress
+    IN_PROGRESS = "in_progress"  # Game active
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+
+
+class RoundType(str, Enum):
+    TAPPING = "tapping"  # Photo Auction Bidding (tapping)
+    RPS = "rps"  # Rock Paper Scissors Bidding
+
+
+# ============== STAMINA HELPER ==============
+def calculate_current_stamina(
+    stamina: int, 
+    last_regen_timestamp: Optional[datetime], 
+    max_stamina: int = MAX_STAMINA_BATTLES
+) -> int:
+    """
+    Calculate current stamina with on-the-fly regeneration.
+    +1 battle per full hour since last regen, capped at max_stamina.
+    """
+    if stamina >= max_stamina:
+        return max_stamina
+    
+    if not last_regen_timestamp:
+        return stamina
+    
+    now = datetime.now(timezone.utc)
+    
+    # Handle timezone-naive timestamps
+    if last_regen_timestamp.tzinfo is None:
+        last_regen_timestamp = last_regen_timestamp.replace(tzinfo=timezone.utc)
+    
+    hours_elapsed = (now - last_regen_timestamp).total_seconds() / 3600
+    battles_regenerated = int(hours_elapsed * STAMINA_REGEN_PER_HOUR)
+    
+    new_stamina = min(stamina + battles_regenerated, max_stamina)
+    return new_stamina
+
+
 # ============== MODELS ==============
+class PhotoStamina(BaseModel):
+    """Per-photo stamina tracking"""
+    mint_id: str
+    stamina: int = MAX_STAMINA_BATTLES  # Current battles available
+    max_stamina: int = MAX_STAMINA_BATTLES
+    last_regen_timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    
+    # Per-photo battle history
+    total_rounds_played: int = 0
+    rounds_won: int = 0
+    rounds_lost: int = 0
+    
+    # Per-photo streaks
+    win_streak: int = 0
+    lose_streak: int = 0
+    best_win_streak: int = 0
+    
+    # XP and level (per photo)
+    xp: int = 0
+    level: int = 1
+    
+    def get_current_stamina(self) -> int:
+        """Get current stamina with regeneration applied"""
+        return calculate_current_stamina(self.stamina, self.last_regen_timestamp, self.max_stamina)
+    
+    def can_battle(self) -> bool:
+        """Check if photo has stamina for at least one battle"""
+        return self.get_current_stamina() >= 1
+    
+    def use_stamina(self, won: bool) -> int:
+        """
+        Deduct stamina after a round.
+        Win = -1, Loss = -2
+        Returns new stamina value.
+        """
+        current = self.get_current_stamina()
+        cost = STAMINA_COST_WIN if won else STAMINA_COST_LOSS
+        self.stamina = max(0, current - cost)
+        self.last_regen_timestamp = datetime.now(timezone.utc)
+        
+        # Update stats
+        self.total_rounds_played += 1
+        self.xp += 1  # +1 XP per round played
+        
+        if won:
+            self.rounds_won += 1
+            self.win_streak += 1
+            self.lose_streak = 0
+            if self.win_streak > self.best_win_streak:
+                self.best_win_streak = self.win_streak
+        else:
+            self.rounds_lost += 1
+            self.win_streak = 0
+            self.lose_streak += 1
+        
+        return self.stamina
+
+
+class OpenGame(BaseModel):
+    """Open PVP game waiting for opponent"""
+    game_id: str = Field(default_factory=lambda: f"open_{uuid.uuid4().hex[:12]}")
+    creator_id: str
+    creator_username: str = ""
+    
+    # Creator's 5 selected photos (locked in)
+    creator_photo_ids: List[str] = Field(default_factory=list)  # Must be exactly 5
+    creator_photos: List[Dict] = Field(default_factory=list)  # Full photo data for preview
+    
+    # Strongest photo for thumbnail (highest Dollar Value)
+    thumbnail_photo: Optional[Dict] = None
+    total_dollar_value: int = 0  # Combined Dollar Value of all 5 photos
+    
+    # Bet settings
+    bet_amount: int = 0  # BL coins (no upper limit for PVP)
+    is_bot_allowed: bool = False  # Default: PVP only
+    bot_difficulty: str = "medium"  # Only used if is_bot_allowed
+    
+    # Status
+    status: OpenGameStatus = OpenGameStatus.WAITING
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    
+    # Opponent (when joined)
+    opponent_id: Optional[str] = None
+    opponent_username: Optional[str] = None
+    opponent_photo_ids: List[str] = Field(default_factory=list)
+    opponent_photos: List[Dict] = Field(default_factory=list)
+    
+    # Ready status
+    creator_ready: bool = False
+    opponent_ready: bool = False
+    countdown_started_at: Optional[datetime] = None
+    
+    # Active game session ID (when game starts)
+    active_session_id: Optional[str] = None
+
+
 class PlayerStats(BaseModel):
     """Player's game statistics"""
     user_id: str
-    stamina: float = MAX_STAMINA
-    last_stamina_update: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     
     # Win streaks (🔥 Fire bonus)
     current_win_streak: int = 0
@@ -130,7 +267,6 @@ class PlayerStats(BaseModel):
         """Get the win streak power multiplier (🔥)"""
         if self.current_win_streak < 3:
             return 1.0
-        # Cap at 10 streaks for max 3.0x
         streak = min(self.current_win_streak, 10)
         return WIN_STREAK_MULTIPLIERS.get(streak, WIN_STREAK_MULTIPLIERS.get(10, 3.0))
     
@@ -141,7 +277,7 @@ class PlayerStats(BaseModel):
     def on_win(self):
         """Update stats on win"""
         self.current_win_streak += 1
-        self.current_lose_streak = 0  # Reset lose streak
+        self.current_lose_streak = 0
         self.battles_won += 1
         self.total_battles += 1
         if self.current_win_streak > self.best_win_streak:
@@ -149,19 +285,66 @@ class PlayerStats(BaseModel):
     
     def on_loss(self):
         """Update stats on loss"""
-        self.current_win_streak = 0  # Reset win streak
+        self.current_win_streak = 0
         self.current_lose_streak += 1
         self.battles_lost += 1
         self.total_battles += 1
 
 
+class PVPGameSession(BaseModel):
+    """Active PVP game session with new round sequence"""
+    session_id: str = Field(default_factory=lambda: f"pvp_{uuid.uuid4().hex[:12]}")
+    open_game_id: str  # Reference to OpenGame
+    
+    player1_id: str
+    player2_id: str
+    
+    bet_amount: int = 0
+    
+    # Each player's 5 locked-in photos
+    player1_photo_ids: List[str] = Field(default_factory=list)
+    player2_photo_ids: List[str] = Field(default_factory=list)
+    player1_photos: List[Dict] = Field(default_factory=list)
+    player2_photos: List[Dict] = Field(default_factory=list)
+    
+    # Photos used per round (index into player's photo list)
+    player1_used_photos: List[str] = Field(default_factory=list)
+    player2_used_photos: List[str] = Field(default_factory=list)
+    
+    # Current round
+    current_round: int = 1  # 1-5
+    round_type: RoundType = RoundType.TAPPING  # Alternates: tap, rps, tap, rps, tap
+    
+    # Current round's selected photos
+    player1_current_photo_id: Optional[str] = None
+    player2_current_photo_id: Optional[str] = None
+    
+    # Scores (first to 3 wins)
+    player1_wins: int = 0
+    player2_wins: int = 0
+    wins_needed: int = 3
+    
+    # RPS bankrolls (reset each RPS round, with advantage bonus)
+    player1_rps_bankroll: int = STARTING_BANKROLL
+    player2_rps_bankroll: int = STARTING_BANKROLL
+    
+    # Round results
+    rounds: List[Dict] = Field(default_factory=list)
+    
+    # Game state
+    status: OpenGameStatus = OpenGameStatus.IN_PROGRESS
+    winner_id: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    completed_at: Optional[datetime] = None
+
+
 class GameSession(BaseModel):
-    """Active game session with Million Dollar RPS"""
+    """Active game session (legacy/bot games)"""
     session_id: str = Field(default_factory=lambda: f"game_{uuid.uuid4().hex[:12]}")
     player1_id: str
     player2_id: str  # "bot" for bot games
     
-    bet_amount: int = 0  # BL coin bet (separate from RPS bankroll)
+    bet_amount: int = 0
     
     # Photo selections
     player1_photo_id: Optional[str] = None
@@ -169,7 +352,7 @@ class GameSession(BaseModel):
     
     # Game state
     phase: GamePhase = GamePhase.RPS_AUCTION
-    stage_number: int = 1  # 1 = first RPS, 2 = photo battle, 3 = tiebreaker
+    stage_number: int = 1
     
     # Million Dollar RPS Bankrolls
     player1_bankroll: int = STARTING_BANKROLL
