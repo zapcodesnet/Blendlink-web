@@ -591,6 +591,30 @@ export const BattleArena = ({
   const currentRound = ROUND_SEQUENCE[currentRoundIndex];
   const WINS_NEEDED = 3;
   
+  // Calculate stamina changes based on round results
+  const calculateStaminaChanges = useCallback((results, photos) => {
+    const photoChanges = {};
+    
+    // Group results by photo
+    results.forEach(result => {
+      if (result.photo?.mint_id) {
+        if (!photoChanges[result.photo.mint_id]) {
+          photoChanges[result.photo.mint_id] = {
+            mint_id: result.photo.mint_id,
+            name: result.photo.name || 'Photo',
+            change: 0,
+          };
+        }
+        // -1 for win, -2 for loss
+        photoChanges[result.photo.mint_id].change += result.winner === 'player' ? -1 : -2;
+      }
+    });
+    
+    return {
+      photos: Object.values(photoChanges),
+    };
+  }, []);
+  
   // Select bot photo for opponent
   const selectBotPhoto = useCallback(() => {
     if (!isBot || !opponentPhotos) return null;
