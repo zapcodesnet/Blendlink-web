@@ -6,6 +6,7 @@
  * - Show warning when selecting low-stamina photos
  * - Display stamina bar and stats on each photo
  * - Lock in exactly 5 photos before creating/joining
+ * - Integrated "Create Game" flow with bet input
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -13,10 +14,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Check, X, AlertTriangle, Zap, Battery, 
   ChevronRight, Loader2, RefreshCw, Filter,
-  Trophy, Shield, Flame, Star, Info
+  Trophy, Shield, Flame, Star, Info, Coins, Plus
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../ui/button';
+import { Input } from '../ui/input';
 import api from '../../services/api';
 
 // Constants
