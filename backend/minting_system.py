@@ -745,6 +745,10 @@ class MintingService:
         if not check["can_mint"]:
             return {"success": False, "error": check["reason"]}
         
+        # Get user info for minter metadata
+        user = await self.db.users.find_one({"user_id": user_id}, {"_id": 0, "username": 1, "name": 1})
+        minter_username = user.get("username") or user.get("name") or user_id
+        
         # Deduct BL coins
         await self.db.users.update_one(
             {"user_id": user_id},
