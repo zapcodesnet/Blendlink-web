@@ -1930,6 +1930,20 @@ const PhotoGameArena = () => {
                   </Button>
                 </motion.div>
                 
+                {/* Match History Button - NEW */}
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button
+                    onClick={() => setGameState('match_history')}
+                    className="w-full py-6 text-lg font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 shadow-lg"
+                    size="lg"
+                    data-testid="match-history-btn"
+                  >
+                    <History className="w-6 h-6 mr-2" />
+                    Match History & Replays
+                    <ChevronRight className="w-6 h-6 ml-2" />
+                  </Button>
+                </motion.div>
+                
                 <Button
                   onClick={() => setGameState('matchmaking')}
                   variant="outline"
