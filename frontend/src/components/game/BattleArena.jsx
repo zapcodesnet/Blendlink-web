@@ -588,6 +588,10 @@ export const BattleArena = ({
   const [roundResults, setRoundResults] = useState([]); // Track win/loss per round
   const [staminaChanges, setStaminaChanges] = useState(null);
   
+  // Medal celebration state
+  const [showMedalCelebration, setShowMedalCelebration] = useState(false);
+  const [celebrationData, setCelebrationData] = useState(null);
+  
   // Get current round info
   const currentRound = ROUND_SEQUENCE[currentRoundIndex];
   const WINS_NEEDED = 3;
