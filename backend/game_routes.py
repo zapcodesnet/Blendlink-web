@@ -595,6 +595,7 @@ async def get_photo_stamina(
             "total_rounds_played": stamina_record.get("total_rounds_played", 0),
             "rounds_won": stamina_record.get("rounds_won", 0),
             "rounds_lost": stamina_record.get("rounds_lost", 0),
+            "medals": stamina_record.get("medals", {"ten_win_streak": 0}),
         }
     else:
         # No record = full stamina, no battles
@@ -608,6 +609,9 @@ async def get_photo_stamina(
             "lose_streak": 0,
             "total_rounds_played": 0,
             "rounds_won": 0,
+            "rounds_lost": 0,
+            "medals": {"ten_win_streak": 0},
+        }
             "rounds_lost": 0,
         }
 
