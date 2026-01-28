@@ -219,7 +219,8 @@ const FlyingCoins = ({ from, to, amount, onComplete }) => {
 
 // Stamina Bar with animation
 const StaminaBar = ({ stamina, maxStamina = 100, showLabel = true }) => {
-  const percent = (stamina / maxStamina) * 100;
+  const safeStamina = stamina ?? maxStamina;
+  const percent = (safeStamina / maxStamina) * 100;
   return (
     <div className="flex items-center gap-2">
       <Zap className="w-4 h-4 text-yellow-400" />
@@ -231,7 +232,7 @@ const StaminaBar = ({ stamina, maxStamina = 100, showLabel = true }) => {
           transition={{ duration: 0.5 }}
         />
       </div>
-      {showLabel && <span className="text-sm text-gray-400">{Math.round(stamina)}/{maxStamina}</span>}
+      {showLabel && <span className="text-sm text-gray-400">{Math.round(safeStamina)}/{maxStamina}</span>}
     </div>
   );
 };
