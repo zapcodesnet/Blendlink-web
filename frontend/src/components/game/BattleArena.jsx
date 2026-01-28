@@ -403,7 +403,8 @@ const GameResultScreen = ({
   playerWins, 
   opponentWins, 
   betAmount = 0, 
-  onPlayAgain 
+  onPlayAgain,
+  staminaChanges = null, // { player: -X, photos: [{mint_id, change}] }
 }) => {
   const isWinner = winner === 'player';
   
@@ -420,6 +421,9 @@ const GameResultScreen = ({
     delay: seededRandom(i * 3.3) * 0.5,
     emoji: ['🎉', '✨', '💰', '🏆', '💎'][Math.floor(seededRandom(i * 4.4) * 5)],
   }));
+  
+  // Calculate total stamina change
+  const totalStaminaChange = staminaChanges?.photos?.reduce((sum, p) => sum + (p.change || 0), 0) || 0;
   
   return (
     <motion.div
