@@ -788,12 +788,15 @@ class PhotoGameService:
         if isinstance(last_update, str):
             last_update = datetime.fromisoformat(last_update.replace("Z", "+00:00"))
         
+        if not last_update:
+            return stats
+        
         now = datetime.now(timezone.utc)
         hours_passed = (now - last_update).total_seconds() / 3600
         
-        if hours_passed > 0 and stats.get("stamina", MAX_STAMINA) < MAX_STAMINA:
+        if hours_passed > 0 and stats.get("stamina", MAX_STAMINA_BATTLES) < MAX_STAMINA_BATTLES:
             stamina_gained = hours_passed * STAMINA_REGEN_PER_HOUR
-            new_stamina = min(MAX_STAMINA, stats.get("stamina", 0) + stamina_gained)
+            new_stamina = min(MAX_STAMINA_BATTLES, stats.get("stamina", 0) + stamina_gained)
             
             await self.db.player_stats.update_one(
                 {"user_id": stats["user_id"]},
