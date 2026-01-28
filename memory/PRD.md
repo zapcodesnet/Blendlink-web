@@ -1,6 +1,49 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 28, 2026 (Session 30 - Battle Achievements & Medals)
+## Latest Update: January 28, 2026 (Session 31 - Profile & Medal Showcase Features)
+
+---
+
+## SESSION 31: PROFILE PICTURE, MEDAL SHOWCASE & CELEBRATION ✅
+
+### Features Implemented (January 28, 2026)
+
+**1. Profile Picture from Minted Photos**
+- Camera button on Settings page avatar opens modal
+- `ProfilePictureModal` displays user's minted photos in a grid
+- Shows medal badges (🏅) on photos with medals
+- Updates via `PUT /api/users/me/profile-picture`
+- Profile picture displays on Profile page and throughout app
+
+**2. Medal Showcase on User Profiles**
+- `MedalShowcase` component integrated into Profile.jsx
+- Displays user's proudest medal-winning photos (max 5)
+- Trophy icon with total medal count badge
+- Owner can edit showcase via settings modal
+- `GET /api/users/:user_id/medal-showcase` - Public endpoint
+- `PUT /api/users/me/medal-showcase` - Update showcase photos
+
+**3. Medal Celebration Animation**
+- `MedalCelebration` component with full-screen overlay
+- Phase 1: Giant medal (🏅) with bounce/pulse animation
+- Phase 2: Gold coin bags (💰) falling + confetti rain
+- Phase 3: Animated coin counter showing "+10,000 BL Coins"
+- Triggered in `BattleArena.jsx` when API returns `medal_earned: true`
+- 10,000 BL coins automatically awarded on medal earn
+
+### Testing Results:
+- **Iteration 66**: 100% backend (22/22 tests), 100% frontend
+- All API endpoints verified working via curl
+- Empty states properly displayed for users without medals
+
+### Files Created/Modified:
+- `frontend/src/components/MedalShowcase.jsx` - Complete implementation
+- `frontend/src/components/MedalCelebration.jsx` - Animation component
+- `frontend/src/pages/Profile.jsx` - MedalShowcase integration
+- `frontend/src/pages/Settings.jsx` - ProfilePictureModal
+- `frontend/src/components/game/BattleArena.jsx` - Celebration trigger
+- `backend/server.py` - Profile picture & medal showcase APIs
+- `backend/game_routes.py` - Medal bonus (10,000 BL coins)
 
 ---
 
