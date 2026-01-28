@@ -253,9 +253,14 @@ class TestMedalBonusAndCelebration(TestAuth):
             headers=headers,
             json={"photo_id": "test_photo_id", "round_won": True}
         )
-        # Should not be 404 - endpoint exists
-        assert response.status_code != 404, "Record round result endpoint not found"
-        print(f"Record round result endpoint status: {response.status_code}")
+        # Endpoint exists - returns 404 for invalid photo (not 404 for missing route)
+        # The detail message confirms the endpoint exists
+        if response.status_code == 404:
+            data = response.json()
+            assert "Photo not found" in data.get("detail", ""), "Endpoint should return photo not found error"
+            print(f"Record round result endpoint exists - returns photo not found for invalid ID")
+        else:
+            print(f"Record round result endpoint status: {response.status_code}")
     
     def test_record_round_result_requires_auth(self):
         """Test that record-round-result requires authentication"""
