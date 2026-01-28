@@ -575,6 +575,49 @@ export const RPSBidding = ({
         <p className="text-gray-400 text-sm">Round {roundNumber} • First to 3 wins!</p>
       </div>
       
+      {/* Power Advantage Indicator - NEW */}
+      {powerAdvantage && powerAdvantage.advantage !== 'none' && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`mb-4 p-3 rounded-xl border ${
+            hasPlayerAdvantage 
+              ? 'bg-green-500/10 border-green-500/50' 
+              : 'bg-red-500/10 border-red-500/50'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">{hasPlayerAdvantage ? '⚡' : '⚠️'}</span>
+              <span className={`font-bold ${hasPlayerAdvantage ? 'text-green-400' : 'text-red-400'}`}>
+                {hasPlayerAdvantage ? 'Power Advantage!' : 'Opponent has Power Advantage'}
+              </span>
+            </div>
+            <span className={`px-3 py-1 rounded-full text-sm font-bold ${
+              hasPlayerAdvantage ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+            }`}>
+              +$1M
+            </span>
+          </div>
+          {playerEffectiveValue && opponentEffectiveValue && (
+            <div className="mt-2 flex items-center justify-center gap-4 text-xs">
+              <span className={`${hasPlayerAdvantage ? 'text-green-300' : 'text-gray-400'}`}>
+                Your Value: ${playerEffectiveValue?.toLocaleString()}
+              </span>
+              <span className="text-gray-500">vs</span>
+              <span className={`${hasOpponentAdvantage ? 'text-red-300' : 'text-gray-400'}`}>
+                Opponent: ${opponentEffectiveValue?.toLocaleString()}
+              </span>
+            </div>
+          )}
+          {hasPlayerAdvantage && (
+            <p className="text-green-300/80 text-xs mt-2 text-center">
+              Higher photo value = +$1M extra bidding money (Start with $6M!)
+            </p>
+          )}
+        </motion.div>
+      )}
+      
       {/* Score and Money Display */}
       <div className="flex justify-between items-center mb-6 px-2">
         {/* Player */}
