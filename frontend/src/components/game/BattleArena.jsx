@@ -26,6 +26,7 @@ import { Button } from '../ui/button';
 import { TappingArena } from './TappingArena';
 import { RPSBidding } from './RPSBidding';
 import { StreakIndicator, StarDisplay, calculateStarBonus } from './StreakIndicator';
+import MedalCelebration from '../MedalCelebration';
 import auctionSounds from '../../utils/auctionSounds';
 import api from '../../services/api';
 
