@@ -642,6 +642,9 @@ export const BattleArena = ({
       const newWins = playerWins + 1;
       setPlayerWins(newWins);
       
+      // Track round result for stamina - player won this round
+      setRoundResults(prev => [...prev, { winner: 'player', photo: selectedPlayerPhoto }]);
+      
       // Update streaks
       setPlayerStats(prev => ({
         current_win_streak: prev.current_win_streak + 1,
@@ -650,6 +653,10 @@ export const BattleArena = ({
       
       // Check for game win
       if (newWins >= WINS_NEEDED) {
+        // Calculate stamina changes for winning player
+        const changes = calculateStaminaChanges([...roundResults, { winner: 'player', photo: selectedPlayerPhoto }], playerPhotos);
+        setStaminaChanges(changes);
+        
         setGameWinner('player');
         setGamePhase('result');
         if (soundEnabled) auctionSounds.battleVictory();
@@ -659,6 +666,9 @@ export const BattleArena = ({
       const newWins = opponentWins + 1;
       setOpponentWins(newWins);
       
+      // Track round result for stamina - player lost this round
+      setRoundResults(prev => [...prev, { winner: 'opponent', photo: selectedPlayerPhoto }]);
+      
       // Update streaks
       setPlayerStats(prev => ({
         current_win_streak: 0,
@@ -667,6 +677,10 @@ export const BattleArena = ({
       
       // Check for game loss
       if (newWins >= WINS_NEEDED) {
+        // Calculate stamina changes for losing player
+        const changes = calculateStaminaChanges([...roundResults, { winner: 'opponent', photo: selectedPlayerPhoto }], playerPhotos);
+        setStaminaChanges(changes);
+        
         setGameWinner('opponent');
         setGamePhase('result');
         if (soundEnabled) auctionSounds.battleDefeat();
@@ -683,11 +697,38 @@ export const BattleArena = ({
       setSelectedOpponentPhoto(null);
       setGamePhase('photo_selection');
     } else {
-      // Shouldn't happen with proper game logic, but handle edge case
-      setGameWinner(playerWins > opponentWins ? 'player' : 'opponent');
+      // End of all rounds - determine winner
+      const finalWinner = playerWins > opponentWins ? 'player' : 'opponent';
+      const changes = calculateStaminaChanges(roundResults, playerPhotos);
+      setStaminaChanges(changes);
+      setGameWinner(finalWinner);
       setGamePhase('result');
     }
-  }, [playerWins, opponentWins, currentRoundIndex, soundEnabled]);
+  }, [playerWins, opponentWins, currentRoundIndex, soundEnabled, selectedPlayerPhoto, roundResults, playerPhotos]);
+  
+  // Calculate stamina changes based on round results
+  const calculateStaminaChanges = (results, photos) => {
+    const photoChanges = {};
+    
+    // Group results by photo
+    results.forEach(result => {
+      if (result.photo?.mint_id) {
+        if (!photoChanges[result.photo.mint_id]) {
+          photoChanges[result.photo.mint_id] = {
+            mint_id: result.photo.mint_id,
+            name: result.photo.name || 'Photo',
+            change: 0,
+          };
+        }
+        // -1 for win, -2 for loss
+        photoChanges[result.photo.mint_id].change += result.winner === 'player' ? -1 : -2;
+      }
+    });
+    
+    return {
+      photos: Object.values(photoChanges),
+    };
+  };
   
   // Handle RPS round complete (with money tracking)
   const handleRPSRoundComplete = useCallback((winner, newPlayerMoney, newOpponentMoney) => {
