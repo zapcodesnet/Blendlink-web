@@ -1876,8 +1876,135 @@ const PhotoGameArena = () => {
       {/* Main content */}
       <div className="max-w-4xl mx-auto px-4 py-8">
         <AnimatePresence mode="wait">
+          {/* NEW: PVP Main Menu */}
+          {gameState === 'pvp_menu' && (
+            <motion.div 
+              key="pvp_menu" 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }}
+              className="space-y-6"
+            >
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-white mb-2">PVP Battle Arena</h2>
+                <p className="text-gray-400">Create or join games with 5 of your minted photos</p>
+              </div>
+              
+              <div className="grid gap-4">
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button
+                    onClick={() => setGameState('pvp_create')}
+                    className="w-full py-8 text-xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 shadow-xl"
+                    size="lg"
+                    data-testid="create-game-menu-btn"
+                  >
+                    <Plus className="w-7 h-7 mr-3" />
+                    Create New Game
+                    <ChevronRight className="w-7 h-7 ml-3" />
+                  </Button>
+                </motion.div>
+                
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button
+                    onClick={() => setGameState('pvp_select_join')}
+                    className="w-full py-8 text-xl font-bold bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 shadow-xl"
+                    size="lg"
+                    data-testid="join-game-menu-btn"
+                  >
+                    <Users className="w-7 h-7 mr-3" />
+                    Browse & Join Games
+                    <ChevronRight className="w-7 h-7 ml-3" />
+                  </Button>
+                </motion.div>
+                
+                <Button
+                  onClick={() => setGameState('matchmaking')}
+                  variant="outline"
+                  className="w-full py-6 border-gray-600 text-gray-300"
+                  size="lg"
+                  data-testid="legacy-mode-btn"
+                >
+                  <Bot className="w-5 h-5 mr-2" />
+                  Practice Mode (Single Photo)
+                </Button>
+              </div>
+            </motion.div>
+          )}
+          
+          {/* NEW: Create Game - Photo Selection */}
+          {gameState === 'pvp_create' && (
+            <motion.div key="pvp_create" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <PhotoSelector
+                mode="create"
+                title="Create Battle"
+                subtitle="Select 5 photos and set your bet"
+                onCreateGame={handleCreateGameSuccess}
+                onBrowseGames={() => setGameState('pvp_select_join')}
+                onCancel={() => setGameState('pvp_menu')}
+              />
+            </motion.div>
+          )}
+          
+          {/* NEW: Select Photos for Joining */}
+          {gameState === 'pvp_select_join' && (
+            <motion.div key="pvp_select_join" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <PhotoSelector
+                mode="select"
+                title="Select Your Team"
+                subtitle="Choose 5 photos to battle with"
+                confirmText="Browse Open Games"
+                onConfirm={handleSelectPhotosForJoin}
+                onCancel={() => setGameState('pvp_menu')}
+              />
+            </motion.div>
+          )}
+          
+          {/* NEW: Browse Open Games */}
+          {gameState === 'pvp_browse' && (
+            <motion.div key="pvp_browse" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <div className="space-y-4">
+                <Button
+                  onClick={() => setGameState('pvp_menu')}
+                  variant="ghost"
+                  className="text-gray-400 hover:text-white"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Menu
+                </Button>
+                
+                <OpenGamesBrowser
+                  onJoinGame={handleJoinGame}
+                  onCreateGame={() => setGameState('pvp_create')}
+                />
+              </div>
+            </motion.div>
+          )}
+          
+          {/* NEW: Game Lobby (Waiting for Ready) */}
+          {gameState === 'pvp_lobby' && currentOpenGame && (
+            <motion.div key="pvp_lobby" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <GameLobby
+                game={currentOpenGame}
+                currentUserId={user?.user_id}
+                onGameStart={handleGameStart}
+                onLeave={handleLeaveLobby}
+              />
+            </motion.div>
+          )}
+          
+          {/* Legacy Matchmaking (single photo mode) */}
           {gameState === 'matchmaking' && (
             <motion.div key="matchmaking" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <div className="mb-4">
+                <Button
+                  onClick={() => setGameState('pvp_menu')}
+                  variant="ghost"
+                  className="text-gray-400 hover:text-white"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to PVP Menu
+                </Button>
+              </div>
               <Matchmaking 
                 onMatchFound={handleMatchFound}
                 selectedPhoto={selectedPhoto}
