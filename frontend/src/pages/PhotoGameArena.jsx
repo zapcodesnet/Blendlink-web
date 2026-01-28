@@ -1867,7 +1867,7 @@ const PhotoGameArena = () => {
                 <p className="text-xs text-gray-400">BL Won</p>
               </div>
               <div className="bg-gray-800/50 rounded-lg p-3">
-                <StaminaBar stamina={stats.stamina} />
+                <StaminaBar stamina={stats?.stamina ?? 100} />
               </div>
             </div>
           )}
