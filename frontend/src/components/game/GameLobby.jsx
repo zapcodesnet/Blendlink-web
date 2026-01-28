@@ -453,6 +453,18 @@ export const GameLobby = ({
         <h2 className="text-2xl font-bold text-white flex items-center justify-center gap-2">
           <Trophy className="w-6 h-6 text-yellow-400" />
           Battle Lobby
+          {/* WebSocket status indicator */}
+          <span 
+            className={`ml-2 flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${
+              wsConnected 
+                ? 'bg-green-500/20 text-green-400' 
+                : 'bg-yellow-500/20 text-yellow-400'
+            }`}
+            title={wsConnected ? 'Real-time connected' : 'Using fallback polling'}
+          >
+            {wsConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+            {wsConnected ? 'Live' : 'Sync'}
+          </span>
         </h2>
         <p className="text-gray-400 mt-1">
           {bothReady 
