@@ -277,8 +277,17 @@ export const GameLobby = ({
           break;
           
         case 'game_start':
-          // Game is starting - transition to battle arena
-          onGameStart?.(data.session_id, data.session);
+          // Game is starting - transition to PVP battle arena
+          onGameStart?.(data.session_id, data.session, data.pvp_room_id);
+          break;
+          
+        case 'pvp_room_created':
+          // PVP room created - store for later use
+          setGameState(prev => ({ 
+            ...prev, 
+            pvp_room_id: data.room_id,
+            active_session_id: data.session_id,
+          }));
           break;
           
         case 'game_state':
