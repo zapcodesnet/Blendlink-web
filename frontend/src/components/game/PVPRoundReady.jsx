@@ -492,7 +492,7 @@ export const PVPRoundReady = ({
             
             {/* Opponent photo */}
             <div className="text-center">
-              <p className="text-xs text-red-400 mb-1">Opponent's Photo</p>
+              <p className="text-xs text-red-400 mb-1">Opponent&apos;s Photo</p>
               <div className="w-28 h-36 rounded-xl overflow-hidden border-2 border-red-500 bg-gray-800">
                 {opponentData?.selectedPhoto?.image_url ? (
                   <img 
