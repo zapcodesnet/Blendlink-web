@@ -1589,6 +1589,10 @@ const PhotoGameArena = () => {
   const [selectedPhotosData, setSelectedPhotosData] = useState([]);
   const [currentOpenGame, setCurrentOpenGame] = useState(null);
   
+  // NEW: PVP Battle state for real-time sync
+  const [opponentInfo, setOpponentInfo] = useState({ id: null, username: null });
+  const [pvpRoomId, setPvpRoomId] = useState(null);
+  
   useEffect(() => {
     auctionSounds.init();
     auctionSounds.setEnabled(soundEnabled);
