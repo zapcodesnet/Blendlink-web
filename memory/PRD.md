@@ -1,6 +1,45 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 28, 2026 (Session 29 - Match History & P1 Features)
+## Latest Update: January 28, 2026 (Session 30 - Battle Achievements & Medals)
+
+---
+
+## SESSION 30: BATTLE ACHIEVEMENTS & BADGES ✅
+
+### 10-Win Streak Medal System
+
+**Features Implemented:**
+- 🏅 Medal icon with counter displayed next to photo name
+- Earned when photo achieves 10 consecutive round wins (cumulative across games)
+- **Permanent** - medals never decrease, even after losses
+- **Transferable** - transfers with photo on sell/trade/gift
+
+**Medal Rules:**
+- Win streak is cumulative across multiple games
+- Streak resets to 0 if photo loses ANY round in a game
+- Medal awarded at every 10 consecutive wins (can earn multiple: 🏅x1, 🏅x2, 🏅x3...)
+- Example: Win 30 rounds without losing = 3 medals
+
+**Display Locations:**
+- PhotoSelector (Create Game, Join Game)
+- Practice Mode photo selection
+- MintedPhotos page (grid and list views)
+
+**Backend APIs:**
+- `POST /api/photo-game/record-round-result` - Records win/loss, awards medals
+- `GET /api/photo-game/photo-medals/{mint_id}` - Returns photo medals (public)
+- `GET /api/photo-game/battle-photos` - Includes medals in response
+
+### Testing Results:
+- **Iteration 65**: 100% backend (16/16 tests), 100% frontend
+- Golden Hour: 4 medals earned during testing
+- Mountain Peak: 1 medal earned
+
+### Files Modified:
+- `backend/game_routes.py` - Medal APIs and tracking
+- `frontend/src/components/game/PhotoSelector.jsx` - Medal display
+- `frontend/src/pages/PhotoGameArena.jsx` - Medal display in Practice Mode
+- `frontend/src/pages/MintedPhotos.jsx` - Medal display on photo cards
 
 ---
 
