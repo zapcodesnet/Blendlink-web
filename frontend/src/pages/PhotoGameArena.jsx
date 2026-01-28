@@ -1803,7 +1803,7 @@ const PhotoGameArena = () => {
   };
   
   const handlePlayAgain = () => {
-    setGameState('matchmaking');
+    setGameState('pvp_menu');
     setSession(null);
     setMatchData(null);
     setSelectedPhoto(null);
@@ -1812,6 +1812,9 @@ const PhotoGameArena = () => {
     setPhotoBattleResult(null);
     setPlayerBankroll(STARTING_BANKROLL);
     setOpponentBankroll(STARTING_BANKROLL);
+    setSelectedPhotoIds([]);
+    setSelectedPhotosData([]);
+    setCurrentOpenGame(null);
     api.get('/photo-game/stats').then(res => setStats(res.data)).catch(() => {});
   };
   
