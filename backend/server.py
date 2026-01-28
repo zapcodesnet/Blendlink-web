@@ -2910,7 +2910,7 @@ try:
         """WebSocket endpoint for real-time game lobby updates"""
         # Validate token
         try:
-            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
             user_id = payload.get("user_id")
             if not user_id:
                 await websocket.close(code=1008, reason="Invalid token")
