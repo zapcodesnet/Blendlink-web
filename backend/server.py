@@ -2943,6 +2943,92 @@ try:
 except Exception as e:
     logger.warning(f"Could not load Game Lobby WebSocket: {e}")
 
+# Load PVP Game WebSocket (Real-time synchronized gameplay)
+try:
+    from pvp_game_websocket import pvp_game_manager
+    from fastapi import WebSocket, WebSocketDisconnect
+    
+    # Set database for PVP manager
+    pvp_game_manager.set_db(db)
+    
+    @app.websocket("/ws/pvp-game/{room_id}/{token}")
+    async def pvp_game_websocket_endpoint(websocket: WebSocket, room_id: str, token: str):
+        """WebSocket endpoint for real-time synchronized PVP gameplay"""
+        # Validate token
+        try:
+            payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+            user_id = payload.get("user_id")
+            if not user_id:
+                await websocket.close(code=1008, reason="Invalid token")
+                return
+        except jwt.ExpiredSignatureError:
+            await websocket.close(code=1008, reason="Token expired")
+            return
+        except jwt.InvalidTokenError:
+            await websocket.close(code=1008, reason="Invalid token")
+            return
+        
+        await websocket.accept()
+        
+        try:
+            while True:
+                data = await websocket.receive_json()
+                msg_type = data.get("type")
+                
+                if msg_type == "join":
+                    # Player joining the game room
+                    photos = data.get("photos", [])
+                    username = data.get("username", "Player")
+                    is_creator = data.get("is_creator", False)
+                    
+                    success = await pvp_game_manager.connect_player(
+                        room_id=room_id,
+                        user_id=user_id,
+                        username=username,
+                        websocket=websocket,
+                        photos=photos,
+                        is_creator=is_creator
+                    )
+                    
+                    await websocket.send_json({
+                        "type": "join_result",
+                        "success": success,
+                        "room_id": room_id,
+                    })
+                    
+                elif msg_type == "select_photo":
+                    # Player selects photo for current round
+                    photo_id = data.get("photo_id")
+                    await pvp_game_manager.select_photo(room_id, user_id, photo_id)
+                    
+                elif msg_type == "ready":
+                    # Player marks ready
+                    await pvp_game_manager.mark_ready(room_id, user_id)
+                    
+                elif msg_type == "round_result":
+                    # Round result submitted (from gameplay component)
+                    winner_id = data.get("winner_user_id")
+                    p1_score = data.get("player1_score", 0)
+                    p2_score = data.get("player2_score", 0)
+                    round_data = data.get("round_data", {})
+                    
+                    await pvp_game_manager.submit_round_result(
+                        room_id, winner_id, p1_score, p2_score, round_data
+                    )
+                    
+                elif msg_type == "ping":
+                    await websocket.send_json({"type": "pong"})
+                    
+        except WebSocketDisconnect:
+            await pvp_game_manager.disconnect_player(user_id)
+        except Exception as e:
+            logger.error(f"PVP Game WebSocket error: {e}")
+            await pvp_game_manager.disconnect_player(user_id)
+    
+    logger.info("PVP Game WebSocket loaded")
+except Exception as e:
+    logger.warning(f"Could not load PVP Game WebSocket: {e}")
+
 # Load Push Notifications
 try:
     from push_notifications import push_router, setup_push_routes
