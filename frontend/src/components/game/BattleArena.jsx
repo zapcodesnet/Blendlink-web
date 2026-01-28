@@ -58,6 +58,85 @@ const formatDollarValue = (value) => {
   return `$${value?.toLocaleString()}`;
 };
 
+// Calculate Power Advantage for RPS rounds
+const ADVANTAGE_BONUS = 1_000_000; // $1M
+const calculatePowerAdvantage = (playerPhoto, opponentPhoto, playerStats, opponentStats) => {
+  if (!playerPhoto || !opponentPhoto) return null;
+  
+  // Get base values
+  const playerValue = playerPhoto.dollar_value || 0;
+  const opponentValue = opponentPhoto.dollar_value || 0;
+  
+  // Apply scenery modifiers
+  let playerMultiplier = 1.0;
+  let opponentMultiplier = 1.0;
+  
+  const playerScenery = SCENERY_CONFIG[playerPhoto.scenery_type] || SCENERY_CONFIG.natural;
+  const opponentScenery = SCENERY_CONFIG[opponentPhoto.scenery_type] || SCENERY_CONFIG.natural;
+  
+  // Strength/weakness calculation
+  if (playerScenery.strong === opponentPhoto.scenery_type) {
+    playerMultiplier = 1.25; // +25% strength
+  } else if (playerScenery.weak === opponentPhoto.scenery_type) {
+    // Check lose streak immunity
+    const hasImmunity = (playerStats?.current_lose_streak || 0) >= 3;
+    playerMultiplier = hasImmunity ? 1.0 : 0.75; // -25% weakness unless immune
+  }
+  
+  if (opponentScenery.strong === playerPhoto.scenery_type) {
+    opponentMultiplier = 1.25;
+  } else if (opponentScenery.weak === playerPhoto.scenery_type) {
+    const hasImmunity = (opponentStats?.current_lose_streak || 0) >= 3;
+    opponentMultiplier = hasImmunity ? 1.0 : 0.75;
+  }
+  
+  // Apply win streak multipliers
+  const playerWinStreak = playerStats?.current_win_streak || 0;
+  const opponentWinStreak = opponentStats?.current_win_streak || 0;
+  
+  const streakMultipliers = { 3: 1.25, 4: 1.50, 5: 1.75, 6: 2.00, 7: 2.25, 8: 2.50, 9: 2.75, 10: 3.00 };
+  if (playerWinStreak >= 3) {
+    playerMultiplier *= streakMultipliers[Math.min(playerWinStreak, 10)] || 3.00;
+  }
+  if (opponentWinStreak >= 3) {
+    opponentMultiplier *= streakMultipliers[Math.min(opponentWinStreak, 10)] || 3.00;
+  }
+  
+  // Calculate effective values
+  const playerEffective = Math.round(playerValue * playerMultiplier);
+  const opponentEffective = Math.round(opponentValue * opponentMultiplier);
+  
+  // Determine advantage
+  if (playerEffective > opponentEffective) {
+    return {
+      advantage: 'player',
+      bonus_amount: ADVANTAGE_BONUS,
+      player_effective_value: playerEffective,
+      opponent_effective_value: opponentEffective,
+      player_bankroll: STARTING_RPS_MONEY + ADVANTAGE_BONUS,
+      opponent_bankroll: STARTING_RPS_MONEY,
+    };
+  } else if (opponentEffective > playerEffective) {
+    return {
+      advantage: 'opponent',
+      bonus_amount: ADVANTAGE_BONUS,
+      player_effective_value: playerEffective,
+      opponent_effective_value: opponentEffective,
+      player_bankroll: STARTING_RPS_MONEY,
+      opponent_bankroll: STARTING_RPS_MONEY + ADVANTAGE_BONUS,
+    };
+  } else {
+    return {
+      advantage: 'none',
+      bonus_amount: 0,
+      player_effective_value: playerEffective,
+      opponent_effective_value: opponentEffective,
+      player_bankroll: STARTING_RPS_MONEY,
+      opponent_bankroll: STARTING_RPS_MONEY,
+    };
+  }
+};
+
 // Photo Selection Card for battle
 const PhotoSelectionCard = ({ 
   photo, 
