@@ -227,21 +227,42 @@ export const GameLobby = ({
     
     try {
       const res = await api.get(`/photo-game/open-games/${gameState.game_id}`);
-      setGameState(res.data);
+      const newState = res.data;
+      
+      // Check if opponent just joined (for creator)
+      if (isCreator && !gameState?.opponent_id && newState?.opponent_id) {
+        toast.success(
+          `🎮 ${newState.opponent_username || 'Player'} has joined your game! Click Ready when you're set.`,
+          { duration: 5000 }
+        );
+      }
+      
+      // Check if creator marked ready (for opponent)
+      if (isOpponent && !gameState?.creator_ready && newState?.creator_ready) {
+        toast.info(`⚡ ${newState.creator_username || 'Host'} is ready!`);
+      }
+      
+      // Check if opponent marked ready (for creator)
+      if (isCreator && !gameState?.opponent_ready && newState?.opponent_ready) {
+        toast.info(`⚡ ${newState.opponent_username || 'Opponent'} is ready!`);
+      }
+      
+      setGameState(newState);
       
       // Check if countdown should start
-      if (res.data.status === 'starting' && !showCountdown) {
+      if (newState.status === 'starting' && !showCountdown) {
         setShowCountdown(true);
+        toast.success('🔥 Both players ready! Starting countdown...');
       }
       
       // Check if game started
-      if (res.data.status === 'in_progress' && res.data.active_session_id) {
-        onGameStart?.(res.data.active_session_id, res.data);
+      if (newState.status === 'in_progress' && newState.active_session_id) {
+        onGameStart?.(newState.active_session_id, newState);
       }
     } catch (err) {
       console.error('Failed to poll game state:', err);
     }
-  }, [gameState?.game_id, showCountdown, onGameStart]);
+  }, [gameState?.game_id, gameState?.opponent_id, gameState?.creator_ready, gameState?.opponent_ready, showCountdown, onGameStart, isCreator, isOpponent]);
   
   // Start polling
   useEffect(() => {
