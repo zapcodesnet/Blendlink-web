@@ -613,7 +613,167 @@ async def get_photo_stamina(
             "medals": {"ten_win_streak": 0},
         }
             "rounds_lost": 0,
+            "medals": {"ten_win_streak": 0},
         }
+
+
+# Medal Constants
+MEDAL_WIN_STREAK_THRESHOLD = 10  # 10 consecutive round wins to earn a medal
+
+
+class RecordRoundResultRequest(BaseModel):
+    """Request to record round results for photos"""
+    photo_id: str
+    round_won: bool  # True if this photo won the round, False if lost
+
+
+@game_router.post("/record-round-result")
+async def record_round_result(
+    request: RecordRoundResultRequest,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """
+    Record a round result for a photo and check for medal awards.
+    
+    Win Streak Medal Rules:
+    - Cumulative across games
+    - Resets to 0 if photo loses ANY round
+    - Earns 🏅 medal at every 10 consecutive wins
+    - Medals are permanent and transfer with photo
+    """
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    mint_id = request.photo_id
+    round_won = request.round_won
+    
+    # Verify photo exists and belongs to user
+    photo = await _db.minted_photos.find_one({
+        "mint_id": mint_id,
+        "user_id": current_user["user_id"]
+    })
+    
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found or not owned by user")
+    
+    # Get or create stamina record
+    stamina_record = await _db.photo_stamina.find_one({"mint_id": mint_id})
+    
+    if not stamina_record:
+        stamina_record = {
+            "mint_id": mint_id,
+            "user_id": current_user["user_id"],
+            "stamina": MAX_STAMINA_BATTLES,
+            "max_stamina": MAX_STAMINA_BATTLES,
+            "level": 1,
+            "xp": 0,
+            "win_streak": 0,
+            "lose_streak": 0,
+            "total_rounds_played": 0,
+            "rounds_won": 0,
+            "rounds_lost": 0,
+            "medals": {"ten_win_streak": 0},
+            "last_regen_timestamp": datetime.now(timezone.utc),
+        }
+        await _db.photo_stamina.insert_one(stamina_record)
+    
+    # Update stats
+    current_win_streak = stamina_record.get("win_streak", 0)
+    medals = stamina_record.get("medals", {"ten_win_streak": 0})
+    medal_earned = False
+    
+    if round_won:
+        # Win: increment streak
+        new_win_streak = current_win_streak + 1
+        
+        # Check if we hit 10-win threshold
+        if new_win_streak >= MEDAL_WIN_STREAK_THRESHOLD and new_win_streak % MEDAL_WIN_STREAK_THRESHOLD == 0:
+            medals["ten_win_streak"] = medals.get("ten_win_streak", 0) + 1
+            medal_earned = True
+            logger.info(f"Photo {mint_id} earned 10-win streak medal! Total: {medals['ten_win_streak']}")
+        
+        update_data = {
+            "$set": {
+                "win_streak": new_win_streak,
+                "lose_streak": 0,
+                "medals": medals,
+            },
+            "$inc": {
+                "total_rounds_played": 1,
+                "rounds_won": 1,
+                "xp": 10,  # XP for winning
+            }
+        }
+    else:
+        # Loss: reset streak to 0
+        new_win_streak = 0
+        
+        update_data = {
+            "$set": {
+                "win_streak": 0,
+                "lose_streak": stamina_record.get("lose_streak", 0) + 1,
+            },
+            "$inc": {
+                "total_rounds_played": 1,
+                "rounds_lost": 1,
+                "xp": 5,  # Smaller XP for losing
+            }
+        }
+    
+    # Update the record
+    await _db.photo_stamina.update_one(
+        {"mint_id": mint_id},
+        update_data
+    )
+    
+    # Also update the medals on the minted_photos collection (for transfer persistence)
+    if medal_earned:
+        await _db.minted_photos.update_one(
+            {"mint_id": mint_id},
+            {"$set": {"medals": medals}}
+        )
+    
+    return {
+        "success": True,
+        "photo_id": mint_id,
+        "round_won": round_won,
+        "new_win_streak": new_win_streak if round_won else 0,
+        "medal_earned": medal_earned,
+        "total_medals": medals.get("ten_win_streak", 0),
+    }
+
+
+@game_router.get("/photo-medals/{mint_id}")
+async def get_photo_medals(mint_id: str):
+    """
+    Get medals for a specific photo (public endpoint).
+    Medals are permanent and transfer with photo ownership.
+    """
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    # Check minted_photos first (for transferred photos)
+    photo = await _db.minted_photos.find_one(
+        {"mint_id": mint_id},
+        {"_id": 0, "medals": 1, "name": 1, "mint_id": 1}
+    )
+    
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    
+    # Get from photo_stamina for detailed stats
+    stamina_record = await _db.photo_stamina.find_one({"mint_id": mint_id})
+    
+    medals = photo.get("medals") or stamina_record.get("medals") if stamina_record else {"ten_win_streak": 0}
+    win_streak = stamina_record.get("win_streak", 0) if stamina_record else 0
+    
+    return {
+        "mint_id": mint_id,
+        "name": photo.get("name"),
+        "medals": medals,
+        "current_win_streak": win_streak,
+        "next_medal_at": MEDAL_WIN_STREAK_THRESHOLD - (win_streak % MEDAL_WIN_STREAK_THRESHOLD) if win_streak > 0 else MEDAL_WIN_STREAK_THRESHOLD,
+    }
 
 
 @game_router.get("/stats")
