@@ -1679,15 +1679,26 @@ const PhotoGameArena = () => {
   
   const handleGameStart = useCallback((sessionId, gameData) => {
     // Transition from lobby to actual battle
+    // Determine which photos are mine and which are the opponent's
+    const amICreator = gameData?.creator_id === user?.user_id;
+    
+    const myPhotos = amICreator 
+      ? (gameData?.creator_photos || selectedPhotosData || [])
+      : (gameData?.opponent_photos || selectedPhotosData || []);
+    
+    const theirPhotos = amICreator 
+      ? (gameData?.opponent_photos || [])
+      : (gameData?.creator_photos || []);
+    
     setSession({ session_id: sessionId, ...gameData });
-    setPlayerBattlePhotos(gameData?.creator_photos || gameData?.opponent_photos || []);
-    setOpponentBattlePhotos(gameData?.opponent_photos || gameData?.creator_photos || []);
+    setPlayerBattlePhotos(myPhotos);
+    setOpponentBattlePhotos(theirPhotos);
     setBattleBetAmount(gameData?.bet_amount || 0);
     setIsAuctionBattleBot(false);
     setGameState('auction_battle');
     auctionSounds.gavelSlam();
     toast.success('⚔️ Battle starting!');
-  }, []);
+  }, [user?.user_id, selectedPhotosData]);
   
   const handleLeaveLobby = useCallback(async () => {
     if (currentOpenGame?.game_id) {
