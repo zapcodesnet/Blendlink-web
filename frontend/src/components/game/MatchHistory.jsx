@@ -257,7 +257,7 @@ const BattleReplay = ({ match, currentUserId, onClose }) => {
           
           {/* Opponent Photos */}
           <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
-            <p className="text-red-400 font-bold mb-3 text-center">Opponent's Team</p>
+            <p className="text-red-400 font-bold mb-3 text-center">Opponent&apos;s Team</p>
             <div className="flex justify-center gap-2 flex-wrap">
               {opponentPhotos?.map((photo, idx) => (
                 <PhotoCard 
