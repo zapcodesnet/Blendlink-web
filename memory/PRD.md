@@ -1,6 +1,52 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 28, 2026 (Session 32 - Real-time WebSocket Lobby)
+## Latest Update: January 28, 2026 (Session 33 - Critical PVP Bug Fix)
+
+---
+
+## SESSION 33: CRITICAL PVP MATCHMAKING & GAMEPLAY SYNC FIX ✅
+
+### Bugs Fixed (January 28, 2026)
+
+**Critical Issues Resolved:**
+1. ❌→✅ No Ready Button in First Round - Now shows ready mechanism before EVERY round
+2. ❌→✅ Countdown Sync Failure - Server-authoritative countdown with millisecond precision
+3. ❌→✅ Wrong Opponent Photo Display - Proper photo sync via WebSocket events
+4. ❌→✅ Opponent "Not Responding" - Real-time WebSocket connection with disconnect handling
+5. ❌→✅ No Per-Round Ready Mechanism - Full per-round flow: selecting → ready → countdown → playing
+
+### New PVP Flow Implemented:
+
+**Pre-Game (Lobby):**
+- Player joins → instant toast to creator via WebSocket
+- Both in shared lobby → "Ready" button visible for BOTH
+- Both click Ready → triggers 10s transparent countdown
+- Countdown syncs via WebSocket → Round 1 starts simultaneously
+
+**Per-Round Flow (EVERY round):**
+1. **Selecting Phase**: Both players select 1 photo from their 5 locked photos
+2. **Ready Phase**: Photos revealed, "Ready" button appears for BOTH
+3. **Countdown Phase**: Server-authoritative 10s countdown (broadcast every second)
+4. **Playing Phase**: Tapping Arena or RPS Bidding with correct opponent photo
+5. **Result Phase**: 2-3s results display → auto-transition to next round
+
+**Timeout/Disconnect Handling:**
+- 30s timeout: Auto-select random valid photo / Auto-ready
+- 10s disconnect: Game forfeits to connected player
+- Reconnection: WebSocket auto-reconnect with exponential backoff
+
+### Testing Results:
+- **Iteration 68**: 100% backend (23/23 tests), 100% frontend
+- All WebSocket events verified working
+- Per-round ready mechanism fully tested
+
+### Files Created/Modified:
+- `backend/pvp_game_websocket.py` - NEW: Full PVP game manager with round sync
+- `backend/server.py` - Added `/ws/pvp-game/{room_id}/{token}` endpoint
+- `backend/game_routes.py` - Returns `pvp_room_id` on game start
+- `frontend/src/components/game/PVPRoundReady.jsx` - NEW: Per-round ready screen
+- `frontend/src/components/game/PVPBattleArena.jsx` - NEW: WebSocket-synced arena
+- `frontend/src/pages/PhotoGameArena.jsx` - Added `pvp_battle` state
 
 ---
 
