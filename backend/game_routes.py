@@ -1,29 +1,38 @@
 """
-Blendlink Photo Game API Routes
+Blendlink Photo Game API Routes v3.0
+- Open Games (PVP matchmaking)
 - Game sessions
-- RPS battles
-- Photo battles
-- Auction bidding
+- RPS battles with power advantage
+- Photo auction bidding (tapping)
+- Stamina system
 - Leaderboards
 """
 
 from fastapi import APIRouter, HTTPException, Depends, Request
-from pydantic import BaseModel
-from typing import Optional, List
+from pydantic import BaseModel, Field
+from typing import Optional, List, Dict
 import logging
 import uuid
+from datetime import datetime, timezone
 
 from photo_game import (
     init_game_service,
     PhotoGameService,
-    MAX_STAMINA,
-    STAMINA_PER_BATTLE,
+    MAX_STAMINA_BATTLES,
+    STAMINA_REGEN_PER_HOUR,
+    STAMINA_COST_WIN,
+    STAMINA_COST_LOSS,
+    REQUIRED_PHOTOS_PER_PLAYER,
     STARTING_BANKROLL,
+    ADVANTAGE_BONUS,
     MIN_BID,
     MAX_BID,
     BID_INCREMENT,
+    MAX_TAPS_PER_SECOND,
     calculate_photo_battle_value,
     calculate_auction_bids_required,
+    calculate_rps_power_advantage,
+    calculate_current_stamina,
     generate_bot_photo,
     generate_bot_stats,
     WIN_STREAK_MULTIPLIERS,
@@ -31,6 +40,11 @@ from photo_game import (
     BOT_MIN_BET,
     BOT_MAX_BET,
     BOT_HOUSE_FEE,
+    OpenGame,
+    OpenGameStatus,
+    PVPGameSession,
+    RoundType,
+    PhotoStamina,
 )
 
 logger = logging.getLogger(__name__)
@@ -58,11 +72,36 @@ async def get_current_user_from_request(request: Request) -> dict:
 
 
 # ============== REQUEST MODELS ==============
+class CreateOpenGameRequest(BaseModel):
+    """Request to create a new open PVP game"""
+    photo_ids: List[str] = Field(..., min_length=5, max_length=5)  # Exactly 5 photos
+    bet_amount: int = 0  # BL coins (no upper limit for PVP)
+    is_bot_allowed: bool = False  # Allow bot fallback
+    bot_difficulty: str = "medium"
+
+
+class JoinOpenGameRequest(BaseModel):
+    """Request to join an open game"""
+    game_id: str
+    photo_ids: List[str] = Field(..., min_length=5, max_length=5)  # Exactly 5 photos
+
+
+class ReadyRequest(BaseModel):
+    """Mark player as ready"""
+    game_id: str
+
+
+class SelectRoundPhotoRequest(BaseModel):
+    """Select photo for current round"""
+    session_id: str
+    photo_id: str
+
+
 class StartGameRequest(BaseModel):
     opponent_id: str = "bot"  # "bot" for bot games
     bet_amount: int = 0
     photo_id: Optional[str] = None
-    practice_mode: bool = False  # NEW: Practice mode - no BL bet, no stamina loss, no rewards
+    practice_mode: bool = False
 
 
 class RPSMoveRequest(BaseModel):
@@ -71,7 +110,7 @@ class RPSMoveRequest(BaseModel):
 
 class RPSAuctionMoveRequest(BaseModel):
     choice: str  # rock, paper, scissors
-    bid_amount: int  # $1M to $5M in $1M increments
+    bid_amount: int  # $1M to $6M in $1M increments
 
 
 # ============== ROUTES ==============
