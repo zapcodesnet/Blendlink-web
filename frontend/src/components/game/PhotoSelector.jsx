@@ -192,14 +192,20 @@ const SelectablePhotoCard = ({ photo, selected, disabled, onSelect }) => {
 export const PhotoSelector = ({
   onConfirm,
   onCancel,
+  onCreateGame,
+  onBrowseGames,
   title = "Select Your Battle Team",
   subtitle = "Choose exactly 5 minted photos for this battle",
   confirmText = "Confirm Selection",
+  mode = "select", // "select" | "create" - create mode shows bet input & create button
 }) => {
   const [photos, setPhotos] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
   const [sortBy, setSortBy] = useState('dollar_value'); // dollar_value, stamina, level
+  const [betAmount, setBetAmount] = useState(0);
+  const [useBotFallback, setUseBotFallback] = useState(false);
   
   // Fetch user's minted photos with stamina
   const fetchPhotos = useCallback(async () => {
@@ -270,6 +276,30 @@ export const PhotoSelector = ({
   
   // Count available photos (stamina >= 1)
   const availablePhotos = photos.filter(p => (p.current_stamina ?? MAX_STAMINA) >= 1).length;
+  
+  // Handle Create Game
+  const handleCreateGame = async () => {
+    if (!canConfirm) return;
+    
+    try {
+      setCreating(true);
+      const res = await api.post('/photo-game/open-games/create', {
+        photo_ids: selectedIds,
+        bet_amount: betAmount,
+        is_bot_allowed: useBotFallback,
+        bot_difficulty: 'medium',
+      });
+      
+      if (res.data.success) {
+        toast.success('🎮 Game created! Waiting for opponent...');
+        onCreateGame?.(res.data.game, selectedIds, selectedPhotos);
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to create game');
+    } finally {
+      setCreating(false);
+    }
+  };
   
   return (
     <div className="space-y-6" data-testid="photo-selector">
@@ -384,39 +414,159 @@ export const PhotoSelector = ({
         </div>
       </div>
       
+      {/* Create Game Mode - Bet Input & Options */}
+      {mode === 'create' && canConfirm && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          className="p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl space-y-4"
+        >
+          <h3 className="text-white font-bold flex items-center gap-2">
+            <Coins className="w-5 h-5 text-yellow-400" />
+            Game Settings
+          </h3>
+          
+          {/* Bet Amount */}
+          <div>
+            <label className="text-sm text-gray-400 mb-2 block">BL Coin Bet (optional)</label>
+            <div className="flex gap-2">
+              <Input
+                type="number"
+                min="0"
+                value={betAmount}
+                onChange={(e) => setBetAmount(Math.max(0, parseInt(e.target.value) || 0))}
+                placeholder="0"
+                className="bg-gray-800 border-gray-700 text-white"
+                data-testid="bet-amount-input"
+              />
+              <div className="flex gap-1">
+                {[10, 50, 100].map(amt => (
+                  <button
+                    key={amt}
+                    onClick={() => setBetAmount(amt)}
+                    className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-yellow-400 text-sm font-bold transition-colors"
+                  >
+                    +{amt}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          {/* Bot fallback toggle */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-300 font-medium">Play with bot if no opponents</p>
+              <p className="text-gray-500 text-xs">Bot will match your bet amount</p>
+            </div>
+            <button
+              onClick={() => setUseBotFallback(!useBotFallback)}
+              className={`relative w-12 h-6 rounded-full transition-colors ${useBotFallback ? 'bg-purple-500' : 'bg-gray-700'}`}
+              data-testid="bot-fallback-toggle"
+            >
+              <motion.span 
+                className="absolute top-1 w-4 h-4 rounded-full bg-white"
+                animate={{ left: useBotFallback ? 28 : 4 }}
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+              />
+            </button>
+          </div>
+        </motion.div>
+      )}
+      
       {/* Action buttons */}
-      <div className="flex gap-3">
-        <Button
-          onClick={onCancel}
-          variant="outline"
-          className="flex-1 py-4 border-gray-700"
-          size="lg"
-        >
-          <X className="w-5 h-5 mr-2" />
-          Cancel
-        </Button>
+      <div className="flex flex-col gap-3">
+        {/* Create mode buttons */}
+        {mode === 'create' && (
+          <>
+            <motion.div whileHover={{ scale: canConfirm ? 1.01 : 1 }} whileTap={{ scale: canConfirm ? 0.99 : 1 }}>
+              <Button
+                onClick={handleCreateGame}
+                disabled={!canConfirm || creating}
+                className={`w-full py-6 text-lg font-bold ${
+                  canConfirm
+                    ? 'bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 hover:opacity-90'
+                    : 'bg-gray-700 cursor-not-allowed'
+                }`}
+                size="lg"
+                data-testid="create-game-btn"
+              >
+                {creating ? (
+                  <>
+                    <Loader2 className="w-6 h-6 mr-2 animate-spin" />
+                    Creating Game...
+                  </>
+                ) : canConfirm ? (
+                  <>
+                    <Plus className="w-6 h-6 mr-2" />
+                    {betAmount > 0 ? `Create Game (${betAmount} BL Bet)` : 'Create Free Game'}
+                    <ChevronRight className="w-6 h-6 ml-2" />
+                  </>
+                ) : (
+                  <>Select {REQUIRED_PHOTOS - selectedIds.length} more photos</>
+                )}
+              </Button>
+            </motion.div>
+            
+            {/* Browse games button */}
+            <Button
+              onClick={onBrowseGames}
+              variant="outline"
+              className="w-full py-4 border-gray-600 text-gray-300 hover:bg-gray-800"
+              size="lg"
+              data-testid="browse-games-btn"
+            >
+              <Trophy className="w-5 h-5 mr-2" />
+              Browse Open Games
+            </Button>
+            
+            <Button
+              onClick={onCancel}
+              variant="ghost"
+              className="text-gray-500 hover:text-gray-300"
+            >
+              <X className="w-4 h-4 mr-2" />
+              Cancel
+            </Button>
+          </>
+        )}
         
-        <Button
-          onClick={() => onConfirm(selectedIds, selectedPhotos)}
-          disabled={!canConfirm}
-          className={`flex-1 py-4 font-bold ${
-            canConfirm
-              ? 'bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500'
-              : 'bg-gray-700 cursor-not-allowed'
-          }`}
-          size="lg"
-          data-testid="confirm-photos-btn"
-        >
-          {canConfirm ? (
-            <>
-              <Check className="w-5 h-5 mr-2" />
-              {confirmText}
-              <ChevronRight className="w-5 h-5 ml-2" />
-            </>
-          ) : (
-            <>Select {REQUIRED_PHOTOS - selectedIds.length} more</>
-          )}
-        </Button>
+        {/* Default select mode buttons */}
+        {mode === 'select' && (
+          <div className="flex gap-3">
+            <Button
+              onClick={onCancel}
+              variant="outline"
+              className="flex-1 py-4 border-gray-700"
+              size="lg"
+            >
+              <X className="w-5 h-5 mr-2" />
+              Cancel
+            </Button>
+            
+            <Button
+              onClick={() => onConfirm(selectedIds, selectedPhotos)}
+              disabled={!canConfirm}
+              className={`flex-1 py-4 font-bold ${
+                canConfirm
+                  ? 'bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500'
+                  : 'bg-gray-700 cursor-not-allowed'
+              }`}
+              size="lg"
+              data-testid="confirm-photos-btn"
+            >
+              {canConfirm ? (
+                <>
+                  <Check className="w-5 h-5 mr-2" />
+                  {confirmText}
+                  <ChevronRight className="w-5 h-5 ml-2" />
+                </>
+              ) : (
+                <>Select {REQUIRED_PHOTOS - selectedIds.length} more</>
+              )}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
