@@ -19,7 +19,7 @@ from io import BytesIO
 from PIL import Image
 
 # Get BASE_URL from environment
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://photoduel.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pvp-matchmaker.preview.emergentagent.com')
 
 # Test credentials
 TEST_EMAIL = "test@example.com"

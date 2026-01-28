@@ -1,85 +1,83 @@
 <analysis>**original_problem_statement:**
-The user's primary goal is to enhance and stabilize the Photo Game feature on the Blendlink.net platform, with a focus on bug fixes, UI/UX improvements, and a major overhaul of the core game mechanics. A critical P0 task was to fix severe performance issues on the authenticated landing page (). After fixing the feed, the user has requested a series of significant UI and gameplay enhancements.
+The user's primary goal is to implement a major expansion for the Minted Photo Auction Bidding Battle game on the Blendlink.net platform. This update focuses on creating a full PVP (Player vs. Player) matchmaking system, introducing a resource management layer with photo stamina, and adding new strategic depth to the gameplay. The implementation must be mobile-first and responsive, with a native mobile app planned for a future phase.
 
 **PRODUCT REQUIREMENTS (from latest user requests):**
 
-1.  **Photo Game Overhaul (P1 - Phased Implementation):** Implement a comprehensive update to the photo game, including a new AI valuation system, scenery mechanics, win/loss streak bonuses, and a real-time auction bidding battle.
-    *   **Core Power / Dollar Value Updates:** Implement an 11-category AI valuation system using OpenAI GPT-4o Vision, with a base value up to ,000,000,000. This includes an optional Authenticity score based on a live video selfie match.
-    *   **Scenery System:** Introduce a Neutral scenery category and update the strength/weakness calculations between Man-made, Natural, Water, and Neutral backgrounds.
-    *   **Streaks System:** Implement win streaks (🔥) that multiply a photo's power and lose streaks (🛡) that grant immunity to scenery disadvantages.
-    *   **Auction Battle Mode:** Implement a new real-time, WebSocket-based tapping game (Photo Auction Bidding) and a strategic Rock Paper Scissors Bidding mode. This includes detailed rules for calculating required taps based on Dollar Value, scenery, and streaks.
-    *   **Bot Matches:** Implement bot opponents with selectable difficulty levels (Easy, Medium, Hard) that respect player streaks and allow for small BL coin bets.
-    *   **Level & Star Progression:** Implement a permanent XP and leveling system for minted photos, granting star bonuses (★) and a golden frame at the max level, which additively increases the photo's Dollar Value.
-2.  **UI/UX Enhancements (Completed, but must be maintained):**
-    *   A floating, semi-transparent bottom navigation bar, visible on all authenticated pages.
-    *   A More menu in the bottom nav containing links to Games, Minted Photos, and Facebook Group.
-    *   A pre-redirect share overlay for the Facebook Group link, showing recent minted photos.
-    *   A contextual Floating Action Button (FAB) to return to the Facebook group.
+1.  **Web-First Implementation (P0):** Prioritize building a fully responsive React web app that is optimized for mobile browsers. A native React Native app will be a future task.
+2.  **PVP Matchmaking & Open Games Browser (P0):**
+    *   Create an Open Games browser where players can see a list of games created by others.
+    *   Each game in the browser must display the creator's strongest photo, the total bet amount, and the combined dollar value of their 5 selected photos.
+    *   Implement a preview modal that shows all 5 of the creator's selected photos, with a flip-card animation to view detailed stats.
+    *   When a player joins a game, the creator receives a real-time web notification (in-app toast).
+    *   Implement a  screen where both players must click Ready before a synchronized, transparent 10-second countdown begins.
+3.  **Mandatory 5-Photo Selection & Stamina System (P0):**
+    *   Players must select exactly 5 minted photos before creating or joining a game.
+    *   Each photo has a stamina attribute (max 24 battles). Stamina must be >= 1 to be selected. Unselectable photos should be grayed out.
+    *   Stamina is deducted after each round: **-1 for a win, -2 for a loss**.
+    *   Stamina regenerates at a rate of **1 battle per hour** for unused photos. This should be calculated on-the-fly when photo data is loaded.
+4.  **RPS Power Advantage Rule (P0):**
+    *   In Rock-Paper-Scissors rounds, automatically compare the effective dollar value of both players' chosen photos.
+    *   The player with the higher value photo receives **+,000,000 extra bidding money** for that round only.
+    *   Add a  quick-bid button to the RPS UI to accommodate this new rule.
+5.  **Core Gameplay Parity:**
+    *   Maintain all existing game mechanics, including the round sequence, tapping battle calculations, and streak system.
+    *   The actual image of the selected minted photo must be displayed in both the Tapping Arena and the RPS Bidding screen.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application is stable and deployable. All critical performance issues on the  page have been resolved. Significant UI/UX improvements to the core navigation are complete, including a new floating bottom navigation bar with a More menu, a Facebook Group integration flow, and a link to the Games page.
+The application is stable. The initial version of the Photo Auction Bidding Battle is fully implemented and tested, including bot matches, a live selfie verification feature, and all core game mechanics (tapping game, RPS bidding, streaks, etc.).
 
-The backend foundation for the **Photo Game Overhaul** is largely complete. This includes:
-*   Updated data models for scenery, win/loss streaks, and player stats in .
-*   Battle calculation logic incorporating scenery advantages, streak bonuses, and dollar value differences.
-*   Backend routes in  to create and manage auction battles.
-*   A WebSocket endpoint () and a dedicated module () for real-time game events.
-*   An API endpoint for the live selfie match ().
-*   Logic for bot matches with difficulty levels.
+The backend has been updated to support the new PVP overhaul. This includes:
+*   New Pydantic models in  for  sessions and a  field for stamina.
+*   A backend function to calculate the new RPS Power Advantage.
+*   New API endpoints in  for creating, listing, and joining open games.
 
-The frontend UI for these new game mechanics has **not** been started.
+The frontend scaffolding for the new features has been created, but the components are empty placeholders:
+*   
+*   
+*   
 
 **Last working item**:
--   **Last item agent was working**: The agent had just completed the entire backend implementation for the Photo Game Overhaul (streaks, scenery rules, auction bidding logic, WebSockets, bot matches, and selfie match endpoint). It was about to begin the frontend implementation for the Photo Auction Bidding Battle as per the user's very detailed and strict specifications.
--   **Status**: NOT STARTED
--   **Agent Testing Done**: N (for the frontend part)
--   **Which testing method agent to use?**: Frontend testing agent. Testing must verify all UI elements, animations (with FPS counter), real-time updates via WebSockets, and exact implementation of game rules, calculations, and visuals as specified by the user.
+-   **Last item agent was working**: The agent just finished laying the groundwork for the major PVP overhaul. It updated the backend models and API routes (, ) and then created the three new placeholder React components (, , ) for the frontend. The last action was updating the component index file to export these new components.
+-   **Status**: IN PROGRESS
+-   **Agent Testing Done**: N
+-   **Which testing method agent to use?**: Frontend testing agent. Comprehensive testing will be required to validate the entire new PVP flow, from game creation and browsing to the lobby, ready-up sequence, and final gameplay with stamina and RPS advantage rules.
 -   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
-There are no outstanding bugs. The primary pending work is the feature implementation outlined below.
+There are no outstanding bugs. The work is entirely new feature development.
 
 **In progress Task List**:
--   **Task 1: Implement Frontend for Photo Game Overhaul (P0)**
-    *   **Description**: Build the entire frontend UI for the new Photo Auction Bidding Battle and Rock Paper Scissors Bidding modes. This is a large task with very specific requirements for UI, animations, and real-time data handling.
-    *   **Where to resume**: Start by creating the new React components specified by the user: , , and  within the  structure.
-    *   **What will be achieved with this?** A fully functional, real-time, engaging photo battle game that aligns with the user's detailed vision.
-    *   **Status:** NOT STARTED
-    *   **Should Test frontend/backend/both after fix?** both (to ensure e2e gameplay)
-    *   **Blocked on something:** Nothing. The backend is ready.
+-   **Task 1: Implement Frontend for Open Games & PVP Overhaul (P0)**
+    *   **Description**: Build out the logic and UI for the three newly created placeholder components to deliver the full PVP matchmaking experience.
+    -   **Where to resume**: Start implementing the logic inside . This component is the first step in the new user flow, where players must select their 5 photos and have their stamina validated.
+    -   **What will be achieved with this?** A fully functional PVP matchmaking system that acts as the new entry point to the photo game, aligning with the user's top priority.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** both
+    -   **Blocked on something:** Nothing.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    *   **Live Selfie Match UI (P1):** Create the frontend flow for the live video selfie match, allowing users to complete up to 3 tries (costing 100 BL coins each) to add the Authenticity bonus to their minted photos.
-    *   **Bot Match UI (P1):** Build the UI for selecting bot difficulty and playing against AI opponents.
+    *   **Implement  (P0):** After the  is done, build the UI to browse, search, and preview open games, including the flip-card animation.
+    *   **Implement  (P0):** Build the ready-up screen with WebSocket-driven notifications and the synchronized countdown.
+    *   **Integrate New Flow (P0):** Rework  to replace the old matchmaking UI with the new  ->  ->  flow.
+    *   **Implement RPS Power Advantage UI (P1):** Update  to display the +M bonus and add the  quick bid button.
+    *   **Implement Stamina UI (P1):** Display stamina on photo cards and ensure frontend logic reflects stamina deductions correctly.
 -   **Future Tasks:**
-    *   **Photo Editor Bugs (P2):** Investigate and fix Failed Fetch errors and other bugs in .
-    *   **Expand i18n Coverage (P2):** Integrate  hook across all remaining components with hardcoded English text.
-    *   **Marketplace Features (P2):** Implement functionality to gift, trade, or sell minted photos.
+    *   **React Native App (P2):** Develop a native mobile app with 100% feature parity.
+    *   **Mobile Push Notifications (P2):** Integrate a service like Firebase Cloud Messaging.
+    *   **Photo Editor Bugs (P2):** Fix Failed Fetch errors in .
+    *   **Expand i18n Coverage (P2):** Integrate  hook across all remaining components.
 
 **Completed work in this session**
--   **P0 Feed Page Performance Fix:**
-    -   Resolved critical lag and scrolling freezes on the  page.
-    -   Completely removed all traces of old widgets (SociableKIT, Elfsight).
-    -   Optimized the EmbedSocial widget implementation in .
-    -   Verified performance metrics (load time <1s, 60+ FPS scroll) with the testing agent.
--   **Deployment Fixes:**
-    -   Added a root-level  endpoint in  to satisfy Kubernetes health checks.
-    -   Removed unused  dependency from the root .
--   **Navigation and UI Overhaul:**
-    -   Implemented a new floating, semi-transparent bottom navigation bar in .
-    -   Created a More menu in the nav bar for Minted Photos and Facebook Group.
-    -   Added a Games link to the More menu with a custom icon.
-    -   Created a pre-redirect  component that shows recent minted photos.
-    -   Implemented a contextual  (Floating Action Button).
-    -   Ensured the floating nav bar is correctly displayed for logged-in users on public pages like .
--   **Photo Game Backend Foundation:**
-    -   Implemented the complete backend logic for the new Photo Game mechanics, including win/loss streaks, scenery strength/weakness, and updated dollar value calculations in .
-    -   Set up WebSocket infrastructure () and API endpoints () for real-time auction battles.
-    -   Added backend logic for bot matches with difficulty levels.
-    -   Created the  endpoint.
+-   **Photo Auction Bidding Battle v1 (DONE):**
+    -   Successfully implemented and tested the complete initial game flow, including , , and .
+-   **Live Selfie Match UI (DONE):**
+    -   Created and integrated the  into the  page.
+-   **Open Games Backend Foundation (DONE):**
+    -   Updated  with models for open games, stamina (), and RPS power advantage logic.
+    -   Added API endpoints in  to create, list, and manage open games.
 
 **Earlier issues found/mentioned but not fixed**
 -   **Issue 1: Photo Editor Bugs & Performance**
@@ -95,7 +93,7 @@ There are no outstanding bugs. The primary pending work is the feature implement
 
 **Known issue recurrence from previous fork**
 -   **Issue recurrence in previous fork**: The social feed widget is slow/broken was a major recurring issue in the last session.
--   **Recurrence count**: 4+ (user tried multiple different widgets)
+-   **Recurrence count**: 4+
 -   **Status**: RESOLVED
 -   **Note**: The feed performance is now stable. The user is sensitive to performance regressions.
 
@@ -103,74 +101,61 @@ There are no outstanding bugs. The primary pending work is the feature implement
 
 
 **Key Technical Concepts**
--   **Real-time Communication:** Using WebSockets for the live auction-bidding tapping game.
--   **Frontend Performance:** Lazy loading, CSS containment (), and  for optimizing the social feed.
--   **Advanced UI/UX:** Building a floating, semi-transparent navigation bar and contextual FABs. Using Framer Motion for animations.
--   **Component-based Architecture:** Creating modular components for UI elements like the Share Overlay, FAB, and upcoming game components (, ).
--   **Deployment Health Checks:** Understanding and implementing root-level  endpoints for Kubernetes readiness probes.
+-   **Full-stack Feature Expansion:** Building on an existing feature with significant changes to both frontend and backend.
+-   **On-the-fly Calculation:** Designing the stamina regeneration system to be calculated on read, avoiding the need for cron jobs.
+-   **Complex State Management:** Orchestrating a new multi-step user flow:  ->  ->  -> .
+-   **Real-time UI:** Using WebSockets for live notifications and lobby synchronization.
 
 **key DB schema**
--   No database schema changes were made in this session. Existing collections in MongoDB like , , and  were used and updated.
+-   **photos** collection: Documents will be updated to include  to enable on-the-fly stamina calculation.
 
 **All files of reference**
-*   : The primary file to be modified for the next task.
-*   : Contains all the new game logic (streaks, battle calculations).
-*    & : Define the API and real-time communication for the game.
-*   : The implementation of the core navigation.
-*   : Main backend application file, contains the crucial  endpoint fix.
-
-**Areas that need refactoring**:
--   : This file will require a significant rewrite to implement the new, complex game modes (, ). It should be broken down into smaller, manageable components.
-
-**key api endpoints**
-*   : Retrieves win/loss streak info for a user's photos.
-*   : Creates a new auction battle room.
-*   : Allows a player to join an existing auction battle.
-*   : Processes the live selfie match for the Authenticity score.
-*   : Real-time WebSocket endpoint for the auction tapping game.
-*   : **Critical** root-level endpoint for Kubernetes health checks.
+*   : The first component to be implemented.
+*   : The second component to implement.
+*   : The third component to implement.
+*   : The main page that will need to be restructured to integrate the new PVP flow.
+*   : Contains the new backend logic for stamina and RPS advantage.
+*   : Defines the new API for the open games system.
 
 **Critical Info for New Agent**
--   **Follow Instructions Exactly:** The user has provided extremely detailed, strict, and non-negotiable requirements for the Minted Photo Auction Bidding Battle. You **must** implement every rule, calculation, UI detail, and animation exactly as specified in the last user message. Do not simplify, modify, or add your own interpretations.
--   **Phased Approach:** The project is divided into phases. The backend for the game overhaul is **complete**. Your immediate and sole focus is on implementing the **frontend UI** for the new game modes.
--   **Component Structure:** The user expects new components like , , and . You should build these within the existing  structure.
--   **Real-time is Key:** The auction tapping game must be implemented using WebSockets for a real-time experience, as confirmed with the user.
--   **Performance is still a priority**: The user is sensitive to performance. Ensure all new animations are smooth (60 FPS target) and components are optimized.
+-   **Strict Implementation Order:** The user has provided a clear, phased implementation plan. You **must** follow it:
+    1.  **OpenGamesBrowser + PVP Matchmaking** (start with ).
+    2.  **Stamina System** integration.
+    3.  **RPS Power Advantage** rule integration.
+-   **Web-First Priority:** Focus exclusively on the responsive web application. The native mobile app is a future task.
+-   **Start with Placeholders:** The frontend components , , and  are currently empty files. Your first task is to build out the UI and logic within them, starting with .
+-   **Backend is Ready:** The necessary backend changes (models, APIs) for the new features are already in place. You can start building the frontend immediately.
 
 **documents and test reports created in this job**
 *   
 *   
-*   
-*    (updated multiple times)
+*    (updated for all completed features)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Fix Google Auth failure in the mobile app. (COMPLETED - was a deployment issue).
-2.  **User**: Provided detailed build error logs showing deployment failure. (COMPLETED - fixed by adding /health endpoint).
-3.  **User**: Add a Games section to the bottom navigation bar. (COMPLETED).
-4.  **User**: Enhance navigation transparency and the Facebook integration flow. (COMPLETED).
-5.  **User**: Provided very detailed requirements for the complete Photo Game overhaul (valuation, scenery, streaks, auction bidding). (IN PROGRESS - Backend is DONE, Frontend is NEXT).
-6.  **User (Clarification)**: Confirmed use of OpenAI GPT-4o for vision tasks, WebSockets for the tapping game, and provided detailed requirements for bot match behavior. (Acknowleged, plan updated).
-7.  **User**: Yes continue proceed with the frontend UI updates for the tapping game and next action items. (PENDING - This is the current directive).
-8.  **User**: Provided an extremely strict and detailed implementation request for the Minted Photo Auction Bidding Battle frontend. (PENDING - This is the spec for the current task).
+1.  User: (FINISH) Called  after implementing the Bot Match UI and successfully testing the full v1 game flow.
+2.  User: **Provided a new, massive spec for a v2 game overhaul.** This includes web+mobile sync, a 5-photo selection requirement, a stamina system, an open games browser, and a new RPS power advantage rule. (PENDING)
+3.  Agent: Analyzed the user's provided screenshot.
+4.  Agent: **Asked clarifying questions** about implementation priorities (web vs. native, order of features, stamina calculation method, and notifications).
+5.  User: **Replied with clear priorities.** 1. Web-first. 2. Specific implementation order (Matchmaking -> Stamina -> RPS Advantage). 3. On-the-fly stamina calculation. 4. Web-only notifications for now. This is the current directive. (ACKNOWLEDGED)
+6.  Agent: Started implementing the backend changes for the new requirements. (IN PROGRESS)
 
 **Project Health Check:**
-*   **Live**: The application is healthy and ready for deployment.
+*   **Live**: The application is healthy and all existing features are working.
 *   **Broken**: Nothing is currently broken.
 *   **Mocked**: No mocked components.
 
 **3rd Party Integrations**
-*   **EmbedSocial**: Used for the Facebook Group feed on .
-*   **OpenAI GPT-4o Vision**: Confirmed for use in the photo valuation and live selfie match system.
-*   **Stripe, Shippo, Resend, remove.bg, ip-api.com**: Existing integrations.
+*   **EmbedSocial**: For the Facebook Group feed.
+*   **OpenAI GPT-4o Vision**: For photo valuation and selfie matching.
+*   **Existing**: Stripe, Shippo, Resend, remove.bg, ip-api.com.
 
 **Testing status**
--   **Testing agent used after significant changes**: YES (Used successfully after feed page fix and navigation updates).
--   **Troubleshoot agent used after agent stuck in loop**: NO
--   **Test files created**: None.
--   **Known regressions**: None. The major performance regression on the  page was fixed.
+-   **Testing agent used after significant changes**: YES. V1 of the Photo Game was thoroughly tested and passed. The agent will be needed again for the v2 overhaul.
+-   **Test files created**: 
+-   **Known regressions**: None.
 
 **Credentials to test flow:**
--   A test account was created with email . Use the registration flow to create new test users if needed.
+-   Use the registration flow to create new test users. A test account  was previously used.
 
 **What agent forgot to execute**
--   The agent has not forgotten anything. It has completed the backend phase of the current task and is correctly positioned to start the frontend phase, as per the user's instructions.</analysis>
+-   The agent has followed the user's plan correctly. It has completed the backend foundation for the new features and created the necessary frontend placeholder files, positioning the next agent to begin implementation immediately.</analysis>
