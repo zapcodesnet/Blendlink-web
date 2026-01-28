@@ -974,3 +974,200 @@ async def get_authenticity_status(mint_id: str):
             photo.get("selfie_match_attempts", 0) < 3
         ),
     }
+
+
+
+@minting_router.post("/photos/{mint_id}/claim-birthday-bonus")
+async def claim_birthday_bonus(
+    mint_id: str,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """
+    Claim the yearly birthday bonus for a minted photo.
+    +5,000 BL coins on minting anniversary date each year.
+    """
+    from minting_system import BIRTHDAY_BONUS_BL
+    from datetime import datetime, timezone
+    
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    # Verify ownership
+    photo = await _db.minted_photos.find_one(
+        {"mint_id": mint_id, "user_id": current_user["user_id"]},
+        {"_id": 0}
+    )
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found or does not belong to you")
+    
+    now = datetime.now(timezone.utc)
+    minted_at = photo.get("minted_at")
+    if isinstance(minted_at, str):
+        minted_at = datetime.fromisoformat(minted_at.replace('Z', '+00:00'))
+    
+    if not minted_at:
+        raise HTTPException(status_code=400, detail="Photo minting date not available")
+    
+    # Check if today is the anniversary (same month and day)
+    is_anniversary = (now.month == minted_at.month and now.day == minted_at.day)
+    
+    if not is_anniversary:
+        days_until_birthday = ((minted_at.replace(year=now.year) - now).days) % 365
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Birthday bonus can only be claimed on the minting anniversary. {days_until_birthday} days until next anniversary."
+        )
+    
+    # Check if already claimed this year
+    last_claimed_year = photo.get("last_birthday_bonus_year", 0)
+    if last_claimed_year >= now.year:
+        raise HTTPException(status_code=400, detail="Birthday bonus already claimed this year")
+    
+    # Award the bonus
+    await _db.users.update_one(
+        {"user_id": current_user["user_id"]},
+        {"$inc": {"bl_coins": BIRTHDAY_BONUS_BL}}
+    )
+    
+    # Update photo's last claim year
+    await _db.minted_photos.update_one(
+        {"mint_id": mint_id},
+        {"$set": {"last_birthday_bonus_year": now.year}}
+    )
+    
+    # Record transaction
+    from referral_system import record_transaction, TransactionType, Currency
+    await record_transaction(
+        user_id=current_user["user_id"],
+        transaction_type=TransactionType.BIRTHDAY_BONUS,
+        currency=Currency.BL,
+        amount=BIRTHDAY_BONUS_BL,
+        reference_id=mint_id,
+        details={"type": "birthday_bonus", "photo_name": photo.get("name")}
+    )
+    
+    return {
+        "success": True,
+        "bl_awarded": BIRTHDAY_BONUS_BL,
+        "photo_name": photo.get("name"),
+        "message": f"🎂 Happy Birthday to '{photo.get('name')}'! You received {BIRTHDAY_BONUS_BL:,} BL coins!"
+    }
+
+
+@minting_router.post("/subscription/claim-daily-bl")
+async def claim_daily_subscription_bl(
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """
+    Claim daily BL coins based on subscription tier.
+    - Bronze: 15,000 BL/day
+    - Silver: 35,000 BL/day
+    - Gold: 80,000 BL/day
+    - Platinum: 200,000 BL/day
+    """
+    from minting_system import SUBSCRIPTION_TIERS
+    from datetime import datetime, timezone
+    
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    user = await _db.users.find_one({"user_id": current_user["user_id"]}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    subscription_tier = user.get("subscription_tier", "free")
+    tier_config = SUBSCRIPTION_TIERS.get(subscription_tier, SUBSCRIPTION_TIERS["free"])
+    daily_bl_claim = tier_config.get("daily_bl_claim", 0)
+    
+    if daily_bl_claim <= 0:
+        raise HTTPException(status_code=400, detail="Free tier does not include daily BL claim. Subscribe to unlock!")
+    
+    # Check if already claimed today
+    now = datetime.now(timezone.utc)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    last_claim = user.get("last_daily_bl_claim")
+    if last_claim:
+        if isinstance(last_claim, str):
+            last_claim = datetime.fromisoformat(last_claim.replace('Z', '+00:00'))
+        if last_claim >= today_start:
+            next_claim_in = 24 - (now - last_claim).seconds // 3600
+            raise HTTPException(status_code=400, detail=f"Daily BL already claimed. Next claim in {next_claim_in} hours.")
+    
+    # Award the daily BL
+    await _db.users.update_one(
+        {"user_id": current_user["user_id"]},
+        {
+            "$inc": {"bl_coins": daily_bl_claim},
+            "$set": {"last_daily_bl_claim": now.isoformat()}
+        }
+    )
+    
+    # Record transaction
+    from referral_system import record_transaction, TransactionType, Currency
+    await record_transaction(
+        user_id=current_user["user_id"],
+        transaction_type=TransactionType.SUBSCRIPTION_BONUS,
+        currency=Currency.BL,
+        amount=daily_bl_claim,
+        reference_id=f"daily_{now.strftime('%Y%m%d')}",
+        details={"type": "daily_subscription_claim", "tier": subscription_tier}
+    )
+    
+    return {
+        "success": True,
+        "bl_awarded": daily_bl_claim,
+        "subscription_tier": subscription_tier,
+        "message": f"💰 Daily claim successful! +{daily_bl_claim:,} BL coins from your {subscription_tier.title()} subscription!"
+    }
+
+
+@minting_router.get("/subscription/info")
+async def get_subscription_info(
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """Get current subscription tier and benefits"""
+    from minting_system import SUBSCRIPTION_TIERS
+    from datetime import datetime, timezone
+    
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    user = await _db.users.find_one({"user_id": current_user["user_id"]}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    subscription_tier = user.get("subscription_tier", "free")
+    tier_config = SUBSCRIPTION_TIERS.get(subscription_tier, SUBSCRIPTION_TIERS["free"])
+    
+    # Check if can claim today
+    now = datetime.now(timezone.utc)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    last_claim = user.get("last_daily_bl_claim")
+    can_claim = True
+    
+    if last_claim:
+        if isinstance(last_claim, str):
+            last_claim = datetime.fromisoformat(last_claim.replace('Z', '+00:00'))
+        if last_claim >= today_start:
+            can_claim = False
+    
+    return {
+        "current_tier": subscription_tier,
+        "benefits": {
+            "daily_mint_limit": tier_config.get("daily_mint_limit"),
+            "xp_multiplier": tier_config.get("xp_multiplier"),
+            "daily_bl_claim": tier_config.get("daily_bl_claim"),
+            "price": tier_config.get("price"),
+        },
+        "can_claim_daily_bl": can_claim and tier_config.get("daily_bl_claim", 0) > 0,
+        "all_tiers": {
+            name: {
+                "daily_mint_limit": config.get("daily_mint_limit"),
+                "xp_multiplier": config.get("xp_multiplier"),
+                "daily_bl_claim": config.get("daily_bl_claim"),
+                "price": config.get("price"),
+            }
+            for name, config in SUBSCRIPTION_TIERS.items()
+        }
+    }
