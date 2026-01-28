@@ -710,9 +710,11 @@ export const RPSBidding = ({
           
           {/* Bid Selection */}
           <div className="mb-6">
-            <p className="text-sm text-gray-400 mb-3 text-center">Set your bid (min $1M):</p>
+            <p className="text-sm text-gray-400 mb-3 text-center">
+              Set your bid (min $1M{hasPlayerAdvantage ? ', max $6M with advantage' : ''}):
+            </p>
             <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
-              {BID_OPTIONS.map((amount) => (
+              {currentBidOptions.map((amount) => (
                 <BidButton
                   key={amount}
                   amount={amount}
@@ -723,6 +725,11 @@ export const RPSBidding = ({
                 />
               ))}
             </div>
+            {hasPlayerAdvantage && (
+              <p className="text-center text-xs text-green-400 mt-2">
+                ⚡ $6M bid unlocked from Power Advantage!
+              </p>
+            )}
           </div>
           
           {/* Max bid warning */}
