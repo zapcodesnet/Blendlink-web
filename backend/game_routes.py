@@ -733,6 +733,25 @@ async def record_round_result(
             {"mint_id": mint_id},
             {"$set": {"medals": medals}}
         )
+        
+        # Award bonus coins to user's wallet
+        user_id = current_user["user_id"]
+        await _db.users.update_one(
+            {"user_id": user_id},
+            {
+                "$inc": {"bl_coins": bonus_coins},
+                "$push": {
+                    "coin_transactions": {
+                        "type": "medal_bonus",
+                        "amount": bonus_coins,
+                        "description": f"🏅 10-Win Streak Medal Bonus for {photo.get('name', 'Photo')}",
+                        "photo_mint_id": mint_id,
+                        "timestamp": datetime.now(timezone.utc).isoformat()
+                    }
+                }
+            }
+        )
+        logger.info(f"User {user_id} received {bonus_coins} BL coins for medal on photo {mint_id}")
     
     return {
         "success": True,
@@ -741,6 +760,7 @@ async def record_round_result(
         "new_win_streak": new_win_streak if round_won else 0,
         "medal_earned": medal_earned,
         "total_medals": medals.get("ten_win_streak", 0),
+        "bonus_coins": bonus_coins,
     }
 
 
