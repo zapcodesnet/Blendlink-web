@@ -8,3 +8,6 @@ export { TappingArena } from './TappingArena';
 export { RPSBidding } from './RPSBidding';
 export { BattleArena } from './BattleArena';
 export { BotDifficultySelector } from './BotDifficultySelector';
+export { OpenGamesBrowser } from './OpenGamesBrowser';
+export { PhotoSelector } from './PhotoSelector';
+export { GameLobby } from './GameLobby';
