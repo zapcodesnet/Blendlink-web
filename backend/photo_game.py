@@ -28,8 +28,20 @@ STAMINA_REGEN_PER_HOUR = 1  # Regenerate 1 battle per hour
 STAMINA_COST_WIN = 1  # Cost per round won
 STAMINA_COST_LOSS = 2  # Cost per round lost
 
+# Legacy stamina constants for backward compatibility
+STAMINA_PER_BATTLE = 4.167  # Percentage per battle (100/24)
+STAMINA_PERCENT_PER_BATTLE = 4.167  # Same as above
+DEFEAT_STAMINA_PENALTY = 2  # 2x stamina cost for loss
+
 # Required photos for PVP
 REQUIRED_PHOTOS_PER_PLAYER = 5
+
+# Light Types (for photo analysis)
+LIGHT_TYPES = {
+    "sunlight_fire": {"name": "Sunlight/Fire", "strong_vs": "rain_snow_ice", "weak_vs": "darkness_night"},
+    "rain_snow_ice": {"name": "Rain/Snow/Ice", "strong_vs": "darkness_night", "weak_vs": "sunlight_fire"},
+    "darkness_night": {"name": "Darkness/Night/Interior", "strong_vs": "sunlight_fire", "weak_vs": "rain_snow_ice"},
+}
 
 # Million Dollar RPS Constants
 STARTING_BANKROLL = 5_000_000  # $5M starting bankroll (per spec)
