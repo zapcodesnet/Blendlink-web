@@ -773,6 +773,106 @@ async def update_privacy_settings(data: PrivacySettingsUpdate, current_user: dic
         "message": "Privacy settings updated successfully"
     }
 
+
+# Medal Showcase API
+class MedalShowcaseUpdate(BaseModel):
+    showcase_photo_ids: List[str] = []
+
+
+@users_router.put("/me/medal-showcase")
+async def update_medal_showcase(data: MedalShowcaseUpdate, current_user: dict = Depends(get_current_user)):
+    """Update user's medal showcase - choose which decorated photos to feature"""
+    # Limit to 5 photos
+    photo_ids = data.showcase_photo_ids[:5]
+    
+    # Verify all photos belong to user and have medals
+    if photo_ids:
+        photos = await db.minted_photos.find({
+            "mint_id": {"$in": photo_ids},
+            "user_id": current_user["user_id"]
+        }, {"_id": 0}).to_list(5)
+        
+        # Only include photos that exist
+        valid_ids = [p["mint_id"] for p in photos]
+        photo_ids = [pid for pid in photo_ids if pid in valid_ids]
+    
+    # Update user's showcase
+    await db.users.update_one(
+        {"user_id": current_user["user_id"]},
+        {"$set": {
+            "medal_showcase_ids": photo_ids,
+            "medal_showcase_updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {
+        "success": True,
+        "showcase_photo_ids": photo_ids,
+        "message": "Medal showcase updated successfully"
+    }
+
+
+@users_router.get("/{user_id}/medal-showcase")
+async def get_user_medal_showcase(user_id: str):
+    """Get a user's medal showcase (public endpoint)"""
+    # Get user's showcase settings
+    user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    showcase_ids = user.get("medal_showcase_ids", [])
+    
+    # Get all user's photos with medals
+    from game_routes import _db as game_db
+    
+    all_photos = await db.minted_photos.find(
+        {"user_id": user_id},
+        {"_id": 0, "mint_id": 1, "name": 1, "image_url": 1, "dollar_value": 1, "medals": 1}
+    ).to_list(100)
+    
+    # Enrich with stamina data for medal counts
+    enriched_photos = []
+    total_medals = 0
+    
+    for photo in all_photos:
+        stamina_record = await db.photo_stamina.find_one({"mint_id": photo["mint_id"]})
+        medals = {}
+        win_streak = 0
+        
+        if stamina_record:
+            medals = stamina_record.get("medals", {"ten_win_streak": 0})
+            win_streak = stamina_record.get("win_streak", 0)
+        
+        # Also check photo itself
+        if not medals.get("ten_win_streak") and photo.get("medals"):
+            medals = photo.get("medals", {"ten_win_streak": 0})
+        
+        medal_count = medals.get("ten_win_streak", 0)
+        if medal_count > 0:
+            total_medals += medal_count
+            enriched_photos.append({
+                **photo,
+                "medals": medals,
+                "win_streak": win_streak,
+            })
+    
+    # Get showcase photos in order
+    showcase_photos = []
+    for mint_id in showcase_ids:
+        for p in enriched_photos:
+            if p["mint_id"] == mint_id:
+                showcase_photos.append(p)
+                break
+    
+    return {
+        "user_id": user_id,
+        "showcase_photo_ids": showcase_ids,
+        "showcase_photos": showcase_photos,
+        "all_medal_photos": enriched_photos,
+        "total_medals": total_medals,
+    }
+
+
 @users_router.get("/{user_id}/friends")
 async def get_user_friends(user_id: str, current_user: dict = Depends(get_current_user)):
     """Get list of approved friends for a user"""
