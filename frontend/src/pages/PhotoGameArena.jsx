@@ -1546,7 +1546,7 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect, onPracticeSta
 // ============== MAIN BATTLE ARENA COMPONENT ==============
 const PhotoGameArena = () => {
   const { user } = useContext(AuthContext);
-  const [gameState, setGameState] = useState('matchmaking');
+  const [gameState, setGameState] = useState('pvp_menu'); // NEW: Start with PVP menu
   const [session, setSession] = useState(null);
   const [stats, setStats] = useState(null);
   const [matchData, setMatchData] = useState(null);
@@ -1570,6 +1570,11 @@ const PhotoGameArena = () => {
   const [battleBetAmount, setBattleBetAmount] = useState(0);
   const [isAuctionBattleBot, setIsAuctionBattleBot] = useState(false);
   const [botDifficulty, setBotDifficulty] = useState('medium');
+  
+  // NEW: PVP Open Games state
+  const [selectedPhotoIds, setSelectedPhotoIds] = useState([]);
+  const [selectedPhotosData, setSelectedPhotosData] = useState([]);
+  const [currentOpenGame, setCurrentOpenGame] = useState(null);
   
   useEffect(() => {
     auctionSounds.init();
