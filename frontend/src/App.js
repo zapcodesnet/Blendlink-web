@@ -71,6 +71,7 @@ import Pages from "./pages/Pages";
 import MyTeam from "./pages/MyTeam";
 import MintedPhotos from "./pages/MintedPhotos";
 import PhotoGameArena from "./pages/PhotoGameArena";
+import BattleReplayPage from "./pages/BattleReplayPage";
 import SubscriptionTiers from "./pages/SubscriptionTiers";
 import Checkout from "./pages/Checkout";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
