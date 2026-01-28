@@ -1,83 +1,67 @@
 <analysis>**original_problem_statement:**
-The user's primary goal is to implement a major expansion for the Minted Photo Auction Bidding Battle game on the Blendlink.net platform. This update focuses on creating a full PVP (Player vs. Player) matchmaking system, introducing a resource management layer with photo stamina, and adding new strategic depth to the gameplay. The implementation must be mobile-first and responsive, with a native mobile app planned for a future phase.
+The user's primary goal is to implement a major expansion for the Minted Photo Auction Bidding Battle game on the Blendlink.net platform. This involves creating a full PVP matchmaking system, a resource management layer with photo stamina, new strategic depth with the RPS Power Advantage rule, a shareable match history/replay system, and a permanent medal achievement system for 10-win streaks.
 
-**PRODUCT REQUIREMENTS (from latest user requests):**
-
-1.  **Web-First Implementation (P0):** Prioritize building a fully responsive React web app that is optimized for mobile browsers. A native React Native app will be a future task.
-2.  **PVP Matchmaking & Open Games Browser (P0):**
-    *   Create an Open Games browser where players can see a list of games created by others.
-    *   Each game in the browser must display the creator's strongest photo, the total bet amount, and the combined dollar value of their 5 selected photos.
-    *   Implement a preview modal that shows all 5 of the creator's selected photos, with a flip-card animation to view detailed stats.
-    *   When a player joins a game, the creator receives a real-time web notification (in-app toast).
-    *   Implement a  screen where both players must click Ready before a synchronized, transparent 10-second countdown begins.
-3.  **Mandatory 5-Photo Selection & Stamina System (P0):**
-    *   Players must select exactly 5 minted photos before creating or joining a game.
-    *   Each photo has a stamina attribute (max 24 battles). Stamina must be >= 1 to be selected. Unselectable photos should be grayed out.
-    *   Stamina is deducted after each round: **-1 for a win, -2 for a loss**.
-    *   Stamina regenerates at a rate of **1 battle per hour** for unused photos. This should be calculated on-the-fly when photo data is loaded.
-4.  **RPS Power Advantage Rule (P0):**
-    *   In Rock-Paper-Scissors rounds, automatically compare the effective dollar value of both players' chosen photos.
-    *   The player with the higher value photo receives **+,000,000 extra bidding money** for that round only.
-    *   Add a  quick-bid button to the RPS UI to accommodate this new rule.
-5.  **Core Gameplay Parity:**
-    *   Maintain all existing game mechanics, including the round sequence, tapping battle calculations, and streak system.
-    *   The actual image of the selected minted photo must be displayed in both the Tapping Arena and the RPS Bidding screen.
+Most recently, the user has requested to:
+1.  **Fix Profile Picture Settings**: Enable users to select one of their minted photos as their profile picture on the  page.
+2.  **Add Medal Showcase**: Implement an optional Medal Showcase section on user profiles to display their proudest photos that have earned medals.
+3.  **Add Medal Bonus & Animation**: When a photo earns a 10-win streak medal, award the owner 10,000 BL coins and show a celebration animation (medal + gold coins).
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application is stable. The initial version of the Photo Auction Bidding Battle is fully implemented and tested, including bot matches, a live selfie verification feature, and all core game mechanics (tapping game, RPS bidding, streaks, etc.).
+The application features a complete and tested PVP matchmaking system, including a , , and . Core gameplay mechanics like the RPS Power Advantage, stamina system, match history, and a permanent 10-win streak medal achievement are fully implemented on both the frontend and backend.
 
-The backend has been updated to support the new PVP overhaul. This includes:
-*   New Pydantic models in  for  sessions and a  field for stamina.
-*   A backend function to calculate the new RPS Power Advantage.
-*   New API endpoints in  for creating, listing, and joining open games.
-
-The frontend scaffolding for the new features has been created, but the components are empty placeholders:
-*   
-*   
-*   
+However, the UI for several new features requested by the user consists of placeholder components that are not yet integrated:
+*   The profile picture selection on the  page is not functional.
+*    and  are empty placeholder components.
+*   The backend has been prepared with an endpoint to update profile pictures (), an endpoint to fetch medal data for the showcase (), and logic to award a 10,000 BL coin bonus when a medal is earned.
 
 **Last working item**:
--   **Last item agent was working**: The agent just finished laying the groundwork for the major PVP overhaul. It updated the backend models and API routes (, ) and then created the three new placeholder React components (, , ) for the frontend. The last action was updating the component index file to export these new components.
+-   **Last item agent was working**: The agent was scaffolding the features for the latest user request. It added the logic to award a 10,000 BL coin bonus to , created an API endpoint for the medal showcase in , and created the placeholder frontend components  and .
 -   **Status**: IN PROGRESS
 -   **Agent Testing Done**: N
--   **Which testing method agent to use?**: Frontend testing agent. Comprehensive testing will be required to validate the entire new PVP flow, from game creation and browsing to the lobby, ready-up sequence, and final gameplay with stamina and RPS advantage rules.
+-   **Which testing method agent to use?**: Frontend testing agent. The agent will need to test the entire profile picture selection flow, verify the medal showcase on user profiles, and trigger the celebration animation within a game to confirm it works.
 -   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
 There are no outstanding bugs. The work is entirely new feature development.
 
 **In progress Task List**:
--   **Task 1: Implement Frontend for Open Games & PVP Overhaul (P0)**
-    *   **Description**: Build out the logic and UI for the three newly created placeholder components to deliver the full PVP matchmaking experience.
-    -   **Where to resume**: Start implementing the logic inside . This component is the first step in the new user flow, where players must select their 5 photos and have their stamina validated.
-    -   **What will be achieved with this?** A fully functional PVP matchmaking system that acts as the new entry point to the photo game, aligning with the user's top priority.
-    -   **Status:** IN PROGRESS
+-   **Task 1: Implement Profile Picture, Medal Showcase, and Bonus Animation (P0)**
+    -   **Description**: This task involves wiring up the backend logic and placeholder components created in the previous step to deliver three new user-facing features.
+    -   **Where to resume**:
+        1.  In , implement the logic to open a  and call the  endpoint upon selection.
+        2.  Flesh out  to fetch data from the  endpoint and display the photos. Integrate this component into .
+        3.  Implement the celebration animation in  and trigger it from  when the API response from recording a round result indicates a medal was earned.
+    -   **What will be achieved with this?** A more personalized user experience with custom profile pictures, a way to showcase achievements, and a rewarding visual feedback loop for winning.
+    -   **Status**: IN PROGRESS
     -   **Should Test frontend/backend/both after fix?** both
     -   **Blocked on something:** Nothing.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    *   **Implement  (P0):** After the  is done, build the UI to browse, search, and preview open games, including the flip-card animation.
-    *   **Implement  (P0):** Build the ready-up screen with WebSocket-driven notifications and the synchronized countdown.
-    *   **Integrate New Flow (P0):** Rework  to replace the old matchmaking UI with the new  ->  ->  flow.
-    *   **Implement RPS Power Advantage UI (P1):** Update  to display the +M bonus and add the  quick bid button.
-    *   **Implement Stamina UI (P1):** Display stamina on photo cards and ensure frontend logic reflects stamina deductions correctly.
+    *   **Implement Real-time Lobby (P1):** Convert the  from HTTP polling to a real-time WebSocket connection for instant Ready status updates.
 -   **Future Tasks:**
-    *   **React Native App (P2):** Develop a native mobile app with 100% feature parity.
-    *   **Mobile Push Notifications (P2):** Integrate a service like Firebase Cloud Messaging.
-    *   **Photo Editor Bugs (P2):** Fix Failed Fetch errors in .
-    *   **Expand i18n Coverage (P2):** Integrate  hook across all remaining components.
+    *   **React Native App (P2):** Develop a native mobile app with 100% feature parity with the web application.
+    *   **Mobile Push Notifications (P2):** Integrate a service like Firebase Cloud Messaging for game invites and other events.
+    *   **Photo Editor Bugs (P2):** Investigate and fix Failed Fetch errors and other reported issues in .
+    *   **Expand i18n Coverage (P2):** Integrate the  hook across all remaining components that still have hardcoded English text.
 
 **Completed work in this session**
--   **Photo Auction Bidding Battle v1 (DONE):**
-    -   Successfully implemented and tested the complete initial game flow, including , , and .
--   **Live Selfie Match UI (DONE):**
-    -   Created and integrated the  into the  page.
--   **Open Games Backend Foundation (DONE):**
-    -   Updated  with models for open games, stamina (), and RPS power advantage logic.
-    -   Added API endpoints in  to create, list, and manage open games.
+-   **Battle Achievements & Badges (DONE):**
+    -   Implemented a permanent, transferable 10-win streak medal (🏅) system in  and .
+    -   The medal count is now displayed next to the photo's name on all relevant photo cards (, ).
+-   **Match History & Shareable Replays (DONE):**
+    -   Created a  component to view past battles and a public  for shareable links.
+    -   Added a backend endpoint () to serve detailed game data.
+    -   Enabled sharing of replays to the community Facebook group.
+-   **Stamina & Notification UI (DONE):**
+    -   The  results screen now clearly displays stamina deductions for each photo (-1 for a win, -2 for a loss).
+    -    now uses  to show an in-app toast notification when an opponent joins the game.
+-   **RPS Power Advantage UI (DONE):**
+    -   The  component now displays a +,000,000 indicator and adds a  quick-bid button when a player has the photo value advantage.
+-   **PVP Matchmaking System (DONE):**
+    -   Successfully implemented and integrated the complete  ->  ->  flow into .
 
 **Earlier issues found/mentioned but not fixed**
 -   **Issue 1: Photo Editor Bugs & Performance**
@@ -92,70 +76,71 @@ There are no outstanding bugs. The work is entirely new feature development.
     -   **Is recurring issue?** N
 
 **Known issue recurrence from previous fork**
--   **Issue recurrence in previous fork**: The social feed widget is slow/broken was a major recurring issue in the last session.
+-   **Issue recurrence in previous fork**: The social feed widget is slow/broken was a major recurring issue in a previous session.
 -   **Recurrence count**: 4+
 -   **Status**: RESOLVED
--   **Note**: The feed performance is now stable. The user is sensitive to performance regressions.
+-   **Note**: The feed performance is now stable and should be monitored.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Full-stack Feature Expansion:** Building on an existing feature with significant changes to both frontend and backend.
--   **On-the-fly Calculation:** Designing the stamina regeneration system to be calculated on read, avoiding the need for cron jobs.
--   **Complex State Management:** Orchestrating a new multi-step user flow:  ->  ->  -> .
--   **Real-time UI:** Using WebSockets for live notifications and lobby synchronization.
+-   **Full-Stack Feature Development**: Implementing features that require coordinated changes across the React frontend, FastAPI backend, and MongoDB database.
+-   **API-Driven UI**: Building frontend components that fetch data from, and send updates to, a RESTful API.
+-   **State Management & Component Integration**: Weaving new components (, ) and modals into existing, complex pages like  and .
+-   **Animations for User Feedback**: Using  to create engaging animations that confirm user actions and celebrate achievements.
 
 **key DB schema**
--   **photos** collection: Documents will be updated to include  to enable on-the-fly stamina calculation.
+-   **users**: The  field will be updated with the URL of a minted photo. The  field will be incremented when a medal bonus is awarded.
+-   **photo_stamina**: This collection holds the  object (e.g., ) and  counter for each photo. It is the source of truth for all achievements.
 
 **All files of reference**
-*   : The first component to be implemented.
-*   : The second component to implement.
-*   : The third component to implement.
-*   : The main page that will need to be restructured to integrate the new PVP flow.
-*   : Contains the new backend logic for stamina and RPS advantage.
-*   : Defines the new API for the open games system.
+-   **Primary Implementation Files**:
+    -   
+    -   
+    -   
+    -   
+    -   
+-   **Backend Logic**:
+    -    (specifically the  endpoint)
+    -    (for profile picture and medal showcase endpoints)
 
 **Critical Info for New Agent**
--   **Strict Implementation Order:** The user has provided a clear, phased implementation plan. You **must** follow it:
-    1.  **OpenGamesBrowser + PVP Matchmaking** (start with ).
-    2.  **Stamina System** integration.
-    3.  **RPS Power Advantage** rule integration.
--   **Web-First Priority:** Focus exclusively on the responsive web application. The native mobile app is a future task.
--   **Start with Placeholders:** The frontend components , , and  are currently empty files. Your first task is to build out the UI and logic within them, starting with .
--   **Backend is Ready:** The necessary backend changes (models, APIs) for the new features are already in place. You can start building the frontend immediately.
+-   Your immediate task is to bring the placeholder components to life. The backend APIs and data structures are already in place.
+-   **Profile Picture Flow**: Start with . On clicking the avatar's edit icon, open a modal containing the  component. On photo selection, call the  endpoint with the .
+-   **Medal Showcase Flow**: Implement  to fetch from  and display the resulting photo data. Then, add this component to the  page. Remember the user's requirement for it to be optional.
+-   **Celebration Animation Flow**: The  endpoint now returns a boolean . In , check for this flag in the response and, if true, trigger the  animation.
 
 **documents and test reports created in this job**
-*   
-*   
-*    (updated for all completed features)
+-   
+-    (fully updated with all completed work)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  User: (FINISH) Called  after implementing the Bot Match UI and successfully testing the full v1 game flow.
-2.  User: **Provided a new, massive spec for a v2 game overhaul.** This includes web+mobile sync, a 5-photo selection requirement, a stamina system, an open games browser, and a new RPS power advantage rule. (PENDING)
-3.  Agent: Analyzed the user's provided screenshot.
-4.  Agent: **Asked clarifying questions** about implementation priorities (web vs. native, order of features, stamina calculation method, and notifications).
-5.  User: **Replied with clear priorities.** 1. Web-first. 2. Specific implementation order (Matchmaking -> Stamina -> RPS Advantage). 3. On-the-fly stamina calculation. 4. Web-only notifications for now. This is the current directive. (ACKNOWLEDGED)
-6.  Agent: Started implementing the backend changes for the new requirements. (IN PROGRESS)
+1.  User: (FINISH) Finished the Battle Achievements & Medals task.
+2.  User: **Requested fixing profile picture settings, adding a Medal Showcase, and a 10,000 BL coin bonus with animation for earning a medal.** (PENDING)
+3.  Agent: Asked for clarification on the Medal Showcase visibility (public/private).
+4.  User: **Clarified that the Medal Showcase should be optional for both the owner and visitors.** (ACKNOWLEDGED)
+5.  Agent: Started implementation by exploring files.
 
 **Project Health Check:**
-*   **Live**: The application is healthy and all existing features are working.
-*   **Broken**: Nothing is currently broken.
-*   **Mocked**: No mocked components.
+-   **Live**: The application is healthy and all major gameplay features are working.
+-   **Broken**: The profile picture update functionality on the Settings page is not implemented.
+-   **Mocked**:  and  are non-functional placeholders.
 
 **3rd Party Integrations**
-*   **EmbedSocial**: For the Facebook Group feed.
-*   **OpenAI GPT-4o Vision**: For photo valuation and selfie matching.
-*   **Existing**: Stripe, Shippo, Resend, remove.bg, ip-api.com.
+-   **EmbedSocial**: For the Facebook Group feed.
+-   **OpenAI GPT-4o Vision**: For photo valuation and selfie matching.
+-   **Existing**: Stripe, Shippo, Resend, remove.bg, ip-api.com.
 
 **Testing status**
--   **Testing agent used after significant changes**: YES. V1 of the Photo Game was thoroughly tested and passed. The agent will be needed again for the v2 overhaul.
+-   **Testing agent used after significant changes**: YES. The medal system was validated by the testing agent.
 -   **Test files created**: 
 -   **Known regressions**: None.
 
 **Credentials to test flow:**
--   Use the registration flow to create new test users. A test account  was previously used.
+-   **Email**: 
+-   **Password**: 
+-   This user has 10 minted photos, one of which (Golden Hour) has already earned a 10-win streak medal, making it ideal for testing the medal showcase and profile picture features.
 
 **What agent forgot to execute**
--   The agent has followed the user's plan correctly. It has completed the backend foundation for the new features and created the necessary frontend placeholder files, positioning the next agent to begin implementation immediately.</analysis>
+-   The agent has correctly planned the work by creating placeholder files and backend updates. The next logical step, which has not been executed, is the frontend integration of these pieces.</analysis>
