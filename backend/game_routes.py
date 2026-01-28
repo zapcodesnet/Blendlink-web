@@ -612,9 +612,6 @@ async def get_photo_stamina(
             "rounds_lost": 0,
             "medals": {"ten_win_streak": 0},
         }
-            "rounds_lost": 0,
-            "medals": {"ten_win_streak": 0},
-        }
 
 
 # Medal Constants
