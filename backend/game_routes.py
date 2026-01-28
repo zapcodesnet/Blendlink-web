@@ -45,6 +45,13 @@ from photo_game import (
     PVPGameSession,
     RoundType,
     PhotoStamina,
+    # XP & Level System
+    XP_PER_ROUND,
+    SUBSCRIPTION_XP_MULTIPLIERS,
+    get_level_from_xp,
+    get_xp_for_next_level,
+    calculate_xp_with_subscription,
+    LEVEL_XP_THRESHOLDS,
 )
 
 logger = logging.getLogger(__name__)
