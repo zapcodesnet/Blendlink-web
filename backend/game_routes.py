@@ -150,7 +150,7 @@ async def list_open_games(
     List all open games waiting for opponents.
     Returns games with creator's strongest photo as thumbnail.
     """
-    if not _db:
+    if _db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     query = {"status": OpenGameStatus.WAITING.value}
@@ -192,7 +192,7 @@ async def get_open_game_details(
     Get detailed view of an open game including all 5 creator photos.
     Used for the preview modal with flip cards.
     """
-    if not _db:
+    if _db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     game = await _db.open_games.find_one({"game_id": game_id})
@@ -214,7 +214,7 @@ async def create_open_game(
     Create a new open PVP game.
     Requires exactly 5 minted photos with stamina >= 1.
     """
-    if not _db:
+    if _db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     user_id = current_user["user_id"]
@@ -315,7 +315,7 @@ async def join_open_game(
     Requires exactly 5 minted photos with stamina >= 1.
     Sends notification to creator.
     """
-    if not _db:
+    if _db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     user_id = current_user["user_id"]
@@ -430,7 +430,7 @@ async def mark_ready(
     """
     Mark player as ready. When both are ready, starts 10-second countdown.
     """
-    if not _db:
+    if _db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     user_id = current_user["user_id"]
@@ -490,7 +490,7 @@ async def start_pvp_game(
     Actually start the PVP game after countdown.
     Creates a PVPGameSession.
     """
-    if not _db:
+    if _db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     game = await _db.open_games.find_one({
@@ -537,7 +537,7 @@ async def cancel_open_game(
     current_user: dict = Depends(get_current_user_from_request)
 ):
     """Cancel an open game (creator only, before opponent joins)"""
-    if not _db:
+    if _db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     result = await _db.open_games.update_one(
@@ -562,7 +562,7 @@ async def get_photo_stamina(
     current_user: dict = Depends(get_current_user_from_request)
 ):
     """Get stamina info for a specific photo"""
-    if not _db:
+    if _db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     # Verify ownership
