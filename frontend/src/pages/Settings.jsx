@@ -448,6 +448,27 @@ export default function Settings() {
           Connected to mobile-games-hub API
         </p>
       </main>
+      
+      {/* Profile Picture Modal */}
+      <AnimatePresence>
+        {showPictureModal && (
+          <ProfilePictureModal
+            isOpen={showPictureModal}
+            onClose={() => setShowPictureModal(false)}
+            onSelect={(photo) => {
+              // Update user context with new profile picture
+              if (setUser && user) {
+                setUser({ 
+                  ...user, 
+                  profile_picture: photo.image_url,
+                  profile_picture_mint_id: photo.mint_id 
+                });
+              }
+            }}
+            currentUserId={user?.user_id}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
