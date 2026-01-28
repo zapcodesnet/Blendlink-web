@@ -23,7 +23,7 @@ def get_auth_token():
     """Login and get JWT token"""
     response = requests.post(
         f"{BASE_URL}/api/auth/login",
-        json={"email": "pvptest@blendlink.com", "password": "Test123!"}
+        json={"email": "testplayer@blendlink.com", "password": "Test123!"}
     )
     if response.status_code == 200:
         return response.json().get("token")
