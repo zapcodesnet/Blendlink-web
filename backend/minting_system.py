@@ -61,14 +61,15 @@ RATING_CRITERIA = {
     "authenticity": {"weight": 10, "max_value": 100_000_000, "label": "Authenticity", "description": "Face detection (5%) + Live selfie match (5%)"},
 }
 
-# Level/Star bonuses for Dollar Value
+# Level/Star bonuses for Dollar Value (cumulative)
+# Each milestone adds +10%, Level 60 adds extra +20% with golden frame
 LEVEL_BONUSES = {
-    10: {"stars": 1, "bonus_percent": 20},   # Level 10: 1 star +20%
-    20: {"stars": 2, "bonus_percent": 40},   # Level 20: 2 stars +40% (cumulative)
-    30: {"stars": 3, "bonus_percent": 60},   # Level 30: 3 stars +60%
-    40: {"stars": 4, "bonus_percent": 80},   # Level 40: 4 stars +80%
-    50: {"stars": 5, "bonus_percent": 100},  # Level 50: 5 stars +100%
-    60: {"stars": 5, "bonus_percent": 150, "golden_frame": True},  # Level 60 (max): 5 stars + golden frame +150%
+    10: {"stars": 1, "bonus_percent": 10, "bl_coins_reward": 10_000},   # Level 10: 1 star +10% + 10,000 BL
+    20: {"stars": 2, "bonus_percent": 20},   # Level 20: 2 stars +20% (cumulative)
+    30: {"stars": 3, "bonus_percent": 30},   # Level 30: 3 stars +30%
+    40: {"stars": 4, "bonus_percent": 40},   # Level 40: 4 stars +40%
+    50: {"stars": 5, "bonus_percent": 50},   # Level 50: 5 stars +50%
+    60: {"stars": 5, "bonus_percent": 70, "golden_frame": True, "bl_coins_reward": 100_000},  # Level 60 (max): 5 stars + golden frame +70% + 100,000 BL
 }
 
 # Dollar Value Upgrade costs (BL coins)
