@@ -2007,6 +2007,32 @@ const PhotoGameArena = () => {
             </motion.div>
           )}
           
+          {/* NEW: Match History & Replays */}
+          {gameState === 'match_history' && (
+            <motion.div key="match_history" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <div className="space-y-4">
+                <Button
+                  onClick={() => setGameState('pvp_menu')}
+                  variant="ghost"
+                  className="text-gray-400 hover:text-white"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Menu
+                </Button>
+                
+                <div className="text-center mb-6">
+                  <h2 className="text-2xl font-bold text-white flex items-center justify-center gap-2">
+                    <History className="w-6 h-6 text-purple-400" />
+                    Match History
+                  </h2>
+                  <p className="text-gray-400 mt-1">View replays and share your epic battles</p>
+                </div>
+                
+                <MatchHistory currentUserId={user?.user_id} />
+              </div>
+            </motion.div>
+          )}
+          
           {/* NEW: Game Lobby (Waiting for Ready) */}
           {gameState === 'pvp_lobby' && currentOpenGame && (
             <motion.div key="pvp_lobby" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
