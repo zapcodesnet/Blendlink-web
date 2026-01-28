@@ -332,7 +332,21 @@ export const RPSBidding = ({
   isBot = false,
   botDifficulty = 'medium',
   soundEnabled = true,
+  // NEW: Power Advantage props
+  playerPhoto = null,
+  opponentPhoto = null,
+  powerAdvantage = null, // { advantage: 'player'|'opponent'|'none', bonus_amount, player_effective_value, opponent_effective_value }
 }) => {
+  // Determine if player has the $1M advantage
+  const hasPlayerAdvantage = powerAdvantage?.advantage === 'player';
+  const hasOpponentAdvantage = powerAdvantage?.advantage === 'opponent';
+  const playerEffectiveValue = powerAdvantage?.player_effective_value;
+  const opponentEffectiveValue = powerAdvantage?.opponent_effective_value;
+  
+  // Use $6M bid options if player has advantage
+  const currentBidOptions = hasPlayerAdvantage ? BID_OPTIONS_WITH_ADVANTAGE : BID_OPTIONS;
+  const currentMaxBid = hasPlayerAdvantage ? 6_000_000 : MAX_BID;
+  
   // Game state
   const [gamePhase, setGamePhase] = useState('countdown'); // countdown, choosing, revealing, finished
   const [countdown, setCountdown] = useState(COUNTDOWN_SECONDS);
