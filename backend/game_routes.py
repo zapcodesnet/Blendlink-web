@@ -890,14 +890,36 @@ async def record_round_result(
         )
         logger.info(f"User {user_id} received {bonus_coins} BL coins for photo {mint_id}")
     
+    # Calculate XP progress for response
+    xp_for_next = get_xp_for_next_level(new_level)
+    xp_progress = new_xp - LEVEL_XP_THRESHOLDS.get(new_level, 0)
+    xp_needed_for_next = xp_for_next - LEVEL_XP_THRESHOLDS.get(new_level, 0) if new_level < 60 else 0
+    
     return {
         "success": True,
         "photo_id": mint_id,
         "round_won": round_won,
+        # Streak info
         "new_win_streak": new_win_streak if round_won else 0,
+        "new_lose_streak": 0 if round_won else stamina_record.get("lose_streak", 0) + 1,
+        "has_immunity": (stamina_record.get("lose_streak", 0) + (0 if round_won else 1)) >= LOSE_STREAK_IMMUNITY_THRESHOLD,
+        # Medal info
         "medal_earned": medal_earned,
         "total_medals": medals.get("ten_win_streak", 0),
         "bonus_coins": bonus_coins,
+        # XP & Level info
+        "xp_gained": xp_gained,
+        "xp_multiplier": SUBSCRIPTION_XP_MULTIPLIERS.get(subscription_tier, 1),
+        "subscription_tier": subscription_tier,
+        "new_xp": new_xp,
+        "new_level": new_level,
+        "level_up": level_up,
+        "xp_progress": xp_progress,
+        "xp_needed_for_next": xp_needed_for_next,
+        # Stamina info
+        "stamina_cost": stamina_cost,
+        "new_stamina": new_stamina,
+        "max_stamina": MAX_STAMINA_BATTLES,
     }
 
 
