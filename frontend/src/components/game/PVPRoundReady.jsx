@@ -522,7 +522,7 @@ export const PVPRoundReady = ({
             <div className={`px-4 py-2 rounded-full ${myData?.isReady ? 'bg-green-500/20 border border-green-500' : 'bg-gray-700'}`}>
               {myData?.isReady ? (
                 <span className="text-green-400 font-bold flex items-center gap-1">
-                  <Check className="w-4 h-4" /> You're Ready
+                  <Check className="w-4 h-4" /> You&apos;re Ready
                 </span>
               ) : (
                 <span className="text-gray-400">Not Ready</span>
