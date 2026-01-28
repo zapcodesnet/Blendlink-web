@@ -806,6 +806,259 @@ async def get_game_history(
     return {"sessions": sessions, "count": len(sessions)}
 
 
+# ============== MATCH HISTORY WITH REPLAY ==============
+@game_router.get("/match-history")
+async def get_match_history_with_replay(
+    skip: int = 0,
+    limit: int = 50,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """
+    Get user's match history with full replay data.
+    Includes all 5 photos from both players and detailed round-by-round results.
+    """
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    user_id = current_user["user_id"]
+    
+    # Get completed battle sessions
+    sessions = await _db.battle_sessions.find(
+        {
+            "$or": [
+                {"player1_id": user_id},
+                {"player2_id": user_id},
+            ],
+            "status": "completed",
+        },
+        {"_id": 0}
+    ).sort("completed_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    # Also check pvp_sessions collection
+    pvp_sessions = await _db.pvp_sessions.find(
+        {
+            "$or": [
+                {"player1_id": user_id},
+                {"player2_id": user_id},
+            ],
+            "status": "completed",
+        },
+        {"_id": 0}
+    ).sort("completed_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    # Also check game_sessions for backwards compatibility
+    game_sessions = await _db.game_sessions.find(
+        {
+            "$or": [
+                {"player1_id": user_id},
+                {"player2_id": user_id},
+            ],
+            "phase": "completed",
+        },
+        {"_id": 0}
+    ).sort("completed_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    # Combine all sessions
+    all_sessions = sessions + pvp_sessions + game_sessions
+    
+    # Enrich sessions with player info and photos
+    enriched_matches = []
+    for session in all_sessions:
+        session_id = session.get("session_id") or session.get("game_id")
+        
+        # Get player info
+        player1_id = session.get("player1_id")
+        player2_id = session.get("player2_id")
+        
+        player1_info = None
+        player2_info = None
+        
+        if player1_id:
+            p1 = await _db.users.find_one({"user_id": player1_id}, {"_id": 0, "user_id": 1, "username": 1, "name": 1})
+            player1_info = p1 if p1 else {"user_id": player1_id, "username": "Player 1"}
+            
+        if player2_id:
+            p2 = await _db.users.find_one({"user_id": player2_id}, {"_id": 0, "user_id": 1, "username": 1, "name": 1})
+            player2_info = p2 if p2 else {"user_id": player2_id, "username": "Bot" if session.get("is_bot") else "Player 2"}
+        
+        # Get photos for both players
+        player1_photo_ids = session.get("player1_photo_ids") or session.get("creator_photo_ids") or []
+        player2_photo_ids = session.get("player2_photo_ids") or session.get("opponent_photo_ids") or []
+        
+        player1_photos = []
+        player2_photos = []
+        
+        if player1_photo_ids:
+            photos = await _db.minted_photos.find(
+                {"mint_id": {"$in": player1_photo_ids}},
+                {"_id": 0, "mint_id": 1, "name": 1, "image_url": 1, "dollar_value": 1, "scenery_type": 1}
+            ).to_list(5)
+            player1_photos = photos
+            
+        if player2_photo_ids:
+            photos = await _db.minted_photos.find(
+                {"mint_id": {"$in": player2_photo_ids}},
+                {"_id": 0, "mint_id": 1, "name": 1, "image_url": 1, "dollar_value": 1, "scenery_type": 1}
+            ).to_list(5)
+            player2_photos = photos
+        
+        # Build rounds array from session data
+        rounds = session.get("rounds") or []
+        if not rounds:
+            # Try to reconstruct rounds from available data
+            rps_rounds = session.get("rps_rounds") or []
+            tapping_results = session.get("tapping_results") or []
+            
+            # Alternate tapping and RPS rounds (standard sequence)
+            for i in range(5):
+                if i % 2 == 0:  # Tapping rounds: 0, 2, 4
+                    tap_idx = i // 2
+                    tap_data = tapping_results[tap_idx] if tap_idx < len(tapping_results) else {}
+                    rounds.append({
+                        "type": "auction",
+                        "round": i + 1,
+                        "player1_taps": tap_data.get("player1_taps", 0),
+                        "player2_taps": tap_data.get("player2_taps", 0),
+                        "winner": tap_data.get("winner"),
+                        "player1_photo": player1_photos[tap_idx] if tap_idx < len(player1_photos) else None,
+                        "player2_photo": player2_photos[tap_idx] if tap_idx < len(player2_photos) else None,
+                    })
+                else:  # RPS rounds: 1, 3
+                    rps_idx = i // 2
+                    rps_data = rps_rounds[rps_idx] if rps_idx < len(rps_rounds) else {}
+                    rounds.append({
+                        "type": "rps",
+                        "round": i + 1,
+                        "player1_choice": rps_data.get("player1_choice"),
+                        "player2_choice": rps_data.get("player2_choice"),
+                        "player1_bid": rps_data.get("player1_bid"),
+                        "player2_bid": rps_data.get("player2_bid"),
+                        "winner": rps_data.get("winner"),
+                    })
+        
+        # Calculate scores
+        player1_wins = session.get("player1_wins") or session.get("player1_rps_wins", 0)
+        player2_wins = session.get("player2_wins") or session.get("player2_rps_wins", 0)
+        
+        enriched_matches.append({
+            "session_id": session_id,
+            "player1_id": player1_id,
+            "player2_id": player2_id,
+            "player1_info": player1_info,
+            "player2_info": player2_info,
+            "player1_photos": player1_photos,
+            "player2_photos": player2_photos,
+            "player1_wins": player1_wins,
+            "player2_wins": player2_wins,
+            "winner_id": session.get("winner_id"),
+            "bet_amount": session.get("bet_amount", 0),
+            "rounds": rounds,
+            "is_bot": session.get("is_bot", False),
+            "completed_at": session.get("completed_at"),
+            "created_at": session.get("created_at"),
+        })
+    
+    # Sort by completed_at and remove duplicates
+    seen_ids = set()
+    unique_matches = []
+    for match in sorted(enriched_matches, key=lambda x: x.get("completed_at") or x.get("created_at") or "", reverse=True):
+        if match["session_id"] and match["session_id"] not in seen_ids:
+            seen_ids.add(match["session_id"])
+            unique_matches.append(match)
+    
+    return {
+        "matches": unique_matches[:limit],
+        "count": len(unique_matches[:limit]),
+        "total": len(unique_matches),
+    }
+
+
+@game_router.get("/battle/{session_id}")
+async def get_battle_details(
+    session_id: str,
+):
+    """
+    Get public battle details for sharing/viewing.
+    Anyone can view a battle replay via its session_id.
+    """
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    # Search in all session collections
+    session = await _db.battle_sessions.find_one(
+        {"session_id": session_id},
+        {"_id": 0}
+    )
+    
+    if not session:
+        session = await _db.pvp_sessions.find_one(
+            {"session_id": session_id},
+            {"_id": 0}
+        )
+    
+    if not session:
+        session = await _db.game_sessions.find_one(
+            {"session_id": session_id},
+            {"_id": 0}
+        )
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="Battle not found")
+    
+    # Get player info
+    player1_id = session.get("player1_id")
+    player2_id = session.get("player2_id")
+    
+    player1_info = None
+    player2_info = None
+    
+    if player1_id:
+        p1 = await _db.users.find_one({"user_id": player1_id}, {"_id": 0, "user_id": 1, "username": 1, "name": 1})
+        player1_info = p1 if p1 else {"user_id": player1_id, "username": "Player 1"}
+        
+    if player2_id:
+        p2 = await _db.users.find_one({"user_id": player2_id}, {"_id": 0, "user_id": 1, "username": 1, "name": 1})
+        player2_info = p2 if p2 else {"user_id": player2_id, "username": "Bot" if session.get("is_bot") else "Player 2"}
+    
+    # Get photos
+    player1_photo_ids = session.get("player1_photo_ids") or session.get("creator_photo_ids") or []
+    player2_photo_ids = session.get("player2_photo_ids") or session.get("opponent_photo_ids") or []
+    
+    player1_photos = []
+    player2_photos = []
+    
+    if player1_photo_ids:
+        photos = await _db.minted_photos.find(
+            {"mint_id": {"$in": player1_photo_ids}},
+            {"_id": 0, "mint_id": 1, "name": 1, "image_url": 1, "dollar_value": 1, "scenery_type": 1}
+        ).to_list(5)
+        player1_photos = photos
+        
+    if player2_photo_ids:
+        photos = await _db.minted_photos.find(
+            {"mint_id": {"$in": player2_photo_ids}},
+            {"_id": 0, "mint_id": 1, "name": 1, "image_url": 1, "dollar_value": 1, "scenery_type": 1}
+        ).to_list(5)
+        player2_photos = photos
+    
+    return {
+        "session_id": session_id,
+        "player1_id": player1_id,
+        "player2_id": player2_id,
+        "player1_info": player1_info,
+        "player2_info": player2_info,
+        "player1_photos": player1_photos,
+        "player2_photos": player2_photos,
+        "player1_wins": session.get("player1_wins", 0),
+        "player2_wins": session.get("player2_wins", 0),
+        "winner_id": session.get("winner_id"),
+        "bet_amount": session.get("bet_amount", 0),
+        "rounds": session.get("rounds", []),
+        "is_bot": session.get("is_bot", False),
+        "completed_at": session.get("completed_at"),
+    }
+
+
 # ============== LEADERBOARDS ==============
 @game_router.get("/leaderboard/wins")
 async def get_wins_leaderboard(
