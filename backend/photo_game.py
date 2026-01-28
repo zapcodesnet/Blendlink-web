@@ -583,6 +583,68 @@ def calculate_auction_bids_required(
     }
 
 
+def calculate_rps_power_advantage(
+    player_photo: Dict,
+    opponent_photo: Dict,
+    player_stats: Optional[Dict] = None,
+    opponent_stats: Optional[Dict] = None
+) -> Dict:
+    """
+    Calculate RPS power advantage for bidding rounds.
+    
+    Per spec: Compare final effective Dollar Value of each photo.
+    Higher value gets +$1,000,000 extra bidding money.
+    
+    Returns:
+    - player_bankroll: Starting bankroll for player ($5M or $6M)
+    - opponent_bankroll: Starting bankroll for opponent ($5M or $6M)
+    - advantage: 'player', 'opponent', or 'none'
+    - advantage_reason: Description of why
+    """
+    # Calculate effective values for both photos
+    player_value_calc = calculate_photo_battle_value(
+        player_photo, opponent_photo, player_stats, opponent_stats
+    )
+    opponent_value_calc = calculate_photo_battle_value(
+        opponent_photo, player_photo, opponent_stats, player_stats
+    )
+    
+    player_effective = player_value_calc["effective_value"]
+    opponent_effective = opponent_value_calc["effective_value"]
+    
+    # Determine advantage
+    if player_effective > opponent_effective:
+        return {
+            "player_bankroll": STARTING_BANKROLL + ADVANTAGE_BONUS,  # $6M
+            "opponent_bankroll": STARTING_BANKROLL,  # $5M
+            "advantage": "player",
+            "advantage_reason": f"Higher photo value: ${player_effective:,} vs ${opponent_effective:,}",
+            "player_effective_value": player_effective,
+            "opponent_effective_value": opponent_effective,
+            "bonus_amount": ADVANTAGE_BONUS,
+        }
+    elif opponent_effective > player_effective:
+        return {
+            "player_bankroll": STARTING_BANKROLL,  # $5M
+            "opponent_bankroll": STARTING_BANKROLL + ADVANTAGE_BONUS,  # $6M
+            "advantage": "opponent",
+            "advantage_reason": f"Opponent has higher photo value: ${opponent_effective:,} vs ${player_effective:,}",
+            "player_effective_value": player_effective,
+            "opponent_effective_value": opponent_effective,
+            "bonus_amount": ADVANTAGE_BONUS,
+        }
+    else:
+        return {
+            "player_bankroll": STARTING_BANKROLL,  # $5M
+            "opponent_bankroll": STARTING_BANKROLL,  # $5M
+            "advantage": "none",
+            "advantage_reason": f"Equal photo values: ${player_effective:,}",
+            "player_effective_value": player_effective,
+            "opponent_effective_value": opponent_effective,
+            "bonus_amount": 0,
+        }
+
+
 def generate_bot_photo(difficulty: str = "medium", player_photos: List[Dict] = None) -> Dict:
     """
     Generate a bot photo for battles based on difficulty level.
