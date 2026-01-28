@@ -468,8 +468,22 @@ const PhotoCard = ({ photo, onSelect, onUpdate, viewMode, onViewFull, onSelfieMa
         
         {/* COMPACT BOTTOM SECTION - Mobile optimized */}
         <div className="p-2 space-y-1.5">
-          {/* Name */}
-          <h3 className="font-semibold text-white text-sm truncate">{photo.name}</h3>
+          {/* Name with Medals */}
+          <div className="flex items-center gap-1.5">
+            <h3 className="font-semibold text-white text-sm truncate">{photo.name}</h3>
+            {/* Medal Display - 10 Win Streak */}
+            {(photo.medals?.ten_win_streak > 0 || photo.ten_win_streak_medals > 0) && (
+              <span 
+                className="flex items-center gap-0.5 text-yellow-400 text-xs font-bold shrink-0"
+                title={`${photo.medals?.ten_win_streak || photo.ten_win_streak_medals} x 10-Win Streak Medal(s)`}
+              >
+                🏅
+                <span className="text-[10px]">
+                  x{photo.medals?.ten_win_streak || photo.ten_win_streak_medals}
+                </span>
+              </span>
+            )}
+          </div>
           
           {/* Dollar Value (Power) */}
           <div className="text-yellow-400 font-bold text-lg">
