@@ -125,7 +125,7 @@ export default function Profile() {
         {/* Profile Header */}
         <div className="flex items-start gap-6 mb-6">
           <Avatar className="w-20 h-20 md:w-24 md:h-24">
-            <AvatarImage src={profile?.avatar || profile?.picture} />
+            <AvatarImage src={profile?.profile_picture || profile?.avatar || profile?.picture} />
             <AvatarFallback className="text-2xl">{profile?.name?.[0]}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
