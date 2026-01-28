@@ -5,14 +5,14 @@
  * - Shows both players' 5 photos
  * - Ready button for each player
  * - 10-second transparent countdown when both ready
- * - Real-time sync via polling (WebSocket can be added)
+ * - Real-time sync via WebSocket for instant updates
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Check, Clock, Users, Zap, Trophy, Shield,
-  Loader2, X, ChevronRight, Bell
+  Loader2, X, ChevronRight, Bell, Wifi, WifiOff
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../ui/button';
