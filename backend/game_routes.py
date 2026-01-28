@@ -1417,6 +1417,17 @@ async def get_battle_ready_photos(
             needed = (100 / 24) - stamina
             time_until_available = int(needed / (100 / 24) * 60)
         
+        # Fetch medals from photo_stamina collection
+        stamina_record = await _db.photo_stamina.find_one({"mint_id": photo.get("mint_id")})
+        medals = {}
+        win_streak = 0
+        if stamina_record:
+            medals = stamina_record.get("medals", {"ten_win_streak": 0})
+            win_streak = stamina_record.get("win_streak", 0)
+        # Also check if medals are stored on the photo itself (for transfers)
+        if not medals.get("ten_win_streak") and photo.get("medals"):
+            medals = photo.get("medals", {"ten_win_streak": 0})
+        
         battle_photos.append({
             "mint_id": photo.get("mint_id"),
             "name": photo.get("name"),
@@ -1438,6 +1449,8 @@ async def get_battle_ready_photos(
             "is_available": is_available,
             "time_until_available": time_until_available,
             "image_url": photo.get("image_url", ""),
+            "medals": medals,
+            "win_streak": win_streak,
         })
     
     return {
