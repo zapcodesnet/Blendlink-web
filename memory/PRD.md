@@ -1,6 +1,41 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 28, 2026 (Session 31 - Profile & Medal Showcase Features)
+## Latest Update: January 28, 2026 (Session 32 - Real-time WebSocket Lobby)
+
+---
+
+## SESSION 32: REAL-TIME WEBSOCKET LOBBY ✅
+
+### Features Implemented (January 28, 2026)
+
+**WebSocket Implementation for Game Lobby**
+- Created `/ws/lobby/{game_id}/{token}` endpoint for real-time updates
+- Replaced HTTP polling with WebSocket connection (instant updates)
+- Fallback to slower polling (3s) when WebSocket fails
+- JWT authentication for WebSocket connections
+
+**Real-time Events Broadcasted:**
+- `player_joined` - When opponent joins a game (instant notification)
+- `ready_status_changed` - When player marks ready (instant UI update)
+- `countdown_start` - When both players are ready (synced countdown)
+- `game_start` - When game begins (transition to battle arena)
+- `player_disconnected` - When a player leaves
+
+**UI Improvements:**
+- Added connection status indicator (🟢 Live / 🟡 Sync)
+- Optimistic UI updates on Ready button click
+- Toast notifications for real-time events
+
+### Testing Results:
+- **Iteration 67**: 100% backend (15/15 tests), 100% frontend
+- Fixed JWT_SECRET bug in WebSocket endpoint authentication
+- WebSocket connection and message handling verified
+
+### Files Created/Modified:
+- `backend/lobby_websocket.py` - NEW: WebSocket manager for lobby
+- `backend/server.py` - Added WebSocket endpoint `/ws/lobby/{game_id}/{token}`
+- `backend/game_routes.py` - Added broadcast calls for join/ready/start events
+- `frontend/src/components/game/GameLobby.jsx` - WebSocket connection + fallback polling
 
 ---
 
