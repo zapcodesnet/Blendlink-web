@@ -1,6 +1,40 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 2026 (Session 27 - PVP Matchmaking System)
+## Latest Update: January 28, 2026 (Session 28 - PVP Flow Completion)
+
+---
+
+## SESSION 28: PVP FLOW COMPLETION & RPS POWER ADVANTAGE ✅
+
+### Features Implemented & Tested (100% Pass Rate - Iteration 63)
+
+**1. GameLobby → BattleArena Integration**
+- Complete transition flow from lobby to battle when both players ready
+- Correct photo assignment for creator vs joiner
+- Session data properly passed to BattleArena
+
+**2. RPS Power Advantage System (NEW)**
+- `calculatePowerAdvantage()` helper in BattleArena.jsx
+- Compares effective photo values (base + scenery modifier + streak bonus)
+- Shows +$1M bonus indicator when player has higher value
+- **$6M bid button** unlocked for player with advantage
+- Color-coded indicator: green for player advantage, red for opponent
+
+**3. Photo Selection Flow Verified**
+- All 10 photos displayed sorted by dollar value
+- 5-photo selection with stamina validation (24/24 max)
+- Game Settings panel (bet input, +10/+50/+100 quick buttons, bot toggle)
+- Create Game button creates open game via API
+
+### Testing Results:
+- **Iteration 63**: 100% backend (26/26 tests), 100% frontend
+- All PVP flow components render correctly
+- Mobile responsive on 390x844 viewport
+
+### Files Modified:
+- `frontend/src/components/game/BattleArena.jsx` - Added calculatePowerAdvantage()
+- `frontend/src/components/game/RPSBidding.jsx` - Added $6M bid, advantage indicator
+- `frontend/src/pages/PhotoGameArena.jsx` - Fixed handleGameStart for photo assignment
 
 ---
 
