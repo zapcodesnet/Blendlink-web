@@ -11,3 +11,4 @@ export { BotDifficultySelector } from './BotDifficultySelector';
 export { OpenGamesBrowser } from './OpenGamesBrowser';
 export { PhotoSelector } from './PhotoSelector';
 export { GameLobby } from './GameLobby';
+export { MatchHistory } from './MatchHistory';
