@@ -2900,6 +2900,49 @@ try:
 except Exception as e:
     logger.warning(f"Could not load Auction WebSocket: {e}")
 
+# Load Game Lobby WebSocket
+try:
+    from lobby_websocket import lobby_manager
+    from fastapi import WebSocket, WebSocketDisconnect
+    
+    @app.websocket("/ws/lobby/{game_id}/{token}")
+    async def lobby_websocket_endpoint(websocket: WebSocket, game_id: str, token: str):
+        """WebSocket endpoint for real-time game lobby updates"""
+        # Validate token
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            user_id = payload.get("user_id")
+            if not user_id:
+                await websocket.close(code=1008, reason="Invalid token")
+                return
+        except jwt.ExpiredSignatureError:
+            await websocket.close(code=1008, reason="Token expired")
+            return
+        except jwt.InvalidTokenError:
+            await websocket.close(code=1008, reason="Invalid token")
+            return
+        
+        await websocket.accept()
+        await lobby_manager.connect(game_id, user_id, websocket)
+        
+        try:
+            while True:
+                data = await websocket.receive_json()
+                msg_type = data.get("type")
+                
+                if msg_type == "ping":
+                    await websocket.send_json({"type": "pong"})
+                    
+        except WebSocketDisconnect:
+            await lobby_manager.disconnect(user_id)
+        except Exception as e:
+            logger.error(f"Lobby WebSocket error: {e}")
+            await lobby_manager.disconnect(user_id)
+    
+    logger.info("Game Lobby WebSocket loaded")
+except Exception as e:
+    logger.warning(f"Could not load Game Lobby WebSocket: {e}")
+
 # Load Push Notifications
 try:
     from push_notifications import push_router, setup_push_routes
