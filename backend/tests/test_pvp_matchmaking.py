@@ -19,16 +19,15 @@ from datetime import datetime
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 
-def get_session_token():
-    """Get latest session token from MongoDB"""
-    result = subprocess.run([
-        'mongosh', '--quiet', '--eval', '''
-        use('test_database');
-        var session = db.user_sessions.findOne({}, {}, {sort: {created_at: -1}});
-        if (session) print(session.session_token);
-        '''
-    ], capture_output=True, text=True)
-    return result.stdout.strip()
+def get_auth_token():
+    """Login and get JWT token"""
+    response = requests.post(
+        f"{BASE_URL}/api/auth/login",
+        json={"email": "pvptest@blendlink.com", "password": "Test123!"}
+    )
+    if response.status_code == 200:
+        return response.json().get("token")
+    return None
 
 
 class TestPVPMatchmakingSetup:
@@ -62,9 +61,9 @@ class TestOpenGamesAPI:
     @pytest.fixture
     def auth_session(self):
         """Get authenticated session with cookie"""
-        token = get_session_token()
+        token = get_auth_token()
         if not token:
-            pytest.skip("No session token available")
+            pytest.skip("Could not get auth token")
         
         session = requests.Session()
         session.cookies.set("session_token", token)
@@ -186,9 +185,9 @@ class TestBattlePhotosAPI:
     @pytest.fixture
     def auth_session(self):
         """Get authenticated session with cookie"""
-        token = get_session_token()
+        token = get_auth_token()
         if not token:
-            pytest.skip("No session token available")
+            pytest.skip("Could not get auth token")
         
         session = requests.Session()
         session.cookies.set("session_token", token)
@@ -220,9 +219,9 @@ class TestPhotoStaminaAPI:
     @pytest.fixture
     def auth_session(self):
         """Get authenticated session with cookie"""
-        token = get_session_token()
+        token = get_auth_token()
         if not token:
-            pytest.skip("No session token available")
+            pytest.skip("Could not get auth token")
         
         session = requests.Session()
         session.cookies.set("session_token", token)
@@ -291,9 +290,9 @@ class TestPVPMatchmakingAPI:
     @pytest.fixture
     def auth_session(self):
         """Get authenticated session with cookie"""
-        token = get_session_token()
+        token = get_auth_token()
         if not token:
-            pytest.skip("No session token available")
+            pytest.skip("Could not get auth token")
         
         session = requests.Session()
         session.cookies.set("session_token", token)
@@ -340,9 +339,9 @@ class TestGameStatsAPI:
     @pytest.fixture
     def auth_session(self):
         """Get authenticated session with cookie"""
-        token = get_session_token()
+        token = get_auth_token()
         if not token:
-            pytest.skip("No session token available")
+            pytest.skip("Could not get auth token")
         
         session = requests.Session()
         session.cookies.set("session_token", token)
