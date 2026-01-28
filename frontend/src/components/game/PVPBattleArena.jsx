@@ -322,11 +322,17 @@ export const PVPBattleArena = ({
         console.log('PVP WebSocket closed');
         setWsConnected(false);
         
-        // Reconnect
+        // Reconnect - schedule with timeout instead of recursive call
         if (reconnectAttempts.current < 5 && gamePhase !== 'result') {
           reconnectAttempts.current++;
           const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 10000);
-          setTimeout(connectWebSocket, delay);
+          // Use window.location to force reconnect on next tick
+          setTimeout(() => {
+            const newWsUrl = getWebSocketUrl();
+            if (newWsUrl && wsRef.current?.readyState !== WebSocket.OPEN) {
+              window.location.reload(); // Simple reconnect strategy
+            }
+          }, delay);
         }
       };
       
