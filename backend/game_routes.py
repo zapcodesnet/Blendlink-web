@@ -118,24 +118,498 @@ class RPSAuctionMoveRequest(BaseModel):
 async def get_game_config():
     """Get game configuration"""
     return {
-        "max_stamina": MAX_STAMINA,
-        "stamina_per_battle": STAMINA_PER_BATTLE,
-        "stamina_regen_hours": 24,
+        "max_stamina": MAX_STAMINA_BATTLES,
+        "stamina_regen_per_hour": STAMINA_REGEN_PER_HOUR,
+        "stamina_cost_win": STAMINA_COST_WIN,
+        "stamina_cost_loss": STAMINA_COST_LOSS,
+        "required_photos": REQUIRED_PHOTOS_PER_PLAYER,
         "win_streak_multipliers": {
-            "3": 1.25,
-            "4": 1.50,
-            "5": 1.75,
-            "6+": 2.00,
+            "3": 1.25, "4": 1.50, "5": 1.75,
+            "6": 2.00, "7": 2.25, "8": 2.50,
+            "9": 2.75, "10": 3.00,
         },
         "strength_multiplier": 1.25,
-        # Million Dollar RPS Auction config
+        "max_taps_per_second": MAX_TAPS_PER_SECOND,
         "rps_auction": {
             "starting_bankroll": STARTING_BANKROLL,
+            "advantage_bonus": ADVANTAGE_BONUS,
             "min_bid": MIN_BID,
             "max_bid": MAX_BID,
             "bid_increment": BID_INCREMENT,
         }
     }
+
+
+# ============== OPEN GAMES (PVP MATCHMAKING) ==============
+@game_router.get("/open-games")
+async def list_open_games(
+    search: Optional[str] = None,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """
+    List all open games waiting for opponents.
+    Returns games with creator's strongest photo as thumbnail.
+    """
+    if not _db:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    query = {"status": OpenGameStatus.WAITING.value}
+    
+    # Optional search by username or game_id
+    if search:
+        query["$or"] = [
+            {"creator_username": {"$regex": search, "$options": "i"}},
+            {"game_id": {"$regex": search, "$options": "i"}},
+        ]
+    
+    games_cursor = _db.open_games.find(query).sort("created_at", -1).limit(50)
+    games = await games_cursor.to_list(length=50)
+    
+    # Format response
+    result = []
+    for game in games:
+        result.append({
+            "game_id": game.get("game_id"),
+            "creator_id": game.get("creator_id"),
+            "creator_username": game.get("creator_username", "Player"),
+            "bet_amount": game.get("bet_amount", 0),
+            "total_dollar_value": game.get("total_dollar_value", 0),
+            "thumbnail_photo": game.get("thumbnail_photo"),
+            "created_at": game.get("created_at"),
+            "is_bot_allowed": game.get("is_bot_allowed", False),
+            "photo_count": len(game.get("creator_photo_ids", [])),
+        })
+    
+    return {"games": result, "count": len(result)}
+
+
+@game_router.get("/open-games/{game_id}")
+async def get_open_game_details(
+    game_id: str,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """
+    Get detailed view of an open game including all 5 creator photos.
+    Used for the preview modal with flip cards.
+    """
+    if not _db:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    game = await _db.open_games.find_one({"game_id": game_id})
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found")
+    
+    # Exclude _id from response
+    game.pop("_id", None)
+    
+    return game
+
+
+@game_router.post("/open-games/create")
+async def create_open_game(
+    data: CreateOpenGameRequest,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """
+    Create a new open PVP game.
+    Requires exactly 5 minted photos with stamina >= 1.
+    """
+    if not _db:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    user_id = current_user["user_id"]
+    
+    # Validate exactly 5 photos
+    if len(data.photo_ids) != REQUIRED_PHOTOS_PER_PLAYER:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Must select exactly {REQUIRED_PHOTOS_PER_PLAYER} photos"
+        )
+    
+    # Fetch all photos and validate ownership & stamina
+    photos = []
+    total_dollar_value = 0
+    highest_value_photo = None
+    highest_value = 0
+    
+    for photo_id in data.photo_ids:
+        photo = await _db.minted_photos.find_one({
+            "mint_id": photo_id,
+            "user_id": user_id
+        })
+        
+        if not photo:
+            raise HTTPException(status_code=404, detail=f"Photo {photo_id} not found")
+        
+        # Get/calculate current stamina
+        stamina_record = await _db.photo_stamina.find_one({"mint_id": photo_id})
+        if stamina_record:
+            current_stamina = calculate_current_stamina(
+                stamina_record.get("stamina", MAX_STAMINA_BATTLES),
+                stamina_record.get("last_regen_timestamp"),
+                stamina_record.get("max_stamina", MAX_STAMINA_BATTLES)
+            )
+        else:
+            current_stamina = MAX_STAMINA_BATTLES
+        
+        if current_stamina < 1:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Photo '{photo.get('name', photo_id)}' has no stamina left (0/{MAX_STAMINA_BATTLES})"
+            )
+        
+        # Build photo data for preview
+        photo_data = {
+            "mint_id": photo.get("mint_id"),
+            "name": photo.get("name"),
+            "image_url": photo.get("image_url"),
+            "dollar_value": photo.get("dollar_value", 0),
+            "scenery_type": photo.get("scenery_type", "natural"),
+            "current_stamina": current_stamina,
+            "max_stamina": MAX_STAMINA_BATTLES,
+            "level": stamina_record.get("level", 1) if stamina_record else 1,
+            "xp": stamina_record.get("xp", 0) if stamina_record else 0,
+            "win_streak": stamina_record.get("win_streak", 0) if stamina_record else 0,
+            "lose_streak": stamina_record.get("lose_streak", 0) if stamina_record else 0,
+        }
+        
+        photos.append(photo_data)
+        total_dollar_value += photo.get("dollar_value", 0)
+        
+        # Track highest value for thumbnail
+        if photo.get("dollar_value", 0) > highest_value:
+            highest_value = photo.get("dollar_value", 0)
+            highest_value_photo = photo_data
+    
+    # Create open game
+    open_game = OpenGame(
+        creator_id=user_id,
+        creator_username=current_user.get("username", "Player"),
+        creator_photo_ids=data.photo_ids,
+        creator_photos=photos,
+        thumbnail_photo=highest_value_photo,
+        total_dollar_value=total_dollar_value,
+        bet_amount=data.bet_amount,
+        is_bot_allowed=data.is_bot_allowed,
+        bot_difficulty=data.bot_difficulty,
+    )
+    
+    # Insert into database
+    await _db.open_games.insert_one(open_game.model_dump())
+    
+    return {
+        "success": True,
+        "game_id": open_game.game_id,
+        "message": "Game created! Waiting for opponent...",
+        "game": open_game.model_dump()
+    }
+
+
+@game_router.post("/open-games/join")
+async def join_open_game(
+    data: JoinOpenGameRequest,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """
+    Join an existing open game.
+    Requires exactly 5 minted photos with stamina >= 1.
+    Sends notification to creator.
+    """
+    if not _db:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    user_id = current_user["user_id"]
+    
+    # Find the game
+    game = await _db.open_games.find_one({
+        "game_id": data.game_id,
+        "status": OpenGameStatus.WAITING.value
+    })
+    
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found or already started")
+    
+    # Can't join own game
+    if game.get("creator_id") == user_id:
+        raise HTTPException(status_code=400, detail="Cannot join your own game")
+    
+    # Validate exactly 5 photos
+    if len(data.photo_ids) != REQUIRED_PHOTOS_PER_PLAYER:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Must select exactly {REQUIRED_PHOTOS_PER_PLAYER} photos"
+        )
+    
+    # Fetch and validate opponent photos
+    photos = []
+    for photo_id in data.photo_ids:
+        photo = await _db.minted_photos.find_one({
+            "mint_id": photo_id,
+            "user_id": user_id
+        })
+        
+        if not photo:
+            raise HTTPException(status_code=404, detail=f"Photo {photo_id} not found")
+        
+        # Get/calculate current stamina
+        stamina_record = await _db.photo_stamina.find_one({"mint_id": photo_id})
+        if stamina_record:
+            current_stamina = calculate_current_stamina(
+                stamina_record.get("stamina", MAX_STAMINA_BATTLES),
+                stamina_record.get("last_regen_timestamp"),
+                stamina_record.get("max_stamina", MAX_STAMINA_BATTLES)
+            )
+        else:
+            current_stamina = MAX_STAMINA_BATTLES
+        
+        if current_stamina < 1:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Photo '{photo.get('name', photo_id)}' has no stamina left"
+            )
+        
+        photo_data = {
+            "mint_id": photo.get("mint_id"),
+            "name": photo.get("name"),
+            "image_url": photo.get("image_url"),
+            "dollar_value": photo.get("dollar_value", 0),
+            "scenery_type": photo.get("scenery_type", "natural"),
+            "current_stamina": current_stamina,
+            "max_stamina": MAX_STAMINA_BATTLES,
+            "level": stamina_record.get("level", 1) if stamina_record else 1,
+            "xp": stamina_record.get("xp", 0) if stamina_record else 0,
+            "win_streak": stamina_record.get("win_streak", 0) if stamina_record else 0,
+            "lose_streak": stamina_record.get("lose_streak", 0) if stamina_record else 0,
+        }
+        photos.append(photo_data)
+    
+    # Update game with opponent info
+    await _db.open_games.update_one(
+        {"game_id": data.game_id},
+        {"$set": {
+            "opponent_id": user_id,
+            "opponent_username": current_user.get("username", "Player"),
+            "opponent_photo_ids": data.photo_ids,
+            "opponent_photos": photos,
+            "status": OpenGameStatus.READY.value,
+        }}
+    )
+    
+    # Create notification for creator
+    notification = {
+        "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+        "user_id": game.get("creator_id"),
+        "type": "game_joined",
+        "title": "Player joined your game!",
+        "message": f"{current_user.get('username', 'A player')} has joined your Photo Battle! Tap Ready to start.",
+        "data": {
+            "game_id": data.game_id,
+            "opponent_username": current_user.get("username", "Player"),
+        },
+        "created_at": datetime.now(timezone.utc),
+        "read": False,
+    }
+    await _db.notifications.insert_one(notification)
+    
+    # Fetch updated game
+    updated_game = await _db.open_games.find_one({"game_id": data.game_id})
+    updated_game.pop("_id", None)
+    
+    return {
+        "success": True,
+        "message": "Joined game! Both players must tap Ready to start.",
+        "game": updated_game
+    }
+
+
+@game_router.post("/open-games/ready")
+async def mark_ready(
+    data: ReadyRequest,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """
+    Mark player as ready. When both are ready, starts 10-second countdown.
+    """
+    if not _db:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    user_id = current_user["user_id"]
+    
+    game = await _db.open_games.find_one({
+        "game_id": data.game_id,
+        "status": {"$in": [OpenGameStatus.READY.value, OpenGameStatus.STARTING.value]}
+    })
+    
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found or not in ready state")
+    
+    # Determine which player
+    is_creator = game.get("creator_id") == user_id
+    is_opponent = game.get("opponent_id") == user_id
+    
+    if not is_creator and not is_opponent:
+        raise HTTPException(status_code=403, detail="Not a participant in this game")
+    
+    # Update ready status
+    update_field = "creator_ready" if is_creator else "opponent_ready"
+    await _db.open_games.update_one(
+        {"game_id": data.game_id},
+        {"$set": {update_field: True}}
+    )
+    
+    # Check if both ready
+    game = await _db.open_games.find_one({"game_id": data.game_id})
+    both_ready = game.get("creator_ready") and game.get("opponent_ready")
+    
+    if both_ready and game.get("status") != OpenGameStatus.STARTING.value:
+        # Start countdown
+        await _db.open_games.update_one(
+            {"game_id": data.game_id},
+            {"$set": {
+                "status": OpenGameStatus.STARTING.value,
+                "countdown_started_at": datetime.now(timezone.utc)
+            }}
+        )
+    
+    game = await _db.open_games.find_one({"game_id": data.game_id})
+    game.pop("_id", None)
+    
+    return {
+        "success": True,
+        "both_ready": both_ready,
+        "game": game
+    }
+
+
+@game_router.post("/open-games/start/{game_id}")
+async def start_pvp_game(
+    game_id: str,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """
+    Actually start the PVP game after countdown.
+    Creates a PVPGameSession.
+    """
+    if not _db:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    game = await _db.open_games.find_one({
+        "game_id": game_id,
+        "status": OpenGameStatus.STARTING.value
+    })
+    
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found or not ready to start")
+    
+    # Create PVP game session
+    session = PVPGameSession(
+        open_game_id=game_id,
+        player1_id=game.get("creator_id"),
+        player2_id=game.get("opponent_id"),
+        bet_amount=game.get("bet_amount", 0),
+        player1_photo_ids=game.get("creator_photo_ids", []),
+        player2_photo_ids=game.get("opponent_photo_ids", []),
+        player1_photos=game.get("creator_photos", []),
+        player2_photos=game.get("opponent_photos", []),
+    )
+    
+    await _db.pvp_sessions.insert_one(session.model_dump())
+    
+    # Update open game with session reference
+    await _db.open_games.update_one(
+        {"game_id": game_id},
+        {"$set": {
+            "status": OpenGameStatus.IN_PROGRESS.value,
+            "active_session_id": session.session_id
+        }}
+    )
+    
+    return {
+        "success": True,
+        "session_id": session.session_id,
+        "session": session.model_dump()
+    }
+
+
+@game_router.delete("/open-games/{game_id}")
+async def cancel_open_game(
+    game_id: str,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """Cancel an open game (creator only, before opponent joins)"""
+    if not _db:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    result = await _db.open_games.update_one(
+        {
+            "game_id": game_id,
+            "creator_id": current_user["user_id"],
+            "status": OpenGameStatus.WAITING.value
+        },
+        {"$set": {"status": OpenGameStatus.CANCELLED.value}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Game not found or cannot be cancelled")
+    
+    return {"success": True, "message": "Game cancelled"}
+
+
+# ============== STAMINA ROUTES ==============
+@game_router.get("/photo-stamina/{mint_id}")
+async def get_photo_stamina(
+    mint_id: str,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """Get stamina info for a specific photo"""
+    if not _db:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    # Verify ownership
+    photo = await _db.minted_photos.find_one({
+        "mint_id": mint_id,
+        "user_id": current_user["user_id"]
+    })
+    
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    
+    # Get stamina record
+    stamina_record = await _db.photo_stamina.find_one({"mint_id": mint_id})
+    
+    if stamina_record:
+        current_stamina = calculate_current_stamina(
+            stamina_record.get("stamina", MAX_STAMINA_BATTLES),
+            stamina_record.get("last_regen_timestamp"),
+            stamina_record.get("max_stamina", MAX_STAMINA_BATTLES)
+        )
+        
+        return {
+            "mint_id": mint_id,
+            "current_stamina": current_stamina,
+            "max_stamina": MAX_STAMINA_BATTLES,
+            "level": stamina_record.get("level", 1),
+            "xp": stamina_record.get("xp", 0),
+            "win_streak": stamina_record.get("win_streak", 0),
+            "lose_streak": stamina_record.get("lose_streak", 0),
+            "total_rounds_played": stamina_record.get("total_rounds_played", 0),
+            "rounds_won": stamina_record.get("rounds_won", 0),
+            "rounds_lost": stamina_record.get("rounds_lost", 0),
+        }
+    else:
+        # No record = full stamina, no battles
+        return {
+            "mint_id": mint_id,
+            "current_stamina": MAX_STAMINA_BATTLES,
+            "max_stamina": MAX_STAMINA_BATTLES,
+            "level": 1,
+            "xp": 0,
+            "win_streak": 0,
+            "lose_streak": 0,
+            "total_rounds_played": 0,
+            "rounds_won": 0,
+            "rounds_lost": 0,
+        }
 
 
 @game_router.get("/stats")
