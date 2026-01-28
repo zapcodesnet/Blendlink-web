@@ -766,7 +766,11 @@ class PhotoGameService:
             # Create new stats
             new_stats = PlayerStats(user_id=user_id)
             stats_dict = new_stats.model_dump()
-            stats_dict["last_stamina_update"] = stats_dict["last_stamina_update"].isoformat()
+            # Add last_stamina_update if not present
+            if "last_stamina_update" not in stats_dict:
+                stats_dict["last_stamina_update"] = datetime.now(timezone.utc).isoformat()
+            elif isinstance(stats_dict.get("last_stamina_update"), datetime):
+                stats_dict["last_stamina_update"] = stats_dict["last_stamina_update"].isoformat()
             await self.db.player_stats.insert_one(stats_dict)
             stats = await self.db.player_stats.find_one({"user_id": user_id}, {"_id": 0})
         else:
