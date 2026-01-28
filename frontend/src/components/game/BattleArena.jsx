@@ -691,6 +691,14 @@ export const BattleArena = ({
               isBot={isBot}
               botDifficulty={botDifficulty}
               soundEnabled={soundEnabled}
+              playerPhoto={selectedPlayerPhoto}
+              opponentPhoto={selectedOpponentPhoto}
+              powerAdvantage={calculatePowerAdvantage(
+                selectedPlayerPhoto, 
+                selectedOpponentPhoto, 
+                playerStats, 
+                opponentStats
+              )}
             />
           </motion.div>
         )}
