@@ -127,6 +127,16 @@ UPGRADE_COSTS = {
     1_000_000_000: 1_000_000_000,  # $1B = 1B BL
 }
 
+# Monthly Dollar Value Growth
+MONTHLY_GROWTH_VALUE = 1_000_000  # +$1M per 30 days
+
+# Birthday Bonus (minting anniversary)
+BIRTHDAY_BONUS_BL = 5_000  # 5,000 BL coins yearly
+
+# Social Reaction Bonus
+REACTION_BONUS_THRESHOLD = 100  # Per 100 new reactions
+REACTION_BONUS_VALUE = 1_000_000  # +$1M per threshold
+
 # Legacy list for backward compatibility
 RATING_CRITERIA_LIST = list(RATING_CRITERIA.keys())
 
@@ -142,6 +152,10 @@ class MintedPhoto(BaseModel):
     
     # Mock transaction hash for NFT-like feel
     transaction_hash: str = Field(default_factory=lambda: f"0x{uuid.uuid4().hex}{uuid.uuid4().hex[:24]}")
+    
+    # Permanent Minting Metadata (transfers with photo)
+    minted_by_user_id: str = ""  # Original minter's user ID
+    minted_by_username: str = ""  # Original minter's @username
     
     # AI Analysis Results
     scenery_type: str = "natural"  # natural, water, manmade, neutral
@@ -159,11 +173,19 @@ class MintedPhoto(BaseModel):
     
     # Base Dollar value ($1M to $1B based on ratings) - Core Power
     base_dollar_value: int = 1_000_000
-    # Total Dollar value (includes level bonuses and upgrades)
+    # Total Dollar value (includes level bonuses, upgrades, monthly growth, reactions)
     dollar_value: int = 1_000_000
     # Dollar value upgrades purchased with BL coins
     upgrades_purchased: List[int] = Field(default_factory=list)
     total_upgrade_value: int = 0
+    
+    # Monthly Dollar Value Growth (+$1M per 30 days)
+    monthly_growth_value: int = 0  # Accumulated monthly growth
+    last_monthly_growth_at: Optional[datetime] = None  # Last growth calculation
+    
+    # Social Reaction Bonus (+$1M per 100 reactions)
+    total_reactions: int = 0  # Combined from all sources (FB, website, app)
+    reaction_bonus_value: int = 0  # Accumulated reaction bonus
     
     # Authenticity (Face Detection + Selfie Match)
     has_face: bool = False
@@ -190,9 +212,12 @@ class MintedPhoto(BaseModel):
     battles_lost: int = 0
     times_transferred: int = 0
     
-    # Photo stamina for battles (100% = 24 battles)
-    stamina: float = 100.0
+    # Photo stamina for battles (Win=-1, Loss=-2, Max=24, Regen=+1/hour)
+    stamina: float = 100.0  # 100% = 24 battles
+    current_stamina: int = 24  # Direct battle count
+    max_stamina: int = 24
     last_battle_at: Optional[datetime] = None
+    last_stamina_regen_at: Optional[datetime] = None
     
     # Privacy & Display
     is_private: bool = False
@@ -206,6 +231,9 @@ class MintedPhoto(BaseModel):
     # Metadata
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     minted_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    
+    # Birthday Bonus Tracking
+    last_birthday_bonus_year: int = 0  # Year of last birthday bonus claim
 
 
 class PhotoAlbum(BaseModel):
