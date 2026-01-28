@@ -1,14 +1,13 @@
 """
-Blendlink Photo Game System v2.0
-Million Dollar RPS Bidding Auction + Photo Dollar Auction Clash
+Blendlink Photo Game System v3.0
+Minted Photo Auction Bidding Battle - PVP First
 
 Game Flow:
-1. Photo Upload → AI rates permanent Dollar value ($1M-$1B)
-2. Stage 1: Million Dollar RPS Bidding Auction (race to 3)
-3. Stage 2: Photo Dollar Auction Clash
-4. Stage 3: RPS Tiebreaker (if split)
+1. Create/Join Open Game with 5 pre-selected minted photos
+2. Round sequence: Tapping → RPS → Tapping → RPS → Tapping (tiebreaker)
+3. First to 3 wins takes the pot
 
-Stamina: 100% = 24 battles, recovers 1/hour, defeats drain 25% faster
+Stamina: 24 battles max per photo, -1 on win, -2 on loss, +1/hour regeneration
 """
 
 import os
@@ -23,23 +22,23 @@ from enum import Enum
 logger = logging.getLogger(__name__)
 
 # ============== CONSTANTS ==============
-MAX_STAMINA = 100
-BATTLES_PER_FULL_STAMINA = 24
-STAMINA_PER_BATTLE = MAX_STAMINA / BATTLES_PER_FULL_STAMINA  # ~4.16%
-STAMINA_REGEN_PER_HOUR = MAX_STAMINA / 24  # Full regen in 24 hours
-DEFEAT_STAMINA_PENALTY = 1.25  # 25% more stamina loss on defeat
+# Stamina System (per photo)
+MAX_STAMINA_BATTLES = 24  # Maximum battles available
+STAMINA_REGEN_PER_HOUR = 1  # Regenerate 1 battle per hour
+STAMINA_COST_WIN = 1  # Cost per round won
+STAMINA_COST_LOSS = 2  # Cost per round lost
 
-# Stamina percentage per battle (for display)
-STAMINA_PERCENT_PER_BATTLE = 100 / BATTLES_PER_FULL_STAMINA  # ~4.16%
+# Required photos for PVP
+REQUIRED_PHOTOS_PER_PLAYER = 5
 
 # Million Dollar RPS Constants
-STARTING_BANKROLL = 10_000_000  # $10M starting bankroll
+STARTING_BANKROLL = 5_000_000  # $5M starting bankroll (per spec)
+ADVANTAGE_BONUS = 1_000_000  # $1M bonus for higher Dollar Value photo in RPS
 MIN_BID = 1_000_000  # $1M minimum bid
-MAX_BID = 5_000_000  # $5M maximum bid
+MAX_BID = 6_000_000  # $6M maximum bid (updated with advantage)
 BID_INCREMENT = 1_000_000  # $1M increments
 
 # Win streak multipliers (🔥 Fire bonus - visible during battles)
-# Bonus affects required bids in Auction battles
 WIN_STREAK_MULTIPLIERS = {
     3: 1.25,   # 🔥 ×1.25
     4: 1.50,   # 🔥 ×1.50
@@ -52,40 +51,32 @@ WIN_STREAK_MULTIPLIERS = {
 }
 
 # Lose streak immunity threshold (🛡 Shield - gains immunity at 3+ losses)
-LOSE_STREAK_IMMUNITY_THRESHOLD = 3  # 3 or more losses = 100% immunity vs stronger scenery
-
-# Scenery strength/weakness (expanded system with Neutral)
-# Light conditions
-LIGHT_TYPES = {
-    "sunlight_fire": {"name": "Sunlight/Fire", "strong_vs": "darkness_night", "weak_vs": "rain_snow_ice"},
-    "rain_snow_ice": {"name": "Rain/Snow/Ice", "strong_vs": "sunlight_fire", "weak_vs": "darkness_night"},
-    "darkness_night": {"name": "Darkness/Night/Interior", "strong_vs": "rain_snow_ice", "weak_vs": "sunlight_fire"},
-}
+LOSE_STREAK_IMMUNITY_THRESHOLD = 3
 
 # Scenery types with Neutral category
 SCENERY_TYPES = {
     "natural": {"name": "Natural Scenery", "strong_vs": "water", "weak_vs": "manmade", "neutral_bonus": 1.10},
     "water": {"name": "Water Scenery", "strong_vs": "manmade", "weak_vs": "natural", "neutral_bonus": 1.10},
     "manmade": {"name": "Man-made/Mixed", "strong_vs": "natural", "weak_vs": "water", "neutral_bonus": 1.10},
-    "neutral": {"name": "Neutral/Plain", "strong_vs": None, "weak_vs": "all", "neutral_bonus": 1.0},  # 10% weaker vs all
+    "neutral": {"name": "Neutral/Plain", "strong_vs": None, "weak_vs": "all", "neutral_bonus": 1.0},
 }
 
 # Strength/weakness multipliers
 STRENGTH_MULTIPLIER = 1.25  # +25% value for strong matchups
-WEAKNESS_MULTIPLIER = 0.75  # -25% value for weak matchups (1/1.25)
-NEUTRAL_WEAKNESS_MULTIPLIER = 0.90  # Neutral is 10% weaker than all other scenery types
+WEAKNESS_MULTIPLIER = 0.75  # -25% value for weak matchups
+NEUTRAL_WEAKNESS_MULTIPLIER = 0.90  # Neutral is 10% weaker
 
 # Auction Bidding Constants
 BASE_BIDS_TO_WIN = 200  # Base number of taps needed if equal power
-MAX_TAPS_PER_SECOND = 10  # Anti-cheat limit
+MAX_TAPS_PER_SECOND = 25  # Anti-cheat limit (updated from 20)
 AUCTION_COUNTDOWN_SECONDS = 10  # Countdown before round starts
 AUCTION_ROUND_DURATION = 15  # Seconds to complete tapping
 
 # Bot Match Constants
 BOT_DIFFICULTY = {
-    "easy": {"win_rate": 0.55, "tap_speed": 5, "strategy": "random"},      # Player wins ~55%
-    "medium": {"win_rate": 0.50, "tap_speed": 7, "strategy": "basic"},     # Player wins ~50%
-    "hard": {"win_rate": 0.40, "tap_speed": 9, "strategy": "adaptive"},    # Player wins ~40%
+    "easy": {"win_rate": 0.55, "tap_speed": 5, "strategy": "random"},
+    "medium": {"win_rate": 0.50, "tap_speed": 7, "strategy": "basic"},
+    "hard": {"win_rate": 0.40, "tap_speed": 9, "strategy": "adaptive"},
 }
 BOT_MIN_BET = 1
 BOT_MAX_BET = 500
