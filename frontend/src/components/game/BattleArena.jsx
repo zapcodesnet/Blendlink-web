@@ -794,6 +794,10 @@ export const BattleArena = ({
     setOpponentStats({ current_win_streak: 0, current_lose_streak: 0 });
     setGameWinner(null);
     setGamePhase('photo_selection');
+    setRoundResults([]);
+    setStaminaChanges(null);
+    setShowMedalCelebration(false);
+    setCelebrationData(null);
     
     if (onGameComplete) {
       onGameComplete(gameWinner);
