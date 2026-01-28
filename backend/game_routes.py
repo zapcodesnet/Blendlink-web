@@ -956,6 +956,49 @@ async def get_photo_medals(mint_id: str):
     }
 
 
+
+@game_router.get("/xp-level-info")
+async def get_xp_level_info():
+    """
+    Get XP and level progression info.
+    Includes level thresholds, star bonuses, and subscription multipliers.
+    """
+    from minting_system import LEVEL_BONUSES, SUBSCRIPTION_TIERS
+    
+    return {
+        "xp_per_round": XP_PER_ROUND,
+        "subscription_multipliers": SUBSCRIPTION_XP_MULTIPLIERS,
+        "level_thresholds": LEVEL_XP_THRESHOLDS,
+        "level_bonuses": {
+            level: {
+                "stars": info.get("stars"),
+                "bonus_percent": info.get("bonus_percent"),
+                "bl_coins_reward": info.get("bl_coins_reward", 0),
+                "golden_frame": info.get("golden_frame", False),
+            }
+            for level, info in LEVEL_BONUSES.items()
+        },
+        "subscription_tiers": {
+            name: {
+                "xp_multiplier": config.get("xp_multiplier"),
+                "daily_mint_limit": config.get("daily_mint_limit"),
+                "daily_bl_claim": config.get("daily_bl_claim"),
+                "price": config.get("price"),
+            }
+            for name, config in SUBSCRIPTION_TIERS.items()
+        },
+        "streak_multipliers": WIN_STREAK_MULTIPLIERS,
+        "lose_streak_immunity_threshold": LOSE_STREAK_IMMUNITY_THRESHOLD,
+        "stamina": {
+            "max": MAX_STAMINA_BATTLES,
+            "cost_win": STAMINA_COST_WIN,
+            "cost_loss": STAMINA_COST_LOSS,
+            "regen_per_hour": STAMINA_REGEN_PER_HOUR,
+        }
+    }
+
+
+
 @game_router.get("/stats")
 async def get_my_stats(current_user: dict = Depends(get_current_user_from_request)):
     """Get current user's game stats"""
