@@ -952,11 +952,16 @@ async def get_battle_ready_photos(
     
     from datetime import datetime, timezone
     
+    user_id = current_user["user_id"]
+    logger.info(f"Fetching battle photos for user: {user_id}")
+    
     # Get all user's minted photos
     photos = await _db.minted_photos.find(
-        {"user_id": current_user["user_id"]},
+        {"user_id": user_id},
         {"_id": 0, "image_data": 0}
     ).sort("dollar_value", -1).to_list(100)  # Sort by dollar value (power) descending
+    
+    logger.info(f"Found {len(photos)} photos for user {user_id}")
     
     # Calculate current stamina for each photo based on time since last battle
     now = datetime.now(timezone.utc)
