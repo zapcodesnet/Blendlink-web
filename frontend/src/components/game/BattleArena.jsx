@@ -728,31 +728,7 @@ export const BattleArena = ({
       setGameWinner(finalWinner);
       setGamePhase('result');
     }
-  }, [playerWins, opponentWins, currentRoundIndex, soundEnabled, selectedPlayerPhoto, roundResults, playerPhotos]);
-  
-  // Calculate stamina changes based on round results
-  const calculateStaminaChanges = (results, photos) => {
-    const photoChanges = {};
-    
-    // Group results by photo
-    results.forEach(result => {
-      if (result.photo?.mint_id) {
-        if (!photoChanges[result.photo.mint_id]) {
-          photoChanges[result.photo.mint_id] = {
-            mint_id: result.photo.mint_id,
-            name: result.photo.name || 'Photo',
-            change: 0,
-          };
-        }
-        // -1 for win, -2 for loss
-        photoChanges[result.photo.mint_id].change += result.winner === 'player' ? -1 : -2;
-      }
-    });
-    
-    return {
-      photos: Object.values(photoChanges),
-    };
-  };
+  }, [playerWins, opponentWins, currentRoundIndex, soundEnabled, selectedPlayerPhoto, roundResults, playerPhotos, calculateStaminaChanges]);
   
   // Handle RPS round complete (with money tracking)
   const handleRPSRoundComplete = useCallback((winner, newPlayerMoney, newOpponentMoney) => {
