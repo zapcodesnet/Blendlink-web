@@ -51,6 +51,10 @@ class TransactionType(str, Enum):
     BATTLE_WIN = "battle_win"
     BATTLE_LOSS = "battle_loss"
     BATTLE_BET = "battle_bet"
+    MEDAL_BONUS = "medal_bonus"
+    BIRTHDAY_BONUS = "birthday_bonus"
+    SUBSCRIPTION_BONUS = "subscription_bonus"
+    LEVEL_UP_BONUS = "level_up_bonus"
     # Activity rewards - Phase 2
     POST_VIDEO = "post_video"
     POST_STORY = "post_story"
