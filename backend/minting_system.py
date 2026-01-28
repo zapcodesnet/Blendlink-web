@@ -528,9 +528,6 @@ def calculate_dollar_value(ratings: Dict[str, int], scenery_type: str = "natural
     # Final dollar value = base + level bonus + upgrades
     dollar_value = base_value + level_bonus + total_upgrades
     
-    # Cap at $1B (can exceed with upgrades)
-    # Actually, with upgrades you can go higher, so let's not cap
-    
     return {
         "base_value": base_value,
         "dollar_value": dollar_value,
@@ -540,6 +537,95 @@ def calculate_dollar_value(ratings: Dict[str, int], scenery_type: str = "natural
         "upgrade_bonus": total_upgrades,
         "scenery_penalty": scenery_penalty
     }
+
+
+def calculate_full_dollar_value(
+    photo: Dict[str, Any],
+    current_time: Optional[datetime] = None
+) -> Dict[str, Any]:
+    """
+    Calculate full dollar value with all bonuses:
+    - Base value (AI scoring)
+    - Level bonus
+    - Upgrade bonus
+    - Monthly growth (+$1M per 30 days)
+    - Reaction bonus (+$1M per 100 reactions)
+    
+    Returns updated values for database storage
+    """
+    if current_time is None:
+        current_time = datetime.now(timezone.utc)
+    
+    base_dollar_value = photo.get("base_dollar_value", 1_000_000)
+    level_bonus_percent = photo.get("level_bonus_percent", 0)
+    total_upgrade_value = photo.get("total_upgrade_value", 0)
+    
+    # Calculate level bonus
+    level_bonus = int(base_dollar_value * (level_bonus_percent / 100))
+    
+    # Calculate monthly growth since minting
+    minted_at = photo.get("minted_at")
+    if isinstance(minted_at, str):
+        minted_at = datetime.fromisoformat(minted_at.replace('Z', '+00:00'))
+    
+    monthly_growth_value = 0
+    if minted_at:
+        days_since_mint = (current_time - minted_at).days
+        months_since_mint = days_since_mint // 30
+        monthly_growth_value = months_since_mint * MONTHLY_GROWTH_VALUE
+    
+    # Calculate reaction bonus
+    total_reactions = photo.get("total_reactions", 0)
+    reaction_bonus_value = (total_reactions // REACTION_BONUS_THRESHOLD) * REACTION_BONUS_VALUE
+    
+    # Final dollar value
+    dollar_value = (
+        base_dollar_value +
+        level_bonus +
+        total_upgrade_value +
+        monthly_growth_value +
+        reaction_bonus_value
+    )
+    
+    return {
+        "dollar_value": dollar_value,
+        "base_dollar_value": base_dollar_value,
+        "level_bonus": level_bonus,
+        "level_bonus_percent": level_bonus_percent,
+        "total_upgrade_value": total_upgrade_value,
+        "monthly_growth_value": monthly_growth_value,
+        "reaction_bonus_value": reaction_bonus_value,
+        "last_monthly_growth_at": current_time
+    }
+
+
+def calculate_stamina_regen(photo: Dict[str, Any], current_time: Optional[datetime] = None) -> int:
+    """
+    Calculate current stamina with regeneration.
+    +1 battle per hour when not used.
+    Max: 24 battles
+    """
+    if current_time is None:
+        current_time = datetime.now(timezone.utc)
+    
+    current_stamina = photo.get("current_stamina", 24)
+    max_stamina = photo.get("max_stamina", 24)
+    last_battle_at = photo.get("last_battle_at")
+    
+    if not last_battle_at or current_stamina >= max_stamina:
+        return min(current_stamina, max_stamina)
+    
+    if isinstance(last_battle_at, str):
+        last_battle_at = datetime.fromisoformat(last_battle_at.replace('Z', '+00:00'))
+    
+    # Calculate hours since last battle
+    hours_since_battle = (current_time - last_battle_at).total_seconds() / 3600
+    
+    # Add +1 per hour (integer hours only)
+    regen_amount = int(hours_since_battle)
+    
+    new_stamina = min(current_stamina + regen_amount, max_stamina)
+    return new_stamina
 
 
 def get_level_stars(level: int) -> Dict[str, Any]:
