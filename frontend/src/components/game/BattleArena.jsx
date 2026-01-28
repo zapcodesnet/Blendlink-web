@@ -488,6 +488,40 @@ const GameResultScreen = ({
           </>
         )}
         
+        {/* Stamina Changes Display */}
+        {staminaChanges && staminaChanges.photos && staminaChanges.photos.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="mb-6 p-4 bg-gray-800/50 rounded-xl border border-gray-700"
+          >
+            <h4 className="text-sm font-bold text-gray-400 mb-3 flex items-center justify-center gap-2">
+              <Zap className="w-4 h-4 text-yellow-400" />
+              Stamina Used This Battle
+            </h4>
+            <div className="flex flex-wrap justify-center gap-2">
+              {staminaChanges.photos.map((photo, idx) => (
+                <div 
+                  key={photo.mint_id || idx}
+                  className="flex items-center gap-1 px-2 py-1 bg-gray-700/50 rounded-lg text-sm"
+                >
+                  <span className="text-gray-300">{photo.name || `Photo ${idx + 1}`}</span>
+                  <span className={`font-bold ${photo.change < 0 ? 'text-red-400' : 'text-green-400'}`}>
+                    {photo.change > 0 ? '+' : ''}{photo.change}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p className={`mt-3 text-sm font-bold ${totalStaminaChange < 0 ? 'text-red-400' : 'text-green-400'}`}>
+              Total: {totalStaminaChange > 0 ? '+' : ''}{totalStaminaChange} stamina
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              Win = -1 stamina • Loss = -2 stamina • Regenerates 1/hour
+            </p>
+          </motion.div>
+        )}
+        
         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
           <Button
             onClick={onPlayAgain}
