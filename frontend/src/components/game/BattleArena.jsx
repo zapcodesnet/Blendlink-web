@@ -674,12 +674,23 @@ export const BattleArena = ({
           round_won: winner === 'player',
         });
         
-        // Check if medal was earned
+        // Check if medal was earned - trigger celebration!
         if (res.data.medal_earned) {
-          toast.success(
-            `🏅 ${selectedPlayerPhoto.name} earned a 10-Win Streak Medal! Total: ${res.data.total_medals}`,
-            { duration: 5000 }
-          );
+          // Show full-screen medal celebration
+          setCelebrationData({
+            photoName: selectedPlayerPhoto.name || 'Your Photo',
+            totalMedals: res.data.total_medals || 1,
+            bonusCoins: res.data.bonus_coins || 10000,
+          });
+          setShowMedalCelebration(true);
+          
+          // Also show toast after celebration
+          setTimeout(() => {
+            toast.success(
+              `🏅 +10,000 BL Coins! ${selectedPlayerPhoto.name} earned Medal #${res.data.total_medals}!`,
+              { duration: 5000 }
+            );
+          }, 5500); // After celebration completes
         }
       } catch (err) {
         console.error('Failed to record round result:', err);
