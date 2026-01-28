@@ -299,12 +299,18 @@ export const PVPRoundReady = ({
     };
     
     websocket.addEventListener('message', handleMessage);
-    setWsConnected(websocket.readyState === WebSocket.OPEN);
     
     return () => {
       websocket.removeEventListener('message', handleMessage);
     };
   }, [websocket, currentUserId, opponentData?.username, onRoundStart]);
+  
+  // Update connection status
+  useEffect(() => {
+    if (websocket) {
+      setWsConnected(websocket.readyState === WebSocket.OPEN);
+    }
+  }, [websocket]);
   
   // Handle photo selection
   const handleSelectPhoto = useCallback((photo) => {
