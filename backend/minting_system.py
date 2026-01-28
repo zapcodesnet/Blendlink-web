@@ -23,11 +23,52 @@ logger = logging.getLogger(__name__)
 
 # ============== CONSTANTS ==============
 MINT_COST_BL = 500  # BL coins per mint
-DAILY_MINT_LIMIT = 10  # Max mints per day (free tier)
+
+# Monthly Subscription Tiers with benefits
+SUBSCRIPTION_TIERS = {
+    "free": {
+        "daily_mint_limit": 3,
+        "xp_multiplier": 1,
+        "daily_bl_claim": 0,
+        "price": 0,
+    },
+    "bronze": {
+        "daily_mint_limit": 20,
+        "xp_multiplier": 2,
+        "daily_bl_claim": 15_000,
+        "price": 4.99,
+    },
+    "silver": {
+        "daily_mint_limit": 50,
+        "xp_multiplier": 3,
+        "daily_bl_claim": 35_000,
+        "price": 9.99,
+    },
+    "gold": {
+        "daily_mint_limit": 100,
+        "xp_multiplier": 4,
+        "daily_bl_claim": 80_000,
+        "price": 14.99,
+    },
+    "platinum": {
+        "daily_mint_limit": 999999,  # Unlimited
+        "xp_multiplier": 5,
+        "daily_bl_claim": 200_000,
+        "price": 24.99,
+    },
+}
+
+# Legacy compatibility
+DAILY_MINT_LIMIT = 10
 SUBSCRIPTION_LIMITS = {
-    "free": 10,
-    "basic": 20,  # $4.99/month
-    "premium": 50,  # $9.99/month
+    "free": 3,
+    "bronze": 20,
+    "silver": 50,
+    "gold": 100,
+    "platinum": 999999,
+    # Legacy names
+    "basic": 20,
+    "premium": 50,
 }
 
 # Scenery types and their strength/weakness relationships
