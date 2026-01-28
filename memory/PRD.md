@@ -1,6 +1,70 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 28, 2026 (Session 33 - Critical PVP Bug Fix)
+## Latest Update: January 28, 2026 (Session 34 - Dollar Value System & Subscription Tiers)
+
+---
+
+## SESSION 34: PHASE 1 - DOLLAR VALUE AI SCORING SYSTEM ✅
+
+### Features Implemented (January 28, 2026)
+
+**1. 11-Category AI Rating System (Complete)**
+Updated the AI photo analysis with proper weights and max values:
+- Original (8%) = $80M max
+- Innovative (10%) = $100M max
+- Unique (10%) = $100M max
+- Rare (10%) = $100M max
+- Exposure (10%) = $100M max
+- Color (8%) = $80M max
+- Clarity (8%) = $80M max
+- Composition (8%) = $80M max
+- Narrative (8%) = $80M max
+- Captivating (10%) = $100M max
+- Authenticity (10%) = $100M max (Face 5% + Selfie 5%)
+
+**2. Updated Level/Star Bonuses**
+Fixed to match spec (+10% per milestone):
+- L10: 1★ +10% + 10,000 BL coins
+- L20: 2★ +20%
+- L30: 3★ +30%
+- L40: 4★ +40%
+- L50: 5★ +50%
+- L60: 5★ + golden frame +70% + 100,000 BL coins
+
+**3. Subscription Tiers (New)**
+- Free: 3 mints/day, ×1 XP
+- Bronze ($4.99): 20 mints/day, ×2 XP, 15,000 BL daily claim
+- Silver ($9.99): 50 mints/day, ×3 XP, 35,000 BL daily claim
+- Gold ($14.99): 100 mints/day, ×4 XP, 80,000 BL daily claim
+- Platinum ($24.99): Unlimited, ×5 XP, 200,000 BL daily claim
+
+**4. New Photo Metadata Fields**
+- `minted_by_username` - Original minter's @username (permanent)
+- `minted_by_user_id` - Original minter's ID (permanent)
+- `monthly_growth_value` - +$1M per 30 days since mint
+- `total_reactions` - Combined reactions from all sources
+- `reaction_bonus_value` - +$1M per 100 reactions
+- `current_stamina` / `max_stamina` - Direct battle count (24 max)
+- `last_birthday_bonus_year` - Tracks yearly bonus claims
+
+**5. New API Endpoints**
+- `POST /api/minting/photos/{mint_id}/claim-birthday-bonus` - 5,000 BL yearly
+- `POST /api/minting/subscription/claim-daily-bl` - Daily subscription claim
+- `GET /api/minting/subscription/info` - Subscription tier info
+
+**6. Dollar Value Calculation Functions**
+- `calculate_full_dollar_value()` - Includes all bonuses
+- `calculate_stamina_regen()` - +1 battle per hour
+
+### Files Modified:
+- `backend/minting_system.py` - Complete overhaul
+- `backend/minting_routes.py` - New endpoints
+- `backend/referral_system.py` - New transaction types
+
+### Testing:
+- All API endpoints verified working
+- Subscription tiers displaying correctly
+- Rating criteria API returns proper weights
 
 ---
 
