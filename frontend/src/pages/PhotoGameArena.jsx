@@ -1634,13 +1634,76 @@ const PhotoGameArena = () => {
   
   // Handle Auction Battle completion
   const handleAuctionBattleComplete = useCallback((winner) => {
-    setGameState('matchmaking');
+    setGameState('pvp_menu');
     setSession(null);
     setSelectedPhoto(null);
     setPlayerBattlePhotos([]);
     setOpponentBattlePhotos([]);
     setBattleBetAmount(0);
+    setCurrentOpenGame(null);
     api.get('/photo-game/stats').then(res => setStats(res.data)).catch(() => {});
+  }, []);
+  
+  // NEW: PVP Open Games Handlers
+  const handleCreateGameSuccess = useCallback((game, photoIds, photos) => {
+    setCurrentOpenGame(game);
+    setSelectedPhotoIds(photoIds);
+    setSelectedPhotosData(photos);
+    setGameState('pvp_lobby');
+    toast.success('🎮 Game created! Waiting in lobby...');
+  }, []);
+  
+  const handleJoinGame = useCallback(async (game) => {
+    if (selectedPhotoIds.length !== 5) {
+      toast.error('Please select 5 photos first');
+      setGameState('pvp_select_join');
+      return;
+    }
+    
+    try {
+      const res = await api.post('/photo-game/open-games/join', {
+        game_id: game.game_id,
+        photo_ids: selectedPhotoIds,
+      });
+      
+      if (res.data.success) {
+        setCurrentOpenGame(res.data.game);
+        setGameState('pvp_lobby');
+        toast.success(`Joined ${game.creator_username}'s game!`);
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to join game');
+    }
+  }, [selectedPhotoIds]);
+  
+  const handleGameStart = useCallback((sessionId, gameData) => {
+    // Transition from lobby to actual battle
+    setSession({ session_id: sessionId, ...gameData });
+    setPlayerBattlePhotos(gameData?.creator_photos || gameData?.opponent_photos || []);
+    setOpponentBattlePhotos(gameData?.opponent_photos || gameData?.creator_photos || []);
+    setBattleBetAmount(gameData?.bet_amount || 0);
+    setIsAuctionBattleBot(false);
+    setGameState('auction_battle');
+    auctionSounds.gavelSlam();
+    toast.success('⚔️ Battle starting!');
+  }, []);
+  
+  const handleLeaveLobby = useCallback(async () => {
+    if (currentOpenGame?.game_id) {
+      try {
+        await api.delete(`/photo-game/open-games/${currentOpenGame.game_id}`);
+      } catch (err) {
+        // Ignore errors when leaving
+      }
+    }
+    setCurrentOpenGame(null);
+    setGameState('pvp_menu');
+  }, [currentOpenGame]);
+  
+  const handleSelectPhotosForJoin = useCallback((photoIds, photos) => {
+    setSelectedPhotoIds(photoIds);
+    setSelectedPhotosData(photos);
+    setGameState('pvp_browse');
   }, []);
   
   const handleMatchFound = async (matchInfo) => {
