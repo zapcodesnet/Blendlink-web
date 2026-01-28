@@ -1,6 +1,44 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 28, 2026 (Session 28 - PVP Flow Completion)
+## Latest Update: January 28, 2026 (Session 29 - Match History & P1 Features)
+
+---
+
+## SESSION 29: MATCH HISTORY & SOCIAL SHARING + P1 FEATURES ✅
+
+### Features Implemented
+
+**1. Match History & Replay System (NEW)**
+- Match History dashboard with stats (Victories, Defeats, Win Rate)
+- Filter buttons (All, Wins, Losses)
+- Full animated replay (all 5 rounds step-by-step)
+- Battle card with all 10 photos + detailed stats
+
+**2. Social Sharing Integration**
+- One-click share to Facebook Group: `https://www.facebook.com/groups/938837402074960`
+- Twitter share with battle stats
+- Copy link for easy sharing
+- Public battle replay page at `/battle/:sessionId`
+
+**3. Stamina Deductions Display (P1)**
+- Shows stamina changes after each battle (-1 win, -2 loss per photo)
+- Total stamina summary in result screen
+- Reminder about 1/hour regeneration
+
+**4. Real-time Lobby Notifications (P1)**
+- Toast notification when opponent joins: "🎮 [Player] has joined your game!"
+- Toast when opponent/creator marks ready
+- Toast when countdown starts
+
+### Testing Results:
+- **Iteration 64**: 100% backend (18/18 tests), 100% frontend
+
+### Files Created/Modified:
+- `frontend/src/components/game/MatchHistory.jsx` - NEW
+- `frontend/src/pages/BattleReplayPage.jsx` - NEW  
+- `frontend/src/components/game/BattleArena.jsx` - Stamina tracking
+- `frontend/src/components/game/GameLobby.jsx` - Toast notifications
+- `backend/game_routes.py` - Match history APIs
 
 ---
 
