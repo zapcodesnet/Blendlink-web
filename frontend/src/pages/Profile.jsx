@@ -5,6 +5,7 @@ import api from "../services/api";
 import { toast } from "sonner";
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
+import { MedalShowcase } from "../components/MedalShowcase";
 import { 
   Settings, Grid3X3, Heart, Bookmark, Share2, 
   Users, MessageCircle, Coins, ArrowLeft, Edit, Copy,
@@ -394,6 +395,14 @@ export default function Profile() {
             </div>
           </>
         )}
+
+        {/* Medal Showcase Section */}
+        <div className="mb-6" data-testid="medal-showcase-section">
+          <MedalShowcase 
+            userId={profile?.user_id || id} 
+            isOwnProfile={isOwnProfile} 
+          />
+        </div>
 
         {/* Posts Grid */}
         <div className="border-t border-border/50 pt-4">
