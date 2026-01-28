@@ -506,14 +506,14 @@ export const RPSBidding = ({
     setPlayerBid(amount);
     if (soundEnabled) auctionSounds.buttonHover();
     
-    // Show warning on max bid
-    if (amount === MAX_BID && playerMoney <= MAX_BID) {
+    // Show warning on max bid (either $5M or $6M depending on advantage)
+    if (amount === currentMaxBid && playerMoney <= currentMaxBid) {
       setShowMaxBidWarning(true);
-      toast.warning("⚠️ Warning: Bidding all $5M. You may auto-lose future RPS rounds if you run out of money!");
+      toast.warning(`⚠️ Warning: Bidding all ${formatMoney(currentMaxBid)}. You may auto-lose future RPS rounds if you run out of money!`);
     } else {
       setShowMaxBidWarning(false);
     }
-  }, [playerMoney, soundEnabled]);
+  }, [playerMoney, soundEnabled, currentMaxBid]);
   
   // Handle choice select
   const handleChoiceSelect = useCallback((choiceId) => {
