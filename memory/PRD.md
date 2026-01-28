@@ -1,6 +1,62 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 2026 (Session 26 - Complete Photo Game Overhaul)
+## Latest Update: January 2026 (Session 27 - PVP Matchmaking System)
+
+---
+
+## SESSION 27: PVP MATCHMAKING SYSTEM - COMPLETE ✅
+
+### Major Feature Implementation
+
+**1. PVP Battle Arena Menu (NEW)**
+- New entry point to photo game at `/photo-game`
+- Three main options:
+  - **Create New Game**: Select 5 photos → Set bet → Create open game
+  - **Browse & Join Games**: Select 5 photos → Browse available games → Join
+  - **Practice Mode**: Legacy single-photo bot battles
+
+**2. PhotoSelector Component (NEW)**
+- Mandatory 5-photo selection with stamina validation
+- Gray out photos with stamina < 1
+- Sorting options: Value, Stamina, Level
+- Selection counter and total dollar value display
+- **Create Mode**: Includes bet input (0-∞ BL coins), bot fallback toggle
+- **Select Mode**: For joining games, leads to OpenGamesBrowser
+
+**3. OpenGamesBrowser Component (COMPLETED)**
+- Real-time list of available open games
+- Search by username or game ID
+- Game cards showing: creator's strongest photo, bet amount, total value
+- Preview modal with flip-card animation showing all 5 photos
+- Detailed stats view on card back (double-tap to flip)
+
+**4. GameLobby Component (COMPLETED)**
+- Displays both players' 5 photos side-by-side
+- Ready button for each player
+- Real-time status updates (polling every 2 seconds)
+- Transparent 10-second countdown when both ready
+- WebSocket notifications planned for future
+
+**5. Backend API Endpoints (ALL WORKING)**
+- `POST /api/photo-game/open-games/create` - Create new game
+- `GET /api/photo-game/open-games` - List available games
+- `GET /api/photo-game/open-games/{id}` - Get game details
+- `POST /api/photo-game/open-games/join` - Join a game
+- `POST /api/photo-game/open-games/ready` - Mark player ready
+- `POST /api/photo-game/open-games/start/{id}` - Start countdown
+- `DELETE /api/photo-game/open-games/{id}` - Cancel game
+
+### Testing Results:
+- **Iteration 62**: 100% backend (26/26 tests), 100% frontend
+- Fixed: MongoDB bool check, stamina regeneration, NaN display
+
+### Files Created/Modified:
+- `frontend/src/components/game/PhotoSelector.jsx` - Full create flow
+- `frontend/src/components/game/OpenGamesBrowser.jsx` - Game browser
+- `frontend/src/components/game/GameLobby.jsx` - Ready-up lobby
+- `frontend/src/pages/PhotoGameArena.jsx` - Integrated new flow
+- `backend/game_routes.py` - Open games API
+- `backend/photo_game.py` - OpenGame model, stamina calculations
 
 ---
 
