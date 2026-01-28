@@ -210,7 +210,10 @@ export const GameLobby = ({
   const [gameState, setGameState] = useState(game);
   const [loading, setLoading] = useState(false);
   const [showCountdown, setShowCountdown] = useState(false);
-  const pollingRef = useRef(null);
+  const [wsConnected, setWsConnected] = useState(false);
+  const wsRef = useRef(null);
+  const reconnectAttempts = useRef(0);
+  const maxReconnectAttempts = 5;
   
   // Determine current user's role
   const isCreator = gameState?.creator_id === currentUserId;
@@ -221,64 +224,197 @@ export const GameLobby = ({
   const opponentReady = gameState?.opponent_ready;
   const bothReady = creatorReady && opponentReady;
   
-  // Poll for game state updates
-  const pollGameState = useCallback(async () => {
-    if (!gameState?.game_id) return;
+  // Get WebSocket URL
+  const getWebSocketUrl = useCallback(() => {
+    const token = localStorage.getItem('blendlink_token');
+    if (!token || !gameState?.game_id) return null;
     
+    const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+    // Convert HTTP(S) to WS(S)
+    const wsProtocol = backendUrl.startsWith('https') ? 'wss' : 'ws';
+    const wsHost = backendUrl.replace(/^https?:\/\//, '');
+    
+    return `${wsProtocol}://${wsHost}/ws/lobby/${gameState.game_id}/${token}`;
+  }, [gameState?.game_id]);
+  
+  // Handle WebSocket messages
+  const handleWebSocketMessage = useCallback((event) => {
     try {
-      const res = await api.get(`/photo-game/open-games/${gameState.game_id}`);
-      const newState = res.data;
+      const data = JSON.parse(event.data);
       
-      // Check if opponent just joined (for creator)
-      if (isCreator && !gameState?.opponent_id && newState?.opponent_id) {
-        toast.success(
-          `🎮 ${newState.opponent_username || 'Player'} has joined your game! Click Ready when you're set.`,
-          { duration: 5000 }
-        );
-      }
-      
-      // Check if creator marked ready (for opponent)
-      if (isOpponent && !gameState?.creator_ready && newState?.creator_ready) {
-        toast.info(`⚡ ${newState.creator_username || 'Host'} is ready!`);
-      }
-      
-      // Check if opponent marked ready (for creator)
-      if (isCreator && !gameState?.opponent_ready && newState?.opponent_ready) {
-        toast.info(`⚡ ${newState.opponent_username || 'Opponent'} is ready!`);
-      }
-      
-      setGameState(newState);
-      
-      // Check if countdown should start
-      if (newState.status === 'starting' && !showCountdown) {
-        setShowCountdown(true);
-        toast.success('🔥 Both players ready! Starting countdown...');
-      }
-      
-      // Check if game started
-      if (newState.status === 'in_progress' && newState.active_session_id) {
-        onGameStart?.(newState.active_session_id, newState);
+      switch (data.type) {
+        case 'player_joined':
+          // Update game state with new player
+          setGameState(prev => ({
+            ...prev,
+            opponent_id: data.user_id,
+            opponent_username: data.username,
+            opponent_photos: data.photos,
+            status: 'ready'
+          }));
+          toast.success(
+            `🎮 ${data.username || 'Player'} has joined your game!`,
+            { duration: 5000 }
+          );
+          break;
+          
+        case 'ready_status_changed':
+          // Update ready status instantly
+          setGameState(prev => ({
+            ...prev,
+            creator_ready: data.is_creator ? data.is_ready : prev.creator_ready,
+            opponent_ready: !data.is_creator ? data.is_ready : prev.opponent_ready,
+          }));
+          if (data.user_id !== currentUserId) {
+            toast.info(`⚡ ${data.username || 'Player'} is ready!`);
+          }
+          break;
+          
+        case 'countdown_start':
+          setShowCountdown(true);
+          setGameState(prev => ({ ...prev, status: 'starting' }));
+          toast.success('🔥 Both players ready! Starting countdown...');
+          break;
+          
+        case 'game_start':
+          // Game is starting - transition to battle arena
+          onGameStart?.(data.session_id, data.session);
+          break;
+          
+        case 'game_state':
+          // Full state update
+          setGameState(prev => ({ ...prev, ...data.state }));
+          break;
+          
+        case 'player_disconnected':
+          toast.warning(`${data.user_id === gameState?.opponent_id ? 'Opponent' : 'Creator'} disconnected`);
+          break;
+          
+        case 'pong':
+          // Heartbeat response
+          break;
+          
+        default:
+          console.log('Unknown WebSocket message:', data);
       }
     } catch (err) {
-      console.error('Failed to poll game state:', err);
+      console.error('Failed to parse WebSocket message:', err);
     }
-  }, [gameState?.game_id, gameState?.opponent_id, gameState?.creator_ready, gameState?.opponent_ready, showCountdown, onGameStart, isCreator, isOpponent]);
+  }, [currentUserId, gameState?.opponent_id, onGameStart]);
   
-  // Start polling
+  // Connect to WebSocket
+  const connectWebSocket = useCallback(() => {
+    const wsUrl = getWebSocketUrl();
+    if (!wsUrl) return;
+    
+    // Close existing connection
+    if (wsRef.current) {
+      wsRef.current.close();
+    }
+    
+    try {
+      const ws = new WebSocket(wsUrl);
+      
+      ws.onopen = () => {
+        console.log('Lobby WebSocket connected');
+        setWsConnected(true);
+        reconnectAttempts.current = 0;
+      };
+      
+      ws.onmessage = handleWebSocketMessage;
+      
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        setWsConnected(false);
+      };
+      
+      ws.onclose = () => {
+        console.log('WebSocket closed');
+        setWsConnected(false);
+        
+        // Attempt reconnection
+        if (reconnectAttempts.current < maxReconnectAttempts) {
+          reconnectAttempts.current++;
+          const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 10000);
+          setTimeout(connectWebSocket, delay);
+        }
+      };
+      
+      wsRef.current = ws;
+    } catch (err) {
+      console.error('Failed to create WebSocket:', err);
+      setWsConnected(false);
+    }
+  }, [getWebSocketUrl, handleWebSocketMessage]);
+  
+  // Setup WebSocket connection
   useEffect(() => {
-    pollingRef.current = setInterval(pollGameState, 2000);
+    connectWebSocket();
+    
+    // Heartbeat to keep connection alive
+    const heartbeat = setInterval(() => {
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({ type: 'ping' }));
+      }
+    }, 30000);
+    
     return () => {
-      if (pollingRef.current) clearInterval(pollingRef.current);
+      clearInterval(heartbeat);
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
     };
-  }, [pollGameState]);
+  }, [connectWebSocket]);
+  
+  // Fallback polling (only if WebSocket fails)
+  useEffect(() => {
+    if (wsConnected) return; // Don't poll if WebSocket is connected
+    
+    const pollGameState = async () => {
+      if (!gameState?.game_id) return;
+      
+      try {
+        const res = await api.get(`/photo-game/open-games/${gameState.game_id}`);
+        const newState = res.data;
+        
+        // Check for state changes (only update if different)
+        if (JSON.stringify(newState) !== JSON.stringify(gameState)) {
+          setGameState(newState);
+          
+          // Check if countdown should start
+          if (newState.status === 'starting' && !showCountdown) {
+            setShowCountdown(true);
+            toast.success('🔥 Both players ready! Starting countdown...');
+          }
+          
+          // Check if game started
+          if (newState.status === 'in_progress' && newState.active_session_id) {
+            onGameStart?.(newState.active_session_id, newState);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to poll game state:', err);
+      }
+    };
+    
+    const pollInterval = setInterval(pollGameState, 3000); // Slower polling as fallback
+    return () => clearInterval(pollInterval);
+  }, [wsConnected, gameState, showCountdown, onGameStart]);
   
   // Handle ready
   const handleReady = async () => {
     try {
       setLoading(true);
       await api.post('/photo-game/open-games/ready', { game_id: gameState.game_id });
+      
+      // Optimistically update local state
+      if (isCreator) {
+        setGameState(prev => ({ ...prev, creator_ready: true }));
+      } else {
+        setGameState(prev => ({ ...prev, opponent_ready: true }));
+      }
+      
       toast.success('You are ready!');
-      pollGameState(); // Immediate update
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Failed to mark ready');
     } finally {
@@ -295,8 +431,8 @@ export const GameLobby = ({
         onGameStart?.(res.data.session_id, res.data.session);
       }
     } catch (err) {
-      // Might already be started by the other player
-      pollGameState();
+      // Might already be started by the other player - WebSocket will handle it
+      console.log('Game may have been started by opponent');
     }
   };
   
