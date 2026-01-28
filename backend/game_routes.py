@@ -411,6 +411,18 @@ async def join_open_game(
     }
     await _db.notifications.insert_one(notification)
     
+    # Broadcast via WebSocket for instant notification
+    try:
+        from lobby_websocket import lobby_manager
+        await lobby_manager.broadcast_player_joined(
+            game_id=data.game_id,
+            joiner_id=user_id,
+            joiner_username=current_user.get("username", "Player"),
+            joiner_photos=photos
+        )
+    except Exception as e:
+        logger.warning(f"Could not broadcast player joined: {e}")
+    
     # Fetch updated game
     updated_game = await _db.open_games.find_one({"game_id": data.game_id})
     updated_game.pop("_id", None)
