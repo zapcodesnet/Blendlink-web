@@ -878,6 +878,7 @@ export const BattleArena = ({
               opponentWins={opponentWins}
               betAmount={betAmount}
               onPlayAgain={handlePlayAgain}
+              staminaChanges={staminaChanges}
             />
           </motion.div>
         )}
