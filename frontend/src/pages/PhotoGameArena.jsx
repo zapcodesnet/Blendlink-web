@@ -2124,7 +2124,7 @@ const PhotoGameArena = () => {
             </motion.div>
           )}
           
-          {/* New Auction Battle Mode (Tapping + RPS Game) */}
+          {/* New Auction Battle Mode (Tapping + RPS Game for Bot matches) */}
           {gameState === 'auction_battle' && (
             <motion.div 
               key="auction_battle" 
@@ -2143,6 +2143,39 @@ const PhotoGameArena = () => {
                 websocket={null}
                 onGameComplete={handleAuctionBattleComplete}
                 onExit={() => setGameState('matchmaking')}
+              />
+            </motion.div>
+          )}
+          
+          {/* PVP Battle with Real-time WebSocket Sync */}
+          {gameState === 'pvp_battle' && (
+            <motion.div 
+              key="pvp_battle" 
+              initial={{ opacity: 0, y: 20 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              exit={{ opacity: 0 }}
+            >
+              <PVPBattleArena
+                gameId={currentOpenGame?.game_id}
+                session={session}
+                currentUserId={user?.user_id}
+                currentUsername={user?.username}
+                playerPhotos={playerBattlePhotos}
+                opponentPhotos={opponentBattlePhotos}
+                opponentId={opponentInfo.id}
+                opponentUsername={opponentInfo.username}
+                betAmount={battleBetAmount}
+                pvpRoomId={pvpRoomId || session?.pvp_room_id}
+                onGameComplete={() => {
+                  setGameState('pvp_menu');
+                  setCurrentOpenGame(null);
+                  setPvpRoomId(null);
+                }}
+                onExit={() => {
+                  setGameState('pvp_menu');
+                  setCurrentOpenGame(null);
+                  setPvpRoomId(null);
+                }}
               />
             </motion.div>
           )}
