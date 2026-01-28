@@ -372,6 +372,15 @@ const PhotoCard = ({ photo, onSelect, onUpdate, viewMode, onViewFull, onSelfieMa
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-white truncate">{photo.name}</h3>
+            {/* Medal Display - 10 Win Streak */}
+            {(photo.medals?.ten_win_streak > 0 || photo.ten_win_streak_medals > 0) && (
+              <span 
+                className="flex items-center gap-0.5 text-yellow-400 text-xs font-bold shrink-0"
+                title={`${photo.medals?.ten_win_streak || photo.ten_win_streak_medals} x 10-Win Streak Medal(s)`}
+              >
+                🏅x{photo.medals?.ten_win_streak || photo.ten_win_streak_medals}
+              </span>
+            )}
             {photo.is_private ? (
               <Lock className="w-4 h-4 text-gray-500" />
             ) : (
