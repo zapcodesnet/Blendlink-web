@@ -1,12 +1,54 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 29, 2026 (Session 34 - Phase 3 Reactions & Birthday Bonus)
+## Latest Update: January 29, 2026 (Session 34 - Phase 4 Subscriptions & Upgrades)
 
 ---
 
-## SESSION 34: PHASES 1-3 COMPLETE ✅
+## SESSION 34: PHASES 1-4 COMPLETE ✅
 
-### Phase 3: Social Reaction Bonus & Birthday Bonus (January 29, 2026)
+### Phase 4: Subscriptions & Dollar Value Upgrades (January 29, 2026)
+
+**1. Updated Subscription Tiers**
+| Tier | Price | Daily BL | XP Multi | Mints/Day |
+|------|-------|----------|----------|-----------|
+| Free | $0 | 0 | 1x | 3 |
+| Bronze | $4.99 | 15,000 | 2x | 20 |
+| Silver | $9.99 | 35,000 | 3x | 50 |
+| Gold | $14.99 | 80,000 | 4x | 100 |
+| Platinum | $24.99 | 200,000 | 5x | Unlimited |
+
+**2. Dollar Value Upgrades (BL to $ Conversion)**
+- $1M → 1M BL
+- $2M → 2M BL
+- $5M → 5M BL
+- $10M → 10M BL
+- $20M → 20M BL
+- $50M → 50M BL
+- $100M → 100M BL
+- $500M → 500M BL
+- $1B → 1B BL
+
+**New API Endpoints:**
+- `GET /api/minting/upgrade-prices` - List all upgrade options
+- `POST /api/minting/photos/{mint_id}/upgrade` - Purchase upgrade
+- `GET /api/minting/photos/{mint_id}/available-upgrades` - Check photo's available upgrades
+
+**Frontend Updates:**
+- SubscriptionTiers.jsx - 5-tier grid with icons (🥉🥈🥇👑)
+- "BEST VALUE" badge on Gold tier
+- "ELITE" badge on Platinum tier
+
+### Testing Results:
+- **Iteration 71**: 100% backend (35/35 tests), 100% frontend
+- Fixed duplicate route issue for upgrade endpoint
+
+### Note:
+- Gold and Platinum Stripe price IDs are placeholders
+- Need to create actual products in Stripe dashboard for production
+
+---
+
+### Phase 3: Social Reaction Bonus & Birthday Bonus (Earlier Today)
 
 **1. Social Reaction Bonus (Mocked ❤️ Counter)**
 - +$1,000,000 per 100 reactions accumulated
