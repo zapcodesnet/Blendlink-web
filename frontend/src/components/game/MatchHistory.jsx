@@ -15,7 +15,7 @@ import {
   Play, Pause, SkipForward, RotateCcw, Share2, Facebook, Twitter,
   Link2, X, Filter, TrendingUp, TrendingDown, Zap, Shield, Flame,
   Eye, Download, Users, Crown, Target, Loader2, Copy, Check,
-  Hand, FileText // Rock, Paper, Scissors icons
+  Hand, FileText, Film, Trash2 // Rock, Paper, Scissors icons + Film for replays
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../ui/button';
