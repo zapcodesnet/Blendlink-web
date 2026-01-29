@@ -1981,7 +1981,7 @@ const PhotoGameArena = () => {
                   data-testid="legacy-mode-btn"
                 >
                   <Bot className="w-5 h-5 mr-2" />
-                  Practice Mode (Single Photo)
+                  Play with Bot
                 </Button>
               </div>
             </motion.div>
