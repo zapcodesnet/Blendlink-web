@@ -1377,6 +1377,22 @@ export const mintingAPI = {
     const response = await api.get(`/minting/user/${userId}/photos?skip=${skip}&limit=${limit}`);
     return response.data;
   },
+
+  // Get authenticity status for a photo
+  getAuthenticityStatus: async (mintId) => {
+    const response = await api.get(`/minting/photo/${mintId}/authenticity-status`);
+    return response.data;
+  },
+
+  // Submit selfie for face matching (Authenticity bonus)
+  submitSelfieMatch: async (mintId, selfieBase64, mimeType = 'image/jpeg') => {
+    const response = await api.post(`/minting/photo/${mintId}/selfie-match`, {
+      mint_id: mintId,
+      selfie_base64: selfieBase64,
+      mime_type: mimeType,
+    });
+    return response.data;
+  },
 };
 
 // ============== PHOTO MARKETPLACE API ==============
