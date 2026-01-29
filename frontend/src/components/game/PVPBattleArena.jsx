@@ -442,22 +442,41 @@ export const PVPBattleArena = ({
   
   // Connect on mount
   useEffect(() => {
-    connectWebSocket();
+    connectWebSocket(false);
     
-    // Heartbeat
+    // Heartbeat - more frequent to detect disconnection faster
     const heartbeat = setInterval(() => {
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         wsRef.current.send(JSON.stringify({ type: 'ping' }));
       }
-    }, 30000);
+    }, 10000); // Every 10 seconds
     
     return () => {
       clearInterval(heartbeat);
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
       if (wsRef.current) {
         wsRef.current.close();
       }
     };
   }, [connectWebSocket]);
+  
+  // Handle visibility change (tab switch, app background)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && !wsConnected && gamePhase !== 'result') {
+        console.log('Tab became visible, checking connection...');
+        if (wsRef.current?.readyState !== WebSocket.OPEN) {
+          reconnectAttempts.current = 0;
+          connectWebSocket(true);
+        }
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [wsConnected, gamePhase, connectWebSocket]);
   
   // Handle photo selection
   const handlePhotoSelect = useCallback((photo) => {
