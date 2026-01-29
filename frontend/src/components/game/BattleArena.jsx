@@ -871,6 +871,9 @@ export const BattleArena = ({
     setStaminaChanges(null);
     setShowMedalCelebration(false);
     setCelebrationData(null);
+    setReplayRounds([]);
+    setShowReplaySaved(false);
+    setSavedReplayId(null);
     
     if (onGameComplete) {
       // Pass full game result data for bot battle tracking
@@ -881,6 +884,25 @@ export const BattleArena = ({
       });
     }
   }, [gameWinner, onGameComplete, session, playerWins, opponentWins]);
+  
+  // View saved replay
+  const handleViewReplay = useCallback(() => {
+    if (savedReplayId) {
+      window.open(`/replay/${savedReplayId}`, '_blank');
+    }
+  }, [savedReplayId]);
+  
+  // Share replay to feed
+  const handleShareReplayToFeed = useCallback(async () => {
+    if (!savedReplayId) return;
+    
+    try {
+      await api.post(`/photo-game/battle-replay/${savedReplayId}/share-to-feed`);
+      toast.success('🚀 Shared to Blendlink Feed!');
+    } catch (err) {
+      toast.error('Failed to share to feed');
+    }
+  }, [savedReplayId]);
   
   return (
     <div className="min-h-[70vh]" data-testid="battle-arena">
