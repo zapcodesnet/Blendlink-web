@@ -1114,6 +1114,7 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect, onPracticeSta
   const [error, setError] = useState(null);
   const [showBotSelector, setShowBotSelector] = useState(false); // Bot difficulty modal
   const [userBalance, setUserBalance] = useState(0);
+  const [botWinStats, setBotWinStats] = useState({}); // Bot progression stats
   const intervalRef = useRef(null);
   const isMountedRef = useRef(true);
   const onMatchFoundRef = useRef(onMatchFound);
@@ -1128,16 +1129,19 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect, onPracticeSta
     const fetchData = async () => {
       try {
         setLoadingPhotos(true);
-        const [photosRes, queueRes, statsRes] = await Promise.all([
+        const [photosRes, queueRes, statsRes, botStatsRes] = await Promise.all([
           api.get('/photo-game/battle-photos'),
           api.get('/photo-game/pvp/queue-status'),
-          api.get('/photo-game/stats')
+          api.get('/photo-game/stats'),
+          api.get('/photo-game/bot-battle/stats').catch(() => ({ data: {} }))
         ]);
         if (isMountedRef.current) {
           setBattlePhotos(photosRes.data.photos || []);
           setQueueStatus(queueRes.data);
           // Get user's BL balance from wallet or stats
           setUserBalance(statsRes.data?.bl_coins || 0);
+          // Set bot win stats for progression tracking
+          setBotWinStats(botStatsRes.data || {});
         }
       } catch (err) {
         if (isMountedRef.current) {
