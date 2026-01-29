@@ -567,6 +567,15 @@ export default function PhotoDetailScreen() {
         {/* Bottom padding */}
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* Selfie Match Modal */}
+      <SelfieMatchModal
+        visible={selfieModalVisible}
+        onClose={() => setSelfieModalVisible(false)}
+        photo={photo}
+        onSuccess={handleSelfieMatchSuccess}
+        userBalance={user?.bl_coins || 0}
+      />
     </SafeAreaView>
   );
 }
