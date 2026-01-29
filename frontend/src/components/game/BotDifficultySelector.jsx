@@ -272,6 +272,9 @@ const PhotoCard = React.memo(({ photo, isSelected, selectionIndex, canSelect, on
           <span className="text-yellow-300 text-xs">{'★'.repeat(Math.min(level, 5))}</span>
         </div>
         
+        {/* Streak Badge - Top Right */}
+        <StreakBadge winStreak={winStreak} loseStreak={loseStreak} />
+        
         <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/70 rounded-lg z-10">
           <span className="text-xs">
             <span className="mr-1">{scenery.emoji}</span>
