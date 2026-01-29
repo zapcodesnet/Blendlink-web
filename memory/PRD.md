@@ -1,12 +1,55 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 28, 2026 (Session 34 - Phase 2 Streaks + XP System)
+## Latest Update: January 29, 2026 (Session 34 - Phase 3 Reactions & Birthday Bonus)
 
 ---
 
-## SESSION 34: PHASE 1 & 2 - DOLLAR VALUE + STREAKS/XP SYSTEM ✅
+## SESSION 34: PHASES 1-3 COMPLETE ✅
 
-### Phase 2: Streaks + XP System (January 28, 2026)
+### Phase 3: Social Reaction Bonus & Birthday Bonus (January 29, 2026)
+
+**1. Social Reaction Bonus (Mocked ❤️ Counter)**
+- +$1,000,000 per 100 reactions accumulated
+- Single ❤️ counter displayed on photo cards
+- Reactions from: FB Page, FB Group, Blendlink (website/app)
+- Currently mocked - real FB API integration later
+
+**New API Endpoints:**
+- `POST /api/minting/photos/{mint_id}/react` - Add reaction
+- `DELETE /api/minting/photos/{mint_id}/react` - Remove reaction
+
+**2. Birthday Bonus**
+- 5,000 BL coins yearly on minting anniversary
+- Check eligibility: Shows days until birthday
+- Claim once per year
+
+**New API Endpoints:**
+- `GET /api/minting/photos/{mint_id}/check-birthday` - Check eligibility
+- `POST /api/minting/photos/{mint_id}/claim-birthday-bonus` - Claim bonus
+
+**3. Full Value Calculation**
+- `GET /api/minting/photos/{mint_id}/full-value` - Returns complete breakdown:
+  - Base Value (AI scoring)
+  - Level Bonus (+10% per milestone)
+  - Upgrade Bonus (BL purchases)
+  - Monthly Growth (+$1M per 30 days)
+  - Reaction Bonus (+$1M per 100 reactions)
+
+**4. Frontend Updates (MintedPhotos.jsx)**
+- ❤️ Reaction counter on photo cards
+- Value breakdown in back card view
+- "Minted by @username on date" permanent metadata
+- Stars display (★) based on level
+- Golden frame indicator (🔶) at L60
+
+### Testing Results:
+- **Iteration 70**: 100% backend (19/19 tests), 100% frontend
+- All constants verified correct
+- API structure validated
+
+---
+
+### Phase 2: Streaks + XP System (Earlier Today)
 
 **1. Win Streak Multipliers (🔥)**
 Visible during battles, broken on loss:
