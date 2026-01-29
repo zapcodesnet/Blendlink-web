@@ -135,6 +135,81 @@ class PVPGameManager:
         
         return True
     
+    async def reconnect_player(
+        self,
+        room_id: str,
+        user_id: str,
+        websocket: WebSocket,
+    ) -> bool:
+        """Reconnect a disconnected player to their game room"""
+        room = self.rooms.get(room_id)
+        if not room:
+            logger.error(f"Room {room_id} not found for reconnect")
+            return False
+        
+        async with self._lock:
+            player = None
+            if room.player1 and room.player1.user_id == user_id:
+                player = room.player1
+            elif room.player2 and room.player2.user_id == user_id:
+                player = room.player2
+            
+            if not player:
+                logger.error(f"User {user_id} not found in room {room_id}")
+                return False
+            
+            # Update connection
+            player.websocket = websocket
+            player.is_connected = True
+            player.last_heartbeat = asyncio.get_event_loop().time()
+            player.missed_pings = 0
+            
+            self.user_rooms[user_id] = room_id
+        
+        logger.info(f"Player {user_id} reconnected to room {room_id}")
+        
+        # Notify all players about reconnection
+        await self._broadcast_to_room(room_id, {
+            "type": "player_reconnected",
+            "user_id": user_id,
+            "username": player.username,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+        
+        # Send current game state to reconnected player
+        await self._send_to_user(user_id, {
+            "type": "reconnect_state",
+            "room_id": room_id,
+            "current_round": room.current_round,
+            "round_phase": room.round_phase,
+            "round_type": room.round_type,
+            "player1_wins": room.player1_wins,
+            "player2_wins": room.player2_wins,
+            "player1": {
+                "user_id": room.player1.user_id if room.player1 else None,
+                "username": room.player1.username if room.player1 else None,
+                "is_connected": room.player1.is_connected if room.player1 else False,
+                "has_selected": bool(room.player1.selected_photo_id) if room.player1 else False,
+                "is_ready": room.player1.is_ready if room.player1 else False,
+                "selected_photo": self._sanitize_photo(
+                    next((p for p in room.player1.photos if p.get("mint_id") == room.player1.selected_photo_id), None)
+                ) if room.player1 and room.player1.selected_photo_id else None,
+            },
+            "player2": {
+                "user_id": room.player2.user_id if room.player2 else None,
+                "username": room.player2.username if room.player2 else None,
+                "is_connected": room.player2.is_connected if room.player2 else False,
+                "has_selected": bool(room.player2.selected_photo_id) if room.player2 else False,
+                "is_ready": room.player2.is_ready if room.player2 else False,
+                "selected_photo": self._sanitize_photo(
+                    next((p for p in room.player2.photos if p.get("mint_id") == room.player2.selected_photo_id), None)
+                ) if room.player2 and room.player2.selected_photo_id else None,
+            },
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+        
+        return True
+    
     async def disconnect_player(self, user_id: str):
         """Handle player disconnect"""
         room_id = self.user_rooms.get(user_id)
