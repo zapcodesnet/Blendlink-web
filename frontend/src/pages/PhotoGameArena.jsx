@@ -1901,7 +1901,14 @@ const PhotoGameArena = () => {
                 </motion.div>
                 
                 <Button
-                  onClick={() => setGameState('matchmaking')}
+                  onClick={() => {
+                    // Direct to Bot Battle selector
+                    if (battlePhotos.length < 1) {
+                      toast.error('You need at least 1 minted photo to play! Go to Minting to create photos.');
+                      return;
+                    }
+                    setShowBotSelector(true);
+                  }}
                   variant="outline"
                   className="w-full py-6 border-gray-600 text-gray-300"
                   size="lg"
