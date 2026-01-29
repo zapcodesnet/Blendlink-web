@@ -108,6 +108,21 @@ export default function GamesScreen() {
           </View>
         </TouchableOpacity>
 
+        {/* Open Games Browser - Browse & Join PVP Battles */}
+        <TouchableOpacity
+          style={[styles.openGamesCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+          onPress={() => navigation.navigate('OpenGamesBrowser')}
+        >
+          <View style={styles.openGamesIcon}>
+            <Text style={styles.openGamesEmoji}>👥</Text>
+          </View>
+          <View style={styles.openGamesInfo}>
+            <Text style={[styles.openGamesTitle, { color: colors.text }]}>Open Games</Text>
+            <Text style={[styles.openGamesDesc, { color: colors.textMuted }]}>Browse & join PvP battles</Text>
+          </View>
+          <Text style={[styles.openGamesArrow, { color: colors.textMuted }]}>→</Text>
+        </TouchableOpacity>
+
         {/* Minted Photos Quick Access */}
         <TouchableOpacity
           style={[styles.mintedPhotosCard, { backgroundColor: colors.card, borderColor: colors.border }]}
