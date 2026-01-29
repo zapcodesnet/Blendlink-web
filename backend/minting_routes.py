@@ -618,7 +618,7 @@ class UpgradeRequest(BaseModel):
 @minting_router.get("/upgrade-prices")
 async def get_upgrade_prices():
     """Get available dollar value upgrade options and their BL costs"""
-    from minting_system import DOLLAR_VALUE_UPGRADES
+    from minting_system import UPGRADE_COSTS
     
     return {
         "upgrades": [
@@ -628,7 +628,7 @@ async def get_upgrade_prices():
                 "formatted_dollar": f"${amount:,}",
                 "formatted_cost": f"{cost:,} BL",
             }
-            for amount, cost in sorted(DOLLAR_VALUE_UPGRADES.items())
+            for amount, cost in sorted(UPGRADE_COSTS.items())
         ]
     }
 
@@ -643,18 +643,18 @@ async def purchase_dollar_upgrade(
     Purchase a permanent dollar value upgrade for a photo.
     Costs BL coins, adds permanent dollar value.
     """
-    from minting_system import DOLLAR_VALUE_UPGRADES
+    from minting_system import UPGRADE_COSTS
     
     if _db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     upgrade_amount = request.amount
-    bl_cost = DOLLAR_VALUE_UPGRADES.get(upgrade_amount)
+    bl_cost = UPGRADE_COSTS.get(upgrade_amount)
     
     if bl_cost is None:
         raise HTTPException(
             status_code=400, 
-            detail=f"Invalid upgrade amount. Available: {list(DOLLAR_VALUE_UPGRADES.keys())}"
+            detail=f"Invalid upgrade amount. Available: {list(UPGRADE_COSTS.keys())}"
         )
     
     # Check ownership
@@ -728,7 +728,7 @@ async def get_available_upgrades(
     current_user: dict = Depends(get_current_user_from_request)
 ):
     """Get available upgrades for a specific photo"""
-    from minting_system import DOLLAR_VALUE_UPGRADES
+    from minting_system import UPGRADE_COSTS
     
     if _db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
@@ -746,7 +746,7 @@ async def get_available_upgrades(
     user_bl = user.get("bl_coins", 0) if user else 0
     
     available = []
-    for amount, cost in sorted(DOLLAR_VALUE_UPGRADES.items()):
+    for amount, cost in sorted(UPGRADE_COSTS.items()):
         available.append({
             "dollar_amount": amount,
             "bl_cost": cost,
