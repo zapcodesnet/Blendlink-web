@@ -593,8 +593,76 @@ export const TappingArena = ({
         </div>
       </div>
       
-      {/* Photo cards - side by side */}
-      <div className="absolute top-24 left-0 right-0 flex justify-center gap-4 sm:gap-8 px-4 z-10">
+      {/* Progress meters - MOVED ABOVE PHOTOS */}
+      <div className="absolute top-20 left-0 right-0 px-4 z-20">
+        <div className="flex gap-4 items-center">
+          {/* Player meter */}
+          <div className="flex-1">
+            <div className="flex justify-between text-xs text-gray-400 mb-1">
+              <span className="text-purple-300 font-bold">Your Progress</span>
+              <span className="text-white font-bold">{Math.round(playerProgress)}%</span>
+            </div>
+            <div className="h-6 bg-gray-800 rounded-full overflow-hidden border border-purple-500/50">
+              <div 
+                className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 progress-animated"
+                style={{ 
+                  width: `${playerProgress}%`,
+                  transition: 'width 0.08s linear',
+                }}
+              />
+            </div>
+          </div>
+          
+          {/* VS */}
+          <span className="text-2xl">⚔️</span>
+          
+          {/* Opponent meter (mirrored) */}
+          <div className="flex-1">
+            <div className="flex justify-between text-xs text-gray-400 mb-1">
+              <span className="text-red-300 font-bold">Opponent</span>
+              <span className="text-white font-bold">{Math.round(opponentProgress)}%</span>
+            </div>
+            <div className="h-6 bg-gray-800 rounded-full overflow-hidden border border-red-500/50">
+              <div 
+                className="h-full bg-gradient-to-r from-red-500 to-orange-500 progress-animated"
+                style={{ 
+                  width: `${opponentProgress}%`,
+                  transition: 'width 0.08s linear',
+                }}
+              />
+            </div>
+          </div>
+        </div>
+        
+        {/* Dollar Value Display - PROMINENTLY VISIBLE */}
+        <div className="flex justify-between mt-3 px-2">
+          <div className="text-center">
+            <p 
+              className="text-2xl sm:text-3xl font-bold text-yellow-400 tabular-nums drop-shadow-lg"
+              style={{ 
+                textShadow: '0 0 10px rgba(234, 179, 8, 0.5)',
+              }}
+            >
+              {formatDollarValue(Math.round(playerEffectiveValue * Math.min(playerProgress / 100, 1)))}
+            </p>
+            <p className="text-xs text-gray-400">Your Bid</p>
+          </div>
+          <div className="text-center">
+            <p 
+              className="text-2xl sm:text-3xl font-bold text-orange-400 tabular-nums drop-shadow-lg"
+              style={{ 
+                textShadow: '0 0 10px rgba(249, 115, 22, 0.5)',
+              }}
+            >
+              {formatDollarValue(Math.round(opponentEffectiveValue * Math.min(opponentProgress / 100, 1)))}
+            </p>
+            <p className="text-xs text-gray-400">Opponent Bid</p>
+          </div>
+        </div>
+      </div>
+      
+      {/* Photo cards - side by side - MOVED DOWN */}
+      <div className="absolute top-[38%] left-0 right-0 flex justify-center gap-4 sm:gap-8 px-4 z-10">
         <PhotoBattleCard 
           photo={playerPhoto}
           effectiveValue={playerEffectiveValue}
@@ -606,10 +674,6 @@ export const TappingArena = ({
           sceneryAdvantage={playerSceneryAdvantage}
         />
         
-        <div className="flex items-center">
-          <span className="text-3xl">⚔️</span>
-        </div>
-        
         <PhotoBattleCard 
           photo={opponentPhoto}
           effectiveValue={opponentEffectiveValue}
@@ -620,45 +684,6 @@ export const TappingArena = ({
           loseStreak={opponentStats?.current_lose_streak || 0}
           sceneryAdvantage={playerSceneryAdvantage === 'strong' ? 'weak' : (playerSceneryAdvantage === 'weak' ? 'strong' : null)}
         />
-      </div>
-      
-      {/* Progress meters - OPTIMIZED with CSS transitions instead of Framer Motion */}
-      <div className="absolute top-[45%] left-0 right-0 px-4 z-10">
-        <div className="flex gap-4">
-          {/* Player meter */}
-          <div className="flex-1">
-            <div className="flex justify-between text-xs text-gray-400 mb-1">
-              <span>Your Progress</span>
-              <span>{Math.round(playerProgress)}%</span>
-            </div>
-            <div className="h-4 bg-gray-800 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 progress-animated"
-                style={{ 
-                  width: `${playerProgress}%`,
-                  transition: 'width 0.08s linear',
-                }}
-              />
-            </div>
-          </div>
-          
-          {/* Opponent meter (mirrored) */}
-          <div className="flex-1">
-            <div className="flex justify-between text-xs text-gray-400 mb-1">
-              <span>Opponent</span>
-              <span>{Math.round(opponentProgress)}%</span>
-            </div>
-            <div className="h-4 bg-gray-800 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-red-500 to-orange-500 progress-animated"
-                style={{ 
-                  width: `${opponentProgress}%`,
-                  transition: 'width 0.08s linear',
-                }}
-              />
-            </div>
-          </div>
-        </div>
       </div>
       
       {/* Countdown overlay */}
