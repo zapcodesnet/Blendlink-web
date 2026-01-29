@@ -16,17 +16,16 @@ import {
 } from 'lucide-react';
 import { Button } from '../ui/button';
 
-// Bot difficulty configurations with unlock requirements
+// Bot difficulty configurations with fixed bets and unlock requirements
 const BOT_DIFFICULTIES = [
   {
     id: 'easy',
     name: 'Easy Bot',
     emoji: '🤖',
     description: 'Perfect for beginners',
-    dollarValue: '$600,000,000',
+    dollarValue: '$600M',
     minDollarValue: 600000000,
-    tapsPerSec: 8,
-    tapsDisplay: '8 taps/sec',
+    tapsPerSec: 8, // Hidden from UI
     fixedBet: 100,
     color: 'from-green-500 to-emerald-600',
     bgColor: 'bg-green-500/10',
@@ -35,16 +34,16 @@ const BOT_DIFFICULTIES = [
     unlockRequirement: null, // Always unlocked
     requiredWinsField: null,
     winsNeeded: 0,
+    unlockBonus: 0, // No bonus for Easy (always unlocked)
   },
   {
     id: 'medium',
     name: 'Medium Bot',
     emoji: '🤖',
     description: 'Balanced challenge',
-    dollarValue: '$800,000,000',
+    dollarValue: '$800M',
     minDollarValue: 800000000,
-    tapsPerSec: 10,
-    tapsDisplay: '10 taps/sec',
+    tapsPerSec: 10, // Hidden from UI
     fixedBet: 500,
     color: 'from-yellow-500 to-orange-500',
     bgColor: 'bg-yellow-500/10',
@@ -53,16 +52,16 @@ const BOT_DIFFICULTIES = [
     unlockRequirement: 'Win 3 games vs Easy Bot',
     requiredWinsField: 'easy_bot_wins',
     winsNeeded: 3,
+    unlockBonus: 20000, // +20,000 BL coins
   },
   {
     id: 'hard',
     name: 'Hard Bot',
     emoji: '🤖',
     description: 'For experienced players',
-    dollarValue: '$1,000,000,000',
+    dollarValue: '$1B',
     minDollarValue: 1000000000,
-    tapsPerSec: 12,
-    tapsDisplay: '12 taps/sec',
+    tapsPerSec: 12, // Hidden from UI
     fixedBet: 1000,
     color: 'from-red-500 to-pink-600',
     bgColor: 'bg-red-500/10',
@@ -71,13 +70,14 @@ const BOT_DIFFICULTIES = [
     unlockRequirement: 'Win 3 games vs Medium Bot',
     requiredWinsField: 'medium_bot_wins',
     winsNeeded: 3,
+    unlockBonus: 100000, // +100,000 BL coins
   },
   {
     id: 'extreme',
     name: 'Extremely Hard Bot',
     emoji: '💀',
     description: 'Ultimate challenge',
-    dollarValue: '$2,000,000,000',
+    dollarValue: '$2B',
     minDollarValue: 2000000000,
     tapsPerSec: 15,
     tapsDisplay: '15 taps/sec',
