@@ -1171,3 +1171,254 @@ async def get_subscription_info(
             for name, config in SUBSCRIPTION_TIERS.items()
         }
     }
+
+
+@minting_router.post("/photos/{mint_id}/react")
+async def react_to_photo(
+    mint_id: str,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """
+    Add a reaction (like/emoji) to a minted photo.
+    +$1M bonus per 100 reactions accumulated.
+    For now, this is a mocked counter - real FB integration later.
+    """
+    from minting_system import REACTION_BONUS_THRESHOLD, REACTION_BONUS_VALUE
+    from datetime import datetime, timezone
+    
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    # Get the photo
+    photo = await _db.minted_photos.find_one({"mint_id": mint_id}, {"_id": 0})
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    
+    # Check if user already reacted (one reaction per user)
+    existing_reaction = await _db.photo_reactions.find_one({
+        "mint_id": mint_id,
+        "user_id": current_user["user_id"]
+    })
+    
+    if existing_reaction:
+        raise HTTPException(status_code=400, detail="You have already reacted to this photo")
+    
+    # Add reaction
+    await _db.photo_reactions.insert_one({
+        "mint_id": mint_id,
+        "user_id": current_user["user_id"],
+        "reaction_type": "like",
+        "created_at": datetime.now(timezone.utc),
+    })
+    
+    # Update photo's total reactions
+    new_total = photo.get("total_reactions", 0) + 1
+    new_reaction_bonus = (new_total // REACTION_BONUS_THRESHOLD) * REACTION_BONUS_VALUE
+    old_reaction_bonus = photo.get("reaction_bonus_value", 0)
+    
+    # Calculate if this reaction triggered a bonus milestone
+    bonus_triggered = new_reaction_bonus > old_reaction_bonus
+    bonus_amount = new_reaction_bonus - old_reaction_bonus if bonus_triggered else 0
+    
+    await _db.minted_photos.update_one(
+        {"mint_id": mint_id},
+        {"$set": {
+            "total_reactions": new_total,
+            "reaction_bonus_value": new_reaction_bonus,
+            "likes_count": new_total,  # Keep likes_count in sync
+        }}
+    )
+    
+    return {
+        "success": True,
+        "total_reactions": new_total,
+        "reaction_bonus_value": new_reaction_bonus,
+        "bonus_triggered": bonus_triggered,
+        "bonus_amount": bonus_amount,
+        "message": f"❤️ Reaction added! {new_total} total reactions." + (f" +${bonus_amount:,} bonus!" if bonus_triggered else "")
+    }
+
+
+@minting_router.delete("/photos/{mint_id}/react")
+async def remove_reaction(
+    mint_id: str,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """Remove a reaction from a photo"""
+    from minting_system import REACTION_BONUS_THRESHOLD, REACTION_BONUS_VALUE
+    
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    # Check if reaction exists
+    existing = await _db.photo_reactions.find_one({
+        "mint_id": mint_id,
+        "user_id": current_user["user_id"]
+    })
+    
+    if not existing:
+        raise HTTPException(status_code=404, detail="Reaction not found")
+    
+    # Remove reaction
+    await _db.photo_reactions.delete_one({
+        "mint_id": mint_id,
+        "user_id": current_user["user_id"]
+    })
+    
+    # Update photo's total reactions
+    photo = await _db.minted_photos.find_one({"mint_id": mint_id}, {"_id": 0})
+    if photo:
+        new_total = max(0, photo.get("total_reactions", 1) - 1)
+        new_reaction_bonus = (new_total // REACTION_BONUS_THRESHOLD) * REACTION_BONUS_VALUE
+        
+        await _db.minted_photos.update_one(
+            {"mint_id": mint_id},
+            {"$set": {
+                "total_reactions": new_total,
+                "reaction_bonus_value": new_reaction_bonus,
+                "likes_count": new_total,
+            }}
+        )
+    
+    return {"success": True, "message": "Reaction removed"}
+
+
+@minting_router.get("/photos/{mint_id}/full-value")
+async def get_photo_full_value(mint_id: str):
+    """
+    Get a photo with fully calculated dollar value including:
+    - Base value (AI scoring)
+    - Level bonus
+    - Upgrade bonus
+    - Monthly growth (+$1M per 30 days)
+    - Reaction bonus (+$1M per 100 reactions)
+    """
+    from minting_system import calculate_full_dollar_value, calculate_stamina_regen, get_level_stars
+    from datetime import datetime, timezone
+    
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    photo = await _db.minted_photos.find_one({"mint_id": mint_id}, {"_id": 0})
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    
+    now = datetime.now(timezone.utc)
+    
+    # Calculate full dollar value
+    value_breakdown = calculate_full_dollar_value(photo, now)
+    
+    # Calculate current stamina with regeneration
+    current_stamina = calculate_stamina_regen(photo, now)
+    
+    # Get star info
+    level = photo.get("level", 1)
+    star_info = get_level_stars(level)
+    
+    # Check birthday eligibility
+    minted_at = photo.get("minted_at")
+    if isinstance(minted_at, str):
+        minted_at = datetime.fromisoformat(minted_at.replace('Z', '+00:00'))
+    
+    is_birthday = False
+    days_until_birthday = 0
+    can_claim_birthday = False
+    
+    if minted_at:
+        is_birthday = (now.month == minted_at.month and now.day == minted_at.day)
+        anniversary_this_year = minted_at.replace(year=now.year)
+        if anniversary_this_year < now:
+            anniversary_this_year = minted_at.replace(year=now.year + 1)
+        days_until_birthday = (anniversary_this_year - now).days
+        
+        last_claimed_year = photo.get("last_birthday_bonus_year", 0)
+        can_claim_birthday = is_birthday and last_claimed_year < now.year
+    
+    return {
+        "mint_id": mint_id,
+        "name": photo.get("name"),
+        "image_url": photo.get("image_url"),
+        # Value breakdown
+        "dollar_value": value_breakdown["dollar_value"],
+        "base_dollar_value": value_breakdown["base_dollar_value"],
+        "level_bonus": value_breakdown["level_bonus"],
+        "level_bonus_percent": value_breakdown["level_bonus_percent"],
+        "upgrade_bonus": value_breakdown["total_upgrade_value"],
+        "monthly_growth_value": value_breakdown["monthly_growth_value"],
+        "reaction_bonus_value": value_breakdown["reaction_bonus_value"],
+        # Reactions
+        "total_reactions": photo.get("total_reactions", 0),
+        # Stamina
+        "current_stamina": current_stamina,
+        "max_stamina": photo.get("max_stamina", 24),
+        # Level & XP
+        "level": level,
+        "xp": photo.get("xp", 0),
+        "stars": star_info["stars"],
+        "has_golden_frame": star_info["has_golden_frame"],
+        # Streaks
+        "win_streak": photo.get("win_streak", 0),
+        "lose_streak": photo.get("lose_streak", 0),
+        # Minter info
+        "minted_by_username": photo.get("minted_by_username", ""),
+        "minted_at": minted_at.isoformat() if minted_at else None,
+        # Birthday
+        "is_birthday": is_birthday,
+        "days_until_birthday": days_until_birthday,
+        "can_claim_birthday_bonus": can_claim_birthday,
+        # Scenery
+        "scenery_type": photo.get("scenery_type"),
+        "strength_vs": photo.get("strength_vs"),
+        "weakness_vs": photo.get("weakness_vs"),
+    }
+
+
+@minting_router.get("/photos/{mint_id}/check-birthday")
+async def check_birthday_eligibility(
+    mint_id: str,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """Check if a photo is eligible for birthday bonus claim"""
+    from minting_system import BIRTHDAY_BONUS_BL
+    from datetime import datetime, timezone
+    
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    photo = await _db.minted_photos.find_one(
+        {"mint_id": mint_id, "user_id": current_user["user_id"]},
+        {"_id": 0}
+    )
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found or does not belong to you")
+    
+    now = datetime.now(timezone.utc)
+    minted_at = photo.get("minted_at")
+    if isinstance(minted_at, str):
+        minted_at = datetime.fromisoformat(minted_at.replace('Z', '+00:00'))
+    
+    if not minted_at:
+        return {"can_claim": False, "reason": "Minting date not available"}
+    
+    is_birthday = (now.month == minted_at.month and now.day == minted_at.day)
+    last_claimed_year = photo.get("last_birthday_bonus_year", 0)
+    
+    # Calculate days until next birthday
+    anniversary_this_year = minted_at.replace(year=now.year)
+    if anniversary_this_year.date() < now.date():
+        anniversary_this_year = minted_at.replace(year=now.year + 1)
+    days_until = (anniversary_this_year.date() - now.date()).days
+    
+    can_claim = is_birthday and last_claimed_year < now.year
+    
+    return {
+        "can_claim": can_claim,
+        "is_birthday": is_birthday,
+        "days_until_birthday": days_until,
+        "last_claimed_year": last_claimed_year,
+        "bonus_amount": BIRTHDAY_BONUS_BL,
+        "photo_name": photo.get("name"),
+        "minted_at": minted_at.isoformat() if minted_at else None,
+        "message": "🎂 Happy Birthday! Claim your bonus!" if can_claim else f"{days_until} days until birthday bonus"
+    }
+
