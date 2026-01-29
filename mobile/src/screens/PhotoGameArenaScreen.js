@@ -764,94 +764,22 @@ const MatchmakingView = ({ onMatchFound, onCancel, onPracticeStart, selectedPhot
         />
       </View>
 
-      {/* Battle Settings (show only when photo is selected) */}
-      {selectedPhoto && (
+      {error && selectedPhoto && (
         <View style={[styles.matchmakingCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Text style={[styles.matchmakingTitle, { color: colors.text }]}>
-            🪙 Battle Settings
-          </Text>
-          
-          {queueStatus && (
-            <View style={[styles.queueStatusCard, { backgroundColor: colors.cardSecondary }]}>
-              <View style={styles.queueStatusRow}>
-                <Text style={[styles.queueStatusLabel, { color: colors.textMuted }]}>Players searching:</Text>
-                <Text style={[styles.queueStatusValue, { color: colors.text }]}>{queueStatus.players_waiting}</Text>
-              </View>
-              <View style={styles.queueStatusRow}>
-                <Text style={[styles.queueStatusLabel, { color: colors.textMuted }]}>Active matches:</Text>
-                <Text style={[styles.queueStatusValue, { color: colors.text }]}>{queueStatus.active_matches}</Text>
-              </View>
-            </View>
-          )}
-          
-          <View style={styles.inputGroup}>
-            <Text style={[styles.inputLabel, { color: colors.textMuted }]}>BL Coin Bet (optional)</Text>
-            <TextInput
-              style={[styles.textInput, { backgroundColor: colors.cardSecondary, color: colors.text, borderColor: colors.border }]}
-              value={betAmount}
-              onChangeText={setBetAmount}
-              keyboardType="numeric"
-              placeholder="0"
-              placeholderTextColor={colors.textMuted}
-            />
-          </View>
-          
-          <View style={styles.switchRow}>
-            <Text style={[styles.switchLabel, { color: colors.text }]}>Play with bot if no players</Text>
-            <Switch
-              value={useBotFallback}
-              onValueChange={setUseBotFallback}
-              trackColor={{ false: colors.cardSecondary, true: colors.primary + '80' }}
-              thumbColor={useBotFallback ? colors.primary : colors.textMuted}
-            />
-          </View>
-          
-          {error && (
-            <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
-          )}
+          <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
         </View>
       )}
       
-      {/* Find Match Button */}
+      {/* Auction Bidding Battle with Bot Button */}
       {selectedPhoto && (
         <TouchableOpacity
-          style={styles.findMatchButton}
-          onPress={startMatchmaking}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.findMatchButtonText}>⚔️ Find Match with {selectedPhoto.name}</Text>
-        </TouchableOpacity>
-      )}
-      
-      {/* Practice Mode Button */}
-      {selectedPhoto && (
-        <TouchableOpacity
-          style={[styles.practiceButton, { borderColor: colors.gold }]}
+          style={styles.auctionBattleButton}
           onPress={startPracticeMode}
           activeOpacity={0.8}
         >
-          <Text style={[styles.practiceButtonText, { color: colors.gold }]}>🎯 Practice vs Bot (No Risk)</Text>
-          <Text style={[styles.practiceSubtext, { color: colors.textMuted }]}>No BL bet, no stamina loss, no rewards</Text>
+          <Text style={styles.auctionBattleButtonText}>Auction Bidding Battle with Bot</Text>
         </TouchableOpacity>
       )}
-      
-      <View style={styles.quickMatchRow}>
-        <TouchableOpacity
-          style={[styles.quickMatchButton, { backgroundColor: colors.card, borderColor: colors.border, opacity: selectedPhoto ? 1 : 0.5 }]}
-          onPress={startMatchmaking}
-          disabled={!selectedPhoto}
-        >
-          <Text style={styles.quickMatchIcon}>🤖</Text>
-          <Text style={[styles.quickMatchText, { color: colors.text }]}>Quick Bot</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.quickMatchButton, { backgroundColor: colors.card, borderColor: colors.border, opacity: selectedPhoto ? 1 : 0.5 }]}
-          disabled={!selectedPhoto}
-        >
-          <Text style={styles.quickMatchIcon}>🏆</Text>
-          <Text style={[styles.quickMatchText, { color: colors.text }]}>Ranked</Text>
-        </TouchableOpacity>
-      </View>
 
       <View style={{ height: 100 }} />
     </ScrollView>
