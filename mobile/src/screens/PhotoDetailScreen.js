@@ -85,6 +85,7 @@ export default function PhotoDetailScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const { colors } = useTheme();
+  const { user } = useAuth();
   
   const mintId = route.params?.mintId;
   
@@ -96,6 +97,7 @@ export default function PhotoDetailScreen() {
   const [upgradeOptions, setUpgradeOptions] = useState(null);
   const [purchasing, setPurchasing] = useState(null);
   const [claimingBirthday, setClaimingBirthday] = useState(false);
+  const [selfieModalVisible, setSelfieModalVisible] = useState(false);
   
   // Fetch photo data
   const fetchPhotoData = useCallback(async () => {
