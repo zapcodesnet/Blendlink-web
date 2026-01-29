@@ -283,10 +283,18 @@ export const TappingArena = ({
     e.preventDefault();
     e.stopPropagation();
     
-    // Anti-cheat: Max 20 taps per second
+    // Anti-cheat: Max 30 taps per second (rolling window)
     if (tapsThisSecond >= MAX_TAPS_PER_SECOND) {
-      setShowAntiCheatWarning(true);
-      setTimeout(() => setShowAntiCheatWarning(false), 1500);
+      // Show warning toast (debounced to prevent spam)
+      if (!showAntiCheatWarning) {
+        toast.warning('⚠️ Tap rate exceeded! Slow down.', {
+          duration: 1500,
+          id: 'tap-rate-warning', // Prevent duplicate toasts
+        });
+        setShowAntiCheatWarning(true);
+        setTimeout(() => setShowAntiCheatWarning(false), 1000);
+      }
+      // Discard excess taps - they don't count toward meter
       return;
     }
     
@@ -314,7 +322,7 @@ export const TappingArena = ({
     if (newTaps >= playerRequiredTaps) {
       handlePlayerWinRef.current?.();
     }
-  }, [gamePhase, playerTaps, playerRequiredTaps, tapsThisSecond, soundEnabled, websocket, vibrate, onTap]);
+  }, [gamePhase, playerTaps, playerRequiredTaps, tapsThisSecond, soundEnabled, websocket, vibrate, onTap, showAntiCheatWarning]);
   
   // Reset taps counter every second
   useEffect(() => {
