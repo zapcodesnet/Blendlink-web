@@ -595,12 +595,12 @@ const MatchmakingView = ({ onMatchFound, onCancel, onPracticeStart, selectedPhot
   const fetchBattlePhotos = async () => {
     try {
       setLoadingPhotos(true);
-      const [photosData, statsData] = await Promise.all([
+      const [photosData, userProfile] = await Promise.all([
         photoGameAPI.getBattlePhotos(),
-        photoGameAPI.getMyStats().catch(() => ({})),
+        photoGameAPI.getUserProfile().catch(() => ({})),
       ]);
       setBattlePhotos(photosData.photos || []);
-      setUserBalance(statsData?.bl_coins || 0);
+      setUserBalance(userProfile?.bl_coins || 0);
     } catch (err) {
       console.error('Failed to fetch battle photos:', err);
       setError('Failed to load your photos');
