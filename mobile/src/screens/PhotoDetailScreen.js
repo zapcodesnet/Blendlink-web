@@ -337,6 +337,76 @@ export default function PhotoDetailScreen() {
           </View>
         )}
 
+        {/* Selfie Match / Authenticity Section */}
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>🔐 Authenticity</Text>
+          
+          {/* Current authenticity status */}
+          <View style={styles.authenticityStatus}>
+            <View style={styles.authenticityRow}>
+              <Text style={[styles.authenticityLabel, { color: colors.textMuted }]}>Face Detected:</Text>
+              <Text style={[styles.authenticityValue, { color: photo?.has_face ? colors.success : colors.error }]}>
+                {photo?.has_face ? `Yes (${photo?.face_detection_score || 0}%)` : 'No'}
+              </Text>
+            </View>
+            <View style={styles.authenticityRow}>
+              <Text style={[styles.authenticityLabel, { color: colors.textMuted }]}>Selfie Match:</Text>
+              <Text style={[styles.authenticityValue, { color: photo?.selfie_match_score ? colors.success : colors.textMuted }]}>
+                {photo?.selfie_match_score ? `${photo.selfie_match_score}% Match` : 'Not verified'}
+              </Text>
+            </View>
+            {photo?.authenticity_bonus > 0 && (
+              <View style={styles.authenticityRow}>
+                <Text style={[styles.authenticityLabel, { color: colors.textMuted }]}>Total Bonus:</Text>
+                <Text style={[styles.authenticityValue, { color: colors.gold }]}>
+                  +{photo.authenticity_bonus?.toFixed(1)}%
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {/* Selfie match button */}
+          {photo?.has_face && !photo?.authenticity_locked && (
+            <TouchableOpacity
+              style={[
+                styles.selfieMatchButton,
+                {
+                  backgroundColor: canDoSelfieMatch ? colors.primary : colors.cardSecondary,
+                  opacity: canDoSelfieMatch ? 1 : 0.6,
+                }
+              ]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                setSelfieModalVisible(true);
+              }}
+              disabled={!canDoSelfieMatch}
+            >
+              <Text style={styles.selfieMatchIcon}>📸</Text>
+              <View style={styles.selfieMatchInfo}>
+                <Text style={styles.selfieMatchTitle}>
+                  {canDoSelfieMatch ? 'Verify with Selfie' : 'Verification Complete'}
+                </Text>
+                <Text style={styles.selfieMatchSubtitle}>
+                  {canDoSelfieMatch 
+                    ? `${SELFIE_MATCH_COST} BL • ${MAX_SELFIE_ATTEMPTS - (photo?.selfie_match_attempts || 0)} attempts left`
+                    : `+${photo?.authenticity_bonus?.toFixed(1) || 0}% bonus added`
+                  }
+                </Text>
+              </View>
+              {canDoSelfieMatch && <Text style={styles.selfieMatchArrow}>→</Text>}
+            </TouchableOpacity>
+          )}
+
+          {/* No face detected message */}
+          {!photo?.has_face && (
+            <View style={[styles.noFaceMessage, { backgroundColor: colors.cardSecondary }]}>
+              <Text style={[styles.noFaceText, { color: colors.textMuted }]}>
+                This photo doesn't have a detectable face. Only photos with faces can be verified for authenticity bonus.
+              </Text>
+            </View>
+          )}
+        </View>
+
         {/* XP Progress */}
         <View style={[styles.section, { backgroundColor: colors.card }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>⭐ Level Progress</Text>
