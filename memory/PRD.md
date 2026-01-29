@@ -1,35 +1,33 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 29, 2026 (Session 35 - 30 TPS Rate Limit Update)
+## Latest Update: January 29, 2026 (30 TPS Rate Limit - DEPLOYED)
 
 ---
 
-## SESSION 35: CRITICAL PERFORMANCE UPDATE - 30 TPS ✅
+## CRITICAL UPDATE: 30 TPS RATE LIMIT ✅
 
-### 30 TPS Rate Limit Update (January 29, 2026) - DEPLOYED
+### Scope
+- **ALL Photo Auction Bidding Rounds** (Rounds 1, 3, 5)
+- **PVP** (human vs human) and **PvB** (player vs bot, all difficulties)
+- Applied to **Web** and **Mobile** with identical behavior
 
-**Scope:** All Photo Auction Bidding Rounds (Rounds 1, 3, 5) - PVP and PvB modes
+### Changes Applied
 
-**Changes Applied:**
+**Web (`/app/frontend/src/components/game/TappingArena.jsx`):**
+- `MAX_TAPS_PER_SECOND`: 20 → **30**
+- Warning toast: `⚠️ Tap rate exceeded! Slow down.`
+- Excess taps (>30/sec) discarded, valid taps continue
+- Bot speeds updated: Easy 5-10, Medium 10-18, Hard 18-28 TPS
 
-1. **Web TappingArena.jsx**
-   - `MAX_TAPS_PER_SECOND`: Changed from 20 → **30**
-   - Warning toast on rate exceeded: `⚠️ Tap rate exceeded! Slow down.`
-   - Excess taps (>30/sec) are discarded, valid taps continue counting
-   - Bot speeds updated for fairness:
-     - Easy: 5-10 TPS (was 3-6)
-     - Medium: 10-18 TPS (was 5-8)
-     - Hard: 18-28 TPS (was 7-10)
+**Mobile (`/app/mobile/src/screens/PhotoGameArenaScreen.js`):**
+- Added `TappingArenaView` component with 30 TPS limit
+- Same anti-cheat logic as web
+- Haptics: `Haptics.impactAsync(Light)` on valid tap
+- Haptics: `Haptics.notificationAsync(Warning)` on rate exceed
+- TPS debug indicator at bottom-right
+- Bot speeds match web
 
-2. **Mobile MobileTappingArena.js** (NEW)
-   - Full implementation with 30 TPS limit
-   - Same anti-cheat logic as web
-   - Toast warning component built-in
-   - Haptic feedback via expo-haptics (Light on tap, Warning on exceed)
-   - Bot speeds match web version
-   - TPS indicator for debugging
-
-**Unchanged (per spec):**
+### Unchanged (per spec)
 - Base 200 taps to win (equal power/scenery)
 - All Dollar Value bonuses (scenery, streaks, levels, upgrades)
 - Social reaction bonus ($1M per 100)
@@ -38,10 +36,10 @@
 - Win/loss animations (confetti, shake)
 - WebSocket sync for PVP
 
-**Files Modified:**
-- `/app/frontend/src/components/game/TappingArena.jsx`
-- `/app/mobile/src/components/MobileTappingArena.js` (NEW)
-- `/app/mobile/src/components/index.js`
+### Testing
+- Web app verified via screenshot ✅
+- Photo Game Arena loads correctly
+- TPS limit at 30 (achievable via 2-finger hypertapping)
 
 ---
 
