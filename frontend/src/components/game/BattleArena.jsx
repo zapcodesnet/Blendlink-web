@@ -14,7 +14,7 @@
  * Player selects photos strategically (one used per round)
  */
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Trophy, Skull, Users, Loader2, RefreshCw, 
