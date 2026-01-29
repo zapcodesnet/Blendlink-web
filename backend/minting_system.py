@@ -689,18 +689,12 @@ class MintingService:
         if not user:
             return {"can_mint": False, "reason": "User not found"}
         
-        # Check BL coins
+        # Get user's BL coins (for info only - minting is FREE)
         bl_coins = user.get("bl_coins", 0)
-        if bl_coins < MINT_COST_BL:
-            return {
-                "can_mint": False, 
-                "reason": f"Insufficient BL coins. Need {MINT_COST_BL}, have {bl_coins}",
-                "bl_needed": MINT_COST_BL - bl_coins
-            }
         
         # Check daily limit
         subscription = user.get("subscription_tier", "free")
-        daily_limit = SUBSCRIPTION_LIMITS.get(subscription, 3)
+        daily_limit = SUBSCRIPTION_LIMITS.get(subscription, 10)  # Default 10 for free users
         
         # Fix: Use string comparison properly for ISO dates stored as strings
         today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
@@ -723,7 +717,8 @@ class MintingService:
             "bl_coins": bl_coins,
             "mints_today": mints_today,
             "daily_limit": daily_limit,
-            "remaining_mints": daily_limit - mints_today
+            "remaining_mints": daily_limit - mints_today,
+            "is_free": True  # Minting is FREE for all users
         }
     
     async def mint_photo(
