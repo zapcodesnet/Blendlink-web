@@ -617,8 +617,8 @@ export default function MintedPhotosScreen() {
   };
 
   const handlePhotoPress = (photo) => {
-    // Navigate to photo detail or battle screen
-    navigation.navigate('PhotoGameArena');
+    // Navigate to photo detail screen with full value breakdown
+    navigation.navigate('PhotoDetail', { mintId: photo.mint_id });
   };
 
   const totalValue = photos.reduce((sum, p) => sum + (p.dollar_value || 0), 0);
