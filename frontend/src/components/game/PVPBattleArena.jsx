@@ -460,10 +460,24 @@ export const PVPBattleArena = ({
     connectWebSocket(true);
   }, [connectWebSocket]);
   
+  // Track if already connected on mount
+  const hasConnectedRef = useRef(false);
+  
   // Connect on mount
   useEffect(() => {
-    connectWebSocket(false);
-    
+    // Only connect once on mount
+    if (!hasConnectedRef.current) {
+      hasConnectedRef.current = true;
+      // Defer connection to avoid synchronous setState
+      const timeoutId = setTimeout(() => {
+        connectWebSocketRef.current?.(false);
+      }, 0);
+      return () => clearTimeout(timeoutId);
+    }
+  }, []); // Empty deps - only run once
+  
+  // Heartbeat effect
+  useEffect(() => {
     // Heartbeat - more frequent to detect disconnection faster
     const heartbeat = setInterval(() => {
       if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -480,7 +494,7 @@ export const PVPBattleArena = ({
         wsRef.current.close();
       }
     };
-  }, [connectWebSocket]);
+  }, []);
   
   // Handle visibility change (tab switch, app background)
   useEffect(() => {
@@ -489,14 +503,15 @@ export const PVPBattleArena = ({
         console.log('Tab became visible, checking connection...');
         if (wsRef.current?.readyState !== WebSocket.OPEN) {
           reconnectAttempts.current = 0;
-          connectWebSocket(true);
+          setReconnectAttemptCount(0);
+          connectWebSocketRef.current?.(true);
         }
       }
     };
     
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [wsConnected, gamePhase, connectWebSocket]);
+  }, [wsConnected, gamePhase]);
   
   // Handle photo selection
   const handlePhotoSelect = useCallback((photo) => {
