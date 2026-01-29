@@ -93,7 +93,7 @@
   "rca_of_the_issue": {
     "issue": "Video not loading in browser",
     "reproduction_steps": [
-      "1. Navigate to https://bid-battle-minted.preview.emergentagent.com",
+      "1. Navigate to https://mintbid-upgrade.preview.emergentagent.com",
       "2. Scroll to video section below 'I Have an Account' button",
       "3. Observe video shows poster image (logo) instead of playing video"
     ],
