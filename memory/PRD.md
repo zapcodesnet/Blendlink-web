@@ -1,6 +1,38 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 29, 2026 (Bot Battle Replay System)
+## Latest Update: January 29, 2026 (Featured Replays + Facebook API Research)
+
+---
+
+## SESSION 49: FEATURED REPLAYS SECTION ✅
+
+### New Feature: Featured Replays on Landing Page
+
+1. **Featured Replays Component**
+   - Shows best community bot battle replays
+   - Three category tabs: Top Wins, Popular, Recent
+   - Horizontal carousel with scroll buttons
+   - Rank badges (🥇🥈🥉) for top wins
+   - Play overlay on hover
+
+2. **API Endpoint**
+   - `GET /api/photo-game/battle-replay/featured?category=top_wins&limit=10`
+   - Categories: top_wins (sorted by winnings), most_viewed, recent
+
+3. **Replay Card Features**
+   - Thumbnail from first player photo
+   - Win/Loss badge
+   - Bot difficulty indicator
+   - Score and BL winnings
+   - Views and likes count
+   - Player avatar and username
+
+**Files Created:**
+- `/app/frontend/src/components/game/FeaturedReplays.jsx`
+
+**Files Modified:**
+- `/app/backend/game_routes.py` - Added /featured endpoint
+- `/app/frontend/src/pages/PhotoGameArena.jsx` - Integrated FeaturedReplays in pvp_menu
 
 ---
 
