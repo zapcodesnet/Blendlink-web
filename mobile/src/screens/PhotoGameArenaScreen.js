@@ -138,6 +138,130 @@ const WinStreakBadge = ({ streak, colors }) => {
   );
 };
 
+// ============== ROUND TRANSITION COMPONENT ==============
+const RoundTransitionView = ({ 
+  roundResult, 
+  currentRound, 
+  player1Wins, 
+  player2Wins, 
+  isWinner, 
+  onContinue, 
+  colors 
+}) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const progressAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Entrance animation
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        friction: 8,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 6,
+        tension: 50,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Progress bar animation
+    Animated.timing(progressAnim, {
+      toValue: 1,
+      duration: 3000,
+      useNativeDriver: false,
+    }).start();
+  }, []);
+
+  const totalRoundsToWin = 3;
+  const nextRound = currentRound + 1;
+
+  return (
+    <Animated.View 
+      style={[
+        styles.roundTransitionContainer, 
+        { 
+          opacity: fadeAnim,
+          transform: [
+            { translateY: slideAnim },
+            { scale: scaleAnim },
+          ],
+        }
+      ]}
+    >
+      {/* Result Emoji with Pulse */}
+      <Text style={styles.roundTransitionEmoji}>
+        {isWinner ? '🎉' : '😔'}
+      </Text>
+
+      {/* Round Result Title */}
+      <Text style={[styles.roundTransitionTitle, { 
+        color: isWinner ? colors.success : colors.error 
+      }]}>
+        {isWinner ? 'Round Won!' : 'Round Lost'}
+      </Text>
+
+      {/* Score Display */}
+      <View style={styles.roundTransitionScoreContainer}>
+        <View style={[styles.scoreCircle, { 
+          backgroundColor: player1Wins > player2Wins ? colors.success : colors.cardSecondary 
+        }]}>
+          <Text style={styles.scoreCircleText}>{player1Wins}</Text>
+        </View>
+        <Text style={[styles.scoreSeparator, { color: colors.textMuted }]}>-</Text>
+        <View style={[styles.scoreCircle, { 
+          backgroundColor: player2Wins > player1Wins ? colors.error : colors.cardSecondary 
+        }]}>
+          <Text style={styles.scoreCircleText}>{player2Wins}</Text>
+        </View>
+      </View>
+
+      {/* Progress to next round */}
+      <Text style={[styles.roundTransitionSubtitle, { color: colors.textMuted }]}>
+        {player1Wins >= totalRoundsToWin || player2Wins >= totalRoundsToWin
+          ? 'Game Over!'
+          : `Preparing Round ${nextRound}...`}
+      </Text>
+
+      {/* Auto-transition progress bar */}
+      <View style={[styles.transitionProgressBg, { backgroundColor: colors.cardSecondary }]}>
+        <Animated.View 
+          style={[
+            styles.transitionProgressFill, 
+            { 
+              backgroundColor: colors.primary,
+              width: progressAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: ['0%', '100%'],
+              }),
+            }
+          ]} 
+        />
+      </View>
+
+      {/* Next round info */}
+      <View style={[styles.nextRoundInfo, { backgroundColor: colors.cardSecondary }]}>
+        <Text style={[styles.nextRoundInfoText, { color: colors.text }]}>
+          📷 Select a new photo for Round {nextRound}
+        </Text>
+        <Text style={[styles.nextRoundInfoHint, { color: colors.textMuted }]}>
+          Previously used photos cannot be selected again
+        </Text>
+      </View>
+    </Animated.View>
+  );
+};
+
 // ============== PHOTO SELECTION COMPONENT ==============
 const PhotoSelectionView = ({ 
   photos, 
