@@ -79,8 +79,7 @@ const BOT_DIFFICULTIES = [
     description: 'Ultimate challenge',
     dollarValue: '$2B',
     minDollarValue: 2000000000,
-    tapsPerSec: 15,
-    tapsDisplay: '15 taps/sec',
+    tapsPerSec: 15, // Hidden from UI
     fixedBet: 2000,
     color: 'from-purple-600 to-indigo-700',
     bgColor: 'bg-purple-500/10',
@@ -89,6 +88,7 @@ const BOT_DIFFICULTIES = [
     unlockRequirement: 'Win 3 games vs Hard Bot',
     requiredWinsField: 'hard_bot_wins',
     winsNeeded: 3,
+    unlockBonus: 500000, // +500,000 BL coins
   },
 ];
 
