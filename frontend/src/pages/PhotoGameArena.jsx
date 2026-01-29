@@ -1471,6 +1471,7 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect, onPracticeSta
         selectedPhoto={selectedPhoto}
         playerPhotos={battlePhotos}
         userBalance={userBalance}
+        botWinStats={botWinStats}
       />
     </div>
   );
