@@ -1029,6 +1029,7 @@ export const BattleArena = ({
     setPlayerStats({ current_win_streak: 0, current_lose_streak: 0 });
     setOpponentStats({ current_win_streak: 0, current_lose_streak: 0 });
     setGameWinner(null);
+    setIsTie(false); // Reset tie state
     setGamePhase('photo_selection');
     setRoundResults([]);
     setStaminaChanges(null);
