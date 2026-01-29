@@ -253,11 +253,26 @@ const BotDifficultySelector = ({
     );
   };
 
+  // Format large numbers
+  const formatValue = (value) => {
+    if (!value) return '$0';
+    if (value >= 1_000_000_000) return `$${(value / 1_000_000_000).toFixed(1)}B`;
+    if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(0)}M`;
+    if (value >= 1_000) return `$${(value / 1_000).toFixed(0)}K`;
+    return `$${value}`;
+  };
+
   const renderPhotoItem = (photo) => {
     const isSelected = selectedPhotos.some(p => p.mint_id === photo.mint_id);
     const hasStamina = (photo.current_stamina || photo.stamina || 0) >= 1;
     const canSelect = hasStamina && (isSelected || selectedPhotos.length < 5);
     const scenery = SCENERY_CONFIG[photo.scenery_type] || SCENERY_CONFIG.neutral;
+    const stamina = Math.min((photo.current_stamina || photo.stamina || 0), 100);
+    const level = photo.level || 1;
+    const hearts = photo.hearts || photo.reaction_count || 0;
+    const winStreak = photo.current_win_streak || 0;
+    const loseStreak = photo.current_lose_streak || 0;
+    const imageUrl = photo.image_url || photo.thumbnail_url;
 
     return (
       <TouchableOpacity
@@ -271,9 +286,11 @@ const BotDifficultySelector = ({
             backgroundColor: isSelected ? 'rgba(139, 92, 246, 0.2)' : colors.card,
             borderColor: isSelected ? '#8b5cf6' : colors.border,
             opacity: canSelect ? 1 : 0.5,
+            borderWidth: isSelected ? 2 : 1,
           },
         ]}
       >
+        {/* Selection number badge */}
         {isSelected && (
           <View style={styles.photoSelectionNumber}>
             <Text style={styles.photoSelectionNumberText}>
@@ -282,29 +299,93 @@ const BotDifficultySelector = ({
           </View>
         )}
 
+        {/* Low stamina overlay */}
         {!hasStamina && (
           <View style={styles.lowStaminaOverlay}>
             <Text style={styles.lowStaminaText}>⚡ 0 Stamina</Text>
+            <Text style={styles.lowStaminaSubtext}>Regenerating...</Text>
           </View>
         )}
 
-        <View style={[styles.photoThumbnail, { backgroundColor: scenery.color }]}>
-          <Text style={styles.photoThumbnailEmoji}>{scenery.emoji}</Text>
+        {/* Photo Image */}
+        <View style={styles.photoImageContainer}>
+          {imageUrl ? (
+            <Image 
+              source={{ uri: imageUrl }} 
+              style={styles.photoImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={[styles.photoThumbnail, { backgroundColor: scenery.color }]}>
+              <Text style={styles.photoThumbnailEmoji}>{scenery.emoji}</Text>
+            </View>
+          )}
+          
+          {/* Level badge */}
+          <View style={styles.levelBadge}>
+            <Text style={styles.levelText}>Lv{level}</Text>
+            <Text style={styles.starsText}>{'★'.repeat(Math.min(level, 5))}</Text>
+          </View>
+          
+          {/* Scenery badge */}
+          <View style={styles.sceneryBadge}>
+            <Text style={styles.sceneryBadgeText}>{scenery.emoji} {scenery.label}</Text>
+          </View>
         </View>
 
-        <Text style={[styles.photoName, { color: colors.text }]} numberOfLines={1}>
-          {photo.name}
-        </Text>
-        <Text style={[styles.photoValue, { color: '#eab308' }]}>
-          ${((photo.dollar_value || 0) / 1000000).toFixed(0)}M
-        </Text>
-        
-        {/* Stamina bar */}
-        {hasStamina && (
-          <View style={styles.staminaBar}>
-            <View style={[styles.staminaFill, { width: `${Math.min((photo.current_stamina || photo.stamina || 0), 100)}%` }]} />
+        {/* Photo Info */}
+        <View style={styles.photoInfoContainer}>
+          <Text style={[styles.photoName, { color: colors.text }]} numberOfLines={1}>
+            {photo.name}
+          </Text>
+          
+          {/* Dollar Value - Prominent */}
+          <View style={styles.dollarValueContainer}>
+            <Text style={styles.dollarValueText}>{formatValue(photo.dollar_value)}</Text>
           </View>
-        )}
+          
+          {/* Scenery Strength/Weakness */}
+          <View style={styles.sceneryStrengthRow}>
+            <Text style={styles.strengthText}>💪 {scenery.strong}</Text>
+            <Text style={styles.weaknessText}>😰 {scenery.weak}</Text>
+          </View>
+          
+          {/* Stats Row: Hearts, Streaks */}
+          <View style={styles.statsRow}>
+            <View style={styles.heartsContainer}>
+              <Text style={styles.heartsText}>❤️ {hearts > 999 ? `${(hearts/1000).toFixed(1)}K` : hearts}</Text>
+            </View>
+            <View style={styles.streaksContainer}>
+              {winStreak > 0 && (
+                <Text style={styles.winStreakText}>🔥{winStreak}</Text>
+              )}
+              {loseStreak >= 3 && (
+                <Text style={styles.immunityText}>🛡️</Text>
+              )}
+            </View>
+          </View>
+          
+          {/* Stamina bar */}
+          <View style={styles.staminaContainer}>
+            <View style={styles.staminaLabelRow}>
+              <Text style={styles.staminaLabel}>Stamina</Text>
+              <Text style={[styles.staminaPercent, { 
+                color: stamina > 50 ? '#22c55e' : stamina > 20 ? '#eab308' : '#ef4444' 
+              }]}>
+                {stamina.toFixed(0)}%
+              </Text>
+            </View>
+            <View style={styles.staminaBarBg}>
+              <View style={[
+                styles.staminaBarFill, 
+                { 
+                  width: `${stamina}%`,
+                  backgroundColor: stamina > 50 ? '#22c55e' : stamina > 20 ? '#eab308' : '#ef4444'
+                }
+              ]} />
+            </View>
+          </View>
+        </View>
       </TouchableOpacity>
     );
   };
