@@ -14,7 +14,7 @@ import {
   ChevronLeft, ChevronRight, Loader2, Film
 } from 'lucide-react';
 import { Button } from '../ui/button';
-import api from '../../api';
+import api from '../../services/api';
 
 const BOT_EMOJIS = {
   easy: '🤖',
