@@ -714,13 +714,29 @@ export const RPSBidding = ({
         </motion.div>
       )}
       
-      {/* Photo Display - Show player and opponent photos with streak indicators */}
+      {/* Photo Display - ENHANCED with Original vs Effective Dollar Values */}
       {(playerPhoto || opponentPhoto) && (
-        <div className="flex justify-center gap-4 sm:gap-8 mb-6">
-          {/* Player Photo */}
+        <div className="flex justify-center gap-3 sm:gap-6 mb-6" data-testid="rps-photo-display">
+          {/* Player Photo Card */}
           {playerPhoto && (
-            <div className="relative">
-              <p className="text-xs text-purple-400 text-center mb-2">Your Photo</p>
+            <div className="relative flex flex-col items-center" data-testid="player-photo-card">
+              {/* EFFECTIVE VALUE - ABOVE PHOTO (Prominent) */}
+              <div className="mb-2 px-3 py-1.5 bg-purple-600/80 rounded-lg border border-purple-400/50 shadow-lg shadow-purple-500/20">
+                <p className="text-[10px] text-purple-200 text-center uppercase tracking-wide">Effective Power</p>
+                <p className="text-lg font-bold text-white text-center drop-shadow" data-testid="player-effective-value">
+                  {formatMoney(playerEffectiveValue || playerPhoto.dollar_value)}
+                </p>
+                {playerEffectiveValue && playerEffectiveValue !== playerPhoto.dollar_value && (
+                  <p className={`text-[10px] text-center font-bold ${
+                    playerEffectiveValue > playerPhoto.dollar_value ? 'text-green-300' : 'text-red-300'
+                  }`}>
+                    {playerEffectiveValue > playerPhoto.dollar_value ? '↑' : '↓'}
+                    {Math.abs(Math.round(((playerEffectiveValue - playerPhoto.dollar_value) / playerPhoto.dollar_value) * 100))}%
+                  </p>
+                )}
+              </div>
+              
+              <p className="text-xs text-purple-400 text-center mb-1">Your Photo</p>
               <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border-2 border-purple-500 shadow-lg relative">
                 {playerPhoto.image_url ? (
                   <img 
@@ -746,17 +762,46 @@ export const RPSBidding = ({
                   </div>
                 )}
               </div>
-              <p className="text-xs text-yellow-400 text-center mt-1 font-bold">
-                ${(playerPhoto.dollar_value / 1_000_000).toFixed(0)}M
-              </p>
-              {/* Streak indicator below photo */}
-              <div className="mt-1 flex justify-center">
-                <StreakIndicator 
-                  winStreak={playerPhoto.current_win_streak || 0} 
-                  loseStreak={playerPhoto.current_lose_streak || 0}
-                  size="small"
-                  showTooltip={true}
-                />
+              
+              {/* ORIGINAL STATS - BELOW PHOTO */}
+              <div className="mt-2 w-full max-w-[100px] sm:max-w-[120px]" data-testid="player-original-stats">
+                {/* Base Dollar Value */}
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-gray-500">Base:</span>
+                  <span className="text-yellow-500 font-bold" data-testid="player-base-value">
+                    {formatMoney(playerPhoto.dollar_value)}
+                  </span>
+                </div>
+                
+                {/* Scenery */}
+                <div className="flex items-center justify-between text-[10px] mt-0.5">
+                  <span className="text-gray-500">Scenery:</span>
+                  <span className="text-gray-300">
+                    {playerPhoto.scenery_type === 'natural' && '🌿 Natural'}
+                    {playerPhoto.scenery_type === 'water' && '🌊 Water'}
+                    {playerPhoto.scenery_type === 'manmade' && '🏙️ Man-made'}
+                    {playerPhoto.scenery_type === 'neutral' && '⬜ Neutral'}
+                    {!playerPhoto.scenery_type && '🌿 Natural'}
+                  </span>
+                </div>
+                
+                {/* Level & Stars */}
+                <div className="flex items-center justify-between text-[10px] mt-0.5">
+                  <span className="text-gray-500">Level:</span>
+                  <span className="text-gray-300">
+                    Lv{playerPhoto.level || 1} {'★'.repeat(Math.min(Math.floor((playerPhoto.level || 1)/10), 5))}
+                  </span>
+                </div>
+                
+                {/* Streak indicator */}
+                <div className="mt-1 flex justify-center">
+                  <StreakIndicator 
+                    winStreak={playerPhoto.current_win_streak || 0} 
+                    loseStreak={playerPhoto.current_lose_streak || 0}
+                    size="small"
+                    showTooltip={true}
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -766,10 +811,26 @@ export const RPSBidding = ({
             <span className="text-2xl text-gray-500">⚔️</span>
           </div>
           
-          {/* Opponent Photo */}
+          {/* Opponent Photo Card */}
           {opponentPhoto && (
-            <div className="relative">
-              <p className="text-xs text-red-400 text-center mb-2">Opponent</p>
+            <div className="relative flex flex-col items-center" data-testid="opponent-photo-card">
+              {/* EFFECTIVE VALUE - ABOVE PHOTO (Prominent) */}
+              <div className="mb-2 px-3 py-1.5 bg-red-600/80 rounded-lg border border-red-400/50 shadow-lg shadow-red-500/20">
+                <p className="text-[10px] text-red-200 text-center uppercase tracking-wide">Effective Power</p>
+                <p className="text-lg font-bold text-white text-center drop-shadow" data-testid="opponent-effective-value">
+                  {formatMoney(opponentEffectiveValue || opponentPhoto.dollar_value)}
+                </p>
+                {opponentEffectiveValue && opponentEffectiveValue !== opponentPhoto.dollar_value && (
+                  <p className={`text-[10px] text-center font-bold ${
+                    opponentEffectiveValue > opponentPhoto.dollar_value ? 'text-green-300' : 'text-red-300'
+                  }`}>
+                    {opponentEffectiveValue > opponentPhoto.dollar_value ? '↑' : '↓'}
+                    {Math.abs(Math.round(((opponentEffectiveValue - opponentPhoto.dollar_value) / opponentPhoto.dollar_value) * 100))}%
+                  </p>
+                )}
+              </div>
+              
+              <p className="text-xs text-red-400 text-center mb-1">Opponent</p>
               <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border-2 border-red-500 shadow-lg relative">
                 {opponentPhoto.image_url ? (
                   <img 
@@ -795,17 +856,46 @@ export const RPSBidding = ({
                   </div>
                 )}
               </div>
-              <p className="text-xs text-yellow-400 text-center mt-1 font-bold">
-                ${(opponentPhoto.dollar_value / 1_000_000).toFixed(0)}M
-              </p>
-              {/* Streak indicator below photo */}
-              <div className="mt-1 flex justify-center">
-                <StreakIndicator 
-                  winStreak={opponentPhoto.current_win_streak || 0} 
-                  loseStreak={opponentPhoto.current_lose_streak || 0}
-                  size="small"
-                  showTooltip={true}
-                />
+              
+              {/* ORIGINAL STATS - BELOW PHOTO */}
+              <div className="mt-2 w-full max-w-[100px] sm:max-w-[120px]" data-testid="opponent-original-stats">
+                {/* Base Dollar Value */}
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-gray-500">Base:</span>
+                  <span className="text-yellow-500 font-bold" data-testid="opponent-base-value">
+                    {formatMoney(opponentPhoto.dollar_value)}
+                  </span>
+                </div>
+                
+                {/* Scenery */}
+                <div className="flex items-center justify-between text-[10px] mt-0.5">
+                  <span className="text-gray-500">Scenery:</span>
+                  <span className="text-gray-300">
+                    {opponentPhoto.scenery_type === 'natural' && '🌿 Natural'}
+                    {opponentPhoto.scenery_type === 'water' && '🌊 Water'}
+                    {opponentPhoto.scenery_type === 'manmade' && '🏙️ Man-made'}
+                    {opponentPhoto.scenery_type === 'neutral' && '⬜ Neutral'}
+                    {!opponentPhoto.scenery_type && '🌿 Natural'}
+                  </span>
+                </div>
+                
+                {/* Level & Stars */}
+                <div className="flex items-center justify-between text-[10px] mt-0.5">
+                  <span className="text-gray-500">Level:</span>
+                  <span className="text-gray-300">
+                    Lv{opponentPhoto.level || 1} {'★'.repeat(Math.min(Math.floor((opponentPhoto.level || 1)/10), 5))}
+                  </span>
+                </div>
+                
+                {/* Streak indicator */}
+                <div className="mt-1 flex justify-center">
+                  <StreakIndicator 
+                    winStreak={opponentPhoto.current_win_streak || 0} 
+                    loseStreak={opponentPhoto.current_lose_streak || 0}
+                    size="small"
+                    showTooltip={true}
+                  />
+                </div>
               </div>
             </div>
           )}
