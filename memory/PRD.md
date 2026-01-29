@@ -1,6 +1,64 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 30, 2026 (Critical Bot Unlock Fix)
+## Latest Update: January 30, 2026 (Streak Indicators + Mock Engagement)
+
+---
+
+## SESSION 51: WIN/LOSE STREAK INDICATORS + MOCK ENGAGEMENT ✅
+
+### Bug Fixed: Win/Lose Streak Indicators Not Displaying
+
+**Problem:**
+The 🔥 fire (win streak with multiplier) and 🛡️ shield (lose streak immunity) indicators were not showing on photo cards or during battles.
+
+**Fixes Applied:**
+
+1. **Backend - Added lose_streak to /battle-photos response**
+   - `/battle-photos` now returns both `win_streak` and `lose_streak` per photo
+   - Added `current_win_streak` and `current_lose_streak` aliases for frontend compatibility
+
+2. **BotDifficultySelector.jsx - Enhanced streak display on photo cards**
+   - Added `StreakBadge` component to top-right of photo cards
+   - Fire icon (🔥) shows for any win streak with multiplier when >= 3
+   - Shield (🛡️ Immunity) shows when lose_streak >= 3
+   - Multiplier values displayed: ×1.25 (3 wins) to ×3.00 (10 wins)
+
+3. **TappingArena.jsx - Streak indicators in battle header**
+   - Shows both player and opponent streaks at top of arena
+   - `StreakIndicator` component with animated fire particles and shield glow
+
+4. **RPSBidding.jsx - Streak indicators below photos**
+   - Added `StreakIndicator` below player and opponent photos
+   - Shows streak badges on photo thumbnails
+
+5. **BattleArena.jsx - Initialize stats from photo data**
+   - `playerStats` and `opponentStats` now initialized from photo's streak values
+   - Added `effectivePlayerStats` and `effectiveOpponentStats` using useMemo
+   - Properly tracks streak changes during game
+
+### New Feature: Mock Engagement Service (❤️ Reactions)
+
+**Endpoints Created:**
+- `POST /engagement/like` - Add/update reaction to a photo
+- `DELETE /engagement/unlike/{photo_id}` - Remove reaction
+- `GET /engagement/photo/{photo_id}` - Get engagement stats
+- `POST /engagement/simulate-reactions/{photo_id}` - [DEV] Simulate random reactions
+
+**Features:**
+- Stores reaction counts per photo in MongoDB (`reaction_count`, `reactions.{type}`)
+- Tracks individual user reactions in `photo_reactions` collection
+- Supports multiple reaction types: heart, like, love, wow, haha
+- Ready to swap with real Facebook Graph API when credentials available
+
+**Files Modified:**
+- `/app/backend/game_routes.py` - Lines 1646-1686 (lose_streak), 2650-2820 (engagement endpoints)
+- `/app/frontend/src/components/game/BotDifficultySelector.jsx` - Streak display
+- `/app/frontend/src/components/game/RPSBidding.jsx` - StreakIndicator integration
+- `/app/frontend/src/components/game/BattleArena.jsx` - effectivePlayerStats, effectiveOpponentStats
+
+**Test Results: 100% Success Rate (iteration_77.json)**
+- All 10 streak indicator tests passed
+- All UI elements verified via Playwright
 
 ---
 
