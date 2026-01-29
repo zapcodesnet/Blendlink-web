@@ -954,7 +954,7 @@ const TappingArenaView = ({
   // Handle opponent win
   const handleOpponentWin = useCallback(() => {
     if (winner) return;
-    setGamePhase('finished');
+    setLocalGamePhase('finished');
     setWinner('opponent');
     
     // Screen shake
@@ -975,30 +975,31 @@ const TappingArenaView = ({
     setTimeout(() => onRoundComplete?.('opponent'), 2500);
   }, [winner, onRoundComplete]);
 
-  // Reset taps counter every second
+  // Reset taps counter every second (works in both modes)
   useEffect(() => {
-    if (gamePhase === 'active') {
+    const currentPhase = isWebSocketMode ? (wsGamePhase === 'playing' ? 'active' : wsGamePhase) : localGamePhase;
+    if (currentPhase === 'active') {
       tapResetRef.current = setInterval(() => setTapsThisSecond(0), 1000);
     }
     return () => clearInterval(tapResetRef.current);
-  }, [gamePhase]);
+  }, [localGamePhase, wsGamePhase, isWebSocketMode]);
 
-  // Auto-start countdown
+  // Auto-start countdown (BOT MODE ONLY)
   useEffect(() => {
-    if (gamePhase === 'waiting') {
-      const timeout = setTimeout(() => setGamePhase('countdown'), 500);
+    if (!isWebSocketMode && localGamePhase === 'waiting') {
+      const timeout = setTimeout(() => setLocalGamePhase('countdown'), 500);
       return () => clearTimeout(timeout);
     }
-  }, [gamePhase]);
+  }, [localGamePhase, isWebSocketMode]);
 
-  // Countdown timer
+  // Countdown timer (BOT MODE ONLY - WebSocket mode uses server time)
   useEffect(() => {
-    if (gamePhase === 'countdown') {
+    if (!isWebSocketMode && localGamePhase === 'countdown') {
       const timer = setInterval(() => {
-        setCountdown(prev => {
+        setLocalCountdown(prev => {
           if (prev <= 1) {
             clearInterval(timer);
-            setGamePhase('active');
+            setLocalGamePhase('active');
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
             return 0;
           }
@@ -1008,17 +1009,17 @@ const TappingArenaView = ({
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, [gamePhase]);
+  }, [localGamePhase, isWebSocketMode]);
 
-  // Game timer
+  // Game timer (BOT MODE ONLY - WebSocket mode uses server result)
   useEffect(() => {
-    if (gamePhase === 'active') {
+    if (!isWebSocketMode && localGamePhase === 'active') {
       gameTimerRef.current = setInterval(() => {
         setTimeRemaining(prev => {
           if (prev <= 1) {
             clearInterval(gameTimerRef.current);
             const pProgress = playerTaps / playerRequiredTaps;
-            const oProgress = opponentTaps / opponentRequiredTaps;
+            const oProgress = localOpponentTaps / opponentRequiredTaps;
             if (pProgress >= oProgress) handlePlayerWin();
             else handleOpponentWin();
             return 0;
@@ -1028,11 +1029,11 @@ const TappingArenaView = ({
       }, 1000);
       return () => clearInterval(gameTimerRef.current);
     }
-  }, [gamePhase, playerTaps, opponentTaps, playerRequiredTaps, opponentRequiredTaps]);
+  }, [localGamePhase, isWebSocketMode, playerTaps, localOpponentTaps, playerRequiredTaps, opponentRequiredTaps]);
 
-  // Bot tapping - 30 TPS max
+  // Bot tapping - 30 TPS max (BOT MODE ONLY)
   useEffect(() => {
-    if (gamePhase === 'active' && isBot) {
+    if (!isWebSocketMode && localGamePhase === 'active' && isBot) {
       const botSpeeds = {
         easy: { min: 5, max: 10 },
         medium: { min: 10, max: 18 },
@@ -1041,7 +1042,7 @@ const TappingArenaView = ({
       const speed = botSpeeds[botDifficulty] || botSpeeds.medium;
       
       botTimerRef.current = setInterval(() => {
-        setOpponentTaps(prev => {
+        setLocalOpponentTaps(prev => {
           const tapsToAdd = Math.floor(Math.random() * (speed.max - speed.min + 1)) + speed.min;
           const newTaps = prev + tapsToAdd;
           if (newTaps >= opponentRequiredTaps && !winner) handleOpponentWin();
