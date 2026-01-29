@@ -222,6 +222,8 @@ export const PVPRoundReady = ({
   player1Wins,
   player2Wins,
   usedPhotoIds = [],  // Photos already used in previous rounds
+  selectionTimeRemaining = 30, // Time left for selection
+  opponentHasSelected = false, // Whether opponent has selected
   onRoundStart,
   onPhotoSelect,
   onReady,
@@ -231,6 +233,17 @@ export const PVPRoundReady = ({
   const [countdown, setCountdown] = useState(null);
   const [serverTime, setServerTime] = useState(null);
   const [wsConnected, setWsConnected] = useState(false);
+  const [localOpponentSelected, setLocalOpponentSelected] = useState(opponentHasSelected);
+  const [localTimeRemaining, setLocalTimeRemaining] = useState(selectionTimeRemaining);
+  
+  // Update local state when props change
+  useEffect(() => {
+    setLocalOpponentSelected(opponentHasSelected);
+  }, [opponentHasSelected]);
+  
+  useEffect(() => {
+    setLocalTimeRemaining(selectionTimeRemaining);
+  }, [selectionTimeRemaining]);
   
   // Determine if current user is player 1 or 2
   const isPlayer1 = player1?.userId === currentUserId;
