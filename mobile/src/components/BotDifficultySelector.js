@@ -33,14 +33,14 @@ const BOT_DIFFICULTIES = [
     description: 'Perfect for beginners',
     dollarValue: '$600M',
     minDollarValue: 600000000,
-    tapsPerSec: 8,
-    tapsDisplay: '8 taps/sec',
+    tapsPerSec: 8, // Hidden from UI
     fixedBet: 100,
     color: '#22c55e',
     bgColor: 'rgba(34, 197, 94, 0.1)',
     unlockRequirement: null,
     requiredWinsField: null,
     winsNeeded: 0,
+    unlockBonus: 0,
   },
   {
     id: 'medium',
@@ -49,14 +49,14 @@ const BOT_DIFFICULTIES = [
     description: 'Balanced challenge',
     dollarValue: '$800M',
     minDollarValue: 800000000,
-    tapsPerSec: 10,
-    tapsDisplay: '10 taps/sec',
+    tapsPerSec: 10, // Hidden from UI
     fixedBet: 500,
     color: '#f59e0b',
     bgColor: 'rgba(245, 158, 11, 0.1)',
     unlockRequirement: 'Win 3 games vs Easy Bot',
     requiredWinsField: 'easy_bot_wins',
     winsNeeded: 3,
+    unlockBonus: 20000,
   },
   {
     id: 'hard',
@@ -65,14 +65,14 @@ const BOT_DIFFICULTIES = [
     description: 'For experienced players',
     dollarValue: '$1B',
     minDollarValue: 1000000000,
-    tapsPerSec: 12,
-    tapsDisplay: '12 taps/sec',
+    tapsPerSec: 12, // Hidden from UI
     fixedBet: 1000,
     color: '#ef4444',
     bgColor: 'rgba(239, 68, 68, 0.1)',
     unlockRequirement: 'Win 3 games vs Medium Bot',
     requiredWinsField: 'medium_bot_wins',
     winsNeeded: 3,
+    unlockBonus: 100000,
   },
   {
     id: 'extreme',
@@ -81,14 +81,14 @@ const BOT_DIFFICULTIES = [
     description: 'Ultimate challenge',
     dollarValue: '$2B',
     minDollarValue: 2000000000,
-    tapsPerSec: 15,
-    tapsDisplay: '15 taps/sec',
+    tapsPerSec: 15, // Hidden from UI
     fixedBet: 2000,
     color: '#8b5cf6',
     bgColor: 'rgba(139, 92, 246, 0.1)',
     unlockRequirement: 'Win 3 games vs Hard Bot',
     requiredWinsField: 'hard_bot_wins',
     winsNeeded: 3,
+    unlockBonus: 500000,
   },
 ];
 
