@@ -275,13 +275,28 @@ const MintAnimationOverlay = ({ visible, onComplete, photoName, colors }) => {
   );
 };
 
-// Mint Photo Dialog
+// Mint Photo Dialog with Dollar Value Preview
 const MintPhotoDialog = ({ visible, onClose, onMint, mintStatus, colors }) => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [isPrivate, setIsPrivate] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [ratingCriteria, setRatingCriteria] = useState(null);
+  const [previewExpanded, setPreviewExpanded] = useState(false);
+
+  // Fetch rating criteria on mount
+  useEffect(() => {
+    const fetchCriteria = async () => {
+      try {
+        const data = await mintingAPI.getRatingCriteria();
+        setRatingCriteria(data.criteria || []);
+      } catch (err) {
+        console.error('Failed to fetch rating criteria:', err);
+      }
+    };
+    if (visible) fetchCriteria();
+  }, [visible]);
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -323,6 +338,21 @@ const MintPhotoDialog = ({ visible, onClose, onMint, mintStatus, colors }) => {
     }
   };
 
+  // Category icons
+  const categoryIcons = {
+    composition: '📐',
+    lighting: '💡',
+    color: '🎨',
+    subject: '👤',
+    technical: '📷',
+    emotional: '❤️',
+    uniqueness: '✨',
+    storytelling: '📖',
+    context: '🌍',
+    timing: '⏰',
+    authenticity: '🔐',
+  };
+
   return (
     <Modal visible={visible} animationType="slide" transparent>
       <View style={styles.dialogOverlay}>
@@ -358,6 +388,72 @@ const MintPhotoDialog = ({ visible, onClose, onMint, mintStatus, colors }) => {
                 </View>
               </View>
             )}
+
+            {/* Dollar Value AI Preview Section */}
+            <TouchableOpacity
+              style={[styles.dollarValuePreviewCard, { backgroundColor: colors.cardSecondary, borderColor: colors.gold }]}
+              onPress={() => setPreviewExpanded(!previewExpanded)}
+              activeOpacity={0.8}
+            >
+              <View style={styles.dollarValuePreviewHeader}>
+                <View style={styles.dollarValuePreviewTitleRow}>
+                  <Text style={styles.dollarValuePreviewEmoji}>💵</Text>
+                  <Text style={[styles.dollarValuePreviewTitle, { color: colors.text }]}>
+                    AI Dollar Value Scoring
+                  </Text>
+                </View>
+                <Text style={[styles.dollarValuePreviewArrow, { color: colors.textMuted }]}>
+                  {previewExpanded ? '▼' : '▶'}
+                </Text>
+              </View>
+              
+              <Text style={[styles.dollarValuePreviewDesc, { color: colors.textMuted }]}>
+                Your photo will be scored across 11 categories by AI
+              </Text>
+
+              {previewExpanded && ratingCriteria && (
+                <View style={styles.dollarValueCriteriaList}>
+                  {ratingCriteria.map((criterion, index) => (
+                    <View 
+                      key={criterion.key} 
+                      style={[
+                        styles.dollarValueCriteriaItem,
+                        { backgroundColor: colors.card, borderColor: colors.border }
+                      ]}
+                    >
+                      <View style={styles.dollarValueCriteriaHeader}>
+                        <Text style={styles.dollarValueCriteriaIcon}>
+                          {categoryIcons[criterion.key] || '📊'}
+                        </Text>
+                        <Text style={[styles.dollarValueCriteriaLabel, { color: colors.text }]}>
+                          {criterion.label}
+                        </Text>
+                        <View style={[styles.dollarValueWeightBadge, { backgroundColor: colors.primary + '30' }]}>
+                          <Text style={[styles.dollarValueWeightText, { color: colors.primary }]}>
+                            {criterion.weight}%
+                          </Text>
+                        </View>
+                      </View>
+                      <Text style={[styles.dollarValueCriteriaDesc, { color: colors.textMuted }]}>
+                        {criterion.description}
+                      </Text>
+                      <Text style={[styles.dollarValueMaxValue, { color: colors.gold }]}>
+                        Max: ${(criterion.max_value / 1_000_000).toFixed(0)}M
+                      </Text>
+                    </View>
+                  ))}
+                  
+                  <View style={[styles.dollarValueTotalCard, { backgroundColor: colors.gold + '20', borderColor: colors.gold }]}>
+                    <Text style={[styles.dollarValueTotalLabel, { color: colors.text }]}>
+                      Maximum Possible Value
+                    </Text>
+                    <Text style={[styles.dollarValueTotalValue, { color: colors.gold }]}>
+                      $1,000,000,000 (1B)
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </TouchableOpacity>
 
             {/* Image Upload */}
             <TouchableOpacity
