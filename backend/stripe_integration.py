@@ -82,7 +82,7 @@ async def start_kyc_verification(current_user: dict = Depends(get_current_user))
                     "require_matching_selfie": True,
                 }
             },
-            return_url=f"{os.environ.get('REACT_APP_BACKEND_URL', '')}/kyc-complete",
+            return_url=f"{os.environ.get('FRONTEND_URL', os.environ.get('APP_URL', ''))}/kyc-complete",
         )
         
         # Update user with verification session ID
