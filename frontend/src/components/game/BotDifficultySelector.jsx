@@ -298,11 +298,26 @@ const PhotoCard = React.memo(({ photo, isSelected, selectionIndex, canSelect, on
             <span>{hearts > 999 ? `${(hearts/1000).toFixed(1)}K` : hearts}</span>
           </div>
           <div className="flex items-center gap-2">
-            {winStreak > 0 && (
-              <span className="text-orange-400" title={`${winStreak} win streak`}>🔥{winStreak}</span>
+            {winStreak >= 3 && (
+              <span 
+                className="flex items-center gap-0.5 px-1.5 py-0.5 bg-orange-500/20 rounded-full text-orange-400 border border-orange-500/50" 
+                title={`${winStreak} win streak - ×${WIN_STREAK_MULTIPLIERS[Math.min(winStreak, 10)]?.toFixed(2)} Power Multiplier`}
+              >
+                🔥 {winStreak} <span className="text-orange-300 font-bold">×{WIN_STREAK_MULTIPLIERS[Math.min(winStreak, 10)]?.toFixed(2)}</span>
+              </span>
+            )}
+            {winStreak > 0 && winStreak < 3 && (
+              <span className="text-orange-400/60" title={`${winStreak} wins - Need ${3 - winStreak} more for multiplier`}>
+                🔥{winStreak}
+              </span>
             )}
             {loseStreak >= 3 && (
-              <span className="text-blue-400" title="Immunity active!">🛡️</span>
+              <span 
+                className="flex items-center gap-0.5 px-1.5 py-0.5 bg-blue-500/20 rounded-full text-blue-400 border border-blue-500/50" 
+                title="Immunity active! No scenery weakness penalty"
+              >
+                🛡️ Immunity
+              </span>
             )}
           </div>
         </div>
