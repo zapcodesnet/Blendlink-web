@@ -190,16 +190,17 @@ const PhotoBattleCard = ({
         </p>
       </div>
       
-      {/* Progress bar overlay */}
+      {/* Progress bar overlay - OPTIMIZED with CSS transition */}
       <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-800">
-        <motion.div 
-          className={`h-full ${isPlayer 
+        <div 
+          className={`h-full progress-animated ${isPlayer 
             ? 'bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500' 
             : 'bg-gradient-to-r from-red-500 to-orange-500'
           }`}
-          initial={{ width: '0%' }}
-          animate={{ width: `${Math.min(progress * 100, 100)}%` }}
-          transition={{ duration: 0.1 }}
+          style={{ 
+            width: `${Math.min(progress * 100, 100)}%`,
+            transition: 'width 0.08s linear',
+          }}
         />
       </div>
     </motion.div>
