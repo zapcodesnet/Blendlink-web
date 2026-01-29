@@ -2386,10 +2386,12 @@ class SaveBattleReplayRequest(BaseModel):
 @game_router.post("/battle-replay/save")
 async def save_battle_replay(
     request: SaveBattleReplayRequest,
-    user_id: str = Depends(get_current_user_id)
+    current_user: dict = Depends(get_current_user_from_request)
 ):
     """Save a battle replay for later viewing and sharing"""
-    db = await get_database()
+    from server import db
+    
+    user_id = current_user.get("user_id")
     
     # Get user info
     user = await db.users.find_one({"user_id": user_id})
