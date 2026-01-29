@@ -416,27 +416,58 @@ const BotDifficultySelector = ({
                   </View>
                 </View>
 
-                {/* Photo Selection Header */}
-                <View style={styles.photoSelectionHeader}>
-                  <Text style={[styles.sectionTitle, { color: colors.text }]}>Select 5 Photos</Text>
-                  <Text style={[styles.photoCount, { color: selectedPhotos.length === 5 ? '#22c55e' : '#eab308' }]}>
-                    {selectedPhotos.length}/5
-                  </Text>
+                {/* Photo Selection Counter - Prominent */}
+                <View style={[styles.selectionCounter, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                  <View>
+                    <Text style={[styles.selectionCounterLabel, { color: colors.text }]}>Photos Selected:</Text>
+                    <Text style={[styles.selectionCounterHint, { color: colors.textMuted }]}>Tap photos to select/deselect</Text>
+                  </View>
+                  <View style={[styles.selectionCounterBadge, { 
+                    backgroundColor: selectedPhotos.length === 5 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(234, 179, 8, 0.2)' 
+                  }]}>
+                    <Text style={[styles.selectionCounterText, { 
+                      color: selectedPhotos.length === 5 ? '#22c55e' : '#eab308' 
+                    }]}>
+                      {selectedPhotos.length} / 5
+                    </Text>
+                  </View>
                 </View>
+
+                {/* Instruction message */}
+                {needMorePhotos && (
+                  <View style={styles.instructionBox}>
+                    <Text style={styles.instructionText}>
+                      ⚠️ Select exactly 5 minted photos with available stamina to play
+                    </Text>
+                  </View>
+                )}
+
+                {/* Not enough valid photos warning */}
+                {validPhotosCount < 5 && (
+                  <View style={styles.errorBox}>
+                    <Text style={styles.errorBoxText}>
+                      ❌ You need at least 5 photos with stamina ≥1 ({validPhotosCount} available)
+                    </Text>
+                  </View>
+                )}
 
                 {/* Photo Grid */}
                 <View style={styles.photoGrid}>
                   {photos.map(renderPhotoItem)}
                   {photos.length === 0 && (
                     <View style={styles.emptyPhotos}>
+                      <Text style={styles.emptyPhotosEmoji}>📷</Text>
                       <Text style={[styles.emptyPhotosText, { color: colors.textMuted }]}>
                         No minted photos available
+                      </Text>
+                      <Text style={[styles.emptyPhotosHint, { color: colors.textMuted }]}>
+                        Mint some photos to start battling!
                       </Text>
                     </View>
                   )}
                 </View>
 
-                {/* Start Button */}
+                {/* Start Button - Fixed at bottom with extra padding */}
                 <TouchableOpacity
                   onPress={handleStart}
                   disabled={selectedPhotos.length !== 5}
