@@ -1,44 +1,63 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 29, 2026 (Mobile Screens & 30 TPS Update)
+## Latest Update: January 29, 2026 (Game Creation Flow Complete)
 
 ---
 
-## SESSION 35: MOBILE SCREEN IMPLEMENTATION ✅
+## SESSION 35: MOBILE SCREENS & 30 TPS UPDATE ✅
 
-### 30 TPS Rate Limit - DEPLOYED
-- Web `TappingArena.jsx`: MAX_TAPS_PER_SECOND = 30
-- Mobile `PhotoGameArenaScreen.js`: Added TappingArenaView with 30 TPS
-- Bot speeds updated: Easy 5-10, Medium 10-18, Hard 18-28 TPS
-- Warning toast on rate exceed, excess taps discarded
+### Game Creation Screen - NEW
+**File:** `/app/mobile/src/screens/GameCreationScreen.js`
 
-### Mobile API Enhancements
-**New mintingAPI methods added:**
-- `getRatingCriteria()` - Get 11-category scoring criteria
-- `getLevelBonuses()` - Get level milestone bonuses
-- `getPhotoWithValue(mintId)` - Get photo with full dollar value breakdown
-- `getUpgradeOptions(mintId)` - Get available upgrades
-- `purchaseUpgrade(mintId, type)` - Buy dollar value upgrade
-- `claimDailyBonus()` - Claim subscription daily reward
-- `claimBirthdayBonus(mintId)` - Claim yearly photo birthday bonus
+**Features:**
+- 5-photo selection with stamina validation
+- Grid view of user's minted photos
+- Stamina bar on each photo (grayed out if stamina = 0)
+- Low stamina warning badge
+- Sort options: Dollar Value, Stamina, Level
+- Bet amount input for create mode
+- Three modes:
+  - `create` - Create open game for others to join
+  - `join` - Select photos to join existing game
+  - `bot` - Start bot match (easy/medium/hard)
+- Bottom action bar with total value and confirm button
+- Haptic feedback on selection
 
-### MintedPhotosScreen Enhancements
-- Added **Dollar Value AI Scoring Preview** section
-- Shows all 11 rating categories with:
-  - Category icon and label
-  - Weight percentage badge
-  - Description
-  - Max value per category
-- Expandable/collapsible UI
-- Total max value display: $1B
+**Navigation:**
+- Added to AppStack as `GameCreation`
+- Quick access from GamesScreen:
+  - ⚔️ Create (new battle)
+  - 👥 Join (open games browser)
+  - 🤖 Bot Match (practice mode)
+
+### API Additions
+**photoGameAPI:**
+- `getPhotoStamina(mintId)` - Get stamina details
+- `startBotMatch({ photo_ids, difficulty })` - Start PvB match
+
+**mintingAPI:**
+- `getRatingCriteria()` - 11-category AI scoring info
+- `getLevelBonuses()` - Level milestone bonuses
+- `getPhotoWithValue()` - Full dollar value breakdown
+- `getUpgradeOptions()` - Available upgrades
+- `purchaseUpgrade()` - Buy upgrade with BL coins
+- `claimDailyBonus()` - Subscription daily reward
+- `claimBirthdayBonus()` - Yearly photo bonus
 
 ### Mobile Screens Status
 | Screen | Status |
 |--------|--------|
+| GameCreationScreen | ✅ NEW - 5-photo selection with stamina |
 | OpenGamesBrowserScreen | ✅ Complete |
 | TappingArenaView | ✅ Complete (30 TPS) |
 | MintedPhotosScreen | ✅ Enhanced with Dollar Value preview |
 | PhotoGameArenaScreen | ✅ Updated with TappingArenaView |
+| GamesScreen | ✅ Updated with quick access buttons |
+
+### 30 TPS Rate Limit - DEPLOYED
+- Web `TappingArena.jsx`: MAX_TAPS_PER_SECOND = 30
+- Mobile `TappingArenaView`: 30 TPS with haptics
+- Bot speeds: Easy 5-10, Medium 10-18, Hard 18-28 TPS
 
 ---
 
