@@ -610,7 +610,7 @@ export const TappingArena = ({
         />
       </div>
       
-      {/* Progress meters */}
+      {/* Progress meters - OPTIMIZED with CSS transitions instead of Framer Motion */}
       <div className="absolute top-[45%] left-0 right-0 px-4 z-10">
         <div className="flex gap-4">
           {/* Player meter */}
@@ -620,12 +620,12 @@ export const TappingArena = ({
               <span>{Math.round(playerProgress)}%</span>
             </div>
             <div className="h-4 bg-gray-800 rounded-full overflow-hidden">
-              <motion.div 
-                className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
-                style={{ width: `${playerProgress}%` }}
-                initial={{ width: '0%' }}
-                animate={{ width: `${playerProgress}%` }}
-                transition={{ duration: 0.1 }}
+              <div 
+                className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 progress-animated"
+                style={{ 
+                  width: `${playerProgress}%`,
+                  transition: 'width 0.08s linear',
+                }}
               />
             </div>
           </div>
@@ -637,12 +637,12 @@ export const TappingArena = ({
               <span>{Math.round(opponentProgress)}%</span>
             </div>
             <div className="h-4 bg-gray-800 rounded-full overflow-hidden">
-              <motion.div 
-                className="h-full bg-gradient-to-r from-red-500 to-orange-500"
-                style={{ width: `${opponentProgress}%` }}
-                initial={{ width: '0%' }}
-                animate={{ width: `${opponentProgress}%` }}
-                transition={{ duration: 0.1 }}
+              <div 
+                className="h-full bg-gradient-to-r from-red-500 to-orange-500 progress-animated"
+                style={{ 
+                  width: `${opponentProgress}%`,
+                  transition: 'width 0.08s linear',
+                }}
               />
             </div>
           </div>
