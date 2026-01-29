@@ -7,6 +7,7 @@
  * - Ready button before countdown
  * - Server-authoritative timer synchronization
  * - Live opponent tap meter updates
+ * - Bot Battle progression system with difficulty unlocks
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -24,6 +25,7 @@ import {
   Switch,
   FlatList,
   Vibration,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -31,6 +33,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { photoGameAPI } from '../services/api';
 import { usePVPWebSocket } from '../hooks/usePVPWebSocket';
+import BotDifficultySelector from '../components/BotDifficultySelector';
 import auctionSounds from '../utils/auctionSounds';
 import * as Haptics from 'expo-haptics';
 
