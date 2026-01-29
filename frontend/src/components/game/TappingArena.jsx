@@ -470,13 +470,15 @@ export const TappingArena = ({
     }
   }, [gamePhase, playerTaps, opponentTaps, playerRequiredTaps, opponentRequiredTaps, soundEnabled]);
   
-  // Bot tapping (if bot match)
+  // Bot tapping (if bot match) - Updated for 30 TPS max
   useEffect(() => {
     if (gamePhase === 'active' && isBot) {
+      // Bot speeds adjusted for 30 TPS max player rate
+      // Bots now tap faster to provide proper challenge
       const botSpeeds = {
-        easy: { min: 3, max: 6 },
-        medium: { min: 5, max: 8 },
-        hard: { min: 7, max: 10 },
+        easy: { min: 5, max: 10 },      // Casual: 5-10 TPS
+        medium: { min: 10, max: 18 },   // Moderate: 10-18 TPS
+        hard: { min: 18, max: 28 },     // Challenging: 18-28 TPS (near max)
       };
       
       const speed = botSpeeds[botDifficulty] || botSpeeds.medium;
