@@ -1177,6 +1177,12 @@ export const photoGameAPI = {
     return response.data;
   },
 
+  // Get user profile (for BL balance)
+  getUserProfile: async () => {
+    const response = await api.get('/auth/me');
+    return response.data;
+  },
+
   // Get battle-ready photos sorted by dollar value
   getBattlePhotos: async () => {
     const response = await api.get('/photo-game/battle-photos');
