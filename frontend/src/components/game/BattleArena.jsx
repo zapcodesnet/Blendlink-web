@@ -1168,8 +1168,8 @@ export const BattleArena = ({
           </motion.div>
         )}
         
-        {/* Game Result */}
-        {gamePhase === 'result' && gameWinner && (
+        {/* Game Result - Show for wins, losses, AND ties */}
+        {gamePhase === 'result' && (gameWinner || isTie) && (
           <motion.div
             key="result"
             initial={{ opacity: 0 }}
@@ -1187,6 +1187,7 @@ export const BattleArena = ({
               savedReplayId={savedReplayId}
               onViewReplay={handleViewReplay}
               onShareReplayToFeed={handleShareReplayToFeed}
+              isTie={isTie}
             />
           </motion.div>
         )}
