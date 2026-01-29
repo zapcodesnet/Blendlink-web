@@ -863,6 +863,241 @@ input:focus, textarea:focus, select:focus {
   to { transform: translateX(0); opacity: 1; }
 }
 
+/* ============================================
+   60FPS ANIMATION & GPU ACCELERATION
+   ============================================ */
+
+/* Force GPU acceleration for smooth animations */
+.gpu-accelerate,
+[class*="animate-"],
+.motion-safe\:animate-*,
+[data-animated="true"] {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  will-change: transform, opacity;
+}
+
+/* Optimized motion primitives for Framer Motion */
+.framer-motion-optimized {
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+/* High-performance image rendering */
+img,
+.lazy-image {
+  content-visibility: auto;
+  contain-intrinsic-size: 200px 200px;
+}
+
+/* Optimized image loading with GPU layers */
+img[loading="lazy"] {
+  transform: translateZ(0);
+  will-change: opacity;
+}
+
+/* Ensure tap and scroll don't jank */
+.tap-target,
+button,
+a,
+[role="button"] {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Optimized scrolling containers */
+.scroll-container,
+.overflow-y-auto,
+.overflow-x-auto,
+[class*="overflow-"] {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+}
+
+/* Disable scroll-behavior during rapid interactions */
+.scrolling-fast * {
+  scroll-behavior: auto !important;
+}
+
+/* Optimized card transitions - use transform only */
+.card-smooth {
+  transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              opacity 0.2s ease;
+  will-change: transform;
+}
+
+.card-smooth:hover {
+  transform: translateY(-4px) translateZ(0);
+}
+
+.card-smooth:active {
+  transform: scale(0.98) translateZ(0);
+}
+
+/* Optimized button press animations */
+.btn-press {
+  transition: transform 0.1s ease;
+  will-change: transform;
+}
+
+.btn-press:active {
+  transform: scale(0.95) translateZ(0);
+}
+
+/* Photo grid optimizations for game */
+.photo-grid {
+  contain: layout style;
+  content-visibility: auto;
+}
+
+.photo-grid-item {
+  contain: layout style paint;
+  transform: translateZ(0);
+}
+
+/* Game-specific performance */
+.tapping-arena {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  transform: translateZ(0);
+  will-change: contents;
+}
+
+.tap-zone {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  touch-action: manipulation;
+}
+
+/* Progress bar optimizations */
+.progress-animated {
+  will-change: width;
+  transform: translateZ(0);
+}
+
+/* Meter/gauge animations */
+.meter-fill {
+  will-change: height, transform;
+  transform-origin: bottom center;
+  transition: height 0.1s linear;
+}
+
+/* Confetti and particle system optimization */
+.particle-container {
+  contain: strict;
+  pointer-events: none;
+}
+
+.particle {
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
+}
+
+/* WebSocket status indicators - no layout shift */
+.status-indicator {
+  contain: strict;
+  width: 8px;
+  height: 8px;
+}
+
+/* Battle arena optimizations */
+.battle-card {
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.battle-result {
+  transform: scale(1) translateZ(0);
+  will-change: transform, opacity;
+}
+
+/* Countdown animation optimization */
+.countdown-number {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+/* Dollar meter animation */
+.dollar-meter {
+  will-change: height;
+  transform: translateZ(0);
+  contain: strict;
+}
+
+/* Optimized modal/overlay transitions */
+.modal-overlay {
+  will-change: opacity;
+  transform: translateZ(0);
+}
+
+.modal-content {
+  will-change: transform, opacity;
+  transform: translate3d(-50%, -50%, 0);
+}
+
+/* Reduce paint on hover states */
+@media (hover: hover) {
+  .hover-lift {
+    transition: transform 0.2s ease;
+    will-change: transform;
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-2px) translateZ(0);
+  }
+}
+
+/* Mobile touch feedback optimization */
+@media (hover: none) {
+  .touch-feedback {
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.1s ease;
+  }
+  
+  .touch-feedback:active {
+    transform: scale(0.97) translateZ(0);
+  }
+}
+
+/* Optimized skeleton loading */
+.skeleton-optimized {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 0%,
+    hsl(var(--muted-foreground) / 0.1) 50%,
+    hsl(var(--muted)) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-slide 1.2s ease-in-out infinite;
+  will-change: background-position;
+}
+
+@keyframes skeleton-slide {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Disable animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .gpu-accelerate,
+  [class*="animate-"] {
+    will-change: auto;
+  }
+}
+
 /* EmbedSocial Widget Performance Optimizations */
 .embedsocial-hashtag {
   contain: content;
