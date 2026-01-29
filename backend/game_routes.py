@@ -2080,7 +2080,20 @@ async def start_bot_battle(
         if not photo:
             raise HTTPException(status_code=404, detail=f"Photo {photo_id} not found or not owned")
         
-        current_stamina = calculate_current_stamina(photo)
+        # Calculate current stamina with proper parameters
+        from datetime import datetime
+        last_regen = photo.get("last_regen_timestamp")
+        if isinstance(last_regen, str):
+            try:
+                last_regen = datetime.fromisoformat(last_regen.replace('Z', '+00:00'))
+            except:
+                last_regen = None
+        
+        current_stamina = calculate_current_stamina(
+            photo.get("stamina", 100),
+            last_regen,
+            photo.get("max_stamina", 24)
+        )
         if current_stamina < 1:
             raise HTTPException(
                 status_code=400, 
