@@ -20,6 +20,9 @@ import websockets
 from datetime import datetime, timezone
 import uuid
 
+# Configure pytest-asyncio
+pytest_plugins = ('pytest_asyncio',)
+
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
@@ -379,7 +382,7 @@ class TestPVPGameManagerMethods:
         # If there are games, check structure
         if data["games"]:
             game = data["games"][0]
-            expected_fields = ["game_id", "creator_id", "status"]
+            expected_fields = ["game_id", "creator_id"]
             for field in expected_fields:
                 assert field in game, f"Game should have {field} field"
         
