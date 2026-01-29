@@ -791,15 +791,56 @@ const MatchmakingView = ({ onMatchFound, onCancel, onPracticeStart, selectedPhot
       )}
       
       {/* Auction Bidding Battle with Bot Button */}
-      {selectedPhoto && (
-        <TouchableOpacity
-          style={styles.auctionBattleButton}
-          onPress={startPracticeMode}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.auctionBattleButtonText}>Auction Bidding Battle with Bot</Text>
-        </TouchableOpacity>
-      )}
+      <TouchableOpacity
+        style={[styles.auctionBattleButton, { opacity: battlePhotos.length > 0 ? 1 : 0.5 }]}
+        onPress={() => {
+          if (battlePhotos.length > 0) {
+            setShowBotSelector(true);
+          } else {
+            Alert.alert('No Photos', 'You need at least 5 minted photos to start a bot battle.');
+          }
+        }}
+        activeOpacity={0.8}
+        disabled={battlePhotos.length === 0}
+      >
+        <Text style={styles.auctionBattleButtonText}>Auction Bidding Battle with Bot</Text>
+      </TouchableOpacity>
+
+      {/* Bot Difficulty Selector Modal */}
+      <BotDifficultySelector
+        visible={showBotSelector}
+        onClose={() => setShowBotSelector(false)}
+        onStart={async (battleConfig) => {
+          setShowBotSelector(false);
+          try {
+            // Call backend to start bot battle
+            const response = await photoGameAPI.startBotBattle({
+              difficulty: battleConfig.difficulty,
+              photo_ids: battleConfig.photos.map(p => p.mint_id),
+            });
+            
+            if (response.success) {
+              auctionSounds.matchFound();
+              onPracticeStart?.({
+                success: true,
+                session: { session_id: response.session_id },
+                playerPhotos: battleConfig.photos,
+                opponentPhotos: response.bot_photos,
+                betAmount: response.bet_amount,
+                isBot: true,
+                botDifficulty: battleConfig.difficulty,
+                botConfig: response.bot_config,
+              });
+            }
+          } catch (err) {
+            Alert.alert('Error', err.response?.data?.detail || 'Failed to start bot battle');
+          }
+        }}
+        photos={battlePhotos}
+        userBalance={userBalance}
+        botWinStats={botWinStats}
+        colors={colors}
+      />
 
       <View style={{ height: 100 }} />
     </ScrollView>
