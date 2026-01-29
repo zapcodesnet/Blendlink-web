@@ -221,12 +221,14 @@ const BotDifficultySelector = ({
           <View style={[styles.statBadge, { backgroundColor: difficulty.bgColor }]}>
             <Text style={[styles.statText, { color: difficulty.color }]}>{difficulty.dollarValue}</Text>
           </View>
-          <View style={[styles.statBadge, { backgroundColor: colors.cardSecondary }]}>
-            <Text style={[styles.statText, { color: colors.text }]}>{difficulty.tapsDisplay}</Text>
-          </View>
           <View style={[styles.statBadge, { backgroundColor: 'rgba(234, 179, 8, 0.2)' }]}>
             <Text style={[styles.statText, { color: '#eab308' }]}>{difficulty.fixedBet} BL</Text>
           </View>
+          {difficulty.unlockBonus > 0 && !isUnlocked && (
+            <View style={[styles.statBadge, { backgroundColor: 'rgba(16, 185, 129, 0.2)' }]}>
+              <Text style={[styles.statText, { color: '#10b981' }]}>+{(difficulty.unlockBonus / 1000).toFixed(0)}K</Text>
+            </View>
+          )}
         </View>
 
         {!isUnlocked && difficulty.unlockRequirement && (
