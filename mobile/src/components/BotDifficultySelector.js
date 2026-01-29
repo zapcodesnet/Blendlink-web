@@ -505,7 +505,7 @@ const styles = StyleSheet.create({
   modalContent: {
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    maxHeight: '90%',
+    maxHeight: '85%',
   },
   header: {
     flexDirection: 'row',
@@ -518,6 +518,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    flex: 1,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  balanceChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: 'rgba(234, 179, 8, 0.2)',
+    borderRadius: 8,
+  },
+  balanceChipText: {
+    color: '#eab308',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
   headerIcon: {
     width: 40,
@@ -544,6 +561,9 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
+  },
+  scrollContentContainer: {
+    paddingBottom: 100, // Extra padding for nav bar clearance
   },
   sectionTitle: {
     fontSize: 14,
