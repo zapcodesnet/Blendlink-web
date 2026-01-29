@@ -618,6 +618,64 @@ export const RPSBidding = ({
         </motion.div>
       )}
       
+      {/* Photo Display - Show player and opponent photos */}
+      {(playerPhoto || opponentPhoto) && (
+        <div className="flex justify-center gap-4 sm:gap-8 mb-6">
+          {/* Player Photo */}
+          {playerPhoto && (
+            <div className="relative">
+              <p className="text-xs text-purple-400 text-center mb-2">Your Photo</p>
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border-2 border-purple-500 shadow-lg">
+                {playerPhoto.image_url ? (
+                  <img 
+                    src={playerPhoto.image_url} 
+                    alt={playerPhoto.name || 'Player Photo'}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                    <span className="text-3xl">📷</span>
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-yellow-400 text-center mt-1 font-bold">
+                ${(playerPhoto.dollar_value / 1_000_000).toFixed(0)}M
+              </p>
+            </div>
+          )}
+          
+          {/* VS Divider */}
+          <div className="flex items-center">
+            <span className="text-2xl text-gray-500">⚔️</span>
+          </div>
+          
+          {/* Opponent Photo */}
+          {opponentPhoto && (
+            <div className="relative">
+              <p className="text-xs text-red-400 text-center mb-2">Opponent</p>
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border-2 border-red-500 shadow-lg">
+                {opponentPhoto.image_url ? (
+                  <img 
+                    src={opponentPhoto.image_url} 
+                    alt={opponentPhoto.name || 'Opponent Photo'}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
+                    <span className="text-3xl">🤖</span>
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-yellow-400 text-center mt-1 font-bold">
+                ${(opponentPhoto.dollar_value / 1_000_000).toFixed(0)}M
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+      
       {/* Score and Money Display */}
       <div className="flex justify-between items-center mb-6 px-2">
         {/* Player */}
