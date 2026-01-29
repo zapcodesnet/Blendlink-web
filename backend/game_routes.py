@@ -2230,8 +2230,19 @@ async def record_bot_battle_result(
         {"_id": 0}
     )
     
-    # Check for newly unlocked difficulties
+    # Check for newly unlocked difficulties and award one-time bonuses
     newly_unlocked = None
+    unlock_bonus = 0
+    extreme_mastery_bonus = 0
+    
+    # Unlock bonus amounts
+    UNLOCK_BONUSES = {
+        "medium": 20000,      # +20,000 BL for unlocking Medium
+        "hard": 100000,       # +100,000 BL for unlocking Hard
+        "extreme": 500000,    # +500,000 BL for unlocking Extremely Hard
+    }
+    EXTREME_MASTERY_BONUS = 1000000  # +1,000,000 BL for mastering Extremely Hard (3 wins)
+    
     if request.player_won:
         if difficulty == "easy" and updated_stats.get("easy_bot_wins", 0) == 3:
             newly_unlocked = "medium"
@@ -2239,6 +2250,47 @@ async def record_bot_battle_result(
             newly_unlocked = "hard"
         elif difficulty == "hard" and updated_stats.get("hard_bot_wins", 0) == 3:
             newly_unlocked = "extreme"
+        elif difficulty == "extreme" and updated_stats.get("extreme_bot_wins", 0) == 3:
+            # Check if mastery bonus already claimed
+            mastery_claimed = updated_stats.get("extreme_mastery_bonus_claimed", False)
+            if not mastery_claimed:
+                extreme_mastery_bonus = EXTREME_MASTERY_BONUS
+                await _db.bot_battle_stats.update_one(
+                    {"user_id": user_id},
+                    {"$set": {"extreme_mastery_bonus_claimed": True}}
+                )
+                await _db.users.update_one(
+                    {"user_id": user_id},
+                    {"$inc": {"bl_coins": extreme_mastery_bonus}}
+                )
+    
+    # Award one-time unlock bonus if unlocked a new difficulty
+    if newly_unlocked:
+        # Check if bonus was already claimed
+        bonus_field = f"{newly_unlocked}_unlock_bonus_claimed"
+        already_claimed = updated_stats.get(bonus_field, False)
+        
+        if not already_claimed:
+            unlock_bonus = UNLOCK_BONUSES.get(newly_unlocked, 0)
+            
+            # Mark as claimed and award bonus
+            await _db.bot_battle_stats.update_one(
+                {"user_id": user_id},
+                {"$set": {bonus_field: True}}
+            )
+            await _db.users.update_one(
+                {"user_id": user_id},
+                {"$inc": {"bl_coins": unlock_bonus}}
+            )
+    
+    # Build response message
+    bonus_message = None
+    if newly_unlocked and unlock_bonus > 0:
+        bonus_message = f"🎉 You unlocked {newly_unlocked.title()} Bot! +{unlock_bonus:,} BL coins bonus!"
+    elif extreme_mastery_bonus > 0:
+        bonus_message = f"🏆 Extremely Hard Bot MASTERED! +{extreme_mastery_bonus:,} BL coins bonus!"
+    elif newly_unlocked:
+        bonus_message = f"🎉 You unlocked {newly_unlocked.title()} Bot!"
     
     return {
         "success": True,
@@ -2248,7 +2300,9 @@ async def record_bot_battle_result(
         "difficulty": difficulty,
         f"{difficulty}_wins": updated_stats.get(f"{difficulty}_bot_wins", 0),
         "newly_unlocked_difficulty": newly_unlocked,
-        "message": f"🎉 You unlocked {newly_unlocked.title()} Bot!" if newly_unlocked else None,
+        "unlock_bonus": unlock_bonus,
+        "extreme_mastery_bonus": extreme_mastery_bonus,
+        "message": bonus_message,
     }
 
 
