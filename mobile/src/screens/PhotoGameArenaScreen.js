@@ -564,6 +564,9 @@ const MatchmakingView = ({ onMatchFound, onCancel, onPracticeStart, selectedPhot
   const [battlePhotos, setBattlePhotos] = useState([]);
   const [loadingPhotos, setLoadingPhotos] = useState(true);
   const [error, setError] = useState(null);
+  const [showBotSelector, setShowBotSelector] = useState(false);
+  const [botWinStats, setBotWinStats] = useState({});
+  const [userBalance, setUserBalance] = useState(0);
   
   const intervalRef = useRef(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -571,6 +574,7 @@ const MatchmakingView = ({ onMatchFound, onCancel, onPracticeStart, selectedPhot
   useEffect(() => {
     fetchBattlePhotos();
     fetchQueueStatus();
+    fetchBotStats();
     const interval = setInterval(fetchQueueStatus, 5000);
     return () => clearInterval(interval);
   }, []);
@@ -591,13 +595,26 @@ const MatchmakingView = ({ onMatchFound, onCancel, onPracticeStart, selectedPhot
   const fetchBattlePhotos = async () => {
     try {
       setLoadingPhotos(true);
-      const data = await photoGameAPI.getBattlePhotos();
-      setBattlePhotos(data.photos || []);
+      const [photosData, statsData] = await Promise.all([
+        photoGameAPI.getBattlePhotos(),
+        photoGameAPI.getMyStats().catch(() => ({})),
+      ]);
+      setBattlePhotos(photosData.photos || []);
+      setUserBalance(statsData?.bl_coins || 0);
     } catch (err) {
       console.error('Failed to fetch battle photos:', err);
       setError('Failed to load your photos');
     } finally {
       setLoadingPhotos(false);
+    }
+  };
+
+  const fetchBotStats = async () => {
+    try {
+      const stats = await photoGameAPI.getBotBattleStats();
+      setBotWinStats(stats || {});
+    } catch (err) {
+      console.error('Failed to fetch bot stats:', err);
     }
   };
 
