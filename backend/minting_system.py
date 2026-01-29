@@ -22,12 +22,12 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 # ============== CONSTANTS ==============
-MINT_COST_BL = 500  # BL coins per mint
+MINT_COST_BL = 0  # FREE minting for all users
 
 # Monthly Subscription Tiers with benefits
 SUBSCRIPTION_TIERS = {
     "free": {
-        "daily_mint_limit": 3,
+        "daily_mint_limit": 10,  # 10 FREE mints per day for regular users
         "xp_multiplier": 1,
         "daily_bl_claim": 0,
         "price": 0,
@@ -61,7 +61,7 @@ SUBSCRIPTION_TIERS = {
 # Legacy compatibility
 DAILY_MINT_LIMIT = 10
 SUBSCRIPTION_LIMITS = {
-    "free": 3,
+    "free": 10,  # 10 FREE mints per day for regular users
     "bronze": 20,
     "silver": 50,
     "gold": 100,
