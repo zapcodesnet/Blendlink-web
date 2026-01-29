@@ -681,6 +681,9 @@ export const MatchHistory = ({ currentUserId }) => {
   const [filter, setFilter] = useState('all'); // all, wins, losses
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [stats, setStats] = useState(null);
+  const [activeTab, setActiveTab] = useState('pvp'); // pvp or bot_replays
+  const [botReplays, setBotReplays] = useState([]);
+  const [botReplaysLoading, setBotReplaysLoading] = useState(false);
   
   // Fetch match history
   const fetchHistory = useCallback(async () => {
@@ -701,9 +704,28 @@ export const MatchHistory = ({ currentUserId }) => {
     }
   }, []);
   
+  // Fetch bot battle replays
+  const fetchBotReplays = useCallback(async () => {
+    try {
+      setBotReplaysLoading(true);
+      const response = await api.get('/photo-game/battle-replay/user/list?limit=20');
+      setBotReplays(response.data.replays || []);
+    } catch (err) {
+      console.error('Failed to fetch bot replays:', err);
+    } finally {
+      setBotReplaysLoading(false);
+    }
+  }, []);
+  
   useEffect(() => {
     fetchHistory();
   }, [fetchHistory]);
+  
+  useEffect(() => {
+    if (activeTab === 'bot_replays' && botReplays.length === 0) {
+      fetchBotReplays();
+    }
+  }, [activeTab, botReplays.length, fetchBotReplays]);
   
   // Filter matches
   const filteredMatches = matches.filter(match => {
