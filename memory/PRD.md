@@ -1,12 +1,12 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 29, 2026 (Session 35 - Phase 5 Performance & Mobile Scaffold)
+## Latest Update: January 29, 2026 (Session 35 - Phase 5 Performance & Mobile Screens)
 
 ---
 
-## SESSION 35: PHASE 5 - PERFORMANCE & MOBILE SCAFFOLD ✅
+## SESSION 35: PHASE 5 - PERFORMANCE & MOBILE SCREENS ✅
 
-### Phase 5: Web Performance Optimizations (January 29, 2026)
+### Phase 5A: Web Performance Optimizations (January 29, 2026)
 
 **1. Code Splitting & Lazy Loading**
 - Implemented `React.lazy()` for all non-critical page components in App.js
@@ -36,14 +36,34 @@ New CSS classes added to `index.css`:
 - Error fallback handling
 - `PhotoThumbnail` and `LazyImageGrid` exports for game use
 
-### Expo Mobile App Scaffold Enhancement
+### Phase 5B: Mobile Screen Implementation (January 29, 2026)
 
-**New Shared Components Created:**
-1. `PhotoCard.js` - Reusable photo display with scenery, value, stamina
-2. `StreakIndicator.js` - Animated win/loss streak badges
-3. `LoadingSkeletons.js` - Optimized skeleton loading states
-4. `HapticFeedback.js` - Unified game haptic patterns
-5. `useCameraPermission.js` - Camera permission hook (for future selfie feature)
+**New Mobile Screens Created:**
+1. **OpenGamesBrowserScreen.js** - Browse & join PVP battles
+   - Grid view of open games with photo thumbnails
+   - Search by username or game ID
+   - Flip card preview modal showing all 5 creator photos
+   - Haptic feedback on all interactions
+   - Pull-to-refresh with 15s auto-polling
+   - "Create New Game" and "Join Battle" buttons
+
+**New Shared Components:**
+- `PhotoCard.js` - Reusable photo display with scenery, value, stamina
+- `StreakIndicator.js` - Animated win/loss streak badges
+- `LoadingSkeletons.js` - Optimized skeleton loading states
+- `HapticFeedback.js` - Unified game haptic patterns (24 methods)
+- `useCameraPermission.js` - Camera permission hook (for future selfie)
+
+**API Additions (mobile/src/services/api.js):**
+- `photoGameAPI.getOpenGames()` - List browsable open games
+- `photoGameAPI.getOpenGameDetails()` - Get full game with photos
+- `photoGameAPI.createOpenGame()` - Create new open game
+- `photoGameAPI.joinOpenGame()` - Join an existing game
+- `photoGameAPI.cancelOpenGame()` - Cancel (creator only)
+
+**Navigation Updates:**
+- Added `OpenGamesBrowser` to AppStack
+- Added navigation link from GamesScreen to OpenGamesBrowser
 
 **Dependencies Added:**
 - `expo-haptics@15.0.8` - Native haptic feedback
@@ -53,22 +73,23 @@ New CSS classes added to `index.css`:
 /app/mobile/
 ├── App.js                  # Root with providers
 ├── src/
-│   ├── components/         # NEW: Shared components
+│   ├── components/         # Shared components
 │   │   ├── index.js
 │   │   ├── PhotoCard.js
 │   │   ├── StreakIndicator.js
 │   │   └── LoadingSkeletons.js
 │   ├── context/            # Auth, Theme, PushNotification
-│   ├── navigation/         # Tab + Stack navigators
-│   ├── screens/            # 35+ screens (game, admin, etc.)
-│   ├── services/           # API client
-│   └── utils/              # NEW: Haptics, Camera permission
+│   ├── navigation/         # Tab + Stack navigators  
+│   ├── screens/            # 36+ screens (game, admin, etc.)
+│   │   └── OpenGamesBrowserScreen.js  # NEW
+│   ├── services/           # API client (extended)
+│   └── utils/              # Haptics, Camera permission
 ```
 
 **Testing Status:**
-- Web app loads successfully with lazy loading
-- No console errors from performance changes
-- Photo game arena functional
+- Web app verified working with screenshot
+- Games page renders correctly
+- Lazy loading active (console shows component loading)
 
 ---
 
