@@ -1183,6 +1183,21 @@ export const photoGameAPI = {
     return response.data;
   },
 
+  // Get photo stamina details
+  getPhotoStamina: async (mintId) => {
+    const response = await api.get(`/photo-game/photo-stamina/${mintId}`);
+    return response.data;
+  },
+
+  // Start bot match (PvB)
+  startBotMatch: async ({ photo_ids, difficulty = 'medium' }) => {
+    const response = await api.post('/photo-game/bot-match', {
+      photo_ids,
+      difficulty,
+    });
+    return response.data;
+  },
+
   // ============== OPEN GAMES ==============
 
   // Get list of open games (browsable)
