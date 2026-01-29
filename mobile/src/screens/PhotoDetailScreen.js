@@ -13,6 +13,7 @@
  * - Birthday bonus claim (if eligible)
  * - Battle stats for this photo
  * - Haptic feedback on interactions
+ * - Selfie match for Authenticity bonus
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -31,9 +32,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 import { mintingAPI } from '../services/api';
+import SelfieMatchModal from '../components/SelfieMatchModal';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// Selfie match constants
+const SELFIE_MATCH_COST = 100;
+const MAX_SELFIE_ATTEMPTS = 3;
 
 // Scenery config
 const SCENERY_CONFIG = {
