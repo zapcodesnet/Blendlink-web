@@ -94,10 +94,10 @@ const BOT_DIFFICULTIES = [
 
 // Scenery config for display
 const SCENERY_CONFIG = {
-  water: { emoji: '🌊', label: 'Water', color: '#3b82f6' },
-  natural: { emoji: '🌿', label: 'Natural', color: '#22c55e' },
-  man_made: { emoji: '🏙️', label: 'Man-made', color: '#6b7280' },
-  neutral: { emoji: '⚪', label: 'Neutral', color: '#9ca3af' },
+  water: { emoji: '🌊', label: 'Water', color: '#3b82f6', strong: 'Natural', weak: 'Man-made' },
+  natural: { emoji: '🌿', label: 'Natural', color: '#22c55e', strong: 'Man-made', weak: 'Water' },
+  man_made: { emoji: '🏙️', label: 'Man-made', color: '#6b7280', strong: 'Water', weak: 'Natural' },
+  neutral: { emoji: '⚪', label: 'Neutral', color: '#9ca3af', strong: 'None', weak: 'None' },
 };
 
 const BotDifficultySelector = ({
