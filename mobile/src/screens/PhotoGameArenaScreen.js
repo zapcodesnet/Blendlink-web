@@ -1566,6 +1566,10 @@ export default function PhotoGameArenaScreen() {
       } else if (msg.type === 'round_result') {
         // Handle round result - show winner briefly then transition
         setGameState('pvp_round_result');
+      } else if (msg.type === 'round_selecting') {
+        // New round starting - reset photo selection
+        setSelectedPhoto(null);
+        setGameState('pvp_selecting');
       } else if (msg.type === 'game_end') {
         setGameState('pvp_game_over');
       } else if (msg.type === 'game_forfeit') {
