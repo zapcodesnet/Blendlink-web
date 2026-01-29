@@ -592,6 +592,11 @@ export const BattleArena = ({
   const [showMedalCelebration, setShowMedalCelebration] = useState(false);
   const [celebrationData, setCelebrationData] = useState(null);
   
+  // Replay data collection - NEW
+  const [replayRounds, setReplayRounds] = useState([]);
+  const [showReplaySaved, setShowReplaySaved] = useState(false);
+  const [savedReplayId, setSavedReplayId] = useState(null);
+  
   // Get current round info
   const currentRound = ROUND_SEQUENCE[currentRoundIndex];
   const WINS_NEEDED = 3;
