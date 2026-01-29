@@ -31,6 +31,7 @@ class PlayerConnection:
     is_ready: bool = False
     is_connected: bool = True
     last_heartbeat: float = 0
+    missed_pings: int = 0  # Track missed heartbeats
 
 
 @dataclass 
