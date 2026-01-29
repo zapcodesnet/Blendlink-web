@@ -616,13 +616,43 @@ export const BotDifficultySelector = ({
                   </div>
                 </div>
                 
-                {/* Photo selection grid */}
-                <PhotoSelectionGrid
-                  photos={playerPhotos}
-                  selectedPhotos={selectedPhotos}
-                  onTogglePhoto={togglePhotoSelection}
-                  maxPhotos={5}
-                />
+                {/* No photos warning */}
+                {playerPhotos.length === 0 ? (
+                  <div className="p-6 bg-red-500/10 border border-red-500/30 rounded-xl text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-red-500/20 rounded-full flex items-center justify-center">
+                      <AlertCircle className="w-8 h-8 text-red-400" />
+                    </div>
+                    <h4 className="text-lg font-bold text-red-400 mb-2">No Minted Photos</h4>
+                    <p className="text-sm text-gray-400 mb-4">
+                      You need at least 5 minted photos with stamina to play Bot Battle.
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Go to the <span className="text-purple-400 font-bold">Minting</span> section to create your photos first.
+                    </p>
+                  </div>
+                ) : playerPhotos.filter(p => (p.current_stamina || p.stamina || 0) >= 1).length < 5 ? (
+                  <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="text-sm font-bold text-yellow-400 mb-1">Not Enough Photos with Stamina</h4>
+                        <p className="text-xs text-gray-400">
+                          You need 5 photos with stamina ≥1 to play. You have {playerPhotos.filter(p => (p.current_stamina || p.stamina || 0) >= 1).length} valid photos.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {/* Photo selection grid */}
+                    <PhotoSelectionGrid
+                      photos={playerPhotos}
+                      selectedPhotos={selectedPhotos}
+                      onTogglePhoto={togglePhotoSelection}
+                      maxPhotos={5}
+                    />
+                  </>
+                )}
                 
                 {/* Selection summary */}
                 {selectedPhotos.length > 0 && (
