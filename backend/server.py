@@ -3042,10 +3042,18 @@ try:
                     })
                     
         except WebSocketDisconnect:
-            await pvp_game_manager.disconnect_player(user_id)
+            try:
+                await pvp_game_manager.disconnect_player(user_id)
+            except Exception as disc_err:
+                logger.error(f"Error during disconnect cleanup: {disc_err}")
         except Exception as e:
             logger.error(f"PVP Game WebSocket error: {e}")
-            await pvp_game_manager.disconnect_player(user_id)
+            import traceback
+            logger.error(traceback.format_exc())
+            try:
+                await pvp_game_manager.disconnect_player(user_id)
+            except Exception as disc_err:
+                logger.error(f"Error during disconnect cleanup: {disc_err}")
     
     logger.info("PVP Game WebSocket loaded")
 except Exception as e:
