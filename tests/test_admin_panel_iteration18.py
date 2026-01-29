@@ -15,7 +15,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://photo-duel-1.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://photo-battle-mobile.preview.emergentagent.com')
 
 # Admin credentials
 ADMIN_EMAIL = "blendlinknet@gmail.com"

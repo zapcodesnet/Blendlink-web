@@ -1,146 +1,150 @@
 <analysis>**original_problem_statement:**
-The user's primary goal is to implement a major expansion for the Minted Photo Auction Bidding Battle game on the Blendlink.net platform. This involves creating a full PVP matchmaking system, a resource management layer with photo stamina, new strategic depth with the RPS Power Advantage rule, a shareable match history/replay system, and a permanent medal achievement system for 10-win streaks.
+The user has requested a major feature expansion for the Minted Photo Auction Bidding Battle game. The core requirements include a complete overhaul of the game's mechanics, to be applied to both the existing responsive website and a new native mobile app (React Native/Expo) with 100% feature and data synchronization.
 
-Most recently, the user has requested to:
-1.  **Fix Profile Picture Settings**: Enable users to select one of their minted photos as their profile picture on the  page.
-2.  **Add Medal Showcase**: Implement an optional Medal Showcase section on user profiles to display their proudest photos that have earned medals.
-3.  **Add Medal Bonus & Animation**: When a photo earns a 10-win streak medal, award the owner 10,000 BL coins and show a celebration animation (medal + gold coins).
+The expansion involves:
+1.  **Critical Performance Optimizations**: Achieve 60fps animations, lazy-loading, and eliminate all lag, with a mobile-first UI approach.
+2.  **Dollar Value System**: Implement a detailed 11-category AI-powered valuation system for photos.
+3.  **Advanced Gameplay Mechanics**: Introduce background scenery advantages, win/lose streaks, a detailed XP/Level progression system, and a photo stamina system.
+4.  **New Permanent Metadata**: Add Minted by info, monthly dollar value growth, a yearly birthday bonus for the owner, and a social reaction bonus.
+5.  **Monetization**: Implement Dollar Value upgrades purchasable with in-game currency (BL coins) and a multi-tier monthly subscription system (Bronze, Silver, Gold, Platinum) using Stripe.
+
+The user approved a phased implementation plan, and the agent has just completed the first four phases.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application features a complete and tested PVP matchmaking system, including a , , and . Core gameplay mechanics like the RPS Power Advantage, stamina system, match history, and a permanent 10-win streak medal achievement are fully implemented on both the frontend and backend.
+The application is a full-stack React/FastAPI/MongoDB project. All previously requested features, including profile picture settings, medal showcases, a real-time WebSocket game lobby, and critical PVP sync bug fixes, are fully implemented and tested.
 
-However, the UI for several new features requested by the user consists of placeholder components that are not yet integrated:
-*   The profile picture selection on the  page is not functional.
-*    and  are empty placeholder components.
-*   The backend has been prepared with an endpoint to update profile pictures (), an endpoint to fetch medal data for the showcase (), and logic to award a 10,000 BL coin bonus when a medal is earned.
+The backend has been significantly updated to support the new major update request. This includes:
+-   A complete 11-category Dollar Value AI scoring system ().
+-   A new XP/level progression system with configurable thresholds ().
+-   Logic for stamina costs, win/loss streaks, monthly growth, birthday bonuses, and a mocked social reaction counter.
+-   A 4-tier subscription system with corresponding Stripe price IDs configured in the environment.
+-   Numerous new API endpoints to support these features, such as claiming daily/birthday bonuses, getting level info, and purchasing dollar value upgrades.
+
+The frontend has been updated to display some of this new information, such as Minted by details and an updated stamina display.
 
 **Last working item**:
--   **Last item agent was working**: The agent was scaffolding the features for the latest user request. It added the logic to award a 10,000 BL coin bonus to , created an API endpoint for the medal showcase in , and created the placeholder frontend components  and .
--   **Status**: IN PROGRESS
--   **Agent Testing Done**: N
--   **Which testing method agent to use?**: Frontend testing agent. The agent will need to test the entire profile picture selection flow, verify the medal showcase on user profiles, and trigger the celebration animation within a game to confirm it works.
+-   **Last item agent was working**: The agent completed **Phase 4: Subscription setup and Dollar Value upgrades**. This involved updating the backend subscription tiers, configuring Stripe price IDs in the  file, and adding the API endpoints for purchasing Dollar Value upgrades.
+-   **Status**: FINISHED (User verification pending on the entire feature set)
+-   **Agent Testing Done**: Y
+-   **Which testing method agent to use?**: Frontend testing agent. The next phase is focused on performance and building the Expo mobile app foundation, which will require significant UI testing.
 -   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
-There are no outstanding bugs. The work is entirely new feature development.
+There are no pending bugs. All work is directed towards the user's phased feature expansion plan.
 
 **In progress Task List**:
--   **Task 1: Implement Profile Picture, Medal Showcase, and Bonus Animation (P0)**
-    -   **Description**: This task involves wiring up the backend logic and placeholder components created in the previous step to deliver three new user-facing features.
-    -   **Where to resume**:
-        1.  In , implement the logic to open a  and call the  endpoint upon selection.
-        2.  Flesh out  to fetch data from the  endpoint and display the photos. Integrate this component into .
-        3.  Implement the celebration animation in  and trigger it from  when the API response from recording a round result indicates a medal was earned.
-    -   **What will be achieved with this?** A more personalized user experience with custom profile pictures, a way to showcase achievements, and a rewarding visual feedback loop for winning.
-    -   **Status**: IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** both
-    -   **Blocked on something:** Nothing.
+There are no tasks currently in progress. The agent just completed all assigned backend work for the major feature expansion.
 
 **Upcoming and Future Tasks**
--   **Upcoming Tasks:**
-    *   **Implement Real-time Lobby (P1):** Convert the  from HTTP polling to a real-time WebSocket connection for instant Ready status updates.
--   **Future Tasks:**
-    *   **React Native App (P2):** Develop a native mobile app with 100% feature parity with the web application.
-    *   **Mobile Push Notifications (P2):** Integrate a service like Firebase Cloud Messaging for game invites and other events.
-    *   **Photo Editor Bugs (P2):** Investigate and fix Failed Fetch errors and other reported issues in .
-    *   **Expand i18n Coverage (P2):** Integrate the  hook across all remaining components that still have hardcoded English text.
+
+**Upcoming Tasks:**
+-   **Phase 5: Polish performance & Add Expo Mobile App Foundation (P0)**:
+    -   Create the React Native/Expo project structure (managed workflow).
+    -   Begin mirroring existing web components to the native app, focusing on mobile-first design (large touch targets, haptics).
+    -   Implement performance optimizations across both web and mobile (60fps animations with Framer Motion, lazy loading, GPU acceleration).
+
+**Future Tasks:**
+-   **Phase 6: Advanced Features (P1)**:
+    -   Implement the live video selfie match feature for the Authenticity bonus.
+    -   Integrate the real Facebook Graph API to replace the mocked social reaction counter.
+-   **Photo Editor Bugs (P2)**: Investigate and fix Failed Fetch errors and other issues in .
+-   **Expand i18n Coverage (P2)**: Integrate the  hook across all remaining components with hardcoded English text.
+-   **Mobile Push Notifications (P2)**: Integrate a service like Firebase Cloud Messaging for game invites and other events.
 
 **Completed work in this session**
--   **Battle Achievements & Badges (DONE):**
-    -   Implemented a permanent, transferable 10-win streak medal (🏅) system in  and .
-    -   The medal count is now displayed next to the photo's name on all relevant photo cards (, ).
--   **Match History & Shareable Replays (DONE):**
-    -   Created a  component to view past battles and a public  for shareable links.
-    -   Added a backend endpoint () to serve detailed game data.
-    -   Enabled sharing of replays to the community Facebook group.
--   **Stamina & Notification UI (DONE):**
-    -   The  results screen now clearly displays stamina deductions for each photo (-1 for a win, -2 for a loss).
-    -    now uses  to show an in-app toast notification when an opponent joins the game.
--   **RPS Power Advantage UI (DONE):**
-    -   The  component now displays a +,000,000 indicator and adds a  quick-bid button when a player has the photo value advantage.
--   **PVP Matchmaking System (DONE):**
-    -   Successfully implemented and integrated the complete  ->  ->  flow into .
+-   **Profile Picture, Medal Showcase, & Animation (DONE)**: Fully integrated and tested.
+-   **Real-time WebSocket Lobby (DONE)**: Converted the game lobby from HTTP polling to WebSockets.
+-   **Critical PVP Sync Bug Fixes (DONE)**: Implemented a new server-authoritative WebSocket architecture for PVP battles to fix desync issues, including a per-round ready screen.
+-   **Phase 1: Dollar Value AI Scoring System (DONE)**: Implemented the backend logic for the 11-category weighted AI scoring.
+-   **Phase 2: Streaks + XP System (DONE)**: Implemented the backend logic for XP progression, level-up bonuses, win/loss streaks, and subscription-based XP multipliers.
+-   **Phase 3: Social & Birthday Bonuses (DONE)**: Implemented backend logic for monthly dollar value growth, yearly birthday bonuses, and a mocked social reaction bonus. Frontend updated to display this information.
+-   **Phase 4: Subscriptions & Upgrades (DONE)**: Set up backend for a 4-tier Stripe subscription model and added endpoints for purchasing permanent Dollar Value upgrades with in-game currency.
 
 **Earlier issues found/mentioned but not fixed**
 -   **Issue 1: Photo Editor Bugs & Performance**
     -   **Debug checklist:** Investigate Failed Fetch errors and other bugs reported in .
-    -   **Why to solve this issue and what will be achieved with this?** This is part of the original project scope to improve the core photo features.
+    -   **Why to solve this issue and what will be achieved with this?** This is part of the original project scope to improve core photo features.
     -   **Should Test frontend/backend/both after fix:** both
-    -   **Is recurring issue?** N
--   **Issue 2: Expand i18n Coverage**
-    -   **Debug checklist:** Integrate  hook across all remaining components with hardcoded English text.
-    -   **Why to solve this issue and what will be achieved with this?** To make the application accessible to a global audience.
-    -   **Should Test frontend/backend/both after fix:** frontend
     -   **Is recurring issue?** N
 
 **Known issue recurrence from previous fork**
--   **Issue recurrence in previous fork**: The social feed widget is slow/broken was a major recurring issue in a previous session.
+-   **Issue recurrence in previous fork**: Social feed widget is slow/broken.
 -   **Recurrence count**: 4+
 -   **Status**: RESOLVED
--   **Note**: The feed performance is now stable and should be monitored.
+-   **Note**: The feed's performance is currently stable but should be monitored.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Full-Stack Feature Development**: Implementing features that require coordinated changes across the React frontend, FastAPI backend, and MongoDB database.
--   **API-Driven UI**: Building frontend components that fetch data from, and send updates to, a RESTful API.
--   **State Management & Component Integration**: Weaving new components (, ) and modals into existing, complex pages like  and .
--   **Animations for User Feedback**: Using  to create engaging animations that confirm user actions and celebrate achievements.
+-   **Real-Time Game Synchronization**: Using WebSockets (FastAPI) for authoritative game state management (lobby, per-round ready states, countdowns).
+-   **Complex Game Mechanics**: Backend logic for dynamic, interdependent systems like Dollar Value, XP progression, streaks, and subscriptions.
+-   **Stripe Integration**: Configuration of recurring monthly subscription products and prices.
+-   **Phased Development**: Executing a large-scale feature expansion according to a user-approved, multi-phase plan.
+-   **Full-Stack Implementation**: Coordinated changes across the React frontend, FastAPI backend, and MongoDB database.
 
 **key DB schema**
--   **users**: The  field will be updated with the URL of a minted photo. The  field will be incremented when a medal bonus is awarded.
--   **photo_stamina**: This collection holds the  object (e.g., ) and  counter for each photo. It is the source of truth for all achievements.
+-   **minted_photos**: Added , , , , , .
+-   **users**: Utilizes  for multipliers. Added  for subscription benefits.
+-   **transactions**:  enum expanded with  and .
 
 **All files of reference**
--   **Primary Implementation Files**:
-    -   
-    -   
-    -   
-    -   
-    -   
--   **Backend Logic**:
-    -    (specifically the  endpoint)
-    -    (for profile picture and medal showcase endpoints)
+-   : The source of truth for the new Dollar Value calculation.
+-   , : Contain the core logic for the new XP, level, and streak systems.
+-   : Defines the new monetization tiers.
+-   : The main entry point for all game modes.
+-   : The new, primary component for PVP gameplay.
+-   **A new directory for the Expo project will need to be created at the root level (e.g., ).**
 
 **Critical Info for New Agent**
--   Your immediate task is to bring the placeholder components to life. The backend APIs and data structures are already in place.
--   **Profile Picture Flow**: Start with . On clicking the avatar's edit icon, open a modal containing the  component. On photo selection, call the  endpoint with the .
--   **Medal Showcase Flow**: Implement  to fetch from  and display the resulting photo data. Then, add this component to the  page. Remember the user's requirement for it to be optional.
--   **Celebration Animation Flow**: The  endpoint now returns a boolean . In , check for this flag in the response and, if true, trigger the  animation.
+-   Your immediate task is to start **Phase 5: Polish performance and add the Expo native mobile app foundation.**
+-   The user explicitly requested a **real native app using Expo's managed workflow**, not a PWA.
+-   The backend is fully implemented to support all the new, complex game mechanics. No backend work is needed to start Phase 5.
+-   The plan is to develop the mobile app in parallel with the web app, ensuring 100% feature parity and UI/UX consistency, with a mobile-first approach.
+-   Begin by setting up the Expo project structure. Then, start migrating/recreating components from the  directory, focusing on performance optimizations like 60fps animations, haptics, and lazy loading from the start.
 
 **documents and test reports created in this job**
--   
--    (fully updated with all completed work)
+-   /app/test_reports/iteration_66.json
+-   /app/test_reports/iteration_67.json
+-   /app/test_reports/iteration_68.json
+-   /app/test_reports/iteration_69.json
+-   /app/test_reports/iteration_70.json
+-   /app/test_reports/iteration_71.json
+-   /app/memory/PRD.md (fully updated)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  User: (FINISH) Finished the Battle Achievements & Medals task.
-2.  User: **Requested fixing profile picture settings, adding a Medal Showcase, and a 10,000 BL coin bonus with animation for earning a medal.** (PENDING)
-3.  Agent: Asked for clarification on the Medal Showcase visibility (public/private).
-4.  User: **Clarified that the Medal Showcase should be optional for both the owner and visitors.** (ACKNOWLEDGED)
-5.  Agent: Started implementation by exploring files.
+1.  User: Requested a major feature expansion with a detailed 11-point list of requirements for web and mobile. (PENDING - In Progress via Phased Plan)
+2.  Agent: Asked for clarification on priorities for the major expansion.
+3.  User: Confirmed the phased plan, prioritizing the Dollar Value AI scoring system first (Phase 1), and requested a full native Expo app. Approved using GPT-4o Vision for face detection and mocking Facebook integration for now.
+4.  Agent: Started and completed Phase 1 (Dollar Value AI Scoring System).
+5.  User: Instructed agent to continue to the next action item.
+6.  Agent: Started and completed Phase 2 (Streaks + XP System).
+7.  User: Instructed agent to continue to the next action item.
+8.  Agent: Started and completed Phase 3 (Social Reaction & Birthday Bonus).
+9.  User: Instructed agent to continue to the next action item.
+10. Agent: Started and completed Phase 4 (Stripe Subscription Setup). (LATEST)
 
 **Project Health Check:**
--   **Live**: The application is healthy and all major gameplay features are working.
--   **Broken**: The profile picture update functionality on the Settings page is not implemented.
--   **Mocked**:  and  are non-functional placeholders.
+-   **Live**: The application is healthy.
+-   **Broken**: No features are broken.
+-   **Mocked**: The social reaction counter (❤️) is mocked on the backend and is not yet connected to a real Facebook API.
 
 **3rd Party Integrations**
+-   **OpenAI GPT-4o Vision**: Used for photo valuation.
+-   **Stripe**: Configured for the new 4-tier monthly subscription service.
 -   **EmbedSocial**: For the Facebook Group feed.
--   **OpenAI GPT-4o Vision**: For photo valuation and selfie matching.
--   **Existing**: Stripe, Shippo, Resend, remove.bg, ip-api.com.
+-   **Existing**: Shippo, Resend, remove.bg, ip-api.com.
 
 **Testing status**
--   **Testing agent used after significant changes**: YES. The medal system was validated by the testing agent.
--   **Test files created**: 
+-   **Testing agent used after significant changes**: YES. The agent was used to validate every major feature and phase completion, including the WebSocket lobby, PVP sync fixes, and all four phases of the major feature expansion.
+-   **Test files created**:  was updated.
 -   **Known regressions**: None.
 
 **Credentials to test flow:**
 -   **Email**: 
 -   **Password**: 
--   This user has 10 minted photos, one of which (Golden Hour) has already earned a 10-win streak medal, making it ideal for testing the medal showcase and profile picture features.
 
 **What agent forgot to execute**
--   The agent has correctly planned the work by creating placeholder files and backend updates. The next logical step, which has not been executed, is the frontend integration of these pieces.</analysis>
+The agent has meticulously followed the user's phased plan and has not overlooked any requested tasks. The work is ready to proceed to the next approved phase.</analysis>

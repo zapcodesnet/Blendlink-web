@@ -14,7 +14,7 @@ import os
 import base64
 from io import BytesIO
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://photo-duel-1.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://photo-battle-mobile.preview.emergentagent.com')
 
 # Test credentials
 TEST_EMAIL = "test@test.com"
