@@ -174,14 +174,15 @@ const PhotoBattleCard = ({
       <div className={`p-2 ${isPlayer ? 'bg-purple-900/80' : 'bg-red-900/80'}`}>
         <p className="text-white font-bold text-sm truncate">{photo?.name || 'Photo'}</p>
         
-        {/* Dollar value - animated counter */}
-        <motion.p 
-          className="text-yellow-400 font-bold text-lg tabular-nums"
-          animate={{ scale: currentTaps > 0 ? [1, 1.1, 1] : 1 }}
-          transition={{ duration: 0.1 }}
+        {/* Dollar value - optimized with CSS transform instead of scale animation */}
+        <p 
+          className="text-yellow-400 font-bold text-lg tabular-nums transition-transform duration-75"
+          style={{ 
+            transform: currentTaps > 0 ? 'scale(1.02)' : 'scale(1)',
+          }}
         >
           {formatDollarValue(currentDollarValue)}
-        </motion.p>
+        </p>
         
         {/* Required taps */}
         <p className="text-gray-300 text-xs">
