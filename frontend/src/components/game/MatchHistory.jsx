@@ -156,6 +156,112 @@ const MatchCard = ({ match, currentUserId, onClick }) => {
   );
 };
 
+// Bot Replay Card Component - For showing saved bot battle replays
+const BotReplayCard = ({ replay, onView, onShare }) => {
+  const isWin = replay.winner === 'player';
+  const thumbnail = replay.player_photos?.[0]?.image_url;
+  
+  const BOT_COLORS = {
+    easy: 'from-green-500 to-emerald-600',
+    medium: 'from-yellow-500 to-orange-500',
+    hard: 'from-red-500 to-pink-600',
+    extreme: 'from-purple-600 to-indigo-700',
+  };
+  
+  const BOT_EMOJIS = {
+    easy: '🤖',
+    medium: '🤖',
+    hard: '🤖',
+    extreme: '💀',
+  };
+  
+  const botColor = BOT_COLORS[replay.difficulty] || BOT_COLORS.easy;
+  const botEmoji = BOT_EMOJIS[replay.difficulty] || '🤖';
+  
+  return (
+    <motion.div
+      whileHover={{ scale: 1.02 }}
+      className={`p-4 rounded-xl border transition-all cursor-pointer ${
+        isWin 
+          ? 'bg-green-500/10 border-green-500/30 hover:border-green-500/50' 
+          : 'bg-red-500/10 border-red-500/30 hover:border-red-500/50'
+      }`}
+    >
+      <div className="flex items-center gap-4">
+        {/* Thumbnail */}
+        <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+          {thumbnail ? (
+            <img src={thumbnail} alt="Battle" className="w-full h-full object-cover" />
+          ) : (
+            <div className={`w-full h-full bg-gradient-to-br ${botColor} flex items-center justify-center`}>
+              <span className="text-2xl">{botEmoji}</span>
+            </div>
+          )}
+          <div className={`absolute top-1 left-1 px-1 rounded text-xs font-bold ${
+            isWin ? 'bg-green-500' : 'bg-red-500'
+          } text-white`}>
+            {isWin ? 'W' : 'L'}
+          </div>
+        </div>
+        
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-lg">{botEmoji}</span>
+            <h4 className="font-bold text-white capitalize truncate">
+              vs {replay.difficulty} Bot
+            </h4>
+          </div>
+          
+          <div className="flex items-center gap-2 text-sm">
+            <span className={`font-bold ${isWin ? 'text-green-400' : 'text-red-400'}`}>
+              {replay.final_score_player} - {replay.final_score_opponent}
+            </span>
+            <span className="text-gray-500">•</span>
+            <span className="text-yellow-400">
+              {isWin ? `+${replay.winnings}` : `-${replay.bet_amount}`} BL
+            </span>
+          </div>
+          
+          <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
+            <span className="flex items-center gap-1">
+              <Eye className="w-3 h-3" />
+              {replay.views || 0}
+            </span>
+            <span className="flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              {replay.rounds?.length || 0} rounds
+            </span>
+            <span>{formatDate(replay.created_at)}</span>
+          </div>
+        </div>
+        
+        {/* Actions */}
+        <div className="flex flex-col gap-2">
+          <Button
+            onClick={(e) => { e.stopPropagation(); onView(); }}
+            variant="ghost"
+            size="sm"
+            className="text-purple-400 hover:bg-purple-500/20"
+          >
+            <Play className="w-4 h-4 mr-1" />
+            Watch
+          </Button>
+          <Button
+            onClick={(e) => { e.stopPropagation(); onShare(); }}
+            variant="ghost"
+            size="sm"
+            className="text-pink-400 hover:bg-pink-500/20"
+          >
+            <Share2 className="w-4 h-4 mr-1" />
+            Share
+          </Button>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 // Battle Replay Component
 const BattleReplay = ({ match, currentUserId, onClose }) => {
   const [currentRoundIndex, setCurrentRoundIndex] = useState(0);
