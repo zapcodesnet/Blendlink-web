@@ -2225,6 +2225,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  // Auction Battle Button
+  auctionBattleButton: {
+    marginHorizontal: 16,
+    marginVertical: 8,
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    backgroundColor: '#f59e0b',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  auctionBattleButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
   // Searching
   matchmakingSearching: {
     alignItems: 'center',
