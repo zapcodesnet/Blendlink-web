@@ -4,7 +4,7 @@
  * Real-time phone tapping game for Rounds 1, 3, 5.
  * EXACTLY implements user's specifications:
  * - Base: 200 taps when equal power/scenery
- * - Max 20 taps/second (anti-cheat)
+ * - Max 30 taps/second (anti-cheat) - UPDATED from 25
  * - 10-second countdown before round
  * - Full-screen tap area
  * - Real minted photo images displayed
@@ -22,7 +22,7 @@ import { StreakIndicator } from './StreakIndicator';
 
 // Constants from user spec
 const BASE_TAPS_TO_WIN = 200;
-const MAX_TAPS_PER_SECOND = 20;
+const MAX_TAPS_PER_SECOND = 30; // UPDATED: Increased from 20/25 to 30 TPS
 const COUNTDOWN_SECONDS = 10;
 const ROUND_DURATION_SECONDS = 15;
 
