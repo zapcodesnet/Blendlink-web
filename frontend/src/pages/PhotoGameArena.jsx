@@ -6,7 +6,7 @@ import {
   Shield, Target, TrendingUp, Coins, RefreshCw,
   X, Check, AlertCircle, Loader2, Image, ChevronRight,
   DollarSign, Gavel, Banknote, Volume2, VolumeX, Maximize2,
-  Plus, ArrowLeft, History
+  Plus, ArrowLeft, History, Film
 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../services/api';
@@ -23,6 +23,7 @@ import {
   MatchHistory
 } from '../components/game';
 import PVPBattleArena from '../components/game/PVPBattleArena';
+import FeaturedReplays from '../components/game/FeaturedReplays';
 
 // ============== PHOTO LIGHTBOX MODAL ==============
 const PhotoLightbox = ({ photo, isOpen, onClose }) => {
