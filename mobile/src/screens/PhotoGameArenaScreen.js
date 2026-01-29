@@ -1348,8 +1348,13 @@ const ResultView = ({ session, onPlayAgain, user, colors }) => {
 // ============== MAIN SCREEN ==============
 export default function PhotoGameArenaScreen() {
   const navigation = useNavigation();
+  const route = useRoute();
   const { user } = useAuth();
   const { colors, isDark } = useTheme();
+  
+  // Get pvpRoomId from navigation params (when joining an open game)
+  const pvpRoomId = route.params?.pvpRoomId || null;
+  const isCreator = route.params?.isCreator || false;
   
   const [gameState, setGameState] = useState('matchmaking');
   const [session, setSession] = useState(null);
@@ -1357,6 +1362,44 @@ export default function PhotoGameArenaScreen() {
   const [matchData, setMatchData] = useState(null);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // PVP WebSocket Hook
+  const {
+    isConnected: wsConnected,
+    isConnecting: wsConnecting,
+    error: wsError,
+    gameState: wsGameState,
+    connect: wsConnect,
+    disconnect: wsDisconnect,
+    selectPhoto: wsSelectPhoto,
+    markReady: wsMarkReady,
+    sendTap: wsSendTap,
+    requestGameState: wsRequestState,
+  } = usePVPWebSocket(pvpRoomId, {
+    autoConnect: !!pvpRoomId,
+    onMessage: (msg) => {
+      console.log('WS Message:', msg.type);
+      
+      // Handle game state transitions
+      if (msg.type === 'round_selecting') {
+        setGameState('pvp_selecting');
+      } else if (msg.type === 'round_ready') {
+        setGameState('pvp_ready');
+      } else if (msg.type === 'countdown_tick' || msg.type === 'countdown_start') {
+        setGameState('pvp_countdown');
+      } else if (msg.type === 'round_start') {
+        setGameState('pvp_tapping');
+      } else if (msg.type === 'round_result') {
+        // Handle round result - show winner briefly then transition
+        setGameState('pvp_round_result');
+      } else if (msg.type === 'game_end') {
+        setGameState('pvp_game_over');
+      } else if (msg.type === 'game_forfeit') {
+        // Handle opponent disconnect/forfeit
+        setGameState('pvp_forfeit');
+      }
+    },
+  });
 
   const fetchStats = async () => {
     try {
@@ -1373,9 +1416,27 @@ export default function PhotoGameArenaScreen() {
     fetchStats();
   }, []);
 
+  // If we have a pvpRoomId, transition to waiting state
+  useEffect(() => {
+    if (pvpRoomId && wsConnected) {
+      setGameState('pvp_waiting');
+    }
+  }, [pvpRoomId, wsConnected]);
+
   const handlePhotoSelect = (photo) => {
     setSelectedPhoto(photo);
     auctionSounds.selectionConfirm();
+  };
+  
+  // Handle photo selection in PVP mode
+  const handlePVPPhotoSelect = (photo) => {
+    setSelectedPhoto(photo);
+    auctionSounds.selectionConfirm();
+    
+    // Send selection to server via WebSocket
+    if (pvpRoomId && wsSelectPhoto) {
+      wsSelectPhoto(photo.mint_id);
+    }
   };
 
   // Handle practice mode start (direct bot battle, no matchmaking)
@@ -1452,11 +1513,21 @@ export default function PhotoGameArenaScreen() {
   };
 
   const handlePlayAgain = () => {
+    // Disconnect WebSocket if connected
+    if (pvpRoomId) {
+      wsDisconnect();
+    }
     setGameState('matchmaking');
     setSession(null);
     setMatchData(null);
     setSelectedPhoto(null);
     fetchStats();
+  };
+  
+  // Handle PVP round complete (called from TappingArenaView in WebSocket mode)
+  const handlePVPRoundComplete = (winner) => {
+    // The WebSocket will handle transitioning to next round or game end
+    console.log('PVP Round completed, winner:', winner);
   };
 
   if (loading) {
@@ -1466,6 +1537,9 @@ export default function PhotoGameArenaScreen() {
       </View>
     );
   }
+
+  // Determine if we're in PVP WebSocket mode
+  const isPVPMode = !!pvpRoomId && wsConnected;
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
@@ -1477,10 +1551,22 @@ export default function PhotoGameArenaScreen() {
           </TouchableOpacity>
           <View>
             <Text style={[styles.headerTitle, { color: colors.text }]}>⚔️ Battle Arena</Text>
-            <Text style={[styles.headerSubtitle, { color: colors.textMuted }]}>PvP Photo Battles</Text>
+            <Text style={[styles.headerSubtitle, { color: colors.textMuted }]}>
+              {isPVPMode ? 'Live PvP Battle' : 'PvP Photo Battles'}
+            </Text>
           </View>
         </View>
         {stats && <WinStreakBadge streak={stats.current_win_streak} colors={colors} />}
+        {/* WebSocket connection indicator */}
+        {pvpRoomId && (
+          <View style={[styles.connectionIndicator, { 
+            backgroundColor: wsConnected ? colors.success : wsConnecting ? colors.gold : colors.error 
+          }]}>
+            <Text style={styles.connectionText}>
+              {wsConnected ? '●' : wsConnecting ? '○' : '✕'}
+            </Text>
+          </View>
+        )}
       </View>
       
       {/* Stats Bar */}
@@ -1504,9 +1590,20 @@ export default function PhotoGameArenaScreen() {
         </View>
       )}
       
+      {/* WebSocket Error Display */}
+      {wsError && (
+        <View style={[styles.wsErrorBanner, { backgroundColor: colors.error }]}>
+          <Text style={styles.wsErrorText}>Connection Error: {wsError.message || 'Unknown error'}</Text>
+          <TouchableOpacity onPress={() => wsConnect()} style={styles.wsRetryButton}>
+            <Text style={styles.wsRetryText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+      
       {/* Main Content */}
       <View style={styles.content}>
-        {gameState === 'matchmaking' && (
+        {/* Standard matchmaking flow */}
+        {gameState === 'matchmaking' && !pvpRoomId && (
           <MatchmakingView
             onMatchFound={handleMatchFound}
             onCancel={() => {}}
@@ -1517,6 +1614,104 @@ export default function PhotoGameArenaScreen() {
           />
         )}
         
+        {/* PVP Waiting for opponent */}
+        {(gameState === 'pvp_waiting' || gameState === 'pvp_selecting') && (
+          <View style={styles.pvpWaitingContainer}>
+            <Text style={[styles.pvpWaitingTitle, { color: colors.text }]}>
+              {gameState === 'pvp_waiting' ? '👥 Waiting for Opponent...' : '📷 Select Your Photo'}
+            </Text>
+            <Text style={[styles.pvpWaitingSubtitle, { color: colors.textMuted }]}>
+              {gameState === 'pvp_waiting' 
+                ? 'The battle will begin when your opponent joins'
+                : 'Choose your photo for this round'
+              }
+            </Text>
+            {gameState === 'pvp_selecting' && (
+              <PhotoSelectionView
+                photos={stats?.battle_photos || []}
+                loading={false}
+                selectedPhotoId={selectedPhoto?.mint_id}
+                onSelectPhoto={handlePVPPhotoSelect}
+                colors={colors}
+              />
+            )}
+            {wsConnecting && <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />}
+          </View>
+        )}
+        
+        {/* PVP Ready phase / Countdown / Tapping */}
+        {(gameState === 'pvp_ready' || gameState === 'pvp_countdown' || gameState === 'pvp_tapping') && (
+          <TappingArenaView
+            playerPhoto={wsGameState.myPhoto || selectedPhoto}
+            opponentPhoto={wsGameState.opponentPhoto}
+            isBot={false}
+            onRoundComplete={handlePVPRoundComplete}
+            roundNumber={wsGameState.currentRound}
+            colors={colors}
+            // WebSocket props
+            isWebSocketMode={true}
+            wsGamePhase={wsGameState.roundPhase}
+            wsCountdown={wsGameState.countdown}
+            wsOpponentTaps={wsGameState.opponentTaps}
+            wsPlayerReady={wsGameState.myReady}
+            wsOpponentReady={wsGameState.opponentReady}
+            onSendTap={wsSendTap}
+            onMarkReady={wsMarkReady}
+          />
+        )}
+        
+        {/* PVP Round Result */}
+        {gameState === 'pvp_round_result' && wsGameState.roundResult && (
+          <View style={styles.pvpRoundResultContainer}>
+            <Text style={[styles.pvpRoundResultTitle, { 
+              color: wsGameState.roundResult.winner_user_id === user?.user_id ? colors.success : colors.error 
+            }]}>
+              {wsGameState.roundResult.winner_user_id === user?.user_id ? '🎉 Round Won!' : '😢 Round Lost'}
+            </Text>
+            <Text style={[styles.pvpScoreText, { color: colors.text }]}>
+              Score: {wsGameState.player1Wins} - {wsGameState.player2Wins}
+            </Text>
+            <Text style={[styles.pvpNextRoundText, { color: colors.textMuted }]}>
+              Next round starting soon...
+            </Text>
+          </View>
+        )}
+        
+        {/* PVP Game Over */}
+        {gameState === 'pvp_game_over' && wsGameState.gameResult && (
+          <View style={styles.pvpGameOverContainer}>
+            <Text style={styles.pvpGameOverEmoji}>
+              {wsGameState.gameResult.winner_user_id === user?.user_id ? '🏆' : '😢'}
+            </Text>
+            <Text style={[styles.pvpGameOverTitle, { 
+              color: wsGameState.gameResult.winner_user_id === user?.user_id ? colors.gold : colors.error 
+            }]}>
+              {wsGameState.gameResult.winner_user_id === user?.user_id ? 'VICTORY!' : 'DEFEAT'}
+            </Text>
+            <Text style={[styles.pvpFinalScore, { color: colors.text }]}>
+              Final Score: {wsGameState.player1Wins} - {wsGameState.player2Wins}
+            </Text>
+            <TouchableOpacity style={[styles.playAgainButton, { marginTop: 20 }]} onPress={handlePlayAgain}>
+              <Text style={styles.playAgainButtonText}>🔄 Play Again</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        
+        {/* PVP Forfeit */}
+        {gameState === 'pvp_forfeit' && (
+          <View style={styles.pvpForfeitContainer}>
+            <Text style={styles.pvpForfeitEmoji}>🏳️</Text>
+            <Text style={[styles.pvpForfeitTitle, { color: colors.gold }]}>Opponent Disconnected</Text>
+            <Text style={[styles.pvpForfeitSubtitle, { color: colors.textMuted }]}>
+              You win by forfeit!
+            </Text>
+            <TouchableOpacity style={[styles.playAgainButton, { marginTop: 20 }]} onPress={handlePlayAgain}>
+              <Text style={styles.playAgainButtonText}>🔄 Play Again</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        
+        {/* Legacy RPS Flow (for bot battles) */}
         {(gameState === 'rps' || gameState === 'tiebreaker') && (
           <ScrollView contentContainerStyle={styles.contentContainer}>
             <RPSBattleView
