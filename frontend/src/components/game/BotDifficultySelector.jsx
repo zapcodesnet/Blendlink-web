@@ -10,6 +10,7 @@
  * FIXED: Duplicate scroll bars - Now uses single full-page scroll
  * ADDED: Loading screen after starting battle
  * ADDED: Quick Play button for instant photo selection
+ * ADDED: Win/Lose streak indicators with multipliers
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -19,6 +20,19 @@ import {
   Coins, ChevronRight, X, Info, Check, AlertCircle, Loader2
 } from 'lucide-react';
 import { Button } from '../ui/button';
+import { StreakBadge } from './StreakIndicator';
+
+// Win streak multipliers (exact values from spec)
+const WIN_STREAK_MULTIPLIERS = {
+  3: 1.25,
+  4: 1.50,
+  5: 1.75,
+  6: 2.00,
+  7: 2.25,
+  8: 2.50,
+  9: 2.75,
+  10: 3.00,
+};
 
 // Bot difficulty configurations with fixed bets and unlock requirements
 const BOT_DIFFICULTIES = [
