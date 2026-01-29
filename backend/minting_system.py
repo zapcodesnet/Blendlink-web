@@ -709,7 +709,9 @@ class MintingService:
                 "can_mint": False,
                 "reason": f"Daily limit reached ({daily_limit} mints). Resets at midnight UTC.",
                 "mints_today": mints_today,
-                "daily_limit": daily_limit
+                "daily_limit": daily_limit,
+                "remaining_mints": 0,
+                "is_free": True  # Minting is FREE for all users
             }
         
         return {
