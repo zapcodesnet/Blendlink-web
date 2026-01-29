@@ -406,6 +406,10 @@ const GameResultScreen = ({
   betAmount = 0, 
   onPlayAgain,
   staminaChanges = null, // { player: -X, photos: [{mint_id, change}] }
+  isBot = false,
+  savedReplayId = null,
+  onViewReplay,
+  onShareReplayToFeed,
 }) => {
   const isWinner = winner === 'player';
   
@@ -520,6 +524,38 @@ const GameResultScreen = ({
             <p className="text-xs text-gray-500 mt-1">
               Win = -1 stamina • Loss = -2 stamina • Regenerates 1/hour
             </p>
+          </motion.div>
+        )}
+        
+        {/* Replay Buttons - For Bot Battles */}
+        {isBot && savedReplayId && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className="mb-6 p-4 bg-purple-500/10 rounded-xl border border-purple-500/30"
+          >
+            <h4 className="text-sm font-bold text-purple-300 mb-3 flex items-center justify-center gap-2">
+              <Film className="w-4 h-4" />
+              Battle Replay Saved!
+            </h4>
+            <div className="flex flex-wrap justify-center gap-3">
+              <Button
+                onClick={onViewReplay}
+                variant="outline"
+                className="border-purple-500/50 text-purple-300 hover:bg-purple-500/20"
+              >
+                <Film className="w-4 h-4 mr-2" />
+                Watch Replay
+              </Button>
+              <Button
+                onClick={onShareReplayToFeed}
+                className="bg-gradient-to-r from-purple-600 to-pink-600"
+              >
+                <Share2 className="w-4 h-4 mr-2" />
+                Share to Feed
+              </Button>
+            </div>
           </motion.div>
         )}
         
