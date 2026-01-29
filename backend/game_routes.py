@@ -2346,3 +2346,253 @@ async def generate_bot_photos_for_difficulty(difficulty: str):
         "fixed_bet": config["fixed_bet"],
     }
 
+
+
+# ============================================================================
+# BATTLE REPLAY SYSTEM
+# ============================================================================
+
+class BattleReplayRound(BaseModel):
+    round_number: int
+    player_photo: Dict
+    opponent_photo: Dict
+    player_taps: int
+    opponent_taps: int
+    player_progress: float
+    opponent_progress: float
+    player_effective_value: float
+    opponent_effective_value: float
+    winner: str  # 'player' or 'opponent'
+    round_type: str  # 'tapping' or 'rps'
+    rps_choice_player: Optional[str] = None
+    rps_choice_opponent: Optional[str] = None
+    bid_player: Optional[int] = None
+    bid_opponent: Optional[int] = None
+    duration_ms: int = 10000
+
+class SaveBattleReplayRequest(BaseModel):
+    session_id: str
+    difficulty: str  # easy, medium, hard, extreme
+    player_photos: List[Dict]
+    opponent_photos: List[Dict]
+    rounds: List[BattleReplayRound]
+    final_score_player: int
+    final_score_opponent: int
+    winner: str  # 'player' or 'opponent'
+    bet_amount: int
+    winnings: int
+    total_duration_ms: int
+
+@game_router.post("/battle-replay/save")
+async def save_battle_replay(
+    request: SaveBattleReplayRequest,
+    user_id: str = Depends(get_current_user_id)
+):
+    """Save a battle replay for later viewing and sharing"""
+    db = await get_database()
+    
+    # Get user info
+    user = await db.users.find_one({"user_id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    replay_id = str(uuid.uuid4())[:12]
+    
+    replay_doc = {
+        "replay_id": replay_id,
+        "user_id": user_id,
+        "username": user.get("username", "Player"),
+        "avatar_url": user.get("avatar_url"),
+        "session_id": request.session_id,
+        "difficulty": request.difficulty,
+        "player_photos": request.player_photos,
+        "opponent_photos": request.opponent_photos,
+        "rounds": [r.dict() for r in request.rounds],
+        "final_score_player": request.final_score_player,
+        "final_score_opponent": request.final_score_opponent,
+        "winner": request.winner,
+        "bet_amount": request.bet_amount,
+        "winnings": request.winnings,
+        "total_duration_ms": request.total_duration_ms,
+        "created_at": datetime.now(timezone.utc),
+        "views": 0,
+        "likes": 0,
+        "shares": 0,
+        "shared_to_feed": False,
+    }
+    
+    await db.battle_replays.insert_one(replay_doc)
+    
+    return {
+        "success": True,
+        "replay_id": replay_id,
+        "share_url": f"/replay/{replay_id}",
+        "message": "Battle replay saved! You can now share it."
+    }
+
+
+@game_router.get("/battle-replay/{replay_id}")
+async def get_battle_replay(replay_id: str):
+    """Get a battle replay by ID (public endpoint for sharing)"""
+    db = await get_database()
+    
+    replay = await db.battle_replays.find_one(
+        {"replay_id": replay_id},
+        {"_id": 0}
+    )
+    
+    if not replay:
+        raise HTTPException(status_code=404, detail="Replay not found")
+    
+    # Increment view count
+    await db.battle_replays.update_one(
+        {"replay_id": replay_id},
+        {"$inc": {"views": 1}}
+    )
+    
+    # Convert datetime to string
+    if replay.get("created_at"):
+        replay["created_at"] = replay["created_at"].isoformat()
+    
+    return replay
+
+
+@game_router.get("/battle-replay/user/list")
+async def get_user_replays(
+    user_id: str = Depends(get_current_user_id),
+    limit: int = 20,
+    skip: int = 0
+):
+    """Get all replays for the current user"""
+    db = await get_database()
+    
+    replays = await db.battle_replays.find(
+        {"user_id": user_id},
+        {"_id": 0}
+    ).sort("created_at", -1).skip(skip).limit(limit).to_list(length=limit)
+    
+    # Convert datetime to string
+    for replay in replays:
+        if replay.get("created_at"):
+            replay["created_at"] = replay["created_at"].isoformat()
+    
+    total = await db.battle_replays.count_documents({"user_id": user_id})
+    
+    return {
+        "replays": replays,
+        "total": total,
+        "has_more": skip + limit < total
+    }
+
+
+@game_router.post("/battle-replay/{replay_id}/share-to-feed")
+async def share_replay_to_feed(
+    replay_id: str,
+    user_id: str = Depends(get_current_user_id)
+):
+    """Share a replay to the blendlink.net/feed"""
+    db = await get_database()
+    
+    # Get the replay
+    replay = await db.battle_replays.find_one({"replay_id": replay_id, "user_id": user_id})
+    if not replay:
+        raise HTTPException(status_code=404, detail="Replay not found or not owned by user")
+    
+    # Check if already shared
+    if replay.get("shared_to_feed"):
+        return {"success": True, "message": "Already shared to feed", "post_id": replay.get("feed_post_id")}
+    
+    # Get user info
+    user = await db.users.find_one({"user_id": user_id})
+    
+    # Create feed post
+    post_id = str(uuid.uuid4())
+    
+    # Get thumbnail from first player photo
+    thumbnail = None
+    if replay.get("player_photos") and len(replay["player_photos"]) > 0:
+        thumbnail = replay["player_photos"][0].get("image_url")
+    
+    feed_post = {
+        "post_id": post_id,
+        "user_id": user_id,
+        "username": user.get("username", "Player"),
+        "avatar_url": user.get("avatar_url"),
+        "type": "battle_replay",
+        "content": f"🎮 {replay['winner'].title()} vs {replay['difficulty'].title()} Bot! Score: {replay['final_score_player']}-{replay['final_score_opponent']}",
+        "replay_id": replay_id,
+        "replay_data": {
+            "difficulty": replay["difficulty"],
+            "winner": replay["winner"],
+            "final_score_player": replay["final_score_player"],
+            "final_score_opponent": replay["final_score_opponent"],
+            "bet_amount": replay["bet_amount"],
+            "winnings": replay["winnings"],
+            "rounds_count": len(replay.get("rounds", [])),
+        },
+        "thumbnail_url": thumbnail,
+        "share_url": f"/replay/{replay_id}",
+        "created_at": datetime.now(timezone.utc),
+        "likes": [],
+        "comments": [],
+        "shares": 0,
+        "visibility": "public",
+    }
+    
+    await db.social_posts.insert_one(feed_post)
+    
+    # Update replay as shared
+    await db.battle_replays.update_one(
+        {"replay_id": replay_id},
+        {
+            "$set": {"shared_to_feed": True, "feed_post_id": post_id},
+            "$inc": {"shares": 1}
+        }
+    )
+    
+    return {
+        "success": True,
+        "post_id": post_id,
+        "message": "Replay shared to feed!",
+        "feed_url": "/feed"
+    }
+
+
+@game_router.post("/battle-replay/{replay_id}/like")
+async def like_replay(
+    replay_id: str,
+    user_id: str = Depends(get_current_user_id)
+):
+    """Like a battle replay"""
+    db = await get_database()
+    
+    result = await db.battle_replays.update_one(
+        {"replay_id": replay_id},
+        {"$inc": {"likes": 1}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Replay not found")
+    
+    return {"success": True, "message": "Liked!"}
+
+
+@game_router.delete("/battle-replay/{replay_id}")
+async def delete_replay(
+    replay_id: str,
+    user_id: str = Depends(get_current_user_id)
+):
+    """Delete a battle replay"""
+    db = await get_database()
+    
+    result = await db.battle_replays.delete_one(
+        {"replay_id": replay_id, "user_id": user_id}
+    )
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Replay not found or not owned by user")
+    
+    # Also delete associated feed post if exists
+    await db.social_posts.delete_one({"replay_id": replay_id})
+    
+    return {"success": True, "message": "Replay deleted"}
