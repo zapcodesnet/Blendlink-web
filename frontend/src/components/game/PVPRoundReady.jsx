@@ -262,8 +262,16 @@ export const PVPRoundReady = ({
           case 'player_selected_photo':
             // Opponent selected (don't know which)
             if (data.user_id !== currentUserId) {
+              setLocalOpponentSelected(true);
               toast.info(`${opponentData?.username || 'Opponent'} selected their photo`);
             }
+            break;
+          
+          case 'selection_timeout_tick':
+            // Update countdown and opponent selection status
+            setLocalTimeRemaining(data.seconds_remaining);
+            const oppSelected = isPlayer1 ? data.player2_selected : data.player1_selected;
+            setLocalOpponentSelected(oppSelected);
             break;
             
           case 'round_ready':
@@ -297,6 +305,8 @@ export const PVPRoundReady = ({
           case 'auto_selected':
             if (data.user_id === currentUserId) {
               toast.warning('Time ran out - photo auto-selected');
+            } else {
+              setLocalOpponentSelected(true);
             }
             break;
             
@@ -316,7 +326,7 @@ export const PVPRoundReady = ({
     return () => {
       websocket.removeEventListener('message', handleMessage);
     };
-  }, [websocket, currentUserId, opponentData?.username, onRoundStart]);
+  }, [websocket, currentUserId, opponentData?.username, onRoundStart, isPlayer1]);
   
   // Update connection status
   useEffect(() => {
