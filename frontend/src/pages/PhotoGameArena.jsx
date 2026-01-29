@@ -1342,30 +1342,35 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect, onPracticeSta
   };
   
   // Handle bot battle start from difficulty selector
-  const handleBotBattleStart = ({ difficulty, betAmount: bet, photo, photos }) => {
+  const handleBotBattleStart = async ({ difficulty, betAmount: bet, photos, botConfig }) => {
     setShowBotSelector(false);
     
-    // Create bot opponent photos based on player's photos
-    const botPhotos = photos.slice(0, 4).map((p, i) => ({
-      ...p,
-      mint_id: `bot_photo_${i}`,
-      name: `Bot Photo ${i + 1}`,
-      dollar_value: (p.dollar_value || 50000000) * (0.8 + Math.random() * 0.4),
-      scenery_type: ['natural', 'water', 'manmade', 'neutral'][Math.floor(Math.random() * 4)],
-    }));
-    
-    // Start the battle
-    onAuctionBattleStart?.({
-      success: true,
-      session: { session_id: `auction_${Date.now()}` },
-      playerPhotos: photos.slice(0, 4),
-      opponentPhotos: botPhotos,
-      betAmount: bet,
-      isBot: true,
-      botDifficulty: difficulty,
-    });
-    
-    toast.success(`🎯 ${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Bot Battle started!`);
+    try {
+      // Call backend to start bot battle with 5 photos
+      const response = await api.post('/photo-game/bot-battle/start', {
+        difficulty,
+        photo_ids: photos.map(p => p.mint_id),
+      });
+      
+      if (response.data.success) {
+        // Start the battle with backend-generated bot photos
+        onAuctionBattleStart?.({
+          success: true,
+          session: { session_id: response.data.session_id },
+          playerPhotos: photos,
+          opponentPhotos: response.data.bot_photos,
+          betAmount: response.data.bet_amount,
+          isBot: true,
+          botDifficulty: difficulty,
+          botConfig: response.data.bot_config,
+        });
+        
+        toast.success(`🎯 ${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Bot Battle started! Bet: ${response.data.bet_amount} BL`);
+      }
+    } catch (err) {
+      console.error('Failed to start bot battle:', err);
+      toast.error(err.response?.data?.detail || 'Failed to start bot battle');
+    }
   };
   
   useEffect(() => {
