@@ -9,6 +9,7 @@ export { default as PhotoCard, SCENERY_CONFIG, formatDollarValue } from './Photo
 
 // Game-specific components
 export { default as StreakIndicator, StreakDots } from './StreakIndicator';
+export { default as MobileTappingArena } from './MobileTappingArena';
 
 // Loading states
 export {
