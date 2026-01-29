@@ -873,39 +873,7 @@ export const BattleArena = ({
         saveReplay(finalWinner, playerWins, opponentWins, [...replayRounds, replayRoundData]);
       }
     }
-  }, [playerWins, opponentWins, currentRoundIndex, soundEnabled, selectedPlayerPhoto, selectedOpponentPhoto, roundResults, playerPhotos, calculateStaminaChanges, currentRound, isBot, replayRounds]);
-  
-  // Save replay to backend
-  const saveReplay = useCallback(async (winner, scorePlayer, scoreOpponent, rounds) => {
-    if (!isBot) return;
-    
-    try {
-      const totalDuration = rounds.reduce((sum, r) => sum + (r.duration_ms || 3000), 0);
-      const winnings = winner === 'player' ? betAmount * 2 : 0;
-      
-      const response = await api.post('/photo-game/battle-replay/save', {
-        session_id: session?.session_id || `bot_${botDifficulty}_${Date.now()}`,
-        difficulty: botDifficulty,
-        player_photos: playerPhotos,
-        opponent_photos: opponentPhotos,
-        rounds: rounds,
-        final_score_player: scorePlayer,
-        final_score_opponent: scoreOpponent,
-        winner: winner,
-        bet_amount: betAmount,
-        winnings: winnings,
-        total_duration_ms: totalDuration,
-      });
-      
-      if (response.data.success) {
-        setSavedReplayId(response.data.replay_id);
-        setShowReplaySaved(true);
-        toast.success('🎬 Battle replay saved! You can share it now.', { duration: 3000 });
-      }
-    } catch (err) {
-      console.error('Failed to save replay:', err);
-    }
-  }, [isBot, session, botDifficulty, playerPhotos, opponentPhotos, betAmount]);
+  }, [playerWins, opponentWins, currentRoundIndex, soundEnabled, selectedPlayerPhoto, selectedOpponentPhoto, roundResults, playerPhotos, calculateStaminaChanges, currentRound, isBot, replayRounds, saveReplay]);
   
   // Handle RPS round complete (with money tracking)
   const handleRPSRoundComplete = useCallback((winner, newPlayerMoney, newOpponentMoney) => {
