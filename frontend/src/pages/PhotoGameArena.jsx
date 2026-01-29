@@ -1617,6 +1617,38 @@ const PhotoGameArena = () => {
     api.get('/photo-game/stats').then(res => setStats(res.data)).catch(() => {});
   }, []);
   
+  // Handle Bot Battle start from main menu's BotDifficultySelector
+  const handleMenuBotBattleStart = useCallback(async ({ difficulty, betAmount: bet, photos, botConfig }) => {
+    setShowBotSelector(false);
+    
+    try {
+      // Call backend to start bot battle with 5 photos
+      const response = await api.post('/photo-game/bot-battle/start', {
+        difficulty,
+        photo_ids: photos.map(p => p.mint_id),
+      });
+      
+      if (response.data.success) {
+        // Start the battle with backend-generated bot photos
+        handleAuctionBattleStart({
+          success: true,
+          session: { session_id: response.data.session_id },
+          playerPhotos: photos,
+          opponentPhotos: response.data.bot_photos,
+          betAmount: response.data.bet_amount,
+          isBot: true,
+          botDifficulty: difficulty,
+          botConfig: response.data.bot_config,
+        });
+        
+        toast.success(`🎯 ${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Bot Battle started! Bet: ${response.data.bet_amount} BL`);
+      }
+    } catch (err) {
+      console.error('Failed to start bot battle:', err);
+      toast.error(err.response?.data?.detail || 'Failed to start bot battle');
+    }
+  }, [handleAuctionBattleStart]);
+  
   // NEW: PVP Open Games Handlers
   const handleCreateGameSuccess = useCallback((game, photoIds, photos) => {
     setCurrentOpenGame(game);
