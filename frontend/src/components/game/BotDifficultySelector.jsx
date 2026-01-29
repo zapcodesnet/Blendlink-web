@@ -183,12 +183,21 @@ const DifficultyCard = ({ difficulty, selected, onSelect, isUnlocked, currentWin
 const PhotoSelectionGrid = ({ photos, selectedPhotos, onTogglePhoto, maxPhotos = 5, colors }) => {
   const getSceneryConfig = (type) => {
     const configs = {
-      water: { emoji: '🌊', label: 'Water', color: 'from-blue-500 to-cyan-500' },
-      natural: { emoji: '🌿', label: 'Natural', color: 'from-green-500 to-emerald-500' },
-      man_made: { emoji: '🏙️', label: 'Man-made', color: 'from-gray-500 to-slate-500' },
-      neutral: { emoji: '⚪', label: 'Neutral', color: 'from-gray-400 to-gray-500' },
+      water: { emoji: '🌊', label: 'Water', color: 'from-blue-500 to-cyan-500', strong: 'Natural', weak: 'Man-made' },
+      natural: { emoji: '🌿', label: 'Natural', color: 'from-green-500 to-emerald-500', strong: 'Man-made', weak: 'Water' },
+      man_made: { emoji: '🏙️', label: 'Man-made', color: 'from-gray-500 to-slate-500', strong: 'Water', weak: 'Natural' },
+      neutral: { emoji: '⚪', label: 'Neutral', color: 'from-gray-400 to-gray-500', strong: 'None', weak: 'None' },
     };
     return configs[type] || configs.neutral;
+  };
+
+  // Format large numbers
+  const formatValue = (value) => {
+    if (!value) return '$0';
+    if (value >= 1_000_000_000) return `$${(value / 1_000_000_000).toFixed(1)}B`;
+    if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(0)}M`;
+    if (value >= 1_000) return `$${(value / 1_000).toFixed(0)}K`;
+    return `$${value}`;
   };
 
   const validPhotos = photos.filter(p => (p.current_stamina || p.stamina || 0) >= 1);
