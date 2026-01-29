@@ -1,67 +1,73 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 29, 2026 (Game Creation Flow Complete)
+## Latest Update: January 29, 2026 (Photo Detail Screen Complete)
 
 ---
 
-## SESSION 35: MOBILE SCREENS & 30 TPS UPDATE ✅
+## SESSION 35: MOBILE SCREENS COMPLETE ✅
 
-### Game Creation Screen - NEW
-**File:** `/app/mobile/src/screens/GameCreationScreen.js`
+### Photo Detail Screen - NEW
+**File:** `/app/mobile/src/screens/PhotoDetailScreen.js`
 
 **Features:**
-- 5-photo selection with stamina validation
-- Grid view of user's minted photos
-- Stamina bar on each photo (grayed out if stamina = 0)
-- Low stamina warning badge
-- Sort options: Dollar Value, Stamina, Level
-- Bet amount input for create mode
-- Three modes:
-  - `create` - Create open game for others to join
-  - `join` - Select photos to join existing game
-  - `bot` - Start bot match (easy/medium/hard)
-- Bottom action bar with total value and confirm button
-- Haptic feedback on selection
+- Photo hero section with scenery badge and emoji
+- Dollar Value breakdown showing all bonus sources:
+  - Base AI Score, Scenery Bonus, Level Bonus
+  - Streak Bonus, Monthly Growth, Social Reactions
+  - Purchased Upgrades, Birthday Bonus
+- Total value display with gold styling
+- XP progress bar to next level
+- Stamina progress bar with regeneration info
+- Birthday bonus claim button (when eligible)
+- Days until birthday countdown
+- Dollar Value upgrade grid:
+  - Shows all upgrade tiers
+  - BL cost display
+  - "Owned" badge for purchased upgrades
+  - "Insufficient" warning if can't afford
+- Pull-to-refresh for data sync
+- Haptic feedback on all interactions
 
 **Navigation:**
-- Added to AppStack as `GameCreation`
-- Quick access from GamesScreen:
-  - ⚔️ Create (new battle)
-  - 👥 Join (open games browser)
-  - 🤖 Bot Match (practice mode)
+- Added to AppStack as `PhotoDetail`
+- Linked from MintedPhotosScreen photo cards
 
-### API Additions
-**photoGameAPI:**
-- `getPhotoStamina(mintId)` - Get stamina details
-- `startBotMatch({ photo_ids, difficulty })` - Start PvB match
+### All Mobile Screens Summary
+| Screen | Status | Features |
+|--------|--------|----------|
+| PhotoDetailScreen | ✅ NEW | Full value breakdown, upgrades |
+| GameCreationScreen | ✅ | 5-photo selection, stamina check |
+| OpenGamesBrowserScreen | ✅ | Grid view, flip cards, search |
+| TappingArenaView | ✅ | 30 TPS, haptics, confetti |
+| MintedPhotosScreen | ✅ | Dollar Value preview, grid/list |
+| PhotoGameArenaScreen | ✅ | TappingArena, RPS, game modes |
+| GamesScreen | ✅ | Quick access buttons updated |
 
-**mintingAPI:**
-- `getRatingCriteria()` - 11-category AI scoring info
-- `getLevelBonuses()` - Level milestone bonuses
-- `getPhotoWithValue()` - Full dollar value breakdown
-- `getUpgradeOptions()` - Available upgrades
-- `purchaseUpgrade()` - Buy upgrade with BL coins
-- `claimDailyBonus()` - Subscription daily reward
-- `claimBirthdayBonus()` - Yearly photo bonus
+### Mobile Navigation Flow
+```
+GamesScreen
+├── ⚔️ Create → GameCreation (mode: 'create')
+├── 👥 Join → OpenGamesBrowser
+├── 🤖 Bot Match → GameCreation (mode: 'bot')
+└── 🎰 Slots → CasinoGame
 
-### Mobile Screens Status
-| Screen | Status |
-|--------|--------|
-| GameCreationScreen | ✅ NEW - 5-photo selection with stamina |
-| OpenGamesBrowserScreen | ✅ Complete |
-| TappingArenaView | ✅ Complete (30 TPS) |
-| MintedPhotosScreen | ✅ Enhanced with Dollar Value preview |
-| PhotoGameArenaScreen | ✅ Updated with TappingArenaView |
-| GamesScreen | ✅ Updated with quick access buttons |
+MintedPhotosScreen
+└── Tap photo → PhotoDetail (mintId)
+
+PhotoDetail
+├── View value breakdown
+├── Purchase upgrades
+└── Claim birthday bonus
+```
 
 ### 30 TPS Rate Limit - DEPLOYED
-- Web `TappingArena.jsx`: MAX_TAPS_PER_SECOND = 30
-- Mobile `TappingArenaView`: 30 TPS with haptics
+- Web & Mobile: MAX_TAPS_PER_SECOND = 30
+- Warning toast on rate exceed
 - Bot speeds: Easy 5-10, Medium 10-18, Hard 18-28 TPS
 
 ---
 
-## PHASE 5: PERFORMANCE & MOBILE SCREENS ✅
+## PHASE 5: PERFORMANCE & MOBILE SCREENS ✅ COMPLETE
 
 ### Phase 5A: Web Performance Optimizations (January 29, 2026)
 
