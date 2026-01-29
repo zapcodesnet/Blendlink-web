@@ -1946,3 +1946,336 @@ async def get_streak_info(user_id: str):
         "has_shield": lose_streak >= LOSE_STREAK_IMMUNITY_THRESHOLD,
         "shield_info": "100% immunity vs stronger scenery" if lose_streak >= LOSE_STREAK_IMMUNITY_THRESHOLD else None,
     }
+
+
+# ============== BOT BATTLE PROGRESSION SYSTEM ==============
+
+# Bot difficulty configurations
+BOT_DIFFICULTY_CONFIG = {
+    "easy": {
+        "min_dollar_value": 600_000_000,
+        "taps_per_second": 8,
+        "fixed_bet": 100,
+        "sceneries": ["water", "natural", "man_made", "neutral", "neutral"],
+    },
+    "medium": {
+        "min_dollar_value": 800_000_000,
+        "taps_per_second": 10,
+        "fixed_bet": 500,
+        "sceneries": ["water", "natural", "man_made", "neutral", "neutral"],
+    },
+    "hard": {
+        "min_dollar_value": 1_000_000_000,
+        "taps_per_second": 12,
+        "fixed_bet": 1000,
+        "sceneries": ["water", "natural", "man_made", "neutral", "neutral"],
+    },
+    "extreme": {
+        "min_dollar_value": 2_000_000_000,
+        "taps_per_second": 15,
+        "fixed_bet": 2000,
+        "sceneries": ["water", "natural", "man_made", "neutral", "neutral"],
+    },
+}
+
+class BotBattleStartRequest(BaseModel):
+    difficulty: str = "easy"
+    photo_ids: List[str]  # 5 photo IDs
+    
+class BotBattleResultRequest(BaseModel):
+    session_id: str
+    player_won: bool
+    difficulty: str
+    rounds_won: int
+    rounds_lost: int
+    bet_amount: int
+
+
+@game_router.get("/bot-battle/stats")
+async def get_bot_battle_stats(current_user: dict = Depends(get_current_user_from_request)):
+    """Get bot battle progression stats for current user"""
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    user_id = current_user["user_id"]
+    
+    # Get or create bot stats
+    stats = await _db.bot_battle_stats.find_one(
+        {"user_id": user_id},
+        {"_id": 0}
+    )
+    
+    if not stats:
+        stats = {
+            "user_id": user_id,
+            "easy_bot_wins": 0,
+            "medium_bot_wins": 0,
+            "hard_bot_wins": 0,
+            "extreme_bot_wins": 0,
+            "total_bot_battles": 0,
+            "total_bot_wins": 0,
+            "total_bl_won_from_bots": 0,
+            "total_bl_lost_to_bots": 0,
+        }
+        await _db.bot_battle_stats.insert_one({**stats, "user_id": user_id})
+    
+    # Calculate unlocked difficulties
+    unlocked = {
+        "easy": True,  # Always unlocked
+        "medium": stats.get("easy_bot_wins", 0) >= 3,
+        "hard": stats.get("medium_bot_wins", 0) >= 3,
+        "extreme": stats.get("hard_bot_wins", 0) >= 3,
+    }
+    
+    return {
+        **stats,
+        "unlocked_difficulties": unlocked,
+    }
+
+
+@game_router.post("/bot-battle/start")
+async def start_bot_battle(
+    request: BotBattleStartRequest,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """Start a new bot battle with 5-photo selection"""
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    user_id = current_user["user_id"]
+    difficulty = request.difficulty
+    
+    # Validate difficulty
+    if difficulty not in BOT_DIFFICULTY_CONFIG:
+        raise HTTPException(status_code=400, detail="Invalid difficulty")
+    
+    config = BOT_DIFFICULTY_CONFIG[difficulty]
+    
+    # Check if difficulty is unlocked
+    stats = await _db.bot_battle_stats.find_one({"user_id": user_id}, {"_id": 0})
+    if not stats:
+        stats = {"easy_bot_wins": 0, "medium_bot_wins": 0, "hard_bot_wins": 0}
+    
+    unlock_requirements = {
+        "easy": True,
+        "medium": stats.get("easy_bot_wins", 0) >= 3,
+        "hard": stats.get("medium_bot_wins", 0) >= 3,
+        "extreme": stats.get("hard_bot_wins", 0) >= 3,
+    }
+    
+    if not unlock_requirements.get(difficulty, False):
+        raise HTTPException(status_code=403, detail=f"Difficulty '{difficulty}' is not yet unlocked")
+    
+    # Validate exactly 5 photos
+    if len(request.photo_ids) != 5:
+        raise HTTPException(status_code=400, detail="Exactly 5 photos required")
+    
+    # Validate all photos exist and have stamina
+    player_photos = []
+    for photo_id in request.photo_ids:
+        photo = await _db.minted_photos.find_one(
+            {"mint_id": photo_id, "owner_id": user_id},
+            {"_id": 0}
+        )
+        if not photo:
+            raise HTTPException(status_code=404, detail=f"Photo {photo_id} not found or not owned")
+        
+        current_stamina = calculate_current_stamina(photo)
+        if current_stamina < 1:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Photo '{photo.get('name', photo_id)}' has insufficient stamina"
+            )
+        player_photos.append({**photo, "current_stamina": current_stamina})
+    
+    # Check user balance for fixed bet
+    user = await _db.users.find_one({"user_id": user_id}, {"_id": 0, "bl_coins": 1})
+    user_balance = user.get("bl_coins", 0) if user else 0
+    fixed_bet = config["fixed_bet"]
+    
+    if user_balance < fixed_bet:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Insufficient balance. Required: {fixed_bet} BL, Available: {user_balance} BL"
+        )
+    
+    # Generate bot's 5 photos
+    bot_photos = []
+    for i, scenery in enumerate(config["sceneries"]):
+        bot_photo = {
+            "mint_id": f"bot_{difficulty}_{i}_{uuid.uuid4().hex[:8]}",
+            "name": f"Bot Photo {i+1}",
+            "dollar_value": config["min_dollar_value"] + (i * 50_000_000),
+            "scenery_type": scenery,
+            "is_bot": True,
+        }
+        bot_photos.append(bot_photo)
+    
+    # Create session
+    session_id = f"bot_{difficulty}_{uuid.uuid4().hex[:12]}"
+    session = {
+        "session_id": session_id,
+        "user_id": user_id,
+        "difficulty": difficulty,
+        "bet_amount": fixed_bet,
+        "player_photos": player_photos,
+        "bot_photos": bot_photos,
+        "bot_taps_per_second": config["taps_per_second"],
+        "current_round": 1,
+        "player_wins": 0,
+        "bot_wins": 0,
+        "player_used_indices": [],
+        "bot_used_indices": [],
+        "status": "active",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    
+    await _db.bot_battle_sessions.insert_one(session)
+    
+    # Deduct bet amount
+    await _db.users.update_one(
+        {"user_id": user_id},
+        {"$inc": {"bl_coins": -fixed_bet}}
+    )
+    
+    return {
+        "success": True,
+        "session_id": session_id,
+        "difficulty": difficulty,
+        "bet_amount": fixed_bet,
+        "player_photos": player_photos,
+        "bot_photos": bot_photos,
+        "bot_config": {
+            "taps_per_second": config["taps_per_second"],
+            "min_dollar_value": config["min_dollar_value"],
+        },
+    }
+
+
+@game_router.post("/bot-battle/result")
+async def record_bot_battle_result(
+    request: BotBattleResultRequest,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """Record the result of a completed bot battle"""
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    user_id = current_user["user_id"]
+    difficulty = request.difficulty
+    
+    # Validate difficulty
+    if difficulty not in BOT_DIFFICULTY_CONFIG:
+        raise HTTPException(status_code=400, detail="Invalid difficulty")
+    
+    config = BOT_DIFFICULTY_CONFIG[difficulty]
+    bet_amount = request.bet_amount or config["fixed_bet"]
+    
+    # Calculate winnings
+    pot_total = bet_amount * 2  # Player bet + bot bet
+    winnings = pot_total if request.player_won else 0
+    
+    # Update user balance
+    if request.player_won:
+        await _db.users.update_one(
+            {"user_id": user_id},
+            {"$inc": {"bl_coins": winnings}}
+        )
+    
+    # Update bot battle stats
+    update_fields = {
+        "$inc": {
+            "total_bot_battles": 1,
+        }
+    }
+    
+    if request.player_won:
+        update_fields["$inc"]["total_bot_wins"] = 1
+        update_fields["$inc"]["total_bl_won_from_bots"] = winnings
+        update_fields["$inc"][f"{difficulty}_bot_wins"] = 1
+    else:
+        update_fields["$inc"]["total_bl_lost_to_bots"] = bet_amount
+    
+    await _db.bot_battle_stats.update_one(
+        {"user_id": user_id},
+        update_fields,
+        upsert=True
+    )
+    
+    # Update game stats (streaks, battles_won, etc.)
+    game_stats_update = {
+        "$inc": {
+            "total_battles": 1,
+        }
+    }
+    
+    if request.player_won:
+        game_stats_update["$inc"]["battles_won"] = 1
+        game_stats_update["$inc"]["current_win_streak"] = 1
+        game_stats_update["$set"] = {"current_lose_streak": 0}
+    else:
+        game_stats_update["$inc"]["battles_lost"] = 1
+        game_stats_update["$inc"]["current_lose_streak"] = 1
+        game_stats_update["$set"] = {"current_win_streak": 0}
+    
+    await _db.game_stats.update_one(
+        {"user_id": user_id},
+        game_stats_update,
+        upsert=True
+    )
+    
+    # Get updated stats
+    updated_stats = await _db.bot_battle_stats.find_one(
+        {"user_id": user_id},
+        {"_id": 0}
+    )
+    
+    # Check for newly unlocked difficulties
+    newly_unlocked = None
+    if request.player_won:
+        if difficulty == "easy" and updated_stats.get("easy_bot_wins", 0) == 3:
+            newly_unlocked = "medium"
+        elif difficulty == "medium" and updated_stats.get("medium_bot_wins", 0) == 3:
+            newly_unlocked = "hard"
+        elif difficulty == "hard" and updated_stats.get("hard_bot_wins", 0) == 3:
+            newly_unlocked = "extreme"
+    
+    return {
+        "success": True,
+        "player_won": request.player_won,
+        "winnings": winnings if request.player_won else 0,
+        "bet_lost": bet_amount if not request.player_won else 0,
+        "difficulty": difficulty,
+        f"{difficulty}_wins": updated_stats.get(f"{difficulty}_bot_wins", 0),
+        "newly_unlocked_difficulty": newly_unlocked,
+        "message": f"🎉 You unlocked {newly_unlocked.title()} Bot!" if newly_unlocked else None,
+    }
+
+
+@game_router.get("/bot-battle/generate-photos/{difficulty}")
+async def generate_bot_photos_for_difficulty(difficulty: str):
+    """Generate bot photos for a specific difficulty (for preview)"""
+    if difficulty not in BOT_DIFFICULTY_CONFIG:
+        raise HTTPException(status_code=400, detail="Invalid difficulty")
+    
+    config = BOT_DIFFICULTY_CONFIG[difficulty]
+    
+    bot_photos = []
+    for i, scenery in enumerate(config["sceneries"]):
+        bot_photo = {
+            "mint_id": f"preview_bot_{i}",
+            "name": f"Bot Photo {i+1}",
+            "dollar_value": config["min_dollar_value"] + (i * 50_000_000),
+            "scenery_type": scenery,
+            "scenery_label": scenery.replace("_", " ").title(),
+            "is_bot": True,
+        }
+        bot_photos.append(bot_photo)
+    
+    return {
+        "difficulty": difficulty,
+        "bot_photos": bot_photos,
+        "taps_per_second": config["taps_per_second"],
+        "fixed_bet": config["fixed_bet"],
+    }
+
