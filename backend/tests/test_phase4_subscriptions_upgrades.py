@@ -265,7 +265,7 @@ class TestPhotoUpgradeEndpoint:
         """Verify endpoint requires authentication"""
         response = api_client.post(
             f"{BASE_URL}/api/minting/photos/test_mint_id/upgrade",
-            json={"amount": 1000000}
+            json={"upgrade_amount": 1000000}
         )
         assert response.status_code == 401
     
@@ -273,7 +273,7 @@ class TestPhotoUpgradeEndpoint:
         """Verify 404 for non-existent photo"""
         response = authenticated_client.post(
             f"{BASE_URL}/api/minting/photos/nonexistent_mint_id/upgrade",
-            json={"amount": 1000000}
+            json={"upgrade_amount": 1000000}
         )
         assert response.status_code == 404
     
@@ -281,7 +281,7 @@ class TestPhotoUpgradeEndpoint:
         """Verify 400 for invalid upgrade amount"""
         response = authenticated_client.post(
             f"{BASE_URL}/api/minting/photos/test_mint_id/upgrade",
-            json={"amount": 999}  # Invalid amount
+            json={"upgrade_amount": 999}  # Invalid amount
         )
         # Should return 400 or 404 (404 if photo not found first)
         assert response.status_code in [400, 404]
