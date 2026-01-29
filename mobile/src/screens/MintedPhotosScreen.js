@@ -1269,4 +1269,91 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '300',
   },
+  // Dollar Value Preview
+  dollarValuePreviewCard: {
+    marginTop: 16,
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  dollarValuePreviewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  dollarValuePreviewTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dollarValuePreviewEmoji: {
+    fontSize: 20,
+    marginRight: 8,
+  },
+  dollarValuePreviewTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  dollarValuePreviewArrow: {
+    fontSize: 14,
+  },
+  dollarValuePreviewDesc: {
+    fontSize: 12,
+    marginTop: 6,
+  },
+  dollarValueCriteriaList: {
+    marginTop: 16,
+    gap: 10,
+  },
+  dollarValueCriteriaItem: {
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  dollarValueCriteriaHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  dollarValueCriteriaIcon: {
+    fontSize: 16,
+    marginRight: 8,
+  },
+  dollarValueCriteriaLabel: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  dollarValueWeightBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  dollarValueWeightText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+  },
+  dollarValueCriteriaDesc: {
+    fontSize: 11,
+    lineHeight: 16,
+  },
+  dollarValueMaxValue: {
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  dollarValueTotalCard: {
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  dollarValueTotalLabel: {
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  dollarValueTotalValue: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
 });
