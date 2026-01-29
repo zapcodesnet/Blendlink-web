@@ -1,6 +1,58 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 29, 2026 (Photo Detail Screen Complete)
+## Latest Update: January 29, 2026 (WebSocket PVP Integration)
+
+---
+
+## SESSION 36: MOBILE WEBSOCKET PVP INTEGRATION ✅
+
+### Real-time PVP WebSocket Integration
+**Files Modified:**
+- `/app/mobile/src/screens/PhotoGameArenaScreen.js` - Full WebSocket integration
+- `/app/backend/pvp_game_websocket.py` - Added tap handling
+- `/app/backend/server.py` - Added tap message handler
+
+**Key Features Implemented:**
+1. **usePVPWebSocket Hook Integration**
+   - Auto-connects when `pvpRoomId` is passed via navigation params
+   - Manages game state from server (round, phase, scores)
+   - Handles all WebSocket events (join, ready, countdown, taps, results)
+
+2. **TappingArenaView WebSocket Mode**
+   - New props: `isWebSocketMode`, `wsGamePhase`, `wsCountdown`, `wsOpponentTaps`, etc.
+   - Ready button overlay before countdown starts
+   - Server-authoritative countdown display
+   - Live opponent tap meter updates via `tap_update` events
+   - Both players must click "Ready" before round begins
+
+3. **Game State Flow (WebSocket Mode)**
+   - `pvp_waiting` - Waiting for opponent to join
+   - `pvp_selecting` - Both players select photos for round
+   - `pvp_ready` - Both selected, show Ready buttons
+   - `pvp_countdown` - Server-broadcast 10-second countdown
+   - `pvp_tapping` - Active gameplay with live tap sync
+   - `pvp_round_result` - Round winner display
+   - `pvp_game_over` - Final game result (first to 3 wins)
+   - `pvp_forfeit` - Opponent disconnected, auto-win
+
+4. **Backend Tap Handler**
+   - New `handle_tap(room_id, user_id, tap_count)` method in pvp_game_manager
+   - Broadcasts `tap_update` events to opponent in real-time
+   - Tracks tap counts per player per round
+
+5. **UI Elements Added**
+   - Connection indicator (green/yellow/red dot in header)
+   - WebSocket error banner with retry button
+   - Ready button overlay with both-players status
+   - PVP waiting/selecting screens
+   - Round result screen
+   - Game over screen with final score
+   - Forfeit screen for disconnects
+
+**Testing Credentials:**
+- Email: `test@blendlink.com`
+- Password: `admin`
+- Database: `test_database`
 
 ---
 
