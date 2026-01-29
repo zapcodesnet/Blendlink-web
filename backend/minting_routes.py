@@ -303,7 +303,6 @@ async def get_my_photos(
 # ============== UPGRADE & ENHANCEMENT ROUTES ==============
 
 class UpgradeDollarValueRequest(BaseModel):
-    mint_id: str
     upgrade_amount: int  # Dollar amount to upgrade by (e.g., 1000000 for $1M)
 
 
