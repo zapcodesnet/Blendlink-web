@@ -103,10 +103,16 @@ const Confetti = ({ count = 50 }) => {
   );
 };
 
-// Photo card display in arena
+// Win streak multipliers
+const WIN_STREAK_MULTIPLIERS = {
+  3: 1.25, 4: 1.50, 5: 1.75, 6: 2.00, 7: 2.25, 8: 2.50, 9: 2.75, 10: 3.00
+};
+
+// Photo card display in arena - ENHANCED with Original vs Effective values
 const PhotoBattleCard = ({ 
   photo, 
   effectiveValue, 
+  originalValue,
   requiredTaps, 
   currentTaps, 
   isPlayer, 
@@ -117,6 +123,11 @@ const PhotoBattleCard = ({
   const scenery = SCENERY_CONFIG[photo?.scenery_type] || SCENERY_CONFIG.natural;
   const progress = currentTaps / requiredTaps;
   const currentDollarValue = Math.round(effectiveValue * Math.min(progress, 1));
+  const baseValue = originalValue || photo?.dollar_value || effectiveValue;
+  const level = photo?.level || 1;
+  const hasStreakMultiplier = winStreak >= 3;
+  const streakMultiplier = hasStreakMultiplier ? WIN_STREAK_MULTIPLIERS[Math.min(winStreak, 10)] : 1;
+  const hasImmunity = loseStreak >= 3;
   
   return (
     <motion.div
@@ -127,8 +138,21 @@ const PhotoBattleCard = ({
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
     >
+      {/* EFFECTIVE VALUE - ABOVE PHOTO (Prominently displayed) */}
+      <div className={`p-2 text-center ${isPlayer ? 'bg-purple-600' : 'bg-red-600'}`}>
+        <p className="text-[10px] text-white/70 uppercase tracking-wide">Effective Power</p>
+        <p className="text-lg font-bold text-white drop-shadow-lg">
+          {formatDollarValue(effectiveValue)}
+        </p>
+        {effectiveValue !== baseValue && (
+          <p className={`text-[10px] font-bold ${effectiveValue > baseValue ? 'text-green-300' : 'text-red-300'}`}>
+            {effectiveValue > baseValue ? '↑' : '↓'} {Math.round(((effectiveValue - baseValue) / baseValue) * 100)}% from base
+          </p>
+        )}
+      </div>
+      
       {/* Photo Image */}
-      <div className="relative w-32 h-32 sm:w-40 sm:h-40 bg-gray-900">
+      <div className="relative w-32 h-28 sm:w-40 sm:h-32 bg-gray-900">
         {photo?.image_url ? (
           <img 
             src={photo.image_url} 
@@ -141,56 +165,81 @@ const PhotoBattleCard = ({
           </div>
         )}
         
-        {/* Scenery type badge */}
-        <div className="absolute top-2 left-2">
-          <span className={`px-2 py-0.5 rounded text-xs font-bold bg-gradient-to-r ${scenery.color} text-white shadow-lg`}>
-            {scenery.name}
-          </span>
-        </div>
-        
         {/* Scenery advantage indicator */}
         {sceneryAdvantage && (
           <div className={`absolute top-2 right-2 px-2 py-0.5 rounded text-xs font-bold ${
             sceneryAdvantage === 'strong' 
-              ? 'bg-green-500/80 text-white' 
-              : 'bg-red-500/80 text-white'
+              ? 'bg-green-500/90 text-white' 
+              : 'bg-red-500/90 text-white'
           }`}>
             {sceneryAdvantage === 'strong' ? '+25%' : '-25%'}
           </div>
         )}
+      </div>
+      
+      {/* ORIGINAL STATS - BELOW PHOTO */}
+      <div className={`p-2 ${isPlayer ? 'bg-purple-900/90' : 'bg-red-900/90'}`}>
+        <p className="text-white font-bold text-sm truncate">{photo?.name || 'Photo'}</p>
         
-        {/* Streak indicators */}
-        <div className="absolute bottom-2 left-2">
-          <StreakIndicator 
-            winStreak={winStreak} 
-            loseStreak={loseStreak} 
-            size="small" 
-            showTooltip={false}
-          />
+        {/* Original Base Value */}
+        <div className="flex items-center justify-between text-xs mb-1">
+          <span className="text-gray-400">Base:</span>
+          <span className="text-yellow-400 font-bold">{formatDollarValue(baseValue)}</span>
+        </div>
+        
+        {/* Scenery Strength/Weakness */}
+        <div className="flex items-center justify-between text-xs mb-1">
+          <span className={`px-1.5 py-0.5 rounded bg-gradient-to-r ${scenery.color} text-white`}>
+            {scenery.icon} {scenery.name}
+          </span>
+          <span className="text-gray-400 text-[10px]">
+            💪{SCENERY_CONFIG[scenery.strong]?.icon || '?'} 😰{SCENERY_CONFIG[scenery.weak]?.icon || '?'}
+          </span>
+        </div>
+        
+        {/* Level & Stars */}
+        <div className="flex items-center justify-between text-xs mb-1">
+          <span className="text-gray-400">Lv{level} {'★'.repeat(Math.min(Math.floor(level/10), 5))}</span>
+          {level >= 10 && (
+            <span className="text-yellow-300 text-[10px]">+{Math.min(Math.floor(level/10) * 20, 100)}%</span>
+          )}
+        </div>
+        
+        {/* Streak Indicators */}
+        <div className="flex items-center gap-2 text-xs">
+          {hasStreakMultiplier && (
+            <span className="flex items-center gap-0.5 px-1.5 py-0.5 bg-orange-500/30 rounded text-orange-400 border border-orange-500/50">
+              🔥 {winStreak} <span className="font-bold">×{streakMultiplier.toFixed(2)}</span>
+            </span>
+          )}
+          {winStreak > 0 && winStreak < 3 && (
+            <span className="text-orange-400/60">🔥{winStreak}</span>
+          )}
+          {hasImmunity && (
+            <span className="px-1.5 py-0.5 bg-blue-500/30 rounded text-blue-400 border border-blue-500/50">
+              🛡️ Immune
+            </span>
+          )}
+        </div>
+        
+        {/* Current bid progress */}
+        <div className="mt-2 pt-2 border-t border-gray-700">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-gray-400">Bid:</span>
+            <span 
+              className="text-yellow-400 font-bold tabular-nums transition-transform duration-75"
+              style={{ transform: currentTaps > 0 ? 'scale(1.05)' : 'scale(1)' }}
+            >
+              {formatDollarValue(currentDollarValue)}
+            </span>
+          </div>
+          <p className="text-gray-500 text-[10px] text-right">
+            {currentTaps} / {requiredTaps} taps
+          </p>
         </div>
       </div>
       
-      {/* Info bar */}
-      <div className={`p-2 ${isPlayer ? 'bg-purple-900/80' : 'bg-red-900/80'}`}>
-        <p className="text-white font-bold text-sm truncate">{photo?.name || 'Photo'}</p>
-        
-        {/* Dollar value - optimized with CSS transform instead of scale animation */}
-        <p 
-          className="text-yellow-400 font-bold text-lg tabular-nums transition-transform duration-75"
-          style={{ 
-            transform: currentTaps > 0 ? 'scale(1.02)' : 'scale(1)',
-          }}
-        >
-          {formatDollarValue(currentDollarValue)}
-        </p>
-        
-        {/* Required taps */}
-        <p className="text-gray-300 text-xs">
-          {currentTaps} / {requiredTaps} taps
-        </p>
-      </div>
-      
-      {/* Progress bar overlay - OPTIMIZED with CSS transition */}
+      {/* Progress bar overlay */}
       <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-800">
         <div 
           className={`h-full progress-animated ${isPlayer 
