@@ -1182,6 +1182,43 @@ export const photoGameAPI = {
     const response = await api.get('/photo-game/battle-photos');
     return response.data;
   },
+
+  // ============== OPEN GAMES ==============
+
+  // Get list of open games (browsable)
+  getOpenGames: async (params = {}) => {
+    const response = await api.get('/photo-game/open-games', { params });
+    return response.data;
+  },
+
+  // Get detailed info about a specific open game
+  getOpenGameDetails: async (gameId) => {
+    const response = await api.get(`/photo-game/open-games/${gameId}`);
+    return response.data;
+  },
+
+  // Create a new open game
+  createOpenGame: async ({ photo_ids, bet_amount = 0 }) => {
+    const response = await api.post('/photo-game/open-games', {
+      photo_ids,
+      bet_amount,
+    });
+    return response.data;
+  },
+
+  // Join an open game
+  joinOpenGame: async (gameId, photoIds) => {
+    const response = await api.post(`/photo-game/open-games/${gameId}/join`, {
+      photo_ids: photoIds,
+    });
+    return response.data;
+  },
+
+  // Cancel an open game (creator only)
+  cancelOpenGame: async (gameId) => {
+    const response = await api.delete(`/photo-game/open-games/${gameId}`);
+    return response.data;
+  },
 };
 
 // ============== MINTING API ==============
