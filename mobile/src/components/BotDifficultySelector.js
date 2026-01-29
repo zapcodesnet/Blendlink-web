@@ -18,6 +18,7 @@ import {
   ScrollView,
   Dimensions,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 
