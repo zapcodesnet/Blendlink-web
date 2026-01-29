@@ -1845,21 +1845,21 @@ export default function PhotoGameArenaScreen() {
           />
         )}
         
-        {/* PVP Round Result */}
+        {/* PVP Round Result with Transition Animation */}
         {gameState === 'pvp_round_result' && wsGameState.roundResult && (
-          <View style={styles.pvpRoundResultContainer}>
-            <Text style={[styles.pvpRoundResultTitle, { 
-              color: wsGameState.roundResult.winner_user_id === user?.user_id ? colors.success : colors.error 
-            }]}>
-              {wsGameState.roundResult.winner_user_id === user?.user_id ? '🎉 Round Won!' : '😢 Round Lost'}
-            </Text>
-            <Text style={[styles.pvpScoreText, { color: colors.text }]}>
-              Score: {wsGameState.player1Wins} - {wsGameState.player2Wins}
-            </Text>
-            <Text style={[styles.pvpNextRoundText, { color: colors.textMuted }]}>
-              Next round starting soon...
-            </Text>
-          </View>
+          <RoundTransitionView
+            roundResult={wsGameState.roundResult}
+            currentRound={wsGameState.currentRound}
+            player1Wins={wsGameState.player1Wins}
+            player2Wins={wsGameState.player2Wins}
+            isWinner={wsGameState.roundResult.winner_user_id === user?.user_id}
+            onContinue={() => {
+              // Clear selected photo for next round
+              setSelectedPhoto(null);
+              // Transition will happen automatically from WebSocket
+            }}
+            colors={colors}
+          />
         )}
         
         {/* PVP Game Over */}
