@@ -1051,7 +1051,12 @@ const TappingArenaView = ({
       }, 1000);
       return () => clearInterval(botTimerRef.current);
     }
-  }, [gamePhase, isBot, botDifficulty, opponentRequiredTaps, winner]);
+  }, [localGamePhase, isWebSocketMode, isBot, botDifficulty, opponentRequiredTaps, winner]);
+
+  // Determine effective game phase for UI
+  const effectiveGamePhase = isWebSocketMode 
+    ? (wsGamePhase === 'playing' ? 'active' : wsGamePhase === 'countdown' ? 'countdown' : wsGamePhase)
+    : localGamePhase;
 
   return (
     <Animated.View style={[styles.tappingArenaContainer, { transform: [{ translateX: shakeAnim }] }]}>
@@ -1106,6 +1111,12 @@ const TappingArenaView = ({
           <Text style={[styles.tappingTapCount, { color: colors.textMuted }]}>
             {playerTaps}/{playerRequiredTaps}
           </Text>
+          {/* Ready indicator for WebSocket mode */}
+          {isWebSocketMode && effectiveGamePhase === 'ready' && (
+            <View style={[styles.readyIndicator, { backgroundColor: wsPlayerReady ? colors.success : colors.cardSecondary }]}>
+              <Text style={styles.readyIndicatorText}>{wsPlayerReady ? '✓ Ready' : 'Not Ready'}</Text>
+            </View>
+          )}
         </View>
 
         <Text style={[styles.tappingVS, { color: colors.textMuted }]}>VS</Text>
@@ -1127,11 +1138,47 @@ const TappingArenaView = ({
           <Text style={[styles.tappingTapCount, { color: colors.textMuted }]}>
             {opponentTaps}/{opponentRequiredTaps}
           </Text>
+          {/* Opponent ready indicator for WebSocket mode */}
+          {isWebSocketMode && effectiveGamePhase === 'ready' && (
+            <View style={[styles.readyIndicator, { backgroundColor: wsOpponentReady ? colors.success : colors.cardSecondary }]}>
+              <Text style={styles.readyIndicatorText}>{wsOpponentReady ? '✓ Ready' : 'Waiting...'}</Text>
+            </View>
+          )}
         </View>
       </View>
 
+      {/* Ready Button Overlay (WebSocket mode only) */}
+      {isWebSocketMode && effectiveGamePhase === 'ready' && !wsPlayerReady && (
+        <View style={styles.readyButtonOverlay}>
+          <Text style={styles.readyOverlayTitle}>Both photos selected!</Text>
+          <Text style={styles.readyOverlaySubtitle}>Press Ready when you want to start</Text>
+          <TouchableOpacity 
+            style={[styles.readyButton, { backgroundColor: colors.primary }]}
+            onPress={() => {
+              onMarkReady?.();
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              auctionSounds.selectionConfirm();
+            }}
+          >
+            <Text style={styles.readyButtonText}>✓ I'm Ready!</Text>
+          </TouchableOpacity>
+          <Text style={styles.readyOverlayHint}>
+            {wsOpponentReady ? 'Opponent is ready! Press to start!' : 'Waiting for opponent...'}
+          </Text>
+        </View>
+      )}
+
+      {/* Waiting for opponent ready (WebSocket mode only) */}
+      {isWebSocketMode && effectiveGamePhase === 'ready' && wsPlayerReady && !wsOpponentReady && (
+        <View style={styles.readyButtonOverlay}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.readyOverlayTitle}>Waiting for opponent...</Text>
+          <Text style={styles.readyOverlaySubtitle}>You're ready! Opponent is still preparing.</Text>
+        </View>
+      )}
+
       {/* Countdown Overlay */}
-      {gamePhase === 'countdown' && (
+      {effectiveGamePhase === 'countdown' && (
         <View style={styles.tappingCountdownOverlay}>
           <Animated.Text style={[styles.tappingCountdownNumber, { transform: [{ scale: pulseAnim }] }]}>
             {countdown}
