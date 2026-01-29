@@ -11,7 +11,7 @@ import os
 import uuid
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://photo-battle-mobile.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://tapbattle-4.preview.emergentagent.com')
 
 # Test credentials
 TEST_EMAIL = "test@test.com"
