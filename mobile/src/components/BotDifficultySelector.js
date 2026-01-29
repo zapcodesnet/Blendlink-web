@@ -283,7 +283,7 @@ const BotDifficultySelector = ({
 
         {!hasStamina && (
           <View style={styles.lowStaminaOverlay}>
-            <Text style={styles.lowStaminaText}>Low Stamina</Text>
+            <Text style={styles.lowStaminaText}>⚡ 0 Stamina</Text>
           </View>
         )}
 
@@ -297,15 +297,25 @@ const BotDifficultySelector = ({
         <Text style={[styles.photoValue, { color: '#eab308' }]}>
           ${((photo.dollar_value || 0) / 1000000).toFixed(0)}M
         </Text>
+        
+        {/* Stamina bar */}
+        {hasStamina && (
+          <View style={styles.staminaBar}>
+            <View style={[styles.staminaFill, { width: `${Math.min((photo.current_stamina || photo.stamina || 0), 100)}%` }]} />
+          </View>
+        )}
       </TouchableOpacity>
     );
   };
+
+  const validPhotosCount = photos.filter(p => (p.current_stamina || p.stamina || 0) >= 1).length;
+  const needMorePhotos = selectedPhotos.length < 5;
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
       <View style={styles.modalOverlay}>
         <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
-          {/* Header */}
+          {/* Header with Balance */}
           <View style={[styles.header, { borderBottomColor: colors.border }]}>
             <View style={styles.headerLeft}>
               <View style={[styles.headerIcon, { backgroundColor: 'rgba(139, 92, 246, 0.2)' }]}>
@@ -318,12 +328,22 @@ const BotDifficultySelector = ({
                 </Text>
               </View>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Text style={[styles.closeButtonText, { color: colors.textMuted }]}>✕</Text>
-            </TouchableOpacity>
+            <View style={styles.headerRight}>
+              {/* Balance Display */}
+              <View style={styles.balanceChip}>
+                <Text style={styles.balanceChipText}>{userBalance.toLocaleString()} BL</Text>
+              </View>
+              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                <Text style={[styles.closeButtonText, { color: colors.textMuted }]}>✕</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
-          <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <ScrollView 
+            style={styles.scrollContent} 
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContentContainer}
+          >
             {step === 'difficulty' ? (
               <>
                 {/* Difficulty Selection */}
