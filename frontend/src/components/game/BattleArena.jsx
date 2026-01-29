@@ -686,17 +686,6 @@ export const BattleArena = ({
   const currentRound = ROUND_SEQUENCE[currentRoundIndex];
   const WINS_NEEDED = 3;
   
-  // Derive streaks from selected photos - photo-specific streaks
-  const currentPlayerStreak = useMemo(() => ({
-    current_win_streak: selectedPlayerPhoto?.current_win_streak || selectedPlayerPhoto?.win_streak || 0,
-    current_lose_streak: selectedPlayerPhoto?.current_lose_streak || selectedPlayerPhoto?.lose_streak || 0,
-  }), [selectedPlayerPhoto?.current_win_streak, selectedPlayerPhoto?.win_streak, selectedPlayerPhoto?.current_lose_streak, selectedPlayerPhoto?.lose_streak]);
-  
-  const currentOpponentStreak = useMemo(() => ({
-    current_win_streak: selectedOpponentPhoto?.current_win_streak || selectedOpponentPhoto?.win_streak || 0,
-    current_lose_streak: selectedOpponentPhoto?.current_lose_streak || selectedOpponentPhoto?.lose_streak || 0,
-  }), [selectedOpponentPhoto?.current_win_streak, selectedOpponentPhoto?.win_streak, selectedOpponentPhoto?.current_lose_streak, selectedOpponentPhoto?.lose_streak]);
-  
   // Calculate stamina changes based on round results
   const calculateStaminaChanges = useCallback((results, photos) => {
     const photoChanges = {};
