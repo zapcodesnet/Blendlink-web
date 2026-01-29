@@ -2436,7 +2436,7 @@ async def save_battle_replay(
 @game_router.get("/battle-replay/{replay_id}")
 async def get_battle_replay(replay_id: str):
     """Get a battle replay by ID (public endpoint for sharing)"""
-    db = await get_database()
+    from server import db
     
     replay = await db.battle_replays.find_one(
         {"replay_id": replay_id},
@@ -2461,12 +2461,14 @@ async def get_battle_replay(replay_id: str):
 
 @game_router.get("/battle-replay/user/list")
 async def get_user_replays(
-    user_id: str = Depends(get_current_user_id),
+    current_user: dict = Depends(get_current_user_from_request),
     limit: int = 20,
     skip: int = 0
 ):
     """Get all replays for the current user"""
-    db = await get_database()
+    from server import db
+    
+    user_id = current_user.get("user_id")
     
     replays = await db.battle_replays.find(
         {"user_id": user_id},
@@ -2490,10 +2492,12 @@ async def get_user_replays(
 @game_router.post("/battle-replay/{replay_id}/share-to-feed")
 async def share_replay_to_feed(
     replay_id: str,
-    user_id: str = Depends(get_current_user_id)
+    current_user: dict = Depends(get_current_user_from_request)
 ):
     """Share a replay to the blendlink.net/feed"""
-    db = await get_database()
+    from server import db
+    
+    user_id = current_user.get("user_id")
     
     # Get the replay
     replay = await db.battle_replays.find_one({"replay_id": replay_id, "user_id": user_id})
