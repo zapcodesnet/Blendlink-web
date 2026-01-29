@@ -2,13 +2,10 @@
  * BotDifficultySelector Component for Mobile
  * 
  * Progressive bot unlock system with 5-photo selection
- * - Easy Bot: Default unlocked, 8 taps/sec, 100 BL fixed bet
- * - Medium Bot: Unlocks after 3 Easy wins, 10 taps/sec, 500 BL fixed bet
- * - Hard Bot: Unlocks after 3 Medium wins, 12 taps/sec, 1000 BL fixed bet
- * - Extremely Hard Bot: Unlocks after 3 Hard wins, 15 taps/sec, 2000 BL fixed bet
+ * FIXED: Single scroll, Loading screen, Quick Play button
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -22,7 +19,7 @@ import {
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 // Bot difficulty configurations
 const BOT_DIFFICULTIES = [
@@ -33,7 +30,7 @@ const BOT_DIFFICULTIES = [
     description: 'Perfect for beginners',
     dollarValue: '$600M',
     minDollarValue: 600000000,
-    tapsPerSec: 8, // Hidden from UI
+    tapsPerSec: 8,
     fixedBet: 100,
     color: '#22c55e',
     bgColor: 'rgba(34, 197, 94, 0.1)',
@@ -49,7 +46,7 @@ const BOT_DIFFICULTIES = [
     description: 'Balanced challenge',
     dollarValue: '$800M',
     minDollarValue: 800000000,
-    tapsPerSec: 10, // Hidden from UI
+    tapsPerSec: 10,
     fixedBet: 500,
     color: '#f59e0b',
     bgColor: 'rgba(245, 158, 11, 0.1)',
@@ -65,7 +62,7 @@ const BOT_DIFFICULTIES = [
     description: 'For experienced players',
     dollarValue: '$1B',
     minDollarValue: 1000000000,
-    tapsPerSec: 12, // Hidden from UI
+    tapsPerSec: 12,
     fixedBet: 1000,
     color: '#ef4444',
     bgColor: 'rgba(239, 68, 68, 0.1)',
@@ -81,7 +78,7 @@ const BOT_DIFFICULTIES = [
     description: 'Ultimate challenge',
     dollarValue: '$2B',
     minDollarValue: 2000000000,
-    tapsPerSec: 15, // Hidden from UI
+    tapsPerSec: 15,
     fixedBet: 2000,
     color: '#8b5cf6',
     bgColor: 'rgba(139, 92, 246, 0.1)',
@@ -92,13 +89,25 @@ const BOT_DIFFICULTIES = [
   },
 ];
 
-// Scenery config for display
 const SCENERY_CONFIG = {
   water: { emoji: '🌊', label: 'Water', color: '#3b82f6', strong: 'Natural', weak: 'Man-made' },
   natural: { emoji: '🌿', label: 'Natural', color: '#22c55e', strong: 'Man-made', weak: 'Water' },
   man_made: { emoji: '🏙️', label: 'Man-made', color: '#6b7280', strong: 'Water', weak: 'Natural' },
   neutral: { emoji: '⚪', label: 'Neutral', color: '#9ca3af', strong: 'None', weak: 'None' },
 };
+
+// Loading Screen Component
+const LoadingScreen = ({ difficulty }) => (
+  <View style={styles.loadingOverlay}>
+    <Text style={styles.loadingEmoji}>{difficulty?.emoji || '🤖'}</Text>
+    <Text style={styles.loadingTitle}>Loading Bot Battle...</Text>
+    <Text style={styles.loadingSubtitle}>Preparing your battle against {difficulty?.name || 'Bot'}</Text>
+    <ActivityIndicator size="large" color="#8b5cf6" style={styles.loadingSpinner} />
+    <View style={styles.loadingBar}>
+      <View style={styles.loadingBarInner} />
+    </View>
+  </View>
+);
 
 const BotDifficultySelector = ({
   visible,
@@ -111,14 +120,15 @@ const BotDifficultySelector = ({
 }) => {
   const [selectedDifficulty, setSelectedDifficulty] = useState('easy');
   const [selectedPhotos, setSelectedPhotos] = useState([]);
-  const [step, setStep] = useState('difficulty'); // 'difficulty' | 'photos'
+  const [step, setStep] = useState('difficulty');
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Reset when modal opens
   useEffect(() => {
     if (visible) {
       setStep('difficulty');
       setSelectedPhotos([]);
       setSelectedDifficulty('easy');
+      setIsLoading(false);
     }
   }, [visible]);
 
@@ -137,6 +147,18 @@ const BotDifficultySelector = ({
 
   const canAffordBet = userBalance >= (currentDifficulty?.fixedBet || 0);
 
+  // Get top 5 photos by dollar value with valid stamina
+  const top5Photos = useMemo(() => {
+    return photos
+      .filter(p => (p.current_stamina || p.stamina || 0) >= 1)
+      .sort((a, b) => (b.dollar_value || 0) - (a.dollar_value || 0))
+      .slice(0, 5);
+  }, [photos]);
+
+  const validPhotosCount = useMemo(() => {
+    return photos.filter(p => (p.current_stamina || p.stamina || 0) >= 1).length;
+  }, [photos]);
+
   const togglePhotoSelection = (photo) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedPhotos(prev => {
@@ -150,9 +172,23 @@ const BotDifficultySelector = ({
     });
   };
 
-  const handleStart = () => {
+  // Quick Play - Auto-select top 5 photos
+  const handleQuickPlay = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (top5Photos.length === 5) {
+      setSelectedPhotos(top5Photos);
+    }
+  };
+
+  const handleStart = async () => {
     if (selectedPhotos.length !== 5 || !currentDifficulty) return;
+    
+    setIsLoading(true);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    
+    // Small delay for loading screen visibility
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
     onStart?.({
       difficulty: selectedDifficulty,
       betAmount: currentDifficulty.fixedBet,
@@ -169,6 +205,14 @@ const BotDifficultySelector = ({
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       setStep('photos');
     }
+  };
+
+  const formatValue = (value) => {
+    if (!value) return '$0';
+    if (value >= 1_000_000_000) return `$${(value / 1_000_000_000).toFixed(1)}B`;
+    if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(0)}M`;
+    if (value >= 1_000) return `$${(value / 1_000).toFixed(0)}K`;
+    return `$${value}`;
   };
 
   const renderDifficultyCard = (difficulty) => {
@@ -255,15 +299,6 @@ const BotDifficultySelector = ({
     );
   };
 
-  // Format large numbers
-  const formatValue = (value) => {
-    if (!value) return '$0';
-    if (value >= 1_000_000_000) return `$${(value / 1_000_000_000).toFixed(1)}B`;
-    if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(0)}M`;
-    if (value >= 1_000) return `$${(value / 1_000).toFixed(0)}K`;
-    return `$${value}`;
-  };
-
   const renderPhotoItem = (photo) => {
     const isSelected = selectedPhotos.some(p => p.mint_id === photo.mint_id);
     const hasStamina = (photo.current_stamina || photo.stamina || 0) >= 1;
@@ -292,7 +327,6 @@ const BotDifficultySelector = ({
           },
         ]}
       >
-        {/* Selection number badge */}
         {isSelected && (
           <View style={styles.photoSelectionNumber}>
             <Text style={styles.photoSelectionNumberText}>
@@ -301,7 +335,6 @@ const BotDifficultySelector = ({
           </View>
         )}
 
-        {/* Low stamina overlay */}
         {!hasStamina && (
           <View style={styles.lowStaminaOverlay}>
             <Text style={styles.lowStaminaText}>⚡ 0 Stamina</Text>
@@ -309,7 +342,6 @@ const BotDifficultySelector = ({
           </View>
         )}
 
-        {/* Photo Image */}
         <View style={styles.photoImageContainer}>
           {imageUrl ? (
             <Image 
@@ -323,36 +355,30 @@ const BotDifficultySelector = ({
             </View>
           )}
           
-          {/* Level badge */}
           <View style={styles.levelBadge}>
             <Text style={styles.levelText}>Lv{level}</Text>
             <Text style={styles.starsText}>{'★'.repeat(Math.min(level, 5))}</Text>
           </View>
           
-          {/* Scenery badge */}
           <View style={styles.sceneryBadge}>
             <Text style={styles.sceneryBadgeText}>{scenery.emoji} {scenery.label}</Text>
           </View>
         </View>
 
-        {/* Photo Info */}
         <View style={styles.photoInfoContainer}>
           <Text style={[styles.photoName, { color: colors.text }]} numberOfLines={1}>
             {photo.name}
           </Text>
           
-          {/* Dollar Value - Prominent */}
           <View style={styles.dollarValueContainer}>
             <Text style={styles.dollarValueText}>{formatValue(photo.dollar_value)}</Text>
           </View>
           
-          {/* Scenery Strength/Weakness */}
           <View style={styles.sceneryStrengthRow}>
             <Text style={styles.strengthText}>💪 {scenery.strong}</Text>
             <Text style={styles.weaknessText}>😰 {scenery.weak}</Text>
           </View>
           
-          {/* Stats Row: Hearts, Streaks */}
           <View style={styles.statsRow}>
             <View style={styles.heartsContainer}>
               <Text style={styles.heartsText}>❤️ {hearts > 999 ? `${(hearts/1000).toFixed(1)}K` : hearts}</Text>
@@ -367,7 +393,6 @@ const BotDifficultySelector = ({
             </View>
           </View>
           
-          {/* Stamina bar */}
           <View style={styles.staminaContainer}>
             <View style={styles.staminaLabelRow}>
               <Text style={styles.staminaLabel}>Stamina</Text>
@@ -392,14 +417,16 @@ const BotDifficultySelector = ({
     );
   };
 
-  const validPhotosCount = photos.filter(p => (p.current_stamina || p.stamina || 0) >= 1).length;
   const needMorePhotos = selectedPhotos.length < 5;
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
+      {/* Loading Screen Overlay */}
+      {isLoading && <LoadingScreen difficulty={currentDifficulty} />}
+      
       <View style={styles.modalOverlay}>
         <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
-          {/* Header with Balance */}
+          {/* Header */}
           <View style={[styles.header, { borderBottomColor: colors.border }]}>
             <View style={styles.headerLeft}>
               <View style={[styles.headerIcon, { backgroundColor: 'rgba(139, 92, 246, 0.2)' }]}>
@@ -413,28 +440,27 @@ const BotDifficultySelector = ({
               </View>
             </View>
             <View style={styles.headerRight}>
-              {/* Balance Display */}
               <View style={styles.balanceChip}>
                 <Text style={styles.balanceChipText}>{userBalance.toLocaleString()} BL</Text>
               </View>
-              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <TouchableOpacity onPress={onClose} disabled={isLoading} style={styles.closeButton}>
                 <Text style={[styles.closeButtonText, { color: colors.textMuted }]}>✕</Text>
               </TouchableOpacity>
             </View>
           </View>
 
+          {/* Single ScrollView - No nested scroll */}
           <ScrollView 
             style={styles.scrollContent} 
-            showsVerticalScrollIndicator={false}
+            showsVerticalScrollIndicator={true}
             contentContainerStyle={styles.scrollContentContainer}
+            bounces={true}
           >
             {step === 'difficulty' ? (
               <>
-                {/* Difficulty Selection */}
                 <Text style={[styles.sectionTitle, { color: colors.text }]}>Select Difficulty</Text>
                 {BOT_DIFFICULTIES.map(renderDifficultyCard)}
 
-                {/* Balance Info */}
                 {currentDifficulty && isBotUnlocked(currentDifficulty) && (
                   <View style={[styles.balanceCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                     <View style={styles.balanceRow}>
@@ -455,7 +481,6 @@ const BotDifficultySelector = ({
                   </View>
                 )}
 
-                {/* Info Box */}
                 <View style={[styles.infoBox, { backgroundColor: 'rgba(139, 92, 246, 0.1)', borderColor: 'rgba(139, 92, 246, 0.3)' }]}>
                   <Text style={styles.infoTitle}>Bot Battle Rules:</Text>
                   <Text style={styles.infoText}>• Select exactly 5 minted photos (stamina ≥1)</Text>
@@ -465,7 +490,6 @@ const BotDifficultySelector = ({
                   <Text style={styles.infoText}>• Win 3 games to unlock next difficulty</Text>
                 </View>
 
-                {/* Continue Button */}
                 <TouchableOpacity
                   onPress={proceedToPhotos}
                   disabled={!isBotUnlocked(currentDifficulty) || !canAffordBet}
@@ -482,12 +506,10 @@ const BotDifficultySelector = ({
               </>
             ) : (
               <>
-                {/* Back Button */}
                 <TouchableOpacity onPress={() => setStep('difficulty')} style={styles.backButton}>
                   <Text style={[styles.backButtonText, { color: colors.textMuted }]}>← Back to difficulty</Text>
                 </TouchableOpacity>
 
-                {/* Selected Difficulty Summary */}
                 <View style={[styles.summaryCard, { backgroundColor: currentDifficulty?.bgColor, borderColor: currentDifficulty?.color }]}>
                   <Text style={styles.summaryEmoji}>{currentDifficulty?.emoji}</Text>
                   <View style={styles.summaryInfo}>
@@ -500,7 +522,7 @@ const BotDifficultySelector = ({
                   </View>
                 </View>
 
-                {/* Photo Selection Counter - Prominent */}
+                {/* Selection Counter */}
                 <View style={[styles.selectionCounter, { backgroundColor: colors.card, borderColor: colors.border }]}>
                   <View>
                     <Text style={[styles.selectionCounterLabel, { color: colors.text }]}>Photos Selected:</Text>
@@ -517,16 +539,25 @@ const BotDifficultySelector = ({
                   </View>
                 </View>
 
-                {/* Instruction message */}
-                {needMorePhotos && (
+                {/* Quick Play Button */}
+                {top5Photos.length === 5 && selectedPhotos.length === 0 && (
+                  <TouchableOpacity
+                    onPress={handleQuickPlay}
+                    style={styles.quickPlayButton}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.quickPlayText}>⚡ Quick Play - Auto-Select Top 5 Photos</Text>
+                  </TouchableOpacity>
+                )}
+
+                {needMorePhotos && selectedPhotos.length > 0 && (
                   <View style={styles.instructionBox}>
                     <Text style={styles.instructionText}>
-                      ⚠️ Select exactly 5 minted photos with available stamina to play
+                      ⚠️ Select {5 - selectedPhotos.length} more photo{5 - selectedPhotos.length > 1 ? 's' : ''} to start
                     </Text>
                   </View>
                 )}
 
-                {/* Not enough valid photos warning */}
                 {validPhotosCount < 5 && (
                   <View style={styles.errorBox}>
                     <Text style={styles.errorBoxText}>
@@ -535,7 +566,7 @@ const BotDifficultySelector = ({
                   </View>
                 )}
 
-                {/* Photo Grid */}
+                {/* Photo Grid - Part of main scroll, no inner scroll */}
                 <View style={styles.photoGrid}>
                   {photos.map(renderPhotoItem)}
                   {photos.length === 0 && (
@@ -550,30 +581,40 @@ const BotDifficultySelector = ({
                     </View>
                   )}
                 </View>
-
-                {/* Start Button - Fixed at bottom with extra padding */}
-                <TouchableOpacity
-                  onPress={handleStart}
-                  disabled={selectedPhotos.length !== 5}
-                  style={[
-                    styles.startButton,
-                    {
-                      backgroundColor: selectedPhotos.length === 5 ? '#f59e0b' : colors.cardSecondary,
-                      opacity: selectedPhotos.length === 5 ? 1 : 0.5,
-                    },
-                  ]}
-                >
-                  <Text style={styles.startButtonEmoji}>{currentDifficulty?.emoji}</Text>
-                  <Text style={styles.startButtonText}>
-                    Start Battle vs {currentDifficulty?.name}
-                  </Text>
-                  <View style={styles.startButtonBet}>
-                    <Text style={styles.startButtonBetText}>{currentDifficulty?.fixedBet} BL</Text>
-                  </View>
-                </TouchableOpacity>
               </>
             )}
           </ScrollView>
+
+          {/* Fixed Start Button - Always visible above nav bar */}
+          {step === 'photos' && validPhotosCount >= 5 && (
+            <View style={styles.fixedStartButtonContainer}>
+              <TouchableOpacity
+                onPress={handleStart}
+                disabled={selectedPhotos.length !== 5 || isLoading}
+                style={[
+                  styles.startButton,
+                  {
+                    backgroundColor: selectedPhotos.length === 5 ? '#f59e0b' : colors.cardSecondary,
+                    opacity: selectedPhotos.length === 5 ? 1 : 0.5,
+                  },
+                ]}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <>
+                    <Text style={styles.startButtonEmoji}>{currentDifficulty?.emoji}</Text>
+                    <Text style={styles.startButtonText}>
+                      Start Battle vs {currentDifficulty?.name}
+                    </Text>
+                    <View style={styles.startButtonBet}>
+                      <Text style={styles.startButtonBetText}>{currentDifficulty?.fixedBet} BL</Text>
+                    </View>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </View>
     </Modal>
@@ -589,7 +630,8 @@ const styles = StyleSheet.create({
   modalContent: {
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    maxHeight: '85%',
+    maxHeight: '90%',
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
@@ -644,10 +686,11 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   scrollContent: {
+    flex: 1,
     padding: 16,
   },
   scrollContentContainer: {
-    paddingBottom: 100, // Extra padding for nav bar clearance
+    paddingBottom: 120,
   },
   sectionTitle: {
     fontSize: 14,
@@ -827,24 +870,78 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 2,
   },
-  photoSelectionHeader: {
+  selectionCounter: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
     marginBottom: 12,
   },
-  photoCount: {
+  selectionCounterLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  selectionCounterHint: {
+    fontSize: 11,
+    marginTop: 2,
+  },
+  selectionCounterBadge: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  selectionCounterText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  quickPlayButton: {
+    backgroundColor: '#0ea5e9',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginBottom: 12,
+    alignItems: 'center',
+  },
+  quickPlayText: {
+    color: '#fff',
     fontSize: 14,
     fontWeight: 'bold',
+  },
+  instructionBox: {
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.3)',
+    marginBottom: 12,
+  },
+  instructionText: {
+    color: '#f59e0b',
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  errorBox: {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+    marginBottom: 12,
+  },
+  errorBoxText: {
+    color: '#ef4444',
+    fontSize: 12,
+    textAlign: 'center',
   },
   photoGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
-    paddingBottom: 100, // Extra padding for start button
   },
   photoItem: {
-    width: (width - 52) / 2, // 2 columns
+    width: (width - 52) / 2,
     borderRadius: 12,
     borderWidth: 1,
     overflow: 'hidden',
@@ -909,45 +1006,45 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   photoThumbnailEmoji: {
-    fontSize: 48,
+    fontSize: 40,
     opacity: 0.5,
   },
   levelBadge: {
     position: 'absolute',
     top: 8,
     left: 8,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 6,
-    gap: 3,
+    gap: 4,
   },
   levelText: {
-    color: '#facc15',
-    fontSize: 10,
+    color: '#eab308',
+    fontSize: 11,
     fontWeight: 'bold',
   },
   starsText: {
-    color: '#fde047',
-    fontSize: 8,
+    color: '#fbbf24',
+    fontSize: 9,
   },
   sceneryBadge: {
     position: 'absolute',
     bottom: 8,
     left: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    paddingHorizontal: 6,
-    paddingVertical: 3,
+    backgroundColor: 'rgba(0,0,0,0.7)',
     borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
   },
   sceneryBadgeText: {
     color: '#d1d5db',
     fontSize: 10,
   },
   photoInfoContainer: {
-    padding: 10,
+    padding: 8,
   },
   photoName: {
     fontSize: 13,
@@ -956,14 +1053,14 @@ const styles = StyleSheet.create({
   },
   dollarValueContainer: {
     backgroundColor: 'rgba(234, 179, 8, 0.1)',
-    paddingVertical: 6,
     borderRadius: 6,
+    paddingVertical: 4,
     alignItems: 'center',
     marginBottom: 6,
   },
   dollarValueText: {
-    color: '#facc15',
-    fontSize: 18,
+    color: '#eab308',
+    fontSize: 16,
     fontWeight: 'bold',
   },
   sceneryStrengthRow: {
@@ -972,11 +1069,11 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   strengthText: {
-    color: '#4ade80',
+    color: '#22c55e',
     fontSize: 10,
   },
   weaknessText: {
-    color: '#f87171',
+    color: '#ef4444',
     fontSize: 10,
   },
   statsRow: {
@@ -985,34 +1082,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 6,
   },
-  heartsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+  heartsContainer: {},
   heartsText: {
-    color: '#f472b6',
+    color: '#ec4899',
     fontSize: 11,
   },
   streaksContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
     gap: 4,
   },
   winStreakText: {
-    color: '#fb923c',
+    color: '#f97316',
     fontSize: 11,
   },
   immunityText: {
-    color: '#60a5fa',
+    color: '#3b82f6',
     fontSize: 11,
   },
-  staminaContainer: {
-    marginTop: 2,
-  },
+  staminaContainer: {},
   staminaLabelRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 3,
+    marginBottom: 2,
   },
   staminaLabel: {
     color: '#9ca3af',
@@ -1024,7 +1115,7 @@ const styles = StyleSheet.create({
   },
   staminaBarBg: {
     height: 4,
-    backgroundColor: 'rgba(55, 65, 81, 0.5)',
+    backgroundColor: '#374151',
     borderRadius: 2,
     overflow: 'hidden',
   },
@@ -1032,102 +1123,39 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 2,
   },
-  photoValue: {
-    justifyContent: 'center',
-    marginBottom: 6,
-  },
-  photoThumbnailEmoji: {
-    fontSize: 24,
-  },
-  photoName: {
-    fontSize: 11,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  photoValue: {
-    fontSize: 11,
-    fontWeight: 'bold',
-  },
-  // Selection counter
-  selectionCounter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-    marginBottom: 12,
-  },
-  selectionCounterLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  selectionCounterHint: {
-    fontSize: 11,
-    marginTop: 2,
-  },
-  selectionCounterBadge: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  selectionCounterText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  // Instruction/Error boxes
-  instructionBox: {
-    padding: 10,
-    backgroundColor: 'rgba(245, 158, 11, 0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(245, 158, 11, 0.3)',
-    borderRadius: 8,
-    marginBottom: 12,
-    alignItems: 'center',
-  },
-  instructionText: {
-    fontSize: 12,
-    color: '#f59e0b',
-    textAlign: 'center',
-  },
-  errorBox: {
-    padding: 10,
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.3)',
-    borderRadius: 8,
-    marginBottom: 12,
-    alignItems: 'center',
-  },
-  errorBoxText: {
-    fontSize: 12,
-    color: '#ef4444',
-    textAlign: 'center',
-  },
   emptyPhotos: {
     width: '100%',
-    padding: 40,
     alignItems: 'center',
+    paddingVertical: 40,
   },
   emptyPhotosEmoji: {
     fontSize: 40,
-    marginBottom: 8,
+    marginBottom: 12,
   },
   emptyPhotosText: {
     fontSize: 14,
+    fontWeight: '600',
   },
   emptyPhotosHint: {
     fontSize: 12,
     marginTop: 4,
   },
+  fixedStartButtonContainer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 16,
+    right: 16,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    borderRadius: 12,
+    padding: 4,
+  },
   startButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 18,
-    borderRadius: 12,
-    marginTop: 16,
-    marginBottom: 24,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 10,
     gap: 8,
   },
   startButtonEmoji: {
@@ -1135,20 +1163,64 @@ const styles = StyleSheet.create({
   },
   startButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: 'bold',
+    flex: 1,
+    textAlign: 'center',
   },
   startButtonBet: {
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    paddingHorizontal: 8,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 6,
-    marginLeft: 8,
   },
   startButtonBetText: {
     color: '#fff',
     fontSize: 12,
     fontWeight: 'bold',
+  },
+  // Loading Screen Styles
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.95)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 100,
+  },
+  loadingEmoji: {
+    fontSize: 80,
+    marginBottom: 20,
+  },
+  loadingTitle: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  loadingSubtitle: {
+    color: '#9ca3af',
+    fontSize: 14,
+    marginBottom: 24,
+  },
+  loadingSpinner: {
+    marginBottom: 16,
+  },
+  loadingBar: {
+    width: 200,
+    height: 6,
+    backgroundColor: '#374151',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  loadingBarInner: {
+    width: '50%',
+    height: '100%',
+    backgroundColor: '#8b5cf6',
+    borderRadius: 3,
   },
 });
 
