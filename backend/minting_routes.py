@@ -1293,7 +1293,8 @@ async def get_photo_full_value(mint_id: str):
     - Monthly growth (+$1M per 30 days)
     - Reaction bonus (+$1M per 100 reactions)
     """
-    from minting_system import calculate_full_dollar_value, calculate_stamina_regen, get_level_stars
+    from minting_system import calculate_full_dollar_value, calculate_stamina_regen
+    from minting_system import get_level_stars as get_stars_info
     from datetime import datetime, timezone
     
     if _db is None:
