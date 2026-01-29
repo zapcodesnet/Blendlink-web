@@ -318,6 +318,7 @@ function AppStack() {
       <Stack.Screen name="PhotoGameArena" component={PhotoGameArenaScreen} options={{ headerShown: false }} />
       <Stack.Screen name="MintedPhotos" component={MintedPhotosScreen} options={{ headerShown: false }} />
       <Stack.Screen name="PhotoMarketplace" component={PhotoMarketplaceScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="OpenGamesBrowser" component={OpenGamesBrowserScreen} options={{ headerShown: false }} />
       {/* PKO Poker Screens */}
       <Stack.Screen name="PokerLobby" component={PokerLobbyScreen} options={{ headerShown: false }} />
       <Stack.Screen name="PokerTable" component={PokerTableScreen} options={{ headerShown: false, orientation: 'landscape' }} />
