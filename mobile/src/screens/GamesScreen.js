@@ -189,21 +189,29 @@ export default function GamesScreen() {
         <View style={styles.quickGamesGrid}>
           <TouchableOpacity
             style={[styles.quickGameCard, { backgroundColor: '#8B5CF6' }]}
-            onPress={() => navigation.navigate('PhotoGameArena')}
+            onPress={() => navigation.navigate('GameCreation', { mode: 'create' })}
           >
             <Text style={styles.quickGameIcon}>⚔️</Text>
-            <Text style={styles.quickGameName}>Battle</Text>
-            <Text style={styles.quickGameDesc}>PvP Arena</Text>
+            <Text style={styles.quickGameName}>Create</Text>
+            <Text style={styles.quickGameDesc}>New Battle</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.quickGameCard, { backgroundColor: '#22C55E' }]}
+            onPress={() => navigation.navigate('OpenGamesBrowser')}
+          >
+            <Text style={styles.quickGameIcon}>👥</Text>
+            <Text style={styles.quickGameName}>Join</Text>
+            <Text style={styles.quickGameDesc}>Open Games</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.quickGameCard, { backgroundColor: '#EAB308' }]}
-            onPress={() => navigation.navigate('CasinoGame', { gameId: 'daily' })}
+            onPress={() => navigation.navigate('GameCreation', { mode: 'bot', botDifficulty: 'medium' })}
           >
-            {dailySpinAvailable && <View style={[styles.freeDot, { backgroundColor: colors.success }]} />}
-            <Text style={styles.quickGameIcon}>🎁</Text>
-            <Text style={styles.quickGameName}>Daily Spin</Text>
-            <Text style={styles.quickGameDesc}>Free daily!</Text>
+            <Text style={styles.quickGameIcon}>🤖</Text>
+            <Text style={styles.quickGameName}>Bot Match</Text>
+            <Text style={styles.quickGameDesc}>Practice</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -213,15 +221,6 @@ export default function GamesScreen() {
             <Text style={styles.quickGameIcon}>🎰</Text>
             <Text style={styles.quickGameName}>Slots</Text>
             <Text style={styles.quickGameDesc}>Up to 500x</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.quickGameCard, { backgroundColor: '#16A34A' }]}
-            onPress={() => navigation.navigate('CasinoGame', { gameId: 'blackjack' })}
-          >
-            <Text style={styles.quickGameIcon}>🃏</Text>
-            <Text style={styles.quickGameName}>Blackjack</Text>
-            <Text style={styles.quickGameDesc}>Beat 21</Text>
           </TouchableOpacity>
         </View>
 
