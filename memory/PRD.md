@@ -1,6 +1,47 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 29, 2026 (10 Free Daily Mints)
+## Latest Update: January 29, 2026 (Live Video Selfie Match)
+
+---
+
+## SESSION 40: LIVE VIDEO SELFIE MATCH FOR AUTHENTICITY BONUS ✅
+
+### Feature: Selfie Verification for Authenticity Bonus
+**Files Modified/Created:**
+- `/app/backend/minting_routes.py` - Already has selfie match endpoint
+- `/app/backend/minting_system.py` - Authenticity scoring system
+- `/app/mobile/src/components/SelfieMatchModal.js` - NEW: Mobile selfie match component
+- `/app/mobile/src/screens/PhotoDetailScreen.js` - Added selfie match integration
+- `/app/mobile/src/services/api.js` - Added selfie match API methods
+
+**How It Works:**
+1. **Face Detection at Mint** (Automatic)
+   - AI analyzes photo during minting for faces
+   - Face detection score (0-100%) stored with photo
+   - Contributes up to 5% of Authenticity bonus
+
+2. **Live Selfie Verification** (User-Initiated)
+   - Available on photos with detected faces
+   - User takes live selfie using front camera
+   - GPT-4o Vision compares faces between selfie and photo
+   - Costs 100 BL coins per attempt (max 3 attempts)
+   - 80%+ match = Full +5% Authenticity bonus
+   - Lower matches earn partial bonus
+
+3. **Authenticity Bonus Impact:**
+   - Max Authenticity = 10% (Face Detection 5% + Selfie Match 5%)
+   - Applies to photo's Dollar Value calculation
+   - Once verified, authenticity is permanently locked
+
+**Backend API:**
+- `POST /api/minting/photo/{mint_id}/selfie-match` - Submit selfie for matching
+- `GET /api/minting/photo/{mint_id}/authenticity-status` - Get authenticity status
+
+**Mobile Implementation:**
+- Full camera integration using expo-camera
+- Image processing with expo-image-manipulator
+- Result display with success/failure states
+- Attempts tracking and balance display
 
 ---
 
