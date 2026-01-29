@@ -1545,6 +1545,29 @@ const PhotoGameArena = () => {
     fetchStats();
   }, []);
   
+  // Fetch battle photos for Bot Battle mode
+  useEffect(() => {
+    const fetchBattlePhotos = async () => {
+      try {
+        const [photosRes, botStatsRes, userRes] = await Promise.all([
+          api.get('/photo-game/battle-photos'),
+          api.get('/photo-game/bot-battle/stats').catch(() => ({ data: {} })),
+          api.get('/auth/me').catch(() => ({ data: {} }))
+        ]);
+        setBattlePhotos(photosRes.data.photos || []);
+        setBotWinStats(botStatsRes.data || {});
+        setUserBalance(userRes.data?.bl_coins || 0);
+      } catch (err) {
+        console.error('Failed to fetch battle photos:', err);
+      }
+    };
+    
+    // Fetch when on the main menu or when showing bot selector
+    if (gameState === 'pvp_menu') {
+      fetchBattlePhotos();
+    }
+  }, [gameState]);
+  
   const handleSoundToggle = () => {
     const newValue = !soundEnabled;
     setSoundEnabled(newValue);
