@@ -30,7 +30,7 @@
 
 import { getToken } from './api';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://photo-bidding-game.preview.emergentagent.com';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://photo-battle-5.preview.emergentagent.com';
 
 class PVPWebSocketService {
   constructor() {
