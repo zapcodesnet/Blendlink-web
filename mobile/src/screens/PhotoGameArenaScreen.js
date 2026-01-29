@@ -2,7 +2,11 @@
  * Photo Game Arena Screen for Blendlink Mobile
  * PvP Photo Battles with Tapping Arena + RPS mechanics + Photo Selection
  * 
- * UPDATED: 30 TPS rate limit for Photo Auction Bidding rounds
+ * UPDATED: Full WebSocket integration for real-time PVP sync
+ * - 30 TPS rate limit for Photo Auction Bidding rounds
+ * - Ready button before countdown
+ * - Server-authoritative timer synchronization
+ * - Live opponent tap meter updates
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -22,10 +26,11 @@ import {
   Vibration,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { photoGameAPI } from '../services/api';
+import { usePVPWebSocket } from '../hooks/usePVPWebSocket';
 import auctionSounds from '../utils/auctionSounds';
 import * as Haptics from 'expo-haptics';
 
