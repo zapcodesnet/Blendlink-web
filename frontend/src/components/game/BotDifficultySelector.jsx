@@ -238,65 +238,145 @@ const PhotoSelectionGrid = ({ photos, selectedPhotos, onTogglePhoto, maxPhotos =
         </div>
       )}
       
-      <div className="grid grid-cols-3 gap-2 max-h-72 overflow-y-auto p-1">
+      <div className="grid grid-cols-2 gap-3 max-h-[45vh] overflow-y-auto p-1">
         {photos.map(photo => {
           const isSelected = selectedPhotos.some(p => p.mint_id === photo.mint_id);
           const scenery = getSceneryConfig(photo.scenery_type);
           const hasStamina = (photo.current_stamina || photo.stamina || 0) >= 1;
           const canSelect = hasStamina && (isSelected || selectedPhotos.length < maxPhotos);
+          const stamina = Math.min((photo.current_stamina || photo.stamina || 0), 100);
+          const level = photo.level || 1;
+          const hearts = photo.hearts || photo.reaction_count || 0;
+          const winStreak = photo.current_win_streak || 0;
+          const loseStreak = photo.current_lose_streak || 0;
+          const imageUrl = photo.image_url || photo.thumbnail_url;
           
           return (
             <motion.button
               key={photo.mint_id}
               onClick={() => canSelect && onTogglePhoto(photo)}
               disabled={!canSelect}
-              className={`relative p-2 rounded-lg border-2 transition-all ${
+              className={`relative rounded-xl border-2 transition-all overflow-hidden ${
                 !hasStamina
                   ? 'border-gray-700/50 bg-gray-800/30 opacity-50 cursor-not-allowed'
                   : isSelected
-                    ? 'border-purple-500 bg-purple-500/20 ring-2 ring-purple-500/50'
+                    ? 'border-purple-500 bg-purple-500/10 ring-2 ring-purple-500/50 shadow-lg shadow-purple-500/20'
                     : canSelect
                       ? 'border-gray-600 bg-gray-800/50 hover:border-gray-500 hover:bg-gray-700/50'
                       : 'border-gray-700/50 bg-gray-800/30 opacity-50 cursor-not-allowed'
               }`}
               whileHover={canSelect ? { scale: 1.02 } : {}}
               whileTap={canSelect ? { scale: 0.98 } : {}}
+              data-testid={`photo-card-${photo.mint_id}`}
             >
               {/* Selection number badge */}
               {isSelected && (
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-sm font-bold text-white z-10 shadow-lg">
+                <div className="absolute top-2 right-2 w-7 h-7 bg-purple-500 rounded-full flex items-center justify-center text-sm font-bold text-white z-20 shadow-lg">
                   {selectedPhotos.findIndex(p => p.mint_id === photo.mint_id) + 1}
                 </div>
               )}
               
-              {/* Low stamina warning */}
+              {/* Low stamina overlay */}
               {!hasStamina && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/70 rounded-lg z-10">
+                <div className="absolute inset-0 flex items-center justify-center bg-black/70 z-20">
                   <div className="text-center">
-                    <span className="text-xs text-red-400 font-bold">⚡ 0 Stamina</span>
-                    <p className="text-[10px] text-gray-400">Needs rest</p>
+                    <span className="text-sm text-red-400 font-bold">⚡ 0 Stamina</span>
+                    <p className="text-xs text-gray-400">Regenerating...</p>
                   </div>
                 </div>
               )}
               
-              {/* Photo thumbnail */}
-              <div className={`w-full aspect-square rounded-md bg-gradient-to-br ${scenery.color} flex items-center justify-center mb-1`}>
-                <span className="text-2xl">{scenery.emoji}</span>
+              {/* Photo Image */}
+              <div className="relative aspect-square w-full">
+                {imageUrl ? (
+                  <img 
+                    src={imageUrl} 
+                    alt={photo.name}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = '';
+                      e.target.parentElement.classList.add('bg-gradient-to-br', scenery.color);
+                    }}
+                  />
+                ) : (
+                  <div className={`w-full h-full bg-gradient-to-br ${scenery.color} flex items-center justify-center`}>
+                    <span className="text-4xl opacity-50">{scenery.emoji}</span>
+                  </div>
+                )}
+                
+                {/* Level badge */}
+                <div className="absolute top-2 left-2 px-2 py-0.5 bg-black/70 rounded-lg flex items-center gap-1 z-10">
+                  <span className="text-yellow-400 text-xs font-bold">Lv{level}</span>
+                  <span className="text-yellow-300 text-xs">{'★'.repeat(Math.min(level, 5))}</span>
+                </div>
+                
+                {/* Scenery indicator */}
+                <div className={`absolute bottom-2 left-2 px-2 py-0.5 bg-black/70 rounded-lg z-10`}>
+                  <span className="text-xs">
+                    <span className="mr-1">{scenery.emoji}</span>
+                    <span className={`text-gray-300`}>{scenery.label}</span>
+                  </span>
+                </div>
               </div>
               
-              {/* Photo info */}
-              <p className="text-xs text-white truncate font-medium">{photo.name}</p>
-              <p className="text-xs text-yellow-400">${((photo.dollar_value || 0) / 1000000).toFixed(0)}M</p>
-              
-              {/* Stamina indicator */}
-              {hasStamina && (
-                <div className="mt-1 h-1 bg-gray-700 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-green-500 rounded-full"
-                    style={{ width: `${Math.min((photo.current_stamina || photo.stamina || 0), 100)}%` }}
-                  />
+              {/* Photo Info */}
+              <div className="p-2 space-y-1.5">
+                {/* Name and Value */}
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-white font-semibold truncate flex-1">{photo.name}</p>
                 </div>
-              )}
+                
+                {/* Dollar Value - Prominent */}
+                <div className="text-center py-1 bg-yellow-500/10 rounded-lg">
+                  <span className="text-lg font-bold text-yellow-400">{formatValue(photo.dollar_value)}</span>
+                </div>
+                
+                {/* Scenery Strength/Weakness */}
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-green-400">💪 vs {scenery.strong}</span>
+                  <span className="text-red-400">😰 vs {scenery.weak}</span>
+                </div>
+                
+                {/* Stats Row: Hearts, Streaks */}
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-1 text-pink-400">
+                    <span>❤️</span>
+                    <span>{hearts > 999 ? `${(hearts/1000).toFixed(1)}K` : hearts}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {winStreak > 0 && (
+                      <span className="text-orange-400" title={`${winStreak} win streak`}>
+                        🔥{winStreak}
+                      </span>
+                    )}
+                    {loseStreak >= 3 && (
+                      <span className="text-blue-400" title="Immunity active!">
+                        🛡️
+                      </span>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Stamina Bar */}
+                <div className="space-y-0.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-400">Stamina</span>
+                    <span className={`font-medium ${stamina > 50 ? 'text-green-400' : stamina > 20 ? 'text-yellow-400' : 'text-red-400'}`}>
+                      {stamina.toFixed(0)}%
+                    </span>
+                  </div>
+                  <div className="h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all ${
+                        stamina > 50 ? 'bg-green-500' : stamina > 20 ? 'bg-yellow-500' : 'bg-red-500'
+                      }`}
+                      style={{ width: `${stamina}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
             </motion.button>
           );
         })}
