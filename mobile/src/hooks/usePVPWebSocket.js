@@ -248,10 +248,14 @@ export function usePVPWebSocket(roomId, options = {}) {
       unsubRoundReady,
       unsubPlayerReady,
       unsubRoundCountdown,
+      unsubCountdownTick,
       unsubRoundPlaying,
+      unsubRoundStart,
       unsubTapUpdate,
       unsubRoundResult,
       unsubGameResult,
+      unsubPlayerSelected,
+      unsubPhotoConfirmed,
       unsubMessage,
     ];
 
