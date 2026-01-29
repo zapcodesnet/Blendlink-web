@@ -1314,7 +1314,7 @@ async def get_photo_full_value(mint_id: str):
     
     # Get star info
     level = photo.get("level", 1)
-    star_info = get_level_stars(level)
+    star_info = get_stars_info(level)
     
     # Check birthday eligibility
     minted_at = photo.get("minted_at")
