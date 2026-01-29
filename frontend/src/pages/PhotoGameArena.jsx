@@ -1520,6 +1520,12 @@ const PhotoGameArena = () => {
   const [opponentInfo, setOpponentInfo] = useState({ id: null, username: null });
   const [pvpRoomId, setPvpRoomId] = useState(null);
   
+  // Bot Battle state (for Play with Bot from main menu)
+  const [battlePhotos, setBattlePhotos] = useState([]);
+  const [showBotSelector, setShowBotSelector] = useState(false);
+  const [userBalance, setUserBalance] = useState(0);
+  const [botWinStats, setBotWinStats] = useState({});
+  
   useEffect(() => {
     auctionSounds.init();
     auctionSounds.setEnabled(soundEnabled);
