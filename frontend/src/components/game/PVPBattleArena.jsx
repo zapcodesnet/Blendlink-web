@@ -352,6 +352,9 @@ export const PVPBattleArena = ({
     }
   }, [currentUserId, opponentId, opponentUsername, isPlayer1, mySelectedPhoto]);
   
+  // Connect to WebSocket ref to avoid circular dependency
+  const connectWebSocketRef = useRef(null);
+  
   // Connect to WebSocket
   const connectWebSocket = useCallback((isReconnect = false) => {
     const wsUrl = getWebSocketUrl();
@@ -417,7 +420,10 @@ export const PVPBattleArena = ({
           console.log(`Scheduling reconnect attempt ${reconnectAttempts.current}/${MAX_RECONNECT_ATTEMPTS} in ${delay}ms`);
           
           reconnectTimeoutRef.current = setTimeout(() => {
-            connectWebSocket(true);
+            // Use ref to call the latest version
+            if (connectWebSocketRef.current) {
+              connectWebSocketRef.current(true);
+            }
           }, delay);
         } else if (reconnectAttempts.current >= MAX_RECONNECT_ATTEMPTS) {
           toast.error('Connection lost. Please rejoin or create a new game.');
@@ -432,6 +438,11 @@ export const PVPBattleArena = ({
       setReconnecting(false);
     }
   }, [getWebSocketUrl, handleWebSocketMessage, currentUsername, playerPhotos, isPlayer1, gamePhase]);
+  
+  // Keep ref updated
+  useEffect(() => {
+    connectWebSocketRef.current = connectWebSocket;
+  }, [connectWebSocket]);
   
   // Manual reconnect function
   const handleManualReconnect = useCallback(() => {
