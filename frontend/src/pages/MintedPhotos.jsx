@@ -227,6 +227,18 @@ const ImageLightbox = ({ photo, isOpen, onClose, onSetProfilePic, onDelete }) =>
                 </button>
               </div>
               
+              {/* Minted by info - Permanent metadata */}
+              <div className="px-4 py-2 bg-gray-800/50 text-center text-sm">
+                <span className="text-gray-400">Minted by </span>
+                <span className="text-purple-400 font-bold">@{photo.minted_by_username || 'Unknown'}</span>
+                <span className="text-gray-400"> on </span>
+                <span className="text-gray-300">
+                  {photo.minted_at ? new Date(photo.minted_at).toLocaleDateString('en-US', {
+                    month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit'
+                  }) : 'Unknown date'}
+                </span>
+              </div>
+              
               {/* Rating categories - Scrollable */}
               <div className="flex-1 overflow-y-auto p-4 space-y-2">
                 {Object.entries(RATING_LABELS).map(([key, label]) => {
