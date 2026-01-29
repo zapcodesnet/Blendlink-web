@@ -38,6 +38,10 @@ export function usePVPWebSocket(roomId, options = {}) {
     opponentTaps: 0,
     roundResult: null,
     gameResult: null,
+    // NEW: Track used photos and opponent selection status
+    usedPhotoIds: [],        // Photos already used in previous rounds
+    opponentHasSelected: false,  // Whether opponent has selected their photo
+    mySelectedPhotoId: null,     // My current selection (before confirmed)
   });
 
   // Refs for cleanup
