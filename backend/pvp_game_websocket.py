@@ -347,14 +347,35 @@ class PVPGameManager:
         room.timeout_task = asyncio.create_task(self._selection_timeout(room_id))
     
     async def _selection_timeout(self, room_id: str):
-        """Handle selection timeout - auto-select random photo"""
-        await asyncio.sleep(READY_TIMEOUT_SECONDS)
+        """Handle selection timeout - broadcast countdown and auto-select"""
+        import random
         
+        # Broadcast countdown every second for 30 seconds
+        for remaining in range(READY_TIMEOUT_SECONDS, 0, -1):
+            room = self.rooms.get(room_id)
+            if not room or room.round_phase != "selecting":
+                return
+            
+            # Check if both have selected (end timeout early)
+            if room.player1 and room.player2:
+                if room.player1.selected_photo_id and room.player2.selected_photo_id:
+                    await self._transition_to_ready(room_id)
+                    return
+            
+            # Broadcast countdown tick
+            await self._broadcast_to_room(room_id, {
+                "type": "selection_timeout_tick",
+                "seconds_remaining": remaining,
+                "player1_selected": bool(room.player1.selected_photo_id) if room.player1 else False,
+                "player2_selected": bool(room.player2.selected_photo_id) if room.player2 else False,
+            })
+            
+            await asyncio.sleep(1)
+        
+        # Timeout reached - auto-select for players who haven't
         room = self.rooms.get(room_id)
         if not room or room.round_phase != "selecting":
             return
-        
-        import random
         
         # Auto-select for players who haven't selected
         if room.player1 and not room.player1.selected_photo_id:
@@ -377,7 +398,7 @@ class PVPGameManager:
                     "reason": "timeout",
                 })
         
-        # Transition to ready phase
+        # Transition to ready phase if both have selections now
         if room.player1 and room.player2:
             if room.player1.selected_photo_id and room.player2.selected_photo_id:
                 await self._transition_to_ready(room_id)
