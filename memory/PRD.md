@@ -1,10 +1,51 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 29, 2026 (Session 35 - Phase 5 Performance & Mobile Screens)
+## Latest Update: January 29, 2026 (Session 35 - 30 TPS Rate Limit Update)
 
 ---
 
-## SESSION 35: PHASE 5 - PERFORMANCE & MOBILE SCREENS ✅
+## SESSION 35: CRITICAL PERFORMANCE UPDATE - 30 TPS ✅
+
+### 30 TPS Rate Limit Update (January 29, 2026) - DEPLOYED
+
+**Scope:** All Photo Auction Bidding Rounds (Rounds 1, 3, 5) - PVP and PvB modes
+
+**Changes Applied:**
+
+1. **Web TappingArena.jsx**
+   - `MAX_TAPS_PER_SECOND`: Changed from 20 → **30**
+   - Warning toast on rate exceeded: `⚠️ Tap rate exceeded! Slow down.`
+   - Excess taps (>30/sec) are discarded, valid taps continue counting
+   - Bot speeds updated for fairness:
+     - Easy: 5-10 TPS (was 3-6)
+     - Medium: 10-18 TPS (was 5-8)
+     - Hard: 18-28 TPS (was 7-10)
+
+2. **Mobile MobileTappingArena.js** (NEW)
+   - Full implementation with 30 TPS limit
+   - Same anti-cheat logic as web
+   - Toast warning component built-in
+   - Haptic feedback via expo-haptics (Light on tap, Warning on exceed)
+   - Bot speeds match web version
+   - TPS indicator for debugging
+
+**Unchanged (per spec):**
+- Base 200 taps to win (equal power/scenery)
+- All Dollar Value bonuses (scenery, streaks, levels, upgrades)
+- Social reaction bonus ($1M per 100)
+- 30-day automatic $1M increase
+- 10-second countdown, 15-second round duration
+- Win/loss animations (confetti, shake)
+- WebSocket sync for PVP
+
+**Files Modified:**
+- `/app/frontend/src/components/game/TappingArena.jsx`
+- `/app/mobile/src/components/MobileTappingArena.js` (NEW)
+- `/app/mobile/src/components/index.js`
+
+---
+
+## PHASE 5: PERFORMANCE & MOBILE SCREENS ✅
 
 ### Phase 5A: Web Performance Optimizations (January 29, 2026)
 
