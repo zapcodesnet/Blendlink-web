@@ -2604,3 +2604,41 @@ async def delete_replay(
     await db.social_posts.delete_one({"replay_id": replay_id})
     
     return {"success": True, "message": "Replay deleted"}
+
+
+
+@game_router.get("/battle-replay/featured")
+async def get_featured_replays(
+    category: str = "top_wins",
+    limit: int = 10
+):
+    """Get featured battle replays for the landing page"""
+    from server import db
+    
+    # Define sort criteria based on category
+    sort_criteria = {
+        "top_wins": [("winnings", -1), ("views", -1)],
+        "most_viewed": [("views", -1), ("likes", -1)],
+        "recent": [("created_at", -1)],
+    }
+    
+    sort_by = sort_criteria.get(category, sort_criteria["top_wins"])
+    
+    # Only get winning replays for "top_wins" category
+    query = {"winner": "player"} if category == "top_wins" else {}
+    
+    replays = await db.battle_replays.find(
+        query,
+        {"_id": 0, "rounds": 0}  # Exclude heavy data
+    ).sort(sort_by).limit(limit).to_list(length=limit)
+    
+    # Convert datetime to string
+    for replay in replays:
+        if replay.get("created_at"):
+            replay["created_at"] = replay["created_at"].isoformat()
+    
+    return {
+        "replays": replays,
+        "category": category,
+        "total": len(replays)
+    }
