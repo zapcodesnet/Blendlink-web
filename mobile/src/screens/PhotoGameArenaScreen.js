@@ -139,7 +139,16 @@ const WinStreakBadge = ({ streak, colors }) => {
 };
 
 // ============== PHOTO SELECTION COMPONENT ==============
-const PhotoSelectionView = ({ photos, loading, selectedPhotoId, onSelectPhoto, colors }) => {
+const PhotoSelectionView = ({ 
+  photos, 
+  loading, 
+  selectedPhotoId, 
+  onSelectPhoto, 
+  colors,
+  usedPhotoIds = [],  // NEW: Photos used in previous rounds
+  opponentHasSelected = false,  // NEW: Whether opponent has selected
+  showOpponentStatus = false,  // NEW: Whether to show opponent selection status
+}) => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -161,27 +170,39 @@ const PhotoSelectionView = ({ photos, loading, selectedPhotoId, onSelectPhoto, c
     );
   }
 
-  const availablePhotos = photos.filter(p => p.is_available);
-  const unavailablePhotos = photos.filter(p => !p.is_available);
+  // Filter photos: exclude used photos from available
+  const isPhotoUsed = (photo) => usedPhotoIds.includes(photo.mint_id);
+  const availablePhotos = photos.filter(p => p.is_available && !isPhotoUsed(p));
+  const unavailablePhotos = photos.filter(p => !p.is_available || isPhotoUsed(p));
 
-  const renderPhotoItem = ({ item: photo, isAvailable }) => {
+  const renderPhotoItem = ({ item: photo, isAvailable, isUsed = false }) => {
     const scenery = SCENERY_CONFIG[photo.scenery_type] || SCENERY_CONFIG.natural;
     const isSelected = selectedPhotoId === photo.mint_id;
+    const canSelect = isAvailable && !isUsed;
 
     return (
       <TouchableOpacity
-        onPress={() => isAvailable && onSelectPhoto(photo)}
-        activeOpacity={isAvailable ? 0.7 : 1}
-        disabled={!isAvailable}
+        onPress={() => canSelect && onSelectPhoto(photo)}
+        activeOpacity={canSelect ? 0.7 : 1}
+        disabled={!canSelect}
         style={[
           styles.photoItem,
           {
             backgroundColor: isSelected ? colors.primary + '20' : colors.card,
             borderColor: isSelected ? colors.primary : colors.border,
-            opacity: isAvailable ? 1 : 0.5,
+            opacity: canSelect ? 1 : 0.5,
           },
         ]}
       >
+        {/* Used Badge Overlay */}
+        {isUsed && (
+          <View style={styles.usedBadgeOverlay}>
+            <View style={[styles.usedBadge, { backgroundColor: colors.error }]}>
+              <Text style={styles.usedBadgeText}>USED</Text>
+            </View>
+          </View>
+        )}
+        
         {/* Thumbnail */}
         <View style={[styles.photoThumbnail, { backgroundColor: scenery.gradient[0] }]}>
           <Text style={styles.photoThumbnailEmoji}>{scenery.emoji}</Text>
@@ -208,7 +229,7 @@ const PhotoSelectionView = ({ photos, loading, selectedPhotoId, onSelectPhoto, c
           </View>
 
           {/* Stamina */}
-          {isAvailable ? (
+          {isAvailable && !isUsed ? (
             <View style={styles.photoStaminaRow}>
               <View style={styles.photoStaminaBar}>
                 <View
