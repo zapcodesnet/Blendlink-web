@@ -432,6 +432,41 @@ const styles = StyleSheet.create({
   mintedPhotosArrow: {
     fontSize: 20,
   },
+  // Open Games Card
+  openGamesCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+  },
+  openGamesIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#8B5CF6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  openGamesEmoji: {
+    fontSize: 22,
+  },
+  openGamesInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  openGamesTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  openGamesDesc: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  openGamesArrow: {
+    fontSize: 20,
+  },
   // Casino Banner
   casinoBanner: {
     backgroundColor: '#D97706',
