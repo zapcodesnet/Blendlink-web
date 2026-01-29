@@ -157,12 +157,25 @@ const BidButton = ({ amount, selected, onSelect, disabled, playerMoney }) => {
   );
 };
 
-// Dramatic Reveal Animation Component
-const RevealAnimation = ({ playerChoice, opponentChoice, result, onComplete }) => {
+// Dramatic Reveal Animation Component - ENHANCED with bid amounts display
+const RevealAnimation = ({ 
+  playerChoice, 
+  opponentChoice, 
+  playerBid,
+  opponentBid,
+  result, 
+  onComplete 
+}) => {
   const [phase, setPhase] = useState('countdown'); // countdown, reveal, result
   
   const playerChoiceData = RPS_CHOICES.find(c => c.id === playerChoice);
   const opponentChoiceData = RPS_CHOICES.find(c => c.id === opponentChoice);
+  
+  // Determine who has the higher bid (for highlighting)
+  const playerHasHigherBid = playerBid > opponentBid;
+  const opponentHasHigherBid = opponentBid > playerBid;
+  const sameBid = playerBid === opponentBid;
+  const sameChoice = playerChoice === opponentChoice;
   
   useEffect(() => {
     // Countdown phase
@@ -186,7 +199,7 @@ const RevealAnimation = ({ playerChoice, opponentChoice, result, onComplete }) =
     // Complete
     const completeTimer = setTimeout(() => {
       onComplete();
-    }, 4000);
+    }, 4500);
     
     return () => {
       clearTimeout(countdownTimer);
@@ -201,19 +214,20 @@ const RevealAnimation = ({ playerChoice, opponentChoice, result, onComplete }) =
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
+      data-testid="rps-reveal-animation"
     >
-      <div className="flex flex-col items-center">
+      <div className="flex flex-col items-center px-4">
         {/* VS Header */}
         <motion.div 
-          className="text-2xl text-gray-400 mb-8"
+          className="text-2xl text-gray-400 mb-6"
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 1, repeat: Infinity }}
         >
           REVEALING...
         </motion.div>
         
-        {/* Choices */}
-        <div className="flex items-center gap-8 sm:gap-16">
+        {/* Choices with Bid Amounts */}
+        <div className="flex items-center gap-6 sm:gap-12">
           {/* Player choice */}
           <motion.div 
             className="flex flex-col items-center"
@@ -223,7 +237,7 @@ const RevealAnimation = ({ playerChoice, opponentChoice, result, onComplete }) =
           >
             <span className="text-xs text-purple-400 mb-2">YOU</span>
             <motion.div 
-              className={`w-24 h-24 sm:w-32 sm:h-32 rounded-2xl bg-gradient-to-br ${playerChoiceData?.color} flex items-center justify-center shadow-2xl ${
+              className={`relative w-24 h-24 sm:w-32 sm:h-32 rounded-2xl bg-gradient-to-br ${playerChoiceData?.color} flex items-center justify-center shadow-2xl ${
                 phase === 'result' && result === 'player1' ? 'ring-4 ring-green-500' : ''
               } ${
                 phase === 'result' && result === 'player2' ? 'ring-4 ring-red-500' : ''
@@ -232,7 +246,7 @@ const RevealAnimation = ({ playerChoice, opponentChoice, result, onComplete }) =
               transition={{ duration: 0.3 }}
             >
               <motion.span 
-                className="text-6xl sm:text-7xl"
+                className="text-5xl sm:text-6xl"
                 animate={phase === 'result' && result === 'player1' ? {
                   rotate: [0, -15, 15, 0],
                   scale: [1, 1.1, 1]
@@ -242,11 +256,31 @@ const RevealAnimation = ({ playerChoice, opponentChoice, result, onComplete }) =
                 {playerChoiceData?.emoji}
               </motion.span>
             </motion.div>
+            
+            {/* Player Bid Amount - PROMINENT DISPLAY */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.2 }}
+              className={`mt-3 px-4 py-2 rounded-xl font-bold text-lg ${
+                sameChoice && playerHasHigherBid 
+                  ? 'bg-green-500/30 border-2 border-green-500 text-green-300 shadow-lg shadow-green-500/30' 
+                  : sameChoice && sameBid
+                    ? 'bg-yellow-500/20 border border-yellow-500/50 text-yellow-300'
+                    : 'bg-purple-500/20 border border-purple-500/50 text-purple-300'
+              }`}
+              data-testid="player-bid-display"
+            >
+              💵 {formatMoney(playerBid)}
+              {sameChoice && playerHasHigherBid && (
+                <span className="ml-2 text-green-400 text-sm">⬆️ HIGHER</span>
+              )}
+            </motion.div>
           </motion.div>
           
           {/* VS */}
           <motion.div 
-            className="text-4xl font-bold text-white"
+            className="text-3xl sm:text-4xl font-bold text-white"
             animate={{ scale: [1, 1.5, 1], rotate: [0, 360] }}
             transition={{ duration: 0.5, delay: 1 }}
           >
@@ -262,7 +296,7 @@ const RevealAnimation = ({ playerChoice, opponentChoice, result, onComplete }) =
           >
             <span className="text-xs text-red-400 mb-2">OPPONENT</span>
             <motion.div 
-              className={`w-24 h-24 sm:w-32 sm:h-32 rounded-2xl bg-gradient-to-br ${opponentChoiceData?.color} flex items-center justify-center shadow-2xl ${
+              className={`relative w-24 h-24 sm:w-32 sm:h-32 rounded-2xl bg-gradient-to-br ${opponentChoiceData?.color} flex items-center justify-center shadow-2xl ${
                 phase === 'result' && result === 'player2' ? 'ring-4 ring-green-500' : ''
               } ${
                 phase === 'result' && result === 'player1' ? 'ring-4 ring-red-500' : ''
@@ -271,7 +305,7 @@ const RevealAnimation = ({ playerChoice, opponentChoice, result, onComplete }) =
               transition={{ duration: 0.3 }}
             >
               <motion.span 
-                className="text-6xl sm:text-7xl"
+                className="text-5xl sm:text-6xl"
                 animate={phase === 'result' && result === 'player2' ? {
                   rotate: [0, -15, 15, 0],
                   scale: [1, 1.1, 1]
@@ -281,14 +315,50 @@ const RevealAnimation = ({ playerChoice, opponentChoice, result, onComplete }) =
                 {opponentChoiceData?.emoji}
               </motion.span>
             </motion.div>
+            
+            {/* Opponent Bid Amount - PROMINENT DISPLAY */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.2 }}
+              className={`mt-3 px-4 py-2 rounded-xl font-bold text-lg ${
+                sameChoice && opponentHasHigherBid 
+                  ? 'bg-green-500/30 border-2 border-green-500 text-green-300 shadow-lg shadow-green-500/30' 
+                  : sameChoice && sameBid
+                    ? 'bg-yellow-500/20 border border-yellow-500/50 text-yellow-300'
+                    : 'bg-red-500/20 border border-red-500/50 text-red-300'
+              }`}
+              data-testid="opponent-bid-display"
+            >
+              💵 {formatMoney(opponentBid)}
+              {sameChoice && opponentHasHigherBid && (
+                <span className="ml-2 text-green-400 text-sm">⬆️ HIGHER</span>
+              )}
+            </motion.div>
           </motion.div>
         </div>
+        
+        {/* Tie Explanation - Shows when same RPS choice */}
+        <AnimatePresence>
+          {phase === 'reveal' && sameChoice && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="mt-4 px-4 py-2 bg-yellow-500/20 border border-yellow-500/50 rounded-lg"
+            >
+              <span className="text-yellow-300 text-sm font-medium">
+                🎲 Same choice! Higher bid wins this round.
+              </span>
+            </motion.div>
+          )}
+        </AnimatePresence>
         
         {/* Result text */}
         <AnimatePresence>
           {phase === 'result' && (
             <motion.div
-              className="mt-8"
+              className="mt-6 text-center"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
@@ -312,9 +382,31 @@ const RevealAnimation = ({ playerChoice, opponentChoice, result, onComplete }) =
               )}
               {result === 'tie' && (
                 <motion.div className="text-3xl font-bold text-yellow-400">
-                  🤝 TIE - Higher Bid Wins!
+                  🤝 TIE - Same Bids!
                 </motion.div>
               )}
+              
+              {/* Win reason explanation */}
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                className="mt-2 text-sm text-gray-400"
+              >
+                {sameChoice ? (
+                  sameBid ? (
+                    'Both chose same option with same bid - Complete tie!'
+                  ) : playerHasHigherBid ? (
+                    `Your higher bid (${formatMoney(playerBid)} vs ${formatMoney(opponentBid)}) won the tie!`
+                  ) : (
+                    `Opponent's higher bid (${formatMoney(opponentBid)} vs ${formatMoney(playerBid)}) won the tie.`
+                  )
+                ) : result === 'player1' ? (
+                  `${playerChoiceData?.name} beats ${opponentChoiceData?.name}!`
+                ) : (
+                  `${opponentChoiceData?.name} beats ${playerChoiceData?.name}.`
+                )}
+              </motion.p>
             </motion.div>
           )}
         </AnimatePresence>
