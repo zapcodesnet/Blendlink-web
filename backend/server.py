@@ -2995,6 +2995,20 @@ try:
                         "success": success,
                         "room_id": room_id,
                     })
+                
+                elif msg_type == "reconnect":
+                    # Player reconnecting to existing game room
+                    success = await pvp_game_manager.reconnect_player(
+                        room_id=room_id,
+                        user_id=user_id,
+                        websocket=websocket
+                    )
+                    
+                    await websocket.send_json({
+                        "type": "reconnect_result",
+                        "success": success,
+                        "room_id": room_id,
+                    })
                     
                 elif msg_type == "select_photo":
                     # Player selects photo for current round
@@ -3022,7 +3036,10 @@ try:
                     )
                     
                 elif msg_type == "ping":
-                    await websocket.send_json({"type": "pong"})
+                    await websocket.send_json({
+                        "type": "pong",
+                        "timestamp": datetime.now(timezone.utc).isoformat()
+                    })
                     
         except WebSocketDisconnect:
             await pvp_game_manager.disconnect_player(user_id)
