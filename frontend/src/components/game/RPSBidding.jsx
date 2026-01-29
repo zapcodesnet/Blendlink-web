@@ -12,13 +12,15 @@
  * - Warning on $5M selection about potential auto-loss
  * - Out of money = auto-loss for remaining RPS rounds
  * - Dramatic reveal animation
+ * - Win/Lose streak indicators on photos
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, Clock, DollarSign, Loader2, Trophy, Skull } from 'lucide-react';
+import { AlertTriangle, Clock, DollarSign, Loader2, Trophy, Skull, Flame, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import auctionSounds from '../../utils/auctionSounds';
+import { StreakIndicator } from './StreakIndicator';
 
 // Constants from user spec
 const STARTING_MONEY = 5_000_000;
