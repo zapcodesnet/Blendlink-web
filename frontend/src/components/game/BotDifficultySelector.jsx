@@ -356,7 +356,7 @@ export const BotDifficultySelector = ({
           initial={{ scale: 0.9, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          className="bg-gray-900 rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-gray-700"
+          className="bg-gray-900 rounded-2xl max-w-md w-full max-h-[85vh] overflow-y-auto border border-gray-700 mb-20"
           data-testid="bot-difficulty-modal"
         >
           {/* Header */}
@@ -372,17 +372,23 @@ export const BotDifficultySelector = ({
                 </p>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-800 rounded-full transition-colors"
-              data-testid="close-difficulty-modal"
-            >
-              <X className="w-5 h-5 text-gray-400" />
-            </button>
+            {/* BL Balance Display */}
+            <div className="flex items-center gap-3">
+              <div className="px-3 py-1.5 bg-yellow-500/20 rounded-lg">
+                <span className="text-yellow-400 font-bold text-sm">{userBalance.toLocaleString()} BL</span>
+              </div>
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+                data-testid="close-difficulty-modal"
+              >
+                <X className="w-5 h-5 text-gray-400" />
+              </button>
+            </div>
           </div>
           
           {/* Content */}
-          <div className="p-4 space-y-6">
+          <div className="p-4 space-y-6 pb-24">
             {step === 'difficulty' ? (
               <>
                 {/* Difficulty selection */}
