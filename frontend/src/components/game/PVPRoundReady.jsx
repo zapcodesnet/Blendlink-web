@@ -429,18 +429,25 @@ export const PVPRoundReady = ({
             </div>
           </div>
           
-          {/* Opponent status */}
-          <div className="flex items-center justify-center gap-2 text-sm text-gray-400 mb-4">
-            {opponentData?.selectedPhotoId ? (
+          {/* Opponent status with countdown */}
+          <div className="flex items-center justify-center gap-2 text-sm mb-4">
+            {localOpponentSelected || opponentData?.selectedPhotoId ? (
               <>
                 <Check className="w-4 h-4 text-green-400" />
                 <span className="text-green-400">Opponent has selected</span>
               </>
             ) : (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Waiting for opponent to select...</span>
-              </>
+              <div className="flex flex-col items-center gap-1">
+                <div className="flex items-center gap-2 text-gray-400">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Waiting for opponent to select...</span>
+                </div>
+                {localTimeRemaining > 0 && (
+                  <span className={`text-xs font-bold ${localTimeRemaining <= 10 ? 'text-red-400' : 'text-yellow-400'}`}>
+                    Auto-select in {localTimeRemaining}s
+                  </span>
+                )}
+              </div>
             )}
           </div>
           
@@ -465,8 +472,13 @@ export const PVPRoundReady = ({
           )}
           
           {myData?.selectedPhotoId && (
-            <div className="text-center text-green-400 font-bold py-2">
-              ✓ Photo selected - waiting for opponent
+            <div className="text-center py-2">
+              <div className="text-green-400 font-bold">✓ Photo selected</div>
+              {!localOpponentSelected && localTimeRemaining > 0 && (
+                <div className={`text-xs mt-1 ${localTimeRemaining <= 10 ? 'text-red-400' : 'text-yellow-400'}`}>
+                  Opponent selecting... ({localTimeRemaining}s remaining)
+                </div>
+              )}
             </div>
           )}
         </motion.div>
