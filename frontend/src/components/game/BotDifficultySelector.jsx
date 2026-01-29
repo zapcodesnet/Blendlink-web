@@ -139,9 +139,6 @@ const DifficultyCard = ({ difficulty, selected, onSelect, isUnlocked, currentWin
             <span className={`px-2 py-0.5 rounded text-xs ${isUnlocked ? difficulty.bgColor : 'bg-gray-800'} ${isUnlocked ? difficulty.textColor : 'text-gray-500'}`}>
               {difficulty.dollarValue}
             </span>
-            <span className="px-2 py-0.5 rounded text-xs bg-gray-700 text-gray-300">
-              {difficulty.tapsDisplay}
-            </span>
             <span className="px-2 py-0.5 rounded text-xs bg-yellow-500/20 text-yellow-400">
               {difficulty.fixedBet} BL Bet
             </span>
