@@ -2567,10 +2567,10 @@ async def share_replay_to_feed(
 @game_router.post("/battle-replay/{replay_id}/like")
 async def like_replay(
     replay_id: str,
-    user_id: str = Depends(get_current_user_id)
+    current_user: dict = Depends(get_current_user_from_request)
 ):
     """Like a battle replay"""
-    db = await get_database()
+    from server import db
     
     result = await db.battle_replays.update_one(
         {"replay_id": replay_id},
@@ -2586,10 +2586,12 @@ async def like_replay(
 @game_router.delete("/battle-replay/{replay_id}")
 async def delete_replay(
     replay_id: str,
-    user_id: str = Depends(get_current_user_id)
+    current_user: dict = Depends(get_current_user_from_request)
 ):
     """Delete a battle replay"""
-    db = await get_database()
+    from server import db
+    
+    user_id = current_user.get("user_id")
     
     result = await db.battle_replays.delete_one(
         {"replay_id": replay_id, "user_id": user_id}
