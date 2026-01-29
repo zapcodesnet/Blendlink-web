@@ -32,6 +32,7 @@ import MintedPhotosScreen from '../screens/MintedPhotosScreen';
 import PhotoMarketplaceScreen from '../screens/PhotoMarketplaceScreen';
 import OpenGamesBrowserScreen from '../screens/OpenGamesBrowserScreen';
 import GameCreationScreen from '../screens/GameCreationScreen';
+import PhotoDetailScreen from '../screens/PhotoDetailScreen';
 
 // Admin Screens
 import AdminScreen from '../screens/AdminScreen';
