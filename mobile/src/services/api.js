@@ -1183,6 +1183,36 @@ export const photoGameAPI = {
     return response.data;
   },
 
+  // ============== BOT BATTLE PROGRESSION ==============
+
+  // Get bot battle stats and unlock progress
+  getBotBattleStats: async () => {
+    const response = await api.get('/photo-game/bot-battle/stats');
+    return response.data;
+  },
+
+  // Start a bot battle with 5-photo selection
+  startBotBattle: async ({ difficulty, photo_ids }) => {
+    const response = await api.post('/photo-game/bot-battle/start', {
+      difficulty,
+      photo_ids,
+    });
+    return response.data;
+  },
+
+  // Record bot battle result
+  recordBotBattleResult: async ({ session_id, player_won, difficulty, rounds_won, rounds_lost, bet_amount }) => {
+    const response = await api.post('/photo-game/bot-battle/result', {
+      session_id,
+      player_won,
+      difficulty,
+      rounds_won,
+      rounds_lost,
+      bet_amount,
+    });
+    return response.data;
+  },
+
   // Get photo stamina details
   getPhotoStamina: async (mintId) => {
     const response = await api.get(`/photo-game/photo-stamina/${mintId}`);
