@@ -2264,6 +2264,17 @@ const PhotoGameArena = () => {
         isOpen={!!lightboxPhoto}
         onClose={() => setLightboxPhoto(null)}
       />
+      
+      {/* Bot Difficulty Selector Modal for main menu "Play with Bot" */}
+      <BotDifficultySelector
+        isOpen={showBotSelector}
+        onClose={() => setShowBotSelector(false)}
+        onStart={handleMenuBotBattleStart}
+        selectedPhoto={null}
+        playerPhotos={battlePhotos}
+        userBalance={userBalance}
+        botWinStats={botWinStats}
+      />
     </div>
   );
 };
