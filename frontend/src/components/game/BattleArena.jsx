@@ -398,7 +398,7 @@ const RoundTransition = ({ roundInfo, onComplete }) => {
   );
 };
 
-// Game Result Screen
+// Game Result Screen - UPDATED with tie handling
 const GameResultScreen = ({ 
   winner, 
   playerWins, 
@@ -411,6 +411,7 @@ const GameResultScreen = ({
   savedReplayId = null,
   onViewReplay,
   onShareReplayToFeed,
+  isTie = false, // NEW: For 4-4 tie scenarios
 }) => {
   const isWinner = winner === 'player';
   
@@ -436,9 +437,10 @@ const GameResultScreen = ({
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       className="bg-gradient-to-b from-gray-800/50 to-gray-900/50 rounded-2xl p-8 border border-gray-700/50 text-center relative overflow-hidden"
+      data-testid="game-result-screen"
     >
-      {/* Confetti for win */}
-      {isWinner && (
+      {/* Confetti for win only (not tie) */}
+      {isWinner && !isTie && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           {confettiParticles.map((p, i) => (
             <motion.div
@@ -459,7 +461,42 @@ const GameResultScreen = ({
       )}
       
       <div className="relative z-10">
-        {isWinner ? (
+        {/* TIE RESULT - 4-4 Score */}
+        {isTie ? (
+          <>
+            <motion.div
+              animate={{ rotate: [0, -10, 10, 0] }}
+              transition={{ duration: 1, repeat: 3 }}
+              className="text-8xl mb-4"
+            >
+              🤝
+            </motion.div>
+            <h2 className="text-4xl font-bold text-yellow-400 mb-4" data-testid="tie-result-title">Tie Game!</h2>
+            <p className="text-gray-400 mb-2" data-testid="tie-score-display">
+              Final Score: {playerWins} - {opponentWins}
+            </p>
+            
+            {/* Tie explanation */}
+            <div className="my-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
+              <p className="text-yellow-300 font-bold text-lg mb-2">No winner declared!</p>
+              <ul className="text-sm text-gray-400 space-y-1">
+                <li>✓ Bets have been returned to both players</li>
+                <li>✓ No unlock progress awarded</li>
+                <li>✓ No BL coin bonuses applied</li>
+              </ul>
+            </div>
+            
+            {betAmount > 0 && (
+              <motion.p 
+                className="text-green-400 text-xl mb-6"
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 0.5, repeat: 2 }}
+              >
+                💰 Your {betAmount} BL bet has been returned
+              </motion.p>
+            )}
+          </>
+        ) : isWinner ? (
           <>
             <motion.div
               animate={{ scale: [1, 1.3, 1], rotate: [0, 10, -10, 0] }}
