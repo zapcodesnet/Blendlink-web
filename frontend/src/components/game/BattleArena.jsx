@@ -641,6 +641,31 @@ export const BattleArena = ({
     };
   });
   
+  // Merge current photo streaks with in-game tracking
+  // Use photo's stored streak as base, then overlay in-game changes
+  const effectivePlayerStats = useMemo(() => {
+    // If we have in-game changes tracked in playerStats state, use those
+    // Otherwise fall back to the selected photo's stored values
+    const photoStreak = {
+      current_win_streak: selectedPlayerPhoto?.current_win_streak || selectedPlayerPhoto?.win_streak || 0,
+      current_lose_streak: selectedPlayerPhoto?.current_lose_streak || selectedPlayerPhoto?.lose_streak || 0,
+    };
+    // Use the state-tracked values which are updated during game
+    return playerStats.current_win_streak > 0 || playerStats.current_lose_streak > 0 
+      ? playerStats 
+      : photoStreak;
+  }, [playerStats, selectedPlayerPhoto]);
+  
+  const effectiveOpponentStats = useMemo(() => {
+    const photoStreak = {
+      current_win_streak: selectedOpponentPhoto?.current_win_streak || selectedOpponentPhoto?.win_streak || 0,
+      current_lose_streak: selectedOpponentPhoto?.current_lose_streak || selectedOpponentPhoto?.lose_streak || 0,
+    };
+    return opponentStats.current_win_streak > 0 || opponentStats.current_lose_streak > 0 
+      ? opponentStats 
+      : photoStreak;
+  }, [opponentStats, selectedOpponentPhoto]);
+  
   // Winner
   const [gameWinner, setGameWinner] = useState(null);
   
