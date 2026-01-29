@@ -801,7 +801,361 @@ const RPSBattleView = ({ session, onChoice, isTiebreaker, colors }) => {
   );
 };
 
-// ============== PHOTO BATTLE VIEW ==============
+// ============== TAPPING ARENA VIEW (30 TPS) ==============
+const TappingArenaView = ({ 
+  playerPhoto, 
+  opponentPhoto, 
+  isBot = false, 
+  botDifficulty = 'medium',
+  onRoundComplete, 
+  roundNumber = 1,
+  colors 
+}) => {
+  // Game state
+  const [gamePhase, setGamePhase] = useState('waiting'); // waiting, countdown, active, finished
+  const [countdown, setCountdown] = useState(COUNTDOWN_SECONDS);
+  const [timeRemaining, setTimeRemaining] = useState(ROUND_DURATION_SECONDS);
+  
+  // Tap tracking
+  const [playerTaps, setPlayerTaps] = useState(0);
+  const [opponentTaps, setOpponentTaps] = useState(0);
+  const [tapsThisSecond, setTapsThisSecond] = useState(0);
+  
+  // Warning state
+  const [showRateWarning, setShowRateWarning] = useState(false);
+  const lastWarningTime = useRef(0);
+  
+  // Result state
+  const [winner, setWinner] = useState(null);
+  
+  // Animations
+  const shakeAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const confettiAnims = useRef(
+    Array.from({ length: 20 }).map(() => ({
+      y: new Animated.Value(-50),
+      x: new Animated.Value(Math.random() * width),
+    }))
+  ).current;
+  
+  // Timers
+  const gameTimerRef = useRef(null);
+  const botTimerRef = useRef(null);
+  const tapResetRef = useRef(null);
+  
+  // Calculate values
+  const playerValue = playerPhoto?.dollar_value || 0;
+  const opponentValue = opponentPhoto?.dollar_value || 0;
+  const playerRequiredTaps = calculateRequiredTaps(playerValue, opponentValue);
+  const opponentRequiredTaps = calculateRequiredTaps(opponentValue, playerValue);
+  
+  // Progress
+  const playerProgress = Math.min((playerTaps / playerRequiredTaps) * 100, 100);
+  const opponentProgress = Math.min((opponentTaps / opponentRequiredTaps) * 100, 100);
+  
+  // Scenery
+  const playerScenery = SCENERY_CONFIG[playerPhoto?.scenery_type] || SCENERY_CONFIG.natural;
+  const opponentScenery = SCENERY_CONFIG[opponentPhoto?.scenery_type] || SCENERY_CONFIG.natural;
+
+  // Handle tap - 30 TPS rate limit
+  const handleTap = useCallback(() => {
+    if (gamePhase !== 'active' || winner) return;
+    
+    // Anti-cheat: Max 30 taps per second
+    if (tapsThisSecond >= MAX_TAPS_PER_SECOND) {
+      const now = Date.now();
+      if (now - lastWarningTime.current > 1000) {
+        setShowRateWarning(true);
+        lastWarningTime.current = now;
+        setTimeout(() => setShowRateWarning(false), 1500);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      }
+      // Discard excess taps
+      return;
+    }
+    
+    // Valid tap
+    const newTaps = playerTaps + 1;
+    setPlayerTaps(newTaps);
+    setTapsThisSecond(prev => prev + 1);
+    
+    // Haptic feedback for every valid tap
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    // Pulse animation
+    Animated.sequence([
+      Animated.timing(pulseAnim, { toValue: 1.02, duration: 30, useNativeDriver: true }),
+      Animated.timing(pulseAnim, { toValue: 1, duration: 30, useNativeDriver: true }),
+    ]).start();
+    
+    // Check win
+    if (newTaps >= playerRequiredTaps) {
+      handlePlayerWin();
+    }
+  }, [gamePhase, winner, playerTaps, playerRequiredTaps, tapsThisSecond]);
+
+  // Handle player win
+  const handlePlayerWin = useCallback(() => {
+    if (winner) return;
+    setGamePhase('finished');
+    setWinner('player');
+    
+    // Confetti animation
+    confettiAnims.forEach((anim, i) => {
+      anim.y.setValue(-50);
+      Animated.timing(anim.y, {
+        toValue: 800,
+        duration: 2000 + Math.random() * 1000,
+        delay: i * 50,
+        useNativeDriver: true,
+      }).start();
+    });
+    
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    Vibration.vibrate([100, 50, 100, 50, 200]);
+    auctionSounds.roundWin();
+    
+    clearInterval(gameTimerRef.current);
+    clearInterval(botTimerRef.current);
+    
+    setTimeout(() => onRoundComplete?.('player'), 2500);
+  }, [winner, onRoundComplete]);
+
+  // Handle opponent win
+  const handleOpponentWin = useCallback(() => {
+    if (winner) return;
+    setGamePhase('finished');
+    setWinner('opponent');
+    
+    // Screen shake
+    Animated.sequence([
+      Animated.timing(shakeAnim, { toValue: 15, duration: 100, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -15, duration: 100, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 10, duration: 100, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 0, duration: 100, useNativeDriver: true }),
+    ]).start();
+    
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    Vibration.vibrate([200, 100, 200]);
+    auctionSounds.roundLose();
+    
+    clearInterval(gameTimerRef.current);
+    clearInterval(botTimerRef.current);
+    
+    setTimeout(() => onRoundComplete?.('opponent'), 2500);
+  }, [winner, onRoundComplete]);
+
+  // Reset taps counter every second
+  useEffect(() => {
+    if (gamePhase === 'active') {
+      tapResetRef.current = setInterval(() => setTapsThisSecond(0), 1000);
+    }
+    return () => clearInterval(tapResetRef.current);
+  }, [gamePhase]);
+
+  // Auto-start countdown
+  useEffect(() => {
+    if (gamePhase === 'waiting') {
+      const timeout = setTimeout(() => setGamePhase('countdown'), 500);
+      return () => clearTimeout(timeout);
+    }
+  }, [gamePhase]);
+
+  // Countdown timer
+  useEffect(() => {
+    if (gamePhase === 'countdown') {
+      const timer = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            setGamePhase('active');
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+            return 0;
+          }
+          Haptics.selectionAsync();
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [gamePhase]);
+
+  // Game timer
+  useEffect(() => {
+    if (gamePhase === 'active') {
+      gameTimerRef.current = setInterval(() => {
+        setTimeRemaining(prev => {
+          if (prev <= 1) {
+            clearInterval(gameTimerRef.current);
+            const pProgress = playerTaps / playerRequiredTaps;
+            const oProgress = opponentTaps / opponentRequiredTaps;
+            if (pProgress >= oProgress) handlePlayerWin();
+            else handleOpponentWin();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(gameTimerRef.current);
+    }
+  }, [gamePhase, playerTaps, opponentTaps, playerRequiredTaps, opponentRequiredTaps]);
+
+  // Bot tapping - 30 TPS max
+  useEffect(() => {
+    if (gamePhase === 'active' && isBot) {
+      const botSpeeds = {
+        easy: { min: 5, max: 10 },
+        medium: { min: 10, max: 18 },
+        hard: { min: 18, max: 28 },
+      };
+      const speed = botSpeeds[botDifficulty] || botSpeeds.medium;
+      
+      botTimerRef.current = setInterval(() => {
+        setOpponentTaps(prev => {
+          const tapsToAdd = Math.floor(Math.random() * (speed.max - speed.min + 1)) + speed.min;
+          const newTaps = prev + tapsToAdd;
+          if (newTaps >= opponentRequiredTaps && !winner) handleOpponentWin();
+          return newTaps;
+        });
+      }, 1000);
+      return () => clearInterval(botTimerRef.current);
+    }
+  }, [gamePhase, isBot, botDifficulty, opponentRequiredTaps, winner]);
+
+  return (
+    <Animated.View style={[styles.tappingArenaContainer, { transform: [{ translateX: shakeAnim }] }]}>
+      {/* Rate Warning Toast */}
+      {showRateWarning && (
+        <View style={styles.rateWarningToast}>
+          <Text style={styles.rateWarningText}>⚠️ Tap rate exceeded! Slow down.</Text>
+        </View>
+      )}
+      
+      {/* Confetti */}
+      {winner === 'player' && confettiAnims.map((anim, i) => (
+        <Animated.View
+          key={i}
+          style={[
+            styles.confettiPiece,
+            {
+              backgroundColor: ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1'][i % 4],
+              transform: [{ translateX: anim.x }, { translateY: anim.y }],
+            },
+          ]}
+        />
+      ))}
+
+      {/* Header */}
+      <View style={[styles.tappingHeader, { backgroundColor: colors.card }]}>
+        <View>
+          <Text style={[styles.tappingRoundLabel, { color: colors.primary }]}>Round {roundNumber}</Text>
+          <Text style={[styles.tappingRoundType, { color: colors.textMuted }]}>Photo Auction Bidding</Text>
+        </View>
+        <View style={[styles.tappingTimerBadge, { backgroundColor: timeRemaining <= 5 ? colors.error : colors.gold }]}>
+          <Text style={styles.tappingTimerText}>⏱️ {timeRemaining}s</Text>
+        </View>
+      </View>
+
+      {/* Photo Cards */}
+      <View style={styles.tappingPhotosRow}>
+        {/* Player */}
+        <View style={[styles.tappingPhotoCard, { backgroundColor: colors.card, borderColor: colors.primary }]}>
+          <View style={[styles.tappingPhotoPlaceholder, { backgroundColor: playerScenery.gradient[0] }]}>
+            <Text style={styles.tappingPhotoEmoji}>{playerScenery.emoji}</Text>
+          </View>
+          <Text style={[styles.tappingPhotoLabel, { color: colors.text }]} numberOfLines={1}>
+            {playerPhoto?.name || 'Your Photo'}
+          </Text>
+          <Text style={[styles.tappingPhotoValue, { color: colors.gold }]}>
+            {formatDollarValue(playerValue)}
+          </Text>
+          <View style={[styles.tappingProgressBg, { backgroundColor: colors.cardSecondary }]}>
+            <View style={[styles.tappingProgressFill, { width: `${playerProgress}%`, backgroundColor: colors.primary }]} />
+          </View>
+          <Text style={[styles.tappingTapCount, { color: colors.textMuted }]}>
+            {playerTaps}/{playerRequiredTaps}
+          </Text>
+        </View>
+
+        <Text style={[styles.tappingVS, { color: colors.textMuted }]}>VS</Text>
+
+        {/* Opponent */}
+        <View style={[styles.tappingPhotoCard, { backgroundColor: colors.card, borderColor: colors.error }]}>
+          <View style={[styles.tappingPhotoPlaceholder, { backgroundColor: opponentScenery.gradient[0] }]}>
+            <Text style={styles.tappingPhotoEmoji}>{opponentScenery.emoji}</Text>
+          </View>
+          <Text style={[styles.tappingPhotoLabel, { color: colors.text }]} numberOfLines={1}>
+            {opponentPhoto?.name || 'Opponent'}
+          </Text>
+          <Text style={[styles.tappingPhotoValue, { color: colors.gold }]}>
+            {formatDollarValue(opponentValue)}
+          </Text>
+          <View style={[styles.tappingProgressBg, { backgroundColor: colors.cardSecondary }]}>
+            <View style={[styles.tappingProgressFill, { width: `${opponentProgress}%`, backgroundColor: colors.error }]} />
+          </View>
+          <Text style={[styles.tappingTapCount, { color: colors.textMuted }]}>
+            {opponentTaps}/{opponentRequiredTaps}
+          </Text>
+        </View>
+      </View>
+
+      {/* Countdown Overlay */}
+      {gamePhase === 'countdown' && (
+        <View style={styles.tappingCountdownOverlay}>
+          <Animated.Text style={[styles.tappingCountdownNumber, { transform: [{ scale: pulseAnim }] }]}>
+            {countdown}
+          </Animated.Text>
+          <Text style={styles.tappingCountdownLabel}>Get Ready!</Text>
+        </View>
+      )}
+
+      {/* Result Overlay */}
+      {winner && (
+        <View style={styles.tappingResultOverlay}>
+          {winner === 'player' ? (
+            <>
+              <Text style={styles.tappingWinEmoji}>🎉</Text>
+              <Text style={styles.tappingWinText}>YOU WIN!</Text>
+            </>
+          ) : (
+            <>
+              <Text style={styles.tappingLoseEmoji}>😔</Text>
+              <Text style={styles.tappingLoseText}>YOU LOSE</Text>
+            </>
+          )}
+        </View>
+      )}
+
+      {/* Tap Area */}
+      <Pressable
+        style={[
+          styles.tappingTapArea,
+          { backgroundColor: gamePhase === 'active' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(0, 0, 0, 0.3)' }
+        ]}
+        onPress={handleTap}
+        disabled={gamePhase !== 'active' || winner !== null}
+      >
+        {gamePhase === 'active' && !winner && (
+          <Animated.View style={{ transform: [{ scale: pulseAnim }], alignItems: 'center' }}>
+            <Text style={styles.tappingTapEmoji}>👆</Text>
+            <Text style={styles.tappingTapText}>TAP TO BID!</Text>
+            <Text style={styles.tappingTapSubtext}>{playerRequiredTaps - playerTaps} taps remaining</Text>
+          </Animated.View>
+        )}
+        {gamePhase === 'waiting' && <Text style={styles.tappingWaitingText}>Preparing arena...</Text>}
+      </Pressable>
+
+      {/* TPS Debug Indicator */}
+      <View style={[styles.tappingTPSIndicator, { backgroundColor: colors.cardSecondary }]}>
+        <Text style={[styles.tappingTPSText, { color: tapsThisSecond >= 25 ? colors.error : colors.textMuted }]}>
+          TPS: {tapsThisSecond}/{MAX_TAPS_PER_SECOND}
+        </Text>
+      </View>
+    </Animated.View>
+  );
+};
+
+// ============== PHOTO BATTLE VIEW (Legacy - value comparison) ==============
 const PhotoBattleView = ({ session, onBattle, colors }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [result, setResult] = useState(null);
