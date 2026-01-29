@@ -267,6 +267,51 @@ class PVPGameManager:
         
         return True
     
+    async def handle_tap(self, room_id: str, user_id: str, tap_count: int = 1) -> bool:
+        """Handle player tap during auction round"""
+        room = self.rooms.get(room_id)
+        if not room or room.round_phase != "playing" or room.round_type != "auction":
+            return False
+        
+        # Find player and opponent
+        is_player1 = room.player1 and room.player1.user_id == user_id
+        is_player2 = room.player2 and room.player2.user_id == user_id
+        
+        if not is_player1 and not is_player2:
+            return False
+        
+        # Update tap count (stored on the connection object for now)
+        if is_player1:
+            if not hasattr(room.player1, 'tap_count'):
+                room.player1.tap_count = 0
+            room.player1.tap_count += tap_count
+            total_taps = room.player1.tap_count
+        else:
+            if not hasattr(room.player2, 'tap_count'):
+                room.player2.tap_count = 0
+            room.player2.tap_count += tap_count
+            total_taps = room.player2.tap_count
+        
+        # Broadcast tap update to opponent
+        await self._broadcast_to_room(room_id, {
+            "type": "tap_update",
+            "user_id": user_id,
+            "is_me": False,  # Will be overridden for the sending player
+            "total_taps": total_taps,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }, exclude_user=user_id)
+        
+        # Send confirmation to the tapping player
+        await self._send_to_user(user_id, {
+            "type": "tap_update",
+            "user_id": user_id,
+            "is_me": True,
+            "total_taps": total_taps,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+        
+        return True
+    
     async def _transition_to_selecting(self, room_id: str):
         """Transition to photo selection phase"""
         room = self.rooms.get(room_id)
