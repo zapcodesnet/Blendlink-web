@@ -108,10 +108,14 @@ export const PVPBattleArena = ({
   const wsRef = useRef(null);
   const [wsConnected, setWsConnected] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
+  const [reconnectAttemptCount, setReconnectAttemptCount] = useState(0);
   const reconnectAttempts = useRef(0);
   const reconnectTimeoutRef = useRef(null);
   const MAX_RECONNECT_ATTEMPTS = 5;
   const RECONNECT_INTERVAL = 5000; // 5 seconds
+  
+  // Websocket instance for passing to children (synced from ref)
+  const [websocketInstance, setWebsocketInstance] = useState(null);
   
   // Selection timeout
   const [selectionTimeRemaining, setSelectionTimeRemaining] = useState(30);
