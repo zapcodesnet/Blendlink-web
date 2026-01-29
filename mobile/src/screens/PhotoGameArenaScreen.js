@@ -2578,4 +2578,174 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
   },
+  // ============== WEBSOCKET/PVP STYLES ==============
+  connectionIndicator: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  connectionText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  wsErrorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  wsErrorText: {
+    color: '#fff',
+    fontSize: 13,
+    flex: 1,
+  },
+  wsRetryButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 8,
+    marginLeft: 12,
+  },
+  wsRetryText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  // Ready button styles
+  readyIndicator: {
+    marginTop: 6,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  readyIndicatorText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  readyButtonOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    zIndex: 25,
+    padding: 20,
+  },
+  readyOverlayTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  readyOverlaySubtitle: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.7)',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  readyButton: {
+    paddingHorizontal: 40,
+    paddingVertical: 16,
+    borderRadius: 30,
+  },
+  readyButtonText: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  readyOverlayHint: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.5)',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  // PVP Waiting/Selecting styles
+  pvpWaitingContainer: {
+    flex: 1,
+    padding: 20,
+    alignItems: 'center',
+  },
+  pvpWaitingTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  pvpWaitingSubtitle: {
+    fontSize: 14,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  // PVP Round Result styles
+  pvpRoundResultContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  pvpRoundResultTitle: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  pvpScoreText: {
+    fontSize: 24,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  pvpNextRoundText: {
+    fontSize: 14,
+    opacity: 0.7,
+  },
+  // PVP Game Over styles
+  pvpGameOverContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  pvpGameOverEmoji: {
+    fontSize: 80,
+    marginBottom: 16,
+  },
+  pvpGameOverTitle: {
+    fontSize: 42,
+    fontWeight: 'bold',
+    marginBottom: 12,
+  },
+  pvpFinalScore: {
+    fontSize: 24,
+    fontWeight: '600',
+  },
+  // PVP Forfeit styles
+  pvpForfeitContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  pvpForfeitEmoji: {
+    fontSize: 60,
+    marginBottom: 16,
+  },
+  pvpForfeitTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  pvpForfeitSubtitle: {
+    fontSize: 16,
+    marginBottom: 20,
+  },
 });
