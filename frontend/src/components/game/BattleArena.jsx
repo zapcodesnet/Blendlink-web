@@ -625,14 +625,20 @@ export const BattleArena = ({
   const [playerRPSMoney, setPlayerRPSMoney] = useState(STARTING_RPS_MONEY);
   const [opponentRPSMoney, setOpponentRPSMoney] = useState(STARTING_RPS_MONEY);
   
-  // Streak and stats
-  const [playerStats, setPlayerStats] = useState({
-    current_win_streak: 0,
-    current_lose_streak: 0,
+  // Streak and stats - Initialize from first photo's streak data
+  const [playerStats, setPlayerStats] = useState(() => {
+    const firstPhoto = playerPhotos?.[0];
+    return {
+      current_win_streak: firstPhoto?.current_win_streak || firstPhoto?.win_streak || 0,
+      current_lose_streak: firstPhoto?.current_lose_streak || firstPhoto?.lose_streak || 0,
+    };
   });
-  const [opponentStats, setOpponentStats] = useState({
-    current_win_streak: 0,
-    current_lose_streak: 0,
+  const [opponentStats, setOpponentStats] = useState(() => {
+    const firstOpponentPhoto = opponentPhotos?.[0];
+    return {
+      current_win_streak: firstOpponentPhoto?.current_win_streak || firstOpponentPhoto?.win_streak || 0,
+      current_lose_streak: firstOpponentPhoto?.current_lose_streak || firstOpponentPhoto?.lose_streak || 0,
+    };
   });
   
   // Winner
