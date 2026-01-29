@@ -560,18 +560,35 @@ const GameResultScreen = ({
           </motion.div>
         )}
         
-        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-          <Button
-            onClick={onPlayAgain}
-            className="bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 px-12 py-6 text-xl font-bold shadow-lg"
-            size="lg"
-            data-testid="play-again-btn"
-          >
-            <RefreshCw className="w-6 h-6 mr-2" />
-            Play Again
-            <span className="ml-2 text-2xl">🎮</span>
-          </Button>
-        </motion.div>
+        <div className="flex flex-col sm:flex-row justify-center gap-3">
+          {/* Back to Menu Button - Always visible */}
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button
+              onClick={onBackToMenu}
+              variant="outline"
+              className="px-8 py-5 text-lg font-bold border-gray-500"
+              size="lg"
+              data-testid="back-to-menu-btn"
+            >
+              <ChevronLeft className="w-5 h-5 mr-2" />
+              Back to Menu
+            </Button>
+          </motion.div>
+          
+          {/* Play Again Button */}
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button
+              onClick={onPlayAgain}
+              className="bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 px-8 py-5 text-lg font-bold shadow-lg"
+              size="lg"
+              data-testid="play-again-btn"
+            >
+              <RefreshCw className="w-5 h-5 mr-2" />
+              Play Again
+              <span className="ml-2 text-xl">🎮</span>
+            </Button>
+          </motion.div>
+        </div>
       </div>
     </motion.div>
   );
