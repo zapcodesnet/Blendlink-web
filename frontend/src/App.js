@@ -194,6 +194,17 @@ const ProtectedRoute = ({ children }) => {
   );
 };
 
+// Loading fallback for lazy-loaded components - Minimal for 60fps feel
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gray-950">
+    <div className="flex flex-col items-center gap-3">
+      <div className="w-10 h-10 border-3 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" 
+           style={{ animationDuration: '0.6s' }} />
+      <span className="text-sm text-gray-500">Loading...</span>
+    </div>
+  </div>
+);
+
 // App Router
 function AppRouter() {
   const location = useLocation();
@@ -204,6 +215,7 @@ function AppRouter() {
   }
 
   return (
+    <Suspense fallback={<PageLoader />}>
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
