@@ -705,6 +705,7 @@ export const BattleArena = ({
   
   // Winner
   const [gameWinner, setGameWinner] = useState(null);
+  const [isTie, setIsTie] = useState(false); // NEW: For 4-4 tiebreaker scenario
   
   // Stamina tracking - NEW
   const [roundResults, setRoundResults] = useState([]); // Track win/loss per round
