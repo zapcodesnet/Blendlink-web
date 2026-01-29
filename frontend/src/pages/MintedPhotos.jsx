@@ -263,6 +263,45 @@ const ImageLightbox = ({ photo, isOpen, onClose, onSetProfilePic, onDelete }) =>
                   </div>
                   <span className="text-yellow-400 font-bold text-lg">{formatValue(photo.dollar_value)}</span>
                 </div>
+                
+                {/* Value Breakdown */}
+                <div className="mt-3 p-3 bg-gray-800/50 rounded-lg space-y-1.5 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Base Value</span>
+                    <span className="text-green-400">{formatValue(photo.base_dollar_value || photo.dollar_value)}</span>
+                  </div>
+                  {(photo.level_bonus_percent > 0) && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Level Bonus (+{photo.level_bonus_percent}%)</span>
+                      <span className="text-purple-400">+{formatValue(Math.floor((photo.base_dollar_value || 0) * (photo.level_bonus_percent || 0) / 100))}</span>
+                    </div>
+                  )}
+                  {(photo.monthly_growth_value > 0) && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Monthly Growth</span>
+                      <span className="text-blue-400">+{formatValue(photo.monthly_growth_value)}</span>
+                    </div>
+                  )}
+                  {(photo.reaction_bonus_value > 0) && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Reaction Bonus</span>
+                      <span className="text-pink-400">+{formatValue(photo.reaction_bonus_value)}</span>
+                    </div>
+                  )}
+                  {(photo.total_upgrade_value > 0) && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Upgrades</span>
+                      <span className="text-orange-400">+{formatValue(photo.total_upgrade_value)}</span>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Reactions Counter */}
+                <div className="mt-3 flex items-center justify-center gap-2 text-pink-400">
+                  <span className="text-2xl">❤️</span>
+                  <span className="font-bold text-lg">{photo.total_reactions || photo.likes_count || 0}</span>
+                  <span className="text-gray-400 text-sm">reactions</span>
+                </div>
               </div>
               
               {/* Action buttons - FIXED at bottom with safe area */}
