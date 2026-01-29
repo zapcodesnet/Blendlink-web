@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext } from "react";
+import { useState, useEffect, createContext, lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Toaster } from "./components/ui/sonner";
 import api, { getToken, getStoredUser, setStoredUser } from "./services/api";
@@ -6,77 +6,84 @@ import api, { getToken, getStoredUser, setStoredUser } from "./services/api";
 // i18n initialization
 import './i18n';
 
-// Pages
+// ============== PERFORMANCE: Lazy Loading Page Components ==============
+// Critical pages loaded synchronously for fast initial render
 import Landing from "./pages/Landing";
-import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import AuthCallback from "./pages/AuthCallback";
-import Feed from "./pages/Feed";
-import SocialFeed from "./pages/SocialFeed";
-import Marketplace from "./pages/Marketplace";
-import Rentals from "./pages/Rentals";
-import Services from "./pages/Services";
-import Games from "./pages/Games";
-import Wallet from "./pages/Wallet";
-import Profile from "./pages/Profile";
-import Messages from "./pages/Messages";
-import Chat from "./pages/Chat";
-import Settings from "./pages/Settings";
-import CreatePost from "./pages/CreatePost";
-import CreateListing from "./pages/CreateListing";
-import ListingDetail from "./pages/ListingDetail";
-import PropertyDetail from "./pages/PropertyDetail";
-import ServiceDetail from "./pages/ServiceDetail";
-import Referrals from "./pages/Referrals";
-import Raffles from "./pages/Raffles";
 
-// Media Sales Pages
-import MediaUpload from "./pages/MediaUpload";
-import MyMedia from "./pages/MyMedia";
-import MediaForSale from "./pages/MediaForSale";
-import Offers from "./pages/Offers";
-import Contract from "./pages/Contract";
-import PaymentSuccess from "./pages/PaymentSuccess";
-import PaymentCancel from "./pages/PaymentCancel";
+// Pages loaded lazily for code splitting
+const Home = lazy(() => import("./pages/Home"));
+const Feed = lazy(() => import("./pages/Feed"));
+const SocialFeed = lazy(() => import("./pages/SocialFeed"));
+const Marketplace = lazy(() => import("./pages/Marketplace"));
+const Rentals = lazy(() => import("./pages/Rentals"));
+const Services = lazy(() => import("./pages/Services"));
+const Games = lazy(() => import("./pages/Games"));
+const Wallet = lazy(() => import("./pages/Wallet"));
+const Profile = lazy(() => import("./pages/Profile"));
+const Messages = lazy(() => import("./pages/Messages"));
+const Chat = lazy(() => import("./pages/Chat"));
+const Settings = lazy(() => import("./pages/Settings"));
+const CreatePost = lazy(() => import("./pages/CreatePost"));
+const CreateListing = lazy(() => import("./pages/CreateListing"));
+const ListingDetail = lazy(() => import("./pages/ListingDetail"));
+const PropertyDetail = lazy(() => import("./pages/PropertyDetail"));
+const ServiceDetail = lazy(() => import("./pages/ServiceDetail"));
+const Referrals = lazy(() => import("./pages/Referrals"));
+const Raffles = lazy(() => import("./pages/Raffles"));
 
-// Referral/Earnings Pages
-import EarningsDashboard from "./pages/EarningsDashboard";
-import Withdraw from "./pages/Withdraw";
+// Media Sales Pages - lazy loaded
+const MediaUpload = lazy(() => import("./pages/MediaUpload"));
+const MyMedia = lazy(() => import("./pages/MyMedia"));
+const MediaForSale = lazy(() => import("./pages/MediaForSale"));
+const Offers = lazy(() => import("./pages/Offers"));
+const Contract = lazy(() => import("./pages/Contract"));
+const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
+const PaymentCancel = lazy(() => import("./pages/PaymentCancel"));
 
-// Admin System
-import AdminLayout from "./pages/admin/AdminLayout";
-import AdminLogin from "./pages/admin/AdminLogin";
+// Referral/Earnings Pages - lazy loaded
+const EarningsDashboard = lazy(() => import("./pages/EarningsDashboard"));
+const Withdraw = lazy(() => import("./pages/Withdraw"));
 
-// AI Generation
-import AIGeneration from "./pages/AIGeneration";
-import AIGallery from "./pages/AIGallery";
-import AICollections from "./pages/AICollections";
-import AICollectionDetail from "./pages/AICollectionDetail";
+// Admin System - lazy loaded (large bundle)
+const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
+const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
+
+// AI Generation - lazy loaded (heavy)
+const AIGeneration = lazy(() => import("./pages/AIGeneration"));
+const AIGallery = lazy(() => import("./pages/AIGallery"));
+const AICollections = lazy(() => import("./pages/AICollections"));
+const AICollectionDetail = lazy(() => import("./pages/AICollectionDetail"));
 
 // Social Analytics & Notifications
-import Notifications from "./pages/Notifications";
-import AnalyticsDashboard from "./pages/AnalyticsDashboard";
-import AICreate from "./pages/AICreate";
-import SellerDashboard from "./pages/SellerDashboard";
-import GuestMarketplace from "./pages/GuestMarketplace";
-import Albums from "./pages/Albums";
-import AIListingCreator from "./pages/AIListingCreator";
-import Casino from "./pages/Casino";
-import PokerTournament, { PokerLobby } from "./pages/PokerTournament";
-import Friends from "./pages/Friends";
-import Groups from "./pages/Groups";
-import Events from "./pages/Events";
-import Pages from "./pages/Pages";
-import MyTeam from "./pages/MyTeam";
-import MintedPhotos from "./pages/MintedPhotos";
-import PhotoGameArena from "./pages/PhotoGameArena";
-import BattleReplayPage from "./pages/BattleReplayPage";
-import SubscriptionTiers from "./pages/SubscriptionTiers";
-import Checkout from "./pages/Checkout";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import TermsOfService from "./pages/TermsOfService";
-import MarketplaceOffers from "./pages/MarketplaceOffers";
+const Notifications = lazy(() => import("./pages/Notifications"));
+const AnalyticsDashboard = lazy(() => import("./pages/AnalyticsDashboard"));
+const AICreate = lazy(() => import("./pages/AICreate"));
+const SellerDashboard = lazy(() => import("./pages/SellerDashboard"));
+const GuestMarketplace = lazy(() => import("./pages/GuestMarketplace"));
+const Albums = lazy(() => import("./pages/Albums"));
+const AIListingCreator = lazy(() => import("./pages/AIListingCreator"));
+const Casino = lazy(() => import("./pages/Casino"));
+const PokerTournament = lazy(() => import("./pages/PokerTournament").then(m => ({ default: m.default })));
+const PokerLobby = lazy(() => import("./pages/PokerTournament").then(m => ({ default: m.PokerLobby })));
+const Friends = lazy(() => import("./pages/Friends"));
+const Groups = lazy(() => import("./pages/Groups"));
+const Events = lazy(() => import("./pages/Events"));
+const Pages = lazy(() => import("./pages/Pages"));
+const MyTeam = lazy(() => import("./pages/MyTeam"));
+
+// Game components - Heavy, always lazy load
+const MintedPhotos = lazy(() => import("./pages/MintedPhotos"));
+const PhotoGameArena = lazy(() => import("./pages/PhotoGameArena"));
+const BattleReplayPage = lazy(() => import("./pages/BattleReplayPage"));
+
+const SubscriptionTiers = lazy(() => import("./pages/SubscriptionTiers"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
+const MarketplaceOffers = lazy(() => import("./pages/MarketplaceOffers"));
 
 // Components
 import BottomNav from "./components/BottomNav";
