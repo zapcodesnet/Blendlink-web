@@ -405,6 +405,7 @@ const GameResultScreen = ({
   opponentWins, 
   betAmount = 0, 
   onPlayAgain,
+  onBackToMenu,
   staminaChanges = null, // { player: -X, photos: [{mint_id, change}] }
   isBot = false,
   savedReplayId = null,
