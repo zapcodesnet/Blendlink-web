@@ -191,16 +191,45 @@ const PhotoSelectionGrid = ({ photos, selectedPhotos, onTogglePhoto, maxPhotos =
     return configs[type] || configs.neutral;
   };
 
+  const validPhotos = photos.filter(p => (p.current_stamina || p.stamina || 0) >= 1);
+  const needMorePhotos = selectedPhotos.length < maxPhotos;
+
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-sm text-gray-400">Select 5 photos for battle</span>
-        <span className={`text-sm font-bold ${selectedPhotos.length === maxPhotos ? 'text-green-400' : 'text-yellow-400'}`}>
-          {selectedPhotos.length}/{maxPhotos}
-        </span>
+    <div className="space-y-3">
+      {/* Selection Counter - Prominent */}
+      <div className="flex items-center justify-between p-3 bg-gray-800/70 rounded-lg border border-gray-700">
+        <div>
+          <span className="text-sm text-white font-medium">Photos Selected:</span>
+          <p className="text-xs text-gray-400 mt-0.5">Tap photos to select/deselect</p>
+        </div>
+        <div className={`px-4 py-2 rounded-lg font-bold text-lg ${
+          selectedPhotos.length === maxPhotos 
+            ? 'bg-green-500/20 text-green-400' 
+            : 'bg-yellow-500/20 text-yellow-400'
+        }`}>
+          {selectedPhotos.length} / {maxPhotos}
+        </div>
       </div>
       
-      <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto p-1">
+      {/* Instruction message */}
+      {needMorePhotos && (
+        <div className="p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg text-center">
+          <p className="text-xs text-amber-400">
+            ⚠️ Select exactly 5 minted photos with available stamina to play
+          </p>
+        </div>
+      )}
+      
+      {/* Not enough valid photos warning */}
+      {validPhotos.length < 5 && (
+        <div className="p-2 bg-red-500/10 border border-red-500/30 rounded-lg text-center">
+          <p className="text-xs text-red-400">
+            ❌ You need at least 5 photos with stamina ≥1 ({validPhotos.length} available)
+          </p>
+        </div>
+      )}
+      
+      <div className="grid grid-cols-3 gap-2 max-h-72 overflow-y-auto p-1">
         {photos.map(photo => {
           const isSelected = selectedPhotos.some(p => p.mint_id === photo.mint_id);
           const scenery = getSceneryConfig(photo.scenery_type);
@@ -216,25 +245,28 @@ const PhotoSelectionGrid = ({ photos, selectedPhotos, onTogglePhoto, maxPhotos =
                 !hasStamina
                   ? 'border-gray-700/50 bg-gray-800/30 opacity-50 cursor-not-allowed'
                   : isSelected
-                    ? 'border-purple-500 bg-purple-500/20'
+                    ? 'border-purple-500 bg-purple-500/20 ring-2 ring-purple-500/50'
                     : canSelect
-                      ? 'border-gray-600 bg-gray-800/50 hover:border-gray-500'
+                      ? 'border-gray-600 bg-gray-800/50 hover:border-gray-500 hover:bg-gray-700/50'
                       : 'border-gray-700/50 bg-gray-800/30 opacity-50 cursor-not-allowed'
               }`}
               whileHover={canSelect ? { scale: 1.02 } : {}}
               whileTap={canSelect ? { scale: 0.98 } : {}}
             >
-              {/* Selection number */}
+              {/* Selection number badge */}
               {isSelected && (
-                <div className="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center text-xs font-bold text-white z-10">
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-sm font-bold text-white z-10 shadow-lg">
                   {selectedPhotos.findIndex(p => p.mint_id === photo.mint_id) + 1}
                 </div>
               )}
               
               {/* Low stamina warning */}
               {!hasStamina && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-lg z-10">
-                  <span className="text-xs text-red-400 font-bold">Low Stamina</span>
+                <div className="absolute inset-0 flex items-center justify-center bg-black/70 rounded-lg z-10">
+                  <div className="text-center">
+                    <span className="text-xs text-red-400 font-bold">⚡ 0 Stamina</span>
+                    <p className="text-[10px] text-gray-400">Needs rest</p>
+                  </div>
                 </div>
               )}
               
@@ -246,6 +278,16 @@ const PhotoSelectionGrid = ({ photos, selectedPhotos, onTogglePhoto, maxPhotos =
               {/* Photo info */}
               <p className="text-xs text-white truncate font-medium">{photo.name}</p>
               <p className="text-xs text-yellow-400">${((photo.dollar_value || 0) / 1000000).toFixed(0)}M</p>
+              
+              {/* Stamina indicator */}
+              {hasStamina && (
+                <div className="mt-1 h-1 bg-gray-700 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-green-500 rounded-full"
+                    style={{ width: `${Math.min((photo.current_stamina || photo.stamina || 0), 100)}%` }}
+                  />
+                </div>
+              )}
             </motion.button>
           );
         })}
@@ -253,6 +295,7 @@ const PhotoSelectionGrid = ({ photos, selectedPhotos, onTogglePhoto, maxPhotos =
       
       {photos.length === 0 && (
         <div className="text-center py-8 text-gray-500">
+          <p className="text-2xl mb-2">📷</p>
           <p>No minted photos available</p>
           <p className="text-xs mt-1">Mint some photos to start battling!</p>
         </div>
