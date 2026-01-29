@@ -1632,21 +1632,22 @@ const PhotoGameArena = () => {
         
         // Log the bot win tracking
         console.log(`Bot battle recorded: ${botDifficulty}, won=${winner === 'player'}, ${botDifficulty}_wins=${response.data[`${botDifficulty}_wins`]}`);
+        
+        // CRITICAL FIX: Refresh bot win stats to update unlock progress UI
+        try {
+          const botStatsRes = await api.get('/photo-game/bot-battle/stats');
+          setBotWinStats(botStatsRes.data || {});
+          console.log('Bot stats refreshed:', botStatsRes.data);
+        } catch (statsErr) {
+          console.error('Failed to refresh bot stats:', statsErr);
+        }
       } catch (err) {
         console.error('Failed to record bot battle result:', err);
       }
     }
     
-    setGameState('pvp_menu');
-    setSession(null);
-    setSelectedPhoto(null);
-    setPlayerBattlePhotos([]);
-    setOpponentBattlePhotos([]);
-    setBattleBetAmount(0);
-    setCurrentOpenGame(null);
-    setIsAuctionBattleBot(false);
-    setBotDifficulty('easy');
-    api.get('/photo-game/stats').then(res => setStats(res.data)).catch(() => {});
+    // Don't reset game state here - let the user click "Back to Menu" or "Play Again"
+    // The game result screen should remain visible
   }, [isAuctionBattleBot, botDifficulty, battleBetAmount, session]);
   
   // Handle Bot Battle start from main menu's BotDifficultySelector
