@@ -1,6 +1,60 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 29, 2026 (PVP WebSocket Bug Fixes)
+## Latest Update: January 29, 2026 (Deployment Stability Improvements)
+
+---
+
+## SESSION 42: DEPLOYMENT STABILITY IMPROVEMENTS ✅
+
+### Issue Analysis: 404 Errors During Deployment
+**Root Cause Identified:**
+The 404 errors and "Connection refused" errors in production deployment logs were caused by:
+1. **Server restart during deployment** - Kubernetes rolling updates cause brief unavailability
+2. **WebSocket operations during server shutdown** - Could cause unhandled exceptions
+
+**NOT a missing route issue** - All routes were verified to exist:
+- `POST /api/photo-game/bot-battle/start` ✅
+- `POST /api/photo-game/open-games/start/{game_id}` ✅
+- `GET /api/photo-game/bot-battle/stats` ✅
+
+**Files Modified:**
+- `/app/backend/server.py` - Added better exception handling in WebSocket disconnect handler
+- `/app/backend/pvp_game_websocket.py` - Added try-catch around broadcast and task creation
+
+**Improvements Made:**
+1. **Enhanced Exception Handling**
+   - WebSocket disconnect cleanup now wrapped in try-catch
+   - Full traceback logging for WebSocket errors
+   - Prevents unhandled exceptions from crashing the server
+
+2. **Graceful Degradation**
+   - Broadcast errors during disconnect don't crash the handler
+   - Failed forfeit task creation is logged but doesn't propagate
+
+**Code Changes:**
+```python
+# server.py - WebSocket error handling
+except Exception as e:
+    logger.error(f"PVP Game WebSocket error: {e}")
+    import traceback
+    logger.error(traceback.format_exc())
+    try:
+        await pvp_game_manager.disconnect_player(user_id)
+    except Exception as disc_err:
+        logger.error(f"Error during disconnect cleanup: {disc_err}")
+
+# pvp_game_websocket.py - Broadcast error handling
+try:
+    await self._broadcast_to_room(room_id, {...})
+except Exception as e:
+    logger.error(f"Error broadcasting disconnect: {e}")
+```
+
+**Testing Verified:**
+- All bot-battle endpoints return correct responses
+- All open-games endpoints return correct responses
+- Server starts successfully without errors
+- WebSocket handlers have proper error boundaries
 
 ---
 
