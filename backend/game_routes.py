@@ -1647,9 +1647,11 @@ async def get_battle_ready_photos(
         stamina_record = await _db.photo_stamina.find_one({"mint_id": photo.get("mint_id")})
         medals = {}
         win_streak = 0
+        lose_streak = 0
         if stamina_record:
             medals = stamina_record.get("medals", {"ten_win_streak": 0})
             win_streak = stamina_record.get("win_streak", 0)
+            lose_streak = stamina_record.get("lose_streak", 0)
         # Also check if medals are stored on the photo itself (for transfers)
         if not medals.get("ten_win_streak") and photo.get("medals"):
             medals = photo.get("medals", {"ten_win_streak": 0})
@@ -1677,6 +1679,9 @@ async def get_battle_ready_photos(
             "image_url": photo.get("image_url", ""),
             "medals": medals,
             "win_streak": win_streak,
+            "lose_streak": lose_streak,
+            "current_win_streak": win_streak,
+            "current_lose_streak": lose_streak,
         })
     
     return {
