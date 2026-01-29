@@ -610,7 +610,7 @@ export const BotDifficultySelector = ({
                     <div>
                       <p className={`font-bold ${currentDifficulty?.textColor}`}>{currentDifficulty?.name}</p>
                       <p className="text-xs text-gray-400">
-                        {currentDifficulty?.dollarValue} • {currentDifficulty?.tapsDisplay} • {currentDifficulty?.fixedBet} BL Bet
+                        {currentDifficulty?.dollarValue} • {currentDifficulty?.fixedBet} BL Bet
                       </p>
                     </div>
                   </div>
