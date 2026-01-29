@@ -1208,19 +1208,20 @@ const TappingArenaView = ({
       <Pressable
         style={[
           styles.tappingTapArea,
-          { backgroundColor: gamePhase === 'active' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(0, 0, 0, 0.3)' }
+          { backgroundColor: effectiveGamePhase === 'active' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(0, 0, 0, 0.3)' }
         ]}
         onPress={handleTap}
-        disabled={gamePhase !== 'active' || winner !== null}
+        disabled={effectiveGamePhase !== 'active' || winner !== null}
       >
-        {gamePhase === 'active' && !winner && (
+        {effectiveGamePhase === 'active' && !winner && (
           <Animated.View style={{ transform: [{ scale: pulseAnim }], alignItems: 'center' }}>
             <Text style={styles.tappingTapEmoji}>👆</Text>
             <Text style={styles.tappingTapText}>TAP TO BID!</Text>
             <Text style={styles.tappingTapSubtext}>{playerRequiredTaps - playerTaps} taps remaining</Text>
           </Animated.View>
         )}
-        {gamePhase === 'waiting' && <Text style={styles.tappingWaitingText}>Preparing arena...</Text>}
+        {effectiveGamePhase === 'waiting' && <Text style={styles.tappingWaitingText}>Preparing arena...</Text>}
+        {effectiveGamePhase === 'selecting' && <Text style={styles.tappingWaitingText}>Selecting photos...</Text>}
       </Pressable>
 
       {/* TPS Debug Indicator */}
