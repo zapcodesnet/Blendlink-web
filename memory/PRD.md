@@ -1,6 +1,62 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 29, 2026 (WebSocket PVP Integration)
+## Latest Update: January 29, 2026 (Per-Round Photo Selection & Transitions)
+
+---
+
+## SESSION 37: PER-ROUND FEATURES & TRANSITIONS ✅
+
+### A) Per-Round Photo Selection with "Used" Tracking
+**Files Modified:**
+- `/app/mobile/src/screens/PhotoGameArenaScreen.js`
+- `/app/mobile/src/hooks/usePVPWebSocket.js`
+
+**Features:**
+1. **Used Photo Tracking**
+   - `usedPhotoIds` array tracks photos used in previous rounds
+   - Photos used in earlier rounds are grayed out with "USED" badge overlay
+   - Used photos cannot be selected again during the same game
+   - Automatically updated when both players confirm selections
+
+2. **PhotoSelectionView Updates**
+   - New props: `usedPhotoIds`, `opponentHasSelected`, `showOpponentStatus`
+   - Three photo categories: Available, Used This Game, Resting
+   - "Used" badge with red background and rotated text overlay
+
+### B) Round Transition Animations
+**Features:**
+1. **RoundTransitionView Component**
+   - Fade, slide, and scale entrance animations
+   - Large emoji display (🎉 win / 😔 lose)
+   - Score circles showing current wins for each player
+   - Progress bar for auto-transition to next round
+   - "Next Round Info" card explaining photo selection rules
+
+2. **Transition Flow:**
+   - Round ends → Result shows for 3 seconds
+   - Auto-transition to photo selection (server-controlled)
+   - Both players select new photos (used ones unavailable)
+   - Both click Ready → 10-second countdown starts
+   - Round begins
+
+### C) Opponent Photo Selection Sync
+**Features:**
+1. **WebSocket Events Added:**
+   - `player_selected_photo` - Notifies opponent when selection made
+   - `photo_selection_confirmed` - Confirms player's own selection
+
+2. **UI Status Display:**
+   - "⏳ Waiting for opponent to select..." shown during selection
+   - "✓ Opponent has selected their photo" when opponent chooses
+   - Both statuses help players know when to click Ready
+
+**New Styles Added:**
+- `usedBadgeOverlay`, `usedBadge`, `usedBadgeText`
+- `opponentSelectionStatus`, `opponentStatusText`
+- `roundTransitionContainer`, `roundTransitionEmoji`, `roundTransitionTitle`
+- `scoreCircle`, `scoreCircleText`, `scoreSeparator`
+- `transitionProgressBg`, `transitionProgressFill`
+- `nextRoundInfo`, `nextRoundInfoText`, `nextRoundInfoHint`
 
 ---
 
