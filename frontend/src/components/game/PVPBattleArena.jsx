@@ -353,32 +353,48 @@ export const PVPBattleArena = ({
   }, [currentUserId, opponentId, opponentUsername, isPlayer1, mySelectedPhoto]);
   
   // Connect to WebSocket
-  const connectWebSocket = useCallback(() => {
+  const connectWebSocket = useCallback((isReconnect = false) => {
     const wsUrl = getWebSocketUrl();
     if (!wsUrl) {
       console.log('No WebSocket URL available');
       return;
     }
     
-    if (wsRef.current) {
+    // Clear any existing reconnect timeout
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+    
+    // Close existing connection if any
+    if (wsRef.current && wsRef.current.readyState !== WebSocket.CLOSED) {
       wsRef.current.close();
     }
     
     try {
+      console.log(`${isReconnect ? 'Reconnecting' : 'Connecting'} to PVP WebSocket...`);
       const ws = new WebSocket(wsUrl);
       
       ws.onopen = () => {
         console.log('PVP WebSocket connected');
         setWsConnected(true);
+        setReconnecting(false);
         reconnectAttempts.current = 0;
         
-        // Join the room
-        ws.send(JSON.stringify({
-          type: 'join',
-          username: currentUsername,
-          photos: playerPhotos,
-          is_creator: isPlayer1,
-        }));
+        if (isReconnect) {
+          // Send reconnect message to restore state
+          ws.send(JSON.stringify({
+            type: 'reconnect',
+          }));
+        } else {
+          // Join the room
+          ws.send(JSON.stringify({
+            type: 'join',
+            username: currentUsername,
+            photos: playerPhotos,
+            is_creator: isPlayer1,
+          }));
+        }
       };
       
       ws.onmessage = handleWebSocketMessage;
@@ -388,21 +404,24 @@ export const PVPBattleArena = ({
         setWsConnected(false);
       };
       
-      ws.onclose = () => {
-        console.log('PVP WebSocket closed');
+      ws.onclose = (event) => {
+        console.log('PVP WebSocket closed:', event.code, event.reason);
         setWsConnected(false);
         
-        // Reconnect - schedule with timeout instead of recursive call
-        if (reconnectAttempts.current < 5 && gamePhase !== 'result') {
+        // Schedule reconnect if game is still in progress
+        if (gamePhase !== 'result' && reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
+          setReconnecting(true);
           reconnectAttempts.current++;
-          const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 10000);
-          // Use window.location to force reconnect on next tick
-          setTimeout(() => {
-            const newWsUrl = getWebSocketUrl();
-            if (newWsUrl && wsRef.current?.readyState !== WebSocket.OPEN) {
-              window.location.reload(); // Simple reconnect strategy
-            }
+          
+          const delay = RECONNECT_INTERVAL;
+          console.log(`Scheduling reconnect attempt ${reconnectAttempts.current}/${MAX_RECONNECT_ATTEMPTS} in ${delay}ms`);
+          
+          reconnectTimeoutRef.current = setTimeout(() => {
+            connectWebSocket(true);
           }, delay);
+        } else if (reconnectAttempts.current >= MAX_RECONNECT_ATTEMPTS) {
+          toast.error('Connection lost. Please rejoin or create a new game.');
+          setReconnecting(false);
         }
       };
       
@@ -410,8 +429,16 @@ export const PVPBattleArena = ({
     } catch (err) {
       console.error('Failed to create PVP WebSocket:', err);
       setWsConnected(false);
+      setReconnecting(false);
     }
   }, [getWebSocketUrl, handleWebSocketMessage, currentUsername, playerPhotos, isPlayer1, gamePhase]);
+  
+  // Manual reconnect function
+  const handleManualReconnect = useCallback(() => {
+    reconnectAttempts.current = 0;
+    setReconnecting(true);
+    connectWebSocket(true);
+  }, [connectWebSocket]);
   
   // Connect on mount
   useEffect(() => {
