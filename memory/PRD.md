@@ -1,6 +1,46 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 29, 2026 (Bot Battle UI Improvements)
+## Latest Update: January 29, 2026 (Bot Battle Critical Bug Fixes)
+
+---
+
+## SESSION 44: BOT BATTLE CRITICAL BUG FIXES ✅
+
+### Issues Fixed:
+
+1. **"Failed to start bot battle" Error - ROOT CAUSE IDENTIFIED**
+   - **Root Cause**: User has NO minted photos - backend correctly rejects "Photo X not found or not owned"
+   - **Fix**: Added clear UI messaging when no photos exist
+   - Frontend now shows: "No Minted Photos - You need at least 5 minted photos with stamina to play Bot Battle. Go to the Minting section to create your photos first."
+
+2. **"Play with Bot" Button Navigation Fixed**
+   - Changed from `setGameState('matchmaking')` to `setShowBotSelector(true)`
+   - Now opens the correct Bot Battle screen directly
+   - Added photo count check before opening
+
+3. **Removed taps/sec Display from All Bots**
+   - Removed `tapsDisplay` from all bot difficulty configs
+   - UI no longer shows bot tap rates (discourages players)
+   - Internal `tapsPerSec` still works for game mechanics
+
+4. **Added One-Time Unlock Bonuses**
+   - Medium Bot unlock: +20,000 BL coins
+   - Hard Bot unlock: +100,000 BL coins
+   - Extremely Hard Bot unlock: +500,000 BL coins
+   - Extremely Hard Bot mastery (3 wins): +1,000,000 BL coins
+   - Backend tracks claimed bonuses to prevent duplicates
+
+**Files Modified:**
+- `/app/frontend/src/pages/PhotoGameArena.jsx` - Fixed "Play with Bot" navigation
+- `/app/frontend/src/components/game/BotDifficultySelector.jsx` - Added no-photos warning, removed taps/sec
+- `/app/mobile/src/components/BotDifficultySelector.js` - Same changes for mobile
+- `/app/backend/game_routes.py` - Added unlock bonus logic with DB tracking
+
+**Key User Flow:**
+1. User clicks "Play with Bot" → Opens Bot Battle selector
+2. If no minted photos → Shows clear error with guidance
+3. If photos exist → Select 5 photos → Start Battle
+4. On difficulty unlock → Receive one-time BL bonus
 
 ---
 
