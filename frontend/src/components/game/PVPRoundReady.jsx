@@ -170,16 +170,27 @@ const CountdownOverlay = ({ seconds, serverTime }) => {
   
   const [count, setCount] = useState(() => getInitialCount());
   
+  // Use a ref to track the latest getInitialCount to avoid calling setState directly
+  const getInitialCountRef = useRef(getInitialCount);
   useEffect(() => {
-    // Update count when serverTime changes
-    setCount(getInitialCount());
+    getInitialCountRef.current = getInitialCount;
+  }, [getInitialCount]);
+  
+  useEffect(() => {
+    // Calculate initial count once at mount or when serverTime changes
+    const initialCount = getInitialCountRef.current();
+    
+    // Use a timer to update the count
+    let currentCount = initialCount;
+    setCount(currentCount);
     
     const timer = setInterval(() => {
-      setCount(c => Math.max(0, c - 1));
+      currentCount = Math.max(0, currentCount - 1);
+      setCount(currentCount);
     }, 1000);
     
     return () => clearInterval(timer);
-  }, [getInitialCount]);
+  }, [serverTime, seconds]); // Only re-run when these change
   
   return (
     <motion.div
