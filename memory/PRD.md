@@ -1,6 +1,55 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 29, 2026 (Deployment Stability Improvements)
+## Latest Update: January 29, 2026 (Bot Battle UI Improvements)
+
+---
+
+## SESSION 43: BOT BATTLE UI IMPROVEMENTS ✅
+
+### Issues Fixed:
+1. **Photo Images Not Displaying**
+   - Updated PhotoSelectionGrid to show actual `image_url`/`thumbnail_url` from minted photos
+   - Added fallback gradient background with scenery emoji if image fails to load
+   - Added `onError` handler for lazy-loaded images
+
+2. **Missing Photo Stats on Cards**
+   - Added Level badge with stars (Lv1-60)
+   - Added Scenery type indicator with strength/weakness info
+   - Added Hearts counter (❤️)
+   - Added Win/Lose streak indicators (🔥 for wins, 🛡️ for 3+ loss immunity)
+   - Added detailed Stamina bar with percentage
+
+3. **"Failed to start bot battle" Error**
+   - Verified backend endpoint is working correctly
+   - Error occurs when user has no minted photos (expected behavior)
+   - Frontend now shows clear error messages from backend
+
+**Files Modified:**
+- `/app/frontend/src/components/game/BotDifficultySelector.jsx` - Complete photo card redesign
+- `/app/mobile/src/components/BotDifficultySelector.js` - Mobile photo card redesign with Image component
+
+**Photo Card Layout (New):**
+```
+┌─────────────────────┐
+│ [Lv5 ★★★★★]   [#1] │ <- Level badge + selection number
+│                     │
+│   [PHOTO IMAGE]     │ <- Actual image or scenery fallback
+│                     │
+│ [🌊 Water]          │ <- Scenery badge
+├─────────────────────┤
+│ Photo Name          │
+│ [$691M]             │ <- Dollar Value (prominent)
+│ 💪 Natural 😰 Man-made │ <- Strength/Weakness
+│ ❤️ 150    🔥3       │ <- Hearts + Win Streak
+│ [====== 85%]        │ <- Stamina bar
+└─────────────────────┘
+```
+
+**Technical Details:**
+- Photos now use `image_url` field from minted_photos collection
+- Added `formatValue()` helper for B/M/K formatting
+- Grid changed from 3 columns to 2 columns for better stat visibility
+- Mobile uses React Native Image component with proper styling
 
 ---
 
