@@ -1650,6 +1650,21 @@ const PhotoGameArena = () => {
     // The game result screen should remain visible
   }, [isAuctionBattleBot, botDifficulty, battleBetAmount, session]);
   
+  // Handle exiting from battle arena to main menu
+  const handleBattleExit = useCallback(() => {
+    setGameState('pvp_menu');
+    setSession(null);
+    setSelectedPhoto(null);
+    setPlayerBattlePhotos([]);
+    setOpponentBattlePhotos([]);
+    setBattleBetAmount(0);
+    setCurrentOpenGame(null);
+    setIsAuctionBattleBot(false);
+    setBotDifficulty('easy');
+    // Refresh stats
+    api.get('/photo-game/stats').then(res => setStats(res.data)).catch(() => {});
+  }, []);
+  
   // Handle Bot Battle start from main menu's BotDifficultySelector
   const handleMenuBotBattleStart = useCallback(async ({ difficulty, betAmount: bet, photos, botConfig }) => {
     setShowBotSelector(false);
