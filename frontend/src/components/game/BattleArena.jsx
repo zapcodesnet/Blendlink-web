@@ -1069,8 +1069,8 @@ export const BattleArena = ({
             <TappingArena
               playerPhoto={selectedPlayerPhoto}
               opponentPhoto={selectedOpponentPhoto}
-              playerStats={playerStats}
-              opponentStats={opponentStats}
+              playerStats={effectivePlayerStats}
+              opponentStats={effectiveOpponentStats}
               roundNumber={currentRound.round}
               onRoundComplete={handleRoundComplete}
               websocket={websocket}
@@ -1104,8 +1104,8 @@ export const BattleArena = ({
               powerAdvantage={calculatePowerAdvantage(
                 selectedPlayerPhoto, 
                 selectedOpponentPhoto, 
-                playerStats, 
-                opponentStats
+                effectivePlayerStats, 
+                effectiveOpponentStats
               )}
             />
           </motion.div>
