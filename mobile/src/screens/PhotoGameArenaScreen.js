@@ -806,7 +806,7 @@ const RPSBattleView = ({ session, onChoice, isTiebreaker, colors }) => {
   );
 };
 
-// ============== TAPPING ARENA VIEW (30 TPS) ==============
+// ============== TAPPING ARENA VIEW (30 TPS) WITH WEBSOCKET ==============
 const TappingArenaView = ({ 
   playerPhoto, 
   opponentPhoto, 
@@ -814,17 +814,35 @@ const TappingArenaView = ({
   botDifficulty = 'medium',
   onRoundComplete, 
   roundNumber = 1,
-  colors 
+  colors,
+  // WebSocket props for real-time PVP
+  wsGamePhase,       // Phase from WebSocket: 'ready', 'countdown', 'playing'
+  wsCountdown,       // Server countdown value
+  wsOpponentTaps,    // Opponent taps from WebSocket
+  wsPlayerReady,     // Whether we're marked ready
+  wsOpponentReady,   // Whether opponent is ready
+  onSendTap,         // Function to send tap via WebSocket
+  onMarkReady,       // Function to mark ready via WebSocket
+  isWebSocketMode = false,  // Whether using WebSocket for sync
 }) => {
-  // Game state
-  const [gamePhase, setGamePhase] = useState('waiting'); // waiting, countdown, active, finished
-  const [countdown, setCountdown] = useState(COUNTDOWN_SECONDS);
+  // Game state - use WebSocket state if available, otherwise local state
+  const [localGamePhase, setLocalGamePhase] = useState('waiting'); // waiting, countdown, active, finished
+  const [localCountdown, setLocalCountdown] = useState(COUNTDOWN_SECONDS);
   const [timeRemaining, setTimeRemaining] = useState(ROUND_DURATION_SECONDS);
+  
+  // Use WebSocket values when in WebSocket mode
+  const gamePhase = isWebSocketMode 
+    ? (wsGamePhase === 'playing' ? 'active' : wsGamePhase === 'countdown' ? 'countdown' : wsGamePhase) 
+    : localGamePhase;
+  const countdown = isWebSocketMode ? (wsCountdown || COUNTDOWN_SECONDS) : localCountdown;
   
   // Tap tracking
   const [playerTaps, setPlayerTaps] = useState(0);
-  const [opponentTaps, setOpponentTaps] = useState(0);
+  const [localOpponentTaps, setLocalOpponentTaps] = useState(0);
   const [tapsThisSecond, setTapsThisSecond] = useState(0);
+  
+  // Use WebSocket opponent taps if available
+  const opponentTaps = isWebSocketMode ? (wsOpponentTaps || 0) : localOpponentTaps;
   
   // Warning state
   const [showRateWarning, setShowRateWarning] = useState(false);
@@ -864,7 +882,9 @@ const TappingArenaView = ({
 
   // Handle tap - 30 TPS rate limit
   const handleTap = useCallback(() => {
-    if (gamePhase !== 'active' || winner) return;
+    // Use local phase for WebSocket mode as it should be 'active' when playing
+    const currentPhase = isWebSocketMode ? (wsGamePhase === 'playing' ? 'active' : wsGamePhase) : localGamePhase;
+    if (currentPhase !== 'active' || winner) return;
     
     // Anti-cheat: Max 30 taps per second
     if (tapsThisSecond >= MAX_TAPS_PER_SECOND) {
@@ -884,6 +904,11 @@ const TappingArenaView = ({
     setPlayerTaps(newTaps);
     setTapsThisSecond(prev => prev + 1);
     
+    // Send tap via WebSocket if in WebSocket mode
+    if (isWebSocketMode && onSendTap) {
+      onSendTap(1);
+    }
+    
     // Haptic feedback for every valid tap
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     
@@ -893,11 +918,11 @@ const TappingArenaView = ({
       Animated.timing(pulseAnim, { toValue: 1, duration: 30, useNativeDriver: true }),
     ]).start();
     
-    // Check win
-    if (newTaps >= playerRequiredTaps) {
+    // Check win (only in bot mode - WebSocket mode uses server result)
+    if (!isWebSocketMode && newTaps >= playerRequiredTaps) {
       handlePlayerWin();
     }
-  }, [gamePhase, winner, playerTaps, playerRequiredTaps, tapsThisSecond]);
+  }, [localGamePhase, wsGamePhase, isWebSocketMode, winner, playerTaps, playerRequiredTaps, tapsThisSecond, onSendTap]);
 
   // Handle player win
   const handlePlayerWin = useCallback(() => {
