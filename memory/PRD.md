@@ -1,6 +1,49 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 29, 2026 (Featured Replays + Facebook API Research)
+## Latest Update: January 30, 2026 (Critical Bot Unlock Fix)
+
+---
+
+## SESSION 50: BOT DIFFICULTY UNLOCK BUG FIX ✅ CRITICAL
+
+### Bug Fixed: Bot Wins Not Being Recorded
+
+**Root Cause Identified:**
+The `onGameComplete` callback in `BattleArena.jsx` was ONLY being called when the user clicked "Play Again", NOT when the game ended. This meant:
+1. Player wins bot battle → goes to result screen
+2. If player clicks "Play Again" → wins recorded ✅
+3. If player navigates away/closes modal → wins NEVER recorded ❌
+
+**Fixes Applied:**
+
+1. **BattleArena.jsx - Call onGameComplete when game ends**
+   - Added `onGameComplete` call in `handleRoundComplete` when `playerWins >= 3` or `opponentWins >= 3`
+   - Removed duplicate call from `handlePlayAgain` (was causing double recording)
+   - Added `handleBackToMenu` callback for proper exit handling
+
+2. **PhotoGameArena.jsx - Refresh bot stats after game**
+   - `handleAuctionBattleComplete` now calls `/bot-battle/stats` after recording result
+   - Created `handleBattleExit` handler for proper state reset on menu exit
+   - Updated `onExit` prop to use `handleBattleExit` instead of inline function
+
+3. **GameResultScreen UI - Added Back to Menu button**
+   - New "Back to Menu" button next to "Play Again"
+   - Both buttons properly styled and positioned
+
+**Files Modified:**
+- `/app/frontend/src/components/game/BattleArena.jsx` - Lines 893-905 (onGameComplete on game end), 919-950 (handlePlayAgain, handleBackToMenu)
+- `/app/frontend/src/pages/PhotoGameArena.jsx` - Lines 1609-1665 (handleAuctionBattleComplete, handleBattleExit)
+
+**Test Results: 100% Success Rate (iteration_76.json)**
+- All 16 backend tests passed
+- All frontend UI elements verified
+- Bot unlock system fully functional
+
+**Technical Details:**
+- `easy_bot_wins` correctly increments after each Easy Bot win
+- Medium Bot unlocks when `easy_bot_wins >= 3`
+- Unlock bonus (+20,000 BL) awarded and toast shown
+- UI progress counters update in real-time
 
 ---
 
