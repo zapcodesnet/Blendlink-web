@@ -2011,6 +2011,9 @@ const PhotoGameArena = () => {
                   Play with Bot
                 </Button>
               </div>
+              
+              {/* Featured Replays Section */}
+              <FeaturedReplays />
             </motion.div>
           )}
           
