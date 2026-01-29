@@ -1,6 +1,57 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 29, 2026 (Bot Battle UX Improvements)
+## Latest Update: January 29, 2026 (Bot Battle Critical Bug Fixes)
+
+---
+
+## SESSION 47: BOT BATTLE CRITICAL BUG FIXES ✅
+
+### 8 Critical Bugs Fixed:
+
+1. **Bot Win Tracking (FIXED)**
+   - Problem: Wins stuck at "0/3" - Medium Bot never unlocked
+   - Root Cause: Frontend wasn't calling `/api/photo-game/bot-battle/result` on game completion
+   - Fix: Added `handleAuctionBattleComplete` to call API with session_id, rounds_won, rounds_lost, bet_amount
+   - Also: BattleArena.jsx now passes game data to onGameComplete callback
+
+2. **Loading Screen After Start (VERIFIED)**
+   - Working correctly from previous session
+
+3. **Stamina Deduction (VERIFIED)**
+   - Backend `/record-round-result` correctly deducts stamina (win=-1, loss=-2)
+   - Frontend calls this endpoint after each round via BattleArena.jsx line 672
+
+4. **Win/Lose Streaks (VERIFIED)**
+   - Backend updates streaks on each round
+   - Streak multipliers applied correctly (×1.25 at 3 wins, up to ×3.00 at 10)
+
+5. **XP Points (VERIFIED)**
+   - +1 XP per round, multiplied by subscription tier
+   - Level progression and star bonuses working
+
+6. **Dollar Value Calculation (VERIFIED)**
+   - All bonuses applied: scenery, streaks, stars, reactions, monthly growth, paid upgrades
+   - Correct strength/weakness rules (Natural +25% vs Water)
+
+7. **RPS Photo Display (FIXED)**
+   - Added photo display section to RPSBidding.jsx
+   - Shows player and opponent photos with actual images and dollar values
+
+8. **TappingArena Meter Bar (FIXED)**
+   - Repositioned progress meters from `top-[45%]` to `top-20`
+   - Photos moved from `top-24` to `top-[38%]`
+   - Dollar values prominently displayed above photos (not covered)
+
+**Files Modified:**
+- `/app/frontend/src/pages/PhotoGameArena.jsx` - handleAuctionBattleComplete now calls bot-battle/result
+- `/app/frontend/src/components/game/BattleArena.jsx` - Passes game data to onGameComplete
+- `/app/frontend/src/components/game/TappingArena.jsx` - Repositioned meters and photos
+- `/app/frontend/src/components/game/RPSBidding.jsx` - Added photo display
+
+**Test Results: 100% Success Rate (iteration_75.json)**
+- All 8 features verified ✅
+- Backend: 8/8 tests passed
+- Frontend: All UI elements verified
 
 ---
 
