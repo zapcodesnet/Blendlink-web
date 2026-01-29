@@ -78,6 +78,15 @@ async def get_current_user_from_request(request: Request) -> dict:
     return await get_current_user(request)
 
 
+async def get_optional_user(request: Request) -> Optional[dict]:
+    """Get current user if authenticated, None otherwise"""
+    try:
+        from server import get_current_user
+        return await get_current_user(request)
+    except Exception:
+        return None
+
+
 # ============== REQUEST MODELS ==============
 class CreateOpenGameRequest(BaseModel):
     """Request to create a new open PVP game"""
