@@ -1082,6 +1082,7 @@ export const BattleArena = ({
               opponentWins={opponentWins}
               betAmount={betAmount}
               onPlayAgain={handlePlayAgain}
+              onBackToMenu={handleBackToMenu}
               staminaChanges={staminaChanges}
               isBot={isBot}
               savedReplayId={savedReplayId}
