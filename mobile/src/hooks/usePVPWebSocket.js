@@ -124,6 +124,25 @@ export function usePVPWebSocket(roomId, options = {}) {
         countdown: null,
         opponentTaps: 0,
         roundResult: null,
+        // Reset selection status for new round
+        opponentHasSelected: false,
+        mySelectedPhotoId: null,
+      }));
+    });
+
+    // NEW: Handle opponent photo selection notification
+    const unsubPlayerSelected = pvpWebSocket.on('player_selected_photo', (data) => {
+      setGameState(prev => ({
+        ...prev,
+        opponentHasSelected: true,
+      }));
+    });
+
+    // NEW: Handle my photo selection confirmation
+    const unsubPhotoConfirmed = pvpWebSocket.on('photo_selection_confirmed', (data) => {
+      setGameState(prev => ({
+        ...prev,
+        mySelectedPhotoId: data.photo_id,
       }));
     });
 
@@ -133,6 +152,12 @@ export function usePVPWebSocket(roomId, options = {}) {
         roundPhase: 'ready',
         myPhoto: data.my_photo || prev.myPhoto,
         opponentPhoto: data.opponent_photo || prev.opponentPhoto,
+        // Track used photos - add both photos to used list
+        usedPhotoIds: [
+          ...prev.usedPhotoIds,
+          data.my_photo?.mint_id,
+          data.opponent_photo?.mint_id,
+        ].filter(Boolean),
       }));
     });
 
@@ -152,11 +177,31 @@ export function usePVPWebSocket(roomId, options = {}) {
       }));
     });
 
+    // Also handle countdown_tick for smoother updates
+    const unsubCountdownTick = pvpWebSocket.on('countdown_tick', (data) => {
+      setGameState(prev => ({
+        ...prev,
+        roundPhase: 'countdown',
+        countdown: data.seconds_remaining,
+      }));
+    });
+
     const unsubRoundPlaying = pvpWebSocket.on('round_playing', (data) => {
       setGameState(prev => ({
         ...prev,
         roundPhase: 'playing',
         countdown: null,
+      }));
+    });
+
+    // Also handle round_start for playing phase
+    const unsubRoundStart = pvpWebSocket.on('round_start', (data) => {
+      setGameState(prev => ({
+        ...prev,
+        roundPhase: 'playing',
+        countdown: null,
+        myPhoto: data.player1?.photo || data.player2?.photo || prev.myPhoto,
+        opponentPhoto: data.player2?.photo || data.player1?.photo || prev.opponentPhoto,
       }));
     });
 
