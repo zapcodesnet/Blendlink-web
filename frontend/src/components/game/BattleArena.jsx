@@ -800,9 +800,14 @@ export const BattleArena = ({
     setCelebrationData(null);
     
     if (onGameComplete) {
-      onGameComplete(gameWinner);
+      // Pass full game result data for bot battle tracking
+      onGameComplete(gameWinner, {
+        session_id: session?.session_id,
+        rounds_won: playerWins,
+        rounds_lost: opponentWins,
+      });
     }
-  }, [gameWinner, onGameComplete]);
+  }, [gameWinner, onGameComplete, session, playerWins, opponentWins]);
   
   return (
     <div className="min-h-[70vh]" data-testid="battle-arena">
