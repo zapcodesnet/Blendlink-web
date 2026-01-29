@@ -1790,14 +1790,22 @@ export default function PhotoGameArenaScreen() {
         
         {/* PVP Waiting for opponent */}
         {(gameState === 'pvp_waiting' || gameState === 'pvp_selecting') && (
-          <View style={styles.pvpWaitingContainer}>
+          <ScrollView 
+            style={styles.pvpWaitingContainer}
+            contentContainerStyle={styles.pvpWaitingContent}
+            showsVerticalScrollIndicator={false}
+          >
             <Text style={[styles.pvpWaitingTitle, { color: colors.text }]}>
-              {gameState === 'pvp_waiting' ? '👥 Waiting for Opponent...' : '📷 Select Your Photo'}
+              {gameState === 'pvp_waiting' 
+                ? '👥 Waiting for Opponent...' 
+                : `📷 Round ${wsGameState.currentRound} - Select Your Photo`}
             </Text>
             <Text style={[styles.pvpWaitingSubtitle, { color: colors.textMuted }]}>
               {gameState === 'pvp_waiting' 
                 ? 'The battle will begin when your opponent joins'
-                : 'Choose your photo for this round'
+                : wsGameState.usedPhotoIds?.length > 0
+                  ? 'Choose a fresh photo (previously used photos are unavailable)'
+                  : 'Choose your photo for this round'
               }
             </Text>
             {gameState === 'pvp_selecting' && (
@@ -1807,10 +1815,13 @@ export default function PhotoGameArenaScreen() {
                 selectedPhotoId={selectedPhoto?.mint_id}
                 onSelectPhoto={handlePVPPhotoSelect}
                 colors={colors}
+                usedPhotoIds={wsGameState.usedPhotoIds || []}
+                opponentHasSelected={wsGameState.opponentHasSelected}
+                showOpponentStatus={true}
               />
             )}
             {wsConnecting && <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />}
-          </View>
+          </ScrollView>
         )}
         
         {/* PVP Ready phase / Countdown / Tapping */}
