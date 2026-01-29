@@ -948,8 +948,37 @@ export const BattleArena = ({
       setSelectedOpponentPhoto(null);
       setGamePhase('photo_selection');
     } else {
-      // End of all rounds - determine winner
-      const finalWinner = playerWins > opponentWins ? 'player' : 'opponent';
+      // End of all rounds - calculate final scores
+      const finalPlayerWins = playerWins + (winner === 'player' ? 1 : 0);
+      const finalOpponentWins = opponentWins + (winner === 'opponent' ? 1 : 0);
+      
+      // NEW: Check for 4-4 tiebreaker scenario
+      if (finalPlayerWins === 4 && finalOpponentWins === 4) {
+        // 4-4 TIE - No winner, bets returned, no unlock progress
+        setIsTie(true);
+        setGameWinner(null); // No winner
+        setGamePhase('result');
+        
+        if (soundEnabled) {
+          // Play a neutral sound for tie
+          auctionSounds.bidPlaced();
+        }
+        
+        // Show tie toast
+        toast.info('🤝 It\'s a tie! 4-4. Bets returned, no unlocks awarded.', { duration: 4000 });
+        
+        // Save replay for bot battles (with tie result)
+        if (isBot) {
+          saveReplay('tie', finalPlayerWins, finalOpponentWins, [...replayRounds, replayRoundData]);
+        }
+        
+        // For ties: DO NOT call onGameComplete (no unlock progress)
+        // Bets are implicitly returned by not recording a winner
+        return;
+      }
+      
+      // Normal end: determine winner
+      const finalWinner = finalPlayerWins > finalOpponentWins ? 'player' : 'opponent';
       const changes = calculateStaminaChanges(roundResults, playerPhotos);
       setStaminaChanges(changes);
       setGameWinner(finalWinner);
@@ -957,7 +986,7 @@ export const BattleArena = ({
       
       // Save replay for bot battles
       if (isBot) {
-        saveReplay(finalWinner, playerWins, opponentWins, [...replayRounds, replayRoundData]);
+        saveReplay(finalWinner, finalPlayerWins, finalOpponentWins, [...replayRounds, replayRoundData]);
       }
       
       // CRITICAL: Record bot battle result immediately when game ends
@@ -966,8 +995,8 @@ export const BattleArena = ({
       if (isBot && onGameComplete) {
         onGameComplete(finalWinner, {
           session_id: session?.session_id,
-          rounds_won: finalWinner === 'player' ? playerWins + (winner === 'player' ? 1 : 0) : playerWins,
-          rounds_lost: finalWinner === 'opponent' ? opponentWins + (winner === 'opponent' ? 1 : 0) : opponentWins,
+          rounds_won: finalWinner === 'player' ? finalPlayerWins : playerWins,
+          rounds_lost: finalWinner === 'opponent' ? finalOpponentWins : opponentWins,
         });
       }
     }
