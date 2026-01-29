@@ -1,6 +1,60 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 29, 2026 (Per-Round Photo Selection & Transitions)
+## Latest Update: January 29, 2026 (Bot Battle Progression System)
+
+---
+
+## SESSION 38: BOT BATTLE PROGRESSION SYSTEM ✅
+
+### Bot Battle Difficulty Unlock System
+**Files Modified:**
+- `/app/frontend/src/components/game/BotDifficultySelector.jsx` - Complete rewrite
+- `/app/frontend/src/pages/PhotoGameArena.jsx` - Bot stats integration
+- `/app/backend/game_routes.py` - New bot battle endpoints
+- `/app/mobile/src/components/BotDifficultySelector.js` - New mobile component
+- `/app/mobile/src/screens/PhotoGameArenaScreen.js` - Mobile integration
+- `/app/mobile/src/services/api.js` - Bot battle API methods
+
+### Key Features Implemented:
+
+**1. Progressive Bot Unlocking:**
+- Easy Bot: Always unlocked (default)
+- Medium Bot: Unlocks after 3 wins vs Easy
+- Hard Bot: Unlocks after 3 wins vs Medium  
+- Extremely Hard Bot: Unlocks after 3 wins vs Hard
+
+**2. Bot Difficulty Specs:**
+| Difficulty | Dollar Value | Taps/sec | Fixed Bet |
+|------------|-------------|----------|-----------|
+| Easy | $600M | 8 | 100 BL |
+| Medium | $800M | 10 | 500 BL |
+| Hard | $1B | 12 | 1000 BL |
+| Extreme | $2B | 15 | 2000 BL |
+
+**3. 5-Photo Selection Requirement:**
+- Players must select exactly 5 minted photos with stamina ≥1
+- Photos displayed in grid with selection numbers
+- Low stamina photos grayed out with warning
+
+**4. UI Flow:**
+- Step 1: Select difficulty (locked bots show unlock progress)
+- Step 2: Select 5 photos from available pool
+- Step 3: Start battle with fixed bet amount
+
+**5. Backend Endpoints Added:**
+- `GET /photo-game/bot-battle/stats` - Get unlock progress
+- `POST /photo-game/bot-battle/start` - Start 5-photo bot battle
+- `POST /photo-game/bot-battle/result` - Record win/loss and update progress
+
+**6. Bot Photo Generation:**
+- Each bot has 5 photos with sceneries: Water, Natural, Man-made, Neutral, Neutral
+- Dollar values scale with difficulty
+- Bot randomly selects one photo per round
+
+### Testing Credentials:
+- Email: `test@blendlink.com`
+- Password: `admin`
+- Database: `test_database`
 
 ---
 
