@@ -84,7 +84,7 @@ const PhotoCard = ({ photo, size = 'md' }) => {
 
 // Main Battle Replay Page
 const BattleReplayPage = () => {
-  const { sessionId } = useParams();
+  const { sessionId, replayId } = useParams();
   const [battle, setBattle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -93,13 +93,31 @@ const BattleReplayPage = () => {
   const [copied, setCopied] = useState(false);
   const intervalRef = useRef(null);
   
-  // Fetch battle data
+  // Fetch battle data - supports both session-based and replay-based
   useEffect(() => {
     const fetchBattle = async () => {
       try {
         setLoading(true);
-        const res = await api.get(`/photo-game/battle/${sessionId}`);
-        setBattle(res.data);
+        
+        // Check if it's a new replay ID or old session ID
+        if (replayId) {
+          // New replay system
+          const res = await api.get(`/photo-game/battle-replay/${replayId}`);
+          // Transform replay data to match battle format
+          const replayData = res.data;
+          setBattle({
+            ...replayData,
+            player1_info: { username: replayData.username, avatar_url: replayData.avatar_url },
+            player2_info: { username: `${replayData.difficulty?.charAt(0).toUpperCase() + replayData.difficulty?.slice(1)} Bot` },
+            player1_wins: replayData.final_score_player,
+            player2_wins: replayData.final_score_opponent,
+            winner: replayData.winner === 'player' ? 'player1' : 'player2',
+          });
+        } else if (sessionId) {
+          // Legacy session-based system
+          const res = await api.get(`/photo-game/battle/${sessionId}`);
+          setBattle(res.data);
+        }
       } catch (err) {
         console.error('Failed to fetch battle:', err);
         setError(err.response?.data?.detail || 'Battle not found');
@@ -108,10 +126,10 @@ const BattleReplayPage = () => {
       }
     };
     
-    if (sessionId) {
+    if (sessionId || replayId) {
       fetchBattle();
     }
-  }, [sessionId]);
+  }, [sessionId, replayId]);
   
   // Auto-play functionality
   useEffect(() => {
