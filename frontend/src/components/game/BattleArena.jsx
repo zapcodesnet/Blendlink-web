@@ -898,7 +898,7 @@ export const BattleArena = ({
     setGamePhase('playing');
   }, []);
   
-  // Handle play again
+  // Handle play again (just resets the game state, does NOT record result - that's done in handleRoundComplete)
   const handlePlayAgain = useCallback(() => {
     // Reset all state
     setCurrentRoundIndex(0);
@@ -921,16 +921,15 @@ export const BattleArena = ({
     setReplayRounds([]);
     setShowReplaySaved(false);
     setSavedReplayId(null);
-    
-    if (onGameComplete) {
-      // Pass full game result data for bot battle tracking
-      onGameComplete(gameWinner, {
-        session_id: session?.session_id,
-        rounds_won: playerWins,
-        rounds_lost: opponentWins,
-      });
+    // NOTE: Don't call onGameComplete here - it was already called when the game ended
+  }, []);
+  
+  // Handle back to menu (exits to main menu)
+  const handleBackToMenu = useCallback(() => {
+    if (onExit) {
+      onExit();
     }
-  }, [gameWinner, onGameComplete, session, playerWins, opponentWins]);
+  }, [onExit]);
   
   // View saved replay
   const handleViewReplay = useCallback(() => {
