@@ -927,7 +927,7 @@ const TappingArenaView = ({
   // Handle player win
   const handlePlayerWin = useCallback(() => {
     if (winner) return;
-    setGamePhase('finished');
+    setLocalGamePhase('finished');
     setWinner('player');
     
     // Confetti animation
