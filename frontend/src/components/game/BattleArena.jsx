@@ -670,7 +670,28 @@ export const BattleArena = ({
   }, [selectedPlayerPhoto, selectBotPhoto, soundEnabled]);
   
   // Handle round completion
-  const handleRoundComplete = useCallback(async (winner) => {
+  const handleRoundComplete = useCallback(async (winner, roundData = {}) => {
+    // Collect replay data for this round
+    const replayRoundData = {
+      round_number: currentRoundIndex + 1,
+      player_photo: selectedPlayerPhoto,
+      opponent_photo: selectedOpponentPhoto,
+      player_taps: roundData.playerTaps || 0,
+      opponent_taps: roundData.opponentTaps || 0,
+      player_progress: roundData.playerProgress || 100,
+      opponent_progress: roundData.opponentProgress || 100,
+      player_effective_value: roundData.playerEffectiveValue || selectedPlayerPhoto?.dollar_value || 0,
+      opponent_effective_value: roundData.opponentEffectiveValue || selectedOpponentPhoto?.dollar_value || 0,
+      winner: winner,
+      round_type: currentRound?.type || 'tapping',
+      rps_choice_player: roundData.rpsChoicePlayer || null,
+      rps_choice_opponent: roundData.rpsChoiceOpponent || null,
+      bid_player: roundData.bidPlayer || null,
+      bid_opponent: roundData.bidOpponent || null,
+      duration_ms: roundData.durationMs || 10000,
+    };
+    setReplayRounds(prev => [...prev, replayRoundData]);
+    
     // Record the round result for medal tracking
     if (selectedPlayerPhoto?.mint_id) {
       try {
@@ -725,6 +746,11 @@ export const BattleArena = ({
         setGameWinner('player');
         setGamePhase('result');
         if (soundEnabled) auctionSounds.battleVictory();
+        
+        // Save replay for bot battles
+        if (isBot) {
+          saveReplay('player', newWins, opponentWins, [...replayRounds, replayRoundData]);
+        }
         return;
       }
     } else if (winner === 'opponent') {
@@ -749,6 +775,11 @@ export const BattleArena = ({
         setGameWinner('opponent');
         setGamePhase('result');
         if (soundEnabled) auctionSounds.battleDefeat();
+        
+        // Save replay for bot battles
+        if (isBot) {
+          saveReplay('opponent', playerWins, newWins, [...replayRounds, replayRoundData]);
+        }
         return;
       }
     }
@@ -768,8 +799,45 @@ export const BattleArena = ({
       setStaminaChanges(changes);
       setGameWinner(finalWinner);
       setGamePhase('result');
+      
+      // Save replay for bot battles
+      if (isBot) {
+        saveReplay(finalWinner, playerWins, opponentWins, [...replayRounds, replayRoundData]);
+      }
     }
-  }, [playerWins, opponentWins, currentRoundIndex, soundEnabled, selectedPlayerPhoto, roundResults, playerPhotos, calculateStaminaChanges]);
+  }, [playerWins, opponentWins, currentRoundIndex, soundEnabled, selectedPlayerPhoto, selectedOpponentPhoto, roundResults, playerPhotos, calculateStaminaChanges, currentRound, isBot, replayRounds]);
+  
+  // Save replay to backend
+  const saveReplay = useCallback(async (winner, scorePlayer, scoreOpponent, rounds) => {
+    if (!isBot) return;
+    
+    try {
+      const totalDuration = rounds.reduce((sum, r) => sum + (r.duration_ms || 3000), 0);
+      const winnings = winner === 'player' ? betAmount * 2 : 0;
+      
+      const response = await api.post('/photo-game/battle-replay/save', {
+        session_id: session?.session_id || `bot_${botDifficulty}_${Date.now()}`,
+        difficulty: botDifficulty,
+        player_photos: playerPhotos,
+        opponent_photos: opponentPhotos,
+        rounds: rounds,
+        final_score_player: scorePlayer,
+        final_score_opponent: scoreOpponent,
+        winner: winner,
+        bet_amount: betAmount,
+        winnings: winnings,
+        total_duration_ms: totalDuration,
+      });
+      
+      if (response.data.success) {
+        setSavedReplayId(response.data.replay_id);
+        setShowReplaySaved(true);
+        toast.success('🎬 Battle replay saved! You can share it now.', { duration: 3000 });
+      }
+    } catch (err) {
+      console.error('Failed to save replay:', err);
+    }
+  }, [isBot, session, botDifficulty, playerPhotos, opponentPhotos, betAmount]);
   
   // Handle RPS round complete (with money tracking)
   const handleRPSRoundComplete = useCallback((winner, newPlayerMoney, newOpponentMoney) => {
