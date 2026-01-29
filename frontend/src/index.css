@@ -1098,6 +1098,44 @@ a,
   }
 }
 
+/* Optimized pulse animation for tap indicator */
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1) translateZ(0);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2) translateZ(0);
+    opacity: 0.9;
+  }
+}
+
+/* Fast scale animation for reactive elements */
+@keyframes scale-bounce {
+  0%, 100% {
+    transform: scale(1) translateZ(0);
+  }
+  50% {
+    transform: scale(1.1) translateZ(0);
+  }
+}
+
+/* Win celebration animation */
+@keyframes winner-pulse {
+  0%, 100% {
+    text-shadow: 0 0 10px gold;
+    transform: scale(1);
+  }
+  50% {
+    text-shadow: 0 0 30px gold, 0 0 60px gold;
+    transform: scale(1.05);
+  }
+}
+
+.animate-winner {
+  animation: winner-pulse 1s ease-in-out infinite;
+}
+
 /* EmbedSocial Widget Performance Optimizations */
 .embedsocial-hashtag {
   contain: content;
