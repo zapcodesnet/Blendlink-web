@@ -19,7 +19,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Trophy, Skull, Users, Loader2, RefreshCw, 
   Volume2, VolumeX, Image, X, ChevronRight, ChevronLeft,
-  DollarSign, Coins, Zap, Target
+  DollarSign, Coins, Zap, Target, Film, Share2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../ui/button';
