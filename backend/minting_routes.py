@@ -610,6 +610,162 @@ async def move_photo_to_album(
     return result
 
 
+# ============== DOLLAR VALUE UPGRADES ==============
+class UpgradeRequest(BaseModel):
+    amount: int  # Dollar amount to add (e.g., 1_000_000 for $1M)
+
+
+@minting_router.get("/upgrade-prices")
+async def get_upgrade_prices():
+    """Get available dollar value upgrade options and their BL costs"""
+    from minting_system import DOLLAR_VALUE_UPGRADES
+    
+    return {
+        "upgrades": [
+            {
+                "dollar_amount": amount,
+                "bl_cost": cost,
+                "formatted_dollar": f"${amount:,}",
+                "formatted_cost": f"{cost:,} BL",
+            }
+            for amount, cost in sorted(DOLLAR_VALUE_UPGRADES.items())
+        ]
+    }
+
+
+@minting_router.post("/photos/{mint_id}/upgrade")
+async def purchase_dollar_upgrade(
+    mint_id: str,
+    request: UpgradeRequest,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """
+    Purchase a permanent dollar value upgrade for a photo.
+    Costs BL coins, adds permanent dollar value.
+    """
+    from minting_system import DOLLAR_VALUE_UPGRADES
+    
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    upgrade_amount = request.amount
+    bl_cost = DOLLAR_VALUE_UPGRADES.get(upgrade_amount)
+    
+    if bl_cost is None:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid upgrade amount. Available: {list(DOLLAR_VALUE_UPGRADES.keys())}"
+        )
+    
+    # Check ownership
+    photo = await _db.minted_photos.find_one(
+        {"mint_id": mint_id, "user_id": current_user["user_id"]},
+        {"_id": 0}
+    )
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found or does not belong to you")
+    
+    # Check if already purchased this upgrade amount
+    existing_upgrades = photo.get("upgrades_purchased", [])
+    if upgrade_amount in existing_upgrades:
+        raise HTTPException(status_code=400, detail=f"${upgrade_amount:,} upgrade already purchased")
+    
+    # Check user has enough BL coins
+    user = await _db.users.find_one({"user_id": current_user["user_id"]}, {"_id": 0, "bl_coins": 1})
+    if not user or user.get("bl_coins", 0) < bl_cost:
+        raise HTTPException(status_code=400, detail=f"Not enough BL coins. Need {bl_cost:,} BL")
+    
+    # Deduct BL coins
+    await _db.users.update_one(
+        {"user_id": current_user["user_id"]},
+        {"$inc": {"bl_coins": -bl_cost}}
+    )
+    
+    # Add upgrade to photo
+    new_total_upgrade = photo.get("total_upgrade_value", 0) + upgrade_amount
+    new_dollar_value = photo.get("dollar_value", photo.get("base_dollar_value", 1_000_000)) + upgrade_amount
+    
+    await _db.minted_photos.update_one(
+        {"mint_id": mint_id},
+        {
+            "$push": {"upgrades_purchased": upgrade_amount},
+            "$set": {
+                "total_upgrade_value": new_total_upgrade,
+                "dollar_value": new_dollar_value,
+            }
+        }
+    )
+    
+    # Record transaction
+    from referral_system import record_transaction, TransactionType, Currency
+    await record_transaction(
+        user_id=current_user["user_id"],
+        transaction_type=TransactionType.MINT_COST,
+        currency=Currency.BL,
+        amount=-bl_cost,
+        reference_id=mint_id,
+        details={
+            "type": "dollar_upgrade",
+            "upgrade_amount": upgrade_amount,
+            "photo_name": photo.get("name"),
+        }
+    )
+    
+    return {
+        "success": True,
+        "photo_id": mint_id,
+        "upgrade_purchased": upgrade_amount,
+        "bl_spent": bl_cost,
+        "new_total_upgrade_value": new_total_upgrade,
+        "new_dollar_value": new_dollar_value,
+        "message": f"💰 +${upgrade_amount:,} permanent upgrade purchased!"
+    }
+
+
+@minting_router.get("/photos/{mint_id}/available-upgrades")
+async def get_available_upgrades(
+    mint_id: str,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """Get available upgrades for a specific photo"""
+    from minting_system import DOLLAR_VALUE_UPGRADES
+    
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    photo = await _db.minted_photos.find_one(
+        {"mint_id": mint_id, "user_id": current_user["user_id"]},
+        {"_id": 0}
+    )
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found or does not belong to you")
+    
+    purchased = photo.get("upgrades_purchased", [])
+    
+    user = await _db.users.find_one({"user_id": current_user["user_id"]}, {"_id": 0, "bl_coins": 1})
+    user_bl = user.get("bl_coins", 0) if user else 0
+    
+    available = []
+    for amount, cost in sorted(DOLLAR_VALUE_UPGRADES.items()):
+        available.append({
+            "dollar_amount": amount,
+            "bl_cost": cost,
+            "formatted_dollar": f"${amount:,}",
+            "formatted_cost": f"{cost:,} BL",
+            "already_purchased": amount in purchased,
+            "can_afford": user_bl >= cost,
+        })
+    
+    return {
+        "photo_id": mint_id,
+        "current_upgrade_total": photo.get("total_upgrade_value", 0),
+        "user_bl_balance": user_bl,
+        "available_upgrades": available,
+    }
+
+
+
+
 # ============== ALBUM ROUTES ==============
 @minting_router.post("/albums")
 async def create_album(
