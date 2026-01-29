@@ -639,7 +639,7 @@ export const PVPBattleArena = ({
         <div className="flex items-center gap-2">
           {reconnecting && (
             <span className="text-xs text-yellow-400">
-              Attempt {reconnectAttempts.current}/{MAX_RECONNECT_ATTEMPTS}
+              Attempt {reconnectAttemptCount}/{MAX_RECONNECT_ATTEMPTS}
             </span>
           )}
           <button 
@@ -683,7 +683,7 @@ export const PVPBattleArena = ({
             exit={{ opacity: 0, y: -20 }}
           >
             <PVPRoundReady
-              websocket={wsRef.current}
+              websocket={websocketInstance}
               currentUserId={currentUserId}
               currentRound={currentRound}
               roundType={roundType}
@@ -716,7 +716,7 @@ export const PVPBattleArena = ({
               opponentStats={opponentStats}
               roundNumber={currentRound}
               onRoundComplete={handleRoundComplete}
-              websocket={wsRef.current}
+              websocket={websocketInstance}
               isBot={false}
               soundEnabled={true}
             />
