@@ -495,7 +495,7 @@ const BotDifficultySelector = ({
                       {currentDifficulty?.name}
                     </Text>
                     <Text style={[styles.summaryStats, { color: colors.textMuted }]}>
-                      {currentDifficulty?.dollarValue} • {currentDifficulty?.tapsDisplay} • {currentDifficulty?.fixedBet} BL
+                      {currentDifficulty?.dollarValue} • {currentDifficulty?.fixedBet} BL Bet
                     </Text>
                   </View>
                 </View>
