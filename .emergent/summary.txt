@@ -1,209 +1,48 @@
 <analysis>**original_problem_statement:**
-The user has requested a major feature expansion for the Minted Photo Auction Bidding Battle game. The core requirements include a complete overhaul of the game's mechanics, to be applied to both the existing responsive website and a new native mobile app (React Native/Expo) with 100% feature and data synchronization.
+The user has requested a series of major updates for the Minted Photo Auction Bidding Battle game, a casual, non-crypto full-stack application.
 
-The expansion involves:
-1.  **Critical Performance Optimizations**: Achieve 60fps animations, lazy-loading, and eliminate all lag, with a mobile-first UI approach.
-2.  **Dollar Value System**: Implement a detailed 11-category AI-powered valuation system for photos.
-3.  **Advanced Gameplay Mechanics**: Introduce background scenery advantages, win/lose streaks, a detailed XP/Level progression system, and a photo stamina system.
-4.  **New Permanent Metadata**: Add Minted by info, monthly dollar value growth, a yearly birthday bonus for the owner, and a social reaction bonus.
-5.  **Monetization**: Implement Dollar Value upgrades purchasable with in-game currency (BL coins) and a multi-tier monthly subscription system (Bronze, Silver, Gold, Platinum) using Stripe.
+Initial requests involved a complete overhaul of game mechanics, performance optimizations, a new AI-powered photo valuation system, advanced gameplay features (streaks, XP), and a Stripe-based subscription model, all to be synchronized between the existing website and a new React Native mobile app.
 
-A high-priority, targeted update was also requested and implemented: increase the maximum tap rate in all photo auction bidding rounds to 30 taps per second (TPS) for both web and mobile, with anti-cheat warnings for exceeding the limit.
+Subsequent user requests have focused on refining the gameplay experience, including:
+1.  **PVP WebSocket Integration**: Implementing full real-time synchronization for Player-vs-Player matches on the mobile app, including ready states, countdowns, and live tap updates.
+2.  **Bot Battle Progression**: Creating a tiered bot system (Easy, Medium, Hard, Extremely Hard) where players must win games to unlock higher difficulties. This includes defining bot-specific stats (tap rate, photo value) and fixed bet amounts.
+3.  **UI Cleanup**: Removing clutter from the game matchmaking screen to simplify the user experience.
+4.  **Critical Bug Fixes**: Addressing issues on the Bot Battle screen related to photo multi-selection, incorrect BL coin balance display, and a UI layout problem where the Start Battle button was hidden by the navigation bar.
+5.  **Minting Rule Change**: The most recent request is to allow all regular (non-subscribing) users to mint up to 10 photos per day for free.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application is a full-stack React/FastAPI/MongoDB project. All backend features for the major update (Dollar Value AI scoring, XP/Level system, Streaks, Subscriptions) are implemented.
+The application is a full-stack project using React, FastAPI, and MongoDB. A parallel React Native/Expo mobile app exists at .
 
-The web frontend has undergone significant performance optimization, including route-based code splitting with  and , GPU acceleration hints in CSS, and animation optimization in the critical  component by replacing Framer Motion with CSS transitions.
-
-A substantial React Native/Expo mobile app project exists in . The agent has built upon this scaffold by adding several key screens to mirror web functionality: , , and . The mobile minting flow has also been enhanced with a Dollar Value AI scoring preview. The 30 TPS tap rate limit has been implemented in both the web and mobile tapping arenas.
+-   **Backend**: All major backend features for the gameplay expansion (AI Dollar Value, XP system, Subscriptions, Streaks, WebSocket PVP) are implemented. The logic for the new Bot Battle progression and win tracking is also complete. The daily minting limit has been updated in the code.
+-   **Web Frontend**: The website has received significant performance optimizations (, CSS transitions). The Bot Battle screen has been updated with the new progression system and bug fixes.
+-   **Mobile App**: The mobile app mirrors most of the web functionality. The real-time PVP WebSocket integration is complete. The Bot Battle progression system and associated bug fixes have also been implemented.
 
 **Last working item**:
--   Last item agent was working: The agent was integrating the real-time PVP WebSocket functionality into the mobile app's . A dedicated WebSocket service () and a custom hook () were created. The next step is to use this hook within  to connect the UI to the live game state.
--   Status: IN PROGRESS
--   Agent Testing Done: N
--   Which testing method agent to use? manual testing by curl. After integration is complete, the user has requested testing on Expo Go, which is not possible for the agent. The agent should verify the WebSocket connection and message flow via backend logs.
--   User Testing Done: N
+-   **Last item agent was working**: Implementing the user's request for 10 free photo mints per day for regular users. The agent modified the backend code to update the minting rules.
+-   **Status**: TESTING PENDING
+-   **Agent Testing Done**: N
+-   **Which testing method agent to use?**: backend testing agent. The agent should write and execute a test script to verify that a user can mint exactly 10 photos for free in a day and that the 11th attempt is correctly blocked.
+-   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1**: Complete WebSocket integration for the mobile Tapping Arena (P0)
+-   **Issue 1: Verify the implementation of 10 free daily mints (P0)**
 
 **Issues Detail:**
--   **Issue 1: Complete WebSocket integration for the mobile Tapping Arena**
-    -   **Attempted fixes**: The foundational code has been created (, ). No failed attempts yet.
+-   **Issue 1: Verify the implementation of 10 free daily mints**
+    -   **Attempted fixes**: The agent edited  to change the  for the 'free' tier to 10 and set  to 0. The  and  methods were updated to remove coin deduction logic.
     -   **Next debug checklist**:
-        1.  Import  into .
-        2.  Initialize the hook with the  when the tapping arena view is active.
-        3.  Use the state and  function from the hook to update the UI (player/opponent progress, scores) and send tap events to the server.
-        4.  Ensure the WebSocket URL is correctly constructed using the value from the  file.
-        5.  Check backend logs (==> /var/log/supervisor/backend.err.log <==
-WARNING:  WatchFiles detected changes in 'tests/test_auction_battle.py'. Reloading...
-INFO:server:Stripe integration router loaded
-INFO:server:Real-time analytics, A/B testing, and biometric routers loaded
-INFO:server:Referral, Diamond, Withdrawal, KYC, Reassignment, Admin Withdrawal, and Notifications routers loaded
-INFO:server:Production Admin System routers loaded (Auth, Secure OTP, Users, Finance, Genealogy, Content, Roles, System, Notifications, Security, Orphans, Diamonds, Reactions)
-INFO:minting_routes:Minting services initialized
-INFO:server:Internal Minting System loaded (Photo/Video/Music collectibles)
-INFO:game_routes:Photo Game services initialized
-INFO:server:Photo Game System loaded (Battles, Leaderboards, XP)
-INFO:marketplace_routes:Marketplace services initialized
-INFO:server:Marketplace System loaded (Sales, Offers, Auctions)
-INFO:server:BL Rewards System loaded (Content rewards, Downline bonuses)
-INFO:server:Shipping System loaded (Shippo integration)
-INFO:server:Cart & Orders System loaded (Guest checkout, Order management)
-INFO:server:Subscription System loaded (Tiers, Daily Bonuses, Ranked, Tournaments)
-INFO:server:Marketplace Offers System loaded (Make an Offer, Counter-offers, Deposits)
-INFO:server:Auction System loaded (Bidding, Auto-extend, Real-time updates)
-INFO:server:WebSocket Notifications loaded
-INFO:server:Auction Bidding WebSocket loaded
-INFO:server:Game Lobby WebSocket loaded
-INFO:server:PVP Game WebSocket loaded
-INFO:server:Push Notifications loaded (Expo push tokens)
-INFO:     Started server process [206]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [206]
-INFO:     Stopping reloader process [46]
-INFO:     Will watch for changes in these directories: ['/app/backend']
-INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
-INFO:     Started reloader process [2150] using WatchFiles
-INFO:server:Stripe integration router loaded
-INFO:server:Real-time analytics, A/B testing, and biometric routers loaded
-INFO:server:Referral, Diamond, Withdrawal, KYC, Reassignment, Admin Withdrawal, and Notifications routers loaded
-INFO:server:Production Admin System routers loaded (Auth, Secure OTP, Users, Finance, Genealogy, Content, Roles, System, Notifications, Security, Orphans, Diamonds, Reactions)
-INFO:minting_routes:Minting services initialized
-INFO:server:Internal Minting System loaded (Photo/Video/Music collectibles)
-INFO:game_routes:Photo Game services initialized
-INFO:server:Photo Game System loaded (Battles, Leaderboards, XP)
-INFO:marketplace_routes:Marketplace services initialized
-INFO:server:Marketplace System loaded (Sales, Offers, Auctions)
-INFO:server:BL Rewards System loaded (Content rewards, Downline bonuses)
-INFO:server:Shipping System loaded (Shippo integration)
-INFO:server:Cart & Orders System loaded (Guest checkout, Order management)
-INFO:server:Subscription System loaded (Tiers, Daily Bonuses, Ranked, Tournaments)
-INFO:server:Marketplace Offers System loaded (Make an Offer, Counter-offers, Deposits)
-INFO:server:Auction System loaded (Bidding, Auto-extend, Real-time updates)
-INFO:server:WebSocket Notifications loaded
-INFO:server:Auction Bidding WebSocket loaded
-INFO:server:Game Lobby WebSocket loaded
-INFO:server:PVP Game WebSocket loaded
-INFO:server:Push Notifications loaded (Expo push tokens)
-INFO:     Started server process [2152]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-INFO:     Will watch for changes in these directories: ['/app/backend']
-INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
-INFO:     Started reloader process [47] using WatchFiles
-
-==> /var/log/supervisor/backend.out.log <==
-INFO:     10.64.136.226:54952 - "GET /api/marketplace/listings?limit=6 HTTP/1.1" 200 OK
-INFO:     10.64.129.10:58992 - "GET /api/rentals?limit=6 HTTP/1.1" 404 Not Found
-INFO:     10.64.136.245:39592 - "GET /api/services?limit=6 HTTP/1.1" 200 OK
-INFO:     10.64.136.226:36698 - "GET /api/rentals?limit=6 HTTP/1.1" 404 Not Found
-INFO:     10.64.129.10:50602 - "GET /api/rentals?limit=6 HTTP/1.1" 404 Not Found
-INFO:     10.64.129.9:58200 - "GET /api/marketplace/listings?limit=6 HTTP/1.1" 200 OK
-INFO:     10.64.129.9:58210 - "GET /api/services?limit=6 HTTP/1.1" 200 OK
-INFO:     10.64.129.10:50602 - "GET /api/marketplace/listings?limit=6 HTTP/1.1" 200 OK
-INFO:     10.64.129.13:44994 - "GET /api/services?limit=6 HTTP/1.1" 200 OK
-INFO:     10.64.129.7:54498 - "GET /api/utils/detect-language HTTP/1.1" 200 OK
-INFO:     10.64.129.7:54498 - "POST /api/auth/login HTTP/1.1" 200 OK
-INFO:     10.64.129.9:58210 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.64.129.10:50602 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.64.136.245:51784 - "GET /api/wallet/balance HTTP/1.1" 200 OK
-INFO:     10.64.135.173:52674 - "GET /api/wallet/balance HTTP/1.1" 200 OK
-INFO:     10.64.129.10:50602 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.64.135.173:52674 - "GET /api/notifications/?limit=1 HTTP/1.1" 200 OK
-INFO:     10.64.136.245:51784 - "GET /api/stories/ HTTP/1.1" 200 OK
-INFO:     10.64.129.9:58210 - "GET /api/social/feed?skip=0&limit=10 HTTP/1.1" 200 OK
-INFO:     10.64.136.226:36698 - "GET /api/social/feed?skip=0&limit=10 HTTP/1.1" 200 OK
-INFO:     10.64.136.226:36710 - "GET /api/stories/ HTTP/1.1" 200 OK
-INFO:     10.64.129.7:54498 - "GET /api/wallet/balance HTTP/1.1" 200 OK
-INFO:     10.64.129.9:58210 - "GET /api/notifications/?limit=1 HTTP/1.1" 200 OK
-INFO:     10.64.129.7:54498 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.64.129.7:54498 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.64.129.10:50602 - "GET /api/wallet/balance HTTP/1.1" 200 OK
-INFO:     10.64.129.9:58210 - "GET /api/wallet/balance HTTP/1.1" 200 OK
-INFO:     10.64.136.245:51784 - "GET /api/minting/photos HTTP/1.1" 200 OK
-INFO:     10.64.135.173:52674 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.64.129.10:50602 - "GET /api/notifications/?limit=1 HTTP/1.1" 200 OK
-INFO:     10.64.129.13:45006 - "GET /api/minting/status HTTP/1.1" 200 OK
-INFO:     10.64.129.7:54498 - "GET /api/minting/photos HTTP/1.1" 200 OK
-INFO:     10.64.129.9:58210 - "GET /api/notifications/?limit=1 HTTP/1.1" 200 OK
-INFO:     10.64.129.10:50602 - "GET /api/wallet/balance HTTP/1.1" 200 OK
-INFO:     10.64.129.10:50610 - "GET /api/minting/status HTTP/1.1" 200 OK
-INFO:     10.64.129.9:33536 - "GET /api/rentals?limit=6 HTTP/1.1" 404 Not Found
-INFO:     10.64.129.13:47992 - "GET /api/rentals?limit=6 HTTP/1.1" 404 Not Found
-INFO:     10.64.135.173:34174 - "GET /api/marketplace/listings?limit=6 HTTP/1.1" 200 OK
-INFO:     10.64.129.10:34506 - "GET /api/services?limit=6 HTTP/1.1" 200 OK
-INFO:     10.64.129.9:33536 - "GET /api/marketplace/listings?limit=6 HTTP/1.1" 200 OK
-INFO:     10.64.136.245:51254 - "GET /api/services?limit=6 HTTP/1.1" 200 OK
-INFO:     10.64.135.173:34166 - "GET /api/utils/detect-language HTTP/1.1" 200 OK
-INFO:     10.64.129.9:33536 - "POST /api/auth/login HTTP/1.1" 200 OK
-INFO:     10.64.136.226:39776 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.64.129.10:34506 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.64.129.13:47992 - "GET /api/wallet/balance HTTP/1.1" 200 OK
-INFO:     10.64.135.173:34166 - "GET /api/wallet/balance HTTP/1.1" 200 OK
-INFO:     10.64.129.13:48010 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.64.135.173:34166 - "GET /api/notifications/?limit=1 HTTP/1.1" 200 OK
-INFO:     10.64.129.13:47992 - "GET /api/stories/ HTTP/1.1" 200 OK
-INFO:     10.64.129.13:48000 - "GET /api/social/feed?skip=0&limit=10 HTTP/1.1" 200 OK
-INFO:     10.64.135.173:34174 - "GET /api/wallet/balance HTTP/1.1" 200 OK
-INFO:     10.64.136.245:51254 - "GET /api/stories/ HTTP/1.1" 200 OK
-INFO:     10.64.135.173:34166 - "GET /api/social/feed?skip=0&limit=10 HTTP/1.1" 200 OK
-INFO:     10.64.136.245:51268 - "GET /api/notifications/?limit=1 HTTP/1.1" 200 OK
-INFO:     10.64.129.9:33536 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.64.136.245:51268 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.64.136.245:51254 - "GET /api/wallet/balance HTTP/1.1" 200 OK
-INFO:     10.64.129.7:58806 - "GET /api/wallet/balance HTTP/1.1" 200 OK
-INFO:     10.64.129.7:58806 - "GET /api/photo-game/pvp/queue-status HTTP/1.1" 200 OK
-INFO:     10.64.135.173:34166 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.64.136.226:39776 - "GET /api/photo-game/stats HTTP/1.1" 200 OK
-INFO:     10.64.136.245:51254 - "GET /api/notifications/?limit=1 HTTP/1.1" 200 OK
-INFO:     10.64.129.7:58806 - "GET /api/photo-game/pvp/queue-status HTTP/1.1" 200 OK
-INFO:     10.64.129.9:33536 - "GET /api/photo-game/stats HTTP/1.1" 200 OK
-INFO:     10.64.129.7:58818 - "GET /api/notifications/?limit=1 HTTP/1.1" 200 OK
-INFO:     10.64.129.10:34506 - "GET /api/wallet/balance HTTP/1.1" 200 OK
-INFO:     10.64.136.226:55744 - "GET /api/rentals?limit=6 HTTP/1.1" 404 Not Found
-INFO:     10.64.129.7:57558 - "GET /api/services?limit=6 HTTP/1.1" 200 OK
-INFO:     10.64.136.245:42538 - "GET /api/marketplace/listings?limit=6 HTTP/1.1" 200 OK
-INFO:     10.64.129.9:58772 - "GET /api/rentals?limit=6 HTTP/1.1" 404 Not Found
-INFO:     10.64.136.245:42548 - "GET /api/marketplace/listings?limit=6 HTTP/1.1" 200 OK
-INFO:     10.64.136.245:42538 - "GET /api/services?limit=6 HTTP/1.1" 200 OK
-INFO:     10.64.136.245:42538 - "POST /api/auth/login HTTP/1.1" 200 OK
-INFO:     10.64.129.7:57558 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.64.129.9:58772 - "GET /api/wallet/balance HTTP/1.1" 200 OK
-INFO:     10.64.135.173:48270 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.64.129.7:57558 - "GET /api/wallet/balance HTTP/1.1" 200 OK
-INFO:     10.64.136.226:55754 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.64.129.10:37890 - "GET /api/notifications/?limit=1 HTTP/1.1" 200 OK
-INFO:     10.64.136.226:55744 - "GET /api/stories/ HTTP/1.1" 200 OK
-INFO:     10.64.129.13:47532 - "GET /api/social/feed?skip=0&limit=10 HTTP/1.1" 200 OK
-INFO:     10.64.135.173:48270 - "GET /api/notifications/?limit=1 HTTP/1.1" 200 OK
-INFO:     10.64.129.7:57558 - "GET /api/stories/ HTTP/1.1" 200 OK
-INFO:     10.64.129.9:58772 - "GET /api/social/feed?skip=0&limit=10 HTTP/1.1" 200 OK
-INFO:     10.64.129.9:58780 - "GET /api/wallet/balance HTTP/1.1" 200 OK
-INFO:     10.64.129.9:58780 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.64.129.10:37890 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.64.136.245:42538 - "GET /api/wallet/balance HTTP/1.1" 200 OK
-INFO:     10.64.129.7:57558 - "GET /api/wallet/balance HTTP/1.1" 200 OK
-INFO:     10.64.129.9:58780 - "GET /api/notifications/?limit=1 HTTP/1.1" 200 OK
-INFO:     10.64.129.13:47532 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.64.129.10:37890 - "GET /api/notifications/?limit=1 HTTP/1.1" 200 OK
-INFO:     10.64.129.7:57558 - "GET /api/wallet/balance HTTP/1.1" 200 OK
-INFO:     10.64.135.173:48270 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.64.129.13:47532 - "GET /api/social/feed?skip=0&limit=10 HTTP/1.1" 200 OK
-INFO:     10.64.136.245:42538 - "GET /api/stories/ HTTP/1.1" 200 OK
-INFO:     10.64.135.173:48270 - "GET /api/social/feed?skip=0&limit=10 HTTP/1.1" 200 OK
-INFO:     10.64.135.173:48270 - "GET /api/wallet/balance HTTP/1.1" 200 OK
-INFO:     10.64.136.245:42538 - "GET /api/stories/ HTTP/1.1" 200 OK) for WebSocket connection and message logs.
-    -   **Why fix this issue and what will be achieved with the fix?**: This will make the mobile tapping arena functional for real-time player-vs-player games, achieving a critical feature parity with the web application.
-    -   **Status**: IN PROGRESS
+        1.  Log in as the test user ().
+        2.  Fetch the user's initial BL coin balance and daily mint count.
+        3.  Execute a loop to call the  endpoint 10 times.
+        4.  After each call, verify the API returns a success message.
+        5.  After the loop, verify the user's daily mint count is 10 and their BL coin balance is unchanged.
+        6.  Make an 11th call to the minting endpoint and assert that it fails with a daily limit reached error.
+    -   **Why fix this issue and what will be achieved with the fix?**: This fulfills the user's latest feature request and encourages user engagement by increasing the amount of free content available daily.
+    -   **Status**: TESTING PENDING
     -   **Is recurring issue?**: N
-    -   **Should Test frontend/backend/both after fix?**: backend (logs)
+    -   **Should Test frontend/backend/both after fix?**: backend
     -   **Blocked on other issue**: None
 
 **In progress Task List**:
@@ -212,7 +51,7 @@ There are no other in-progress tasks.
 **Upcoming and Future Tasks**
 **Upcoming Tasks:**
 -   **Phase 6: Live Video Selfie & Facebook API (P1)**:
-    -   Implement the live video selfie match feature for the Authenticity bonus, using the  stub created.
+    -   Implement the live video selfie match feature for the Authenticity bonus.
     -   Integrate the real Facebook Graph API to replace the mocked social reaction counter.
 
 **Future Tasks:**
@@ -221,13 +60,15 @@ There are no other in-progress tasks.
 -   **Mobile Push Notifications (P2)**: Integrate a service like Firebase Cloud Messaging for game invites and other events.
 
 **Completed work in this session**
--   **Web Performance Optimization (DONE)**: Implemented  and  for route-based code splitting in . Optimized animations in  by replacing Framer Motion with more performant CSS transitions. Added global CSS for GPU acceleration.
--   **30 TPS Rate Limit Update (DONE)**: Increased the tap rate limit to 30 TPS in  and added an equivalent  with the same logic to .
--   **Mobile App Scaffolding & Components (DONE)**: Created shared components (, , ) and utility hooks (, ) for the mobile app.
--   **Mobile Screen: OpenGamesBrowserScreen (DONE)**: Created  to mirror the web component, including grid view, search, and a flip-card modal.
--   **Mobile Screen: Minting with Dollar Value Preview (DONE)**: Enhanced the existing  to include a pre-minting preview of the 11-category AI Dollar Value score.
--   **Mobile Screen: Game Creation Flow (DONE)**: Created  for 5-photo selection with stamina validation.
--   **Mobile Screen: Photo Detail Screen (DONE)**: Created  to display a detailed breakdown of a photo's stats and provide upgrade options.
+-   **Mobile Real-Time PVP Integration (DONE)**: Fully integrated WebSockets into  for a complete real-time PVP experience, including round synchronization and live tap events.
+-   **PVP Gameplay Enhancements (DONE)**: Added features for multi-round photo selection (with a Used state), animated round transitions, and UI indicators for opponent's photo selection status.
+-   **UI Cleanup (Web & Mobile) (DONE)**: Simplified the matchmaking UI on both platforms by removing multiple sections as requested by the user, such as Battle Settings, Players searching, and BL Coin Bet.
+-   **Bot Battle Progression System (DONE)**: Implemented a comprehensive tiered bot difficulty system (Easy to Extremely Hard) on both web and mobile, requiring players to win games to unlock the next level. This included backend logic for tracking wins.
+-   **Critical Bot Battle Bug Fixes (DONE)**:
+    -   Enabled multi-selection of 5 photos for bot battles.
+    -   Fixed an issue where the user's BL coin balance was incorrectly displayed as 0.
+    -   Resolved a layout bug where the Start Battle button was overlapped by the bottom navigation bar.
+-   **Deployment Readiness Fix (DONE)**: Corrected an improper environment variable reference in the backend Stripe integration code.
 
 **Earlier issues found/mentioned but not fixed**
 -   **Issue 1: Photo Editor Bugs & Performance**
@@ -237,61 +78,58 @@ There are no other in-progress tasks.
     -   **Is recurring issue?** N
 
 **Known issue recurrence from previous fork**
--   **Issue recurrence in previous fork**: Social feed widget is slow/broken.
--   **Recurrence count**: 4+
--   **Status**: RESOLVED
--   **Note**: The feed's performance is currently stable but should be monitored.
+-   None. The previously recurring Social feed widget is slow/broken issue has remained resolved.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Real-Time Game Synchronization**: Using WebSockets (FastAPI) for authoritative game state management.
--   **Client-Side Performance Optimization**: Route-based code splitting with , replacing heavy animations with CSS transitions, and using IntersectionObserver for lazy-loading images.
--   **React Native/Expo Development**: Building a native mobile app with shared logic and components, mirroring a complex web application.
--   **Phased Development**: Executing a large-scale feature expansion according to a user-approved, multi-phase plan.
+-   **Real-Time Game Synchronization**: Using FastAPI WebSockets as the authoritative source for live game state between clients.
+-   **Bot Progression System**: Leveraging backend user stat tracking (, etc.) to conditionally unlock frontend UI and game modes.
+-   **Cross-Platform Parity**: Diligently implementing identical features, UI changes, and bug fixes across both the React (web) and React Native (mobile) codebases to ensure a consistent user experience.
+-   **API-driven State**: Fetching critical user data like wallet balance and game stats from dedicated API endpoints to drive UI state and logic.
+-   **Backend Rule Enforcement**: Implementing business logic like daily usage limits (e.g., photo minting) directly in the backend API to ensure security and consistency.
 
 **key DB schema**
-No changes to the DB schema in this session.
+-   **game_stats collection**: User documents in this collection now include , , and  fields (all ) to track progression against bots.
+-   **minting_history collection**: This collection is used by the backend to count the number of mints a user has performed on a given day.
 
 **All files of reference**
--   : The screen where the  is implemented and needs WebSocket integration.
--   : The newly created hook to manage the WebSocket connection.
--   : The service that handles the raw WebSocket logic.
--   : The backend source of truth for the real-time PVP protocol.
--   : The reference web implementation for the tapping arena.
--   : Contains all mobile dependencies.
+-   : Contains the core logic for the daily free minting limit.
+-   : The web component for the Bot Battle UI, including progression logic and bug fixes.
+-   : The equivalent mobile component for the Bot Battle UI.
+-   : The main web page where the game is played.
+-   : The main mobile screen where the game is played.
+-   : Contains API endpoints for bot battles and user stats.
 
 **Critical Info for New Agent**
--   Your immediate task is to complete the integration of the  hook into the  component to enable real-time PVP functionality on the mobile app.
--   The mobile app's Photo Battle was previously a simple value-comparison game. The agent correctly replaced this with a new  (inline in ) to match the user's explicit request for a 30 TPS tapping mechanic. This view now needs to be connected to the WebSocket.
--   The user wants to test on Expo Go after WebSocket integration, which you cannot do. Your goal is to complete the implementation and verify the connection via backend logs before handing off.
+-   Your immediate priority is to test the 10 free daily mints feature. The code has been changed in , but its correctness has not been verified. Follow the test plan in the All Pending/In progress Issue list to ensure it works as expected.
+-   Be aware that this project has two parallel frontends ( for web,  for React Native). Most feature requests and bug fixes require synchronized changes in both codebases.
+-   All database operations must target the database named , as defined in the backend  file.
+-   The standard test user is  with password .
 
 **documents and test reports created in this job**
--   /app/memory/PRD.md (updated multiple times)
+-    was updated multiple times to reflect the latest implemented features and project status.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  User: Approved phased plan, prioritizing web performance first, then a minimal Expo scaffold. (COMPLETED)
-2.  Agent: Implemented web performance optimizations (lazy loading, CSS animations). (COMPLETED)
-3.  Agent: Discovered an existing mobile app scaffold, created new shared components and utilities. (COMPLETED)
-4.  Agent: Implemented the  screen on mobile. (COMPLETED)
-5.  User: Sent a high-priority request to increase the tap rate limit to 30 TPS on both web and mobile. (COMPLETED)
-6.  Agent: Updated the web  and added a new  to the mobile  with the 30 TPS logic. (COMPLETED)
-7.  User: Instructed to continue with the next action items. (PENDING)
-8.  Agent: Implemented the mobile minting screen with Dollar Value preview. (COMPLETED)
-9.  Agent: Implemented the mobile game creation flow. (COMPLETED)
-10. Agent: Implemented the mobile photo detail screen. (COMPLETED)
-11. User: Instructed to test on Expo Go and then integrate WebSockets for PVP sync. (PENDING - WebSocket integration is in progress).
+1.  **User:** Requests a massive UI cleanup on the game screen. (COMPLETED)
+2.  **Agent:** Implements the UI cleanup on both web and mobile. (COMPLETED)
+3.  **User:** Submits a large and detailed feature request for a Bot Battle progression system. (COMPLETED)
+4.  **Agent:** Implements the full bot progression system on the backend, web, and mobile. (COMPLETED)
+5.  **User:** Reports critical bugs on the Bot Battle screen (photo selection, balance sync, button visibility). (COMPLETED)
+6.  **Agent:** Fixes all three reported bugs on both web and mobile platforms. (COMPLETED)
+7.  **User:** Requests a change to allow 10 free photo mints per day for all regular users. (LAST WORKING ITEM)
+8.  **Agent:** Implements the backend code changes for the new minting rule. (TESTING PENDING)
 
 **Project Health Check:**
--   **Live**: The web application is healthy and performant with the new optimizations.
--   **Broken**: No features are broken.
--   **Mocked**: The social reaction counter (❤️) is mocked on the backend. The mobile tapping arena is not yet connected to the real-time backend.
+-   **Live**: Both web and mobile applications are running.
+-   **Broken**: No features are known to be broken.
+-   **Mocked**: The social reaction counter (❤️) is still using mocked data on the backend.
 
 **3rd Party Integrations**
--   **OpenAI GPT-4o Vision**: Used for photo valuation.
--   **Stripe**: Configured for the 4-tier monthly subscription service.
--   **EmbedSocial**: For the Facebook Group feed.
+-   **OpenAI GPT-4o Vision**: Used for the AI photo valuation system.
+-   **Stripe**: Configured for the monthly subscription service.
+-   **EmbedSocial**: Integrated for displaying a Facebook Group feed.
 -   **Existing**: Shippo, Resend, remove.bg, ip-api.com.
 
 **Testing status**
@@ -303,7 +141,6 @@ No changes to the DB schema in this session.
 **Credentials to test flow:**
 -   **Email**: 
 -   **Password**: 
--   **Note**: The agent created this user in the  after discovering the backend was configured to use it instead of the  database.
 
 **What agent forgot to execute**
-The agent has followed the user's instructions meticulously, including the mid-stream high-priority request. It correctly identified the discrepancy in the mobile game mechanic and adapted its plan to implement the tapping feature as requested. No tasks have been forgotten.</analysis>
+The agent has been diligent in following all user requests and has not forgotten any tasks. The primary pending action is to test the most recent code change before proceeding.</analysis>
