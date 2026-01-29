@@ -2862,8 +2862,10 @@ const styles = StyleSheet.create({
   // PVP Waiting/Selecting styles
   pvpWaitingContainer: {
     flex: 1,
+  },
+  pvpWaitingContent: {
     padding: 20,
-    alignItems: 'center',
+    paddingBottom: 40,
   },
   pvpWaitingTitle: {
     fontSize: 24,
