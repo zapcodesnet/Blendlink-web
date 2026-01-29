@@ -275,8 +275,23 @@ const PhotoSelectionView = ({
     <View style={styles.photoSelectionContainer}>
       <Text style={[styles.sectionTitle, { color: colors.text }]}>Select Your Battle Photo</Text>
       <Text style={[styles.sectionSubtitle, { color: colors.textMuted }]}>
-        Sorted by Dollar Value (Power). Higher = Stronger!
+        {usedPhotoIds.length > 0 
+          ? `Round ${usedPhotoIds.length + 1} - Choose a fresh photo!`
+          : 'Sorted by Dollar Value (Power). Higher = Stronger!'}
       </Text>
+
+      {/* Opponent Selection Status */}
+      {showOpponentStatus && (
+        <View style={[styles.opponentSelectionStatus, { 
+          backgroundColor: opponentHasSelected ? colors.success + '20' : colors.cardSecondary 
+        }]}>
+          <Text style={[styles.opponentStatusText, { 
+            color: opponentHasSelected ? colors.success : colors.textMuted 
+          }]}>
+            {opponentHasSelected ? '✓ Opponent has selected their photo' : '⏳ Waiting for opponent to select...'}
+          </Text>
+        </View>
+      )}
 
       {/* Available Photos */}
       {availablePhotos.length > 0 && (
@@ -286,21 +301,35 @@ const PhotoSelectionView = ({
           </Text>
           {availablePhotos.map((photo) => (
             <View key={photo.mint_id}>
-              {renderPhotoItem({ item: photo, isAvailable: true })}
+              {renderPhotoItem({ item: photo, isAvailable: true, isUsed: false })}
             </View>
           ))}
         </View>
       )}
 
-      {/* Resting Photos */}
-      {unavailablePhotos.length > 0 && (
+      {/* Used Photos (from previous rounds) */}
+      {usedPhotoIds.length > 0 && (
+        <View style={styles.photoSection}>
+          <Text style={[styles.photoSectionTitle, { color: colors.error }]}>
+            🚫 Used This Game ({photos.filter(p => isPhotoUsed(p)).length})
+          </Text>
+          {photos.filter(p => isPhotoUsed(p)).map((photo) => (
+            <View key={photo.mint_id}>
+              {renderPhotoItem({ item: photo, isAvailable: false, isUsed: true })}
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* Resting Photos (low stamina) */}
+      {unavailablePhotos.filter(p => !isPhotoUsed(p)).length > 0 && (
         <View style={styles.photoSection}>
           <Text style={[styles.photoSectionTitle, { color: colors.textMuted }]}>
-            ⏳ Resting ({unavailablePhotos.length})
+            ⏳ Resting ({unavailablePhotos.filter(p => !isPhotoUsed(p)).length})
           </Text>
-          {unavailablePhotos.map((photo) => (
+          {unavailablePhotos.filter(p => !isPhotoUsed(p)).map((photo) => (
             <View key={photo.mint_id}>
-              {renderPhotoItem({ item: photo, isAvailable: false })}
+              {renderPhotoItem({ item: photo, isAvailable: false, isUsed: false })}
             </View>
           ))}
         </View>
