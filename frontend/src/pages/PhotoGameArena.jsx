@@ -1606,7 +1606,33 @@ const PhotoGameArena = () => {
   }, []);
   
   // Handle Auction Battle completion
-  const handleAuctionBattleComplete = useCallback((winner) => {
+  const handleAuctionBattleComplete = useCallback(async (winner) => {
+    // Record bot battle result to update win counts and unlock bonuses
+    if (isAuctionBattleBot && botDifficulty) {
+      try {
+        const response = await api.post('/photo-game/bot-battle/result', {
+          difficulty: botDifficulty,
+          player_won: winner === 'player',
+          bet_amount: battleBetAmount,
+        });
+        
+        // Show unlock bonus notification if applicable
+        if (response.data.message) {
+          toast.success(response.data.message, { duration: 5000 });
+        }
+        
+        // Show win notification
+        if (winner === 'player' && response.data.winnings > 0) {
+          toast.success(`🏆 You won ${response.data.winnings.toLocaleString()} BL coins!`, { duration: 3000 });
+        }
+        
+        // Log the bot win tracking
+        console.log(`Bot battle recorded: ${botDifficulty}, won=${winner === 'player'}, ${botDifficulty}_wins=${response.data[`${botDifficulty}_wins`]}`);
+      } catch (err) {
+        console.error('Failed to record bot battle result:', err);
+      }
+    }
+    
     setGameState('pvp_menu');
     setSession(null);
     setSelectedPhoto(null);
@@ -1614,8 +1640,10 @@ const PhotoGameArena = () => {
     setOpponentBattlePhotos([]);
     setBattleBetAmount(0);
     setCurrentOpenGame(null);
+    setIsAuctionBattleBot(false);
+    setBotDifficulty('easy');
     api.get('/photo-game/stats').then(res => setStats(res.data)).catch(() => {});
-  }, []);
+  }, [isAuctionBattleBot, botDifficulty, battleBetAmount]);
   
   // Handle Bot Battle start from main menu's BotDifficultySelector
   const handleMenuBotBattleStart = useCallback(async ({ difficulty, betAmount: bet, photos, botConfig }) => {
