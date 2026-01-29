@@ -661,6 +661,25 @@ export const BattleArena = ({
   const currentRound = ROUND_SEQUENCE[currentRoundIndex];
   const WINS_NEEDED = 3;
   
+  // Update stats when selected photos change (photo-specific streaks)
+  useEffect(() => {
+    if (selectedPlayerPhoto) {
+      setPlayerStats({
+        current_win_streak: selectedPlayerPhoto.current_win_streak || selectedPlayerPhoto.win_streak || 0,
+        current_lose_streak: selectedPlayerPhoto.current_lose_streak || selectedPlayerPhoto.lose_streak || 0,
+      });
+    }
+  }, [selectedPlayerPhoto?.mint_id]);
+  
+  useEffect(() => {
+    if (selectedOpponentPhoto) {
+      setOpponentStats({
+        current_win_streak: selectedOpponentPhoto.current_win_streak || selectedOpponentPhoto.win_streak || 0,
+        current_lose_streak: selectedOpponentPhoto.current_lose_streak || selectedOpponentPhoto.lose_streak || 0,
+      });
+    }
+  }, [selectedOpponentPhoto?.mint_id]);
+  
   // Calculate stamina changes based on round results
   const calculateStaminaChanges = useCallback((results, photos) => {
     const photoChanges = {};
