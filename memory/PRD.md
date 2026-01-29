@@ -1,45 +1,44 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 29, 2026 (30 TPS Rate Limit - DEPLOYED)
+## Latest Update: January 29, 2026 (Mobile Screens & 30 TPS Update)
 
 ---
 
-## CRITICAL UPDATE: 30 TPS RATE LIMIT ✅
+## SESSION 35: MOBILE SCREEN IMPLEMENTATION ✅
 
-### Scope
-- **ALL Photo Auction Bidding Rounds** (Rounds 1, 3, 5)
-- **PVP** (human vs human) and **PvB** (player vs bot, all difficulties)
-- Applied to **Web** and **Mobile** with identical behavior
-
-### Changes Applied
-
-**Web (`/app/frontend/src/components/game/TappingArena.jsx`):**
-- `MAX_TAPS_PER_SECOND`: 20 → **30**
-- Warning toast: `⚠️ Tap rate exceeded! Slow down.`
-- Excess taps (>30/sec) discarded, valid taps continue
+### 30 TPS Rate Limit - DEPLOYED
+- Web `TappingArena.jsx`: MAX_TAPS_PER_SECOND = 30
+- Mobile `PhotoGameArenaScreen.js`: Added TappingArenaView with 30 TPS
 - Bot speeds updated: Easy 5-10, Medium 10-18, Hard 18-28 TPS
+- Warning toast on rate exceed, excess taps discarded
 
-**Mobile (`/app/mobile/src/screens/PhotoGameArenaScreen.js`):**
-- Added `TappingArenaView` component with 30 TPS limit
-- Same anti-cheat logic as web
-- Haptics: `Haptics.impactAsync(Light)` on valid tap
-- Haptics: `Haptics.notificationAsync(Warning)` on rate exceed
-- TPS debug indicator at bottom-right
-- Bot speeds match web
+### Mobile API Enhancements
+**New mintingAPI methods added:**
+- `getRatingCriteria()` - Get 11-category scoring criteria
+- `getLevelBonuses()` - Get level milestone bonuses
+- `getPhotoWithValue(mintId)` - Get photo with full dollar value breakdown
+- `getUpgradeOptions(mintId)` - Get available upgrades
+- `purchaseUpgrade(mintId, type)` - Buy dollar value upgrade
+- `claimDailyBonus()` - Claim subscription daily reward
+- `claimBirthdayBonus(mintId)` - Claim yearly photo birthday bonus
 
-### Unchanged (per spec)
-- Base 200 taps to win (equal power/scenery)
-- All Dollar Value bonuses (scenery, streaks, levels, upgrades)
-- Social reaction bonus ($1M per 100)
-- 30-day automatic $1M increase
-- 10-second countdown, 15-second round duration
-- Win/loss animations (confetti, shake)
-- WebSocket sync for PVP
+### MintedPhotosScreen Enhancements
+- Added **Dollar Value AI Scoring Preview** section
+- Shows all 11 rating categories with:
+  - Category icon and label
+  - Weight percentage badge
+  - Description
+  - Max value per category
+- Expandable/collapsible UI
+- Total max value display: $1B
 
-### Testing
-- Web app verified via screenshot ✅
-- Photo Game Arena loads correctly
-- TPS limit at 30 (achievable via 2-finger hypertapping)
+### Mobile Screens Status
+| Screen | Status |
+|--------|--------|
+| OpenGamesBrowserScreen | ✅ Complete |
+| TappingArenaView | ✅ Complete (30 TPS) |
+| MintedPhotosScreen | ✅ Enhanced with Dollar Value preview |
+| PhotoGameArenaScreen | ✅ Updated with TappingArenaView |
 
 ---
 
