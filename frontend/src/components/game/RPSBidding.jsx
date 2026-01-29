@@ -620,14 +620,14 @@ export const RPSBidding = ({
         </motion.div>
       )}
       
-      {/* Photo Display - Show player and opponent photos */}
+      {/* Photo Display - Show player and opponent photos with streak indicators */}
       {(playerPhoto || opponentPhoto) && (
         <div className="flex justify-center gap-4 sm:gap-8 mb-6">
           {/* Player Photo */}
           {playerPhoto && (
             <div className="relative">
               <p className="text-xs text-purple-400 text-center mb-2">Your Photo</p>
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border-2 border-purple-500 shadow-lg">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border-2 border-purple-500 shadow-lg relative">
                 {playerPhoto.image_url ? (
                   <img 
                     src={playerPhoto.image_url} 
@@ -640,10 +640,30 @@ export const RPSBidding = ({
                     <span className="text-3xl">📷</span>
                   </div>
                 )}
+                {/* Streak badge overlay */}
+                {(playerPhoto.current_win_streak >= 3 || playerPhoto.current_lose_streak >= 3) && (
+                  <div className="absolute top-1 right-1">
+                    {playerPhoto.current_win_streak >= 3 && (
+                      <span className="text-lg" title={`${playerPhoto.current_win_streak} win streak`}>🔥</span>
+                    )}
+                    {playerPhoto.current_lose_streak >= 3 && (
+                      <span className="text-lg" title="Immunity active">🛡️</span>
+                    )}
+                  </div>
+                )}
               </div>
               <p className="text-xs text-yellow-400 text-center mt-1 font-bold">
                 ${(playerPhoto.dollar_value / 1_000_000).toFixed(0)}M
               </p>
+              {/* Streak indicator below photo */}
+              <div className="mt-1 flex justify-center">
+                <StreakIndicator 
+                  winStreak={playerPhoto.current_win_streak || 0} 
+                  loseStreak={playerPhoto.current_lose_streak || 0}
+                  size="small"
+                  showTooltip={true}
+                />
+              </div>
             </div>
           )}
           
@@ -656,7 +676,7 @@ export const RPSBidding = ({
           {opponentPhoto && (
             <div className="relative">
               <p className="text-xs text-red-400 text-center mb-2">Opponent</p>
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border-2 border-red-500 shadow-lg">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border-2 border-red-500 shadow-lg relative">
                 {opponentPhoto.image_url ? (
                   <img 
                     src={opponentPhoto.image_url} 
@@ -669,10 +689,30 @@ export const RPSBidding = ({
                     <span className="text-3xl">🤖</span>
                   </div>
                 )}
+                {/* Streak badge overlay */}
+                {(opponentPhoto.current_win_streak >= 3 || opponentPhoto.current_lose_streak >= 3) && (
+                  <div className="absolute top-1 right-1">
+                    {opponentPhoto.current_win_streak >= 3 && (
+                      <span className="text-lg" title={`${opponentPhoto.current_win_streak} win streak`}>🔥</span>
+                    )}
+                    {opponentPhoto.current_lose_streak >= 3 && (
+                      <span className="text-lg" title="Immunity active">🛡️</span>
+                    )}
+                  </div>
+                )}
               </div>
               <p className="text-xs text-yellow-400 text-center mt-1 font-bold">
                 ${(opponentPhoto.dollar_value / 1_000_000).toFixed(0)}M
               </p>
+              {/* Streak indicator below photo */}
+              <div className="mt-1 flex justify-center">
+                <StreakIndicator 
+                  winStreak={opponentPhoto.current_win_streak || 0} 
+                  loseStreak={opponentPhoto.current_lose_streak || 0}
+                  size="small"
+                  showTooltip={true}
+                />
+              </div>
             </div>
           )}
         </div>
