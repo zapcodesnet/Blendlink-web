@@ -763,45 +763,109 @@ export const MatchHistory = ({ currentUserId }) => {
         </div>
       </div>
       
-      {/* Filters */}
-      <div className="flex gap-2">
-        {['all', 'wins', 'losses'].map(f => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              filter === f 
-                ? 'bg-purple-500 text-white' 
-                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-            }`}
-          >
-            {f === 'all' ? 'All' : f === 'wins' ? '🏆 Wins' : '⚔️ Losses'}
-          </button>
-        ))}
+      {/* Tab Selector - PVP vs Bot Replays */}
+      <div className="flex gap-2 p-1 bg-gray-800 rounded-lg">
+        <button
+          onClick={() => setActiveTab('pvp')}
+          className={`flex-1 py-2 px-4 rounded-md font-medium transition-all ${
+            activeTab === 'pvp'
+              ? 'bg-purple-500 text-white'
+              : 'text-gray-400 hover:text-white hover:bg-gray-700'
+          }`}
+        >
+          ⚔️ PVP Battles
+        </button>
+        <button
+          onClick={() => setActiveTab('bot_replays')}
+          className={`flex-1 py-2 px-4 rounded-md font-medium transition-all ${
+            activeTab === 'bot_replays'
+              ? 'bg-purple-500 text-white'
+              : 'text-gray-400 hover:text-white hover:bg-gray-700'
+          }`}
+        >
+          🤖 Bot Replays
+        </button>
       </div>
       
-      {/* Match List */}
-      {loading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
-        </div>
-      ) : filteredMatches.length === 0 ? (
-        <div className="text-center py-12">
-          <Swords className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-          <p className="text-gray-400">No battles yet</p>
-          <p className="text-gray-500 text-sm">Start a battle to see your history here!</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {filteredMatches.map(match => (
-            <MatchCard
-              key={match.session_id}
-              match={match}
-              currentUserId={currentUserId}
-              onClick={() => setSelectedMatch(match)}
-            />
-          ))}
-        </div>
+      {/* PVP Tab Content */}
+      {activeTab === 'pvp' && (
+        <>
+          {/* Filters */}
+          <div className="flex gap-2">
+            {['all', 'wins', 'losses'].map(f => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  filter === f 
+                    ? 'bg-purple-500 text-white' 
+                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                }`}
+              >
+                {f === 'all' ? 'All' : f === 'wins' ? '🏆 Wins' : '⚔️ Losses'}
+              </button>
+            ))}
+          </div>
+          
+          {/* Match List */}
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+            </div>
+          ) : filteredMatches.length === 0 ? (
+            <div className="text-center py-12">
+              <Swords className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+              <p className="text-gray-400">No battles yet</p>
+              <p className="text-gray-500 text-sm">Start a battle to see your history here!</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredMatches.map(match => (
+                <MatchCard
+                  key={match.session_id}
+                  match={match}
+                  currentUserId={currentUserId}
+                  onClick={() => setSelectedMatch(match)}
+                />
+              ))}
+            </div>
+          )}
+        </>
+      )}
+      
+      {/* Bot Replays Tab Content */}
+      {activeTab === 'bot_replays' && (
+        <>
+          {botReplaysLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+            </div>
+          ) : botReplays.length === 0 ? (
+            <div className="text-center py-12">
+              <Film className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+              <p className="text-gray-400">No bot battle replays yet</p>
+              <p className="text-gray-500 text-sm">Complete a bot battle to save and share replays!</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {botReplays.map(replay => (
+                <BotReplayCard
+                  key={replay.replay_id}
+                  replay={replay}
+                  onView={() => window.open(`/replay/${replay.replay_id}`, '_blank')}
+                  onShare={async () => {
+                    try {
+                      await api.post(`/photo-game/battle-replay/${replay.replay_id}/share-to-feed`);
+                      toast.success('🚀 Shared to Blendlink Feed!');
+                    } catch (err) {
+                      toast.error('Failed to share');
+                    }
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
       
       {/* Battle Replay Modal */}
