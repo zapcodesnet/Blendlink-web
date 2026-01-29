@@ -1,12 +1,64 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 28, 2026 (Session 34 - Dollar Value System & Subscription Tiers)
+## Latest Update: January 28, 2026 (Session 34 - Phase 2 Streaks + XP System)
 
 ---
 
-## SESSION 34: PHASE 1 - DOLLAR VALUE AI SCORING SYSTEM ✅
+## SESSION 34: PHASE 1 & 2 - DOLLAR VALUE + STREAKS/XP SYSTEM ✅
 
-### Features Implemented (January 28, 2026)
+### Phase 2: Streaks + XP System (January 28, 2026)
+
+**1. Win Streak Multipliers (🔥)**
+Visible during battles, broken on loss:
+- 3 wins: ×1.25
+- 4 wins: ×1.50
+- 5 wins: ×1.75
+- 6 wins: ×2.00
+- 7 wins: ×2.25
+- 8 wins: ×2.50
+- 9 wins: ×2.75
+- 10 wins (max): ×3.00
+
+**2. Lose Streak Immunity (🛡)**
+- 3+ consecutive losses: 100% immunity to stronger scenery
+- No deduction from opponent's strength, retain own strength
+
+**3. XP & Level Progression**
+- +1 XP per round (win or loss)
+- Subscription multipliers: Bronze ×2, Silver ×3, Gold ×4, Platinum ×5
+- Level formula: L1=0, L2=10, each next = +50% marginal XP
+- Max level: 60
+
+**4. Level Bonuses (cumulative)**
+- L10: 1★ +10% + 10,000 BL coins
+- L20: 2★ +20%
+- L30: 3★ +30%
+- L40: 4★ +40%
+- L50: 5★ +50%
+- L60: 5★ +70% + 100,000 BL + 🔶 Golden Frame
+
+**5. Stamina System**
+- Max: 24 battles
+- Win: -1 battle
+- Loss: -2 battles
+- Regen: +1 battle per hour
+
+### New API Endpoints:
+- `GET /api/photo-game/xp-level-info` - Level thresholds, bonuses, multipliers
+
+### Testing Results:
+- **Iteration 69**: 100% backend (18/18 tests passed)
+- All XP/Level constants verified correct
+- Stamina system verified (Win=-1, Loss=-2)
+
+### Files Modified:
+- `backend/photo_game.py` - XP/Level functions, constants
+- `backend/game_routes.py` - Updated record_round_result with XP/stamina
+- `backend/minting_system.py` - Level bonuses, subscription tiers
+
+---
+
+### Phase 1: Dollar Value AI Scoring System (Earlier Today)
 
 **1. 11-Category AI Rating System (Complete)**
 Updated the AI photo analysis with proper weights and max values:
