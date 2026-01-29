@@ -2933,4 +2933,111 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 20,
   },
+  // ============== NEW: USED PHOTO BADGE STYLES ==============
+  usedBadgeOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  usedBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 4,
+    transform: [{ rotate: '-15deg' }],
+  },
+  usedBadgeText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+  },
+  // ============== NEW: OPPONENT SELECTION STATUS ==============
+  opponentSelectionStatus: {
+    width: '100%',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  opponentStatusText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  // ============== NEW: ROUND TRANSITION STYLES ==============
+  roundTransitionContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  roundTransitionEmoji: {
+    fontSize: 80,
+    marginBottom: 16,
+  },
+  roundTransitionTitle: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  roundTransitionScoreContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  scoreCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scoreCircleText: {
+    color: '#fff',
+    fontSize: 28,
+    fontWeight: 'bold',
+  },
+  scoreSeparator: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    marginHorizontal: 16,
+  },
+  roundTransitionSubtitle: {
+    fontSize: 16,
+    marginBottom: 16,
+  },
+  transitionProgressBg: {
+    width: '80%',
+    height: 6,
+    borderRadius: 3,
+    marginBottom: 24,
+    overflow: 'hidden',
+  },
+  transitionProgressFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  nextRoundInfo: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  nextRoundInfoText: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  nextRoundInfoHint: {
+    fontSize: 13,
+  },
+  // PVP Waiting content container
+  pvpWaitingContent: {
+    paddingBottom: 40,
+  },
 });
