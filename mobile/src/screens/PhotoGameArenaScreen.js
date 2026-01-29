@@ -1,6 +1,8 @@
 /**
  * Photo Game Arena Screen for Blendlink Mobile
- * PvP Photo Battles with RPS mechanics + Photo Selection
+ * PvP Photo Battles with Tapping Arena + RPS mechanics + Photo Selection
+ * 
+ * UPDATED: 30 TPS rate limit for Photo Auction Bidding rounds
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -10,12 +12,14 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Pressable,
   Animated,
   Dimensions,
   ActivityIndicator,
   TextInput,
   Switch,
   FlatList,
+  Vibration,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -23,8 +27,15 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { photoGameAPI } from '../services/api';
 import auctionSounds from '../utils/auctionSounds';
+import * as Haptics from 'expo-haptics';
 
 const { width } = Dimensions.get('window');
+
+// ============== TAPPING ARENA CONSTANTS ==============
+const BASE_TAPS_TO_WIN = 200;
+const MAX_TAPS_PER_SECOND = 30; // 30 TPS rate limit - CRITICAL
+const COUNTDOWN_SECONDS = 10;
+const ROUND_DURATION_SECONDS = 15;
 
 // RPS choices
 const RPS_CHOICES = [
@@ -46,6 +57,15 @@ const formatDollarValue = (value) => {
   if (value >= 1_000_000_000) return `$${(value / 1_000_000_000).toFixed(2)}B`;
   if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
   return `$${value.toLocaleString()}`;
+};
+
+// Calculate required taps based on power difference
+const calculateRequiredTaps = (playerValue, opponentValue, baseTaps = BASE_TAPS_TO_WIN) => {
+  const totalPower = playerValue + opponentValue;
+  if (totalPower === 0) return baseTaps;
+  const playerRatio = playerValue / totalPower;
+  const requiredTaps = Math.round(baseTaps * (1.5 - playerRatio));
+  return Math.max(50, Math.min(400, requiredTaps));
 };
 
 // ============== COMPONENTS ==============
