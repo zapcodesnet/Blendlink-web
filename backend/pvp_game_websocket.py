@@ -231,15 +231,21 @@ class PVPGameManager:
         logger.info(f"Player {user_id} disconnected from room {room_id}")
         
         # Notify other player and handle disconnect
-        await self._broadcast_to_room(room_id, {
-            "type": "player_disconnected",
-            "user_id": user_id,
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        })
+        try:
+            await self._broadcast_to_room(room_id, {
+                "type": "player_disconnected",
+                "user_id": user_id,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+        except Exception as e:
+            logger.error(f"Error broadcasting disconnect: {e}")
         
         # Start forfeit timer if game is in progress
         if room.round_phase in ["selecting", "ready", "countdown", "playing"]:
-            asyncio.create_task(self._handle_disconnect_forfeit(room_id, user_id))
+            try:
+                asyncio.create_task(self._handle_disconnect_forfeit(room_id, user_id))
+            except Exception as e:
+                logger.error(f"Error creating forfeit task: {e}")
     
     async def _handle_disconnect_forfeit(self, room_id: str, disconnected_user_id: str):
         """Handle forfeit after disconnect timeout"""
