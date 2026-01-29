@@ -1,6 +1,49 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 29, 2026 (Live Video Selfie Match)
+## Latest Update: January 29, 2026 (PVP WebSocket Bug Fixes)
+
+---
+
+## SESSION 41: PVP WEBSOCKET SYNC & CONNECTION BUG FIXES ✅
+
+### Issue: Critical PVP WebSocket Connection and Sync Problems
+**Files Modified:**
+- `/app/backend/pvp_game_websocket.py` - Added countdown tick broadcasts, reconnect support
+- `/app/backend/server.py` - Added reconnect message handler
+- `/app/frontend/src/components/game/PVPBattleArena.jsx` - Fixed reconnection logic, added state-based WebSocket
+- `/app/frontend/src/components/game/PVPRoundReady.jsx` - Added countdown timer display
+
+**Bugs Fixed:**
+
+1. **Indefinite "Waiting for Opponent to Select" Spinning**
+   - **Problem**: Loading icon spun indefinitely after both players joined
+   - **Fix**: 
+     - Backend now broadcasts `selection_timeout_tick` every second with remaining time
+     - Frontend displays countdown: "Auto-select in Xs" / "Opponent selecting... (Xs remaining)"
+     - Auto-select triggers after 30 seconds if no selection
+
+2. **"Reconnecting..." with No Connection Established**
+   - **Problem**: Sync bar showed slashed/disconnected state, game never synced
+   - **Fix**:
+     - Replaced broken `window.location.reload()` reconnect with proper WebSocket reconnection
+     - Added `reconnect` message type for restoring game state after reconnection
+     - 5 retry attempts with 5-second intervals
+     - Tab visibility change detection for auto-reconnect when app resumes
+     - Manual "Tap to reconnect" button when disconnected
+     - Backend `reconnect_player()` method restores full game state
+
+**Technical Changes:**
+- `_selection_timeout()` now broadcasts countdown ticks instead of silent wait
+- `reconnect_player()` method added to PVPGameManager
+- Frontend uses state (`websocketInstance`) instead of refs for child components
+- Added `opponentHasSelected` state tracking
+- Heartbeat interval reduced to 10 seconds for faster disconnect detection
+
+**UI Improvements:**
+- Connection status shows: "Live" (green), "Reconnecting..." (yellow pulse), "Tap to reconnect" (red)
+- Reconnect attempt counter shown: "Attempt X/5"
+- Selection phase shows: "Auto-select in Xs" when waiting
+- After selection: "Opponent selecting... (Xs remaining)"
 
 ---
 
