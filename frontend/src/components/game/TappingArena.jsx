@@ -688,25 +688,28 @@ export const TappingArena = ({
         )}
       </AnimatePresence>
       
-      {/* Full-screen tap area */}
-      <motion.button
-        className="absolute bottom-0 left-0 right-0 h-[45%] bg-gradient-to-t from-purple-600/30 to-transparent flex flex-col items-center justify-center cursor-pointer select-none touch-none z-10"
+      {/* Full-screen tap area - OPTIMIZED for 60fps with CSS-only animations */}
+      <button
+        className={`absolute bottom-0 left-0 right-0 h-[45%] bg-gradient-to-t from-purple-600/30 to-transparent flex flex-col items-center justify-center select-none z-10 tap-zone btn-press ${
+          gamePhase !== 'active' ? 'cursor-not-allowed' : 'cursor-pointer'
+        }`}
         onPointerDown={handleTap}
         onTouchStart={handleTap}
-        whileTap={{ scale: 0.98, backgroundColor: 'rgba(168, 85, 247, 0.3)' }}
         disabled={gamePhase !== 'active'}
         data-testid="tap-area"
         aria-label="Tap to bid"
+        style={{ touchAction: 'manipulation', WebkitUserSelect: 'none' }}
       >
         {gamePhase === 'active' && (
           <>
-            <motion.div 
+            <div 
               className="text-6xl mb-4"
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 0.5, repeat: Infinity }}
+              style={{ 
+                animation: 'pulse 0.6s ease-in-out infinite',
+              }}
             >
               👆
-            </motion.div>
+            </div>
             <p className="text-2xl text-white font-bold">TAP TO BID!</p>
             <p className="text-sm text-gray-300 mt-2">
               {playerRequiredTaps - playerTaps} taps remaining
@@ -717,7 +720,7 @@ export const TappingArena = ({
         {gamePhase === 'waiting' && (
           <p className="text-xl text-gray-400">Preparing arena...</p>
         )}
-      </motion.button>
+      </button>
       
       {/* Anti-cheat warning */}
       <AnimatePresence>
