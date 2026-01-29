@@ -2074,7 +2074,7 @@ async def start_bot_battle(
     player_photos = []
     for photo_id in request.photo_ids:
         photo = await _db.minted_photos.find_one(
-            {"mint_id": photo_id, "owner_id": user_id},
+            {"mint_id": photo_id, "user_id": user_id},
             {"_id": 0}
         )
         if not photo:
