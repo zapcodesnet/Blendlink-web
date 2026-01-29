@@ -651,6 +651,8 @@ export const RPSBidding = ({
           <RevealAnimation
             playerChoice={playerChoice}
             opponentChoice={opponentChoice}
+            playerBid={playerBid}
+            opponentBid={opponentBid}
             result={roundResult}
             onComplete={handleRevealComplete}
           />
