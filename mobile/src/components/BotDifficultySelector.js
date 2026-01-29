@@ -788,7 +788,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
@@ -798,6 +798,18 @@ const styles = StyleSheet.create({
     color: '#ef4444',
     fontSize: 10,
     fontWeight: 'bold',
+  },
+  staminaBar: {
+    marginTop: 4,
+    height: 3,
+    backgroundColor: 'rgba(107, 114, 128, 0.5)',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  staminaFill: {
+    height: '100%',
+    backgroundColor: '#22c55e',
+    borderRadius: 2,
   },
   photoThumbnail: {
     width: '100%',
@@ -819,13 +831,77 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: 'bold',
   },
+  // Selection counter
+  selectionCounter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    marginBottom: 12,
+  },
+  selectionCounterLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  selectionCounterHint: {
+    fontSize: 11,
+    marginTop: 2,
+  },
+  selectionCounterBadge: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  selectionCounterText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  // Instruction/Error boxes
+  instructionBox: {
+    padding: 10,
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.3)',
+    borderRadius: 8,
+    marginBottom: 12,
+    alignItems: 'center',
+  },
+  instructionText: {
+    fontSize: 12,
+    color: '#f59e0b',
+    textAlign: 'center',
+  },
+  errorBox: {
+    padding: 10,
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+    borderRadius: 8,
+    marginBottom: 12,
+    alignItems: 'center',
+  },
+  errorBoxText: {
+    fontSize: 12,
+    color: '#ef4444',
+    textAlign: 'center',
+  },
   emptyPhotos: {
     width: '100%',
     padding: 40,
     alignItems: 'center',
   },
+  emptyPhotosEmoji: {
+    fontSize: 40,
+    marginBottom: 8,
+  },
   emptyPhotosText: {
     fontSize: 14,
+  },
+  emptyPhotosHint: {
+    fontSize: 12,
+    marginTop: 4,
   },
   startButton: {
     flexDirection: 'row',
