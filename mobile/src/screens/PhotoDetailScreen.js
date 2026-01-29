@@ -750,6 +750,60 @@ const styles = StyleSheet.create({
   birthdayCountdownText: {
     fontSize: 13,
   },
+  // Authenticity section
+  authenticityStatus: {
+    marginBottom: 16,
+  },
+  authenticityRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  authenticityLabel: {
+    fontSize: 14,
+  },
+  authenticityValue: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  selfieMatchButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 12,
+  },
+  selfieMatchIcon: {
+    fontSize: 28,
+    marginRight: 12,
+  },
+  selfieMatchInfo: {
+    flex: 1,
+  },
+  selfieMatchTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  selfieMatchSubtitle: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 12,
+    marginTop: 2,
+  },
+  selfieMatchArrow: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  noFaceMessage: {
+    padding: 12,
+    borderRadius: 8,
+  },
+  noFaceText: {
+    fontSize: 13,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
   // Sections
   section: {
     marginHorizontal: 16,
