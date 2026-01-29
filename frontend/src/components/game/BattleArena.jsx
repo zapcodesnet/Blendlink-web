@@ -1055,6 +1055,10 @@ export const BattleArena = ({
               betAmount={betAmount}
               onPlayAgain={handlePlayAgain}
               staminaChanges={staminaChanges}
+              isBot={isBot}
+              savedReplayId={savedReplayId}
+              onViewReplay={handleViewReplay}
+              onShareReplayToFeed={handleShareReplayToFeed}
             />
           </motion.div>
         )}
