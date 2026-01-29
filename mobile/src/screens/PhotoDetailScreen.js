@@ -182,6 +182,18 @@ export default function PhotoDetailScreen() {
     }
   };
 
+  // Handle selfie match success
+  const handleSelfieMatchSuccess = useCallback(async (result) => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    // Refresh photo data to show updated authenticity
+    await fetchPhotoData();
+  }, [fetchPhotoData]);
+
+  // Check if can do selfie match
+  const canDoSelfieMatch = photo?.has_face && 
+    (photo?.selfie_match_attempts || 0) < MAX_SELFIE_ATTEMPTS &&
+    !photo?.authenticity_locked;
+
   if (loading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
