@@ -30,6 +30,7 @@ import CasinoStatsScreen from '../screens/CasinoStatsScreen';
 import PhotoGameArenaScreen from '../screens/PhotoGameArenaScreen';
 import MintedPhotosScreen from '../screens/MintedPhotosScreen';
 import PhotoMarketplaceScreen from '../screens/PhotoMarketplaceScreen';
+import OpenGamesBrowserScreen from '../screens/OpenGamesBrowserScreen';
 
 // Admin Screens
 import AdminScreen from '../screens/AdminScreen';
