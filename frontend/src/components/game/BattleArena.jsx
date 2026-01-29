@@ -872,8 +872,19 @@ export const BattleArena = ({
       if (isBot) {
         saveReplay(finalWinner, playerWins, opponentWins, [...replayRounds, replayRoundData]);
       }
+      
+      // CRITICAL: Record bot battle result immediately when game ends
+      // This fixes the bug where wins weren't being tracked because 
+      // onGameComplete was only called on "Play Again"
+      if (isBot && onGameComplete) {
+        onGameComplete(finalWinner, {
+          session_id: session?.session_id,
+          rounds_won: finalWinner === 'player' ? playerWins + (winner === 'player' ? 1 : 0) : playerWins,
+          rounds_lost: finalWinner === 'opponent' ? opponentWins + (winner === 'opponent' ? 1 : 0) : opponentWins,
+        });
+      }
     }
-  }, [playerWins, opponentWins, currentRoundIndex, soundEnabled, selectedPlayerPhoto, selectedOpponentPhoto, roundResults, playerPhotos, calculateStaminaChanges, currentRound, isBot, replayRounds, saveReplay]);
+  }, [playerWins, opponentWins, currentRoundIndex, soundEnabled, selectedPlayerPhoto, selectedOpponentPhoto, roundResults, playerPhotos, calculateStaminaChanges, currentRound, isBot, replayRounds, saveReplay, onGameComplete, session]);
   
   // Handle RPS round complete (with money tracking)
   const handleRPSRoundComplete = useCallback((winner, newPlayerMoney, newOpponentMoney) => {
