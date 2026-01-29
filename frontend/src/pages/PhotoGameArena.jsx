@@ -1427,79 +1427,19 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect, onPracticeSta
         />
       </div>
       
-      {selectedPhoto && (
+      {error && (
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-gray-800/50 rounded-xl p-6 border border-gray-700/50"
         >
-          <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-            <Coins className="w-5 h-5 text-yellow-400" />
-            Battle Settings
-          </h3>
-          
-          {queueStatus && (
-            <div className="bg-gray-700/50 rounded-lg p-3 mb-4 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Players searching:</span>
-                <span className="text-white font-bold">{queueStatus.players_waiting}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Active matches:</span>
-                <span className="text-white font-bold">{queueStatus.active_matches}</span>
-              </div>
-            </div>
-          )}
-          
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm text-gray-400 mb-1 block">BL Coin Bet (optional)</label>
-              <Input
-                type="number"
-                value={betAmount}
-                onChange={(e) => setBetAmount(Math.max(0, parseInt(e.target.value) || 0))}
-                placeholder="0"
-                className="bg-gray-700 border-gray-600"
-                data-testid="bet-amount-input"
-              />
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <span className="text-gray-300">Play with bot if no players</span>
-              <button
-                onClick={() => setUseBotFallback(!useBotFallback)}
-                className={`relative w-12 h-6 rounded-full transition-colors ${useBotFallback ? 'bg-purple-600' : 'bg-gray-700'}`}
-                disabled={practiceMode}
-              >
-                <motion.span 
-                  className="absolute top-1 w-4 h-4 rounded-full bg-white"
-                  animate={{ left: useBotFallback ? 28 : 4 }}
-                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                />
-              </button>
-            </div>
-          </div>
-          
-          {error && <p className="text-red-400 text-sm mt-4">{error}</p>}
+          <p className="text-red-400 text-sm">{error}</p>
         </motion.div>
       )}
       
       {selectedPhoto && (
         <div className="space-y-3">
-          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-            <Button 
-              onClick={startMatchmaking} 
-              className="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 py-6 text-lg font-bold shadow-lg"
-              size="lg"
-              data-testid="find-match-btn"
-            >
-              <Swords className="w-6 h-6 mr-2" />
-              Find Match with {selectedPhoto.name}
-              <span className="ml-2 text-2xl">⚔️</span>
-            </Button>
-          </motion.div>
-          
-          {/* NEW: Auction Bidding Battle Mode */}
+          {/* Auction Bidding Battle with Bot */}
           <motion.div 
             whileHover={{ scale: 1.02 }} 
             whileTap={{ scale: 0.98 }}
@@ -1513,33 +1453,9 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect, onPracticeSta
               size="lg"
               data-testid="auction-battle-btn"
             >
-              <Zap className="w-6 h-6 mr-2" />
-              Auction Bidding Battle (NEW!)
-              <span className="ml-2 text-2xl">👆</span>
+              Auction Bidding Battle with Bot
             </Button>
           </motion.div>
-          
-          <p className="text-center text-xs text-amber-400 font-medium">
-            ⚡ Tap fast to win! Battle with your photo&apos;s Dollar Value!
-          </p>
-          
-          <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
-            <Button 
-              onClick={startPracticeMode}
-              variant="outline"
-              className="w-full border-2 border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10 py-4"
-              size="lg"
-              data-testid="practice-mode-btn"
-            >
-              <Target className="w-5 h-5 mr-2" />
-              Practice vs Bot (No Risk)
-              <span className="ml-2 text-lg">🎯</span>
-            </Button>
-          </motion.div>
-          
-          <p className="text-center text-xs text-gray-500">
-            Practice mode: No BL bet, no stamina loss, no rewards - just practice!
-          </p>
         </div>
       )}
       
