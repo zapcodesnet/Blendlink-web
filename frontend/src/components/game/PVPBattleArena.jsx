@@ -386,7 +386,9 @@ export const PVPBattleArena = ({
         console.log('PVP WebSocket connected');
         setWsConnected(true);
         setReconnecting(false);
+        setWebsocketInstance(ws);
         reconnectAttempts.current = 0;
+        setReconnectAttemptCount(0);
         
         if (isReconnect) {
           // Send reconnect message to restore state
@@ -409,16 +411,19 @@ export const PVPBattleArena = ({
       ws.onerror = (error) => {
         console.error('PVP WebSocket error:', error);
         setWsConnected(false);
+        setWebsocketInstance(null);
       };
       
       ws.onclose = (event) => {
         console.log('PVP WebSocket closed:', event.code, event.reason);
         setWsConnected(false);
+        setWebsocketInstance(null);
         
         // Schedule reconnect if game is still in progress
         if (gamePhase !== 'result' && reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
           setReconnecting(true);
           reconnectAttempts.current++;
+          setReconnectAttemptCount(reconnectAttempts.current);
           
           const delay = RECONNECT_INTERVAL;
           console.log(`Scheduling reconnect attempt ${reconnectAttempts.current}/${MAX_RECONNECT_ATTEMPTS} in ${delay}ms`);
