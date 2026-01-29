@@ -2647,3 +2647,202 @@ async def get_featured_replays(
         "category": category,
         "total": len(replays)
     }
+
+
+# ============== MOCK ENGAGEMENT SERVICE ==============
+# Simulates social engagement (❤️ likes) until real Facebook Graph API is integrated
+
+class LikePhotoRequest(BaseModel):
+    """Request to like/react to a photo"""
+    photo_id: str
+    reaction_type: str = "heart"  # heart, like, love, wow, etc.
+
+
+@game_router.post("/engagement/like")
+async def like_photo(
+    request: LikePhotoRequest,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """
+    Mock engagement service - Like/react to a photo.
+    Simulates Facebook-style reactions for testing.
+    Can be replaced with real Facebook Graph API later.
+    """
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    user_id = current_user["user_id"]
+    photo_id = request.photo_id
+    reaction_type = request.reaction_type
+    
+    # Check if photo exists
+    photo = await _db.minted_photos.find_one({"mint_id": photo_id})
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    
+    # Check if user already reacted to this photo
+    existing_reaction = await _db.photo_reactions.find_one({
+        "photo_id": photo_id,
+        "user_id": user_id
+    })
+    
+    if existing_reaction:
+        # User already reacted - update reaction type
+        await _db.photo_reactions.update_one(
+            {"photo_id": photo_id, "user_id": user_id},
+            {"$set": {"reaction_type": reaction_type, "updated_at": datetime.now(timezone.utc)}}
+        )
+        action = "updated"
+    else:
+        # New reaction
+        await _db.photo_reactions.insert_one({
+            "photo_id": photo_id,
+            "user_id": user_id,
+            "reaction_type": reaction_type,
+            "created_at": datetime.now(timezone.utc)
+        })
+        
+        # Increment reaction count on photo
+        await _db.minted_photos.update_one(
+            {"mint_id": photo_id},
+            {"$inc": {"reaction_count": 1, f"reactions.{reaction_type}": 1}}
+        )
+        action = "added"
+    
+    # Get updated counts
+    updated_photo = await _db.minted_photos.find_one({"mint_id": photo_id}, {"_id": 0, "reaction_count": 1, "reactions": 1})
+    
+    return {
+        "success": True,
+        "action": action,
+        "photo_id": photo_id,
+        "reaction_type": reaction_type,
+        "total_reactions": updated_photo.get("reaction_count", 0),
+        "reactions_breakdown": updated_photo.get("reactions", {})
+    }
+
+
+@game_router.delete("/engagement/unlike/{photo_id}")
+async def unlike_photo(
+    photo_id: str,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """Remove user's reaction from a photo"""
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    user_id = current_user["user_id"]
+    
+    # Check if reaction exists
+    existing_reaction = await _db.photo_reactions.find_one({
+        "photo_id": photo_id,
+        "user_id": user_id
+    })
+    
+    if not existing_reaction:
+        raise HTTPException(status_code=404, detail="Reaction not found")
+    
+    reaction_type = existing_reaction.get("reaction_type", "heart")
+    
+    # Remove reaction
+    await _db.photo_reactions.delete_one({
+        "photo_id": photo_id,
+        "user_id": user_id
+    })
+    
+    # Decrement count on photo
+    await _db.minted_photos.update_one(
+        {"mint_id": photo_id},
+        {"$inc": {"reaction_count": -1, f"reactions.{reaction_type}": -1}}
+    )
+    
+    return {
+        "success": True,
+        "action": "removed",
+        "photo_id": photo_id
+    }
+
+
+@game_router.get("/engagement/photo/{photo_id}")
+async def get_photo_engagement(
+    photo_id: str,
+    current_user: Optional[dict] = Depends(get_optional_user)
+):
+    """Get engagement stats for a photo"""
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    photo = await _db.minted_photos.find_one(
+        {"mint_id": photo_id}, 
+        {"_id": 0, "reaction_count": 1, "reactions": 1, "name": 1}
+    )
+    
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    
+    # Check if current user has reacted
+    user_reaction = None
+    if current_user:
+        reaction = await _db.photo_reactions.find_one({
+            "photo_id": photo_id,
+            "user_id": current_user["user_id"]
+        })
+        if reaction:
+            user_reaction = reaction.get("reaction_type")
+    
+    return {
+        "photo_id": photo_id,
+        "photo_name": photo.get("name", ""),
+        "total_reactions": photo.get("reaction_count", 0),
+        "reactions_breakdown": photo.get("reactions", {}),
+        "user_reaction": user_reaction
+    }
+
+
+@game_router.post("/engagement/simulate-reactions/{photo_id}")
+async def simulate_reactions(
+    photo_id: str,
+    count: int = 10,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """
+    [DEV ONLY] Simulate random reactions on a photo for testing.
+    This allows easy testing of the ❤️ counter display.
+    """
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    # Only allow photo owner to simulate reactions
+    photo = await _db.minted_photos.find_one({"mint_id": photo_id, "user_id": current_user["user_id"]})
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found or not owned by user")
+    
+    import random
+    reaction_types = ["heart", "like", "love", "wow", "haha"]
+    
+    # Add simulated reactions
+    simulated_increment = {
+        "reaction_count": count,
+    }
+    
+    # Distribute reactions randomly
+    for _ in range(count):
+        reaction_type = random.choice(reaction_types)
+        key = f"reactions.{reaction_type}"
+        simulated_increment[key] = simulated_increment.get(key, 0) + 1
+    
+    await _db.minted_photos.update_one(
+        {"mint_id": photo_id},
+        {"$inc": simulated_increment}
+    )
+    
+    # Get updated counts
+    updated_photo = await _db.minted_photos.find_one({"mint_id": photo_id}, {"_id": 0, "reaction_count": 1, "reactions": 1})
+    
+    return {
+        "success": True,
+        "photo_id": photo_id,
+        "simulated_count": count,
+        "total_reactions": updated_photo.get("reaction_count", 0),
+        "reactions_breakdown": updated_photo.get("reactions", {})
+    }
