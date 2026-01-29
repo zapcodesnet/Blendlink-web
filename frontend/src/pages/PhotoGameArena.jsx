@@ -2188,7 +2188,7 @@ const PhotoGameArena = () => {
                 soundEnabled={soundEnabled}
                 websocket={null}
                 onGameComplete={handleAuctionBattleComplete}
-                onExit={() => setGameState('matchmaking')}
+                onExit={handleBattleExit}
               />
             </motion.div>
           )}
