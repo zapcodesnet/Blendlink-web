@@ -154,65 +154,84 @@ const SubscriptionTiers = () => {
 
         {/* Subscription Tiers */}
         <h2 className="text-xl font-bold mb-4">Choose Your Plan</h2>
-        <div className="grid md:grid-cols-3 gap-4 mb-8">
-          {Object.entries(tiers).map(([tierId, tier]) => (
-            <div
-              key={tierId}
-              className={`rounded-2xl border-2 p-6 transition-all ${
-                tierId === currentTier 
-                  ? 'border-violet-500 bg-violet-500/10' 
-                  : tierId === 'premium'
-                    ? 'border-amber-500 bg-card'
-                    : 'border-border bg-card'
-              }`}
-            >
-              {tierId === 'premium' && (
-                <div className="bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full w-fit mb-3">
-                  BEST VALUE
+        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+          {Object.entries(tiers).map(([tierId, tier]) => {
+            // Get tier icon and color
+            const tierConfig = {
+              free: { icon: <Shield className="w-5 h-5 text-gray-400" />, highlight: false, color: 'border-border' },
+              bronze: { icon: <span className="text-xl">🥉</span>, highlight: false, color: 'border-amber-700' },
+              silver: { icon: <span className="text-xl">🥈</span>, highlight: false, color: 'border-gray-300' },
+              gold: { icon: <span className="text-xl">🥇</span>, highlight: true, color: 'border-yellow-400' },
+              platinum: { icon: <Crown className="w-5 h-5 text-purple-400" />, highlight: true, color: 'border-purple-500' },
+            };
+            const config = tierConfig[tierId] || tierConfig.free;
+            
+            return (
+              <div
+                key={tierId}
+                className={`rounded-2xl border-2 p-4 transition-all ${
+                  tierId === currentTier 
+                    ? 'border-violet-500 bg-violet-500/10' 
+                    : `${config.color} bg-card`
+                }`}
+              >
+                {(tierId === 'gold' || tierId === 'platinum') && (
+                  <div className={`${tierId === 'platinum' ? 'bg-purple-500' : 'bg-yellow-500'} text-white text-xs font-bold px-2 py-1 rounded-full w-fit mb-2`}>
+                    {tierId === 'platinum' ? 'ELITE' : 'BEST VALUE'}
+                  </div>
+                )}
+                
+                <div className="flex items-center gap-2 mb-2">
+                  {config.icon}
+                  <h3 className="text-base font-bold">{tier.name}</h3>
                 </div>
-              )}
-              
-              <div className="flex items-center gap-2 mb-2">
-                {tierId === 'free' && <Shield className="w-5 h-5 text-muted-foreground" />}
-                {tierId === 'basic' && <Star className="w-5 h-5 text-violet-500" />}
-                {tierId === 'premium' && <Crown className="w-5 h-5 text-amber-500" />}
-                <h3 className="text-lg font-bold">{tier.name}</h3>
-              </div>
-              
-              <div className="mb-4">
-                <span className="text-3xl font-bold">
-                  ${tier.price_monthly.toFixed(2)}
-                </span>
-                <span className="text-muted-foreground">/mo</span>
-              </div>
+                
+                <div className="mb-3">
+                  <span className="text-2xl font-bold">
+                    ${tier.price_monthly?.toFixed(2) || '0.00'}
+                  </span>
+                  <span className="text-muted-foreground text-sm">/mo</span>
+                </div>
+                
+                {/* Key benefits */}
+                <div className="space-y-1 mb-4 text-xs">
+                  <div className="flex items-center gap-1">
+                    <Zap className="w-3 h-3 text-yellow-400" />
+                    <span>{tier.xp_multiplier || 1}x XP</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Gift className="w-3 h-3 text-green-400" />
+                    <span>{(tier.daily_bl_bonus || 0).toLocaleString()} BL/day</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Target className="w-3 h-3 text-blue-400" />
+                    <span>{tier.daily_mint_limit >= 999999 ? 'Unlimited' : tier.daily_mint_limit} mints/day</span>
+                  </div>
+                </div>
 
-              <ul className="space-y-2 mb-6">
-                {tier.features?.map((feature, i) => (
-                  <li key={i} className="flex items-center gap-2 text-sm">
-                    <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              {tierId === currentTier ? (
-                <Button disabled className="w-full" variant="outline">
-                  Current Plan
-                </Button>
-              ) : tierId === 'free' ? (
-                <Button disabled className="w-full" variant="outline">
-                  Free
-                </Button>
-              ) : (
-                <Button 
-                  onClick={() => handleUpgrade(tierId)}
-                  className={`w-full ${tierId === 'premium' ? 'bg-amber-500 hover:bg-amber-600' : ''}`}
-                >
-                  Upgrade to {tier.name}
-                </Button>
-              )}
-            </div>
-          ))}
+                {tierId === currentTier ? (
+                  <Button disabled className="w-full text-xs py-2" variant="outline" size="sm">
+                    Current Plan
+                  </Button>
+                ) : tierId === 'free' ? (
+                  <Button disabled className="w-full text-xs py-2" variant="outline" size="sm">
+                    Free
+                  </Button>
+                ) : (
+                  <Button 
+                    onClick={() => handleUpgrade(tierId)}
+                    className={`w-full text-xs py-2 ${
+                      tierId === 'platinum' ? 'bg-purple-500 hover:bg-purple-600' : 
+                      tierId === 'gold' ? 'bg-yellow-500 hover:bg-yellow-600' : ''
+                    }`}
+                    size="sm"
+                  >
+                    Upgrade
+                  </Button>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* Ranked Profile */}
