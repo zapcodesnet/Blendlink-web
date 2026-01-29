@@ -3005,6 +3005,11 @@ try:
                     # Player marks ready
                     await pvp_game_manager.mark_ready(room_id, user_id)
                     
+                elif msg_type == "tap":
+                    # Player tap during auction round
+                    tap_count = data.get("count", 1)
+                    await pvp_game_manager.handle_tap(room_id, user_id, tap_count)
+                    
                 elif msg_type == "round_result":
                     # Round result submitted (from gameplay component)
                     winner_id = data.get("winner_user_id")
