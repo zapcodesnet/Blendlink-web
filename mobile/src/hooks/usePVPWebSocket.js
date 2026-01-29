@@ -232,6 +232,19 @@ export function usePVPWebSocket(roomId, options = {}) {
       }));
     });
 
+    // Handle game_end event (same as game_result)
+    const unsubGameEnd = pvpWebSocket.on('game_end', (data) => {
+      setGameState(prev => ({
+        ...prev,
+        roundPhase: 'game_over',
+        gameResult: {
+          winner_user_id: data.winner_user_id,
+          player1_wins: data.player1_wins,
+          player2_wins: data.player2_wins,
+        },
+      }));
+    });
+
     // Generic message handler
     const unsubMessage = pvpWebSocket.on('message', (data) => {
       onMessage?.(data);
@@ -254,6 +267,7 @@ export function usePVPWebSocket(roomId, options = {}) {
       unsubTapUpdate,
       unsubRoundResult,
       unsubGameResult,
+      unsubGameEnd,
       unsubPlayerSelected,
       unsubPhotoConfirmed,
       unsubMessage,
