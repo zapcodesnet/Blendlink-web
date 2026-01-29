@@ -1,6 +1,32 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 29, 2026 (Bot Battle Critical Bug Fixes)
+## Latest Update: January 29, 2026 (Bot Battle "Play with Bot" Button Fix)
+
+---
+
+## SESSION 45: BOT BATTLE "PLAY WITH BOT" BUTTON FIX ✅
+
+### Issue Fixed:
+**"battlePhotos is not defined" Error** when clicking "Play with Bot" button
+
+**Root Cause:**
+The `battlePhotos` and `showBotSelector` state variables were defined inside the `Matchmaking` component but were being referenced in the parent `PhotoGameArena` component's `pvp_menu` section, causing a ReferenceError.
+
+**Fix Applied:**
+1. Added `battlePhotos`, `showBotSelector`, `userBalance`, and `botWinStats` state variables to the main `PhotoGameArena` component
+2. Added a `useEffect` hook to fetch battle photos when on `pvp_menu` state
+3. Added `handleMenuBotBattleStart` handler function for bot battle starts from the main menu
+4. Added `BotDifficultySelector` component render at the end of `PhotoGameArena` component
+
+**Files Modified:**
+- `/app/frontend/src/pages/PhotoGameArena.jsx` - Lines 1519-1526 (state), 1549-1573 (useEffect), 1637-1665 (handler), 2274-2282 (component render)
+
+**Test Results: 100% Success Rate**
+- Play with Bot button opens modal without errors ✅
+- Bot Difficulty modal displays all 4 options ✅
+- Photo selection shows 7 minted photos with actual images ✅
+- 5-photo selection validation works ✅
+- Battle starts successfully ✅
 
 ---
 
