@@ -1,6 +1,39 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 29, 2026 (Bot Battle Progression System)
+## Latest Update: January 29, 2026 (10 Free Daily Mints)
+
+---
+
+## SESSION 39: 10 FREE DAILY MINTS ✅
+
+### Feature: Free Photo Minting for All Users
+**Files Modified:**
+- `/app/backend/minting_system.py` - Updated minting costs and limits
+
+**Changes Implemented:**
+1. **Free Minting for All Users**
+   - `MINT_COST_BL = 0` - No BL coin cost to mint photos
+   - Regular (free tier) users can mint up to 10 photos per day
+   - BL coin balance remains unchanged when minting
+
+2. **Daily Limit Enforcement**
+   - 11th mint attempt correctly blocked with "Daily limit reached" message
+   - Reset happens at midnight UTC
+   - `/api/minting/status` endpoint returns `is_free: true` and `remaining_mints`
+
+3. **Subscription Tier Limits (unchanged):**
+   | Tier | Daily Limit | XP Multiplier |
+   |------|-------------|---------------|
+   | Free | 10 | 1x |
+   | Bronze ($4.99) | 20 | 2x |
+   | Silver ($9.99) | 50 | 3x |
+   | Gold ($14.99) | 100 | 4x |
+   | Platinum ($24.99) | Unlimited | 5x |
+
+**Testing Completed:**
+- ✅ Verified 10 photos can be minted without BL deduction
+- ✅ Verified 11th mint is blocked
+- ✅ API endpoint returns correct status
 
 ---
 
