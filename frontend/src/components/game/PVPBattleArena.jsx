@@ -177,11 +177,56 @@ export const PVPBattleArena = ({
         case 'join_result':
           if (data.success) {
             toast.success('Connected to game room');
+            setReconnecting(false);
+            reconnectAttempts.current = 0;
+          }
+          break;
+        
+        case 'reconnect_result':
+          if (data.success) {
+            toast.success('Reconnected to game');
+            setReconnecting(false);
+            reconnectAttempts.current = 0;
+          }
+          break;
+        
+        case 'reconnect_state':
+          // Restore game state after reconnection
+          setCurrentRound(data.current_round || 1);
+          setRoundType(data.round_type || ROUND_TYPES[(data.current_round || 1) - 1]);
+          setPlayer1Wins(data.player1_wins || 0);
+          setPlayer2Wins(data.player2_wins || 0);
+          
+          // Restore selection states
+          const myState = isPlayer1 ? data.player1 : data.player2;
+          const oppState = isPlayer1 ? data.player2 : data.player1;
+          
+          if (myState?.selected_photo) {
+            setMySelectedPhoto(myState.selected_photo);
+          }
+          if (oppState?.selected_photo) {
+            setOpponentSelectedPhoto(oppState.selected_photo);
+          }
+          setOpponentHasSelected(oppState?.has_selected || false);
+          setMyReady(myState?.is_ready || false);
+          setOpponentReady(oppState?.is_ready || false);
+          
+          // Set correct phase based on round_phase
+          if (data.round_phase === 'playing') {
+            setGamePhase('playing');
+          } else if (data.round_phase === 'result') {
+            setGamePhase('result');
+          } else {
+            setGamePhase('ready');
           }
           break;
           
         case 'player_connected':
           toast.success(`${data.username} connected`);
+          break;
+        
+        case 'player_reconnected':
+          toast.success(`${data.username} reconnected`);
           break;
           
         case 'player_disconnected':
@@ -206,11 +251,22 @@ export const PVPBattleArena = ({
           setOpponentReady(false);
           setMySelectedPhoto(null);
           setOpponentSelectedPhoto(null);
+          setOpponentHasSelected(false);
+          setSelectionTimeRemaining(30);
+          break;
+        
+        case 'selection_timeout_tick':
+          // Update countdown timer
+          setSelectionTimeRemaining(data.seconds_remaining);
+          // Update opponent selection status
+          const oppSelected = isPlayer1 ? data.player2_selected : data.player1_selected;
+          setOpponentHasSelected(oppSelected);
           break;
           
         case 'player_selected_photo':
           if (data.user_id !== currentUserId) {
-            // Opponent selected
+            setOpponentHasSelected(true);
+            toast.info(`${opponentUsername || 'Opponent'} selected their photo`);
           }
           break;
           
@@ -273,13 +329,19 @@ export const PVPBattleArena = ({
           break;
           
         case 'auto_selected':
+          if (data.user_id === currentUserId) {
+            toast.warning('Time ran out - photo auto-selected');
+          }
+          break;
+          
         case 'auto_ready':
           if (data.user_id === currentUserId) {
-            toast.warning(`Auto-${data.type === 'auto_selected' ? 'selected' : 'readied'} due to timeout`);
+            toast.warning('Auto-readied due to timeout');
           }
           break;
           
         case 'pong':
+          // Connection is alive
           break;
           
         default:
