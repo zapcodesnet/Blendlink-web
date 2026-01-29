@@ -616,14 +616,41 @@ export const PVPBattleArena = ({
           <Users className="w-5 h-5 text-purple-400" />
           <span className="text-white font-bold">{opponentUsername || 'Opponent'}</span>
         </div>
-        <span 
-          className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full ${
-            wsConnected ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-          }`}
-        >
-          {wsConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-          {wsConnected ? 'Connected' : 'Reconnecting...'}
-        </span>
+        <div className="flex items-center gap-2">
+          {reconnecting && (
+            <span className="text-xs text-yellow-400">
+              Attempt {reconnectAttempts.current}/{MAX_RECONNECT_ATTEMPTS}
+            </span>
+          )}
+          <button 
+            onClick={handleManualReconnect}
+            disabled={wsConnected}
+            className={`flex items-center gap-1 text-xs px-3 py-1.5 rounded-full transition-colors ${
+              wsConnected 
+                ? 'bg-green-500/20 text-green-400 cursor-default' 
+                : reconnecting
+                  ? 'bg-yellow-500/20 text-yellow-400 animate-pulse'
+                  : 'bg-red-500/20 text-red-400 hover:bg-red-500/30 cursor-pointer'
+            }`}
+          >
+            {wsConnected ? (
+              <>
+                <Wifi className="w-3 h-3" />
+                <span>Live</span>
+              </>
+            ) : reconnecting ? (
+              <>
+                <RefreshCw className="w-3 h-3 animate-spin" />
+                <span>Reconnecting...</span>
+              </>
+            ) : (
+              <>
+                <WifiOff className="w-3 h-3" />
+                <span>Tap to reconnect</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
       
       <AnimatePresence mode="wait">
