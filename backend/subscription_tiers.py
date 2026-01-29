@@ -1,9 +1,9 @@
 """
 Blendlink Subscription Tiers System
-- Monthly subscription plans ($4.99 Basic, $9.99 Premium)
-- Daily BL coin bonuses
-- Increased minting limits
-- Ranked matchmaking perks
+- Monthly subscription plans (Bronze $4.99, Silver $9.99, Gold $14.99, Platinum $24.99)
+- Daily BL coin bonuses (15K, 35K, 80K, 200K)
+- Increased minting limits (20, 50, 100, unlimited)
+- XP multipliers (x2, x3, x4, x5)
 - Stripe integration for payments
 """
 
@@ -32,6 +32,7 @@ SUBSCRIPTION_TIERS = {
         "stripe_price_id": None,
         "daily_mint_limit": 3,
         "daily_bl_bonus": 0,
+        "xp_multiplier": 1,
         "bonus_streak_multiplier": 1.0,
         "marketplace_fee_discount": 0,
         "stamina_regen_boost": 1.0,
@@ -40,53 +41,108 @@ SUBSCRIPTION_TIERS = {
         "exclusive_badges": [],
         "features": [
             "3 photo mints per day",
+            "1x XP per round",
             "Basic matchmaking",
             "Standard marketplace fees (8%)"
         ]
     },
-    "basic": {
-        "name": "Basic",
+    "bronze": {
+        "name": "Bronze",
         "price_monthly": 4.99,
-        "stripe_price_id": os.environ.get("STRIPE_BASIC_PRICE_ID"),
+        "stripe_price_id": os.environ.get("STRIPE_BRONZE_PRICE_ID"),
         "daily_mint_limit": 20,
-        "daily_bl_bonus": 100,
+        "daily_bl_bonus": 15_000,
+        "xp_multiplier": 2,
         "bonus_streak_multiplier": 1.25,
         "marketplace_fee_discount": 1,  # 7% instead of 8%
-        "stamina_regen_boost": 1.25,  # 25% faster stamina regen
+        "stamina_regen_boost": 1.25,
         "matchmaking_priority": 1,
         "can_create_tournaments": False,
-        "exclusive_badges": ["basic_supporter"],
+        "exclusive_badges": ["bronze_supporter"],
         "features": [
             "20 photo mints per day",
-            "100 BL daily bonus",
+            "15,000 BL daily bonus",
+            "2x XP per round",
             "Priority matchmaking",
             "7% marketplace fee",
-            "25% faster stamina regen",
-            "Basic supporter badge"
+            "Bronze supporter badge"
         ]
     },
-    "premium": {
-        "name": "Premium",
+    "silver": {
+        "name": "Silver",
         "price_monthly": 9.99,
-        "stripe_price_id": os.environ.get("STRIPE_PREMIUM_PRICE_ID"),
+        "stripe_price_id": os.environ.get("STRIPE_SILVER_PRICE_ID"),
         "daily_mint_limit": 50,
-        "daily_bl_bonus": 300,
+        "daily_bl_bonus": 35_000,
+        "xp_multiplier": 3,
         "bonus_streak_multiplier": 1.5,
         "marketplace_fee_discount": 2,  # 6% instead of 8%
-        "stamina_regen_boost": 1.5,  # 50% faster stamina regen
+        "stamina_regen_boost": 1.5,
         "matchmaking_priority": 2,
         "can_create_tournaments": True,
-        "exclusive_badges": ["premium_supporter", "tournament_host"],
+        "exclusive_badges": ["silver_supporter", "tournament_host"],
         "features": [
             "50 photo mints per day",
-            "300 BL daily bonus",
+            "35,000 BL daily bonus",
+            "3x XP per round",
             "VIP matchmaking queue",
             "6% marketplace fee",
-            "50% faster stamina regen",
             "Create tournaments",
-            "Premium & Tournament badges"
+            "Silver & Tournament badges"
+        ]
+    },
+    "gold": {
+        "name": "Gold",
+        "price_monthly": 14.99,
+        "stripe_price_id": os.environ.get("STRIPE_GOLD_PRICE_ID"),
+        "daily_mint_limit": 100,
+        "daily_bl_bonus": 80_000,
+        "xp_multiplier": 4,
+        "bonus_streak_multiplier": 1.75,
+        "marketplace_fee_discount": 3,  # 5% instead of 8%
+        "stamina_regen_boost": 1.75,
+        "matchmaking_priority": 3,
+        "can_create_tournaments": True,
+        "exclusive_badges": ["gold_supporter", "tournament_host", "vip"],
+        "features": [
+            "100 photo mints per day",
+            "80,000 BL daily bonus",
+            "4x XP per round",
+            "VIP matchmaking queue",
+            "5% marketplace fee",
+            "Create tournaments",
+            "Gold, Tournament & VIP badges"
+        ]
+    },
+    "platinum": {
+        "name": "Platinum",
+        "price_monthly": 24.99,
+        "stripe_price_id": os.environ.get("STRIPE_PLATINUM_PRICE_ID"),
+        "daily_mint_limit": 999999,  # Unlimited
+        "daily_bl_bonus": 200_000,
+        "xp_multiplier": 5,
+        "bonus_streak_multiplier": 2.0,
+        "marketplace_fee_discount": 4,  # 4% instead of 8%
+        "stamina_regen_boost": 2.0,
+        "matchmaking_priority": 4,
+        "can_create_tournaments": True,
+        "exclusive_badges": ["platinum_supporter", "tournament_host", "vip", "elite"],
+        "features": [
+            "Unlimited photo mints",
+            "200,000 BL daily bonus",
+            "5x XP per round",
+            "Elite matchmaking queue",
+            "4% marketplace fee",
+            "Create unlimited tournaments",
+            "All exclusive badges"
         ]
     }
+}
+
+# Legacy tier mapping for backward compatibility
+LEGACY_TIER_MAP = {
+    "basic": "bronze",
+    "premium": "silver",
 }
 
 # ============== RANKED TIERS ==============
