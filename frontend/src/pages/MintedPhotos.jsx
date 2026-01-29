@@ -510,10 +510,21 @@ const PhotoCard = ({ photo, onSelect, onUpdate, viewMode, onViewFull, onSelfieMa
           <div className="flex items-center justify-between text-xs">
             <div className="flex items-center gap-2">
               <span className="text-purple-400 font-bold">Lvl {photo.level || 1}</span>
+              {/* Stars Display */}
+              {(photo.stars > 0) && (
+                <span className="text-yellow-400">
+                  {'★'.repeat(photo.stars)}
+                </span>
+              )}
+              {/* Golden Frame indicator */}
+              {photo.has_golden_frame && (
+                <span className="text-yellow-500" title="Golden Frame">🔶</span>
+              )}
             </div>
+            {/* Stamina as Battles Left */}
             <div className="flex items-center gap-1 text-green-400">
               <Zap className="w-3.5 h-3.5" />
-              <span className="font-bold">{Math.round(photo.stamina || 100)}%</span>
+              <span className="font-bold">{photo.current_stamina || Math.round((photo.stamina || 100) / 100 * 24)}/24</span>
             </div>
           </div>
           
