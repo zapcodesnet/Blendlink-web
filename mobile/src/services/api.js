@@ -1248,6 +1248,50 @@ export const mintingAPI = {
     return response.data;
   },
 
+  // Get photo with full dollar value breakdown
+  getPhotoWithValue: async (mintId) => {
+    const response = await api.get(`/minting/photos/${mintId}/full-value`);
+    return response.data;
+  },
+
+  // Get the 11-category rating criteria
+  getRatingCriteria: async () => {
+    const response = await api.get('/minting/rating-criteria');
+    return response.data;
+  },
+
+  // Get level bonuses info
+  getLevelBonuses: async () => {
+    const response = await api.get('/minting/level-bonuses');
+    return response.data;
+  },
+
+  // Get available dollar value upgrades
+  getUpgradeOptions: async (mintId) => {
+    const response = await api.get(`/minting/photos/${mintId}/upgrade-options`);
+    return response.data;
+  },
+
+  // Purchase a dollar value upgrade
+  purchaseUpgrade: async (mintId, upgradeType) => {
+    const response = await api.post(`/minting/photos/${mintId}/upgrade`, {
+      upgrade_type: upgradeType,
+    });
+    return response.data;
+  },
+
+  // Claim daily subscription bonus
+  claimDailyBonus: async () => {
+    const response = await api.post('/minting/claim-daily');
+    return response.data;
+  },
+
+  // Claim birthday bonus for a photo
+  claimBirthdayBonus: async (mintId) => {
+    const response = await api.post(`/minting/photos/${mintId}/claim-birthday`);
+    return response.data;
+  },
+
   // Upload and mint a photo
   uploadPhoto: async (formData) => {
     const response = await api.post('/minting/photo/upload', formData, {
