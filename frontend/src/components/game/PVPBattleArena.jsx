@@ -107,7 +107,14 @@ export const PVPBattleArena = ({
   // WebSocket connection
   const wsRef = useRef(null);
   const [wsConnected, setWsConnected] = useState(false);
+  const [reconnecting, setReconnecting] = useState(false);
   const reconnectAttempts = useRef(0);
+  const reconnectTimeoutRef = useRef(null);
+  const MAX_RECONNECT_ATTEMPTS = 5;
+  const RECONNECT_INTERVAL = 5000; // 5 seconds
+  
+  // Selection timeout
+  const [selectionTimeRemaining, setSelectionTimeRemaining] = useState(30);
   
   // Game state
   const [gamePhase, setGamePhase] = useState('ready'); // ready, playing, result
@@ -121,6 +128,7 @@ export const PVPBattleArena = ({
   // Photo selections
   const [mySelectedPhoto, setMySelectedPhoto] = useState(null);
   const [opponentSelectedPhoto, setOpponentSelectedPhoto] = useState(null);
+  const [opponentHasSelected, setOpponentHasSelected] = useState(false);
   const [usedPhotoIds, setUsedPhotoIds] = useState([]);
   
   // Ready states
