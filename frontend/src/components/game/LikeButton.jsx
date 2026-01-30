@@ -9,7 +9,7 @@ import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart } from 'lucide-react';
 import { toast } from 'sonner';
-import api from '../../api';
+import api from '../../services/api';
 
 export const LikeButton = ({ 
   photoId, 
