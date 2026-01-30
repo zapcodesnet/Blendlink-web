@@ -9,7 +9,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://photo-battle-bid.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pvpgame-connect.preview.emergentagent.com')
 
 class TestMarketplaceCategories:
     """Test marketplace categories endpoint"""
