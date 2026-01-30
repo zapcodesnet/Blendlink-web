@@ -283,7 +283,12 @@ export const GameLobby = ({
           break;
           
         case 'game_start':
-          // Game is starting - transition to PVP battle arena
+          // Game has started - transition to battle
+          console.log('[GameLobby] game_start received:', {
+            session_id: data.session_id,
+            pvp_room_id: data.pvp_room_id,
+            session: data.session,
+          });
           onGameStart?.(data.session_id, data.session, data.pvp_room_id);
           break;
           
