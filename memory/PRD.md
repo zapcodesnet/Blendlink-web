@@ -1,6 +1,47 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 30, 2026 (Gameplay UI Clarity Updates)
+## Latest Update: January 30, 2026 (Critical Bug Fixes + Gameplay Clarity)
+
+---
+
+## SESSION 53: CRITICAL BUG FIXES ✅ (Escalation Resolution)
+
+### Bug #1: Bot Difficulty Unlock - CONFIRMED WORKING
+- **Root Cause Found & Fixed**: `onGameComplete` was not being called when game ended early (when `newWins >= WINS_NEEDED` at lines 909/937)
+- **Fix Applied**: Added `onGameComplete` calls inside the early return blocks in `BattleArena.jsx`
+- **Verification**: Backend API shows correct stats (13 easy wins, 3 medium wins, Hard unlocked)
+- **Frontend UI**: BotDifficultySelector correctly displays unlock status with progress bars
+
+### Bug #2: Dollar Value Calculation - ENHANCED
+- **Fix Applied**: Created comprehensive `calculateEffectiveValue` function in both TappingArena and RPSBidding
+- **Modifiers Applied**:
+  1. Scenery strength/weakness (+/-25%)
+  2. Win streak multipliers (1.25x-3.0x for 3-10 streaks)
+  3. Level bonus (1% per level above 1)
+  4. Age bonus (0.1% per day)
+  5. Monthly $1M permanent increase (every 30 days)
+  6. Likes bonus (0.05% per like)
+- **UI Display**: 
+  - Effective Power shown ABOVE photo (prominent)
+  - Base value + modifiers shown BELOW photo
+  - Hover tooltip shows all active modifiers
+
+### Bug #3: Battle Replay Shows Nothing - FIXED
+- **Root Cause**: TappingArena and RPSBidding were not passing round data to `onRoundComplete` callback
+- **Fix Applied by Testing Agent**:
+  - TappingArena: Now passes `{playerTaps, opponentTaps, playerProgress, opponentProgress, playerEffectiveValue, opponentEffectiveValue, durationMs}`
+  - RPSBidding: Now passes `{rpsChoicePlayer, rpsChoiceOpponent, bidPlayer, bidOpponent, playerEffectiveValue, opponentEffectiveValue}`
+  - BattleArena: `handleRPSRoundComplete` now forwards RPS data to `handleRoundComplete`
+- **Result**: New replays will show correct tap counts, effective values, and RPS choices
+
+### Files Modified:
+- `/app/frontend/src/components/game/BattleArena.jsx` - onGameComplete calls, handleRPSRoundComplete data forwarding
+- `/app/frontend/src/components/game/TappingArena.jsx` - calculateEffectiveValue, PhotoBattleCard modifiers, round data passing
+- `/app/frontend/src/components/game/RPSBidding.jsx` - calculateEffectiveValue, round data passing
+
+### Test Results:
+- Backend: 100% (11/11 tests passed)
+- Frontend: 90% (Bot Difficulty working, Replay data fix applied)
 
 ---
 
