@@ -69,6 +69,128 @@ const formatMoney = (value) => {
   return `$${value.toLocaleString()}`;
 };
 
+// Scenery config
+const SCENERY_CONFIG = {
+  natural: { name: 'Natural', icon: '🌿', strong: 'water', weak: 'manmade' },
+  water: { name: 'Water', icon: '🌊', strong: 'manmade', weak: 'natural' },
+  manmade: { name: 'Man-made', icon: '🏙️', strong: 'natural', weak: 'water' },
+  neutral: { name: 'Neutral', icon: '⬜', strong: null, weak: 'all' },
+};
+
+// Win streak multipliers
+const WIN_STREAK_MULTIPLIERS = {
+  3: 1.25, 4: 1.50, 5: 1.75, 6: 2.00, 7: 2.25, 8: 2.50, 9: 2.75, 10: 3.00
+};
+
+// Strength/Weakness multipliers
+const STRENGTH_MULTIPLIER = 1.25;
+const WEAKNESS_MULTIPLIER = 0.75;
+
+/**
+ * Calculate effective dollar value for a photo in battle
+ * Mirrors the backend calculate_photo_battle_value function
+ */
+const calculateEffectiveValue = (photo, opponentPhoto, playerStats = {}) => {
+  const baseValue = photo?.dollar_value || 1_000_000;
+  const modifiers = [];
+  
+  let sceneryModifier = 1.0;
+  let streakModifier = 1.0;
+  let levelModifier = 1.0;
+  let ageModifier = 1.0;
+  let likesModifier = 1.0;
+  
+  const photoType = photo?.scenery_type || 'natural';
+  const opponentType = opponentPhoto?.scenery_type || 'natural';
+  
+  // Check for shield immunity
+  const loseStreak = playerStats?.current_lose_streak || photo?.current_lose_streak || 0;
+  const hasImmunity = loseStreak >= 3;
+  
+  // 1. Scenery strength/weakness (25%)
+  if (photoType !== opponentType) {
+    const playerScenery = SCENERY_CONFIG[photoType] || SCENERY_CONFIG.natural;
+    
+    if (photoType === 'neutral') {
+      if (!hasImmunity) {
+        sceneryModifier = 0.90;
+        modifiers.push({ type: 'weakness', reason: 'Neutral background (-10%)', value: -10 });
+      } else {
+        modifiers.push({ type: 'immunity', reason: '🛡 Shield negates weakness', value: 0 });
+      }
+    } else if (opponentType === 'neutral') {
+      sceneryModifier = 1.10;
+      modifiers.push({ type: 'strength', reason: `${playerScenery.name} vs Neutral (+10%)`, value: 10 });
+    } else if (playerScenery.strong === opponentType) {
+      sceneryModifier = STRENGTH_MULTIPLIER;
+      modifiers.push({ type: 'strength', reason: `${playerScenery.name} strong vs ${SCENERY_CONFIG[opponentType]?.name || opponentType} (+25%)`, value: 25 });
+    } else if (playerScenery.weak === opponentType) {
+      if (hasImmunity) {
+        modifiers.push({ type: 'immunity', reason: '🛡 Shield negates weakness', value: 0 });
+      } else {
+        sceneryModifier = WEAKNESS_MULTIPLIER;
+        modifiers.push({ type: 'weakness', reason: `${playerScenery.name} weak vs ${SCENERY_CONFIG[opponentType]?.name || opponentType} (-25%)`, value: -25 });
+      }
+    }
+  }
+  
+  // 2. Win streak multiplier (🔥)
+  const winStreak = playerStats?.current_win_streak || photo?.current_win_streak || 0;
+  if (winStreak >= 3) {
+    const cappedStreak = Math.min(winStreak, 10);
+    streakModifier = WIN_STREAK_MULTIPLIERS[cappedStreak] || 3.0;
+    modifiers.push({ type: 'streak', reason: `🔥 ${winStreak} win streak (×${streakModifier.toFixed(2)})`, value: Math.round((streakModifier - 1) * 100) });
+  }
+  
+  // 3. Level bonus (1% per level above 1)
+  const level = photo?.level || 1;
+  if (level > 1) {
+    levelModifier = 1 + (level - 1) * 0.01;
+    modifiers.push({ type: 'level', reason: `Level ${level} bonus (+${level - 1}%)`, value: level - 1 });
+  }
+  
+  // 4. Age bonus & monthly $1M increase
+  const createdAt = photo?.created_at;
+  let monthlyBonus = 0;
+  if (createdAt) {
+    const created = new Date(createdAt);
+    const now = new Date();
+    const daysOld = Math.floor((now - created) / (1000 * 60 * 60 * 24));
+    if (daysOld > 0) {
+      const ageBonus = daysOld * 0.001;
+      ageModifier += ageBonus;
+      modifiers.push({ type: 'age', reason: `Age bonus (${daysOld} days)`, value: Math.round(ageBonus * 100 * 10) / 10 });
+    }
+    
+    // Every 30 days = $1M permanent increase
+    const monthsOld = Math.floor(daysOld / 30);
+    if (monthsOld > 0) {
+      monthlyBonus = monthsOld * 1_000_000;
+      modifiers.push({ type: 'monthly', reason: `+$${monthsOld}M (${monthsOld}x 30 days)`, value: monthlyBonus });
+    }
+  }
+  
+  // 5. Likes bonus (0.05% per like)
+  const likes = photo?.likes_count || 0;
+  if (likes > 0) {
+    const likesBonus = likes * 0.0005;
+    likesModifier += likesBonus;
+    modifiers.push({ type: 'likes', reason: `Likes bonus (${likes} likes)`, value: Math.round(likesBonus * 100 * 10) / 10 });
+  }
+  
+  // Calculate final effective value
+  let effectiveValue = Math.round(baseValue * sceneryModifier * streakModifier * levelModifier * ageModifier * likesModifier);
+  effectiveValue += monthlyBonus;
+  effectiveValue = Math.max(effectiveValue, 1_000_000);
+  
+  return {
+    effectiveValue,
+    baseValue,
+    modifiers,
+    hasImmunity,
+  };
+};
+
 // Determine RPS winner
 const determineWinner = (choice1, choice2) => {
   if (choice1 === choice2) return 'tie';
