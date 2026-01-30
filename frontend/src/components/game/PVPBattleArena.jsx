@@ -508,9 +508,6 @@ export const PVPBattleArena = ({
     }
   }, []); // Empty deps - only run once
   
-  // Track last pong time for connection health monitoring
-  const lastPongTimeRef = useRef(Date.now());
-  
   // Heartbeat effect with connection health monitoring
   useEffect(() => {
     // Heartbeat - every 10 seconds to keep connection alive
