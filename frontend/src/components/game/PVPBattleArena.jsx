@@ -359,6 +359,9 @@ export const PVPBattleArena = ({
   // Connect to WebSocket ref to avoid circular dependency
   const connectWebSocketRef = useRef(null);
   
+  // Track last pong time for connection health monitoring
+  const lastPongTimeRef = useRef(Date.now());
+  
   // Connect to WebSocket
   const connectWebSocket = useCallback((isReconnect = false) => {
     const wsUrl = getWebSocketUrl();
