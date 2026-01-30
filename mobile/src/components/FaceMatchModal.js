@@ -45,6 +45,10 @@ const FaceMatchModal = ({
   const { user, updateBalance } = useAuth();
   const cameraRef = useRef(null);
   
+  // Confirmation state - shows accept/decline before camera
+  const [showConfirmation, setShowConfirmation] = useState(true);
+  const [declineWarning, setDeclineWarning] = useState(false);
+  
   // Permission state
   const [permission, requestPermission] = useCameraPermissions();
   
@@ -64,9 +68,14 @@ const FaceMatchModal = ({
   const attemptsRemaining = MAX_ATTEMPTS - attemptsUsed;
   const hasAttemptsLeft = attemptsRemaining > 0;
   
-  // Fetch current attempts when modal opens
+  // Fetch current attempts when modal opens and reset state
   useEffect(() => {
     if (visible && photo?.mint_id) {
+      // Reset confirmation state when modal opens
+      setShowConfirmation(true);
+      setDeclineWarning(false);
+      setCapturedImage(null);
+      setMatchResult(null);
       fetchAuthenticityStatus();
     }
   }, [visible, photo?.mint_id]);
