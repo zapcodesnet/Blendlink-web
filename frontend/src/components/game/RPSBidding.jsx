@@ -767,15 +767,23 @@ export const RPSBidding = ({
     }
     // Tie: no change
     
-    // Callback with result
+    // Callback with result and round data for replay
     setTimeout(() => {
       onRoundComplete?.(
         roundResult === 'player1' ? 'player' : (roundResult === 'player2' ? 'opponent' : 'tie'),
         newPlayerMoney,
-        newOpponentMoney
+        newOpponentMoney,
+        {
+          rpsChoicePlayer: playerChoice,
+          rpsChoiceOpponent: opponentChoice,
+          bidPlayer: playerBid,
+          bidOpponent: opponentBid,
+          playerEffectiveValue: playerValueCalc?.effectiveValue || 0,
+          opponentEffectiveValue: opponentValueCalc?.effectiveValue || 0,
+        }
       );
     }, 500);
-  }, [playerMoney, opponentMoney, playerBid, opponentBid, roundResult, onRoundComplete]);
+  }, [playerMoney, opponentMoney, playerBid, opponentBid, roundResult, onRoundComplete, playerChoice, opponentChoice, playerValueCalc, opponentValueCalc]);
   
   return (
     <div className="relative bg-gray-800/50 rounded-2xl p-4 sm:p-6 border border-gray-700/50" data-testid="rps-bidding">
