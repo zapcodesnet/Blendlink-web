@@ -367,7 +367,7 @@ export const SelfieMatchModal = ({
                     <div>
                       <h4 className="text-lg font-bold text-white mb-1">Add 5% Dollar Bonus via live selfie?</h4>
                       <p className="text-sm text-gray-300">
-                        Take a quick live selfie to verify you're the person in this photo and earn up to <span className="text-green-400 font-semibold">+5% Authenticity bonus</span> ($50M max).
+                        Take a quick live selfie to verify you&apos;re the person in this photo and earn up to <span className="text-green-400 font-semibold">+5% Authenticity bonus</span> ($50M max).
                       </p>
                     </div>
                   </div>
