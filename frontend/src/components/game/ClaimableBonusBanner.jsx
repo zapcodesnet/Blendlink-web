@@ -36,44 +36,52 @@ const vibrate = (pattern) => {
 
 // Flying Coin Animation Component
 const FlyingCoinAnimation = ({ isActive, onComplete }) => {
-  const [coinBags, setCoinBags] = useState([]);
-  const [confetti, setConfetti] = useState([]);
   const [showCounter, setShowCounter] = useState(false);
+  
+  // Generate animation data once when active (using useMemo to avoid linter warning)
+  const coinBags = useMemo(() => {
+    if (!isActive) return [];
+    return Array.from({ length: COIN_BAG_COUNT }, (_, i) => ({
+      id: i,
+      startX: Math.random() * 80 + 10, // 10-90% of screen width
+      startY: Math.random() * 30 + 60, // 60-90% of screen height (bottom area)
+      delay: i * 0.1, // Stagger animation
+      duration: 0.8 + Math.random() * 0.4, // 0.8-1.2 seconds
+    }));
+  }, [isActive]);
+  
+  const confetti = useMemo(() => {
+    if (!isActive) return [];
+    return Array.from({ length: CONFETTI_COUNT }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      color: ['#FFD700', '#FFA500', '#FF6B6B', '#4ECDC4', '#9B59B6', '#3498DB'][Math.floor(Math.random() * 6)],
+      delay: Math.random() * 0.3,
+      size: Math.random() * 8 + 4,
+      duration: 2 + Math.random(), // Pre-calculate duration
+      rotateDir: Math.random() > 0.5 ? 1 : -1, // Pre-calculate rotation direction
+    }));
+  }, [isActive]);
   
   useEffect(() => {
     if (isActive) {
-      // Generate coin bags with random start positions
-      const bags = Array.from({ length: COIN_BAG_COUNT }, (_, i) => ({
-        id: i,
-        startX: Math.random() * 80 + 10, // 10-90% of screen width
-        startY: Math.random() * 30 + 60, // 60-90% of screen height (bottom area)
-        delay: i * 0.1, // Stagger animation
-        duration: 0.8 + Math.random() * 0.4, // 0.8-1.2 seconds
-      }));
-      setCoinBags(bags);
-      
-      // Generate confetti
-      const confettiPieces = Array.from({ length: CONFETTI_COUNT }, (_, i) => ({
-        id: i,
-        x: Math.random() * 100,
-        color: ['#FFD700', '#FFA500', '#FF6B6B', '#4ECDC4', '#9B59B6', '#3498DB'][Math.floor(Math.random() * 6)],
-        delay: Math.random() * 0.3,
-        size: Math.random() * 8 + 4,
-        duration: 2 + Math.random(), // Pre-calculate duration
-        rotateDir: Math.random() > 0.5 ? 1 : -1, // Pre-calculate rotation direction
-      }));
-      setConfetti(confettiPieces);
-      
       // Vibrate on mobile
       vibrate([100, 50, 100, 50, 200, 100, 300]);
       
       // Show counter after bags start flying
-      setTimeout(() => setShowCounter(true), 500);
+      const counterTimeout = setTimeout(() => setShowCounter(true), 500);
       
       // Complete after animation
-      setTimeout(() => {
+      const completeTimeout = setTimeout(() => {
         onComplete?.();
       }, 3000);
+      
+      return () => {
+        clearTimeout(counterTimeout);
+        clearTimeout(completeTimeout);
+      };
+    } else {
+      setShowCounter(false);
     }
   }, [isActive, onComplete]);
   
