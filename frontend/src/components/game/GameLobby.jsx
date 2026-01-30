@@ -443,7 +443,8 @@ export const GameLobby = ({
       // Try to start the game
       const res = await api.post(`/photo-game/open-games/start/${gameState.game_id}`);
       if (res.data.success && res.data.session_id) {
-        onGameStart?.(res.data.session_id, res.data.session);
+        // CRITICAL: Pass pvp_room_id to onGameStart
+        onGameStart?.(res.data.session_id, res.data.session, res.data.pvp_room_id);
       }
     } catch (err) {
       // Might already be started by the other player - WebSocket will handle it
