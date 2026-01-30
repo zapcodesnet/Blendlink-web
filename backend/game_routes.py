@@ -2043,7 +2043,18 @@ async def get_bot_battle_stats(current_user: dict = Depends(get_current_user_fro
     }
     
     # Calculate claimable bonuses (unlocked but not yet claimed)
+    # Support both old field names (medium_unlock_bonus_claimed) and new array format (claimed_bonuses)
     claimed = stats.get("claimed_bonuses", [])
+    # Also check old-style boolean flags for backwards compatibility
+    if stats.get("medium_unlock_bonus_claimed"):
+        claimed = claimed + ["medium_unlock"] if "medium_unlock" not in claimed else claimed
+    if stats.get("hard_unlock_bonus_claimed"):
+        claimed = claimed + ["hard_unlock"] if "hard_unlock" not in claimed else claimed
+    if stats.get("extreme_unlock_bonus_claimed"):
+        claimed = claimed + ["extreme_unlock"] if "extreme_unlock" not in claimed else claimed
+    if stats.get("extreme_mastery_bonus_claimed"):
+        claimed = claimed + ["extreme_mastery"] if "extreme_mastery" not in claimed else claimed
+    
     claimable_bonuses = []
     
     # Medium unlock bonus
