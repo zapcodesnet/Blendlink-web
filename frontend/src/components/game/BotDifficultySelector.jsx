@@ -297,10 +297,12 @@ const PhotoCard = React.memo(({ photo, isSelected, selectionIndex, canSelect, on
         </div>
         
         <div className="flex items-center justify-between text-xs">
-          <div className="flex items-center gap-1 text-pink-400">
-            <span>❤️</span>
-            <span>{hearts > 999 ? `${(hearts/1000).toFixed(1)}K` : hearts}</span>
-          </div>
+          {/* Interactive Like Button */}
+          <LikeButtonCompact 
+            photoId={photo.mint_id} 
+            initialLikes={hearts}
+            initialLiked={false}
+          />
           <div className="flex items-center gap-2">
             {winStreak >= 3 && (
               <span 
