@@ -281,9 +281,9 @@ class TestBotDifficultyConfig:
         assert response.status_code == 200, f"Failed: {response.text}"
         
         data = response.json()
-        assert "photos" in data, "Missing photos array"
+        assert "bot_photos" in data, "Missing bot_photos array"
         
-        photos = data["photos"]
+        photos = data["bot_photos"]
         assert len(photos) == 5, f"Expected 5 photos, got {len(photos)}"
         
         # Verify each photo has required fields
@@ -315,7 +315,7 @@ class TestBotDifficultyConfig:
         assert response.status_code == 200, f"Failed: {response.text}"
         
         data = response.json()
-        photos = data["photos"]
+        photos = data["bot_photos"]
         
         # Medium bot should have $2B minimum value
         for i, photo in enumerate(photos):
