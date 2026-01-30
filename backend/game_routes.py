@@ -2695,6 +2695,250 @@ async def delete_replay(
     return {"success": True, "message": "Replay deleted"}
 
 
+# ============== VIDEO EXPORT ==============
+
+@game_router.get("/battle-replay/{replay_id}/export-video")
+async def export_replay_video(
+    replay_id: str,
+    quality: str = "medium"  # low, medium, high
+):
+    """
+    Export a battle replay as a shareable video/image summary.
+    
+    Since generating actual frame-by-frame video is complex,
+    this endpoint generates a summary image with key stats.
+    For full video, the frontend uses canvas recording.
+    """
+    from server import db
+    from fastapi.responses import StreamingResponse
+    import io
+    from PIL import Image, ImageDraw, ImageFont
+    import subprocess
+    import tempfile
+    import os
+    
+    # Get replay
+    replay = await db.battle_replays.find_one({"replay_id": replay_id}, {"_id": 0})
+    if not replay:
+        raise HTTPException(status_code=404, detail="Replay not found")
+    
+    # Quality settings
+    quality_settings = {
+        "low": {"width": 640, "height": 480},
+        "medium": {"width": 1280, "height": 720},
+        "high": {"width": 1920, "height": 1080}
+    }
+    settings = quality_settings.get(quality, quality_settings["medium"])
+    width, height = settings["width"], settings["height"]
+    
+    # Create image
+    img = Image.new('RGB', (width, height), color=(26, 26, 46))
+    draw = ImageDraw.Draw(img)
+    
+    # Try to load a font, fall back to default
+    try:
+        title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", int(height * 0.05))
+        large_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", int(height * 0.08))
+        normal_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", int(height * 0.03))
+        small_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", int(height * 0.025))
+    except:
+        title_font = ImageFont.load_default()
+        large_font = ImageFont.load_default()
+        normal_font = ImageFont.load_default()
+        small_font = ImageFont.load_default()
+    
+    # Colors
+    win_color = (34, 197, 94)  # Green
+    lose_color = (239, 68, 68)  # Red
+    gold_color = (251, 191, 36)
+    purple_color = (167, 139, 250)
+    white_color = (255, 255, 255)
+    gray_color = (156, 163, 175)
+    
+    is_winner = replay.get("winner") == "player"
+    result_color = win_color if is_winner else lose_color
+    
+    # Draw gradient background effect (simple version)
+    for i in range(height):
+        r = int(26 + (40 - 26) * (i / height))
+        g = int(26 + (20 - 26) * (i / height))
+        b = int(46 + (60 - 46) * (i / height))
+        draw.line([(0, i), (width, i)], fill=(r, g, b))
+    
+    # Draw decorative border
+    draw.rectangle([10, 10, width-10, height-10], outline=purple_color, width=3)
+    
+    # Title
+    title = "🎮 MINTED PHOTO BATTLE"
+    draw.text((width // 2, height * 0.08), title, fill=white_color, font=title_font, anchor="mm")
+    
+    # Result
+    result_text = "🏆 VICTORY!" if is_winner else "💀 DEFEAT"
+    draw.text((width // 2, height * 0.2), result_text, fill=result_color, font=large_font, anchor="mm")
+    
+    # Score
+    score_text = f"{replay.get('final_score_player', 0)} - {replay.get('final_score_opponent', 0)}"
+    draw.text((width // 2, height * 0.35), score_text, fill=white_color, font=large_font, anchor="mm")
+    
+    # Difficulty
+    difficulty = replay.get("difficulty", "easy").upper()
+    draw.text((width // 2, height * 0.45), f"vs {difficulty} BOT", fill=purple_color, font=normal_font, anchor="mm")
+    
+    # Stats box
+    stats_y = height * 0.55
+    stats = [
+        f"💰 Bet: {replay.get('bet_amount', 0)} BL",
+        f"🎯 Won: {replay.get('winnings', 0)} BL",
+        f"📊 Rounds: {len(replay.get('rounds', []))}",
+        f"👁 Views: {replay.get('views', 0)}",
+    ]
+    for i, stat in enumerate(stats):
+        draw.text((width // 2, stats_y + i * (height * 0.06)), stat, fill=gold_color, font=normal_font, anchor="mm")
+    
+    # Watermark
+    draw.text((width // 2, height * 0.92), "blendlink.net/photo-game", fill=gray_color, font=small_font, anchor="mm")
+    draw.text((width // 2, height * 0.96), f"Replay ID: {replay_id[:8]}...", fill=gray_color, font=small_font, anchor="mm")
+    
+    # Convert to bytes
+    img_bytes = io.BytesIO()
+    img.save(img_bytes, format='PNG', optimize=True)
+    img_bytes.seek(0)
+    
+    # Return as streaming response
+    return StreamingResponse(
+        img_bytes,
+        media_type="image/png",
+        headers={
+            "Content-Disposition": f"attachment; filename=battle_replay_{replay_id}.png"
+        }
+    )
+
+
+@game_router.post("/battle-replay/{replay_id}/generate-gif")
+async def generate_replay_gif(
+    replay_id: str,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """
+    Generate an animated GIF from replay data.
+    Creates frames showing round progression.
+    """
+    from server import db
+    from fastapi.responses import StreamingResponse
+    import io
+    from PIL import Image, ImageDraw, ImageFont
+    import tempfile
+    import subprocess
+    import os
+    
+    # Get replay
+    replay = await db.battle_replays.find_one({"replay_id": replay_id}, {"_id": 0})
+    if not replay:
+        raise HTTPException(status_code=404, detail="Replay not found")
+    
+    rounds = replay.get("rounds", [])
+    if not rounds:
+        raise HTTPException(status_code=400, detail="Replay has no round data")
+    
+    # Settings
+    width, height = 400, 300
+    frames = []
+    
+    try:
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 20)
+        small_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 14)
+    except:
+        font = ImageFont.load_default()
+        small_font = ImageFont.load_default()
+    
+    # Create intro frame
+    intro = Image.new('RGB', (width, height), color=(26, 26, 46))
+    draw = ImageDraw.Draw(intro)
+    draw.text((width // 2, 50), "🎮 BATTLE REPLAY", fill=(255, 255, 255), font=font, anchor="mm")
+    draw.text((width // 2, 100), f"vs {replay.get('difficulty', 'Bot').upper()}", fill=(167, 139, 250), font=small_font, anchor="mm")
+    draw.text((width // 2, 150), "Starting...", fill=(156, 163, 175), font=small_font, anchor="mm")
+    frames.append(intro)
+    
+    # Create frame for each round
+    player_score = 0
+    opponent_score = 0
+    
+    for i, round_data in enumerate(rounds):
+        img = Image.new('RGB', (width, height), color=(26, 26, 46))
+        draw = ImageDraw.Draw(img)
+        
+        # Update scores
+        if round_data.get("round_won"):
+            player_score += 1
+        else:
+            opponent_score += 1
+        
+        # Round header
+        round_type = round_data.get("type", "tapping")
+        round_emoji = "👆" if round_type == "tapping" else "✊✋✌️"
+        draw.text((width // 2, 30), f"Round {i + 1} {round_emoji}", fill=(255, 255, 255), font=font, anchor="mm")
+        
+        # Score
+        score_color = (34, 197, 94) if player_score > opponent_score else (239, 68, 68) if opponent_score > player_score else (255, 255, 255)
+        draw.text((width // 2, 80), f"{player_score} - {opponent_score}", fill=score_color, font=font, anchor="mm")
+        
+        # Round result
+        result = "YOU WIN! ✓" if round_data.get("round_won") else "OPPONENT WINS ✗"
+        result_color = (34, 197, 94) if round_data.get("round_won") else (239, 68, 68)
+        draw.text((width // 2, 130), result, fill=result_color, font=small_font, anchor="mm")
+        
+        # Stats if available
+        if round_type == "tapping":
+            player_taps = round_data.get("player_taps", 0)
+            opponent_taps = round_data.get("opponent_taps", 0)
+            draw.text((width // 2, 170), f"Taps: {player_taps} vs {opponent_taps}", fill=(156, 163, 175), font=small_font, anchor="mm")
+        elif round_type == "rps":
+            player_choice = round_data.get("rpsChoicePlayer", "?")
+            opponent_choice = round_data.get("rpsChoiceOpponent", "?")
+            draw.text((width // 2, 170), f"{player_choice.upper()} vs {opponent_choice.upper()}", fill=(156, 163, 175), font=small_font, anchor="mm")
+        
+        # Dollar values
+        p_val = round_data.get("playerEffectiveValue", 0)
+        o_val = round_data.get("opponentEffectiveValue", 0)
+        if p_val or o_val:
+            p_str = f"${p_val / 1_000_000:.0f}M" if p_val >= 1_000_000 else f"${p_val:,}"
+            o_str = f"${o_val / 1_000_000:.0f}M" if o_val >= 1_000_000 else f"${o_val:,}"
+            draw.text((width // 2, 200), f"Power: {p_str} vs {o_str}", fill=(251, 191, 36), font=small_font, anchor="mm")
+        
+        frames.append(img)
+    
+    # Create final result frame
+    final = Image.new('RGB', (width, height), color=(26, 26, 46))
+    draw = ImageDraw.Draw(final)
+    is_winner = replay.get("winner") == "player"
+    draw.text((width // 2, 50), "🏆 VICTORY!" if is_winner else "💀 DEFEAT", fill=(34, 197, 94) if is_winner else (239, 68, 68), font=font, anchor="mm")
+    draw.text((width // 2, 100), f"Final: {player_score} - {opponent_score}", fill=(255, 255, 255), font=font, anchor="mm")
+    draw.text((width // 2, 150), f"Won: {replay.get('winnings', 0)} BL 💰", fill=(251, 191, 36), font=small_font, anchor="mm")
+    draw.text((width // 2, 250), "blendlink.net", fill=(156, 163, 175), font=small_font, anchor="mm")
+    frames.append(final)
+    
+    # Save as GIF
+    gif_bytes = io.BytesIO()
+    frames[0].save(
+        gif_bytes,
+        format='GIF',
+        save_all=True,
+        append_images=frames[1:],
+        duration=1500,  # 1.5 seconds per frame
+        loop=0
+    )
+    gif_bytes.seek(0)
+    
+    return StreamingResponse(
+        gif_bytes,
+        media_type="image/gif",
+        headers={
+            "Content-Disposition": f"attachment; filename=battle_replay_{replay_id}.gif"
+        }
+    )
+
+
+
 # ============== MOCK ENGAGEMENT SERVICE ==============
 # Simulates social engagement (❤️ likes) until real Facebook Graph API is integrated
 
