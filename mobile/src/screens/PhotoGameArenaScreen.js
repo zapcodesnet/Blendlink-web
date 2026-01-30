@@ -1593,12 +1593,53 @@ export default function PhotoGameArenaScreen() {
     fetchStats();
   }, []);
 
+  // Handle join game flow when joinGame param is passed
+  useEffect(() => {
+    if (joinGame && !joinedGame) {
+      // User is trying to join an existing game
+      // This will show the photo selection screen first
+      setGameState('pvp_photo_select');
+      setJoinedGame(joinGame);
+    }
+  }, [joinGame, joinedGame]);
+
   // If we have a pvpRoomId, transition to waiting state
   useEffect(() => {
     if (pvpRoomId && wsConnected) {
       setGameState('pvp_waiting');
     }
   }, [pvpRoomId, wsConnected]);
+
+  // Handler when user selects photos and confirms to join
+  const handleConfirmJoin = async (selectedPhotoIds) => {
+    if (!joinedGame?.game_id) {
+      Alert.alert('Error', 'No game to join');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      // Call API to join the game
+      const response = await photoGameAPI.joinOpenGame(joinedGame.game_id, selectedPhotoIds);
+      
+      if (response.success) {
+        // Get pvp_room_id from response or game data
+        const roomId = response.pvp_room_id || response.game?.pvp_room_id || joinedGame.game_id;
+        setPvpRoomId(roomId);
+        setSession(response.game || response);
+        setGameState('pvp_lobby');
+        
+        Alert.alert('Success', 'Joined game! Waiting for both players to ready up.');
+      } else {
+        Alert.alert('Error', response.error || 'Failed to join game');
+      }
+    } catch (err) {
+      console.error('Failed to join game:', err);
+      Alert.alert('Error', err.response?.data?.detail || 'Failed to join game');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handlePhotoSelect = (photo) => {
     setSelectedPhoto(photo);
