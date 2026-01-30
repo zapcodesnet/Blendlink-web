@@ -1,6 +1,38 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 30, 2026 (Major Bot Battle Update)
+## Latest Update: January 30, 2026 (PVP Sync Bug Fix)
+
+---
+
+## SESSION 59: CRITICAL PVP WEBSOCKET SYNC FIX ✅
+
+### Bug Fixed: PVP Sync Bar Slashed + Endless Reconnection
+**Problem**: Players could join PVP games but the Sync bar became "slashed" (disconnected) after photo selection. Clicking reconnect showed "Attempt 0/5" spinning indefinitely without ever connecting.
+
+### Root Cause Analysis:
+1. **Race Condition**: The PVP room was created AFTER the `game_start` broadcast, so players never received the `pvp_room_id` needed to connect to the WebSocket.
+2. **Reconnection Counter**: The reconnect attempt counter wasn't being updated BEFORE the connection attempt, showing incorrect "0/5" status.
+3. **Missing Room ID in Broadcast**: `broadcast_game_start()` didn't include the `pvp_room_id` parameter.
+
+### Fixes Applied:
+
+**Backend (`game_routes.py` + `lobby_websocket.py`):**
+- Reordered game start flow: Create PVP room FIRST, then broadcast
+- Added `pvp_room_id` parameter to `broadcast_game_start()` function
+- Room ID is now included in the `game_start` WebSocket message
+
+**Frontend (`PVPBattleArena.jsx`):**
+- Fixed reconnection counter to update BEFORE connection attempt (shows "1/5" not "0/5")
+- Added 10-second connection timeout to detect stuck connections
+- Added connection health monitoring (30s pong timeout triggers reconnect)
+- Added proactive reconnect trigger in heartbeat when connection is lost
+- Better error messages and toasts for connection failures
+- Tab visibility handling for app resume/background scenarios
+
+### Files Modified:
+- `/app/backend/game_routes.py` - Reordered room creation, added room_id to response
+- `/app/backend/lobby_websocket.py` - Added pvp_room_id parameter to broadcast_game_start
+- `/app/frontend/src/components/game/PVPBattleArena.jsx` - Enhanced WebSocket reconnection logic
 
 ---
 
