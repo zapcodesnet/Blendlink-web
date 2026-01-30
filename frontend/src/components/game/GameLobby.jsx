@@ -243,6 +243,12 @@ export const GameLobby = ({
       const data = JSON.parse(event.data);
       
       switch (data.type) {
+        case 'joined':
+          // Connection confirmation from server
+          console.log('Lobby WebSocket connected to game:', data.game_id);
+          setWsConnected(true);
+          break;
+          
         case 'player_joined':
           // Update game state with new player
           setGameState(prev => ({
