@@ -509,7 +509,7 @@ export const PVPBattleArena = ({
       setReconnecting(false);
       toast.error('Failed to connect to game server');
     }
-  }, [getWebSocketUrl, handleWebSocketMessage, currentUsername, playerPhotos, isPlayer1, gamePhase]);
+  }, [getWebSocketUrl, handleWebSocketMessage, currentUsername, playerPhotos, isPlayer1, gamePhase, showToastThrottled]);
   
   // Keep ref updated
   useEffect(() => {
