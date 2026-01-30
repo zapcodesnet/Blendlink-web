@@ -246,41 +246,22 @@ export const FeaturedReplays = () => {
           </div>
         </div>
         
-        {/* Category Tabs */}
-        <div className="flex gap-1 p-1 bg-gray-800 rounded-lg">
-          <button
-            onClick={() => setCategory('top_wins')}
-            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-              category === 'top_wins'
-                ? 'bg-purple-500 text-white'
-                : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            <Trophy className="w-3 h-3 inline mr-1" />
-            Top Wins
-          </button>
-          <button
-            onClick={() => setCategory('most_viewed')}
-            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-              category === 'most_viewed'
-                ? 'bg-purple-500 text-white'
-                : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            <Eye className="w-3 h-3 inline mr-1" />
-            Popular
-          </button>
-          <button
-            onClick={() => setCategory('recent')}
-            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-              category === 'recent'
-                ? 'bg-purple-500 text-white'
-                : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            <Flame className="w-3 h-3 inline mr-1" />
-            Recent
-          </button>
+        {/* Category Tabs - Enhanced with all categories */}
+        <div className="flex gap-1 p-1 bg-gray-800 rounded-lg overflow-x-auto">
+          {CATEGORIES.map(cat => (
+            <button
+              key={cat.id}
+              onClick={() => setCategory(cat.id)}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap ${
+                category === cat.id
+                  ? 'bg-purple-500 text-white'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <span className="mr-1">{cat.icon}</span>
+              {cat.label}
+            </button>
+          ))}
         </div>
       </div>
       
