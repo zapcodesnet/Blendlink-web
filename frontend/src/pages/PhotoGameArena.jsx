@@ -1480,6 +1480,7 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect, onPracticeSta
         playerPhotos={battlePhotos}
         userBalance={userBalance}
         botWinStats={botWinStats}
+        onBalanceUpdate={(newBalance) => setUserBalance(newBalance)}
       />
     </div>
   );
