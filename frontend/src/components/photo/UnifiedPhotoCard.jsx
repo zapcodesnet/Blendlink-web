@@ -192,9 +192,11 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   const xp = photo?.xp || 0;
   const stars = photo?.stars || getStarsFromLevel(level);
   const hasGoldenFrame = photo?.has_golden_frame || level >= 60;
-  const stamina = photo?.current_stamina ?? photo?.stamina ?? 24;
   const maxStamina = photo?.max_stamina || 24;
-  const staminaPercent = (stamina / maxStamina) * 100;
+  // Normalize stamina to not exceed max
+  const rawStamina = photo?.current_stamina ?? photo?.stamina ?? maxStamina;
+  const stamina = Math.min(rawStamina, maxStamina);
+  const staminaPercent = Math.min((stamina / maxStamina) * 100, 100);
   
   // Win/Loss streaks
   const winStreak = photo?.win_streak || 0;
