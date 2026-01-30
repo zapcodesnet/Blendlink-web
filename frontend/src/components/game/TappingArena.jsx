@@ -580,11 +580,21 @@ export const TappingArena = ({
     if (gameTimerRef.current) clearInterval(gameTimerRef.current);
     if (botTimerRef.current) clearInterval(botTimerRef.current);
     
-    // Callback after animation
+    // Callback after animation with round data
     setTimeout(() => {
-      if (onRoundComplete) onRoundComplete('player');
+      if (onRoundComplete) {
+        onRoundComplete('player', {
+          playerTaps,
+          opponentTaps,
+          playerProgress: Math.min((playerTaps / playerRequiredTaps) * 100, 100),
+          opponentProgress: Math.min((opponentTaps / opponentRequiredTaps) * 100, 100),
+          playerEffectiveValue,
+          opponentEffectiveValue,
+          durationMs: (ROUND_DURATION_SECONDS - timeRemaining) * 1000,
+        });
+      }
     }, 2500);
-  }, [winner, soundEnabled, vibrate, onRoundComplete]);
+  }, [winner, soundEnabled, vibrate, onRoundComplete, playerTaps, opponentTaps, playerRequiredTaps, opponentRequiredTaps, playerEffectiveValue, opponentEffectiveValue, timeRemaining]);
   
   // Keep refs updated
   useEffect(() => {
