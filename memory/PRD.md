@@ -1,6 +1,49 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 30, 2026 (Streak Indicators + Mock Engagement)
+## Latest Update: January 30, 2026 (Gameplay UI Clarity Updates)
+
+---
+
+## SESSION 52: GAMEPLAY & UI CLARITY UPDATES ✅
+
+### Features Implemented: Display Original vs Effective Dollar Values, RPS Bid Clarity, 4-4 Tiebreaker
+
+**1. Enhanced Photo Display in RPSBidding**
+- **Effective Power ABOVE photo**: Shows calculated effective dollar value prominently with percentage change from base
+- **Original Stats BELOW photo**: Base dollar value, scenery type (Natural/Water/Man-made/Neutral), Level & stars, Streak indicators
+- Color-coded advantage indicators (purple for player, red for opponent)
+- Data-testid attributes added for testing: `player-effective-value`, `player-original-stats`, `opponent-effective-value`, `opponent-original-stats`
+
+**2. Bid Amounts Display in RPS Reveal Animation**
+- Shows player bid amount on their RPS choice during reveal
+- Shows opponent bid amount on their RPS choice during reveal  
+- **Highlights higher bid with green glow** when same RPS choice (tie scenario)
+- Shows explanation: "Same choice! Higher bid wins this round."
+- Win reason explanation shows who won the tie and by how much
+- Data-testid: `player-bid-display`, `opponent-bid-display`, `rps-reveal-animation`
+
+**3. 4-4 Tiebreaker Rule**
+- Added `isTie` state to track tie scenarios
+- If game ends in 4-4 tie after 5 rounds:
+  - `setIsTie(true)` and `setGameWinner(null)`
+  - No `onGameComplete` called (no unlock progress)
+  - Bets implicitly returned (no winner recorded)
+- **GameResultScreen Tie UI**:
+  - Shows 🤝 emoji and "Tie Game!" title
+  - Displays "Final Score: 4 - 4"
+  - Shows explanation: "No winner declared! Bets returned, no unlock progress, no BL bonuses"
+  - Data-testid: `tie-result-title`, `tie-score-display`, `game-result-screen`
+- `handlePlayAgain` resets `isTie` to false
+
+**Files Modified:**
+- `/app/frontend/src/components/game/RPSBidding.jsx` - RevealAnimation enhanced with bid amounts, photo display enhanced
+- `/app/frontend/src/components/game/BattleArena.jsx` - Added isTie state, 4-4 tie detection, GameResultScreen tie UI
+- `/app/frontend/src/components/game/TappingArena.jsx` - Already had effective/original value display
+
+**Test Results: 100% Success Rate (iteration_78.json)**
+- All 16 code review checks passed
+- All data-testid attributes verified present
+- Lint passed for all files
 
 ---
 
