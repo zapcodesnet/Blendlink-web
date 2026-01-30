@@ -118,8 +118,11 @@ class TestPVPDualClient:
         # User2 joins the game
         print("\n=== User2 Joining Game ===")
         join_response = self.session2.post(
-            f"{BASE_URL}/api/photo-game/open-games/{self.game_id}/join",
-            json={"photo_ids": self.user2_photo_ids[:5]}
+            f"{BASE_URL}/api/photo-game/open-games/join",
+            json={
+                "game_id": self.game_id,
+                "photo_ids": self.user2_photo_ids[:5]
+            }
         )
         
         assert join_response.status_code == 200, f"Join game failed: {join_response.text}"
