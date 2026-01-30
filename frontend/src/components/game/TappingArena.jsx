@@ -247,6 +247,7 @@ const PhotoBattleCard = ({
   photo, 
   effectiveValue, 
   originalValue,
+  modifiers = [],
   requiredTaps, 
   currentTaps, 
   isPlayer, 
@@ -263,6 +264,9 @@ const PhotoBattleCard = ({
   const streakMultiplier = hasStreakMultiplier ? WIN_STREAK_MULTIPLIERS[Math.min(winStreak, 10)] : 1;
   const hasImmunity = loseStreak >= 3;
   
+  // Show tooltip with modifiers on hover
+  const [showTooltip, setShowTooltip] = useState(false);
+  
   return (
     <motion.div
       className={`relative rounded-2xl overflow-hidden shadow-2xl ${
@@ -271,11 +275,16 @@ const PhotoBattleCard = ({
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
+      onMouseEnter={() => setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
+      onTouchStart={() => setShowTooltip(true)}
+      onTouchEnd={() => setShowTooltip(false)}
+      data-testid={isPlayer ? "player-battle-card" : "opponent-battle-card"}
     >
       {/* EFFECTIVE VALUE - ABOVE PHOTO (Prominently displayed) */}
       <div className={`p-2 text-center ${isPlayer ? 'bg-purple-600' : 'bg-red-600'}`}>
         <p className="text-[10px] text-white/70 uppercase tracking-wide">Effective Power</p>
-        <p className="text-lg font-bold text-white drop-shadow-lg">
+        <p className="text-lg font-bold text-white drop-shadow-lg" data-testid={`${isPlayer ? 'player' : 'opponent'}-effective-value`}>
           {formatDollarValue(effectiveValue)}
         </p>
         {effectiveValue !== baseValue && (
@@ -283,6 +292,31 @@ const PhotoBattleCard = ({
             {effectiveValue > baseValue ? '↑' : '↓'} {Math.round(((effectiveValue - baseValue) / baseValue) * 100)}% from base
           </p>
         )}
+        
+        {/* Active modifiers tooltip */}
+        <AnimatePresence>
+          {showTooltip && modifiers.length > 0 && (
+            <motion.div 
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+              className={`absolute top-full left-0 right-0 z-50 p-2 ${isPlayer ? 'bg-purple-900/95' : 'bg-red-900/95'} border border-white/20 rounded-lg text-left`}
+              data-testid="modifier-tooltip"
+            >
+              <p className="text-[9px] font-bold text-white/80 mb-1">ACTIVE MODIFIERS:</p>
+              {modifiers.map((mod, i) => (
+                <div key={i} className={`text-[9px] ${
+                  mod.type === 'strength' || mod.type === 'streak' || mod.type === 'level' ? 'text-green-300' 
+                  : mod.type === 'weakness' ? 'text-red-300' 
+                  : mod.type === 'immunity' ? 'text-yellow-300'
+                  : 'text-gray-300'
+                }`}>
+                  {mod.reason}
+                </div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
       
       {/* Photo Image */}
