@@ -15,7 +15,6 @@ import requests
 import os
 import time
 import json
-import websocket
 import threading
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pvpgame-connect.preview.emergentagent.com')
