@@ -136,8 +136,17 @@ const FeaturedReplayCard = ({ replay, rank, onWatch }) => {
 export const FeaturedReplays = () => {
   const [replays, setReplays] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [category, setCategory] = useState('top_wins'); // top_wins, most_viewed, recent
+  const [category, setCategory] = useState('top_wins');
   const [scrollPosition, setScrollPosition] = useState(0);
+  
+  // Category options with icons and labels
+  const CATEGORIES = [
+    { id: 'top_wins', label: 'Top Wins', icon: '🏆' },
+    { id: 'most_viewed', label: 'Most Viewed', icon: '👀' },
+    { id: 'longest_streak', label: 'Win Streaks', icon: '🔥' },
+    { id: 'epic_comebacks', label: 'Epic Games', icon: '⚔️' },
+    { id: 'recent', label: 'Recent', icon: '🆕' },
+  ];
   
   useEffect(() => {
     fetchFeaturedReplays();
@@ -197,6 +206,23 @@ export const FeaturedReplays = () => {
         <div className="flex items-center gap-3 mb-4">
           <Film className="w-5 h-5 text-purple-400" />
           <h3 className="text-lg font-bold text-white">Featured Replays</h3>
+        </div>
+        
+        {/* Category Tabs */}
+        <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+          {CATEGORIES.map(cat => (
+            <button
+              key={cat.id}
+              onClick={() => setCategory(cat.id)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+                category === cat.id
+                  ? 'bg-purple-500 text-white'
+                  : 'bg-gray-700/50 text-gray-400 hover:bg-gray-600/50'
+              }`}
+            >
+              {cat.icon} {cat.label}
+            </button>
+          ))}
         </div>
         <div className="text-center py-6">
           <p className="text-gray-500 text-sm">No featured replays yet</p>
