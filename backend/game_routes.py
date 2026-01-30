@@ -1965,30 +1965,31 @@ async def get_streak_info(user_id: str):
 # ============== BOT BATTLE PROGRESSION SYSTEM ==============
 
 # Bot difficulty configurations
+# IMPORTANT: Tap rates are hidden from players - only used internally
 BOT_DIFFICULTY_CONFIG = {
     "easy": {
-        "min_dollar_value": 600_000_000,
-        "taps_per_second": 8,
-        "fixed_bet": 100,
-        "sceneries": ["water", "natural", "man_made", "neutral", "neutral"],
+        "min_dollar_value": 1_000_000_000,  # $1B minimum
+        "taps_per_second": 12,              # Hidden from players
+        "fixed_bet": 200,
+        "sceneries": ["water", "natural", "man_made", "neutral", "neutral"],  # 1W, 1N, 1M, 2Neu
     },
     "medium": {
-        "min_dollar_value": 800_000_000,
-        "taps_per_second": 10,
-        "fixed_bet": 500,
-        "sceneries": ["water", "natural", "man_made", "neutral", "neutral"],
+        "min_dollar_value": 2_000_000_000,  # $2B minimum
+        "taps_per_second": 18,              # Hidden from players
+        "fixed_bet": 1000,
+        "sceneries": ["water", "natural", "man_made", "man_made", "neutral"],  # 1W, 1N, 2M, 1Neu
     },
     "hard": {
-        "min_dollar_value": 1_000_000_000,
-        "taps_per_second": 12,
-        "fixed_bet": 1000,
-        "sceneries": ["water", "natural", "man_made", "neutral", "neutral"],
+        "min_dollar_value": 5_000_000_000,  # $5B minimum
+        "taps_per_second": 20,              # Hidden from players
+        "fixed_bet": 5000,
+        "sceneries": ["water", "natural", "natural", "man_made", "neutral"],  # 1W, 2N, 1M, 1Neu
     },
     "extreme": {
-        "min_dollar_value": 2_000_000_000,
-        "taps_per_second": 15,
-        "fixed_bet": 2000,
-        "sceneries": ["water", "natural", "man_made", "neutral", "neutral"],
+        "min_dollar_value": 10_000_000_000, # $10B minimum
+        "taps_per_second": 25,              # Hidden from players
+        "fixed_bet": 10000,
+        "sceneries": ["water", "water", "natural", "man_made", "neutral"],  # 2W, 1N, 1M, 1Neu
     },
 }
 
