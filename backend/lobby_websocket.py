@@ -171,15 +171,20 @@ class GameLobbyManager:
         self, 
         game_id: str, 
         session_id: str,
-        session_data: Dict
+        session_data: Dict,
+        pvp_room_id: str = None  # Add pvp_room_id parameter
     ):
         """Broadcast when the game is starting"""
-        await self.broadcast_to_lobby(game_id, {
+        message = {
             "type": "game_start",
             "session_id": session_id,
             "session": session_data,
             "timestamp": datetime.now(timezone.utc).isoformat()
-        })
+        }
+        # Include pvp_room_id if provided
+        if pvp_room_id:
+            message["pvp_room_id"] = pvp_room_id
+        await self.broadcast_to_lobby(game_id, message)
     
     async def broadcast_game_state(self, game_id: str, game_state: Dict):
         """Broadcast full game state update"""
