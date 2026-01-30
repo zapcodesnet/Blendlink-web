@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { SelfieMatchModal } from '../components/minting/SelfieMatchModal';
+import { LikeButton } from '../components/game/LikeButton';
 
 // Category labels for the back of card
 const RATING_LABELS = {
