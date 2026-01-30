@@ -82,11 +82,13 @@ export default function Profile() {
   const fetchMintedPhotos = async () => {
     try {
       const userId = id || currentUser?.user_id;
-      // Get user's public minted photos
-      const response = await api.minting.getUserPhotos(userId);
-      // Filter to only show public photos
-      const publicPhotos = (response.photos || []).filter(p => !p.is_private);
-      setMintedPhotos(publicPhotos);
+      // Get user's public minted photos - use same pattern as MintedPhotos.jsx
+      const response = await api.get('/minting/photos');
+      // Filter to only show public photos for this user
+      const userPhotos = (response.data?.photos || []).filter(p => 
+        !p.is_private && (p.user_id === userId || isOwnProfile)
+      );
+      setMintedPhotos(userPhotos);
     } catch (error) {
       console.error("Failed to fetch minted photos:", error);
       setMintedPhotos([]);
