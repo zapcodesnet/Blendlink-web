@@ -632,7 +632,7 @@ export const BotDifficultySelector = ({
                           <div className="flex items-center justify-between text-sm">
                             <span className="text-gray-400">Your balance:</span>
                             <span className={`font-bold ${canAffordBet ? 'text-green-400' : 'text-red-400'}`}>
-                              {userBalance.toLocaleString()} BL
+                              {localBalance.toLocaleString()} BL
                             </span>
                           </div>
                           {!canAffordBet && (
