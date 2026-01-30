@@ -331,8 +331,10 @@ export const ClaimableBonusBanner = ({
         try {
           const audio = new Audio('/sounds/coin-claim.mp3');
           audio.volume = 0.5;
-          audio.play().catch(() => {});
-        } catch (e) {}
+          audio.play().catch(() => { /* ignore audio errors */ });
+        } catch (e) {
+          // Audio not available, continue without sound
+        }
         
         // Update balance in parent
         if (onBalanceUpdate) {
