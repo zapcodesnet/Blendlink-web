@@ -533,10 +533,12 @@ export const PVPBattleArena = ({
   
   // Connect when pvpRoomId becomes available
   useEffect(() => {
+    console.log('[PVPBattleArena] Effect check - pvpRoomId:', pvpRoomId, 'hasConnected:', hasConnectedRef.current, 'wsConnected:', wsConnected);
+    
     // Only connect once when pvpRoomId is available
     if (pvpRoomId && !hasConnectedRef.current && !wsConnected) {
       hasConnectedRef.current = true;
-      console.log('pvpRoomId available, connecting:', pvpRoomId);
+      console.log('[PVPBattleArena] pvpRoomId available, connecting:', pvpRoomId);
       // Defer connection slightly to ensure state is ready
       const timeoutId = setTimeout(() => {
         connectWebSocketRef.current?.(false);
