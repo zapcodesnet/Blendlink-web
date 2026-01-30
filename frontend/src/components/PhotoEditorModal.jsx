@@ -31,8 +31,8 @@ import {
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
-// API helper with improved error handling
-const apiRequest = async (endpoint, options = {}) => {
+// API helper with improved error handling, timeout, and retry support
+const apiRequest = async (endpoint, options = {}, retries = 1, timeout = 60000) => {
   const token = localStorage.getItem('blendlink_token');
   const headers = {
     'Content-Type': 'application/json',
@@ -42,34 +42,74 @@ const apiRequest = async (endpoint, options = {}) => {
     headers['Authorization'] = `Bearer ${token}`;
   }
   
-  try {
-    const response = await fetch(`${API_BASE_URL}/api${endpoint}`, { ...options, headers });
-    
-    if (!response.ok) {
-      // Try to parse error response
-      let errorMessage = 'Request failed';
-      try {
-        const errorData = await response.json();
-        errorMessage = errorData.detail || errorData.message || `Error ${response.status}`;
-      } catch {
-        // If JSON parsing fails, use status text
-        errorMessage = response.statusText || `HTTP Error ${response.status}`;
+  // Create abort controller for timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  
+  const attemptRequest = async (attemptNum) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api${endpoint}`, { 
+        ...options, 
+        headers,
+        signal: controller.signal 
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        // Try to parse error response
+        let errorMessage = 'Request failed';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.detail || errorData.message || `Error ${response.status}`;
+        } catch {
+          // If JSON parsing fails, use status text
+          errorMessage = response.statusText || `HTTP Error ${response.status}`;
+        }
+        
+        // Provide more specific error messages
+        if (response.status === 401) {
+          errorMessage = 'Session expired. Please log in again.';
+        } else if (response.status === 403) {
+          errorMessage = 'Permission denied.';
+        } else if (response.status === 404) {
+          errorMessage = 'Resource not found.';
+        } else if (response.status === 429) {
+          errorMessage = 'Rate limit exceeded. Please wait and try again.';
+        } else if (response.status === 500) {
+          errorMessage = 'Server error. Please try again later.';
+        } else if (response.status === 502 || response.status === 503) {
+          errorMessage = 'Service temporarily unavailable.';
+        }
+        
+        throw new Error(errorMessage);
       }
       
-      // Provide more specific error messages
-      if (response.status === 401) {
-        errorMessage = 'Session expired. Please log in again.';
-      } else if (response.status === 403) {
-        errorMessage = 'Permission denied.';
-      } else if (response.status === 404) {
-        errorMessage = 'Resource not found.';
-      } else if (response.status === 500) {
-        errorMessage = 'Server error. Please try again later.';
-      } else if (response.status === 502 || response.status === 503) {
-        errorMessage = 'Service temporarily unavailable.';
+      return response.json();
+    } catch (error) {
+      clearTimeout(timeoutId);
+      
+      // Handle abort (timeout)
+      if (error.name === 'AbortError') {
+        throw new Error('Request timed out. Please try again.');
       }
       
-      throw new Error(errorMessage);
+      // Handle network errors with retry
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        if (attemptNum < retries) {
+          console.log(`Retrying request (attempt ${attemptNum + 1}/${retries})...`);
+          await new Promise(r => setTimeout(r, 1000 * attemptNum)); // Exponential backoff
+          return attemptRequest(attemptNum + 1);
+        }
+        throw new Error('Network error. Please check your connection.');
+      }
+      
+      throw error;
+    }
+  };
+  
+  return attemptRequest(1);
+};
     }
     
     return response.json();
