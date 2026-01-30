@@ -39,23 +39,23 @@ const ProfilePictureEditor = ({
   // Circle frame size (responsive)
   const FRAME_SIZE = 200;
   
-  // Track previous photo ID to reset on change
-  const prevPhotoIdRef = useRef(null);
+  // Track previous photo for reset
+  const [prevPhotoId, setPrevPhotoId] = useState(null);
   
-  // Reset position when photo changes (using ref comparison)
-  if (photo?.mint_id && photo.mint_id !== prevPhotoIdRef.current) {
-    prevPhotoIdRef.current = photo.mint_id;
-    // Reset state without useEffect to avoid cascading renders
-    if (position.x !== 0 || position.y !== 0) {
+  // Reset position when photo changes - use callback to avoid cascading
+  const resetIfPhotoChanged = useCallback(() => {
+    if (photo?.mint_id && photo.mint_id !== prevPhotoId) {
+      setPrevPhotoId(photo.mint_id);
       setPosition({ x: 0, y: 0 });
-    }
-    if (zoom !== 1) {
       setZoom(1);
-    }
-    if (imageLoaded) {
       setImageLoaded(false);
     }
-  }
+  }, [photo?.mint_id, prevPhotoId]);
+  
+  // Call reset on mount when photo is available
+  useEffect(() => {
+    resetIfPhotoChanged();
+  }, [resetIfPhotoChanged]);
   
   // Handle image load to get dimensions
   const handleImageLoad = (e) => {
