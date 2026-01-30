@@ -40,10 +40,10 @@ const BOT_DIFFICULTIES = [
     name: 'Easy Bot',
     emoji: '🤖',
     description: 'Perfect for beginners',
-    dollarValue: '$600M',
-    minDollarValue: 600000000,
-    // tapsPerSec hidden from players - internal value: 12
-    fixedBet: 100,
+    dollarValue: '$1B',
+    minDollarValue: 1_000_000_000, // $1B minimum
+    // Tap rate: 12 TPS (hidden from players)
+    fixedBet: 200,
     color: 'from-green-500 to-emerald-600',
     bgColor: 'bg-green-500/10',
     borderColor: 'border-green-500/50',
@@ -58,10 +58,10 @@ const BOT_DIFFICULTIES = [
     name: 'Medium Bot',
     emoji: '🤖',
     description: 'Balanced challenge',
-    dollarValue: '$800M',
-    minDollarValue: 800000000,
-    // tapsPerSec hidden from players - internal value: 15
-    fixedBet: 500,
+    dollarValue: '$2B',
+    minDollarValue: 2_000_000_000, // $2B minimum
+    // Tap rate: 18 TPS (hidden from players)
+    fixedBet: 1000,
     color: 'from-yellow-500 to-orange-500',
     bgColor: 'bg-yellow-500/10',
     borderColor: 'border-yellow-500/50',
@@ -76,10 +76,10 @@ const BOT_DIFFICULTIES = [
     name: 'Hard Bot',
     emoji: '🤖',
     description: 'For experienced players',
-    dollarValue: '$1B',
-    minDollarValue: 1000000000,
-    // tapsPerSec hidden from players - internal value: 18
-    fixedBet: 1000,
+    dollarValue: '$5B',
+    minDollarValue: 5_000_000_000, // $5B minimum
+    // Tap rate: 20 TPS (hidden from players)
+    fixedBet: 5000,
     color: 'from-red-500 to-pink-600',
     bgColor: 'bg-red-500/10',
     borderColor: 'border-red-500/50',
@@ -94,10 +94,10 @@ const BOT_DIFFICULTIES = [
     name: 'Extremely Hard Bot',
     emoji: '💀',
     description: 'Ultimate challenge',
-    dollarValue: '$2B',
-    minDollarValue: 2000000000,
-    // tapsPerSec hidden from players - internal value: 20
-    fixedBet: 2000,
+    dollarValue: '$10B',
+    minDollarValue: 10_000_000_000, // $10B minimum
+    // Tap rate: 25 TPS (hidden from players)
+    fixedBet: 10000,
     color: 'from-purple-600 to-indigo-700',
     bgColor: 'bg-purple-500/10',
     borderColor: 'border-purple-500/50',
@@ -108,6 +108,22 @@ const BOT_DIFFICULTIES = [
     unlockBonus: 500000,
   },
 ];
+
+// Bot scenery distributions for each difficulty
+const BOT_SCENERY_CONFIG = {
+  easy: ['water', 'natural', 'manmade', 'neutral', 'neutral'],     // 1W, 1N, 1M, 2Neu
+  medium: ['water', 'natural', 'manmade', 'manmade', 'neutral'],   // 1W, 1N, 2M, 1Neu
+  hard: ['water', 'natural', 'natural', 'manmade', 'neutral'],     // 1W, 2N, 1M, 1Neu
+  extreme: ['water', 'water', 'natural', 'manmade', 'neutral'],    // 2W, 1N, 1M, 1Neu
+};
+
+// One-time bonuses for difficulty unlocks (claimable)
+const UNLOCK_BONUSES = {
+  medium: { amount: 20000, label: '+20,000 BL' },
+  hard: { amount: 100000, label: '+100,000 BL' },
+  extreme: { amount: 500000, label: '+500,000 BL' },
+  extreme_mastery: { amount: 1000000, label: '+1,000,000 BL' }, // 3 wins vs Extremely Hard
+};
 
 const BOT_SCENERIES = ['water', 'natural', 'man_made', 'neutral', 'neutral'];
 
