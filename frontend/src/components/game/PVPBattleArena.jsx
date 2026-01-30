@@ -178,11 +178,22 @@ export const PVPBattleArena = ({
       console.log('PVP WS message:', data.type, data);
       
       switch (data.type) {
+        case 'connected':
+          // Initial connection confirmation from server
+          console.log('PVP WebSocket connected to room:', data.room_id);
+          setWsConnected(true);
+          setReconnecting(false);
+          reconnectAttempts.current = 0;
+          setReconnectAttemptCount(0);
+          break;
+        
         case 'join_result':
           if (data.success) {
             toast.success('Connected to game room');
             setReconnecting(false);
             reconnectAttempts.current = 0;
+          } else {
+            toast.error('Failed to join game room');
           }
           break;
         
