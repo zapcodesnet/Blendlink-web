@@ -415,9 +415,16 @@ export const TappingArena = ({
   const [tapsThisSecond, setTapsThisSecond] = useState(0);
   const [showAntiCheatWarning, setShowAntiCheatWarning] = useState(false);
   
-  // Calculate effective values with scenery/streak bonuses
-  const playerEffectiveValue = playerPhoto?.effective_value || playerPhoto?.dollar_value || 50_000_000;
-  const opponentEffectiveValue = opponentPhoto?.effective_value || opponentPhoto?.dollar_value || 50_000_000;
+  // Calculate effective values with ALL modifiers (scenery, streaks, level, age, likes)
+  const playerValueCalc = calculateEffectiveValue(playerPhoto, opponentPhoto, playerStats);
+  const opponentValueCalc = calculateEffectiveValue(opponentPhoto, playerPhoto, opponentStats);
+  
+  const playerEffectiveValue = playerValueCalc.effectiveValue;
+  const opponentEffectiveValue = opponentValueCalc.effectiveValue;
+  const playerBaseValue = playerValueCalc.baseValue;
+  const opponentBaseValue = opponentValueCalc.baseValue;
+  const playerModifiers = playerValueCalc.modifiers;
+  const opponentModifiers = opponentValueCalc.modifiers;
   
   // Calculate required taps for each player
   const playerRequiredTaps = calculateRequiredTaps(playerEffectiveValue, opponentEffectiveValue);
