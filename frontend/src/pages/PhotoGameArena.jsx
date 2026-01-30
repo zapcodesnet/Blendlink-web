@@ -1756,6 +1756,14 @@ const PhotoGameArena = () => {
       ? (gameData?.opponent_username || 'Opponent')
       : (gameData?.creator_username || 'Creator');
     
+    console.log('[PhotoGameArena] handleGameStart called with:', {
+      sessionId,
+      pvpRoomId,
+      gameDataPvpRoomId: gameData?.pvp_room_id,
+      amICreator,
+      opponentId,
+    });
+    
     setSession({ session_id: sessionId, ...gameData, pvp_room_id: pvpRoomId });
     setPlayerBattlePhotos(myPhotos);
     setOpponentBattlePhotos(theirPhotos);
@@ -1765,6 +1773,8 @@ const PhotoGameArena = () => {
     // Store opponent info for PVP
     setOpponentInfo({ id: opponentId, username: opponentUsername });
     setPvpRoomId(pvpRoomId);
+    
+    console.log('[PhotoGameArena] Setting pvpRoomId:', pvpRoomId);
     
     // Use PVP battle arena for real-time sync
     setGameState('pvp_battle');
