@@ -25,6 +25,7 @@ import {
 import PVPBattleArena from '../components/game/PVPBattleArena';
 import FeaturedReplays from '../components/game/FeaturedReplays';
 import TopLikedPhotosLeaderboard from '../components/game/TopLikedPhotosLeaderboard';
+import UnifiedPhotoCard from '../components/photo/UnifiedPhotoCard';
 
 // ============== PHOTO LIGHTBOX MODAL ==============
 const PhotoLightbox = ({ photo, isOpen, onClose }) => {
