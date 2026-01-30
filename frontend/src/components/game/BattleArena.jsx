@@ -712,18 +712,18 @@ const GameResultScreen = ({
           </motion.div>
         )}
         
-        <div className="flex flex-col sm:flex-row justify-center gap-3">
-          {/* Back to Menu Button - Always visible */}
+        <div className="flex flex-col sm:flex-row justify-center gap-3 mt-6">
+          {/* Return to Dollar Auction Arena Button - Always visible */}
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
               onClick={onBackToMenu}
               variant="outline"
-              className="px-8 py-5 text-lg font-bold border-gray-500"
+              className="w-full sm:w-auto px-8 py-5 text-lg font-bold border-purple-500/50 text-purple-300 hover:bg-purple-500/10"
               size="lg"
-              data-testid="back-to-menu-btn"
+              data-testid="return-to-arena-btn"
             >
               <ChevronLeft className="w-5 h-5 mr-2" />
-              Back to Menu
+              Return to Dollar Auction Arena
             </Button>
           </motion.div>
           
@@ -731,7 +731,7 @@ const GameResultScreen = ({
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
               onClick={onPlayAgain}
-              className="bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 px-8 py-5 text-lg font-bold shadow-lg"
+              className="w-full sm:w-auto bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 px-8 py-5 text-lg font-bold shadow-lg shadow-green-500/30 hover:shadow-green-500/50"
               size="lg"
               data-testid="play-again-btn"
             >
