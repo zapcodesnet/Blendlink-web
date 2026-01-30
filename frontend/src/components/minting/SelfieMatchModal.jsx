@@ -57,6 +57,12 @@ export const SelfieMatchModal = ({
   const [capturedImage, setCapturedImage] = useState(null);
   const [facingMode, setFacingMode] = useState('user'); // 'user' for front camera
   
+  // Face detection state
+  const [faceDetected, setFaceDetected] = useState(false);
+  const [faceScore, setFaceScore] = useState(0);
+  const [loadingModels, setLoadingModels] = useState(false);
+  const [clientMatchResult, setClientMatchResult] = useState(null);
+  
   // Match state
   const [isMatching, setIsMatching] = useState(false);
   const [matchResult, setMatchResult] = useState(null);
@@ -65,12 +71,58 @@ export const SelfieMatchModal = ({
   // Refs
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const overlayRef = useRef(null);
   const streamRef = useRef(null);
+  const stopDetectionRef = useRef(null);
   
   // Check if user can afford an attempt
   const canAffordAttempt = userBalance >= COST_PER_ATTEMPT;
   const attemptsRemaining = MAX_ATTEMPTS - attemptsUsed;
   const hasAttemptsLeft = attemptsRemaining > 0;
+  
+  // Initialize face detection models
+  useEffect(() => {
+    const initModels = async () => {
+      setLoadingModels(true);
+      try {
+        await faceDetectionService.initialize();
+      } catch (err) {
+        console.error('Failed to load face detection models:', err);
+      } finally {
+        setLoadingModels(false);
+      }
+    };
+    initModels();
+  }, []);
+  
+  // Start real-time face detection when camera is active
+  useEffect(() => {
+    if (cameraActive && videoRef.current && overlayRef.current) {
+      const video = videoRef.current;
+      const overlay = overlayRef.current;
+      
+      // Set overlay size to match video
+      overlay.width = video.videoWidth || 640;
+      overlay.height = video.videoHeight || 480;
+      
+      // Start real-time detection
+      stopDetectionRef.current = faceDetectionService.startRealTimeDetection(
+        video,
+        overlay,
+        (result) => {
+          setFaceDetected(result.hasFace);
+          setFaceScore(result.score || 0);
+        }
+      );
+    }
+    
+    return () => {
+      if (stopDetectionRef.current) {
+        stopDetectionRef.current();
+        stopDetectionRef.current = null;
+      }
+    };
+  }, [cameraActive]);
   
   // Start camera
   const startCamera = useCallback(async () => {
