@@ -546,16 +546,19 @@ const PhotoCard = ({ photo, onSelect, onUpdate, viewMode, onViewFull, onSelfieMa
             )}
           </div>
           
-          {/* Dollar Value (Power) + Reactions */}
+          {/* Dollar Value (Power) + Interactive Like Button */}
           <div className="flex items-center justify-between">
             <span className="text-yellow-400 font-bold text-lg">
               {formatDollarValue(photo.dollar_value)}
             </span>
-            {/* Reaction Counter (❤️) */}
-            <span className="flex items-center gap-1 text-pink-400 text-sm">
-              <span className="text-base">❤️</span>
-              <span className="font-bold">{photo.total_reactions || photo.likes_count || 0}</span>
-            </span>
+            {/* Interactive Like Button (❤️) */}
+            <LikeButton 
+              photoId={photo.mint_id}
+              initialLikes={photo.total_reactions || photo.likes_count || 0}
+              initialLiked={photo.user_liked || false}
+              size="sm"
+              showCount={true}
+            />
           </div>
           
           {/* Level + Stars above Stamina */}
