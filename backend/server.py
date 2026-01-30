@@ -2838,7 +2838,7 @@ try:
     from auction_websocket import auction_manager
     from fastapi import WebSocket, WebSocketDisconnect
     
-    @app.websocket("/ws/auction/{room_id}/{token}")
+    @app.websocket("/api/ws/auction/{room_id}/{token}")
     async def auction_websocket_endpoint(websocket: WebSocket, room_id: str, token: str):
         """WebSocket endpoint for real-time auction bidding"""
         import jwt
@@ -2905,7 +2905,7 @@ try:
     from lobby_websocket import lobby_manager
     from fastapi import WebSocket, WebSocketDisconnect
     
-    @app.websocket("/ws/lobby/{game_id}/{token}")
+    @app.websocket("/api/ws/lobby/{game_id}/{token}")
     async def lobby_websocket_endpoint(websocket: WebSocket, game_id: str, token: str):
         """WebSocket endpoint for real-time game lobby updates"""
         # Validate token
@@ -2951,7 +2951,7 @@ try:
     # Set database for PVP manager
     pvp_game_manager.set_db(db)
     
-    @app.websocket("/ws/pvp-game/{room_id}/{token}")
+    @app.websocket("/api/ws/pvp-game/{room_id}/{token}")
     async def pvp_game_websocket_endpoint(websocket: WebSocket, room_id: str, token: str):
         """WebSocket endpoint for real-time synchronized PVP gameplay"""
         # Validate token
