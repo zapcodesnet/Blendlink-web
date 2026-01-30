@@ -2,6 +2,7 @@
  * SelfieMatchModal Component
  * 
  * Live video selfie match for Authenticity bonus verification.
+ * Uses TensorFlow.js face-api.js for client-side face detection.
  * Per user specs:
  * - Up to 3 tries (100 BL coins each)
  * - Camera capture and face comparison
@@ -12,11 +13,12 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Camera, X, RefreshCw, Check, AlertCircle, 
-  Loader2, Coins, Shield, Sparkles, User
+  Loader2, Coins, Shield, Sparkles, User, Scan
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../ui/button';
 import api from '../../services/api';
+import { faceDetectionService } from '../../services/faceDetection';
 
 // Constants per spec
 const COST_PER_ATTEMPT = 100; // BL coins
