@@ -2787,7 +2787,7 @@ try:
     from websocket_notifications import ws_manager, WebSocketNotification, NotificationType
     from fastapi import WebSocket, WebSocketDisconnect
     
-    @app.websocket("/ws/{token}")
+    @app.websocket("/api/ws/{token}")
     async def websocket_endpoint(websocket: WebSocket, token: str):
         """WebSocket endpoint for real-time notifications"""
         try:
