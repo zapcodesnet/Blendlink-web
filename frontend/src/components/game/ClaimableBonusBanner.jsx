@@ -99,7 +99,7 @@ const FlyingCoinAnimation = ({ isActive, onComplete }) => {
       className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center overflow-hidden"
     >
       {/* Confetti rain */}
-      {confetti.map((piece) => (
+      {STATIC_CONFETTI.map((piece) => (
         <motion.div
           key={`confetti-${piece.id}`}
           className="absolute"
@@ -125,7 +125,7 @@ const FlyingCoinAnimation = ({ isActive, onComplete }) => {
       ))}
       
       {/* Coin bags flying to wallet (top-right) */}
-      {coinBags.map((bag) => (
+      {STATIC_COIN_BAGS.map((bag) => (
         <motion.div
           key={`bag-${bag.id}`}
           className="absolute text-5xl"
