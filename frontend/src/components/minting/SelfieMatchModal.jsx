@@ -160,11 +160,19 @@ export const SelfieMatchModal = ({
   
   // Stop camera
   const stopCamera = useCallback(() => {
+    // Stop face detection
+    if (stopDetectionRef.current) {
+      stopDetectionRef.current();
+      stopDetectionRef.current = null;
+    }
+    // Stop camera stream
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
     }
     setCameraActive(false);
+    setFaceDetected(false);
+    setFaceScore(0);
   }, []);
   
   // Capture photo from video
