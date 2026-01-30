@@ -31,7 +31,7 @@ import {
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
-// API helper
+// API helper with improved error handling
 const apiRequest = async (endpoint, options = {}) => {
   const token = localStorage.getItem('blendlink_token');
   const headers = {
@@ -41,12 +41,45 @@ const apiRequest = async (endpoint, options = {}) => {
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  const response = await fetch(`${API_BASE_URL}/api${endpoint}`, { ...options, headers });
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Request failed' }));
-    throw new Error(error.detail || 'Request failed');
+  
+  try {
+    const response = await fetch(`${API_BASE_URL}/api${endpoint}`, { ...options, headers });
+    
+    if (!response.ok) {
+      // Try to parse error response
+      let errorMessage = 'Request failed';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.detail || errorData.message || `Error ${response.status}`;
+      } catch {
+        // If JSON parsing fails, use status text
+        errorMessage = response.statusText || `HTTP Error ${response.status}`;
+      }
+      
+      // Provide more specific error messages
+      if (response.status === 401) {
+        errorMessage = 'Session expired. Please log in again.';
+      } else if (response.status === 403) {
+        errorMessage = 'Permission denied.';
+      } else if (response.status === 404) {
+        errorMessage = 'Resource not found.';
+      } else if (response.status === 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (response.status === 502 || response.status === 503) {
+        errorMessage = 'Service temporarily unavailable.';
+      }
+      
+      throw new Error(errorMessage);
+    }
+    
+    return response.json();
+  } catch (error) {
+    // Handle network errors
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      throw new Error('Network error. Please check your connection.');
+    }
+    throw error;
   }
-  return response.json();
 };
 
 // Background presets - matches backend BACKGROUND_PATTERNS
