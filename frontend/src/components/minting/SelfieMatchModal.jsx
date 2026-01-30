@@ -349,58 +349,177 @@ export const SelfieMatchModal = ({
           
           {/* Content */}
           <div className="p-4">
-            {/* Info banner */}
-            <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3 mb-4">
-              <div className="flex items-start gap-2">
-                <Sparkles className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
-                <div className="text-sm">
-                  <p className="text-purple-300 font-medium">Earn up to +5% Authenticity Bonus</p>
-                  <p className="text-gray-400 text-xs mt-1">
-                    Take a live selfie matching the person in your photo. Better matches = higher bonus!
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            {/* Attempts and cost info */}
-            <div className="flex justify-between items-center mb-4 p-3 bg-gray-800/50 rounded-lg">
-              <div className="flex items-center gap-2">
-                <Camera className="w-4 h-4 text-gray-400" />
-                <span className="text-sm text-gray-300">
-                  Attempts: <span className="text-white font-bold">{attemptsRemaining}/{MAX_ATTEMPTS}</span>
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Coins className="w-4 h-4 text-yellow-400" />
-                <span className="text-sm text-gray-300">
-                  Cost: <span className="text-yellow-400 font-bold">{COST_PER_ATTEMPT} BL</span>
-                </span>
-              </div>
-            </div>
-            
-            {/* Reference photo */}
-            <div className="mb-4">
-              <p className="text-xs text-gray-500 mb-2">Your minted photo:</p>
-              <div className="flex items-center gap-3 p-2 bg-gray-800/50 rounded-lg">
-                {photo?.image_url ? (
-                  <img 
-                    src={photo.image_url} 
-                    alt={photo.name}
-                    className="w-16 h-16 rounded-lg object-cover"
-                  />
-                ) : (
-                  <div className="w-16 h-16 rounded-lg bg-gray-700 flex items-center justify-center">
-                    <User className="w-8 h-8 text-gray-500" />
+            {/* CONFIRMATION DIALOG - Shows first before camera */}
+            {showConfirmation && !declineWarning && (
+              <div className="space-y-4">
+                {/* Info banner */}
+                <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-xl p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-12 h-12 rounded-full bg-purple-500/30 flex items-center justify-center flex-shrink-0">
+                      <Sparkles className="w-6 h-6 text-purple-400" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-bold text-white mb-1">Add 5% Dollar Bonus via live selfie?</h4>
+                      <p className="text-sm text-gray-300">
+                        Take a quick live selfie to verify you're the person in this photo and earn up to <span className="text-green-400 font-semibold">+5% Authenticity bonus</span> ($50M max).
+                      </p>
+                    </div>
                   </div>
-                )}
-                <div>
-                  <p className="text-white font-medium">{photo?.name || 'Photo'}</p>
-                  <p className="text-xs text-gray-400">
-                    Current Authenticity: {photo?.authenticity_score || 0}%
-                  </p>
+                </div>
+                
+                {/* Photo preview */}
+                <div className="flex items-center gap-4 p-3 bg-gray-800/50 rounded-lg">
+                  {photo?.image_url ? (
+                    <img 
+                      src={photo.image_url} 
+                      alt={photo.name}
+                      className="w-20 h-20 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-lg bg-gray-700 flex items-center justify-center">
+                      <User className="w-10 h-10 text-gray-500" />
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-white font-medium text-lg">{photo?.name || 'Your Photo'}</p>
+                    <p className="text-sm text-gray-400">
+                      Current: <span className="text-green-400">{(photo?.face_detection_score || 0) + (photo?.selfie_match_score || 0)}%</span> Authenticity
+                    </p>
+                    <p className="text-xs text-purple-400 mt-1">
+                      Potential: Up to <span className="font-semibold">+5%</span> more
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Cost info */}
+                <div className="flex items-center justify-center gap-2 p-2 bg-yellow-500/10 rounded-lg text-sm">
+                  <Coins className="w-4 h-4 text-yellow-400" />
+                  <span className="text-gray-300">
+                    Cost: <span className="text-yellow-400 font-bold">{COST_PER_ATTEMPT} BL</span> per attempt (max 3 tries)
+                  </span>
+                </div>
+                
+                {/* Buttons */}
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1 border-gray-600 hover:bg-gray-800"
+                    onClick={() => setDeclineWarning(true)}
+                  >
+                    No Photo Face Match
+                  </Button>
+                  <Button
+                    className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                    onClick={() => {
+                      setShowConfirmation(false);
+                      startCamera();
+                    }}
+                    data-testid="accept-face-match-btn"
+                  >
+                    <Camera className="w-4 h-4 mr-2" />
+                    Accept Photo Face Match Now
+                  </Button>
                 </div>
               </div>
-            </div>
+            )}
+            
+            {/* DECLINE WARNING */}
+            {declineWarning && (
+              <div className="space-y-4">
+                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-6 h-6 text-yellow-400 flex-shrink-0" />
+                    <div>
+                      <h4 className="text-lg font-bold text-yellow-400 mb-2">Are you sure?</h4>
+                      <p className="text-sm text-gray-300 mb-3">
+                        If you skip now, it will cost <span className="text-yellow-400 font-bold">100 BL coins per try</span> next time (max 300 BL for 3 tries).
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        This is a one-time opportunity to add up to 5% Authenticity bonus to your photo's Dollar Value.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    className="flex-1 border-gray-600"
+                    onClick={onClose}
+                    data-testid="confirm-decline-btn"
+                  >
+                    Skip for now
+                  </Button>
+                  <Button
+                    className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500"
+                    onClick={() => {
+                      setDeclineWarning(false);
+                      setShowConfirmation(false);
+                      startCamera();
+                    }}
+                  >
+                    <Camera className="w-4 h-4 mr-2" />
+                    I'll do Face Match
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            {/* CAMERA VIEW - Shows after accepting */}
+            {!showConfirmation && !declineWarning && (
+              <>
+                {/* Info banner */}
+                <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3 mb-4">
+                  <div className="flex items-start gap-2">
+                    <Sparkles className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm">
+                      <p className="text-purple-300 font-medium">Earn up to +5% Authenticity Bonus</p>
+                      <p className="text-gray-400 text-xs mt-1">
+                        Take a live selfie matching the person in your photo. Better matches = higher bonus!
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Attempts and cost info */}
+                <div className="flex justify-between items-center mb-4 p-3 bg-gray-800/50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Camera className="w-4 h-4 text-gray-400" />
+                    <span className="text-sm text-gray-300">
+                      Attempts: <span className="text-white font-bold">{attemptsRemaining}/{MAX_ATTEMPTS}</span>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Coins className="w-4 h-4 text-yellow-400" />
+                    <span className="text-sm text-gray-300">
+                      Cost: <span className="text-yellow-400 font-bold">{COST_PER_ATTEMPT} BL</span>
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Reference photo */}
+                <div className="mb-4">
+                  <p className="text-xs text-gray-500 mb-2">Your minted photo:</p>
+                  <div className="flex items-center gap-3 p-2 bg-gray-800/50 rounded-lg">
+                    {photo?.image_url ? (
+                      <img 
+                        src={photo.image_url} 
+                        alt={photo.name}
+                        className="w-16 h-16 rounded-lg object-cover"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded-lg bg-gray-700 flex items-center justify-center">
+                        <User className="w-8 h-8 text-gray-500" />
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-white font-medium">{photo?.name || 'Photo'}</p>
+                      <p className="text-xs text-gray-400">
+                        Current Authenticity: {photo?.authenticity_score || 0}%
+                      </p>
+                    </div>
+                  </div>
+                </div>
             
             {/* Camera/Captured view */}
             <div className="relative aspect-[4/3] bg-gray-800 rounded-xl overflow-hidden mb-4">
