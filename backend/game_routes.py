@@ -2741,7 +2741,7 @@ async def export_replay_video(
         large_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", int(height * 0.08))
         normal_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", int(height * 0.03))
         small_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", int(height * 0.025))
-    except:
+    except (IOError, OSError):
         title_font = ImageFont.load_default()
         large_font = ImageFont.load_default()
         normal_font = ImageFont.load_default()
