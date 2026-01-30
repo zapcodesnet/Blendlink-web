@@ -345,7 +345,10 @@ export const PVPBattleArena = ({
           break;
           
         case 'pong':
-          // Connection is alive
+          // Connection is alive - update last pong time
+          if (typeof lastPongTimeRef !== 'undefined') {
+            lastPongTimeRef.current = Date.now();
+          }
           break;
           
         default:
@@ -355,6 +358,9 @@ export const PVPBattleArena = ({
       console.error('Failed to parse PVP WebSocket message:', err);
     }
   }, [currentUserId, opponentId, opponentUsername, isPlayer1, mySelectedPhoto]);
+  
+  // Track last pong time for connection health monitoring (define early so it can be used in message handler)
+  const lastPongTimeRef = useRef(Date.now());
   
   // Connect to WebSocket ref to avoid circular dependency
   const connectWebSocketRef = useRef(null);
