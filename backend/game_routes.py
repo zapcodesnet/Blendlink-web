@@ -2626,7 +2626,15 @@ async def get_featured_replays(
     category: str = "top_wins",
     limit: int = 10
 ):
-    """Get featured battle replays for the landing page"""
+    """Get featured battle replays for the landing page
+    
+    Categories:
+    - top_wins: Highest winnings with wins
+    - most_viewed: Most viewed replays
+    - recent: Most recent replays
+    - longest_streak: Replays with highest win streaks
+    - epic_comebacks: Close games (4-3 score)
+    """
     from server import db
     
     # Define sort criteria based on category
@@ -2634,22 +2642,68 @@ async def get_featured_replays(
         "top_wins": [("winnings", -1), ("views", -1)],
         "most_viewed": [("views", -1), ("likes", -1)],
         "recent": [("created_at", -1)],
+        "longest_streak": [("player_win_streak", -1), ("winnings", -1)],
+        "epic_comebacks": [("created_at", -1)],  # Filter applied below
     }
     
     sort_by = sort_criteria.get(category, sort_criteria["top_wins"])
     
-    # Only get winning replays for "top_wins" category
-    query = {"winner": "player"} if category == "top_wins" else {}
+    # Build query based on category
+    if category == "top_wins":
+        # Only winning replays with significant winnings
+        query = {"winner": "player", "winnings": {"$gt": 0}}
+    elif category == "longest_streak":
+        # Wins with high streak
+        query = {"winner": "player", "player_win_streak": {"$gte": 3}}
+    elif category == "epic_comebacks":
+        # Close games (4-3 or 3-4 scores)
+        query = {
+            "$or": [
+                {"player_score": 5, "opponent_score": 4},
+                {"player_score": 5, "opponent_score": 3},
+                {"player_score": 4, "opponent_score": 5},
+            ]
+        }
+    else:
+        query = {}
     
-    replays = await db.battle_replays.find(
-        query,
-        {"_id": 0, "rounds": 0}  # Exclude heavy data
-    ).sort(sort_by).limit(limit).to_list(length=limit)
+    # Aggregation pipeline to join with user data
+    pipeline = [
+        {"$match": query},
+        {"$sort": dict(sort_by)},
+        {"$limit": limit},
+        # Lookup user info
+        {
+            "$lookup": {
+                "from": "users",
+                "let": {"user_id": "$user_id"},
+                "pipeline": [
+                    {"$match": {"$expr": {"$eq": ["$user_id", "$$user_id"]}}},
+                    {"$project": {"username": 1, "profile_image": 1, "_id": 0}}
+                ],
+                "as": "user_info"
+            }
+        },
+        {"$unwind": {"path": "$user_info", "preserveNullAndEmptyArrays": True}},
+        # Project fields (exclude heavy data)
+        {
+            "$project": {
+                "_id": 0,
+                "rounds": 0,
+            }
+        }
+    ]
     
-    # Convert datetime to string
+    replays = await db.battle_replays.aggregate(pipeline).to_list(length=limit)
+    
+    # Convert datetime to string and add user info
     for replay in replays:
         if replay.get("created_at"):
             replay["created_at"] = replay["created_at"].isoformat()
+        # Extract user info
+        user_info = replay.pop("user_info", {})
+        replay["player_name"] = user_info.get("username", "Anonymous")
+        replay["player_avatar"] = user_info.get("profile_image")
     
     return {
         "replays": replays,
