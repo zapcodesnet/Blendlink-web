@@ -1023,10 +1023,18 @@ export const BattleArena = ({
   }, [playerWins, opponentWins, currentRoundIndex, soundEnabled, selectedPlayerPhoto, selectedOpponentPhoto, roundResults, playerPhotos, calculateStaminaChanges, currentRound, isBot, replayRounds, saveReplay, onGameComplete, session]);
   
   // Handle RPS round complete (with money tracking)
-  const handleRPSRoundComplete = useCallback((winner, newPlayerMoney, newOpponentMoney) => {
+  const handleRPSRoundComplete = useCallback((winner, newPlayerMoney, newOpponentMoney, rpsData = {}) => {
     setPlayerRPSMoney(newPlayerMoney);
     setOpponentRPSMoney(newOpponentMoney);
-    handleRoundComplete(winner);
+    // Pass RPS data to handleRoundComplete for replay saving
+    handleRoundComplete(winner, {
+      rpsChoicePlayer: rpsData.rpsChoicePlayer,
+      rpsChoiceOpponent: rpsData.rpsChoiceOpponent,
+      bidPlayer: rpsData.bidPlayer,
+      bidOpponent: rpsData.bidOpponent,
+      playerEffectiveValue: rpsData.playerEffectiveValue,
+      opponentEffectiveValue: rpsData.opponentEffectiveValue,
+    });
   }, [handleRoundComplete]);
   
   // Handle transition complete
