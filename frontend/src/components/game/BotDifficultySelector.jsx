@@ -475,7 +475,7 @@ export const BotDifficultySelector = ({
       photos: selectedPhotos,
       photo: selectedPhotos[0],
       botConfig: {
-        tapsPerSec: currentDifficulty.tapsPerSec,
+        // Note: Tap rates are handled internally in TappingArena based on difficulty
         minDollarValue: currentDifficulty.minDollarValue,
         sceneries: BOT_SCENERIES,
       },
