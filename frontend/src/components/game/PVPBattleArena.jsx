@@ -114,6 +114,21 @@ export const PVPBattleArena = ({
   const MAX_RECONNECT_ATTEMPTS = 5;
   const RECONNECT_INTERVAL = 5000; // 5 seconds
   
+  // Toast spam prevention
+  const lastToastTimeRef = useRef(0);
+  const MIN_TOAST_INTERVAL = 5000; // 5 seconds between toasts
+  
+  const showToastThrottled = useCallback((type, message) => {
+    const now = Date.now();
+    if (now - lastToastTimeRef.current > MIN_TOAST_INTERVAL) {
+      lastToastTimeRef.current = now;
+      if (type === 'error') toast.error(message);
+      else if (type === 'success') toast.success(message);
+      else if (type === 'info') toast.info(message);
+      else toast(message);
+    }
+  }, []);
+  
   // Websocket instance for passing to children (synced from ref)
   const [websocketInstance, setWebsocketInstance] = useState(null);
   
