@@ -2337,7 +2337,11 @@ const PhotoGameArena = () => {
         playerPhotos={battlePhotos}
         userBalance={userBalance}
         botWinStats={botWinStats}
-        onBalanceUpdate={(newBalance) => setUserBalance(newBalance)}
+        onBalanceUpdate={(newBalance) => {
+          setUserBalance(newBalance);
+          // Refresh bot stats to update claimable bonuses list
+          api.get('/photo-game/bot-battle/stats').then(res => setBotWinStats(res.data || {})).catch(() => {});
+        }}
       />
     </div>
   );
