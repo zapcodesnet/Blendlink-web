@@ -551,13 +551,25 @@ export const RPSBidding = ({
   // NEW: Power Advantage props
   playerPhoto = null,
   opponentPhoto = null,
+  playerStats = {},
+  opponentStats = {},
   powerAdvantage = null, // { advantage: 'player'|'opponent'|'none', bonus_amount, player_effective_value, opponent_effective_value }
 }) => {
-  // Determine if player has the $1M advantage
-  const hasPlayerAdvantage = powerAdvantage?.advantage === 'player';
-  const hasOpponentAdvantage = powerAdvantage?.advantage === 'opponent';
-  const playerEffectiveValue = powerAdvantage?.player_effective_value;
-  const opponentEffectiveValue = powerAdvantage?.opponent_effective_value;
+  // Calculate effective values with ALL modifiers
+  const playerValueCalc = calculateEffectiveValue(playerPhoto, opponentPhoto, playerStats);
+  const opponentValueCalc = calculateEffectiveValue(opponentPhoto, playerPhoto, opponentStats);
+  
+  // Use calculated values or provided power advantage values
+  const playerEffectiveValue = powerAdvantage?.player_effective_value || playerValueCalc.effectiveValue;
+  const opponentEffectiveValue = powerAdvantage?.opponent_effective_value || opponentValueCalc.effectiveValue;
+  const playerBaseValue = playerValueCalc.baseValue;
+  const opponentBaseValue = opponentValueCalc.baseValue;
+  const playerModifiers = playerValueCalc.modifiers;
+  const opponentModifiers = opponentValueCalc.modifiers;
+  
+  // Determine if player has the $1M advantage (higher effective value)
+  const hasPlayerAdvantage = powerAdvantage?.advantage === 'player' || playerEffectiveValue > opponentEffectiveValue;
+  const hasOpponentAdvantage = powerAdvantage?.advantage === 'opponent' || opponentEffectiveValue > playerEffectiveValue;
   
   // Use $6M bid options if player has advantage
   const currentBidOptions = hasPlayerAdvantage ? BID_OPTIONS_WITH_ADVANTAGE : BID_OPTIONS;
