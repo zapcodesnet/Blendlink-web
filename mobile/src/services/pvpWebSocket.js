@@ -4,7 +4,7 @@
  * Handles real-time WebSocket communication for PVP battles
  * 
  * Protocol:
- * - Connect to: wss://{host}/ws/pvp-game/{roomId}/{token}
+ * - Connect to: wss://{host}/api/ws/pvp-game/{roomId}/{token}
  * - Messages: JSON with 'type' field
  * 
  * Message Types (Server -> Client):
