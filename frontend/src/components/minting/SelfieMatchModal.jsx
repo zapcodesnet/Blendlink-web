@@ -426,6 +426,12 @@ export const SelfieMatchModal = ({
                     className="w-full h-full object-cover scale-x-[-1]" // Mirror for selfie
                   />
                   
+                  {/* Face detection overlay canvas */}
+                  <canvas
+                    ref={overlayRef}
+                    className="absolute inset-0 w-full h-full pointer-events-none scale-x-[-1]"
+                  />
+                  
                   {/* Camera loading */}
                   {!cameraActive && (
                     <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
@@ -433,12 +439,38 @@ export const SelfieMatchModal = ({
                     </div>
                   )}
                   
+                  {/* Loading models indicator */}
+                  {loadingModels && (
+                    <div className="absolute top-2 left-2 flex items-center gap-2 px-2 py-1 bg-black/70 rounded text-xs text-purple-300">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      Loading face detection...
+                    </div>
+                  )}
+                  
+                  {/* Face detection status */}
+                  {cameraActive && !loadingModels && (
+                    <div className={`absolute top-2 left-2 flex items-center gap-2 px-2 py-1 rounded text-xs ${
+                      faceDetected ? 'bg-green-500/80 text-white' : 'bg-yellow-500/80 text-black'
+                    }`}>
+                      <Scan className="w-3 h-3" />
+                      {faceDetected 
+                        ? `Face detected (${faceScore}%)`
+                        : 'No face - position your face in view'
+                      }
+                    </div>
+                  )}
+                  
                   {/* Face guide overlay */}
                   {cameraActive && (
                     <div className="absolute inset-0 pointer-events-none">
-                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-60 border-2 border-dashed border-purple-400/50 rounded-full" />
+                      <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-60 border-2 border-dashed rounded-full transition-colors ${
+                        faceDetected ? 'border-green-400/70' : 'border-purple-400/50'
+                      }`} />
                       <p className="absolute bottom-4 left-0 right-0 text-center text-xs text-purple-300">
-                        Position your face in the oval
+                        {faceDetected 
+                          ? '✓ Face detected - ready to capture!'
+                          : 'Position your face in the oval'
+                        }
                       </p>
                     </div>
                   )}
