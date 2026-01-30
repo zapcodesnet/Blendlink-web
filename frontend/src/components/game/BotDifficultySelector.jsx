@@ -475,7 +475,7 @@ export const BotDifficultySelector = ({
     return botWinStats[difficulty.requiredWinsField] || 0;
   };
   
-  const canAffordBet = userBalance >= (currentDifficulty?.fixedBet || 0);
+  const canAffordBet = localBalance >= (currentDifficulty?.fixedBet || 0);
   
   // Get top 5 photos by dollar value with valid stamina
   const top5Photos = useMemo(() => {
