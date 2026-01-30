@@ -39,24 +39,6 @@ const ProfilePictureEditor = ({
   // Circle frame size (responsive)
   const FRAME_SIZE = 200;
   
-  // Track previous photo for reset
-  const [prevPhotoId, setPrevPhotoId] = useState(null);
-  
-  // Reset position when photo changes - use callback to avoid cascading
-  const resetIfPhotoChanged = useCallback(() => {
-    if (photo?.mint_id && photo.mint_id !== prevPhotoId) {
-      setPrevPhotoId(photo.mint_id);
-      setPosition({ x: 0, y: 0 });
-      setZoom(1);
-      setImageLoaded(false);
-    }
-  }, [photo?.mint_id, prevPhotoId]);
-  
-  // Call reset on mount when photo is available
-  useEffect(() => {
-    resetIfPhotoChanged();
-  }, [resetIfPhotoChanged]);
-  
   // Handle image load to get dimensions
   const handleImageLoad = (e) => {
     const img = e.target;
