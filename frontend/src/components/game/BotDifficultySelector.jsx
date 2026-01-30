@@ -1,16 +1,14 @@
 /**
  * BotDifficultySelector Component
  * 
- * Updated: Progressive bot unlock system with 5-photo selection
- * - Easy Bot: Default unlocked, 8 taps/sec, 100 BL fixed bet
- * - Medium Bot: Unlocks after 3 Easy wins, 10 taps/sec, 500 BL fixed bet
- * - Hard Bot: Unlocks after 3 Medium wins, 12 taps/sec, 1000 BL fixed bet
- * - Extremely Hard Bot: Unlocks after 3 Hard wins, 15 taps/sec, 2000 BL fixed bet
+ * Allows players to select bot difficulty and lock in 5 photos for battle.
+ * Bot Difficulties:
+ * - Easy Bot: Default unlocked, 100 BL fixed bet
+ * - Medium Bot: Unlocks after 3 Easy wins, 500 BL fixed bet
+ * - Hard Bot: Unlocks after 3 Medium wins, 1000 BL fixed bet
+ * - Extremely Hard Bot: Unlocks after 3 Hard wins, 2000 BL fixed bet
  * 
- * FIXED: Duplicate scroll bars - Now uses single full-page scroll
- * ADDED: Loading screen after starting battle
- * ADDED: Quick Play button for instant photo selection
- * ADDED: Win/Lose streak indicators with multipliers
+ * Note: Tap rates are hidden from players to encourage gameplay.
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
