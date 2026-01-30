@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import api from '../../services/api';
+import UnifiedPhotoCard from '../photo/UnifiedPhotoCard';
 
 // Constants
 const REQUIRED_PHOTOS = 5;
