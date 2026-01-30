@@ -511,21 +511,32 @@ export const PVPBattleArena = ({
   // Track if already connected on mount
   const hasConnectedRef = useRef(false);
   
-  // Connect on mount
+  // Connect when pvpRoomId becomes available
   useEffect(() => {
-    // Only connect once on mount
-    if (!hasConnectedRef.current) {
+    // Only connect once when pvpRoomId is available
+    if (pvpRoomId && !hasConnectedRef.current && !wsConnected) {
       hasConnectedRef.current = true;
-      // Defer connection to avoid synchronous setState
+      console.log('pvpRoomId available, connecting:', pvpRoomId);
+      // Defer connection slightly to ensure state is ready
       const timeoutId = setTimeout(() => {
         connectWebSocketRef.current?.(false);
-      }, 100); // Small delay to ensure state is ready
+      }, 100);
       return () => clearTimeout(timeoutId);
     }
-  }, []); // Empty deps - only run once
+  }, [pvpRoomId, wsConnected]); // Re-run when pvpRoomId changes
+  
+  // Reset connection state if pvpRoomId changes (e.g., new game)
+  useEffect(() => {
+    if (!pvpRoomId) {
+      hasConnectedRef.current = false;
+    }
+  }, [pvpRoomId]);
   
   // Heartbeat effect with connection health monitoring
   useEffect(() => {
+    // Don't start heartbeat until connected
+    if (!pvpRoomId) return;
+    
     // Heartbeat - every 10 seconds to keep connection alive
     const heartbeat = setInterval(() => {
       if (wsRef.current?.readyState === WebSocket.OPEN) {
