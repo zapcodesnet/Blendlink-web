@@ -2940,6 +2940,14 @@ try:
                 
                 if msg_type == "ping":
                     await websocket.send_json({"type": "pong"})
+                elif msg_type == "ready":
+                    # Player ready via WebSocket - sync with API state
+                    logger.info(f"Player {user_id} sent ready via WebSocket for game {game_id}")
+                    # Just acknowledge - actual ready state is handled by API
+                    await websocket.send_json({"type": "ready_ack", "success": True})
+                else:
+                    # Log unknown message types for debugging
+                    logger.debug(f"Lobby WS unhandled message type: {msg_type}")
                     
         except WebSocketDisconnect:
             await lobby_manager.disconnect(user_id)
