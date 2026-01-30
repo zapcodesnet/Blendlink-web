@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { StreakBadge } from './StreakIndicator';
+import { LikeButtonCompact } from './LikeButton';
 
 // Win streak multipliers (exact values from spec)
 const WIN_STREAK_MULTIPLIERS = {
