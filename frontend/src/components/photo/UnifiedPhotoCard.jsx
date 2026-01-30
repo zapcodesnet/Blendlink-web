@@ -438,8 +438,11 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
             {/* Authenticity Section */}
             <div className="border-t border-gray-700 pt-2 mt-2">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-gray-400">Authenticity</span>
-                <span className="text-green-400">
+                <span className="text-gray-400 flex items-center gap-1">
+                  <Shield size={12} />
+                  Authenticity
+                </span>
+                <span className="text-green-400 font-medium">
                   {faceScore + selfieScore}%
                 </span>
               </div>
@@ -447,15 +450,15 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
               <div className="space-y-1 text-[10px]">
                 <div className="flex justify-between text-gray-500">
                   <span>Face Detection</span>
-                  <span>{faceScore}%</span>
+                  <span>{faceScore}% / 5%</span>
                 </div>
                 <div className="flex justify-between text-gray-500">
                   <span>Selfie Match</span>
-                  <span>{selfieScore > 0 ? `${selfieScore}%` : 'Not done'}</span>
+                  <span>{selfieScore > 0 ? `${selfieScore}% / 5%` : 'Not done'}</span>
                 </div>
               </div>
               
-              {/* Face Match Button */}
+              {/* Face Match Button - Only shows for photos with detected face and not yet matched */}
               {showFaceMatch && hasFace && !selfieCompleted && (
                 <button
                   onClick={(e) => {
@@ -463,24 +466,34 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
                     onFaceMatchClick?.(photo);
                   }}
                   className={cn(
-                    "w-full mt-2 py-2 px-3 rounded-lg",
+                    "w-full mt-2 py-2.5 px-3 rounded-lg",
                     "bg-gradient-to-r from-purple-500 to-pink-500",
-                    "text-white text-xs font-medium",
+                    "text-white text-xs font-semibold",
                     "flex items-center justify-center gap-2",
                     "hover:from-purple-600 hover:to-pink-600 transition-all",
-                    "shadow-lg shadow-purple-500/20"
+                    "shadow-lg shadow-purple-500/20",
+                    "min-h-[48px]" // Large touch target for mobile
                   )}
+                  title="Take a quick live selfie to add up to 5% Authenticity bonus (optional, one-time per photo)"
                   data-testid="face-match-button"
                 >
-                  <Camera size={14} />
+                  <Camera size={16} />
                   Face Match (+5%)
                 </button>
               )}
               
+              {/* Show locked state after successful match */}
               {selfieCompleted && (
-                <div className="flex items-center justify-center gap-1 text-green-400 text-[10px] mt-1">
-                  <Lock size={10} />
-                  Authenticity Locked
+                <div className="flex items-center justify-center gap-1.5 text-green-400 text-xs mt-2 py-1.5 bg-green-500/10 rounded-lg">
+                  <Lock size={12} />
+                  Authenticity Locked Forever
+                </div>
+              )}
+              
+              {/* Show hint if face detected but no selfie done yet */}
+              {hasFace && !selfieCompleted && !showFaceMatch && (
+                <div className="text-[10px] text-purple-400/70 text-center mt-1">
+                  Flip card to access Face Match
                 </div>
               )}
             </div>
