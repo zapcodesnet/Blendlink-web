@@ -1,6 +1,41 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 30, 2026 (P2 Features Complete)
+## Latest Update: January 30, 2026 (Video Export + Photo Editor Improvements)
+
+---
+
+## SESSION 56: BOT BATTLE VIDEO EXPORT + PHOTO EDITOR FIX ✅
+
+### P2: Bot Battle Video Export - COMPLETE
+- Added backend endpoints for replay export:
+  - `GET /battle-replay/{replay_id}/export-video` - HD summary image (PNG)
+  - `POST /battle-replay/{replay_id}/generate-gif` - Animated GIF with round-by-round progression
+- Features:
+  - Quality options: low (640x480), medium (1280x720), high (1920x1080)
+  - Shows result, score, difficulty, bet/winnings, round count
+  - Branded with blendlink.net watermark
+  - GIF shows round progression with taps/RPS choices
+- Updated BattleReplayViewer.jsx with export dropdown:
+  - Animated GIF option
+  - HD Image (PNG) option
+  - Quick browser-generated image (fallback)
+
+### P3: Photo Editor Improvements - COMPLETE
+- Enhanced apiRequest helper with:
+  - 60-second timeout (configurable)
+  - Automatic retry on network errors (exponential backoff)
+  - AbortController for proper timeout handling
+  - Rate limit (429) error message
+- Better user-facing error messages
+
+### Files Modified:
+- `/app/backend/game_routes.py` - Added export-video and generate-gif endpoints
+- `/app/frontend/src/components/game/BattleReplayViewer.jsx` - Export dropdown UI
+- `/app/frontend/src/components/PhotoEditorModal.jsx` - Improved API error handling
+
+### Dependencies Added:
+- FFmpeg installed for potential future video generation
+- Pillow (already installed) for image generation
 
 ---
 
