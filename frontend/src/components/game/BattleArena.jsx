@@ -1178,6 +1178,8 @@ export const BattleArena = ({
               soundEnabled={soundEnabled}
               playerPhoto={selectedPlayerPhoto}
               opponentPhoto={selectedOpponentPhoto}
+              playerStats={effectivePlayerStats}
+              opponentStats={effectiveOpponentStats}
               powerAdvantage={calculatePowerAdvantage(
                 selectedPlayerPhoto, 
                 selectedOpponentPhoto, 
