@@ -521,6 +521,146 @@ async def get_photo(mint_id: str):
     return photo
 
 
+@minting_router.get("/photo/{mint_id}/full-stats")
+async def get_photo_full_stats(mint_id: str, current_user: dict = Depends(get_current_user_from_request)):
+    """
+    Get complete photo stats for synchronization across all pages.
+    Returns all attributes needed for unified display:
+    - Base dollar value (core power)
+    - Scenery type with strength/weakness
+    - Win/lose streaks and multipliers
+    - XP, level, stars
+    - Reaction bonuses
+    - Monthly growth value
+    - Paid upgrades
+    - Authenticity (face detection + selfie match)
+    - Stamina
+    - Subscription XP multiplier (if active)
+    """
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    photo = await _db.minted_photos.find_one(
+        {"mint_id": mint_id},
+        {"_id": 0, "image_data": 0}  # Exclude large image data
+    )
+    
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    
+    # Get user's subscription for XP multiplier
+    user_subscription = None
+    if current_user:
+        user_sub = await _db.subscriptions.find_one(
+            {"user_id": current_user["user_id"], "status": "active"},
+            {"_id": 0}
+        )
+        if user_sub:
+            from subscription_tiers import SUBSCRIPTION_TIERS
+            tier = user_sub.get("tier", "free")
+            tier_info = SUBSCRIPTION_TIERS.get(tier, SUBSCRIPTION_TIERS["free"])
+            user_subscription = {
+                "tier": tier,
+                "xp_multiplier": tier_info.get("xp_multiplier", 1),
+                "name": tier_info.get("name", "Free"),
+            }
+    
+    # Calculate derived values
+    level = photo.get("level", 1)
+    stars = photo.get("stars", 0) or get_level_stars(level)
+    has_golden_frame = level >= 60
+    level_bonus_percent = photo.get("level_bonus_percent", 0) or (level // 5) * 2
+    
+    # Win/lose streak calculations
+    win_streak = photo.get("win_streak", 0)
+    lose_streak = photo.get("lose_streak", 0)
+    streak_multiplier = 1 + (win_streak * 0.1) if win_streak >= 3 else 1.0
+    has_immunity = lose_streak >= 3
+    
+    # Authenticity
+    face_score = photo.get("face_detection_score", 0)
+    selfie_score = photo.get("selfie_match_score", 0)
+    total_authenticity = min(face_score + selfie_score, 10)  # Max 10%
+    authenticity_bonus = int(1_000_000_000 * (total_authenticity / 100))  # Up to $100M
+    
+    # Build comprehensive response
+    full_stats = {
+        # Core identification
+        "mint_id": photo.get("mint_id"),
+        "name": photo.get("name"),
+        "image_url": photo.get("image_url"),
+        "thumbnail_url": photo.get("thumbnail_url"),
+        
+        # Dollar values
+        "base_dollar_value": photo.get("base_dollar_value", 1_000_000),
+        "dollar_value": photo.get("dollar_value", photo.get("base_dollar_value", 1_000_000)),
+        "total_upgrade_value": photo.get("total_upgrade_value", 0),
+        "monthly_growth_value": photo.get("monthly_growth_value", 0),
+        "reaction_bonus_value": photo.get("reaction_bonus_value", 0),
+        "level_bonus_percent": level_bonus_percent,
+        "authenticity_bonus_value": authenticity_bonus,
+        
+        # Scenery
+        "scenery_type": photo.get("scenery_type", "natural"),
+        "strength_vs": photo.get("strength_vs", ""),
+        "weakness_vs": photo.get("weakness_vs", ""),
+        "light_type": photo.get("light_type", "sunlight_fire"),
+        "light_strength_vs": photo.get("light_strength_vs", ""),
+        "light_weakness_vs": photo.get("light_weakness_vs", ""),
+        
+        # Level & XP
+        "level": level,
+        "xp": photo.get("xp", 0),
+        "stars": stars,
+        "has_golden_frame": has_golden_frame,
+        
+        # Streaks
+        "win_streak": win_streak,
+        "lose_streak": lose_streak,
+        "streak_multiplier": streak_multiplier,
+        "has_immunity": has_immunity,
+        "battles_won": photo.get("battles_won", 0),
+        "battles_lost": photo.get("battles_lost", 0),
+        
+        # Reactions
+        "total_reactions": photo.get("total_reactions", 0),
+        "likes_count": photo.get("likes_count", 0),
+        
+        # Authenticity
+        "has_face": photo.get("has_face", False),
+        "face_detection_score": face_score,
+        "selfie_match_score": selfie_score,
+        "selfie_match_completed": photo.get("selfie_match_completed", False),
+        "selfie_match_attempts": photo.get("selfie_match_attempts", 0),
+        "total_authenticity": total_authenticity,
+        
+        # Stamina
+        "stamina": photo.get("stamina", 100),
+        "current_stamina": photo.get("current_stamina", 24),
+        "max_stamina": photo.get("max_stamina", 24),
+        
+        # Ownership
+        "user_id": photo.get("user_id"),
+        "minted_by_user_id": photo.get("minted_by_user_id"),
+        "minted_by_username": photo.get("minted_by_username"),
+        
+        # Category ratings
+        "ratings": photo.get("ratings", {}),
+        "category_values": photo.get("category_values", {}),
+        "overall_score": photo.get("overall_score", 0),
+        
+        # User subscription (for XP multiplier display)
+        "user_subscription": user_subscription,
+        
+        # Timestamps
+        "created_at": photo.get("created_at"),
+        "minted_at": photo.get("minted_at"),
+        "last_battle_at": photo.get("last_battle_at"),
+    }
+    
+    return full_stats
+
+
 @minting_router.get("/photo/{mint_id}/image")
 async def get_photo_image(mint_id: str):
     """Get the full image data for a minted photo"""
