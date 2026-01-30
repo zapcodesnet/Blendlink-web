@@ -168,7 +168,7 @@ export const PVPBattleArena = ({
     const wsProtocol = backendUrl.startsWith('https') ? 'wss' : 'ws';
     const wsHost = backendUrl.replace(/^https?:\/\//, '');
     
-    return `${wsProtocol}://${wsHost}/ws/pvp-game/${pvpRoomId}/${token}`;
+    return `${wsProtocol}://${wsHost}/api/ws/pvp-game/${pvpRoomId}/${token}`;
   }, [pvpRoomId]);
   
   // Handle WebSocket messages
