@@ -110,17 +110,6 @@ const apiRequest = async (endpoint, options = {}, retries = 1, timeout = 60000) 
   
   return attemptRequest(1);
 };
-    }
-    
-    return response.json();
-  } catch (error) {
-    // Handle network errors
-    if (error.name === 'TypeError' && error.message.includes('fetch')) {
-      throw new Error('Network error. Please check your connection.');
-    }
-    throw error;
-  }
-};
 
 // Background presets - matches backend BACKGROUND_PATTERNS
 const BACKGROUND_PRESETS = {
