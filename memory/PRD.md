@@ -1,10 +1,48 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 30, 2026 (P1 Integration Complete - Profile Gallery & Face Match)
+## Latest Update: January 30, 2026 (Face Match Accept/Decline Flow Complete)
 
 ---
 
-## SESSION 65: P1 Integration Complete ✅
+## SESSION 66: Face Match Button Enhancement ✅
+
+### Completed - Face Match for Existing Minted Photos:
+
+1. **Accept/Decline Confirmation Dialog**
+   - Shows FIRST before camera: "Add 5% Dollar Bonus via live selfie?"
+   - "Accept Photo Face Match Now" → proceeds to camera
+   - "No Photo Face Match" → shows decline warning
+
+2. **Decline Warning**
+   - Shows "Are you sure?" with cost info
+   - "It will cost 100 BL coins per try next time (max 300 BL for 3 tries)"
+   - Options: "Skip for now" or "I'll do Face Match"
+
+3. **Enhanced Face Match Button**
+   - Location: Card BACK, right next to Authenticity section
+   - Button text: "Face Match (+5%)" with Camera icon
+   - Size: min-h-[48px] for mobile touch target
+   - Tooltip: "Take a quick live selfie to add up to 5% Authenticity bonus"
+   - Hides after selfie_match_completed=true
+
+4. **Camera View Improvements**
+   - Shows attempts remaining (3/3) and cost (100 BL)
+   - Face detection overlay with status indicator
+   - Reference photo preview with current authenticity
+
+### Testing Results (iteration_85.json):
+- **Frontend: 100%** (7/7 features verified)
+- All UI flows confirmed working
+- Test photo: mint_test_a1d75b2038d747fe (has_face=true)
+
+### Files Modified:
+- `/app/frontend/src/components/minting/SelfieMatchModal.jsx` - Accept/Decline confirmation
+- `/app/frontend/src/components/photo/UnifiedPhotoCard.jsx` - Enhanced button styling
+- `/app/mobile/src/components/FaceMatchModal.js` - Same Accept/Decline flow
+
+---
+
+## SESSION 65: P1 Integration Complete - Profile Gallery & Face Match ✅
 
 ### Completed Features:
 
