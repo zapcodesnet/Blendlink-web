@@ -399,9 +399,9 @@ export const PVPBattleArena = ({
     if (!wsUrl) {
       // Don't show error toast during initial load - just log and wait
       console.log('WebSocket URL not ready yet - waiting for pvpRoomId');
-      // Only show toast if this is a manual reconnect attempt
+      // Only show toast if this is a manual reconnect attempt (throttled)
       if (isReconnect) {
-        toast.error('Room not ready - please wait...');
+        showToastThrottled('info', 'Waiting for room...');
       }
       setReconnecting(false);
       return;
