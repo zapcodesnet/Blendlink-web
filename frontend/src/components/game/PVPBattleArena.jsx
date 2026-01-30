@@ -208,7 +208,8 @@ export const PVPBattleArena = ({
             setReconnecting(false);
             reconnectAttempts.current = 0;
           } else {
-            toast.error('Failed to join game room');
+            // Use throttled toast to avoid spam
+            showToastThrottled('error', 'Failed to join game room - retrying...');
           }
           break;
         
