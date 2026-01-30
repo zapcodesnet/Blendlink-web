@@ -662,19 +662,68 @@ export const BattleReplayViewer = ({
             Share
           </Button>
           
-          <Button
-            onClick={handleDownloadVideo}
-            disabled={isRecording}
-            variant="outline"
-            className="flex-1"
-          >
-            {isRecording ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Download className="w-4 h-4 mr-2" />
-            )}
-            Download
-          </Button>
+          {/* Download dropdown */}
+          <div className="relative flex-1">
+            <Button
+              onClick={() => setShowDownloadOptions(!showDownloadOptions)}
+              disabled={isRecording}
+              variant="outline"
+              className="w-full"
+            >
+              {isRecording ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4 mr-2" />
+              )}
+              Export
+            </Button>
+            
+            {/* Dropdown options */}
+            <AnimatePresence>
+              {showDownloadOptions && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute bottom-full mb-2 left-0 right-0 bg-gray-800 border border-gray-700 rounded-lg overflow-hidden shadow-xl z-20"
+                >
+                  <button
+                    onClick={handleDownloadGif}
+                    disabled={isRecording}
+                    className="w-full px-4 py-3 text-left hover:bg-gray-700 flex items-center gap-3 text-sm"
+                  >
+                    <span className="text-xl">🎬</span>
+                    <div>
+                      <p className="text-white font-medium">Animated GIF</p>
+                      <p className="text-gray-400 text-xs">Animated replay summary</p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={handleDownloadImage}
+                    disabled={isRecording}
+                    className="w-full px-4 py-3 text-left hover:bg-gray-700 flex items-center gap-3 text-sm border-t border-gray-700"
+                  >
+                    <span className="text-xl">🖼️</span>
+                    <div>
+                      <p className="text-white font-medium">HD Image (PNG)</p>
+                      <p className="text-gray-400 text-xs">High quality summary card</p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={handleDownloadVideo}
+                    disabled={isRecording}
+                    className="w-full px-4 py-3 text-left hover:bg-gray-700 flex items-center gap-3 text-sm border-t border-gray-700"
+                  >
+                    <span className="text-xl">📷</span>
+                    <div>
+                      <p className="text-white font-medium">Quick Image</p>
+                      <p className="text-gray-400 text-xs">Browser-generated (fast)</p>
+                    </div>
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
       
