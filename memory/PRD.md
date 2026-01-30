@@ -1,6 +1,57 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 30, 2026 (CRITICAL PVP WebSocket Fix)
+## Latest Update: January 30, 2026 (PVP Sync + Auto-Room Creation Fix)
+
+---
+
+## SESSION 60: PVP ENDLESS WAITING + ROOM NOT READY FIX ✅ (VERIFIED)
+
+### Bug Fixed: "Waiting for Opponent" + "Room Not Ready" Endless Loop
+**Problems**:
+1. "Waiting for opponent to select..." spins forever
+2. Sync/Connection bars are slashed
+3. "Connection failed - room not ready" popup repeats every 2 seconds
+4. Game never progresses after photo selection
+
+### Root Causes Identified & Fixed:
+
+**Issue 1: Room Not Created When Players Connect**
+- The room was only created when `/open-games/start/{game_id}` was called
+- But players often connected BEFORE the room existed
+- FIX: Added on-demand room creation in `server.py` - if room doesn't exist when player joins, it's created automatically
+
+**Issue 2: pvpRoomId Not Passed Correctly**
+- `GameLobby.jsx` wasn't passing `pvp_room_id` to `onGameStart` in all code paths
+- FIX: Updated `handleCountdownComplete` and polling fallback to include `pvp_room_id`
+
+**Issue 3: Component Connecting Before pvpRoomId Available**
+- `PVPBattleArena` tried to connect immediately on mount, before `pvpRoomId` state was set
+- FIX: Changed to wait for `pvpRoomId` prop before attempting connection
+
+**Issue 4: Repeated Error Toasts**
+- Every failed connection attempt triggered a toast, causing spam
+- FIX: Added toast throttling (5 second minimum between toasts)
+
+### Files Modified:
+
+**Backend:**
+- `/app/backend/server.py` - Added on-demand PVP room creation in WebSocket handler
+- `/app/backend/lobby_websocket.py` - Ensured pvp_room_id in game_start broadcast
+
+**Frontend:**
+- `/app/frontend/src/components/game/PVPBattleArena.jsx`:
+  - Wait for `pvpRoomId` before connecting
+  - Added toast throttling to prevent spam
+  - Better reconnection logic
+- `/app/frontend/src/components/game/GameLobby.jsx`:
+  - Pass `pvp_room_id` in all `onGameStart` calls
+
+### Verification Test PASSED:
+```
+✓ Connected: connected
+✓ Join result: success=True, room=test_pvp_room_179792
+✓ TEST PASSED
+```
 
 ---
 
