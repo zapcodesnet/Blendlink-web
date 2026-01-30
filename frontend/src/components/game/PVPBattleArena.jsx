@@ -360,7 +360,12 @@ export const PVPBattleArena = ({
   const connectWebSocketRef = useRef(null);
   
   // Track last pong time for connection health monitoring
-  const lastPongTimeRef = useRef(Date.now());
+  const lastPongTimeRef = useRef(0);
+  
+  // Initialize lastPongTime on mount
+  useEffect(() => {
+    lastPongTimeRef.current = Date.now();
+  }, []);
   
   // Connect to WebSocket
   const connectWebSocket = useCallback((isReconnect = false) => {
