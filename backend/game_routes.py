@@ -572,47 +572,34 @@ async def start_pvp_game(
         }}
     )
     
-    # Broadcast game start via WebSocket
+    # Create PVP game room for real-time synchronized gameplay FIRST
+    room_id = None
+    try:
+        from pvp_game_websocket import pvp_game_manager
+        room_id = await pvp_game_manager.create_room(game_id)
+        logger.info(f"Created PVP room {room_id} for game {game_id}")
+    except Exception as e:
+        logger.warning(f"Could not create PVP game room: {e}")
+    
+    # Broadcast game start via WebSocket (include pvp_room_id)
     try:
         from lobby_websocket import lobby_manager
         await lobby_manager.broadcast_game_start(
             game_id=game_id,
             session_id=session.session_id,
-            session_data=session.model_dump()
+            session_data=session.model_dump(),
+            pvp_room_id=room_id  # Include room ID in broadcast
         )
     except Exception as e:
         logger.warning(f"Could not broadcast game start: {e}")
     
-    # Create PVP game room for real-time synchronized gameplay
-    try:
-        from pvp_game_websocket import pvp_game_manager
-        room_id = await pvp_game_manager.create_room(game_id)
-        
-        # Broadcast room creation
-        try:
-            from lobby_websocket import lobby_manager
-            await lobby_manager.broadcast_to_lobby(game_id, {
-                "type": "pvp_room_created",
-                "room_id": room_id,
-                "session_id": session.session_id,
-            })
-        except Exception as e:
-            logger.warning(f"Could not broadcast room creation: {e}")
-        
-        return {
-            "success": True,
-            "session_id": session.session_id,
-            "session": session.model_dump(),
-            "pvp_room_id": room_id,
-            "websocket_url": f"/ws/pvp-game/{room_id}",
-        }
-    except Exception as e:
-        logger.warning(f"Could not create PVP game room: {e}")
-        return {
-            "success": True,
-            "session_id": session.session_id,
-            "session": session.model_dump()
-        }
+    return {
+        "success": True,
+        "session_id": session.session_id,
+        "session": session.model_dump(),
+        "pvp_room_id": room_id,
+        "websocket_url": f"/ws/pvp-game/{room_id}" if room_id else None,
+    }
 
 
 @game_router.delete("/open-games/{game_id}")
