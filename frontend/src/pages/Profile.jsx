@@ -6,11 +6,12 @@ import { toast } from "sonner";
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { MedalShowcase } from "../components/MedalShowcase";
+import UnifiedPhotoCard from "../components/photo/UnifiedPhotoCard";
 import { 
   Settings, Grid3X3, Heart, Bookmark, Share2, 
   Users, MessageCircle, Coins, ArrowLeft, Edit, Copy,
   TrendingUp, Wallet, Crown, Shield, FolderOpen, Sparkles, ShoppingBag,
-  Users2, Calendar, FileText
+  Users2, Calendar, FileText, Image
 } from "lucide-react";
 
 export default function Profile() {
@@ -19,14 +20,17 @@ export default function Profile() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
+  const [mintedPhotos, setMintedPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [activeTab, setActiveTab] = useState('photos'); // 'photos' | 'posts'
 
   const isOwnProfile = !id || id === currentUser?.user_id;
 
   useEffect(() => {
     fetchProfile();
     fetchPosts();
+    fetchMintedPhotos();
   }, [id]);
 
   const fetchProfile = async () => {
