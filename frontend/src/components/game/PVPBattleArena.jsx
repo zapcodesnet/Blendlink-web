@@ -475,10 +475,15 @@ export const PVPBattleArena = ({
   
   // Manual reconnect function
   const handleManualReconnect = useCallback(() => {
+    if (wsConnected) return;
+    
+    // Reset attempts for manual reconnect
     reconnectAttempts.current = 0;
+    setReconnectAttemptCount(0);
     setReconnecting(true);
+    toast.info('Reconnecting to game...');
     connectWebSocket(true);
-  }, [connectWebSocket]);
+  }, [connectWebSocket, wsConnected]);
   
   // Track if already connected on mount
   const hasConnectedRef = useRef(false);
