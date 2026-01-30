@@ -2953,7 +2953,7 @@ except Exception as e:
 
 # Load PVP Game WebSocket (Real-time synchronized gameplay)
 try:
-    from pvp_game_websocket import pvp_game_manager
+    from pvp_game_websocket import pvp_game_manager, PVPGameRoom
     from fastapi import WebSocket, WebSocketDisconnect
     
     # Set database for PVP manager
