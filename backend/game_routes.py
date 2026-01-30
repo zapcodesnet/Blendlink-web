@@ -2909,3 +2909,185 @@ async def simulate_reactions(
         "total_reactions": updated_photo.get("reaction_count", 0),
         "reactions_breakdown": updated_photo.get("reactions", {})
     }
+
+
+# ============== TOP LIKED PHOTOS LEADERBOARD ==============
+
+@game_router.get("/leaderboard/top-liked-photos")
+async def get_top_liked_photos(
+    limit: int = 20,
+    period: str = "all_time",  # all_time, this_week, this_month
+    current_user: Optional[dict] = Depends(get_optional_user)
+):
+    """
+    Get leaderboard of most liked/reacted photos
+    
+    Periods:
+    - all_time: All photos sorted by total reactions
+    - this_week: Photos created or reacted to in the last 7 days
+    - this_month: Photos created or reacted to in the last 30 days
+    """
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    # Build date filter
+    date_filter = {}
+    if period == "this_week":
+        date_filter = {"created_at": {"$gte": datetime.now(timezone.utc) - timedelta(days=7)}}
+    elif period == "this_month":
+        date_filter = {"created_at": {"$gte": datetime.now(timezone.utc) - timedelta(days=30)}}
+    
+    # Aggregation pipeline
+    pipeline = [
+        {"$match": {
+            **date_filter,
+            "reaction_count": {"$gt": 0}  # Only photos with reactions
+        }},
+        {"$sort": {"reaction_count": -1, "dollar_value": -1}},
+        {"$limit": limit},
+        # Lookup user info
+        {
+            "$lookup": {
+                "from": "users",
+                "let": {"user_id": "$user_id"},
+                "pipeline": [
+                    {"$match": {"$expr": {"$eq": ["$user_id", "$$user_id"]}}},
+                    {"$project": {"username": 1, "profile_image": 1, "_id": 0}}
+                ],
+                "as": "owner_info"
+            }
+        },
+        {"$unwind": {"path": "$owner_info", "preserveNullAndEmptyArrays": True}},
+        # Project fields
+        {
+            "$project": {
+                "_id": 0,
+                "mint_id": 1,
+                "name": 1,
+                "image_url": 1,
+                "dollar_value": 1,
+                "level": 1,
+                "scenery_type": 1,
+                "reaction_count": 1,
+                "reactions": 1,
+                "created_at": 1,
+                "battles_won": 1,
+                "battles_lost": 1,
+                "current_win_streak": 1,
+                "owner_username": "$owner_info.username",
+                "owner_avatar": "$owner_info.profile_image",
+                "user_id": 1
+            }
+        }
+    ]
+    
+    photos = await _db.minted_photos.aggregate(pipeline).to_list(length=limit)
+    
+    # Add rank and check if current user liked each photo
+    for i, photo in enumerate(photos):
+        photo["rank"] = i + 1
+        if photo.get("created_at"):
+            photo["created_at"] = photo["created_at"].isoformat() if hasattr(photo["created_at"], 'isoformat') else str(photo["created_at"])
+        
+        # Check if current user has liked this photo
+        if current_user:
+            user_reaction = await _db.photo_reactions.find_one({
+                "photo_id": photo["mint_id"],
+                "user_id": current_user["user_id"]
+            })
+            photo["user_liked"] = user_reaction is not None
+        else:
+            photo["user_liked"] = False
+    
+    return {
+        "photos": photos,
+        "period": period,
+        "total": len(photos)
+    }
+
+
+@game_router.get("/leaderboard/top-players")
+async def get_top_players(
+    limit: int = 20,
+    sort_by: str = "total_wins"  # total_wins, bl_coins, total_photos
+):
+    """
+    Get leaderboard of top players
+    
+    Sort options:
+    - total_wins: Most battle wins
+    - bl_coins: Most BL coins
+    - total_photos: Most minted photos
+    """
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    # Aggregation to get player stats
+    pipeline = [
+        # Get all minted photos and group by user
+        {
+            "$group": {
+                "_id": "$user_id",
+                "total_photos": {"$sum": 1},
+                "total_wins": {"$sum": "$battles_won"},
+                "total_losses": {"$sum": "$battles_lost"},
+                "total_reactions": {"$sum": {"$ifNull": ["$reaction_count", 0]}},
+                "total_dollar_value": {"$sum": "$dollar_value"},
+            }
+        },
+        # Lookup user info
+        {
+            "$lookup": {
+                "from": "users",
+                "let": {"user_id": "$_id"},
+                "pipeline": [
+                    {"$match": {"$expr": {"$eq": ["$user_id", "$$user_id"]}}},
+                    {"$project": {"username": 1, "profile_image": 1, "bl_coins": 1, "_id": 0}}
+                ],
+                "as": "user_info"
+            }
+        },
+        {"$unwind": {"path": "$user_info", "preserveNullAndEmptyArrays": True}},
+        # Add user fields
+        {
+            "$project": {
+                "_id": 0,
+                "user_id": "$_id",
+                "username": {"$ifNull": ["$user_info.username", "Anonymous"]},
+                "avatar": "$user_info.profile_image",
+                "bl_coins": {"$ifNull": ["$user_info.bl_coins", 0]},
+                "total_photos": 1,
+                "total_wins": 1,
+                "total_losses": 1,
+                "total_reactions": 1,
+                "total_dollar_value": 1,
+                "win_rate": {
+                    "$cond": [
+                        {"$eq": [{"$add": ["$total_wins", "$total_losses"]}, 0]},
+                        0,
+                        {"$multiply": [
+                            {"$divide": ["$total_wins", {"$add": ["$total_wins", "$total_losses"]}]},
+                            100
+                        ]}
+                    ]
+                }
+            }
+        },
+        # Sort
+        {"$sort": {sort_by: -1, "total_wins": -1}},
+        {"$limit": limit}
+    ]
+    
+    players = await _db.minted_photos.aggregate(pipeline).to_list(length=limit)
+    
+    # Add rank
+    for i, player in enumerate(players):
+        player["rank"] = i + 1
+        player["win_rate"] = round(player.get("win_rate", 0), 1)
+    
+    return {
+        "players": players,
+        "sort_by": sort_by,
+        "total": len(players)
+    }
+
