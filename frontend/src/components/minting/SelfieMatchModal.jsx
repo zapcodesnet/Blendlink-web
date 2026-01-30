@@ -441,7 +441,7 @@ export const SelfieMatchModal = ({
                         If you skip now, it will cost <span className="text-yellow-400 font-bold">100 BL coins per try</span> next time (max 300 BL for 3 tries).
                       </p>
                       <p className="text-xs text-gray-400">
-                        This is a one-time opportunity to add up to 5% Authenticity bonus to your photo's Dollar Value.
+                        This is a one-time opportunity to add up to 5% Authenticity bonus to your photo&apos;s Dollar Value.
                       </p>
                     </div>
                   </div>
