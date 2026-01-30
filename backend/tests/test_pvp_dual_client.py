@@ -104,7 +104,7 @@ class TestPVPDualClient:
         
         # User1 creates open game
         print("\n=== User1 Creating Open Game ===")
-        create_response = self.session1.post(f"{BASE_URL}/api/photo-game/open-games", json={
+        create_response = self.session1.post(f"{BASE_URL}/api/photo-game/open-games/create", json={
             "photo_ids": self.user1_photo_ids[:5],
             "bet_amount": 0,
         })
