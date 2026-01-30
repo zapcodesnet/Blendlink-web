@@ -1265,6 +1265,20 @@ export const photoGameAPI = {
     return response.data;
   },
 
+  // Mark ready in game lobby
+  markReady: async (gameId) => {
+    const response = await api.post('/photo-game/open-games/ready', {
+      game_id: gameId,
+    });
+    return response.data;
+  },
+
+  // Start an open game (after both players ready)
+  startOpenGame: async (gameId) => {
+    const response = await api.post(`/photo-game/open-games/start/${gameId}`);
+    return response.data;
+  },
+
   // Cancel an open game (creator only)
   cancelOpenGame: async (gameId) => {
     const response = await api.delete(`/photo-game/open-games/${gameId}`);
