@@ -148,12 +148,43 @@ const PhotoSelectionCard = ({
 }) => {
   const scenery = SCENERY_CONFIG[photo?.scenery_type] || SCENERY_CONFIG.natural;
   const starBonus = calculateStarBonus(photo?.level || 1);
+  const level = photo?.level || 1;
+  const stars = Math.min(Math.floor(level / 10), 5);
+  
+  // Stamina calculation
+  const currentStamina = photo?.current_stamina ?? 24;
+  const maxStamina = photo?.max_stamina ?? 24;
+  const staminaPercent = Math.round((currentStamina / maxStamina) * 100);
+  
+  // Win/Lose streaks
+  const winStreak = photo?.current_win_streak || 0;
+  const loseStreak = photo?.current_lose_streak || 0;
+  const hasStreakMultiplier = winStreak >= 3;
+  const hasImmunity = loseStreak >= 3;
+  
+  // Reactions/likes bonus
+  const likes = photo?.reaction_count || photo?.likes_count || 0;
+  const likesBonus = likes * 500; // $500 per like
+  
+  // Age bonus (every 30 days = $1M)
+  const createdAt = photo?.created_at;
+  let ageBonus = 0;
+  let daysOld = 0;
+  if (createdAt) {
+    const created = new Date(createdAt);
+    daysOld = Math.floor((new Date() - created) / (1000 * 60 * 60 * 24));
+    const monthsOld = Math.floor(daysOld / 30);
+    ageBonus = monthsOld * 1_000_000;
+  }
+  
+  // Show tooltip on hover
+  const [showTooltip, setShowTooltip] = useState(false);
   
   return (
     <motion.button
       onClick={() => !disabled && !used && onSelect(photo)}
       disabled={disabled || used}
-      className={`relative w-28 h-36 rounded-xl overflow-hidden transition-all ${
+      className={`relative w-32 sm:w-36 rounded-xl overflow-hidden transition-all ${
         used 
           ? 'opacity-40 grayscale cursor-not-allowed' 
           : selected 
@@ -161,10 +192,12 @@ const PhotoSelectionCard = ({
             : 'hover:scale-105 cursor-pointer'
       }`}
       whileHover={!disabled && !used ? { y: -4 } : {}}
+      onMouseEnter={() => setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
       data-testid={`photo-select-${photo?.mint_id}`}
     >
       {/* Photo Image */}
-      <div className="w-full h-24 bg-gray-800">
+      <div className="w-full h-24 bg-gray-800 relative">
         {photo?.image_url ? (
           <img 
             src={photo.image_url} 
@@ -176,21 +209,98 @@ const PhotoSelectionCard = ({
             <span className="text-3xl opacity-60">{scenery.icon}</span>
           </div>
         )}
+        
+        {/* Streak badges on image */}
+        <div className="absolute top-1 right-1 flex gap-1">
+          {hasStreakMultiplier && (
+            <span className="px-1 py-0.5 bg-orange-500/90 rounded text-[9px] font-bold text-white">
+              🔥{winStreak}
+            </span>
+          )}
+          {hasImmunity && (
+            <span className="px-1 py-0.5 bg-blue-500/90 rounded text-[9px] font-bold text-white">
+              🛡️
+            </span>
+          )}
+        </div>
       </div>
       
-      {/* Info */}
-      <div className="p-2 bg-gray-900">
-        <p className="text-xs text-white font-bold truncate">{photo?.name || 'Photo'}</p>
-        <p className="text-xs text-yellow-400">{formatDollarValue(photo?.dollar_value)}</p>
-        {starBonus > 0 && <StarDisplay level={photo?.level || 1} size="small" />}
+      {/* Dollar Value - Prominent */}
+      <div className="px-2 py-1 bg-gray-900 border-b border-gray-700">
+        <p className="text-sm text-yellow-400 font-bold text-center">
+          {formatDollarValue(photo?.dollar_value)}
+        </p>
       </div>
       
-      {/* Scenery badge */}
-      <div className="absolute top-1 left-1">
-        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold bg-gradient-to-r ${scenery.color} text-white`}>
-          {scenery.icon}
-        </span>
+      {/* Full Stats Display */}
+      <div className="p-2 bg-gray-900/95 space-y-1">
+        {/* Scenery with strength/weakness */}
+        <div className="flex items-center justify-between text-[10px]">
+          <span className={`px-1.5 py-0.5 rounded bg-gradient-to-r ${scenery.color} text-white font-bold`}>
+            {scenery.icon} {scenery.name}
+          </span>
+          <span className="text-gray-400 text-[8px]">
+            ⬆{scenery.strong?.slice(0,3)} ⬇{scenery.weak?.slice(0,3)}
+          </span>
+        </div>
+        
+        {/* Stamina bar */}
+        <div className="flex items-center gap-1">
+          <span className="text-[9px] text-gray-400">⚡</span>
+          <div className="flex-1 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+            <div 
+              className={`h-full transition-all ${
+                staminaPercent > 50 ? 'bg-green-500' : staminaPercent > 25 ? 'bg-yellow-500' : 'bg-red-500'
+              }`}
+              style={{ width: `${staminaPercent}%` }}
+            />
+          </div>
+          <span className="text-[9px] text-gray-400">{currentStamina}/{maxStamina}</span>
+        </div>
+        
+        {/* Level & Stars */}
+        <div className="flex items-center justify-between text-[10px]">
+          <span className="text-purple-400 font-medium">Lv{level}</span>
+          <span className="text-yellow-400">
+            {'★'.repeat(stars)}{'☆'.repeat(5-stars)}
+            {starBonus > 0 && <span className="text-green-400 ml-1">+{starBonus}%</span>}
+          </span>
+        </div>
+        
+        {/* Likes & Bonuses */}
+        <div className="flex items-center justify-between text-[10px]">
+          {likes > 0 ? (
+            <span className="text-pink-400">❤️{likes}</span>
+          ) : (
+            <span className="text-gray-500">❤️0</span>
+          )}
+          {ageBonus > 0 && (
+            <span className="text-green-400 text-[9px]">+${ageBonus/1_000_000}M</span>
+          )}
+        </div>
       </div>
+      
+      {/* Hover Tooltip with detailed info */}
+      <AnimatePresence>
+        {showTooltip && !used && (
+          <motion.div
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 5 }}
+            className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 translate-y-full z-50 w-48 p-2 bg-gray-900 border border-gray-600 rounded-lg shadow-xl text-[10px]"
+          >
+            <p className="text-white font-bold mb-1">{photo?.name || 'Photo'}</p>
+            <div className="space-y-0.5 text-gray-300">
+              <p>🎯 <span className="text-green-400">Strong vs {scenery.strong}</span></p>
+              <p>⚠️ <span className="text-red-400">Weak vs {scenery.weak}</span></p>
+              {hasStreakMultiplier && <p>🔥 {winStreak} win streak (+{Math.round((WIN_STREAK_MULTIPLIERS[Math.min(winStreak, 10)] - 1) * 100)}%)</p>}
+              {hasImmunity && <p>🛡️ Immunity active (negates weakness)</p>}
+              {likesBonus > 0 && <p>❤️ +${(likesBonus/1000).toFixed(0)}K from {likes} likes</p>}
+              {ageBonus > 0 && <p>📅 +${ageBonus/1_000_000}M ({Math.floor(daysOld/30)} months old)</p>}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {/* Used overlay */}
       {used && (
@@ -202,7 +312,7 @@ const PhotoSelectionCard = ({
       {/* Selected checkmark */}
       {selected && !used && (
         <motion.div 
-          className="absolute top-1 right-1 w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center"
+          className="absolute top-1 left-1 w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center"
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
         >
