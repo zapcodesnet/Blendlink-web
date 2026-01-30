@@ -1,6 +1,63 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 30, 2026 (Bot Tap Rates + Photo Stats Display)
+## Latest Update: January 30, 2026 (Major Bot Battle Update)
+
+---
+
+## SESSION 58: MAJOR BOT BATTLE UPDATE ✅
+
+### Update 1: Updated Bot Stats & Tap Rates (All Hidden)
+- **Easy Bot**: 
+  - $1,000,000,000 ($1B) minimum Dollar Value
+  - 12 TPS (hidden from players)
+  - Fixed bet: 200 BL
+  - Scenery: 1 Water, 1 Natural, 1 Man-made, 2 Neutral
+- **Medium Bot**: 
+  - $2,000,000,000 ($2B) minimum Dollar Value
+  - 18 TPS (hidden)
+  - Fixed bet: 1,000 BL
+  - Scenery: 1 Water, 1 Natural, 2 Man-made, 1 Neutral
+- **Hard Bot**: 
+  - $5,000,000,000 ($5B) minimum Dollar Value
+  - 20 TPS (hidden)
+  - Fixed bet: 5,000 BL
+  - Scenery: 1 Water, 2 Natural, 1 Man-made, 1 Neutral
+- **Extremely Hard Bot**: 
+  - $10,000,000,000 ($10B) minimum Dollar Value
+  - 25 TPS (hidden)
+  - Fixed bet: 10,000 BL
+  - Scenery: 2 Water, 1 Natural, 1 Man-made, 1 Neutral
+
+### Update 2: Post-Game Buttons After Bot Battle
+- Added "Return to Dollar Auction Arena" button → redirects to /photo-game
+- Added "Play Again" button → restarts same bot difficulty
+- Buttons are visible after any Bot Battle (win, loss, or tie)
+- Styled prominently for visibility
+
+### Update 3: Claimable One-Time BL Coin Bonuses
+- **Medium unlock (3 wins vs Easy)**: +20,000 BL
+- **Hard unlock (3 wins vs Medium)**: +100,000 BL
+- **Extreme unlock (3 wins vs Hard)**: +500,000 BL
+- **Extreme mastery (3 wins vs Extreme)**: +1,000,000 BL
+- Bonuses are NOT auto-credited - require player to claim
+- New `ClaimableBonusBanner` component with exciting animation:
+  - Coin bags flying to wallet
+  - Confetti burst effect
+  - Haptic vibration on mobile
+- Backend endpoints:
+  - `GET /bot-battle/stats` - returns claimable_bonuses array
+  - `POST /bot-battle/claim-bonus?bonus_id=X` - claims bonus and credits BL
+
+### Files Modified:
+- `/app/backend/game_routes.py` - Updated BOT_DIFFICULTY_CONFIG, claim-bonus endpoint
+- `/app/frontend/src/components/game/ClaimableBonusBanner.jsx` - NEW component
+- `/app/frontend/src/components/game/BotDifficultySelector.jsx` - Integrated ClaimableBonusBanner
+- `/app/frontend/src/pages/PhotoGameArena.jsx` - Added onBalanceUpdate callback
+- `/app/backend/tests/test_bot_battle_update.py` - Comprehensive test suite
+
+### Test Results:
+- 11 passed, 1 skipped (requires 5 photos for bot battle start)
+- All bot configurations verified: bet amounts, dollar values, scenery distributions
 
 ---
 
