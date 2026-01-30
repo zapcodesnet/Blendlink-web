@@ -856,6 +856,8 @@ export const TappingArena = ({
         <PhotoBattleCard 
           photo={playerPhoto}
           effectiveValue={playerEffectiveValue}
+          originalValue={playerBaseValue}
+          modifiers={playerModifiers}
           requiredTaps={playerRequiredTaps}
           currentTaps={playerTaps}
           isPlayer={true}
@@ -867,6 +869,8 @@ export const TappingArena = ({
         <PhotoBattleCard 
           photo={opponentPhoto}
           effectiveValue={opponentEffectiveValue}
+          originalValue={opponentBaseValue}
+          modifiers={opponentModifiers}
           requiredTaps={opponentRequiredTaps}
           currentTaps={opponentTaps}
           isPlayer={false}
