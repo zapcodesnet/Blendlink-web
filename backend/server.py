@@ -2978,6 +2978,14 @@ try:
         
         await websocket.accept()
         
+        # Send connection confirmation
+        await websocket.send_json({
+            "type": "connected",
+            "room_id": room_id,
+            "user_id": user_id,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+        
         try:
             while True:
                 data = await websocket.receive_json()
