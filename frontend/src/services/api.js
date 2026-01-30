@@ -712,6 +712,50 @@ export const casinoAPI = {
   },
 };
 
+// Minting API
+export const mintingAPI = {
+  // Get current user's minted photos
+  getPhotos: async () => {
+    return await apiRequest('/minting/photos');
+  },
+  
+  // Get a user's public photos (for profile display)
+  getUserPhotos: async (userId) => {
+    return await apiRequest(`/minting/photos?user_id=${userId}`);
+  },
+  
+  // Get full stats for a single photo
+  getPhotoFullStats: async (mintId) => {
+    return await apiRequest(`/minting/photo/${mintId}/full-stats`);
+  },
+  
+  // Get single photo
+  getPhoto: async (mintId) => {
+    return await apiRequest(`/minting/photo/${mintId}`);
+  },
+  
+  // Mint a new photo
+  mintPhoto: async (data) => {
+    return await apiRequest('/minting/photo', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+  
+  // Submit selfie match
+  submitSelfieMatch: async (mintId, selfieData) => {
+    return await apiRequest(`/minting/photo/${mintId}/selfie-match`, {
+      method: 'POST',
+      body: JSON.stringify(selfieData),
+    });
+  },
+  
+  // Get authenticity status
+  getAuthenticityStatus: async (mintId) => {
+    return await apiRequest(`/minting/photo/${mintId}/authenticity`);
+  },
+};
+
 export default {
   auth: authAPI,
   wallet: walletAPI,
@@ -725,6 +769,7 @@ export default {
   games: gamesAPI,
   raffles: rafflesAPI,
   casino: casinoAPI,
+  minting: mintingAPI,
   getToken,
   setToken,
   removeToken,
