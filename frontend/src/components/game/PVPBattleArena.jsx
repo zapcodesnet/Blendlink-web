@@ -363,7 +363,9 @@ export const PVPBattleArena = ({
   const connectWebSocket = useCallback((isReconnect = false) => {
     const wsUrl = getWebSocketUrl();
     if (!wsUrl) {
-      console.log('No WebSocket URL available');
+      console.error('No WebSocket URL available - pvpRoomId missing?');
+      toast.error('Connection failed - room not ready');
+      setReconnecting(false);
       return;
     }
     
@@ -373,17 +375,33 @@ export const PVPBattleArena = ({
       reconnectTimeoutRef.current = null;
     }
     
+    // Update attempt count BEFORE connecting so UI shows current attempt
+    if (isReconnect) {
+      reconnectAttempts.current++;
+      setReconnectAttemptCount(reconnectAttempts.current);
+      console.log(`Reconnect attempt ${reconnectAttempts.current}/${MAX_RECONNECT_ATTEMPTS}`);
+    }
+    
     // Close existing connection if any
     if (wsRef.current && wsRef.current.readyState !== WebSocket.CLOSED) {
       wsRef.current.close();
     }
     
     try {
-      console.log(`${isReconnect ? 'Reconnecting' : 'Connecting'} to PVP WebSocket...`);
+      console.log(`${isReconnect ? 'Reconnecting' : 'Connecting'} to PVP WebSocket: ${wsUrl}`);
       const ws = new WebSocket(wsUrl);
       
+      // Connection timeout - if websocket doesn't open within 10 seconds, retry
+      const connectionTimeout = setTimeout(() => {
+        if (ws.readyState !== WebSocket.OPEN) {
+          console.log('WebSocket connection timeout - closing');
+          ws.close();
+        }
+      }, 10000);
+      
       ws.onopen = () => {
-        console.log('PVP WebSocket connected');
+        clearTimeout(connectionTimeout);
+        console.log('PVP WebSocket connected successfully');
         setWsConnected(true);
         setReconnecting(false);
         setWebsocketInstance(ws);
@@ -395,6 +413,7 @@ export const PVPBattleArena = ({
           ws.send(JSON.stringify({
             type: 'reconnect',
           }));
+          toast.success('Reconnected to game!');
         } else {
           // Join the room
           ws.send(JSON.stringify({
@@ -409,12 +428,14 @@ export const PVPBattleArena = ({
       ws.onmessage = handleWebSocketMessage;
       
       ws.onerror = (error) => {
+        clearTimeout(connectionTimeout);
         console.error('PVP WebSocket error:', error);
         setWsConnected(false);
         setWebsocketInstance(null);
       };
       
       ws.onclose = (event) => {
+        clearTimeout(connectionTimeout);
         console.log('PVP WebSocket closed:', event.code, event.reason);
         setWsConnected(false);
         setWebsocketInstance(null);
@@ -422,11 +443,9 @@ export const PVPBattleArena = ({
         // Schedule reconnect if game is still in progress
         if (gamePhase !== 'result' && reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
           setReconnecting(true);
-          reconnectAttempts.current++;
-          setReconnectAttemptCount(reconnectAttempts.current);
           
           const delay = RECONNECT_INTERVAL;
-          console.log(`Scheduling reconnect attempt ${reconnectAttempts.current}/${MAX_RECONNECT_ATTEMPTS} in ${delay}ms`);
+          console.log(`Scheduling reconnect in ${delay}ms`);
           
           reconnectTimeoutRef.current = setTimeout(() => {
             // Use ref to call the latest version
@@ -435,7 +454,7 @@ export const PVPBattleArena = ({
             }
           }, delay);
         } else if (reconnectAttempts.current >= MAX_RECONNECT_ATTEMPTS) {
-          toast.error('Connection lost. Please rejoin or create a new game.');
+          toast.error('Connection lost after 5 attempts. Please rejoin or create a new game.');
           setReconnecting(false);
         }
       };
@@ -445,6 +464,7 @@ export const PVPBattleArena = ({
       console.error('Failed to create PVP WebSocket:', err);
       setWsConnected(false);
       setReconnecting(false);
+      toast.error('Failed to connect to game server');
     }
   }, [getWebSocketUrl, handleWebSocketMessage, currentUsername, playerPhotos, isPlayer1, gamePhase]);
   
