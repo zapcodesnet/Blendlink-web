@@ -104,6 +104,18 @@ export const PVPBattleArena = ({
   onGameComplete,
   onExit,
 }) => {
+  // Log props on mount and when they change
+  useEffect(() => {
+    console.log('[PVPBattleArena] Props received:', {
+      gameId,
+      pvpRoomId,
+      currentUserId,
+      opponentId,
+      hasSession: !!session,
+      sessionPvpRoomId: session?.pvp_room_id,
+    });
+  }, [gameId, pvpRoomId, currentUserId, opponentId, session]);
+  
   // WebSocket connection
   const wsRef = useRef(null);
   const [wsConnected, setWsConnected] = useState(false);
