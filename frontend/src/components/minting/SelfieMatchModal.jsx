@@ -465,7 +465,7 @@ export const SelfieMatchModal = ({
                     }}
                   >
                     <Camera className="w-4 h-4 mr-2" />
-                    I'll do Face Match
+                    I&apos;ll do Face Match
                   </Button>
                 </div>
               </div>
