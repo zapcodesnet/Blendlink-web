@@ -59,6 +59,8 @@ const FlyingCoinAnimation = ({ isActive, onComplete }) => {
         color: ['#FFD700', '#FFA500', '#FF6B6B', '#4ECDC4', '#9B59B6', '#3498DB'][Math.floor(Math.random() * 6)],
         delay: Math.random() * 0.3,
         size: Math.random() * 8 + 4,
+        duration: 2 + Math.random(), // Pre-calculate duration
+        rotateDir: Math.random() > 0.5 ? 1 : -1, // Pre-calculate rotation direction
       }));
       setConfetti(confettiPieces);
       
