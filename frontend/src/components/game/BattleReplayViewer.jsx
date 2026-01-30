@@ -337,7 +337,76 @@ export const BattleReplayViewer = ({
     }
   };
   
-  // Download as video (simplified - creates an animated GIF-like experience)
+  // Download options - now with backend-generated exports
+  const [showDownloadOptions, setShowDownloadOptions] = useState(false);
+  
+  // Download summary image (PNG)
+  const handleDownloadImage = async () => {
+    setIsRecording(true);
+    toast.info('Generating image...');
+    
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_BACKEND_URL}/api/photo-game/battle-replay/${replay.replay_id}/export-video?quality=high`,
+        { method: 'GET' }
+      );
+      
+      if (!response.ok) throw new Error('Failed to generate image');
+      
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `battle_replay_${replay.replay_id}.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Battle summary downloaded!');
+    } catch (err) {
+      console.error('Download error:', err);
+      toast.error('Failed to download image');
+    } finally {
+      setIsRecording(false);
+      setShowDownloadOptions(false);
+    }
+  };
+  
+  // Download animated GIF
+  const handleDownloadGif = async () => {
+    setIsRecording(true);
+    toast.info('Generating animated GIF... This may take a moment.');
+    
+    try {
+      const token = localStorage.getItem('blendlink_token');
+      const response = await fetch(
+        `${process.env.REACT_APP_BACKEND_URL}/api/photo-game/battle-replay/${replay.replay_id}/generate-gif`,
+        { 
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
+      if (!response.ok) throw new Error('Failed to generate GIF');
+      
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `battle_replay_${replay.replay_id}.gif`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Animated replay GIF downloaded!');
+    } catch (err) {
+      console.error('GIF error:', err);
+      toast.error('Failed to generate GIF');
+    } finally {
+      setIsRecording(false);
+      setShowDownloadOptions(false);
+    }
+  };
+  
+  // Legacy canvas-based download (fallback)
   const handleDownloadVideo = async () => {
     setIsRecording(true);
     toast.info('Preparing video... This may take a moment.');
