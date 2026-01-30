@@ -3,15 +3,21 @@
  * 
  * Allows players to select bot difficulty and lock in 5 photos for battle.
  * Bot Difficulties:
- * - Easy Bot: Default unlocked, 100 BL fixed bet
- * - Medium Bot: Unlocks after 3 Easy wins, 500 BL fixed bet
- * - Hard Bot: Unlocks after 3 Medium wins, 1000 BL fixed bet
- * - Extremely Hard Bot: Unlocks after 3 Hard wins, 2000 BL fixed bet
+ * - Easy Bot: Default unlocked, 200 BL fixed bet
+ * - Medium Bot: Unlocks after 3 Easy wins, 1,000 BL fixed bet
+ * - Hard Bot: Unlocks after 3 Medium wins, 5,000 BL fixed bet
+ * - Extremely Hard Bot: Unlocks after 3 Hard wins, 10,000 BL fixed bet
+ * 
+ * Claimable One-Time BL Bonuses:
+ * - Medium unlock: +20,000 BL
+ * - Hard unlock: +100,000 BL
+ * - Extreme unlock: +500,000 BL
+ * - Extreme mastery (3 wins): +1,000,000 BL
  * 
  * Note: Tap rates are hidden from players to encourage gameplay.
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Bot, Zap, Target, Flame, Shield, Trophy, Lock,
@@ -20,6 +26,7 @@ import {
 import { Button } from '../ui/button';
 import { StreakBadge } from './StreakIndicator';
 import { LikeButtonCompact } from './LikeButton';
+import { ClaimableBonusBanner } from './ClaimableBonusBanner';
 
 // Win streak multipliers (exact values from spec)
 const WIN_STREAK_MULTIPLIERS = {
