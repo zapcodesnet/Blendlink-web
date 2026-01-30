@@ -51,6 +51,10 @@ export const SelfieMatchModal = ({
   onSuccess, // Callback when match succeeds
   userBalance = 0, // User's BL coin balance
 }) => {
+  // Confirmation state - shows accept/decline before camera
+  const [showConfirmation, setShowConfirmation] = useState(true);
+  const [declineWarning, setDeclineWarning] = useState(false);
+  
   // Camera state
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState(null);
