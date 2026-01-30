@@ -2100,7 +2100,7 @@ async def start_bot_battle(
         if isinstance(last_regen, str):
             try:
                 last_regen = datetime.fromisoformat(last_regen.replace('Z', '+00:00'))
-            except:
+            except (ValueError, TypeError):
                 last_regen = None
         
         current_stamina = calculate_current_stamina(
