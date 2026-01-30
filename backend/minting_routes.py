@@ -567,9 +567,10 @@ async def get_photo_full_stats(mint_id: str, current_user: dict = Depends(get_cu
     
     # Calculate derived values
     level = photo.get("level", 1)
-    stars = photo.get("stars", 0) or get_level_stars(level)
-    has_golden_frame = level >= 60
-    level_bonus_percent = photo.get("level_bonus_percent", 0) or (level // 5) * 2
+    level_info = get_level_stars(level)
+    stars = photo.get("stars", 0) or level_info.get("stars", 0)
+    has_golden_frame = level_info.get("has_golden_frame", False) or level >= 60
+    level_bonus_percent = photo.get("level_bonus_percent", 0) or level_info.get("bonus_percent", 0)
     
     # Win/lose streak calculations
     win_streak = photo.get("win_streak", 0)
