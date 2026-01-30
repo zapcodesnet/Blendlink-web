@@ -14,7 +14,7 @@
  * - Extreme mastery (3 wins vs Extreme): +1,000,000 BL
  */
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Gift, Coins, Sparkles } from 'lucide-react';
 import { Button } from '../ui/button';
