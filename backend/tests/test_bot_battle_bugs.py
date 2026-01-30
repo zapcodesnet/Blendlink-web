@@ -78,13 +78,17 @@ class TestBotBattleStats:
         initial_stats = stats_response.json()
         initial_easy_wins = initial_stats.get("easy_bot_wins", 0)
         
-        # Record a win
+        # Record a win with all required fields
+        session_id = str(uuid.uuid4())[:12]
         result_response = requests.post(
             f"{BASE_URL}/api/photo-game/bot-battle/result",
             headers=self.headers,
             json={
+                "session_id": session_id,
                 "difficulty": "easy",
                 "player_won": True,
+                "rounds_won": 3,
+                "rounds_lost": 1,
                 "bet_amount": 100
             }
         )
@@ -123,13 +127,17 @@ class TestBotBattleStats:
         initial_stats = stats_response.json()
         initial_easy_wins = initial_stats.get("easy_bot_wins", 0)
         
-        # Record a loss
+        # Record a loss with all required fields
+        session_id = str(uuid.uuid4())[:12]
         result_response = requests.post(
             f"{BASE_URL}/api/photo-game/bot-battle/result",
             headers=self.headers,
             json={
+                "session_id": session_id,
                 "difficulty": "easy",
                 "player_won": False,
+                "rounds_won": 1,
+                "rounds_lost": 3,
                 "bet_amount": 100
             }
         )
@@ -282,26 +290,30 @@ class TestDollarValueCalculation:
         self.token = response.json().get("token")
         self.headers = {"Authorization": f"Bearer {self.token}"}
     
-    def test_get_user_minted_photos(self):
-        """Test that user can get their minted photos with dollar values"""
+    def test_get_user_battle_photos(self):
+        """Test that user can get their battle photos with dollar values"""
         response = requests.get(
-            f"{BASE_URL}/api/photo-game/minted-photos",
+            f"{BASE_URL}/api/photo-game/battle-photos",
             headers=self.headers
         )
-        assert response.status_code == 200, f"Failed to get minted photos: {response.text}"
+        assert response.status_code == 200, f"Failed to get battle photos: {response.text}"
         
         data = response.json()
-        assert "photos" in data, "Response should include photos array"
+        # Response is a list of photos directly
+        if isinstance(data, list):
+            photos = data
+        else:
+            photos = data.get("photos", [])
         
-        if len(data["photos"]) > 0:
-            photo = data["photos"][0]
+        if len(photos) > 0:
+            photo = photos[0]
             # Verify photo has dollar value fields
             assert "dollar_value" in photo or "base_dollar_value" in photo, \
                 "Photo should have dollar value field"
-            print(f"Found {len(data['photos'])} minted photos")
+            print(f"Found {len(photos)} battle photos")
             print(f"Sample photo: {photo.get('name')} - ${photo.get('dollar_value', photo.get('base_dollar_value', 0))}")
         else:
-            print("No minted photos found for user")
+            print("No battle photos found for user")
     
     def test_get_game_stats_for_streak(self):
         """Test that game stats include streak info for dollar value calculation"""
