@@ -422,38 +422,112 @@ export default function Profile() {
           />
         </div>
 
-        {/* Posts Grid */}
+        {/* Tabs: Minted Photos / Posts */}
         <div className="border-t border-border/50 pt-4">
-          <div className="flex items-center justify-center gap-2 mb-4 text-muted-foreground">
-            <Grid3X3 className="w-4 h-4" />
-            <span className="text-sm font-medium">Posts</span>
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <button
+              onClick={() => setActiveTab('photos')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                activeTab === 'photos' 
+                  ? 'bg-purple-500/20 text-purple-400' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              data-testid="photos-tab"
+            >
+              <Image className="w-4 h-4" />
+              <span className="text-sm font-medium">Minted ({mintedPhotos.length})</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('posts')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                activeTab === 'posts' 
+                  ? 'bg-purple-500/20 text-purple-400' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              data-testid="posts-tab"
+            >
+              <Grid3X3 className="w-4 h-4" />
+              <span className="text-sm font-medium">Posts ({posts.length})</span>
+            </button>
           </div>
-          
-          {posts.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <p>No posts yet</p>
-              <p className="text-xs mt-1">Social features coming soon to mobile API</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-3 gap-1">
-              {posts.map((post) => (
-                <div 
-                  key={post.post_id}
-                  className="aspect-square bg-muted rounded overflow-hidden cursor-pointer"
-                >
-                  {post.images?.[0] ? (
-                    <img 
-                      src={post.images[0]} 
-                      alt="" 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center p-2 text-xs text-muted-foreground text-center">
-                      {post.content?.slice(0, 50)}...
-                    </div>
+
+          {/* Minted Photos Gallery */}
+          {activeTab === 'photos' && (
+            <div data-testid="minted-photos-gallery">
+              {mintedPhotos.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Image className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>No minted photos yet</p>
+                  {isOwnProfile && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-3"
+                      onClick={() => navigate('/minted-photos')}
+                    >
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Mint Your First Photo
+                    </Button>
                   )}
                 </div>
-              ))}
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {mintedPhotos.slice(0, 12).map(photo => (
+                    <UnifiedPhotoCard
+                      key={photo.mint_id}
+                      photo={photo}
+                      onClick={() => navigate('/minted-photos')}
+                      size="small"
+                      showStats={true}
+                      showStamina={false}
+                    />
+                  ))}
+                </div>
+              )}
+              {mintedPhotos.length > 12 && (
+                <div className="text-center mt-4">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => navigate('/minted-photos')}
+                  >
+                    View all {mintedPhotos.length} photos →
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Posts Grid */}
+          {activeTab === 'posts' && (
+            <div data-testid="posts-grid">
+              {posts.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <p>No posts yet</p>
+                  <p className="text-xs mt-1">Social features coming soon to mobile API</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-1">
+                  {posts.map((post) => (
+                    <div 
+                      key={post.post_id}
+                      className="aspect-square bg-muted rounded overflow-hidden cursor-pointer"
+                    >
+                      {post.images?.[0] ? (
+                        <img 
+                          src={post.images[0]} 
+                          alt="" 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center p-2 text-xs text-muted-foreground text-center">
+                          {post.content?.slice(0, 50)}...
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
