@@ -2925,6 +2925,14 @@ try:
         await websocket.accept()
         await lobby_manager.connect(game_id, user_id, websocket)
         
+        # Send confirmation to client
+        await websocket.send_json({
+            "type": "joined",
+            "game_id": game_id,
+            "user_id": user_id,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+        
         try:
             while True:
                 data = await websocket.receive_json()
