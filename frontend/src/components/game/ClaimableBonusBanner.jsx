@@ -34,34 +34,38 @@ const vibrate = (pattern) => {
   }
 };
 
+// Seeded random number generator for deterministic animations
+const seededRandom = (seed) => {
+  const x = Math.sin(seed * 9999) * 10000;
+  return x - Math.floor(x);
+};
+
+// Pre-generate animation data outside component to avoid impure function warnings
+const generateCoinBags = () => Array.from({ length: COIN_BAG_COUNT }, (_, i) => ({
+  id: i,
+  startX: seededRandom(i * 1.1) * 80 + 10,
+  startY: seededRandom(i * 2.2) * 30 + 60,
+  delay: i * 0.1,
+  duration: 0.8 + seededRandom(i * 3.3) * 0.4,
+}));
+
+const generateConfetti = () => Array.from({ length: CONFETTI_COUNT }, (_, i) => ({
+  id: i,
+  x: seededRandom(i * 1.5) * 100,
+  color: ['#FFD700', '#FFA500', '#FF6B6B', '#4ECDC4', '#9B59B6', '#3498DB'][Math.floor(seededRandom(i * 2.5) * 6)],
+  delay: seededRandom(i * 3.5) * 0.3,
+  size: seededRandom(i * 4.5) * 8 + 4,
+  duration: 2 + seededRandom(i * 5.5),
+  rotateDir: seededRandom(i * 6.5) > 0.5 ? 1 : -1,
+}));
+
+// Pre-generated static data
+const STATIC_COIN_BAGS = generateCoinBags();
+const STATIC_CONFETTI = generateConfetti();
+
 // Flying Coin Animation Component
 const FlyingCoinAnimation = ({ isActive, onComplete }) => {
   const [showCounter, setShowCounter] = useState(false);
-  
-  // Generate animation data once when active (using useMemo to avoid linter warning)
-  const coinBags = useMemo(() => {
-    if (!isActive) return [];
-    return Array.from({ length: COIN_BAG_COUNT }, (_, i) => ({
-      id: i,
-      startX: Math.random() * 80 + 10, // 10-90% of screen width
-      startY: Math.random() * 30 + 60, // 60-90% of screen height (bottom area)
-      delay: i * 0.1, // Stagger animation
-      duration: 0.8 + Math.random() * 0.4, // 0.8-1.2 seconds
-    }));
-  }, [isActive]);
-  
-  const confetti = useMemo(() => {
-    if (!isActive) return [];
-    return Array.from({ length: CONFETTI_COUNT }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      color: ['#FFD700', '#FFA500', '#FF6B6B', '#4ECDC4', '#9B59B6', '#3498DB'][Math.floor(Math.random() * 6)],
-      delay: Math.random() * 0.3,
-      size: Math.random() * 8 + 4,
-      duration: 2 + Math.random(), // Pre-calculate duration
-      rotateDir: Math.random() > 0.5 ? 1 : -1, // Pre-calculate rotation direction
-    }));
-  }, [isActive]);
   
   useEffect(() => {
     if (isActive) {
