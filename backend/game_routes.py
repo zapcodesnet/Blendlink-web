@@ -2447,6 +2447,81 @@ async def save_battle_replay(
     }
 
 
+# IMPORTANT: This route MUST be defined BEFORE /battle-replay/{replay_id} to avoid path conflict
+@game_router.get("/battle-replay/featured")
+async def get_featured_replays(
+    category: str = "top_wins",
+    limit: int = 10
+):
+    """Get featured battle replays for the landing page
+    
+    Categories:
+    - top_wins: Highest winnings with wins
+    - most_viewed: Most viewed replays
+    - recent: Most recent replays
+    - longest_streak: Replays with highest win streaks
+    - epic_comebacks: Close games (4-3 score)
+    """
+    from server import db
+    
+    # Define sort criteria based on category
+    sort_criteria = {
+        "top_wins": [("winnings", -1), ("views", -1)],
+        "most_viewed": [("views", -1), ("likes", -1)],
+        "recent": [("created_at", -1)],
+        "longest_streak": [("player_win_streak", -1), ("winnings", -1)],
+        "epic_comebacks": [("created_at", -1)],
+    }
+    
+    sort_by = sort_criteria.get(category, sort_criteria["top_wins"])
+    
+    # Build query based on category
+    if category == "top_wins":
+        query = {"winner": "player", "winnings": {"$gt": 0}}
+    elif category == "longest_streak":
+        query = {"winner": "player", "player_win_streak": {"$gte": 3}}
+    elif category == "epic_comebacks":
+        query = {
+            "$or": [
+                {"final_score_player": 5, "final_score_opponent": 4},
+                {"final_score_player": 5, "final_score_opponent": 3},
+            ]
+        }
+    else:
+        query = {}
+    
+    # Aggregation pipeline
+    pipeline = [
+        {"$match": query},
+        {"$sort": dict(sort_by)},
+        {"$limit": limit},
+        {
+            "$lookup": {
+                "from": "users",
+                "let": {"user_id": "$user_id"},
+                "pipeline": [
+                    {"$match": {"$expr": {"$eq": ["$user_id", "$$user_id"]}}},
+                    {"$project": {"username": 1, "profile_image": 1, "_id": 0}}
+                ],
+                "as": "user_info"
+            }
+        },
+        {"$unwind": {"path": "$user_info", "preserveNullAndEmptyArrays": True}},
+        {"$project": {"_id": 0, "rounds": 0}}
+    ]
+    
+    replays = await db.battle_replays.aggregate(pipeline).to_list(length=limit)
+    
+    for replay in replays:
+        if replay.get("created_at"):
+            replay["created_at"] = replay["created_at"].isoformat() if hasattr(replay["created_at"], 'isoformat') else str(replay["created_at"])
+        user_info = replay.pop("user_info", {})
+        replay["player_name"] = user_info.get("username", "Anonymous")
+        replay["player_avatar"] = user_info.get("profile_image")
+    
+    return {"replays": replays, "category": category, "total": len(replays)}
+
+
 @game_router.get("/battle-replay/{replay_id}")
 async def get_battle_replay(replay_id: str):
     """Get a battle replay by ID (public endpoint for sharing)"""
