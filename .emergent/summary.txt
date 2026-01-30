@@ -1,0 +1,150 @@
+<analysis>**original_problem_statement:**
+The user's primary goal is to fix bugs and add features to the Minted Photo Auction Bidding Battle game. The work has evolved through several phases, addressing critical bugs, adding a replay system, and making numerous UI/gameplay improvements for clarity and fairness.
+
+The latest requests focus on enhancing the Player-vs-Bot (PvB) experience with major updates to post-game flow, a new claimable bonus system for unlocking bot difficulties, and significant adjustments to bot stats and tap rates.
+
+**PRODUCT REQUIREMENTS:**
+-   All fixes and features must be implemented for both the responsive web application (React) and the native mobile app (React Native), ensuring identical functionality and UI.
+-   The core game mechanics must not be altered unless specified.
+-   Transparency and player trust are key drivers for many UI updates (e.g., showing how values are calculated, displaying bid amounts).
+-   Reward systems (like BL coin bonuses) should be engaging and clear to the user.
+
+**User's preferred language**: English
+
+**what currently exists?**
+The application is a full-stack project with a React frontend, FastAPI backend, and MongoDB database. A significant number of features and bug fixes were completed in this session.
+
+-   **Critical Bug Fixes:** A recurring bug preventing bot difficulty unlocks has been resolved and verified. Issues with Dollar Value calculation and Battle Replay visibility were also fixed.
+-   **Gameplay/UI Clarity:** Updates have been implemented to show original vs. effective dollar values, display bid amounts in RPS rounds, and handle 4-4 tiebreaker scenarios. The in-round photo selection cards now show full stats (scenery, stamina, streaks, level, etc.).
+-   **Bot Mechanics:** Bot tap rates and other stats (dollar values, bet amounts) have been updated multiple times per user requests. The display of tap rates has been hidden from the UI.
+-   **Features:** A mock engagement service (❤️ Like button) has been fully implemented. A Top Liked Photos leaderboard and a Featured Replays section (with backend logic for categories) have been added. A video export feature for battle replays using  has also been implemented.
+-   **Backend for Claimable Bonuses:** The  endpoint now returns the status of claimable bonuses, and a new  endpoint has been created to handle the claim action.
+
+**Last working item**:
+-   **Last item agent was working**: The agent was implementing a Major Bot Battle Update. The backend work for the **Claimable BL Coin Bonuses** was completed by updating the user stats model and adding a new API endpoint to claim bonuses. The agent was about to start creating the frontend  component.
+-   **Status**: IN PROGRESS
+-   **Agent Testing Done**: N
+-   **Which testing method agent to use?**: both. The new backend endpoints ( and the updated ) need to be tested via . The frontend will require screenshot verification and potentially the testing agent to validate the new component, animation, and state changes.
+-   **User Testing Done**: N
+
+**All Pending/In progress Issue list**:
+-   **Issue 1: Complete the Major Bot Battle Update (P0)**
+
+**Issues Detail:**
+-   **Issue 1: Complete the Major Bot Battle Update**
+    -   **Attempted fixes**:
+        -   **Backend:** The  collection in MongoDB was updated to include a  field. The  endpoint was modified to return bonus availability. A new endpoint  was created to credit the user and mark the bonus as claimed.
+        -   **Frontend:** Post-game buttons in  were enhanced. The bot difficulty configuration in  and tap rates in  were updated to the latest user specs.
+    -   **Next debug checklist**:
+        1.  Create a new frontend component: .
+        2.  This component should display a Claim button and an exciting animation (e.g., confetti, flying coins) when triggered.
+        3.  Integrate this banner into . It should be conditionally rendered based on the  data fetched from the  endpoint.
+        4.  Implement the  handler for the Claim button to call the  endpoint.
+        5.  On a successful API response, trigger the animation, update the user's wallet balance in the UI, and hide the banner.
+        6.  Thoroughly test the end-to-end flow: win the required number of games to unlock a new bot -> verify the claim banner appears -> click Claim -> verify animation plays, balance updates, and banner disappears permanently for that bonus tier.
+    -   **Why fix this issue and what will be achieved with the fix?**: This is a major user request to make the reward system more engaging and improve the overall post-game loop.
+    -   **Status**: IN PROGRESS
+    -   **Is recurring issue?**: N
+    -   **Should Test frontend/backend/both after fix?**: both
+    -   **Blocked on other issue**: None
+
+**In progress Task List**:
+-   There are no other in-progress tasks. The Major Bot Battle Update is the only active item.
+
+**Upcoming and Future Tasks**
+**Upcoming Tasks:**
+-   **P1: Real Facebook Graph API Integration**: Replace the current mock engagement service with a real integration.
+-   **P2: Expand i18n Coverage**: Integrate the  hook across all components with hardcoded English text.
+
+**Future Tasks:**
+-   **P2: Bot Battle Tournaments**: Implement a tournament system for Bot Battles.
+
+**Completed work in this session**
+-   **Critical Bug Fixes (DONE & TESTED)**: Resolved repeated, high-priority bugs related to bot difficulty unlocks, inaccurate dollar value calculations, and empty battle replays.
+-   **Gameplay & UI Clarity Updates (DONE & TESTED)**:
+    -   Implemented display of Original vs. Effective Dollar Values in  and .
+    -   Added display of player bid amounts in .
+    -   Added 4-4 tiebreaker logic in .
+    -   Enhanced photo selection cards in  to show full stats (scenery, stamina, streaks, level, etc.).
+-   **Mock Engagement Service (DONE & TESTED)**: Created and integrated a  component into  and .
+-   **Featured Replays Logic (DONE & TESTED)**: Fixed a route-ordering bug and enhanced the backend endpoint  to include more sorting categories. The frontend component was updated to use these new categories.
+-   **Top Liked Photos Leaderboard (DONE & TESTED)**: Created a new backend endpoint and a corresponding frontend component .
+-   **Bot Battle Video Export (DONE & TESTED)**: Installed  and created backend endpoints to generate and download video/GIF versions of battle replays. Updated the  UI with download options.
+-   **Photo Editor Bug Investigation (DONE)**: Investigated Failed Fetch errors in  and improved robustness by adding retry logic and timeouts.
+-   **Bot Stats & Tap Rate Updates (DONE & TESTED)**: Adjusted bot tap rates and stats (dollar values, bets) multiple times per user requests and ensured tap rates are hidden from the UI.
+
+**Earlier issues found/mentioned but not fixed**
+-   **Issue 1: Linter Errors in **
+    -   **Debug checklist**: The file  has a recurring  linting error.
+    -   **Why to solve this issue and what will be achieved with this?**: While not critical, fixing this would improve code quality and prevent potential side effects from setting state directly within a  hook. The fix likely involves refactoring the  to avoid direct state updates that cause re-renders.
+    -   **Should Test frontend/backend/both after fix**: frontend
+    -   **Is recurring issue?**: Y
+
+**Known issue recurrence from previous fork**
+-   **Bot Battle Progression:** This feature, especially win tracking and unlocks, has been a recurring source of bugs. It was addressed multiple times in the current session and appears stable, but it is a sensitive area that requires careful regression testing with any related changes.
+
+**Code Architecture**
+
+
+**Key Technical Concepts**
+-   **FastAPI Route Ordering:** Resolved a critical bug where a dynamic route () was incorrectly capturing a static route (). The fix involved reordering the routes in .
+-   **Backend Video Generation:** Used  via a  call in the FastAPI backend to generate video and GIF files from structured replay data.
+-   **Claimable Rewards System:** Designed a system where bonuses are tracked separately in the database ( in ) and require a specific user action and API call to be claimed, decoupling the reward from the unlock event.
+-   **Robust API Calls:** Improved frontend stability in  by implementing a  helper that includes timeouts and a retry mechanism for network-dependent operations.
+
+**key DB schema**
+-   **user_stats:**
+    -   : {: boolean, : boolean, : boolean, : boolean} - Tracks which one-time bot unlock bonuses have been claimed by the user.
+
+**All files of reference**
+-   : The main backend file, heavily modified for new features and bug fixes.
+-   : Core component for the game loop, containing logic for results, photo selection, and tiebreakers.
+-   : The main UI for starting a bot battle, now contains logic for displaying bot stats and will host the new claimable bonus banner.
+-   : Contains the bot tapping AI logic and has been updated multiple times.
+
+**Critical Info for New Agent**
+-   Your immediate and top priority is to complete the **Major Bot Battle Update**. This involves building the frontend for the **Claimable Bonus** feature. The backend endpoints are already created. You need to create the  component, integrate it into , and implement the claim logic with an animation.
+-   The bot battle progression system has been historically fragile. Test any changes in this area thoroughly to avoid regressions.
+-   A linter error in  has been ignored as pre-existing. It would be good practice to fix it if time permits.
+
+**documents and test reports created in this job**
+-   : Updated multiple times to reflect completed tasks and new requirements.
+-   
+-   
+-   
+
+**Last 10 User Messages and any pending HUMAN messages**
+1.  **User**: Deploy the application. **(COMPLETED)**
+2.  **Agent**: Checked deployment readiness, found a false positive with supervisor config, and verified all services and endpoints are healthy. **(COMPLETED)**
+3.  **User**: New high-priority request: Adjust bot tap rates, hide tap rate display, and show full photo stats in round selection. **(PENDING)**
+4.  **Agent**: Acknowledged the request and began implementation. **(COMPLETED)**
+5.  **Agent**: Implemented all three requests (bot tap rates, hidden display, full stats on selection cards) and verified with screenshots. **(COMPLETED)**
+6.  **Agent**: Finished the task and updated PRD. **(COMPLETED)**
+7.  **User**: New major update request: Add post-game buttons, implement a claimable BL bonus system with animation, and update bot stats again. **(PENDING)**
+8.  **Agent**: Acknowledged the major update and began implementation. **(COMPLETED)**
+9.  **Agent**: Implemented the post-game button enhancements and updated all bot stats/tap rates in the backend and frontend configs. **(COMPLETED)**
+10. **Agent**: Created the backend endpoints ( update and new ) to support the claimable bonus feature. **(COMPLETED)**
+
+**Project Health Check:**
+-   **Live**: Both web and mobile applications are running. All core services (frontend, backend, db) are healthy.
+-   **Broken**: Nothing is critically broken. The claimable bonus feature is partially implemented.
+-   **Mocked**: The social reaction counter (Facebook) is still a mock service.
+
+**3rd Party Integrations**
+-   **OpenAI GPT-4o Vision**: Used for AI photo valuation.
+-   **Stripe**: Configured for subscriptions.
+-   **EmbedSocial**: Used for displaying a Facebook Group feed.
+-   **ffmpeg**: Installed as a system dependency for backend video generation.
+
+**Testing status**
+-   **Testing agent used after significant changes**: YES (Used for LikeButton and replay fixes).
+-   **Troubleshoot agent used after agent stuck in loop**: NO
+-   **Test files created**: Test reports and a new test in  were created/modified by the testing agent.
+-   **Known regressions**: None.
+
+**Credentials to test flow:**
+-   **Email**: 
+-   **Password**: 
+
+**What agent forgot to execute**
+-   The agent did not forget to execute anything; it was in the middle of a multi-step implementation when the session ended. The immediate next step is to build the frontend component for the claimable bonus feature.</analysis>
