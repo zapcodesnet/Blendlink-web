@@ -2031,6 +2031,16 @@ const PhotoGameArena = () => {
               
               {/* Featured Replays Section */}
               <FeaturedReplays />
+              
+              {/* Top Liked Photos Leaderboard */}
+              <div className="mt-6">
+                <TopLikedPhotosLeaderboard 
+                  onPhotoClick={(photo) => {
+                    // Could open lightbox or navigate to photo details
+                    console.log('Photo clicked:', photo);
+                  }}
+                />
+              </div>
             </motion.div>
           )}
           
