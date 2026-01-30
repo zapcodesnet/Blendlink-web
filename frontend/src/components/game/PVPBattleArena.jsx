@@ -382,8 +382,12 @@ export const PVPBattleArena = ({
   const connectWebSocket = useCallback((isReconnect = false) => {
     const wsUrl = getWebSocketUrl();
     if (!wsUrl) {
-      console.error('No WebSocket URL available - pvpRoomId missing?');
-      toast.error('Connection failed - room not ready');
+      // Don't show error toast during initial load - just log and wait
+      console.log('WebSocket URL not ready yet - waiting for pvpRoomId');
+      // Only show toast if this is a manual reconnect attempt
+      if (isReconnect) {
+        toast.error('Room not ready - please wait...');
+      }
       setReconnecting(false);
       return;
     }
