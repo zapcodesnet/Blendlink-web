@@ -2996,6 +2996,16 @@ try:
                     photos = data.get("photos", [])
                     username = data.get("username", "Player")
                     is_creator = data.get("is_creator", False)
+                    game_id = data.get("game_id")  # Optional - for auto-creating room
+                    
+                    # Auto-create room if it doesn't exist (for late joiners)
+                    if room_id not in pvp_game_manager.rooms:
+                        logger.info(f"Room {room_id} not found, creating on-demand")
+                        # Create the room dynamically
+                        pvp_game_manager.rooms[room_id] = PVPGameRoom(
+                            room_id=room_id,
+                            game_id=game_id or room_id,
+                        )
                     
                     success = await pvp_game_manager.connect_player(
                         room_id=room_id,
