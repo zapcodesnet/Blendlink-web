@@ -1,6 +1,50 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 30, 2026 (PVP Sync + Auto-Room Creation Fix)
+## Latest Update: January 30, 2026 (PVP Sync Debugging + Flow Analysis)
+
+---
+
+## SESSION 61: PVP SYNC BAR DEBUGGING ✅
+
+### Deep Analysis of PVP Flow
+Traced the complete PVP game flow:
+1. Creator creates game (status: WAITING)
+2. Opponent joins (status: READY) 
+3. Both mark ready via `/open-games/ready` API
+4. When both ready → status: STARTING → countdown starts
+5. Countdown ends → `/open-games/start/{game_id}` creates PVP room
+6. `game_start` broadcast to lobby WebSocket with `pvp_room_id`
+7. Both players transition to `PVPBattleArena` 
+8. Both connect to `/api/ws/pvp-game/{room_id}/{token}`
+
+### Fixes Applied This Session:
+
+1. **Enhanced Lobby WebSocket Handler** (`server.py`)
+   - Added handling for "ready" message type (acknowledgment)
+   - Added logging for unknown message types
+
+2. **Better State Indicators in Sync Bar** (`PVPBattleArena.jsx`)
+   - Shows "Synced ✅" when connected (instead of "Live")
+   - Shows "Initializing..." when `pvpRoomId` is not yet available
+   - Shows "Reconnecting..." during reconnection attempts
+   - Shows "Tap to reconnect" when disconnected
+
+3. **Added Debug Logging**
+   - `PVPBattleArena.jsx`: Logs props on mount/change
+   - `PhotoGameArena.jsx`: Logs handleGameStart parameters
+   - `GameLobby.jsx`: Logs game_start message received
+
+### Files Modified:
+- `/app/backend/server.py` - Enhanced lobby WebSocket handler
+- `/app/frontend/src/components/game/PVPBattleArena.jsx` - Better sync bar states + logging
+- `/app/frontend/src/pages/PhotoGameArena.jsx` - Debug logging
+- `/app/frontend/src/components/game/GameLobby.jsx` - Debug logging
+
+### Key Findings:
+- The flow requires TWO real players to test fully
+- The `/ready` endpoint requires game status to be "READY" (set when opponent joins)
+- Without an opponent, the game stays in "WAITING" status
+- All WebSocket routes now correctly use `/api/ws/` prefix
 
 ---
 
