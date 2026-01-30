@@ -79,6 +79,20 @@ export default function Profile() {
     }
   };
 
+  const fetchMintedPhotos = async () => {
+    try {
+      const userId = id || currentUser?.user_id;
+      // Get user's public minted photos
+      const response = await api.minting.getUserPhotos(userId);
+      // Filter to only show public photos
+      const publicPhotos = (response.photos || []).filter(p => !p.is_private);
+      setMintedPhotos(publicPhotos);
+    } catch (error) {
+      console.error("Failed to fetch minted photos:", error);
+      setMintedPhotos([]);
+    }
+  };
+
   const handleFollow = async () => {
     try {
       const response = await api.users.followUser(id);
