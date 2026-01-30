@@ -402,9 +402,11 @@ export const GameLobby = ({
             toast.success('🔥 Both players ready! Starting countdown...');
           }
           
-          // Check if game started
+          // Check if game started - also get pvp_room_id from state
           if (newState.status === 'in_progress' && newState.active_session_id) {
-            onGameStart?.(newState.active_session_id, newState);
+            // Try to get pvp_room_id from state or make an API call
+            const roomId = newState.pvp_room_id || gameState?.pvp_room_id;
+            onGameStart?.(newState.active_session_id, newState, roomId);
           }
         }
       } catch (err) {
