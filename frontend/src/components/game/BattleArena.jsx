@@ -906,6 +906,16 @@ export const BattleArena = ({
         if (isBot) {
           saveReplay('player', newWins, opponentWins, [...replayRounds, replayRoundData]);
         }
+        
+        // CRITICAL FIX: Call onGameComplete to record bot battle result and unlock progress
+        if (isBot && onGameComplete) {
+          console.log('[BattleArena] Player wins! Calling onGameComplete with winner=player');
+          onGameComplete('player', {
+            session_id: session?.session_id,
+            rounds_won: newWins,
+            rounds_lost: opponentWins,
+          });
+        }
         return;
       }
     } else if (winner === 'opponent') {
@@ -934,6 +944,16 @@ export const BattleArena = ({
         // Save replay for bot battles
         if (isBot) {
           saveReplay('opponent', playerWins, newWins, [...replayRounds, replayRoundData]);
+        }
+        
+        // CRITICAL FIX: Call onGameComplete even on loss (to track stats properly)
+        if (isBot && onGameComplete) {
+          console.log('[BattleArena] Opponent wins! Calling onGameComplete with winner=opponent');
+          onGameComplete('opponent', {
+            session_id: session?.session_id,
+            rounds_won: playerWins,
+            rounds_lost: newWins,
+          });
         }
         return;
       }
