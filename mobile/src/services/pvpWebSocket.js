@@ -62,10 +62,10 @@ class PVPWebSocketService {
         throw new Error('No auth token');
       }
 
-      // Build WebSocket URL
+      // Build WebSocket URL - CRITICAL: Must use /api prefix for ingress routing
       const wsProtocol = API_URL.startsWith('https') ? 'wss' : 'ws';
       const wsHost = API_URL.replace(/^https?:\/\//, '');
-      const wsUrl = `${wsProtocol}://${wsHost}/ws/pvp-game/${roomId}/${token}`;
+      const wsUrl = `${wsProtocol}://${wsHost}/api/ws/pvp-game/${roomId}/${token}`;
 
       console.log('Connecting to PVP WebSocket:', wsUrl);
 
