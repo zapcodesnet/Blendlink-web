@@ -1,6 +1,38 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 30, 2026 (Video Export + Photo Editor Improvements)
+## Latest Update: January 30, 2026 (Bot Tap Rates + Photo Stats Display)
+
+---
+
+## SESSION 57: BOT TAP RATES + HIDE TPS + FULL PHOTO STATS ✅
+
+### Update 1: Adjusted Bot Tap Rates
+- **Easy Bot**: 10-12 TPS (max 12)
+- **Medium Bot**: 12-15 TPS (max 15)  
+- **Hard Bot**: 15-18 TPS (max 18)
+- **Extremely Hard Bot**: 17-20 TPS (max 20)
+- Updated in `TappingArena.jsx` botSpeeds configuration
+
+### Update 2: Hidden Tap/Second Display
+- Removed `tapsPerSec` from BOT_DIFFICULTIES config in `BotDifficultySelector.jsx`
+- Bot difficulty cards now only show: Description, Dollar Value, BL Bet
+- Players cannot see bot tap rates (encourages gameplay)
+
+### Update 3: Full Photo Stats in Round Selection
+- Enhanced `PhotoSelectionCard` in `BattleArena.jsx` to display:
+  - Dollar Value (prominent)
+  - Scenery badge with strength/weakness (e.g., "⬆nat ⬇man")
+  - Stamina bar with percentage (e.g., "24/24")
+  - Level and star rating (e.g., "Lv4 ★★★★")
+  - Likes/Hearts counter (e.g., "❤️150")
+  - Age bonus indicator if applicable
+- Added hover tooltip with detailed stats explanation
+- Applied to both PVP and PvB modes
+
+### Files Modified:
+- `/app/frontend/src/components/game/TappingArena.jsx` - New bot tap rates
+- `/app/frontend/src/components/game/BotDifficultySelector.jsx` - Removed tapsPerSec display
+- `/app/frontend/src/components/game/BattleArena.jsx` - Enhanced PhotoSelectionCard with full stats
 
 ---
 
