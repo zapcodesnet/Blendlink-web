@@ -1,6 +1,39 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 30, 2026 (P1 Integration Complete)
+## Latest Update: January 30, 2026 (P1 Integration Complete - Profile Gallery & Face Match)
+
+---
+
+## SESSION 65: P1 Integration Complete ✅
+
+### Completed Features:
+
+1. **Profile Page Minted Photos Gallery**
+   - Added tabs: "Minted (count)" and "Posts (count)"
+   - Gallery shows UnifiedPhotoCard components in grid
+   - Uses same API pattern as MintedPhotos (`api.get('/minting/photos')`)
+   - Shows up to 12 photos with "View all" link
+
+2. **Face Match Button Working**
+   - Verified on photo `mint_test_a1d75b2038d747fe` (has_face=true)
+   - Button appears on card BACK in Authenticity section
+   - Opens SelfieMatchModal with camera access prompt
+   - Shows "Earn up to +5% Authenticity Bonus"
+   - Displays attempts (3/3) and cost (100 BL)
+
+3. **Unified API Pattern**
+   - Removed redundant mintingAPI section
+   - Profile.jsx uses same `api.get('/minting/photos')` as MintedPhotos.jsx
+   - Consistent API response handling across app
+
+### Testing Results (iteration_84.json):
+- **Backend: 100%** (7/7 passed)
+- **Frontend: 100%** (6/6 features verified)
+- All features working: Profile tabs, gallery, Card View, Face Match button, SelfieMatchModal
+
+### Files Modified:
+- `/app/frontend/src/pages/Profile.jsx` - Added tabs, minted photos gallery
+- `/app/frontend/src/services/api.js` - Removed redundant mintingAPI
 
 ---
 
