@@ -234,7 +234,7 @@ export const GameLobby = ({
     const wsProtocol = backendUrl.startsWith('https') ? 'wss' : 'ws';
     const wsHost = backendUrl.replace(/^https?:\/\//, '');
     
-    return `${wsProtocol}://${wsHost}/ws/lobby/${gameState.game_id}/${token}`;
+    return `${wsProtocol}://${wsHost}/api/ws/lobby/${gameState.game_id}/${token}`;
   }, [gameState?.game_id]);
   
   // Handle WebSocket messages
