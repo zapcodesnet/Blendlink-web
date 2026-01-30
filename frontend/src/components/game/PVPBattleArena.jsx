@@ -780,7 +780,12 @@ export const PVPBattleArena = ({
             {wsConnected ? (
               <>
                 <Wifi className="w-3 h-3" />
-                <span>Live</span>
+                <span>Synced ✅</span>
+              </>
+            ) : !pvpRoomId ? (
+              <>
+                <RefreshCw className="w-3 h-3 animate-spin" />
+                <span>Initializing...</span>
               </>
             ) : reconnecting ? (
               <>
