@@ -496,17 +496,36 @@ export const PVPBattleArena = ({
       // Defer connection to avoid synchronous setState
       const timeoutId = setTimeout(() => {
         connectWebSocketRef.current?.(false);
-      }, 0);
+      }, 100); // Small delay to ensure state is ready
       return () => clearTimeout(timeoutId);
     }
   }, []); // Empty deps - only run once
   
-  // Heartbeat effect
+  // Track last pong time for connection health monitoring
+  const lastPongTimeRef = useRef(Date.now());
+  
+  // Heartbeat effect with connection health monitoring
   useEffect(() => {
-    // Heartbeat - more frequent to detect disconnection faster
+    // Heartbeat - every 10 seconds to keep connection alive
     const heartbeat = setInterval(() => {
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         wsRef.current.send(JSON.stringify({ type: 'ping' }));
+        
+        // Check if we haven't received a pong in too long (30 seconds)
+        const timeSinceLastPong = Date.now() - lastPongTimeRef.current;
+        if (timeSinceLastPong > 30000 && wsConnected) {
+          console.log('Connection appears stale - no pong in 30s, forcing reconnect');
+          wsRef.current.close();
+        }
+      } else if (wsRef.current?.readyState === WebSocket.CONNECTING) {
+        // Still connecting, wait
+        console.log('WebSocket still connecting...');
+      } else if (!wsConnected && !reconnecting && gamePhase !== 'result') {
+        // Not connected and not reconnecting - trigger reconnect
+        console.log('WebSocket not open and not reconnecting - triggering reconnect');
+        if (reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
+          connectWebSocketRef.current?.(true);
+        }
       }
     }, 10000); // Every 10 seconds
     
@@ -519,7 +538,7 @@ export const PVPBattleArena = ({
         wsRef.current.close();
       }
     };
-  }, []);
+  }, [wsConnected, reconnecting, gamePhase]);
   
   // Handle visibility change (tab switch, app background)
   useEffect(() => {
