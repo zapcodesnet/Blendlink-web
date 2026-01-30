@@ -42,7 +42,7 @@ const BOT_DIFFICULTIES = [
     description: 'Perfect for beginners',
     dollarValue: '$600M',
     minDollarValue: 600000000,
-    tapsPerSec: 8,
+    // tapsPerSec hidden from players - internal value: 12
     fixedBet: 100,
     color: 'from-green-500 to-emerald-600',
     bgColor: 'bg-green-500/10',
@@ -60,7 +60,7 @@ const BOT_DIFFICULTIES = [
     description: 'Balanced challenge',
     dollarValue: '$800M',
     minDollarValue: 800000000,
-    tapsPerSec: 10,
+    // tapsPerSec hidden from players - internal value: 15
     fixedBet: 500,
     color: 'from-yellow-500 to-orange-500',
     bgColor: 'bg-yellow-500/10',
@@ -78,7 +78,7 @@ const BOT_DIFFICULTIES = [
     description: 'For experienced players',
     dollarValue: '$1B',
     minDollarValue: 1000000000,
-    tapsPerSec: 12,
+    // tapsPerSec hidden from players - internal value: 18
     fixedBet: 1000,
     color: 'from-red-500 to-pink-600',
     bgColor: 'bg-red-500/10',
@@ -96,7 +96,7 @@ const BOT_DIFFICULTIES = [
     description: 'Ultimate challenge',
     dollarValue: '$2B',
     minDollarValue: 2000000000,
-    tapsPerSec: 15,
+    // tapsPerSec hidden from players - internal value: 20
     fixedBet: 2000,
     color: 'from-purple-600 to-indigo-700',
     bgColor: 'bg-purple-500/10',
