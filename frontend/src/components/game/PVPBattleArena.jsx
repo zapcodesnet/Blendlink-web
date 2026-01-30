@@ -589,7 +589,7 @@ export const PVPBattleArena = ({
         wsRef.current.close();
       }
     };
-  }, [wsConnected, reconnecting, gamePhase]);
+  }, [wsConnected, reconnecting, gamePhase, pvpRoomId]);
   
   // Handle visibility change (tab switch, app background)
   useEffect(() => {
