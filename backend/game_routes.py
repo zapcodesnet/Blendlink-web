@@ -2847,7 +2847,7 @@ async def generate_replay_gif(
     try:
         font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 20)
         small_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 14)
-    except:
+    except (IOError, OSError):
         font = ImageFont.load_default()
         small_font = ImageFont.load_default()
     
