@@ -1515,16 +1515,21 @@ export default function PhotoGameArenaScreen() {
   const { user } = useAuth();
   const { colors, isDark } = useTheme();
   
-  // Get pvpRoomId from navigation params (when joining an open game)
-  const pvpRoomId = route.params?.pvpRoomId || null;
+  // Get params from navigation
+  const initialPvpRoomId = route.params?.pvpRoomId || null;
   const isCreator = route.params?.isCreator || false;
+  const joinGame = route.params?.joinGame || null; // Game to join from OpenGamesBrowser
+  const mode = route.params?.mode || null; // 'create' mode from create button
   
+  // State for dynamic pvpRoomId (set after joining)
+  const [pvpRoomId, setPvpRoomId] = useState(initialPvpRoomId);
   const [gameState, setGameState] = useState('matchmaking');
   const [session, setSession] = useState(null);
   const [stats, setStats] = useState(null);
   const [matchData, setMatchData] = useState(null);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [joinedGame, setJoinedGame] = useState(null); // Track joined game details
   
   // PVP WebSocket Hook
   const {
@@ -1543,8 +1548,17 @@ export default function PhotoGameArenaScreen() {
     onMessage: (msg) => {
       console.log('WS Message:', msg.type);
       
+      // Handle game_start - get pvp_room_id
+      if (msg.type === 'game_start') {
+        console.log('[Mobile] game_start received:', msg);
+        if (msg.pvp_room_id) {
+          setPvpRoomId(msg.pvp_room_id);
+        }
+        setSession(msg.session);
+        setGameState('pvp_selecting');
+      }
       // Handle game state transitions
-      if (msg.type === 'round_selecting') {
+      else if (msg.type === 'round_selecting') {
         setGameState('pvp_selecting');
       } else if (msg.type === 'round_ready') {
         setGameState('pvp_ready');
@@ -1555,10 +1569,6 @@ export default function PhotoGameArenaScreen() {
       } else if (msg.type === 'round_result') {
         // Handle round result - show winner briefly then transition
         setGameState('pvp_round_result');
-      } else if (msg.type === 'round_selecting') {
-        // New round starting - reset photo selection
-        setSelectedPhoto(null);
-        setGameState('pvp_selecting');
       } else if (msg.type === 'game_end') {
         setGameState('pvp_game_over');
       } else if (msg.type === 'game_forfeit') {
