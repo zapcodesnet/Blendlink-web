@@ -100,21 +100,26 @@ export const PVPBattleArena = ({
   opponentId,
   opponentUsername,
   betAmount = 0,
-  pvpRoomId,
+  pvpRoomId: propPvpRoomId,
   onGameComplete,
   onExit,
 }) => {
+  // CRITICAL: Resolve pvpRoomId from props OR session for robustness
+  // This handles the case where the prop might be stale/undefined on initial render
+  const pvpRoomId = propPvpRoomId || session?.pvp_room_id || session?.active_session_id || gameId;
+  
   // Log props on mount and when they change
   useEffect(() => {
     console.log('[PVPBattleArena] Props received:', {
       gameId,
-      pvpRoomId,
+      propPvpRoomId,
+      resolvedPvpRoomId: pvpRoomId,
       currentUserId,
       opponentId,
       hasSession: !!session,
       sessionPvpRoomId: session?.pvp_room_id,
     });
-  }, [gameId, pvpRoomId, currentUserId, opponentId, session]);
+  }, [gameId, propPvpRoomId, pvpRoomId, currentUserId, opponentId, session]);
   
   // WebSocket connection
   const wsRef = useRef(null);
