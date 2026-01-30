@@ -1,38 +1,50 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 30, 2026 (PVP Sync Bug Fix)
+## Latest Update: January 30, 2026 (CRITICAL PVP WebSocket Fix)
 
 ---
 
-## SESSION 59: CRITICAL PVP WEBSOCKET SYNC FIX ✅
+## SESSION 59: CRITICAL PVP WEBSOCKET SYNC FIX ✅ (VERIFIED)
 
 ### Bug Fixed: PVP Sync Bar Slashed + Endless Reconnection
 **Problem**: Players could join PVP games but the Sync bar became "slashed" (disconnected) after photo selection. Clicking reconnect showed "Attempt 0/5" spinning indefinitely without ever connecting.
 
-### Root Cause Analysis:
-1. **Race Condition**: The PVP room was created AFTER the `game_start` broadcast, so players never received the `pvp_room_id` needed to connect to the WebSocket.
-2. **Reconnection Counter**: The reconnect attempt counter wasn't being updated BEFORE the connection attempt, showing incorrect "0/5" status.
-3. **Missing Room ID in Broadcast**: `broadcast_game_start()` didn't include the `pvp_room_id` parameter.
+### ROOT CAUSE IDENTIFIED & FIXED:
+The WebSocket routes were registered as `/ws/...` but the **Kubernetes ingress only routes `/api/*` to the backend** (port 8001). All WebSocket connections were incorrectly going to the frontend server (port 3000) which doesn't handle WebSocket!
 
 ### Fixes Applied:
 
-**Backend (`game_routes.py` + `lobby_websocket.py`):**
-- Reordered game start flow: Create PVP room FIRST, then broadcast
+**Backend WebSocket Routes (`server.py`):**
+- Changed `/ws/{token}` → `/api/ws/{token}` (Notifications)
+- Changed `/ws/auction/{room_id}/{token}` → `/api/ws/auction/{room_id}/{token}` (Auction)
+- Changed `/ws/lobby/{game_id}/{token}` → `/api/ws/lobby/{game_id}/{token}` (Game Lobby)
+- Changed `/ws/pvp-game/{room_id}/{token}` → `/api/ws/pvp-game/{room_id}/{token}` (PVP Battle)
+- Added `joined` confirmation message on lobby WebSocket connect
+- Added `connected` confirmation message on PVP WebSocket connect
+
+**Frontend WebSocket URLs:**
+- `PVPBattleArena.jsx`: Updated to use `/api/ws/pvp-game/...`
+- `GameLobby.jsx`: Updated to use `/api/ws/lobby/...`
+- Added handlers for `connected` and `joined` confirmation messages
+
+**Backend Game Start Flow (`game_routes.py` + `lobby_websocket.py`):**
+- Reordered: Create PVP room FIRST, then broadcast game_start
 - Added `pvp_room_id` parameter to `broadcast_game_start()` function
 - Room ID is now included in the `game_start` WebSocket message
 
-**Frontend (`PVPBattleArena.jsx`):**
-- Fixed reconnection counter to update BEFORE connection attempt (shows "1/5" not "0/5")
-- Added 10-second connection timeout to detect stuck connections
-- Added connection health monitoring (30s pong timeout triggers reconnect)
-- Added proactive reconnect trigger in heartbeat when connection is lost
-- Better error messages and toasts for connection failures
-- Tab visibility handling for app resume/background scenarios
+### Verification Tests PASSED:
+```
+✓ Lobby WebSocket connected! Received: joined
+✓ PVP room created: pvp_38b445b9fc36
+✓ PVP WebSocket connected! Room: pvp_38b445b9fc36
+```
 
 ### Files Modified:
+- `/app/backend/server.py` - Fixed all WebSocket route paths to use `/api/ws/`
 - `/app/backend/game_routes.py` - Reordered room creation, added room_id to response
 - `/app/backend/lobby_websocket.py` - Added pvp_room_id parameter to broadcast_game_start
-- `/app/frontend/src/components/game/PVPBattleArena.jsx` - Enhanced WebSocket reconnection logic
+- `/app/frontend/src/components/game/PVPBattleArena.jsx` - Updated WebSocket URL, enhanced reconnection
+- `/app/frontend/src/components/game/GameLobby.jsx` - Updated WebSocket URL, added joined handler
 
 ---
 
