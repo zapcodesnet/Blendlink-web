@@ -298,9 +298,15 @@ export const SelfieMatchModal = ({
     };
   }, [isOpen, capturedImage, startCamera, stopCamera]);
   
-  // Fetch current attempts used
+  // Fetch current attempts used and reset confirmation state
   useEffect(() => {
     if (isOpen && photo?.mint_id) {
+      // Reset confirmation state when modal opens
+      setShowConfirmation(true);
+      setDeclineWarning(false);
+      setCapturedImage(null);
+      setMatchResult(null);
+      
       api.get(`/minting/photo/${photo.mint_id}/authenticity-status`)
         .then(res => {
           setAttemptsUsed(res.data.selfie_match_attempts || 0);
