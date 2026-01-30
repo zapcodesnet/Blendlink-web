@@ -340,7 +340,7 @@ class TestBotDifficultyConfig:
         assert response.status_code == 200, f"Failed: {response.text}"
         
         data = response.json()
-        photos = data["photos"]
+        photos = data["bot_photos"]
         
         # Hard bot should have $5B minimum value
         for i, photo in enumerate(photos):
@@ -365,7 +365,7 @@ class TestBotDifficultyConfig:
         assert response.status_code == 200, f"Failed: {response.text}"
         
         data = response.json()
-        photos = data["photos"]
+        photos = data["bot_photos"]
         
         # Extreme bot should have $10B minimum value
         for i, photo in enumerate(photos):
