@@ -425,7 +425,11 @@ export const PVPBattleArena = ({
         }
       };
       
-      ws.onmessage = handleWebSocketMessage;
+      ws.onmessage = (event) => {
+        // Update last pong time on any message (indicates connection is alive)
+        lastPongTimeRef.current = Date.now();
+        handleWebSocketMessage(event);
+      };
       
       ws.onerror = (error) => {
         clearTimeout(connectionTimeout);
