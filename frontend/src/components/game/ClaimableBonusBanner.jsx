@@ -65,28 +65,32 @@ const STATIC_CONFETTI = generateConfetti();
 
 // Flying Coin Animation Component
 const FlyingCoinAnimation = ({ isActive, onComplete }) => {
+  // showCounter is derived from isActive - reset when not active
   const [showCounter, setShowCounter] = useState(false);
   
+  // Reset counter when animation ends (before the component unmounts due to !isActive condition)
   useEffect(() => {
-    if (isActive) {
-      // Vibrate on mobile
-      vibrate([100, 50, 100, 50, 200, 100, 300]);
-      
-      // Show counter after bags start flying
-      const counterTimeout = setTimeout(() => setShowCounter(true), 500);
-      
-      // Complete after animation
-      const completeTimeout = setTimeout(() => {
-        onComplete?.();
-      }, 3000);
-      
-      return () => {
-        clearTimeout(counterTimeout);
-        clearTimeout(completeTimeout);
-      };
-    } else {
-      setShowCounter(false);
+    if (!isActive) {
+      // Use setTimeout to avoid synchronous setState in effect
+      const resetTimeout = setTimeout(() => setShowCounter(false), 0);
+      return () => clearTimeout(resetTimeout);
     }
+    
+    // Vibrate on mobile
+    vibrate([100, 50, 100, 50, 200, 100, 300]);
+    
+    // Show counter after bags start flying
+    const counterTimeout = setTimeout(() => setShowCounter(true), 500);
+    
+    // Complete after animation
+    const completeTimeout = setTimeout(() => {
+      onComplete?.();
+    }, 3000);
+    
+    return () => {
+      clearTimeout(counterTimeout);
+      clearTimeout(completeTimeout);
+    };
   }, [isActive, onComplete]);
   
   if (!isActive) return null;
