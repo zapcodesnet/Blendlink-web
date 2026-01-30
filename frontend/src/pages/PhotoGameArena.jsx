@@ -1735,7 +1735,7 @@ const PhotoGameArena = () => {
     }
   }, [selectedPhotoIds]);
   
-  const handleGameStart = useCallback((sessionId, gameData, pvpRoomId) => {
+  const handleGameStart = useCallback((sessionId, gameData, incomingPvpRoomId) => {
     // Transition from lobby to actual PVP battle
     // Determine which photos are mine and which are the opponent's
     const amICreator = gameData?.creator_id === user?.user_id || gameData?.player1_id === user?.user_id;
@@ -1756,25 +1756,37 @@ const PhotoGameArena = () => {
       ? (gameData?.opponent_username || 'Opponent')
       : (gameData?.creator_username || 'Creator');
     
+    // CRITICAL: Resolve the pvp_room_id from ALL possible sources
+    // Priority: incomingPvpRoomId > gameData.pvp_room_id > gameData.active_session_id (fallback)
+    const resolvedPvpRoomId = incomingPvpRoomId || gameData?.pvp_room_id || gameData?.active_session_id || sessionId;
+    
     console.log('[PhotoGameArena] handleGameStart called with:', {
       sessionId,
-      pvpRoomId,
+      incomingPvpRoomId,
       gameDataPvpRoomId: gameData?.pvp_room_id,
+      resolvedPvpRoomId,
       amICreator,
       opponentId,
     });
     
-    setSession({ session_id: sessionId, ...gameData, pvp_room_id: pvpRoomId });
+    // CRITICAL FIX: Set pvpRoomId BEFORE setting gameState to ensure it's available on first render
+    // We also store it in session object for redundancy
+    const fullSession = { 
+      session_id: sessionId, 
+      ...gameData, 
+      pvp_room_id: resolvedPvpRoomId 
+    };
+    
+    // Set states - pvpRoomId first for proper propagation
+    setPvpRoomId(resolvedPvpRoomId);
+    setSession(fullSession);
     setPlayerBattlePhotos(myPhotos);
     setOpponentBattlePhotos(theirPhotos);
     setBattleBetAmount(gameData?.bet_amount || 0);
     setIsAuctionBattleBot(false);
-    
-    // Store opponent info for PVP
     setOpponentInfo({ id: opponentId, username: opponentUsername });
-    setPvpRoomId(pvpRoomId);
     
-    console.log('[PhotoGameArena] Setting pvpRoomId:', pvpRoomId);
+    console.log('[PhotoGameArena] Setting pvpRoomId:', resolvedPvpRoomId);
     
     // Use PVP battle arena for real-time sync
     setGameState('pvp_battle');
