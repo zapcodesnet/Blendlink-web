@@ -21,7 +21,7 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pvpgame-connect.prev
 
 # Test credentials
 USER1 = {"email": "test@blendlink.com", "password": "admin"}
-USER2 = {"email": "demo@blendlink.com", "password": "demo123"}
+USER2 = {"email": "test@example.com", "password": "test123"}
 
 
 class TestPVPRoomIdFix:
