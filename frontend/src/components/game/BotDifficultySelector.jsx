@@ -578,7 +578,7 @@ export const BotDifficultySelector = ({
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="px-3 py-1.5 bg-yellow-500/20 rounded-lg">
-                      <span className="text-yellow-400 font-bold text-sm">{userBalance.toLocaleString()} BL</span>
+                      <span className="text-yellow-400 font-bold text-sm">{localBalance.toLocaleString()} BL</span>
                     </div>
                     <button
                       onClick={onClose}
@@ -595,6 +595,15 @@ export const BotDifficultySelector = ({
                 <div className="p-4 space-y-4">
                   {step === 'difficulty' ? (
                     <>
+                      {/* Claimable Bonus Banner - Shows at top when bonuses are available */}
+                      {claimableBonuses.length > 0 && (
+                        <ClaimableBonusBanner
+                          claimableBonuses={claimableBonuses}
+                          onBonusClaimed={handleBonusClaimed}
+                          onBalanceUpdate={handleBalanceUpdate}
+                        />
+                      )}
+                      
                       <div>
                         <h4 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
                           <Target className="w-4 h-4" />
