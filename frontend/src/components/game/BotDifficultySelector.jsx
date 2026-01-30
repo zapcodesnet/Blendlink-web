@@ -422,11 +422,18 @@ export const BotDifficultySelector = ({
   playerPhotos = [],
   userBalance = 0,
   botWinStats = {},
+  onBalanceUpdate, // Callback to update user balance after claiming bonus
 }) => {
   const [selectedDifficulty, setSelectedDifficulty] = useState('easy');
   const [selectedPhotos, setSelectedPhotos] = useState([]);
   const [step, setStep] = useState('difficulty');
   const [isLoading, setIsLoading] = useState(false);
+  const [localBalance, setLocalBalance] = useState(userBalance);
+  
+  // Update local balance when prop changes
+  useEffect(() => {
+    setLocalBalance(userBalance);
+  }, [userBalance]);
   
   // Reset state when modal opens
   useEffect(() => {
@@ -437,6 +444,23 @@ export const BotDifficultySelector = ({
       setIsLoading(false);
     }
   }, [isOpen]);
+  
+  // Handle balance update from ClaimableBonusBanner
+  const handleBalanceUpdate = useCallback((newBalance) => {
+    setLocalBalance(newBalance);
+    if (onBalanceUpdate) {
+      onBalanceUpdate(newBalance);
+    }
+  }, [onBalanceUpdate]);
+  
+  // Handle bonus claimed
+  const handleBonusClaimed = useCallback((bonusId, amount) => {
+    console.log(`Bonus ${bonusId} claimed: +${amount} BL`);
+    // The botWinStats will be refreshed by parent component
+  }, []);
+  
+  // Get claimable bonuses from botWinStats
+  const claimableBonuses = botWinStats.claimable_bonuses || [];
   
   const currentDifficulty = BOT_DIFFICULTIES.find(d => d.id === selectedDifficulty);
   
