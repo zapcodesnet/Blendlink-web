@@ -102,10 +102,10 @@ const FlyingCoinAnimation = ({ isActive, onComplete }) => {
           animate={{
             y: window.innerHeight + 50,
             opacity: [1, 1, 0],
-            rotate: 360 * (Math.random() > 0.5 ? 1 : -1),
+            rotate: 360 * piece.rotateDir,
           }}
           transition={{
-            duration: 2 + Math.random(),
+            duration: piece.duration,
             delay: piece.delay,
             ease: 'easeIn',
           }}
