@@ -526,7 +526,7 @@ export const PVPBattleArena = ({
     setReconnecting(true);
     toast.info('Reconnecting to game...');
     connectWebSocket(true);
-  }, [connectWebSocket, wsConnected, showToastThrottled]);
+  }, [connectWebSocket, wsConnected]);
   
   // Track if already connected on mount
   const hasConnectedRef = useRef(false);
