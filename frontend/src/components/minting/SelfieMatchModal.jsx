@@ -766,6 +766,8 @@ export const SelfieMatchModal = ({
                 </div>
               </div>
             )}
+              </>
+            )}
           </div>
         </motion.div>
       </motion.div>
