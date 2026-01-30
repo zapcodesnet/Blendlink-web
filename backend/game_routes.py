@@ -2030,6 +2030,7 @@ async def get_bot_battle_stats(current_user: dict = Depends(get_current_user_fro
             "total_bot_wins": 0,
             "total_bl_won_from_bots": 0,
             "total_bl_lost_to_bots": 0,
+            "claimed_bonuses": [],  # Track which bonuses have been claimed
         }
         await _db.bot_battle_stats.insert_one({**stats, "user_id": user_id})
     
@@ -2041,9 +2042,130 @@ async def get_bot_battle_stats(current_user: dict = Depends(get_current_user_fro
         "extreme": stats.get("hard_bot_wins", 0) >= 3,
     }
     
+    # Calculate claimable bonuses (unlocked but not yet claimed)
+    claimed = stats.get("claimed_bonuses", [])
+    claimable_bonuses = []
+    
+    # Medium unlock bonus
+    if unlocked["medium"] and "medium_unlock" not in claimed:
+        claimable_bonuses.append({
+            "id": "medium_unlock",
+            "label": "Medium Bot Unlocked!",
+            "amount": 20000,
+            "description": "Claim +20,000 BL for unlocking Medium Bot"
+        })
+    
+    # Hard unlock bonus
+    if unlocked["hard"] and "hard_unlock" not in claimed:
+        claimable_bonuses.append({
+            "id": "hard_unlock",
+            "label": "Hard Bot Unlocked!",
+            "amount": 100000,
+            "description": "Claim +100,000 BL for unlocking Hard Bot"
+        })
+    
+    # Extreme unlock bonus
+    if unlocked["extreme"] and "extreme_unlock" not in claimed:
+        claimable_bonuses.append({
+            "id": "extreme_unlock",
+            "label": "Extremely Hard Bot Unlocked!",
+            "amount": 500000,
+            "description": "Claim +500,000 BL for unlocking Extremely Hard Bot"
+        })
+    
+    # Extreme mastery bonus (3 wins vs Extremely Hard)
+    if stats.get("extreme_bot_wins", 0) >= 3 and "extreme_mastery" not in claimed:
+        claimable_bonuses.append({
+            "id": "extreme_mastery",
+            "label": "Bot Battle Master!",
+            "amount": 1000000,
+            "description": "Claim +1,000,000 BL for mastering all bot difficulties"
+        })
+    
     return {
         **stats,
         "unlocked_difficulties": unlocked,
+        "claimable_bonuses": claimable_bonuses,
+    }
+
+
+@game_router.post("/bot-battle/claim-bonus")
+async def claim_bot_bonus(
+    bonus_id: str,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """Claim a one-time bot unlock bonus"""
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    user_id = current_user["user_id"]
+    
+    # Define bonus amounts
+    bonus_amounts = {
+        "medium_unlock": 20000,
+        "hard_unlock": 100000,
+        "extreme_unlock": 500000,
+        "extreme_mastery": 1000000,
+    }
+    
+    if bonus_id not in bonus_amounts:
+        raise HTTPException(status_code=400, detail="Invalid bonus ID")
+    
+    # Get stats
+    stats = await _db.bot_battle_stats.find_one({"user_id": user_id})
+    if not stats:
+        raise HTTPException(status_code=404, detail="Stats not found")
+    
+    claimed = stats.get("claimed_bonuses", [])
+    
+    # Check if already claimed
+    if bonus_id in claimed:
+        raise HTTPException(status_code=400, detail="Bonus already claimed")
+    
+    # Verify eligibility
+    unlocked = {
+        "medium": stats.get("easy_bot_wins", 0) >= 3,
+        "hard": stats.get("medium_bot_wins", 0) >= 3,
+        "extreme": stats.get("hard_bot_wins", 0) >= 3,
+        "extreme_mastery": stats.get("extreme_bot_wins", 0) >= 3,
+    }
+    
+    # Map bonus_id to unlock requirement
+    bonus_to_unlock = {
+        "medium_unlock": "medium",
+        "hard_unlock": "hard",
+        "extreme_unlock": "extreme",
+        "extreme_mastery": "extreme_mastery",
+    }
+    
+    required_unlock = bonus_to_unlock.get(bonus_id)
+    if not unlocked.get(required_unlock, False):
+        raise HTTPException(status_code=400, detail="Bonus not yet earned")
+    
+    bonus_amount = bonus_amounts[bonus_id]
+    
+    # Credit BL coins to user
+    await _db.users.update_one(
+        {"user_id": user_id},
+        {"$inc": {"bl_coins": bonus_amount}}
+    )
+    
+    # Mark bonus as claimed
+    await _db.bot_battle_stats.update_one(
+        {"user_id": user_id},
+        {"$push": {"claimed_bonuses": bonus_id}}
+    )
+    
+    # Get updated user balance
+    user = await _db.users.find_one({"user_id": user_id}, {"bl_coins": 1})
+    new_balance = user.get("bl_coins", 0) if user else 0
+    
+    return {
+        "success": True,
+        "bonus_id": bonus_id,
+        "amount_claimed": bonus_amount,
+        "new_bl_balance": new_balance,
+        "message": f"Claimed {bonus_amount:,} BL coins!"
     }
 
 
