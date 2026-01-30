@@ -990,14 +990,25 @@ const MintedPhotos = () => {
               className={`p-2 rounded-lg transition-colors ${
                 viewMode === 'grid' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'
               }`}
+              title="Grid View"
             >
               <Grid className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setViewMode('card')}
+              className={`p-2 rounded-lg transition-colors ${
+                viewMode === 'card' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'
+              }`}
+              title="Card View (Flip for Stats)"
+            >
+              <LayoutGrid className="w-5 h-5" />
             </button>
             <button
               onClick={() => setViewMode('list')}
               className={`p-2 rounded-lg transition-colors ${
                 viewMode === 'list' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'
               }`}
+              title="List View"
             >
               <List className="w-5 h-5" />
             </button>
@@ -1021,6 +1032,22 @@ const MintedPhotos = () => {
               <Sparkles className="w-4 h-4 mr-2" />
               Mint Your First Photo
             </Button>
+          </div>
+        ) : viewMode === 'card' ? (
+          // New Unified Card View - clean image front, stats on back
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {photos.map(photo => (
+              <UnifiedPhotoCard
+                key={photo.mint_id}
+                photo={photo}
+                onClick={() => setLightboxPhoto(photo)}
+                showStats={true}
+                showStamina={true}
+                showFaceMatch={photo.has_face && !photo.selfie_match_completed}
+                onFaceMatchClick={setSelfieMatchPhoto}
+                size="medium"
+              />
+            ))}
           </div>
         ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
