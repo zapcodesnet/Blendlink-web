@@ -34,6 +34,11 @@ import api from '../../services/api';
 const STARTING_RPS_MONEY = 5_000_000;
 const MAX_PHOTOS_PER_PLAYER = 4;
 
+// Win streak multipliers
+const WIN_STREAK_MULTIPLIERS = {
+  3: 1.25, 4: 1.50, 5: 1.75, 6: 2.00, 7: 2.25, 8: 2.50, 9: 2.75, 10: 3.00
+};
+
 // Round types in fixed sequence per spec
 const ROUND_SEQUENCE = [
   { type: 'auction', name: 'Photo Auction Bidding', round: 1 },
