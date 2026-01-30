@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from photo_game import (
     init_game_service,
