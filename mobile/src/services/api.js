@@ -1200,6 +1200,29 @@ export const photoGameAPI = {
     return response.data;
   },
 
+  // Submit tap via API (polling fallback for real-time sync)
+  pvpSubmitTap: async (sessionId, tapCount = 1) => {
+    const response = await api.post('/photo-game/pvp/tap', {
+      session_id: sessionId,
+      tap_count: tapCount,
+    });
+    return response.data;
+  },
+
+  // Get current tap state for both players (polling endpoint)
+  pvpGetTapState: async (sessionId) => {
+    const response = await api.get(`/photo-game/pvp/tap-state/${sessionId}`);
+    return response.data;
+  },
+
+  // Finish round and calculate winner
+  pvpFinishRound: async (sessionId) => {
+    const response = await api.post('/photo-game/pvp/finish-round', null, {
+      params: { session_id: sessionId }
+    });
+    return response.data;
+  },
+
   // Get user profile (for BL balance)
   getUserProfile: async () => {
     const response = await api.get('/auth/me');
