@@ -1177,6 +1177,29 @@ export const photoGameAPI = {
     return response.data;
   },
 
+  // Get PVP session state (polling fallback for when WebSocket is unreliable)
+  getPVPSessionState: async (sessionId) => {
+    const response = await api.get(`/photo-game/pvp/session/${sessionId}`);
+    return response.data;
+  },
+
+  // Submit photo selection via API (polling fallback)
+  selectPVPPhoto: async (sessionId, photoId) => {
+    const response = await api.post('/photo-game/pvp/select-photo', {
+      session_id: sessionId,
+      photo_id: photoId,
+    });
+    return response.data;
+  },
+
+  // Advance to next round
+  pvpNextRound: async (sessionId) => {
+    const response = await api.post('/photo-game/pvp/next-round', null, {
+      params: { session_id: sessionId }
+    });
+    return response.data;
+  },
+
   // Get user profile (for BL balance)
   getUserProfile: async () => {
     const response = await api.get('/auth/me');
