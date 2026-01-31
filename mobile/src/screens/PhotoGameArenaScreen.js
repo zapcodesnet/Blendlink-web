@@ -1660,14 +1660,11 @@ export default function PhotoGameArenaScreen() {
   }, [joinGame, joinedGame]);
   
   // Handle when entering as creator with a gameId
-  const routeGameId = route.params?.gameId;
-  const routePhotos = route.params?.photos;
-  
   useEffect(() => {
     if (routeGameId && isCreator && !lobbyGameId) {
       console.log('[Mobile] Creator mode - connecting to lobby:', routeGameId);
       setLobbyGameId(routeGameId);
-      if (routePhotos) {
+      if (routePhotos && routePhotos.length > 0) {
         setSelectedPhoto(routePhotos[0]);
       }
       setGameState('pvp_lobby');
