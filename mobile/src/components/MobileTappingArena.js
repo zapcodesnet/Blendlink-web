@@ -325,6 +325,62 @@ export default function MobileTappingArena({
     };
   }, [gamePhase]);
 
+  // API POLLING FOR TAP STATE (Critical for real-time sync when WebSocket fails)
+  useEffect(() => {
+    if (gamePhase !== 'active' || !sessionId || isBot) return;
+    
+    const pollTapState = async () => {
+      try {
+        const data = await photoGameAPI.pvpGetTapState(sessionId);
+        
+        if (data) {
+          // Update opponent taps and dollar from server
+          const serverOpponentTaps = data.opponent_taps || 0;
+          const serverOpponentDollar = data.opponent_dollar || 0;
+          
+          if (serverOpponentTaps > opponentTaps) {
+            console.log('[Mobile TapPoll] Opponent taps updated:', serverOpponentTaps, 'dollar:', serverOpponentDollar);
+            setOpponentTaps(serverOpponentTaps);
+            setOpponentDollar(serverOpponentDollar);
+          }
+        }
+      } catch (err) {
+        // Silent fail - polling should not interrupt gameplay
+        console.debug('[Mobile TapPoll] Error:', err.message);
+      }
+    };
+    
+    // Poll every 200ms for responsive updates
+    pollIntervalRef.current = setInterval(pollTapState, 200);
+    pollTapState(); // Initial poll
+    
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+      }
+    };
+  }, [gamePhase, sessionId, isBot, opponentTaps]);
+
+  // Send taps to API (in addition to WebSocket)
+  const sendTapToApi = useCallback(async (tapCount) => {
+    if (!sessionId || isBot) return;
+    
+    try {
+      const response = await photoGameAPI.pvpSubmitTap(sessionId, tapCount);
+      
+      if (response) {
+        // Update dollar display from API response
+        setPlayerDollar(response.my_dollar || 0);
+        if (response.opponent_taps > opponentTaps) {
+          setOpponentTaps(response.opponent_taps);
+          setOpponentDollar(response.opponent_dollar || 0);
+        }
+      }
+    } catch (err) {
+      console.debug('[Mobile TapAPI] Error:', err.message);
+    }
+  }, [sessionId, isBot, opponentTaps]);
+
   // Auto-start countdown
   useEffect(() => {
     if (gamePhase === 'waiting') {
