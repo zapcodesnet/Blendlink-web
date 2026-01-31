@@ -437,6 +437,7 @@ export const TappingArena = ({
   isBot = false,
   botDifficulty = 'medium',
   soundEnabled = true,
+  sessionId = null, // For API polling fallback
 }) => {
   // Game state
   const [gamePhase, setGamePhase] = useState('waiting'); // waiting, countdown, active, finished
@@ -448,6 +449,13 @@ export const TappingArena = ({
   const [opponentTaps, setOpponentTaps] = useState(0);
   const [tapsThisSecond, setTapsThisSecond] = useState(0);
   const [showAntiCheatWarning, setShowAntiCheatWarning] = useState(false);
+  
+  // Dollar amounts for display
+  const [playerDollar, setPlayerDollar] = useState(0);
+  const [opponentDollar, setOpponentDollar] = useState(0);
+  
+  // Polling ref
+  const pollIntervalRef = useRef(null);
   
   // Calculate effective values with ALL modifiers (scenery, streaks, level, age, likes)
   const playerValueCalc = calculateEffectiveValue(playerPhoto, opponentPhoto, playerStats);
