@@ -34,6 +34,16 @@ class PlayerConnection:
     missed_pings: int = 0  # Track missed heartbeats
 
 
+@dataclass
+class SpectatorConnection:
+    """A spectator's connection to watch a PVP game"""
+    user_id: str
+    username: str
+    websocket: WebSocket
+    is_connected: bool = True
+    joined_at: float = 0
+
+
 @dataclass 
 class PVPGameRoom:
     """A PVP game room with round-by-round synchronization"""
