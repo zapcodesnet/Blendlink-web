@@ -633,6 +633,55 @@ export const PVPBattleArena = ({
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [wsConnected, gamePhase]);
   
+  // Polling fallback for game state synchronization
+  // This ensures the game stays in sync even when WebSocket is unreliable
+  useEffect(() => {
+    if (!pvpRoomId || !gameId) return;
+    
+    const pollGameState = async () => {
+      try {
+        // Get the current session state from the API
+        const response = await api.get(`/photo-game/pvp/session/${gameId}`);
+        const sessionData = response.data;
+        
+        if (sessionData) {
+          // Update game phase if it changed
+          if (sessionData.status && sessionData.status !== gamePhase) {
+            console.log('[Polling] Game phase changed:', sessionData.status);
+            
+            // Handle phase transitions
+            if (sessionData.status === 'selecting') {
+              setGamePhase('selecting');
+            } else if (sessionData.status === 'round_end') {
+              setGamePhase('round_end');
+            } else if (sessionData.status === 'complete' || sessionData.status === 'finished') {
+              setGamePhase('result');
+            }
+          }
+          
+          // Update round info
+          if (sessionData.current_round && sessionData.current_round !== currentRound) {
+            setCurrentRound(sessionData.current_round);
+          }
+          
+          // Update scores
+          if (sessionData.player1_wins !== undefined) {
+            setMyScore(isPlayer1 ? sessionData.player1_wins : sessionData.player2_wins);
+            setOpponentScore(isPlayer1 ? sessionData.player2_wins : sessionData.player1_wins);
+          }
+        }
+      } catch (err) {
+        // Silently fail polling - don't spam errors
+        console.debug('[Polling] Failed to fetch game state:', err.message);
+      }
+    };
+    
+    // Poll every 2 seconds for responsive updates
+    const pollInterval = setInterval(pollGameState, 2000);
+    
+    return () => clearInterval(pollInterval);
+  }, [pvpRoomId, gameId, gamePhase, currentRound, isPlayer1]);
+  
   // Handle photo selection
   const handlePhotoSelect = useCallback((photo) => {
     setMySelectedPhoto(photo);
