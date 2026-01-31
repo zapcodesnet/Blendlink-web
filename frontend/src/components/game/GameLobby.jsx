@@ -214,6 +214,7 @@ export const GameLobby = ({
   const wsRef = useRef(null);
   const reconnectAttempts = useRef(0);
   const maxReconnectAttempts = 5;
+  const intentionalCloseRef = useRef(false);  // Track if close was intentional
   
   // Determine current user's role
   const isCreator = gameState?.creator_id === currentUserId;
