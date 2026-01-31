@@ -1022,6 +1022,7 @@ export const PVPBattleArena = ({
               websocket={websocketInstance}
               isBot={false}
               soundEnabled={true}
+              sessionId={gameId || pvpRoomId}
             />
           </motion.div>
         )}
