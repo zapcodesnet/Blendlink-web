@@ -194,7 +194,8 @@ export const FacebookShareOverlay = ({ isOpen, onClose, onVisitGroup }) => {
     try {
       const response = await api.get('/minting/photos');
       // Sort by most recently minted (created_at descending) and get top 5
-      const allPhotos = response.data || [];
+      // API returns {photos: [...], count: N} so extract the photos array
+      const allPhotos = Array.isArray(response.data) ? response.data : (response.data?.photos || []);
       const sortedPhotos = allPhotos.sort((a, b) => {
         const dateA = new Date(a.created_at || 0);
         const dateB = new Date(b.created_at || 0);
