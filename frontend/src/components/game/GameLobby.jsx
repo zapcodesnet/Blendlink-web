@@ -392,10 +392,9 @@ export const GameLobby = ({
     };
   }, [connectWebSocket]);
   
-  // Fallback polling (only if WebSocket fails)
+  // Fallback polling - ALWAYS poll to ensure state consistency even with WebSocket issues
+  // This is necessary because the Kubernetes ingress may not properly support WebSockets
   useEffect(() => {
-    if (wsConnected) return; // Don't poll if WebSocket is connected
-    
     const pollGameState = async () => {
       if (!gameState?.game_id) return;
       
@@ -425,9 +424,11 @@ export const GameLobby = ({
       }
     };
     
-    const pollInterval = setInterval(pollGameState, 3000); // Slower polling as fallback
+    // Poll every 2 seconds for responsive updates (WebSocket may be unreliable)
+    const pollInterval = setInterval(pollGameState, 2000);
+    pollGameState(); // Initial poll
     return () => clearInterval(pollInterval);
-  }, [wsConnected, gameState, showCountdown, onGameStart]);
+  }, [gameState, showCountdown, onGameStart]);
   
   // Handle ready
   const handleReady = async () => {
