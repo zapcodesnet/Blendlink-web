@@ -355,12 +355,14 @@ export function usePVPWebSocket(roomId, options = {}) {
     // State
     isConnected,
     isConnecting,
+    hasJoined,
     error,
     gameState,
 
     // Actions
     connect,
     disconnect,
+    joinRoom,
     selectPhoto,
     markReady,
     sendTap,
