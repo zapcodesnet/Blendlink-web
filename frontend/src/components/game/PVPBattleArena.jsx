@@ -918,8 +918,13 @@ export const PVPBattleArena = ({
         </div>
         <div className="flex items-center gap-2">
           {reconnecting && (
-            <span className="text-xs text-yellow-400">
-              Attempt {reconnectAttemptCount}/{MAX_RECONNECT_ATTEMPTS}
+            <span className="text-xs text-yellow-400 animate-pulse">
+              Reconnecting... {reconnectAttemptCount}/{MAX_RECONNECT_ATTEMPTS}
+            </span>
+          )}
+          {pollingMode && !wsConnected && (
+            <span className="text-xs text-blue-400">
+              Polling sync
             </span>
           )}
           <button 
