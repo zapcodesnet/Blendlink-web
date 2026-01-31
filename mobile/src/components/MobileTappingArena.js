@@ -658,17 +658,21 @@ export default function MobileTappingArena({
         </View>
       )}
 
-      {/* Tap Area */}
+      {/* Tap Area - Optimized for fast touch response */}
       <Pressable
-        style={[
+        style={({ pressed }) => [
           styles.tapArea,
           { 
-            backgroundColor: gamePhase === 'active' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(0, 0, 0, 0.3)',
+            backgroundColor: gamePhase === 'active' 
+              ? (pressed ? 'rgba(139, 92, 246, 0.4)' : 'rgba(139, 92, 246, 0.2)')
+              : 'rgba(0, 0, 0, 0.3)',
             opacity: winner ? 0.5 : 1,
           }
         ]}
-        onPress={handleTap}
+        onPressIn={handleTap}
         disabled={gamePhase !== 'active' || winner !== null}
+        android_disableSound={true}
+        unstable_pressDelay={0}
       >
         {gamePhase === 'active' && !winner && (
           <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
