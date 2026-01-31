@@ -2181,6 +2181,43 @@ const PhotoGameArena = () => {
             </motion.div>
           )}
           
+          {/* NEW: Live Battles Browser */}
+          {gameState === 'live_battles' && (
+            <motion.div key="live_battles" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <div className="space-y-4">
+                <Button
+                  onClick={() => setGameState('pvp_menu')}
+                  variant="ghost"
+                  className="text-gray-400 hover:text-white"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Menu
+                </Button>
+                
+                <LiveBattles 
+                  onSpectate={(roomId) => {
+                    setSpectatingRoomId(roomId);
+                    setGameState('spectating');
+                  }}
+                  onClose={() => setGameState('pvp_menu')}
+                />
+              </div>
+            </motion.div>
+          )}
+          
+          {/* NEW: Spectator View */}
+          {gameState === 'spectating' && spectatingRoomId && (
+            <motion.div key="spectating" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <SpectatorView 
+                roomId={spectatingRoomId}
+                onExit={() => {
+                  setSpectatingRoomId(null);
+                  setGameState('live_battles');
+                }}
+              />
+            </motion.div>
+          )}
+          
           {/* NEW: Game Lobby (Waiting for Ready) */}
           {gameState === 'pvp_lobby' && currentOpenGame && (
             <motion.div key="pvp_lobby" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
