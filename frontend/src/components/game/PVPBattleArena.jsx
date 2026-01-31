@@ -510,7 +510,7 @@ export const PVPBattleArena = ({
           setReconnecting(true);
           
           const delay = RECONNECT_INTERVAL;
-          console.log(`Scheduling reconnect in ${delay}ms`);
+          console.log(`Scheduling reconnect in ${delay}ms (attempt ${reconnectAttempts.current + 1}/${MAX_RECONNECT_ATTEMPTS})`);
           
           reconnectTimeoutRef.current = setTimeout(() => {
             // Use ref to call the latest version
@@ -519,8 +519,10 @@ export const PVPBattleArena = ({
             }
           }, delay);
         } else if (reconnectAttempts.current >= MAX_RECONNECT_ATTEMPTS) {
-          toast.error('Connection lost after 5 attempts. Please rejoin or create a new game.');
+          console.log('Max reconnect attempts reached - switching to polling-only mode');
+          setPollingMode(true);
           setReconnecting(false);
+          toast.info('Sync mode: Using polling (WebSocket unavailable)');
         }
         intentionalCloseRef.current = false;
       };
