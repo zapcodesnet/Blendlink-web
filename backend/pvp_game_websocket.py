@@ -868,6 +868,196 @@ class PVPGameManager:
             if room.game_id == game_id:
                 return room
         return None
+    
+    # ==================== SPECTATOR METHODS ====================
+    
+    async def connect_spectator(
+        self,
+        room_id: str,
+        user_id: str,
+        username: str,
+        websocket: WebSocket
+    ) -> bool:
+        """Connect a spectator to watch a PVP game"""
+        room = self.rooms.get(room_id)
+        if not room:
+            logger.warning(f"Spectator tried to join non-existent room {room_id}")
+            return False
+        
+        if not room.allow_spectators:
+            logger.warning(f"Room {room_id} does not allow spectators")
+            return False
+        
+        # Don't allow players to spectate their own game
+        if room.player1 and room.player1.user_id == user_id:
+            return False
+        if room.player2 and room.player2.user_id == user_id:
+            return False
+        
+        import time
+        spectator = SpectatorConnection(
+            user_id=user_id,
+            username=username,
+            websocket=websocket,
+            is_connected=True,
+            joined_at=time.time()
+        )
+        
+        async with self._lock:
+            room.spectators[user_id] = spectator
+        
+        logger.info(f"Spectator {username} ({user_id}) joined room {room_id}")
+        
+        # Send current game state to spectator
+        await self._send_spectator_state(room_id, user_id)
+        
+        # Notify others about new spectator count
+        await self._broadcast_spectator_count(room_id)
+        
+        return True
+    
+    async def disconnect_spectator(self, user_id: str, room_id: str):
+        """Disconnect a spectator from a room"""
+        room = self.rooms.get(room_id)
+        if not room:
+            return
+        
+        async with self._lock:
+            if user_id in room.spectators:
+                room.spectators[user_id].is_connected = False
+                del room.spectators[user_id]
+        
+        logger.info(f"Spectator {user_id} left room {room_id}")
+        await self._broadcast_spectator_count(room_id)
+    
+    async def _send_spectator_state(self, room_id: str, spectator_id: str):
+        """Send current game state to a spectator"""
+        room = self.rooms.get(room_id)
+        if not room or spectator_id not in room.spectators:
+            return
+        
+        spectator = room.spectators[spectator_id]
+        
+        # Build spectator-safe game state (hide sensitive info)
+        state = {
+            "type": "spectator_state",
+            "room_id": room_id,
+            "current_round": room.current_round,
+            "max_rounds": room.max_rounds,
+            "round_phase": room.round_phase,
+            "round_type": room.round_type,
+            "player1_wins": room.player1_wins,
+            "player2_wins": room.player2_wins,
+            "spectator_count": len(room.spectators),
+            "player1": {
+                "username": room.player1.username if room.player1 else None,
+                "is_connected": room.player1.is_connected if room.player1 else False,
+                "has_selected": bool(room.player1.selected_photo_id) if room.player1 else False,
+                "is_ready": room.player1.is_ready if room.player1 else False,
+                # Only show selected photo if round is in playing/result phase
+                "selected_photo": self._sanitize_photo_for_spectator(
+                    next((p for p in room.player1.photos if p.get("mint_id") == room.player1.selected_photo_id), None)
+                ) if room.player1 and room.player1.selected_photo_id and room.round_phase in ["playing", "result", "ready", "countdown"] else None,
+            } if room.player1 else None,
+            "player2": {
+                "username": room.player2.username if room.player2 else None,
+                "is_connected": room.player2.is_connected if room.player2 else False,
+                "has_selected": bool(room.player2.selected_photo_id) if room.player2 else False,
+                "is_ready": room.player2.is_ready if room.player2 else False,
+                "selected_photo": self._sanitize_photo_for_spectator(
+                    next((p for p in room.player2.photos if p.get("mint_id") == room.player2.selected_photo_id), None)
+                ) if room.player2 and room.player2.selected_photo_id and room.round_phase in ["playing", "result", "ready", "countdown"] else None,
+            } if room.player2 else None,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+        try:
+            await spectator.websocket.send_json(state)
+        except Exception as e:
+            logger.error(f"Error sending state to spectator {spectator_id}: {e}")
+    
+    def _sanitize_photo_for_spectator(self, photo: Optional[Dict]) -> Optional[Dict]:
+        """Sanitize photo data for spectator view (limited info)"""
+        if not photo:
+            return None
+        return {
+            "mint_id": photo.get("mint_id"),
+            "image_url": photo.get("image_url"),
+            "title": photo.get("title"),
+            "dollar_value": photo.get("dollar_value"),
+            "level": photo.get("level"),
+            "rarity": photo.get("rarity"),
+        }
+    
+    async def _broadcast_spectator_count(self, room_id: str):
+        """Broadcast updated spectator count to players and spectators"""
+        room = self.rooms.get(room_id)
+        if not room:
+            return
+        
+        count = len([s for s in room.spectators.values() if s.is_connected])
+        message = {
+            "type": "spectator_count",
+            "count": count,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # Send to players
+        await self._broadcast_to_room(room_id, message)
+        
+        # Send to all spectators
+        await self._broadcast_to_spectators(room_id, message)
+    
+    async def _broadcast_to_spectators(self, room_id: str, message: Dict):
+        """Broadcast a message to all spectators in a room"""
+        room = self.rooms.get(room_id)
+        if not room:
+            return
+        
+        msg_json = json.dumps(message)
+        
+        for spectator in list(room.spectators.values()):
+            if spectator.is_connected:
+                try:
+                    await spectator.websocket.send_text(msg_json)
+                except Exception as e:
+                    logger.error(f"Error sending to spectator {spectator.user_id}: {e}")
+                    spectator.is_connected = False
+    
+    def get_live_battles(self) -> List[Dict]:
+        """Get list of ongoing battles available for spectating"""
+        live_battles = []
+        
+        for room in self.rooms.values():
+            # Only show rooms that are actively being played
+            if not room.player1 or not room.player2:
+                continue
+            if not room.player1.is_connected or not room.player2.is_connected:
+                continue
+            if not room.allow_spectators:
+                continue
+            if room.round_phase in ["waiting"]:
+                continue
+            
+            live_battles.append({
+                "room_id": room.room_id,
+                "game_id": room.game_id,
+                "player1": {
+                    "username": room.player1.username,
+                    "wins": room.player1_wins
+                },
+                "player2": {
+                    "username": room.player2.username,
+                    "wins": room.player2_wins
+                },
+                "current_round": room.current_round,
+                "max_rounds": room.max_rounds,
+                "round_phase": room.round_phase,
+                "spectator_count": len([s for s in room.spectators.values() if s.is_connected]),
+                "started_at": room.started_at.isoformat() if room.started_at else None
+            })
+        
+        return live_battles
 
 
 # Global manager instance
