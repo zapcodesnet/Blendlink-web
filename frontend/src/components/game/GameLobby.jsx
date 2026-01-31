@@ -381,11 +381,12 @@ export const GameLobby = ({
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         wsRef.current.send(JSON.stringify({ type: 'ping' }));
       }
-    }, 30000);
+    }, 25000);  // Send ping every 25 seconds
     
     return () => {
       clearInterval(heartbeat);
       if (wsRef.current) {
+        intentionalCloseRef.current = true;  // Mark as intentional cleanup
         wsRef.current.close();
       }
     };
