@@ -291,14 +291,13 @@ export default function GameCreationScreen() {
           bet_amount: parseInt(betAmount) || 0,
         });
         
-        Alert.alert(
-          '🎮 Game Created!',
-          'Your game is now open for others to join. You can wait or browse other games.',
-          [
-            { text: 'Browse Games', onPress: () => navigation.navigate('OpenGamesBrowser') },
-            { text: 'Wait Here', style: 'cancel' },
-          ]
-        );
+        // Navigate to PhotoGameArena with the game ID to connect to lobby
+        navigation.replace('PhotoGameArena', {
+          mode: 'pvp',
+          isCreator: true,
+          gameId: result.game?.game_id || result.game_id,
+          photos: selectedPhotos,
+        });
       }
     } catch (err) {
       console.error('Failed to create game:', err);
