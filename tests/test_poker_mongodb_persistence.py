@@ -8,7 +8,7 @@ import requests
 import os
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pvpfix-gamer.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://lagfix-blocker.preview.emergentagent.com')
 
 # Test credentials
 TEST_EMAIL = "test@example.com"

@@ -1,150 +1,169 @@
 <analysis>**original_problem_statement:**
-The user's primary goal is to fix bugs and add features to the Minted Photo Auction Bidding Battle game. The work has evolved through several phases, addressing critical bugs, adding a replay system, and making numerous UI/gameplay improvements for clarity and fairness.
+The user has issued a final, non-negotiable demand to fix all outstanding critical issues. The absolute highest priority is the Player-vs-Player (PVP) mode, which remains broken despite numerous fixes. The user reports a Creator disconnected error, getting stuck before Round 1, and an endless Reconnecting... Attempt 0/5 loop. Proof of a working fix on two real physical devices is required before any other work can proceed.
 
-The latest requests focus on enhancing the Player-vs-Bot (PvB) experience with major updates to post-game flow, a new claimable bonus system for unlocking bot difficulties, and significant adjustments to bot stats and tap rates.
+A new critical issue has also been raised: the entire web and mobile app is suffering from severe lag and unresponsiveness, frequently freezing on heavy pages like the feed and photo game.
 
-**PRODUCT REQUIREMENTS:**
--   All fixes and features must be implemented for both the responsive web application (React) and the native mobile app (React Native), ensuring identical functionality and UI.
--   The core game mechanics must not be altered unless specified.
--   Transparency and player trust are key drivers for many UI updates (e.g., showing how values are calculated, displaying bid amounts).
--   Reward systems (like BL coin bonuses) should be engaging and clear to the user.
+PRODUCT REQUIREMENTS (Strictly in order):
+1.  **PVP Fix (P0 - BLOCKER):** Fix all sync, connection, and state issues in PVP. Rebuild the mobile app and provide video/screenshot proof of a stable match between two physical devices. The fix must be verified by the user.
+2.  **Performance Optimization (P0 - BLOCKER):** Aggressively optimize web and mobile performance to eliminate all freezing and unresponsiveness, especially on the feed and game pages.
+3.  **Face Match (P1):** Implement the client-side Face Match button on existing photos using the browser's MediaDevices API and .
+4.  **Subscription Tiers (P2):** Implement subscription tiers with XP multipliers.
+5.  **Unified Design & Image Integrity (P2):** Ensure all photo cards use the  component and that original image quality/aspect ratio is preserved during minting and profile picture updates.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application is a full-stack project with a React frontend, FastAPI backend, and MongoDB database. A significant number of features and bug fixes were completed in this session.
-
--   **Critical Bug Fixes:** A recurring bug preventing bot difficulty unlocks has been resolved and verified. Issues with Dollar Value calculation and Battle Replay visibility were also fixed.
--   **Gameplay/UI Clarity:** Updates have been implemented to show original vs. effective dollar values, display bid amounts in RPS rounds, and handle 4-4 tiebreaker scenarios. The in-round photo selection cards now show full stats (scenery, stamina, streaks, level, etc.).
--   **Bot Mechanics:** Bot tap rates and other stats (dollar values, bet amounts) have been updated multiple times per user requests. The display of tap rates has been hidden from the UI.
--   **Features:** A mock engagement service (❤️ Like button) has been fully implemented. A Top Liked Photos leaderboard and a Featured Replays section (with backend logic for categories) have been added. A video export feature for battle replays using  has also been implemented.
--   **Backend for Claimable Bonuses:** The  endpoint now returns the status of claimable bonuses, and a new  endpoint has been created to handle the claim action.
+The agent has implemented several critical fixes. The backend PVP logic is now robust after fixing a  serialization bug that prevented the  event from broadcasting. The primary cause of mobile PVP failure—a completely missing lobby WebSocket implementation—has been addressed by creating new hooks and services (, ) and re-architecting the . The most recent bug, Creator disconnected, was traced to the mobile client not sending a  message to the PVP WebSocket; this has also been fixed in . Additionally, a Live Spectator Mode feature was fully implemented on the backend and web frontend.
 
 **Last working item**:
--   **Last item agent was working**: The agent was implementing a Major Bot Battle Update. The backend work for the **Claimable BL Coin Bonuses** was completed by updating the user stats model and adding a new API endpoint to claim bonuses. The agent was about to start creating the frontend  component.
--   **Status**: IN PROGRESS
--   **Agent Testing Done**: N
--   **Which testing method agent to use?**: both. The new backend endpoints ( and the updated ) need to be tested via . The frontend will require screenshot verification and potentially the testing agent to validate the new component, animation, and state changes.
+-   **Last item agent was working**: Fixing the Creator disconnected bug in the mobile PVP flow. The agent identified that the mobile client was connecting to the PVP WebSocket but never sending the required  message, causing the server to disconnect it. The fix was implemented by adding the logic to send this message automatically upon connection. The agent also resolved several linting errors in the process.
+-   **Status**: USER VERIFICATION PENDING
+-   **Agent Testing Done**: Y (Backend tests pass, but the crucial multi-device E2E test required by the user has NOT been performed).
+-   **Which testing method agent to use?**: Manual testing on at least 2 physical mobile devices simultaneously, as explicitly demanded by the user. The agent must rebuild the Expo app and provide video/screenshot proof of a successful, synchronized game.
 -   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Complete the Major Bot Battle Update (P0)**
+-   Issue 1: CRITICAL - Fix PVP Connection & Sync Failure (Creator disconnected) (P0)
+-   Issue 2: CRITICAL - Severe Lag & Unresponsiveness Across the App (P0)
+-   Issue 3: Incomplete Integration of  (P1)
+-   Issue 4: Fix Image Preservation for Minting and Profile Pictures (P1)
 
 **Issues Detail:**
--   **Issue 1: Complete the Major Bot Battle Update**
-    -   **Attempted fixes**:
-        -   **Backend:** The  collection in MongoDB was updated to include a  field. The  endpoint was modified to return bonus availability. A new endpoint  was created to credit the user and mark the bonus as claimed.
-        -   **Frontend:** Post-game buttons in  were enhanced. The bot difficulty configuration in  and tap rates in  were updated to the latest user specs.
+-   **Issue 1: CRITICAL - Fix PVP Connection & Sync Failure (Creator disconnected)**
+    -   **Attempted fixes**: The agent identified that the mobile client failed to send a  message after connecting to the PVP WebSocket. A fix was implemented in  and  to automatically send the  message with the user's photos upon establishing a connection. State management in  was also improved to ensure photo data is available at the right time.
     -   **Next debug checklist**:
-        1.  Create a new frontend component: .
-        2.  This component should display a Claim button and an exciting animation (e.g., confetti, flying coins) when triggered.
-        3.  Integrate this banner into . It should be conditionally rendered based on the  data fetched from the  endpoint.
-        4.  Implement the  handler for the Claim button to call the  endpoint.
-        5.  On a successful API response, trigger the animation, update the user's wallet balance in the UI, and hide the banner.
-        6.  Thoroughly test the end-to-end flow: win the required number of games to unlock a new bot -> verify the claim banner appears -> click Claim -> verify animation plays, balance updates, and banner disappears permanently for that bonus tier.
-    -   **Why fix this issue and what will be achieved with the fix?**: This is a major user request to make the reward system more engaging and improve the overall post-game loop.
-    -   **Status**: IN PROGRESS
+        1.  Rebuild the Expo React Native app in  to include all recent fixes.
+        2.  Test the complete PVP flow on **two physical devices** simultaneously (create game, join, ready up, play round 1) to confirm the Creator disconnected and Reconnecting... errors are gone.
+        3.  Simulate a disconnect on one device and verify that the auto-reconnect feature works.
+        4.  Provide video or multiple screenshot proof of the successful two-device test to the user for verification.
+    -   **Why fix this issue and what will be achieved with the fix?**: This is the #1 blocker for the entire application. Fixing it is the only way to regain user trust and make the core feature functional.
+    -   **Status**: USER VERIFICATION PENDING
+    -   **Is recurring issue?**: Y
+    -   **Should Test frontend/backend/both after fix?**: both (Critically, a 2-device manual E2E test of the mobile app).
+    -   **Blocked on other issue**: None.
+
+-   **Issue 2: CRITICAL - Severe Lag & Unresponsiveness Across the App**
+    -   **Attempted fixes**: None. This is a newly reported critical issue.
+    -   **Next debug checklist**:
+        1.  Profile the performance of heavy pages on web and mobile (, ).
+        2.  Implement image lazy loading ( on web, a library like  on mobile).
+        3.  Virtualize long lists ( optimizations on mobile,  on web).
+        4.  Identify and debounce or remove performance-heavy animations and effects.
+        5.  Test on real devices (especially low-end ones) to ensure smooth 60fps scrolling and interaction.
+    -   **Why fix this issue and what will be achieved with the fix?**: The application is unusable if it constantly freezes. This fix is critical for user experience.
+    -   **Status**: NOT STARTED
     -   **Is recurring issue?**: N
-    -   **Should Test frontend/backend/both after fix?**: both
-    -   **Blocked on other issue**: None
+    -   **Should Test frontend/backend/both after fix?**: frontend (web and mobile).
+    -   **Blocked on other issue**: Blocked by user verification of the PVP fix.
+
+-   **Issue 3: Incomplete Integration of **
+    -   **Next debug checklist**: Modify  and  (and their mobile equivalents) to use the  component for photo selection and battle displays.
+    -   **Status**: NOT STARTED
+    -   **Blocked on other issue**: Blocked by PVP and Lag fixes.
+
+-   **Issue 4: Fix Image Preservation for Minting and Profile Pictures**
+    -   **Next debug checklist**: Integrate the  component and ensure backend logic does not alter original image data during minting.
+    -   **Status**: NOT STARTED
+    -   **Blocked on other issue**: Blocked by PVP and Lag fixes.
 
 **In progress Task List**:
--   There are no other in-progress tasks. The Major Bot Battle Update is the only active item.
+-   There are no other in-progress tasks. All effort must be focused on the pending issues above, in the strict order of priority.
 
 **Upcoming and Future Tasks**
-**Upcoming Tasks:**
--   **P1: Real Facebook Graph API Integration**: Replace the current mock engagement service with a real integration.
--   **P2: Expand i18n Coverage**: Integrate the  hook across all components with hardcoded English text.
+**Upcoming Tasks (To be addressed ONLY after PVP and Lag fixes are verified):**
+-   **P1: Face Match on Existing Photos:** Implement client-side face matching using MediaDevices API and .
+-   **P2: Subscription Tiers & XP Multiplier:** Design and implement the subscription schema and its effects.
 
 **Future Tasks:**
--   **P2: Bot Battle Tournaments**: Implement a tournament system for Bot Battles.
+-   Real Facebook Graph API Integration
+-   Expand i18n Coverage
+-   Bot Battle Tournaments
 
 **Completed work in this session**
--   **Critical Bug Fixes (DONE & TESTED)**: Resolved repeated, high-priority bugs related to bot difficulty unlocks, inaccurate dollar value calculations, and empty battle replays.
--   **Gameplay & UI Clarity Updates (DONE & TESTED)**:
-    -   Implemented display of Original vs. Effective Dollar Values in  and .
-    -   Added display of player bid amounts in .
-    -   Added 4-4 tiebreaker logic in .
-    -   Enhanced photo selection cards in  to show full stats (scenery, stamina, streaks, level, etc.).
--   **Mock Engagement Service (DONE & TESTED)**: Created and integrated a  component into  and .
--   **Featured Replays Logic (DONE & TESTED)**: Fixed a route-ordering bug and enhanced the backend endpoint  to include more sorting categories. The frontend component was updated to use these new categories.
--   **Top Liked Photos Leaderboard (DONE & TESTED)**: Created a new backend endpoint and a corresponding frontend component .
--   **Bot Battle Video Export (DONE & TESTED)**: Installed  and created backend endpoints to generate and download video/GIF versions of battle replays. Updated the  UI with download options.
--   **Photo Editor Bug Investigation (DONE)**: Investigated Failed Fetch errors in  and improved robustness by adding retry logic and timeouts.
--   **Bot Stats & Tap Rate Updates (DONE & TESTED)**: Adjusted bot tap rates and stats (dollar values, bets) multiple times per user requests and ensured tap rates are hidden from the UI.
+-   **CRITICAL PVP Bug Fix (Backend):** Fixed a  serialization error in  that silently blocked the  WebSocket broadcast.
+-   **CRITICAL Mobile PVP Flow Rearchitecture:**
+    -   Implemented a previously missing Lobby WebSocket connection for the mobile app ().
+    -   Fixed the mobile PVP flow by ensuring the client sends a  message after connecting to the PVP WebSocket ().
+    -   Heavily refactored  to support the full lobby lifecycle (creating, joining, readying up, countdown, and transitioning to a PVP battle).
+-   **Live Spectator Mode Feature (Web & Backend):** Implemented a full feature allowing users to watch ongoing PVP battles live. This includes new backend endpoints and frontend components.
 
 **Earlier issues found/mentioned but not fixed**
--   **Issue 1: Linter Errors in **
-    -   **Debug checklist**: The file  has a recurring  linting error.
-    -   **Why to solve this issue and what will be achieved with this?**: While not critical, fixing this would improve code quality and prevent potential side effects from setting state directly within a  hook. The fix likely involves refactoring the  to avoid direct state updates that cause re-renders.
-    -   **Should Test frontend/backend/both after fix**: frontend
-    -   **Is recurring issue?**: Y
+-   The issues regarding  integration and image preservation were identified in the previous session and remain unfixed, as they are lower priority than the critical PVP and performance blockers.
 
 **Known issue recurrence from previous fork**
--   **Bot Battle Progression:** This feature, especially win tracking and unlocks, has been a recurring source of bugs. It was addressed multiple times in the current session and appears stable, but it is a sensitive area that requires careful regression testing with any related changes.
+-   **Issue recurrence in previous fork**: The PVP mode failure is a severe, recurring issue. Each session has uncovered and fixed a different layer of the problem (backend logic, frontend state, serialization, mobile connection), but the end-to-end flow has remained broken for the user.
+-   **Recurrence count**: 4+
+-   **Status**: IN PROGRESS
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **FastAPI Route Ordering:** Resolved a critical bug where a dynamic route () was incorrectly capturing a static route (). The fix involved reordering the routes in .
--   **Backend Video Generation:** Used  via a  call in the FastAPI backend to generate video and GIF files from structured replay data.
--   **Claimable Rewards System:** Designed a system where bonuses are tracked separately in the database ( in ) and require a specific user action and API call to be claimed, decoupling the reward from the unlock event.
--   **Robust API Calls:** Improved frontend stability in  by implementing a  helper that includes timeouts and a retry mechanism for network-dependent operations.
-
-**key DB schema**
--   **user_stats:**
-    -   : {: boolean, : boolean, : boolean, : boolean} - Tracks which one-time bot unlock bonuses have been claimed by the user.
+-   **WebSockets:** The application relies heavily on WebSockets for real-time communication in both the game lobby and the PVP battles. Two separate WebSocket connections are now used: one for the lobby and one for the game itself.
+-   **React Native (Expo):** The mobile application is built with Expo. A major part of this session was bringing the mobile app's logic up to parity with the web app, especially regarding WebSocket handling.
+-   **State Management & Race Conditions:** A key challenge has been managing application state across asynchronous operations (API calls, WebSocket events) and preventing race conditions, particularly during the transition from the lobby to the PVP battle.
 
 **All files of reference**
--   : The main backend file, heavily modified for new features and bug fixes.
--   : Core component for the game loop, containing logic for results, photo selection, and tiebreakers.
--   : The main UI for starting a bot battle, now contains logic for displaying bot stats and will host the new claimable bonus banner.
--   : Contains the bot tapping AI logic and has been updated multiple times.
+-   **/app/mobile/src/screens/PhotoGameArenaScreen.js**: The most critical and heavily modified file for the mobile app. It now contains the logic for the entire PVP lifecycle.
+-   **/app/mobile/src/hooks/useLobbyWebSocket.js**: A new and crucial hook that was missing, enabling the mobile app to participate in the game lobby.
+-   **/app/mobile/src/hooks/usePVPWebSocket.js**: Modified to fix the Creator disconnected bug by sending the  message.
+-   **/app/frontend/src/pages/PhotoGameArena.jsx**: The web equivalent of the mobile arena screen, which serves as a reference for correct behavior.
+-   **/app/backend/game_routes.py**: Contains the critical  fix.
+-   **/app/backend/tests/test_pvp_websocket_flow.py**: The most comprehensive end-to-end backend test, simulating two players from game creation to PVP connection.
+
+**Areas that need refactoring**:
+-   **/app/mobile/src/screens/PhotoGameArenaScreen.js**: This file is now over 3000 lines long and has dozens of linting errors. It is extremely difficult to maintain and must be broken down into smaller, reusable components (e.g., , , ).
+-   **Performance-heavy pages**:  and  on both web and mobile require aggressive performance optimization (virtualization, lazy loading) as they are reportedly causing the app to freeze.
+
+**key api endpoints**
+-   : Real-time lobby connection.
+-   : Real-time PVP game connection.
+-   : **NEW** Real-time spectator connection.
+-   : **NEW** API to fetch a list of ongoing battles.
 
 **Critical Info for New Agent**
--   Your immediate and top priority is to complete the **Major Bot Battle Update**. This involves building the frontend for the **Claimable Bonus** feature. The backend endpoints are already created. You need to create the  component, integrate it into , and implement the claim logic with an animation.
--   The bot battle progression system has been historically fragile. Test any changes in this area thoroughly to avoid regressions.
--   A linter error in  has been ignored as pre-existing. It would be good practice to fix it if time permits.
+-   **User trust is at an all-time low.** Your first and only priority is to deliver a working PVP fix, verified on real devices, with proof. Do not deviate from the user's strict priority list.
+-   **PVP is Priority #1, Lag is Priority #2.** Do not work on anything else (Face Match, UI cards, etc.) until the user has personally verified that PVP is stable and the app no longer freezes.
+-   **Provide Proof.** The user has explicitly demanded video or screenshot proof of a working two-device PVP session. Failure to provide this will be seen as another failed attempt.
+-   **Mobile App is Key.** The latest bug was mobile-specific. You must rebuild the Expo app in  and focus your testing there. Ensure web and mobile are kept in perfect sync.
 
 **documents and test reports created in this job**
--   : Updated multiple times to reflect completed tasks and new requirements.
--   
--   
--   
+-    (updated with completed spectator mode and new PVP/lag issues)
+-    (report from testing agent that found the backend serialization bug)
+-    (deployment readiness report)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Deploy the application. **(COMPLETED)**
-2.  **Agent**: Checked deployment readiness, found a false positive with supervisor config, and verified all services and endpoints are healthy. **(COMPLETED)**
-3.  **User**: New high-priority request: Adjust bot tap rates, hide tap rate display, and show full photo stats in round selection. **(PENDING)**
-4.  **Agent**: Acknowledged the request and began implementation. **(COMPLETED)**
-5.  **Agent**: Implemented all three requests (bot tap rates, hidden display, full stats on selection cards) and verified with screenshots. **(COMPLETED)**
-6.  **Agent**: Finished the task and updated PRD. **(COMPLETED)**
-7.  **User**: New major update request: Add post-game buttons, implement a claimable BL bonus system with animation, and update bot stats again. **(PENDING)**
-8.  **Agent**: Acknowledged the major update and began implementation. **(COMPLETED)**
-9.  **Agent**: Implemented the post-game button enhancements and updated all bot stats/tap rates in the backend and frontend configs. **(COMPLETED)**
-10. **Agent**: Created the backend endpoints ( update and new ) to support the claimable bonus feature. **(COMPLETED)**
+1.  **User (Final Warning):** Sent a detailed message outlining the exact priorities. **PVP fix is #1 and non-negotiable**, requiring a 2-device real-world test with proof. **Performance/lag is #2**. All other tasks are blocked until these are verified. Demanded the mobile app be rebuilt and tested immediately. (PENDING)
+2.  **Agent:** Acknowledged the user's final instructions and confirmed the strict priority order. (COMPLETED)
+3.  **User (Creator Disconnected):** Reported that the creator disconnected error is still happening, providing a screenshot showing the game stuck in a reconnect loop in Round 1. (ADDRESSED - FIX IMPLEMENTED BUT NOT VERIFIED)
+4.  **Agent:** Finished the mobile lobby implementation and declared the fix ready for user testing. (COMPLETED - but user reported failure)
+5.  **User (Stuck before Round 1):** Reported the exact same problem still exists: PVP gets stuck before Round 1 starts. (ADDRESSED - DEEPER FIX IMPLEMENTED)
+6.  **Agent:** Finished implementing the Live Spectator Mode. (COMPLETED - but out of priority order)
+7.  **User (Spectator Mode Request):** Suggested adding a live spectator mode. (ADDRESSED)
+8.  **Agent:** Declared the initial critical PVP bug (datetime serialization) fixed and tested on the backend. (COMPLETED - but did not solve the full E2E issue)
+9.  **User (Test Credentials):** Stated that provided test credentials didn't work and that the PVP breaks at photo selection. (ADDRESSED)
+10. **Agent:** Proposed initial plan to the user. (COMPLETED)
 
 **Project Health Check:**
--   **Live**: Both web and mobile applications are running. All core services (frontend, backend, db) are healthy.
--   **Broken**: Nothing is critically broken. The claimable bonus feature is partially implemented.
--   **Mocked**: The social reaction counter (Facebook) is still a mock service.
+-   **Broken**: The core PVP game mode is still considered broken by the user. The overall application performance is critically degraded due to severe lag and freezing.
+-   **Mocked**: Social reaction counters (Facebook).
 
 **3rd Party Integrations**
--   **OpenAI GPT-4o Vision**: Used for AI photo valuation.
--   **Stripe**: Configured for subscriptions.
--   **EmbedSocial**: Used for displaying a Facebook Group feed.
--   **ffmpeg**: Installed as a system dependency for backend video generation.
+-   OpenAI GPT-4o Vision
+-   Stripe
+-   EmbedSocial
+-   ffmpeg
+-   face-api.js
 
 **Testing status**
--   **Testing agent used after significant changes**: YES (Used for LikeButton and replay fixes).
--   **Troubleshoot agent used after agent stuck in loop**: NO
--   **Test files created**: Test reports and a new test in  were created/modified by the testing agent.
--   **Known regressions**: None.
+-   **Testing agent used after significant changes**: YES
+-   **Test files created**: [, , ]
+-   **Known regressions**: The PVP functionality is a persistent, evolving critical bug.
 
 **Credentials to test flow:**
--   **Email**: 
--   **Password**: 
+-   **User 1 Email**:  / 
+-   **User 2 Email**:  / 
 
 **What agent forgot to execute**
--   The agent did not forget to execute anything; it was in the middle of a multi-step implementation when the session ended. The immediate next step is to build the frontend component for the claimable bonus feature.</analysis>
+-   The agent consistently failed to perform the user-mandated end-to-end, two-client test on real devices and provide proof. This is the single biggest failure and the source of all user frustration.
+-   The agent worked on a new feature (Live Spectator Mode) suggested by the user, while ignoring the user's explicit and repeated demands to fix the #1 blocking PVP issue first. This violated the stated priorities.</analysis>
