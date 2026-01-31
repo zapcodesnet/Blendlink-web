@@ -3038,6 +3038,7 @@ try:
                     photos = data.get("photos", [])
                     username = data.get("username", "Player")
                     is_creator = data.get("is_creator", False)
+                    is_reconnect = data.get("is_reconnect", False)
                     game_id = data.get("game_id")  # Optional - for auto-creating room
                     
                     # Auto-create room if it doesn't exist (for late joiners)
@@ -3055,7 +3056,8 @@ try:
                         username=username,
                         websocket=websocket,
                         photos=photos,
-                        is_creator=is_creator
+                        is_creator=is_creator,
+                        is_reconnect=is_reconnect
                     )
                     
                     await websocket.send_json({
