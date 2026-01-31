@@ -1619,7 +1619,220 @@ async def get_pvp_session_state(
         "player1_selected": session.get("player1_selected", False),
         "player2_selected": session.get("player2_selected", False),
         "winner_id": session.get("winner_id"),
-        "updated_at": session.get("updated_at", session.get("created_at"))
+        "updated_at": session.get("updated_at", session.get("created_at")),
+        # Include round result if available
+        "round_result": session.get("current_round_result"),
+        "player1_photo": session.get("player1_current_photo"),
+        "player2_photo": session.get("player2_current_photo"),
+    }
+
+
+class PVPPhotoSelectRequest(BaseModel):
+    session_id: str
+    photo_id: str
+
+
+@game_router.post("/pvp/select-photo")
+async def pvp_select_photo(
+    data: PVPPhotoSelectRequest,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """
+    Select a photo for the current PVP round via API (polling fallback).
+    This endpoint processes the selection and checks if both players have selected.
+    If both have selected, it triggers the round evaluation.
+    """
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    user_id = current_user.get("user_id")
+    
+    # Find the session
+    session = await _db.pvp_sessions.find_one(
+        {"$or": [
+            {"session_id": data.session_id},
+            {"open_game_id": data.session_id},
+            {"pvp_room_id": data.session_id}
+        ]}
+    )
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Determine if user is player1 or player2
+    is_player1 = session.get("player1_id") == user_id
+    is_player2 = session.get("player2_id") == user_id
+    
+    if not is_player1 and not is_player2:
+        raise HTTPException(status_code=403, detail="Not a participant in this session")
+    
+    # Get the player's photo
+    player_photos = session.get("player1_photos" if is_player1 else "player2_photos", [])
+    selected_photo = None
+    for photo in player_photos:
+        if photo.get("mint_id") == data.photo_id:
+            selected_photo = photo
+            break
+    
+    if not selected_photo:
+        raise HTTPException(status_code=400, detail="Photo not in your selection")
+    
+    # Update the selection in database
+    update_field = "player1_current_photo" if is_player1 else "player2_current_photo"
+    selected_field = "player1_selected" if is_player1 else "player2_selected"
+    
+    await _db.pvp_sessions.update_one(
+        {"session_id": session.get("session_id")},
+        {
+            "$set": {
+                update_field: selected_photo,
+                selected_field: True,
+                "updated_at": datetime.now(timezone.utc)
+            }
+        }
+    )
+    
+    # Check if both players have selected
+    updated_session = await _db.pvp_sessions.find_one(
+        {"session_id": session.get("session_id")}
+    )
+    
+    both_selected = updated_session.get("player1_selected") and updated_session.get("player2_selected")
+    
+    result = {
+        "success": True,
+        "both_selected": both_selected,
+        "player1_selected": updated_session.get("player1_selected", False),
+        "player2_selected": updated_session.get("player2_selected", False),
+    }
+    
+    # If both selected, evaluate the round
+    if both_selected:
+        p1_photo = updated_session.get("player1_current_photo", {})
+        p2_photo = updated_session.get("player2_current_photo", {})
+        
+        p1_value = p1_photo.get("dollar_value", 0)
+        p2_value = p2_photo.get("dollar_value", 0)
+        
+        # Determine winner
+        if p1_value > p2_value:
+            round_winner = "player1"
+            winner_id = updated_session.get("player1_id")
+        elif p2_value > p1_value:
+            round_winner = "player2"
+            winner_id = updated_session.get("player2_id")
+        else:
+            round_winner = "tie"
+            winner_id = None
+        
+        # Update wins
+        new_p1_wins = updated_session.get("player1_wins", 0)
+        new_p2_wins = updated_session.get("player2_wins", 0)
+        
+        if round_winner == "player1":
+            new_p1_wins += 1
+        elif round_winner == "player2":
+            new_p2_wins += 1
+        
+        current_round = updated_session.get("current_round", 1)
+        
+        # Check if game is over (best of 5 = first to 3 wins or 5 rounds complete)
+        game_over = new_p1_wins >= 3 or new_p2_wins >= 3 or current_round >= 5
+        
+        round_result = {
+            "round": current_round,
+            "winner": round_winner,
+            "winner_id": winner_id,
+            "player1_photo": p1_photo,
+            "player2_photo": p2_photo,
+            "player1_value": p1_value,
+            "player2_value": p2_value,
+        }
+        
+        # Determine game winner if game over
+        game_winner_id = None
+        if game_over:
+            if new_p1_wins > new_p2_wins:
+                game_winner_id = updated_session.get("player1_id")
+            elif new_p2_wins > new_p1_wins:
+                game_winner_id = updated_session.get("player2_id")
+        
+        # Update session with round results
+        await _db.pvp_sessions.update_one(
+            {"session_id": session.get("session_id")},
+            {
+                "$set": {
+                    "player1_wins": new_p1_wins,
+                    "player2_wins": new_p2_wins,
+                    "current_round_result": round_result,
+                    "status": "complete" if game_over else "round_result",
+                    "winner_id": game_winner_id,
+                    "updated_at": datetime.now(timezone.utc)
+                }
+            }
+        )
+        
+        result["round_result"] = round_result
+        result["player1_wins"] = new_p1_wins
+        result["player2_wins"] = new_p2_wins
+        result["game_over"] = game_over
+        if game_over:
+            result["game_winner_id"] = game_winner_id
+    
+    return result
+
+
+@game_router.post("/pvp/next-round")
+async def pvp_next_round(
+    session_id: str,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """
+    Move to the next round after viewing round results.
+    Resets selections for the new round.
+    """
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    user_id = current_user.get("user_id")
+    
+    session = await _db.pvp_sessions.find_one(
+        {"$or": [
+            {"session_id": session_id},
+            {"open_game_id": session_id},
+            {"pvp_room_id": session_id}
+        ]}
+    )
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    if session.get("player1_id") != user_id and session.get("player2_id") != user_id:
+        raise HTTPException(status_code=403, detail="Not a participant")
+    
+    current_round = session.get("current_round", 1)
+    
+    # Reset for next round
+    await _db.pvp_sessions.update_one(
+        {"session_id": session.get("session_id")},
+        {
+            "$set": {
+                "current_round": current_round + 1,
+                "player1_selected": False,
+                "player2_selected": False,
+                "player1_current_photo": None,
+                "player2_current_photo": None,
+                "current_round_result": None,
+                "status": "selecting",
+                "updated_at": datetime.now(timezone.utc)
+            }
+        }
+    )
+    
+    return {
+        "success": True,
+        "current_round": current_round + 1,
+        "status": "selecting"
     }
 
 
