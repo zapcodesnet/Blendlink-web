@@ -3090,6 +3090,91 @@ try:
                 logger.error(f"Error during disconnect cleanup: {disc_err}")
     
     logger.info("PVP Game WebSocket loaded")
+    
+    # Spectator WebSocket endpoint
+    @app.websocket("/api/ws/spectate/{room_id}/{token}")
+    async def spectator_websocket_endpoint(websocket: WebSocket, room_id: str, token: str):
+        """WebSocket endpoint for spectating PVP games"""
+        # Validate token
+        try:
+            payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+            user_id = payload.get("user_id")
+            username = payload.get("username", "Spectator")
+            if not user_id:
+                await websocket.close(code=1008, reason="Invalid token")
+                return
+        except jwt.ExpiredSignatureError:
+            await websocket.close(code=1008, reason="Token expired")
+            return
+        except jwt.InvalidTokenError:
+            await websocket.close(code=1008, reason="Invalid token")
+            return
+        
+        # Get username from database if not in token
+        if username == "Spectator":
+            user = await db.users.find_one({"user_id": user_id}, {"username": 1})
+            if user:
+                username = user.get("username", "Spectator")
+        
+        await websocket.accept()
+        
+        # Try to connect as spectator
+        success = await pvp_game_manager.connect_spectator(
+            room_id=room_id,
+            user_id=user_id,
+            username=username,
+            websocket=websocket
+        )
+        
+        if not success:
+            await websocket.send_json({
+                "type": "error",
+                "message": "Could not join as spectator. Game may not exist or not allow spectators.",
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+            await websocket.close(code=1008, reason="Cannot spectate")
+            return
+        
+        # Send connection confirmation
+        await websocket.send_json({
+            "type": "spectator_connected",
+            "room_id": room_id,
+            "user_id": user_id,
+            "username": username,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+        
+        try:
+            while True:
+                data = await websocket.receive_json()
+                msg_type = data.get("type")
+                
+                if msg_type == "ping":
+                    await websocket.send_json({
+                        "type": "pong",
+                        "timestamp": datetime.now(timezone.utc).isoformat()
+                    })
+                # Spectators can only receive, not send game commands
+                    
+        except WebSocketDisconnect:
+            await pvp_game_manager.disconnect_spectator(user_id, room_id)
+        except Exception as e:
+            logger.error(f"Spectator WebSocket error: {e}")
+            await pvp_game_manager.disconnect_spectator(user_id, room_id)
+    
+    # Live battles API endpoint
+    @api_router.get("/photo-game/live-battles")
+    async def get_live_battles():
+        """Get list of ongoing PVP battles available for spectating"""
+        battles = pvp_game_manager.get_live_battles()
+        return {
+            "battles": battles,
+            "count": len(battles),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    
+    logger.info("Spectator WebSocket and Live Battles API loaded")
+    
 except Exception as e:
     logger.warning(f"Could not load PVP Game WebSocket: {e}")
 
