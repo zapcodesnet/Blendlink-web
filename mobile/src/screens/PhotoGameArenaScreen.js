@@ -1563,17 +1563,34 @@ export default function PhotoGameArenaScreen() {
     },
   });
   
-  // Get photos for PVP - from route params (creator) or from session data
-  const pvpPhotos = routePhotos || session?.player1_photos || session?.player2_photos || battlePhotos || [];
+  // Determine which player's photos belong to current user
+  const myPhotos = useMemo(() => {
+    // Route photos take priority (when user creates game with selected photos)
+    if (routePhotos && routePhotos.length > 0) {
+      return routePhotos;
+    }
+    
+    // From session, determine which photos are mine based on user ID
+    if (session && user?.user_id) {
+      if (session.player1_id === user.user_id) {
+        return session.player1_photos || [];
+      } else if (session.player2_id === user.user_id) {
+        return session.player2_photos || [];
+      }
+    }
+    
+    // Fallback to battle photos
+    return battlePhotos || [];
+  }, [routePhotos, session, user?.user_id, battlePhotos]);
   
-  // Debug: Log when pvpPhotos change
+  // Debug: Log when photos change
   useEffect(() => {
-    console.log('[Mobile] pvpPhotos updated:', pvpPhotos?.length, 'photos, pvpRoomId:', pvpRoomId);
-  }, [pvpPhotos, pvpRoomId]);
+    console.log('[Mobile] myPhotos updated:', myPhotos?.length, 'photos, pvpRoomId:', pvpRoomId, 'userId:', user?.user_id);
+  }, [myPhotos, pvpRoomId, user?.user_id]);
   
   // PVP WebSocket Hook - for actual game play (photo selection, tapping, etc.)
   // IMPORTANT: Only auto-connect when we have BOTH roomId AND photos
-  const shouldConnectPVP = !!pvpRoomId && pvpPhotos.length >= 5;
+  const shouldConnectPVP = !!pvpRoomId && myPhotos.length >= 5;
   
   const {
     isConnected: wsConnected,
@@ -1591,7 +1608,7 @@ export default function PhotoGameArenaScreen() {
   } = usePVPWebSocket(shouldConnectPVP ? pvpRoomId : null, {
     autoConnect: shouldConnectPVP,
     username: user?.username || 'Player',
-    photos: pvpPhotos,
+    photos: myPhotos,
     isCreator: isCreator,
     onMessage: (msg) => {
       console.log('[PVP WS]', msg.type);
