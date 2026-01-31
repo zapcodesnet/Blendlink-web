@@ -770,8 +770,8 @@ export const PVPBattleArena = ({
           // Both selected - show round result
           const result = response.data.round_result;
           setOpponentSelectedPhoto(isPlayer1 ? result.player2_photo : result.player1_photo);
-          setMyScore(isPlayer1 ? response.data.player1_wins : response.data.player2_wins);
-          setOpponentScore(isPlayer1 ? response.data.player2_wins : response.data.player1_wins);
+          setPlayer1Wins(response.data.player1_wins || 0);
+          setPlayer2Wins(response.data.player2_wins || 0);
           
           // Determine if we won this round
           const iWon = (isPlayer1 && result.winner === 'player1') || (!isPlayer1 && result.winner === 'player2');
