@@ -439,8 +439,9 @@ export const PVPBattleArena = ({
       console.log(`Reconnect attempt ${reconnectAttempts.current}/${MAX_RECONNECT_ATTEMPTS}`);
     }
     
-    // Close existing connection if any
+    // Close existing connection if any (mark as intentional)
     if (wsRef.current && wsRef.current.readyState !== WebSocket.CLOSED) {
+      intentionalCloseRef.current = true;
       wsRef.current.close();
     }
     
@@ -452,12 +453,14 @@ export const PVPBattleArena = ({
       const connectionTimeout = setTimeout(() => {
         if (ws.readyState !== WebSocket.OPEN) {
           console.log('WebSocket connection timeout - closing');
+          intentionalCloseRef.current = true;
           ws.close();
         }
       }, 10000);
       
       ws.onopen = () => {
         clearTimeout(connectionTimeout);
+        intentionalCloseRef.current = false;
         console.log('PVP WebSocket connected successfully');
         setWsConnected(true);
         setReconnecting(false);
