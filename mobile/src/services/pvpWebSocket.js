@@ -153,7 +153,7 @@ class PVPWebSocketService {
   startHeartbeat() {
     this.stopHeartbeat();
     this.heartbeatInterval = setInterval(() => {
-      this.send({ type: 'heartbeat' });
+      this.send({ type: 'ping' });
     }, 30000);
   }
 
