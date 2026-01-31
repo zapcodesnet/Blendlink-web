@@ -548,6 +548,9 @@ export const TappingArena = ({
       websocket.send(JSON.stringify({ type: 'tap', count: 1 }));
     }
     
+    // ALWAYS send to API as fallback (critical for sync when WS fails)
+    sendTapToApi(1);
+    
     // Callback
     if (onTap) onTap(newTaps);
     
@@ -555,7 +558,7 @@ export const TappingArena = ({
     if (newTaps >= playerRequiredTaps) {
       handlePlayerWinRef.current?.();
     }
-  }, [gamePhase, playerTaps, playerRequiredTaps, tapsThisSecond, soundEnabled, websocket, vibrate, onTap, showAntiCheatWarning]);
+  }, [gamePhase, playerTaps, playerRequiredTaps, tapsThisSecond, soundEnabled, websocket, vibrate, onTap, showAntiCheatWarning, sendTapToApi]);
   
   // Reset taps counter every second
   useEffect(() => {
