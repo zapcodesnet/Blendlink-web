@@ -347,10 +347,13 @@ export function usePVPWebSocket(roomId, options = {}) {
           });
 
           // Update opponent selection status
-          const amPlayer1 = sessionData.player1_id === username || isCreator;
+          // Determine if we're player1 - check both username and isCreator flag
+          // Note: player1_id is a user ID, not username, so we need to check isCreator
+          const amPlayer1 = isCreator;
           const oppSelected = amPlayer1 ? sessionData.player2_selected : sessionData.player1_selected;
           
           if (oppSelected && !gameState.opponentHasSelected) {
+            console.log('[usePVPWS Polling] Opponent has selected!');
             setGameState(prev => ({
               ...prev,
               opponentHasSelected: true,
@@ -370,12 +373,19 @@ export function usePVPWebSocket(roomId, options = {}) {
               (sessionData.round_result?.player1_photo || sessionData.player1_photo);
 
             if (myPhoto && oppPhoto) {
+              console.log('[usePVPWS Polling] Setting roundPhase to playing with photos:', {
+                myPhoto: myPhoto?.mint_id,
+                oppPhoto: oppPhoto?.mint_id,
+              });
               setGameState(prev => ({
                 ...prev,
                 myPhoto,
                 opponentPhoto: oppPhoto,
                 roundPhase: 'playing',
+                opponentHasSelected: true,
               }));
+            } else {
+              console.log('[usePVPWS Polling] Both selected but photos not available yet');
             }
 
             // Handle round result
