@@ -559,6 +559,14 @@ export const PVPBattleArena = ({
   useEffect(() => {
     console.log('[PVPBattleArena] Effect check - pvpRoomId:', pvpRoomId, 'hasConnected:', hasConnectedRef.current, 'wsConnected:', wsConnected, 'photosCount:', playerPhotos?.length);
     
+    // Store sessionId for API calls (polling fallback)
+    if (pvpRoomId) {
+      localStorage.setItem('current_pvp_session', pvpRoomId);
+      if (gameId) {
+        localStorage.setItem('current_pvp_game_id', gameId);
+      }
+    }
+    
     // Only connect once when pvpRoomId is available AND we have photos to play with
     if (pvpRoomId && playerPhotos?.length > 0 && !hasConnectedRef.current && !wsConnected) {
       hasConnectedRef.current = true;
@@ -569,7 +577,7 @@ export const PVPBattleArena = ({
       }, 200); // Increased from 100ms to 200ms for more reliability
       return () => clearTimeout(timeoutId);
     }
-  }, [pvpRoomId, wsConnected, playerPhotos?.length]); // Re-run when pvpRoomId or photos change
+  }, [pvpRoomId, wsConnected, playerPhotos?.length, gameId]); // Re-run when pvpRoomId or photos change
   
   // Reset connection state if pvpRoomId changes (e.g., new game)
   useEffect(() => {
