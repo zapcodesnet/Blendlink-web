@@ -1,6 +1,42 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 30, 2026 (Face Match Accept/Decline Flow Complete)
+## Latest Update: January 31, 2026 (CRITICAL PVP FIX)
+
+---
+
+## SESSION 67: CRITICAL PVP Fix - Datetime Serialization Bug ✅
+
+### Root Cause Analysis:
+The PVP mode was broken because of a **datetime serialization bug** in the backend:
+- `session.model_dump()` returned datetime objects for `created_at` and `completed_at` fields
+- When `broadcast_game_start` tried to JSON serialize the session_data, it failed silently
+- The frontend never received the `game_start` WebSocket message with `pvp_room_id`
+- Without `pvp_room_id`, `PVPBattleArena` couldn't connect to the PVP WebSocket
+
+### Fix Applied:
+Changed `session.model_dump()` to `session.model_dump(mode='json')` in `/app/backend/game_routes.py`:
+- Line 588: Broadcasting session_data
+- Line 601: REST API response
+
+### Frontend Improvements:
+1. Added render guard for `pvpRoomId` in `PhotoGameArena.jsx` - only shows `PVPBattleArena` when `pvpRoomId` is available
+2. Added loading state while waiting for `pvpRoomId`
+3. Updated `PVPBattleArena` to wait for `playerPhotos` before connecting WebSocket
+4. Increased WebSocket connection delay from 100ms to 200ms for reliability
+
+### Testing Results (iteration_87.json):
+- **Backend: 100%** - All 2-player flow tests pass
+- **WebSocket broadcast: FIXED** - `game_start` now includes `pvp_room_id`
+- **PVP WebSocket connection: SUCCESS** - Both players can connect to game room
+
+### Test Credentials:
+- User 1: test@blendlink.com / admin
+- User 2: test@example.com / test123
+
+### Files Modified:
+- `/app/backend/game_routes.py` - Fixed datetime serialization
+- `/app/frontend/src/pages/PhotoGameArena.jsx` - Render guard for pvpRoomId
+- `/app/frontend/src/components/game/PVPBattleArena.jsx` - Photos check before connect
 
 ---
 
