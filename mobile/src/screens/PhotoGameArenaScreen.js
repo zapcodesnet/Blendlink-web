@@ -1520,6 +1520,8 @@ export default function PhotoGameArenaScreen() {
   const isCreator = route.params?.isCreator || false;
   const joinGame = route.params?.joinGame || null; // Game to join from OpenGamesBrowser
   const mode = route.params?.mode || null; // 'create' mode from create button
+  const routeGameId = route.params?.gameId || null; // Game ID when entering as creator
+  const routePhotos = route.params?.photos || []; // Photos passed from game creation screen
   
   // State for dynamic pvpRoomId (set after joining)
   const [pvpRoomId, setPvpRoomId] = useState(initialPvpRoomId);
