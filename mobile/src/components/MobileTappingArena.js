@@ -249,6 +249,9 @@ export default function MobileTappingArena({
       websocket.send(JSON.stringify({ type: 'tap', count: 1 }));
     }
     
+    // ALWAYS send to API as fallback (critical for sync when WS fails)
+    sendTapToApi(1);
+    
     // Callback
     onTap?.(newTaps);
     
@@ -256,7 +259,7 @@ export default function MobileTappingArena({
     if (newTaps >= playerRequiredTaps) {
       handlePlayerWin();
     }
-  }, [gamePhase, winner, playerTaps, playerRequiredTaps, tapsThisSecond, websocket, onTap]);
+  }, [gamePhase, winner, playerTaps, playerRequiredTaps, tapsThisSecond, websocket, onTap, sendTapToApi]);
 
   // Handle player win
   const handlePlayerWin = useCallback(() => {
