@@ -6,7 +6,7 @@ import {
   Shield, Target, TrendingUp, Coins, RefreshCw,
   X, Check, AlertCircle, Loader2, Image, ChevronRight,
   DollarSign, Gavel, Banknote, Volume2, VolumeX, Maximize2,
-  Plus, ArrowLeft, History, Film
+  Plus, ArrowLeft, History, Film, Eye, Radio
 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../services/api';
@@ -26,6 +26,8 @@ import PVPBattleArena from '../components/game/PVPBattleArena';
 import FeaturedReplays from '../components/game/FeaturedReplays';
 import TopLikedPhotosLeaderboard from '../components/game/TopLikedPhotosLeaderboard';
 import UnifiedPhotoCard from '../components/photo/UnifiedPhotoCard';
+import LiveBattles from '../components/game/LiveBattles';
+import SpectatorView from '../components/game/SpectatorView';
 
 // ============== PHOTO LIGHTBOX MODAL ==============
 const PhotoLightbox = ({ photo, isOpen, onClose }) => {
