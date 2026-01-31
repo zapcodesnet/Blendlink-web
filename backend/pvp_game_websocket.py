@@ -116,41 +116,104 @@ class PVPGameManager:
         username: str,
         websocket: WebSocket,
         photos: List[Dict],
-        is_creator: bool
+        is_creator: bool,
+        is_reconnect: bool = False
     ) -> bool:
-        """Connect a player to a PVP game room"""
+        """Connect a player to a PVP game room
+        
+        If the player is already in the room (reconnecting), update their connection.
+        """
         room = self.rooms.get(room_id)
         if not room:
             logger.error(f"Room {room_id} not found")
             return False
         
-        connection = PlayerConnection(
-            user_id=user_id,
-            username=username,
-            websocket=websocket,
-            photos=photos,
-            is_connected=True,
-            last_heartbeat=asyncio.get_event_loop().time()
-        )
-        
         async with self._lock:
-            if is_creator:
-                room.player1 = connection
+            # Check if player is already in this room (reconnection case)
+            existing_player = None
+            if room.player1 and room.player1.user_id == user_id:
+                existing_player = room.player1
+                logger.info(f"Player {username} ({user_id}) reconnecting to room {room_id} as player1")
+            elif room.player2 and room.player2.user_id == user_id:
+                existing_player = room.player2
+                logger.info(f"Player {username} ({user_id}) reconnecting to room {room_id} as player2")
+            
+            if existing_player:
+                # Update existing connection
+                existing_player.websocket = websocket
+                existing_player.is_connected = True
+                existing_player.last_heartbeat = asyncio.get_event_loop().time()
+                existing_player.missed_pings = 0
+                # Update photos if provided
+                if photos:
+                    existing_player.photos = photos
             else:
-                room.player2 = connection
+                # New connection
+                connection = PlayerConnection(
+                    user_id=user_id,
+                    username=username,
+                    websocket=websocket,
+                    photos=photos,
+                    is_connected=True,
+                    last_heartbeat=asyncio.get_event_loop().time()
+                )
+                
+                if is_creator:
+                    room.player1 = connection
+                else:
+                    room.player2 = connection
+                
+                logger.info(f"Player {username} ({user_id}) connected to room {room_id}")
             
             self.user_rooms[user_id] = room_id
-        
-        logger.info(f"Player {username} ({user_id}) connected to room {room_id}")
         
         # Notify other player
         await self._broadcast_player_connected(room_id, user_id, username)
         
-        # Check if both players connected
-        if room.player1 and room.player2:
+        # Check if both players connected (for new connections)
+        if room.player1 and room.player2 and not existing_player:
             await self._transition_to_selecting(room_id)
         
+        # If reconnecting and game was already in progress, send current state
+        if existing_player or is_reconnect:
+            await self._send_game_state_to_player(room_id, user_id)
+        
         return True
+    
+    async def _send_game_state_to_player(self, room_id: str, user_id: str):
+        """Send current game state to a player (useful for reconnections)"""
+        room = self.rooms.get(room_id)
+        if not room:
+            return
+        
+        # Find the player
+        player = None
+        is_player1 = False
+        if room.player1 and room.player1.user_id == user_id:
+            player = room.player1
+            is_player1 = True
+        elif room.player2 and room.player2.user_id == user_id:
+            player = room.player2
+        
+        if not player or not player.websocket:
+            return
+        
+        try:
+            state_msg = {
+                "type": "game_state",
+                "room_id": room_id,
+                "phase": room.phase,
+                "current_round": room.current_round,
+                "player1_wins": room.player1_wins,
+                "player2_wins": room.player2_wins,
+                "player1_connected": room.player1 is not None and room.player1.is_connected,
+                "player2_connected": room.player2 is not None and room.player2.is_connected,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+            await player.websocket.send_json(state_msg)
+            logger.info(f"Sent game state to {user_id}: phase={room.phase}, round={room.current_round}")
+        except Exception as e:
+            logger.error(f"Failed to send game state to {user_id}: {e}")
     
     async def reconnect_player(
         self,
