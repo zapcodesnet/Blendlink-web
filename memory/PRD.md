@@ -1,6 +1,60 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 31, 2026 (CRITICAL Mobile PVP Fix)
+## Latest Update: January 31, 2026 (CRITICAL Mobile PVP Fix - Session 70)
+
+---
+
+## SESSION 70: Mobile PVP Join Message Race Condition Fix ✅
+
+### Date: January 31, 2026
+
+### Root Cause Analysis:
+Two critical bugs were preventing mobile PVP from working:
+
+#### Bug 1: Temporal Dead Zone (TDZ) Error
+**File**: `/app/mobile/src/screens/PhotoGameArenaScreen.js`
+**Problem**: The `routePhotos` variable was used in a `useMemo` at line ~1569 BEFORE it was declared at line ~1662. In JavaScript, `const` variables cannot be accessed before their declaration due to the Temporal Dead Zone.
+**Impact**: Would cause a JavaScript runtime error, potentially crashing the app or leaving photos undefined.
+
+#### Bug 2: WebSocket Join Message Race Condition
+**File**: `/app/mobile/src/hooks/usePVPWebSocket.js`
+**Problem**: The `join` message (which registers the player and sends their photos) was only sent inside the `'connected'` event handler. However, the `photos` array captured in this closure might be empty if the state update for photos hadn't propagated yet.
+**Impact**: The player would connect to the PVP WebSocket but never properly join the room, causing "Creator disconnected" errors and "Reconnecting..." loops.
+
+### Fixes Applied:
+
+#### Fix 1: TDZ Error
+Moved `routePhotos` and `routeGameId` declarations to the top of the component, immediately after other route params are extracted:
+```javascript
+const routeGameId = route.params?.gameId || null;
+const routePhotos = route.params?.photos || [];
+```
+
+#### Fix 2: Race Condition
+Added a separate `useEffect` hook that watches for BOTH `isConnected` AND `photos.length > 0`, then sends the join message:
+```javascript
+useEffect(() => {
+  if (isConnected && photos && photos.length > 0 && !joinSentRef.current && !hasJoined) {
+    pvpWebSocket.joinRoom(username || 'Player', photos, isCreator);
+    joinSentRef.current = true;
+  }
+}, [isConnected, photos, username, isCreator, hasJoined]);
+```
+
+This ensures the join message is sent as soon as both conditions are met, regardless of which happens first.
+
+### Files Modified:
+- `/app/mobile/src/screens/PhotoGameArenaScreen.js` - TDZ fix
+- `/app/mobile/src/hooks/usePVPWebSocket.js` - Race condition fix
+
+### Testing Status:
+- ✅ Backend WebSocket flow tests pass
+- ✅ Web app functional (verified via screenshots)
+- ✅ Test users have photos (User 1: 12 photos, User 2: 16 photos)
+- ⏳ **USER VERIFICATION PENDING** - Awaiting 2-device physical test
+
+### Testing Guide Created:
+- `/app/mobile/PVP_TESTING_GUIDE.md` - Step-by-step instructions for 2-device testing
 
 ---
 
