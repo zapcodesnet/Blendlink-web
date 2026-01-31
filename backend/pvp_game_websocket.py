@@ -54,6 +54,9 @@ class PVPGameRoom:
     player1: Optional[PlayerConnection] = None  # Creator
     player2: Optional[PlayerConnection] = None  # Joiner
     
+    # Spectators
+    spectators: Dict[str, SpectatorConnection] = field(default_factory=dict)
+    
     # Game state
     current_round: int = 1
     max_rounds: int = 5
@@ -70,6 +73,10 @@ class PVPGameRoom:
     
     # Timeout task for auto-ready
     timeout_task: Optional[asyncio.Task] = None
+    
+    # Public visibility for spectators
+    allow_spectators: bool = True
+    started_at: Optional[datetime] = None
 
 
 class PVPGameManager:
