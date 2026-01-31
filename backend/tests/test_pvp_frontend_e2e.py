@@ -26,7 +26,7 @@ import os
 import time
 from datetime import datetime
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://lagfix-blocker.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pvp-connection-fix.preview.emergentagent.com')
 
 # Test users
 USER1 = {"email": "test@blendlink.com", "password": "admin"}

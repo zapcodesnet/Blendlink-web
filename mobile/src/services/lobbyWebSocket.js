@@ -22,7 +22,7 @@
 
 import { getToken } from './api';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://lagfix-blocker.preview.emergentagent.com';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://pvp-connection-fix.preview.emergentagent.com';
 
 class LobbyWebSocketService {
   constructor() {
