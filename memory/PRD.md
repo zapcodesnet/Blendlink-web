@@ -1,6 +1,51 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 31, 2026 (Live Spectator Mode Added)
+## Latest Update: January 31, 2026 (CRITICAL Mobile PVP Fix)
+
+---
+
+## SESSION 69: Mobile PVP WebSocket Fix ✅
+
+### Root Cause Analysis (Mobile):
+The mobile app PVP was broken because it **lacked a lobby WebSocket connection**:
+1. The mobile app created/joined games via REST API
+2. It tried to connect directly to the PVP game WebSocket
+3. BUT the `pvp_room_id` is only created AFTER the countdown completes
+4. The `game_start` event (with `pvp_room_id`) is broadcast via the **lobby WebSocket**, not the PVP WebSocket
+5. Since mobile never connected to the lobby, it never received `game_start` with `pvp_room_id`
+6. Without `pvp_room_id`, the PVP WebSocket couldn't connect
+
+### Fix Applied:
+1. **Created `/app/mobile/src/services/lobbyWebSocket.js`** - Lobby WebSocket service
+2. **Created `/app/mobile/src/hooks/useLobbyWebSocket.js`** - React hook for lobby
+3. **Updated `/app/mobile/src/screens/PhotoGameArenaScreen.js`**:
+   - Added `lobbyGameId` state
+   - Integrated `useLobbyWebSocket` hook
+   - Separated lobby WebSocket (pre-game) from PVP WebSocket (in-game)
+   - Added proper `pvp_lobby` UI with connection status, ready buttons
+   - `game_start` handler now correctly receives `pvp_room_id` and transitions to PVP
+4. **Updated `/app/mobile/src/screens/GameCreationScreen.js`**:
+   - After creating game, navigate to PhotoGameArena with `gameId` to connect to lobby
+5. **Fixed heartbeat message** - Changed `type: 'heartbeat'` to `type: 'ping'` to match backend
+
+### Flow After Fix:
+1. User creates/joins game → REST API
+2. Navigate to PhotoGameArena with `gameId` or `joinGame`
+3. Connect to **Lobby WebSocket** (`/api/ws/lobby/{gameId}/{token}`)
+4. Show lobby UI with ready button and connection status
+5. Mark ready → Countdown
+6. Receive `game_start` with `pvp_room_id`
+7. Connect to **PVP WebSocket** (`/api/ws/pvp-game/{roomId}/{token}`)
+8. Photo selection phase begins
+
+### Files Created:
+- `/app/mobile/src/services/lobbyWebSocket.js`
+- `/app/mobile/src/hooks/useLobbyWebSocket.js`
+
+### Files Modified:
+- `/app/mobile/src/screens/PhotoGameArenaScreen.js`
+- `/app/mobile/src/screens/GameCreationScreen.js`
+- `/app/mobile/src/services/pvpWebSocket.js`
 
 ---
 
