@@ -1914,7 +1914,7 @@ export default function PhotoGameArenaScreen() {
             </Text>
             
             {/* Connection status */}
-            <View style={[styles.connectionBadge, { 
+            <View style={[styles.lobbyConnectionBadge, { 
               backgroundColor: lobbyConnected ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               borderColor: lobbyConnected ? '#22C55E' : '#EF4444',
             }]}>
@@ -1958,8 +1958,8 @@ export default function PhotoGameArenaScreen() {
             
             {/* Countdown display */}
             {lobbyState.countdownActive && lobbyState.countdown && (
-              <View style={styles.countdownContainer}>
-                <Text style={[styles.countdownText, { color: colors.gold }]}>
+              <View style={styles.lobbyCountdownContainer}>
+                <Text style={[styles.lobbyCountdownText, { color: colors.gold }]}>
                   Starting in {lobbyState.countdown}...
                 </Text>
               </View>
@@ -1969,7 +1969,7 @@ export default function PhotoGameArenaScreen() {
             {lobbyConnected && !lobbyState.countdownActive && (
               <TouchableOpacity 
                 style={[
-                  styles.readyButton, 
+                  styles.lobbyReadyButton, 
                   { 
                     backgroundColor: (isCreator ? lobbyState.creatorReady : lobbyState.opponentReady) 
                       ? '#22C55E' 
@@ -1983,7 +1983,7 @@ export default function PhotoGameArenaScreen() {
                 }}
                 disabled={(isCreator ? lobbyState.creatorReady : lobbyState.opponentReady)}
               >
-                <Text style={styles.readyButtonText}>
+                <Text style={styles.lobbyReadyButtonText}>
                   {(isCreator ? lobbyState.creatorReady : lobbyState.opponentReady) 
                     ? '✓ Ready!' 
                     : '🎮 Ready to Battle!'}
