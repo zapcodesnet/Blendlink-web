@@ -469,20 +469,19 @@ export const PVPBattleArena = ({
         reconnectAttempts.current = 0;
         setReconnectAttemptCount(0);
         
+        // ALWAYS send join message - server will handle it appropriately
+        // whether this is a first connection or reconnection
+        console.log('[PVP WS] Sending join message with photos:', playerPhotos?.length);
+        ws.send(JSON.stringify({
+          type: 'join',
+          username: currentUsername,
+          photos: playerPhotos,
+          is_creator: isPlayer1,
+          is_reconnect: isReconnect, // Let server know this is a reconnect
+        }));
+        
         if (isReconnect) {
-          // Send reconnect message to restore state
-          ws.send(JSON.stringify({
-            type: 'reconnect',
-          }));
           toast.success('Reconnected to game!');
-        } else {
-          // Join the room
-          ws.send(JSON.stringify({
-            type: 'join',
-            username: currentUsername,
-            photos: playerPhotos,
-            is_creator: isPlayer1,
-          }));
         }
       };
       
