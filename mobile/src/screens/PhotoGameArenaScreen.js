@@ -1523,6 +1523,7 @@ export default function PhotoGameArenaScreen() {
   
   // State for dynamic pvpRoomId (set after joining)
   const [pvpRoomId, setPvpRoomId] = useState(initialPvpRoomId);
+  const [lobbyGameId, setLobbyGameId] = useState(null); // Game ID for lobby WebSocket
   const [gameState, setGameState] = useState('matchmaking');
   const [session, setSession] = useState(null);
   const [stats, setStats] = useState(null);
@@ -1531,7 +1532,38 @@ export default function PhotoGameArenaScreen() {
   const [loading, setLoading] = useState(true);
   const [joinedGame, setJoinedGame] = useState(null); // Track joined game details
   
-  // PVP WebSocket Hook
+  // Import lobby WebSocket hook
+  const { useLobbyWebSocket } = require('../hooks/useLobbyWebSocket');
+  
+  // Lobby WebSocket Hook - for pre-game coordination (ready, countdown, game_start)
+  const {
+    isConnected: lobbyConnected,
+    isConnecting: lobbyConnecting,
+    lobbyState,
+    markReady: lobbyMarkReady,
+    disconnect: lobbyDisconnect,
+  } = useLobbyWebSocket(lobbyGameId, {
+    autoConnect: !!lobbyGameId,
+    onGameStart: (data) => {
+      console.log('[Mobile] LOBBY game_start received:', data);
+      // CRITICAL: Set the pvpRoomId from the lobby's game_start event
+      if (data.pvpRoomId) {
+        setPvpRoomId(data.pvpRoomId);
+        setSession(data.session);
+        setGameState('pvp_selecting');
+        // Disconnect from lobby since game is starting
+        lobbyDisconnect();
+      }
+    },
+    onMessage: (msg) => {
+      console.log('[Lobby WS]', msg.type);
+      if (msg.type === 'countdown_start' || msg.type === 'countdown_tick') {
+        setGameState('pvp_countdown');
+      }
+    },
+  });
+  
+  // PVP WebSocket Hook - for actual game play (photo selection, tapping, etc.)
   const {
     isConnected: wsConnected,
     isConnecting: wsConnecting,
@@ -1546,19 +1578,10 @@ export default function PhotoGameArenaScreen() {
   } = usePVPWebSocket(pvpRoomId, {
     autoConnect: !!pvpRoomId,
     onMessage: (msg) => {
-      console.log('WS Message:', msg.type);
+      console.log('[PVP WS]', msg.type);
       
-      // Handle game_start - get pvp_room_id
-      if (msg.type === 'game_start') {
-        console.log('[Mobile] game_start received:', msg);
-        if (msg.pvp_room_id) {
-          setPvpRoomId(msg.pvp_room_id);
-        }
-        setSession(msg.session);
-        setGameState('pvp_selecting');
-      }
-      // Handle game state transitions
-      else if (msg.type === 'round_selecting') {
+      // Handle game state transitions from PVP WebSocket
+      if (msg.type === 'round_selecting') {
         setGameState('pvp_selecting');
       } else if (msg.type === 'round_ready') {
         setGameState('pvp_ready');
@@ -1567,12 +1590,10 @@ export default function PhotoGameArenaScreen() {
       } else if (msg.type === 'round_start') {
         setGameState('pvp_tapping');
       } else if (msg.type === 'round_result') {
-        // Handle round result - show winner briefly then transition
         setGameState('pvp_round_result');
       } else if (msg.type === 'game_end') {
         setGameState('pvp_game_over');
       } else if (msg.type === 'game_forfeit') {
-        // Handle opponent disconnect/forfeit
         setGameState('pvp_forfeit');
       }
     },
