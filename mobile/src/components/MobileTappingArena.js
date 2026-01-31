@@ -157,6 +157,7 @@ export default function MobileTappingArena({
   onRoundComplete,
   onTap,
   roundNumber = 1,
+  sessionId = null, // For API polling fallback
 }) {
   const { colors } = useTheme();
   
@@ -169,6 +170,10 @@ export default function MobileTappingArena({
   const [playerTaps, setPlayerTaps] = useState(0);
   const [opponentTaps, setOpponentTaps] = useState(0);
   const [tapsThisSecond, setTapsThisSecond] = useState(0);
+  
+  // Dollar amounts for display (from API)
+  const [playerDollar, setPlayerDollar] = useState(0);
+  const [opponentDollar, setOpponentDollar] = useState(0);
   
   // Warning state
   const [showRateWarning, setShowRateWarning] = useState(false);
@@ -186,6 +191,7 @@ export default function MobileTappingArena({
   const gameTimerRef = useRef(null);
   const botTimerRef = useRef(null);
   const tapResetRef = useRef(null);
+  const pollIntervalRef = useRef(null);
   
   // Calculate effective values with all bonuses
   const playerEffectiveValue = playerPhoto?.dollar_value || 0;
