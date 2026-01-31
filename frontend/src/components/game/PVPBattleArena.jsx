@@ -548,21 +548,21 @@ export const PVPBattleArena = ({
   // Track if already connected on mount
   const hasConnectedRef = useRef(false);
   
-  // Connect when pvpRoomId becomes available
+  // Connect when pvpRoomId becomes available AND we have photos
   useEffect(() => {
-    console.log('[PVPBattleArena] Effect check - pvpRoomId:', pvpRoomId, 'hasConnected:', hasConnectedRef.current, 'wsConnected:', wsConnected);
+    console.log('[PVPBattleArena] Effect check - pvpRoomId:', pvpRoomId, 'hasConnected:', hasConnectedRef.current, 'wsConnected:', wsConnected, 'photosCount:', playerPhotos?.length);
     
-    // Only connect once when pvpRoomId is available
-    if (pvpRoomId && !hasConnectedRef.current && !wsConnected) {
+    // Only connect once when pvpRoomId is available AND we have photos to play with
+    if (pvpRoomId && playerPhotos?.length > 0 && !hasConnectedRef.current && !wsConnected) {
       hasConnectedRef.current = true;
-      console.log('[PVPBattleArena] pvpRoomId available, connecting:', pvpRoomId);
+      console.log('[PVPBattleArena] pvpRoomId available, connecting:', pvpRoomId, 'with', playerPhotos.length, 'photos');
       // Defer connection slightly to ensure state is ready
       const timeoutId = setTimeout(() => {
         connectWebSocketRef.current?.(false);
-      }, 100);
+      }, 200); // Increased from 100ms to 200ms for more reliability
       return () => clearTimeout(timeoutId);
     }
-  }, [pvpRoomId, wsConnected]); // Re-run when pvpRoomId changes
+  }, [pvpRoomId, wsConnected, playerPhotos?.length]); // Re-run when pvpRoomId or photos change
   
   // Reset connection state if pvpRoomId changes (e.g., new game)
   useEffect(() => {
