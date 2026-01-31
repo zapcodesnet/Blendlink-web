@@ -442,9 +442,55 @@ export function usePVPWebSocket(roomId, options = {}) {
   }, [disconnect]);
 
   // Actions
-  const selectPhoto = useCallback((photoId) => {
-    return pvpWebSocket.selectPhoto(photoId);
-  }, []);
+  const selectPhoto = useCallback(async (photoId) => {
+    // Try WebSocket first
+    let wsSuccess = false;
+    try {
+      pvpWebSocket.selectPhoto(photoId);
+      wsSuccess = true;
+    } catch (err) {
+      console.log('[usePVPWS] WebSocket selectPhoto failed:', err.message);
+    }
+
+    // Also send via API as fallback (in case WebSocket is unreliable)
+    try {
+      const result = await photoGameAPI.selectPVPPhoto(roomId, photoId);
+      console.log('[usePVPWS] Photo selected via API:', result);
+      
+      // Update local state based on API response
+      if (result.success) {
+        setGameState(prev => ({
+          ...prev,
+          mySelectedPhotoId: photoId,
+        }));
+
+        // If both selected, update state with round result
+        if (result.both_selected && result.round_result) {
+          console.log('[usePVPWS] Both selected! Round result:', result.round_result);
+          
+          const amPlayer1 = isCreator; // Simplified - creator is always player1
+          const myPhoto = amPlayer1 ? result.round_result.player1_photo : result.round_result.player2_photo;
+          const oppPhoto = amPlayer1 ? result.round_result.player2_photo : result.round_result.player1_photo;
+          
+          setGameState(prev => ({
+            ...prev,
+            myPhoto,
+            opponentPhoto: oppPhoto,
+            player1Wins: result.player1_wins,
+            player2Wins: result.player2_wins,
+            roundPhase: 'playing',
+            opponentHasSelected: true,
+          }));
+        }
+      }
+      
+      return result;
+    } catch (err) {
+      console.error('[usePVPWS] API selectPhoto failed:', err);
+      // If both WS and API fail, throw
+      if (!wsSuccess) throw err;
+    }
+  }, [roomId, isCreator]);
 
   const markReady = useCallback(() => {
     return pvpWebSocket.markReady();
