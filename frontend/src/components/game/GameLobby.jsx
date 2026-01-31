@@ -323,10 +323,16 @@ export const GameLobby = ({
     }
   }, [currentUserId, gameState?.opponent_id, onGameStart]);
   
-  // Connect to WebSocket
+  // Connect to WebSocket (with limited retries due to infrastructure issues)
   const connectWebSocket = useCallback(() => {
     const wsUrl = getWebSocketUrl();
     if (!wsUrl) return;
+    
+    // Don't retry if we've already failed multiple times - rely on polling instead
+    if (reconnectAttempts.current >= 3) {
+      console.log('WebSocket unstable, relying on polling for updates');
+      return;
+    }
     
     // Close existing connection (mark as intentional)
     if (wsRef.current) {
@@ -355,12 +361,15 @@ export const GameLobby = ({
         console.log('WebSocket closed, code:', event.code, 'intentional:', intentionalCloseRef.current);
         setWsConnected(false);
         
-        // Only attempt reconnection if close was NOT intentional
-        if (!intentionalCloseRef.current && reconnectAttempts.current < maxReconnectAttempts) {
+        // Only attempt limited reconnection if close was NOT intentional
+        // After 3 failures, stop trying and rely on polling
+        if (!intentionalCloseRef.current && reconnectAttempts.current < 3) {
           reconnectAttempts.current++;
-          const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 10000);
-          console.log(`Reconnecting in ${delay}ms (attempt ${reconnectAttempts.current})`);
+          const delay = Math.min(2000 * Math.pow(2, reconnectAttempts.current), 10000);
+          console.log(`Reconnecting in ${delay}ms (attempt ${reconnectAttempts.current}/3)`);
           setTimeout(connectWebSocket, delay);
+        } else if (reconnectAttempts.current >= 3) {
+          console.log('WebSocket connection unstable - switching to polling mode');
         }
         intentionalCloseRef.current = false;
       };
