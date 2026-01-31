@@ -1579,9 +1579,9 @@ export default function PhotoGameArenaScreen() {
       }
     }
     
-    // Fallback to battle photos
-    return battlePhotos || [];
-  }, [routePhotos, session, user?.user_id, battlePhotos]);
+    // Fallback - no photos available yet
+    return [];
+  }, [routePhotos, session, user?.user_id]);
   
   // Debug: Log when photos change
   useEffect(() => {
