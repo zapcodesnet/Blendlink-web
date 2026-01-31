@@ -796,13 +796,14 @@ class PVPGameManager:
         message: Dict,
         exclude_user: Optional[str] = None
     ):
-        """Broadcast a message to all players in a room"""
+        """Broadcast a message to all players in a room and spectators"""
         room = self.rooms.get(room_id)
         if not room:
             return
         
         msg_json = json.dumps(message)
         
+        # Send to players
         for player in [room.player1, room.player2]:
             if not player or not player.is_connected or not player.websocket:
                 continue
@@ -814,6 +815,16 @@ class PVPGameManager:
             except Exception as e:
                 logger.error(f"Error sending to {player.user_id}: {e}")
                 player.is_connected = False
+        
+        # Also send to spectators (they see the same game events)
+        for spectator in list(room.spectators.values()):
+            if not spectator.is_connected or not spectator.websocket:
+                continue
+            try:
+                await spectator.websocket.send_text(msg_json)
+            except Exception as e:
+                logger.error(f"Error sending to spectator {spectator.user_id}: {e}")
+                spectator.is_connected = False
     
     async def _send_to_user(self, user_id: str, message: Dict):
         """Send a message to a specific user"""
