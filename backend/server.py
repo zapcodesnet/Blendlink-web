@@ -2935,11 +2935,24 @@ try:
         
         try:
             while True:
-                data = await websocket.receive_json()
+                try:
+                    data = await asyncio.wait_for(websocket.receive_json(), timeout=120)  # 2 minute timeout
+                except asyncio.TimeoutError:
+                    # Send ping to keep connection alive
+                    try:
+                        await websocket.send_json({"type": "ping"})
+                        continue
+                    except Exception:
+                        logger.warning(f"Lobby WS: Failed to send ping to {user_id}, connection may be dead")
+                        break
+                
                 msg_type = data.get("type")
                 
                 if msg_type == "ping":
-                    await websocket.send_json({"type": "pong"})
+                    await websocket.send_json({"type": "pong", "timestamp": datetime.now(timezone.utc).isoformat()})
+                elif msg_type == "pong":
+                    # Client responded to our ping - connection is alive
+                    pass
                 elif msg_type == "ready":
                     # Player ready via WebSocket - sync with API state
                     logger.info(f"Player {user_id} sent ready via WebSocket for game {game_id}")
@@ -2949,10 +2962,13 @@ try:
                     # Log unknown message types for debugging
                     logger.debug(f"Lobby WS unhandled message type: {msg_type}")
                     
-        except WebSocketDisconnect:
+        except WebSocketDisconnect as e:
+            logger.info(f"Lobby WS: Player {user_id} disconnected (WebSocketDisconnect code={getattr(e, 'code', 'unknown')})")
             await lobby_manager.disconnect(user_id)
         except Exception as e:
-            logger.error(f"Lobby WebSocket error: {e}")
+            logger.error(f"Lobby WebSocket error for {user_id}: {type(e).__name__}: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             await lobby_manager.disconnect(user_id)
     
     logger.info("Game Lobby WebSocket loaded")
