@@ -1756,13 +1756,24 @@ export default function PhotoGameArenaScreen() {
   };
   
   // Handle photo selection in PVP mode
-  const handlePVPPhotoSelect = (photo) => {
+  const handlePVPPhotoSelect = async (photo) => {
     setSelectedPhoto(photo);
     auctionSounds.selectionConfirm();
     
-    // Send selection to server via WebSocket
+    // Send selection via the hook (which now uses both WebSocket AND API)
     if (pvpRoomId && wsSelectPhoto) {
-      wsSelectPhoto(photo.mint_id);
+      try {
+        const result = await wsSelectPhoto(photo.mint_id);
+        console.log('[Mobile] Photo selection result:', result);
+        
+        // If both players have selected, the API response will trigger the polling
+        // to detect the state change and transition to playing
+        if (result?.both_selected) {
+          console.log('[Mobile] Both players have selected! Round will start via polling...');
+        }
+      } catch (err) {
+        console.error('[Mobile] Photo selection error:', err);
+      }
     }
   };
 
