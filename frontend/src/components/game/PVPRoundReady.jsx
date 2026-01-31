@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../ui/button';
+import api from '../../services/api';
 
 // Constants
 const COUNTDOWN_SECONDS = 10;
