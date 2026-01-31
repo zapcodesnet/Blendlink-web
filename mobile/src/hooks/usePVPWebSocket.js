@@ -329,6 +329,111 @@ export function usePVPWebSocket(roomId, options = {}) {
     }
   }, [isConnected, photos, username, isCreator, hasJoined]);
 
+  // POLLING FALLBACK: Poll for game state when WebSocket is unreliable
+  // This ensures the game progresses even if WebSocket messages are lost
+  useEffect(() => {
+    if (!roomId) return;
+
+    const pollGameState = async () => {
+      try {
+        const sessionData = await photoGameAPI.getPVPSessionState(roomId);
+        
+        if (sessionData) {
+          console.log('[usePVPWS Polling] Session state:', {
+            status: sessionData.status,
+            round: sessionData.current_round,
+            p1_selected: sessionData.player1_selected,
+            p2_selected: sessionData.player2_selected,
+          });
+
+          // Update opponent selection status
+          const amPlayer1 = sessionData.player1_id === username || isCreator;
+          const oppSelected = amPlayer1 ? sessionData.player2_selected : sessionData.player1_selected;
+          
+          if (oppSelected && !gameState.opponentHasSelected) {
+            setGameState(prev => ({
+              ...prev,
+              opponentHasSelected: true,
+            }));
+          }
+
+          // Check if both players have selected - this triggers round progression
+          if (sessionData.player1_selected && sessionData.player2_selected) {
+            console.log('[usePVPWS Polling] Both players selected!');
+            
+            // Get photos from round result or direct fields
+            const myPhoto = amPlayer1 ? 
+              (sessionData.round_result?.player1_photo || sessionData.player1_photo) :
+              (sessionData.round_result?.player2_photo || sessionData.player2_photo);
+            const oppPhoto = amPlayer1 ? 
+              (sessionData.round_result?.player2_photo || sessionData.player2_photo) :
+              (sessionData.round_result?.player1_photo || sessionData.player1_photo);
+
+            if (myPhoto && oppPhoto) {
+              setGameState(prev => ({
+                ...prev,
+                myPhoto,
+                opponentPhoto: oppPhoto,
+                roundPhase: 'playing',
+              }));
+            }
+
+            // Handle round result
+            if (sessionData.round_result) {
+              const result = sessionData.round_result;
+              const iWon = (amPlayer1 && result.winner === 'player1') || 
+                          (!amPlayer1 && result.winner === 'player2');
+              
+              setGameState(prev => ({
+                ...prev,
+                player1Wins: sessionData.player1_wins || 0,
+                player2Wins: sessionData.player2_wins || 0,
+                roundResult: {
+                  winner: iWon ? 'player' : 'opponent',
+                  myPhoto: amPlayer1 ? result.player1_photo : result.player2_photo,
+                  opponentPhoto: amPlayer1 ? result.player2_photo : result.player1_photo,
+                },
+              }));
+            }
+          }
+
+          // Handle game completion
+          if (sessionData.status === 'complete' || sessionData.status === 'finished') {
+            setGameState(prev => ({
+              ...prev,
+              gameResult: {
+                winner_id: sessionData.winner_id,
+                player1_wins: sessionData.player1_wins,
+                player2_wins: sessionData.player2_wins,
+              },
+            }));
+          }
+
+          // Update round info
+          if (sessionData.current_round !== gameState.currentRound) {
+            setGameState(prev => ({
+              ...prev,
+              currentRound: sessionData.current_round,
+              // Reset for new round
+              opponentHasSelected: false,
+              myPhoto: null,
+              opponentPhoto: null,
+            }));
+          }
+        }
+      } catch (err) {
+        // Silently fail - don't spam errors
+        console.debug('[usePVPWS Polling] Error:', err.message);
+      }
+    };
+
+    // Poll every 1.5 seconds
+    const pollInterval = setInterval(pollGameState, 1500);
+    pollGameState(); // Initial poll
+
+    return () => clearInterval(pollInterval);
+  }, [roomId, gameState.currentRound, gameState.opponentHasSelected, isCreator, username]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
