@@ -372,37 +372,40 @@ export const PVPRoundReady = ({
       }
     }
     
-    // Always also send via API as fallback (in case WebSocket message is lost)
-    if (!wsSuccess || websocket?.readyState !== WebSocket.OPEN) {
-      try {
-        // Get session ID from the URL or context
-        const sessionId = window.location.pathname.split('/').pop() || 
-                          localStorage.getItem('current_pvp_session');
+    // Always send via API as primary method (WebSocket is unreliable)
+    try {
+      // Use sessionId prop, or fallback to URL/localStorage
+      const effectiveSessionId = sessionId || 
+                                 window.location.pathname.split('/').pop() || 
+                                 localStorage.getItem('current_pvp_session');
+      
+      console.log('[PVPRoundReady] Sending selection via API:', { effectiveSessionId, photoId: selectedPhoto.mint_id });
+      
+      if (effectiveSessionId) {
+        const response = await api.post('/photo-game/pvp/select-photo', {
+          session_id: effectiveSessionId,
+          photo_id: selectedPhoto.mint_id
+        });
         
-        if (sessionId) {
-          const response = await api.post('/photo-game/pvp/select-photo', {
-            session_id: sessionId,
-            photo_id: selectedPhoto.mint_id
-          });
+        if (response.data.success) {
+          console.log('[PVPRoundReady] Selection confirmed via API:', response.data);
           
-          if (response.data.success) {
-            console.log('[PVPRoundReady] Selection confirmed via API:', response.data);
-            
-            // If both players have selected, the API returns the round result
-            if (response.data.both_selected && response.data.round_result) {
-              // Notify parent component about the round result
-              console.log('[PVPRoundReady] Both players selected! Round result:', response.data.round_result);
-            }
+          // If both players have selected, the API returns the round result
+          if (response.data.both_selected && response.data.round_result) {
+            // Notify parent component about the round result
+            console.log('[PVPRoundReady] Both players selected! Round result:', response.data.round_result);
           }
         }
-      } catch (err) {
-        console.error('[PVPRoundReady] API selection failed:', err);
+      } else {
+        console.error('[PVPRoundReady] No sessionId available for API call');
       }
+    } catch (err) {
+      console.error('[PVPRoundReady] API selection failed:', err);
     }
     
     onPhotoSelect?.(selectedPhoto);
     toast.success(`Selected ${selectedPhoto.name}`);
-  }, [selectedPhoto, websocket, onPhotoSelect]);
+  }, [selectedPhoto, websocket, onPhotoSelect, sessionId]);
   
   // Handle ready
   const handleReady = useCallback(() => {
