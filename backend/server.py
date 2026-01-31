@@ -2923,20 +2923,28 @@ try:
             return
         
         await websocket.accept()
+        logger.info(f"Lobby WS: Accepted connection for {user_id} to game {game_id}")
         await lobby_manager.connect(game_id, user_id, websocket)
         
         # Send confirmation to client
-        await websocket.send_json({
-            "type": "joined",
-            "game_id": game_id,
-            "user_id": user_id,
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        })
+        try:
+            await websocket.send_json({
+                "type": "joined",
+                "game_id": game_id,
+                "user_id": user_id,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+            logger.info(f"Lobby WS: Sent 'joined' confirmation to {user_id}")
+        except Exception as e:
+            logger.error(f"Lobby WS: Failed to send joined confirmation to {user_id}: {e}")
+            await lobby_manager.disconnect(user_id)
+            return
         
         try:
             while True:
                 try:
                     data = await asyncio.wait_for(websocket.receive_json(), timeout=120)  # 2 minute timeout
+                    logger.debug(f"Lobby WS: Received message from {user_id}: {data.get('type', 'unknown')}")
                 except asyncio.TimeoutError:
                     # Send ping to keep connection alive
                     try:
