@@ -14,7 +14,7 @@ import os
 import base64
 from io import BytesIO
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pvpgame-connect.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pvpfix-gamer.preview.emergentagent.com')
 
 # Test credentials
 TEST_EMAIL = "test@test.com"

@@ -7,7 +7,7 @@ import requests
 import os
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pvpgame-connect.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pvpfix-gamer.preview.emergentagent.com')
 
 class TestHealthCheck:
     """Health check endpoint tests"""
