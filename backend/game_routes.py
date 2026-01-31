@@ -584,10 +584,12 @@ async def start_pvp_game(
     # Broadcast game start via WebSocket (include pvp_room_id)
     try:
         from lobby_websocket import lobby_manager
+        # Use mode='json' to serialize datetime objects to ISO strings
+        session_data = session.model_dump(mode='json')
         await lobby_manager.broadcast_game_start(
             game_id=game_id,
             session_id=session.session_id,
-            session_data=session.model_dump(),
+            session_data=session_data,
             pvp_room_id=room_id  # Include room ID in broadcast
         )
     except Exception as e:
