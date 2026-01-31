@@ -191,6 +191,29 @@ class PVPWebSocketService {
   // ============== GAME ACTIONS ==============
 
   /**
+   * Join the PVP room - MUST be called after connect() succeeds
+   * This registers the player with the backend and sends their photos
+   */
+  joinRoom(username, photos, isCreator) {
+    console.log('[PVP WS] Sending join message:', { username, photosCount: photos?.length, isCreator });
+    return this.send({
+      type: 'join',
+      username: username,
+      photos: photos,
+      is_creator: isCreator,
+    });
+  }
+
+  /**
+   * Reconnect to room (for recovering from disconnect)
+   */
+  reconnectToRoom() {
+    return this.send({
+      type: 'reconnect',
+    });
+  }
+
+  /**
    * Select photo for current round
    */
   selectPhoto(photoId) {
