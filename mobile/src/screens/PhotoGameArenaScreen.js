@@ -1678,6 +1678,46 @@ export default function PhotoGameArenaScreen() {
     }
   }, [pvpRoomId, wsConnected]);
 
+  // POLLING FALLBACK: Watch wsGameState.roundPhase and transition local gameState
+  // This handles the case where WebSocket messages are lost but polling detects state changes
+  useEffect(() => {
+    if (!pvpRoomId) return;
+    
+    console.log('[Mobile] wsGameState update:', {
+      roundPhase: wsGameState.roundPhase,
+      myPhoto: wsGameState.myPhoto?.mint_id,
+      oppPhoto: wsGameState.opponentPhoto?.mint_id,
+      currentGameState: gameState,
+    });
+
+    // Transition to tapping phase when polling detects both players selected
+    if (wsGameState.roundPhase === 'playing' && wsGameState.myPhoto && wsGameState.opponentPhoto) {
+      if (gameState !== 'pvp_tapping' && gameState !== 'pvp_round_result' && gameState !== 'pvp_game_over') {
+        console.log('[Mobile] POLLING: Transitioning to pvp_tapping');
+        setGameState('pvp_tapping');
+      }
+    }
+
+    // Transition to round result if we have a result
+    if (wsGameState.roundResult && gameState === 'pvp_tapping') {
+      console.log('[Mobile] POLLING: Transitioning to pvp_round_result');
+      setGameState('pvp_round_result');
+    }
+
+    // Transition to game over if we have a final result
+    if (wsGameState.gameResult) {
+      console.log('[Mobile] POLLING: Transitioning to pvp_game_over');
+      setGameState('pvp_game_over');
+    }
+
+    // Update selected photo display if opponent selected
+    if (wsGameState.opponentHasSelected && gameState === 'pvp_selecting') {
+      console.log('[Mobile] POLLING: Opponent has selected their photo');
+    }
+  }, [pvpRoomId, wsGameState.roundPhase, wsGameState.myPhoto, wsGameState.opponentPhoto, 
+      wsGameState.roundResult, wsGameState.gameResult, wsGameState.opponentHasSelected, gameState]);
+
+
   // Handler when user selects photos and confirms to join
   const handleConfirmJoin = async (selectedPhotoIds) => {
     if (!joinedGame?.game_id) {
