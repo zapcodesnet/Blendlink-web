@@ -3100,14 +3100,18 @@ try:
                         "type": "pong",
                         "timestamp": datetime.now(timezone.utc).isoformat()
                     })
+                elif msg_type == "pong":
+                    # Client responded to our ping - connection is alive
+                    pass
                     
-        except WebSocketDisconnect:
+        except WebSocketDisconnect as e:
+            logger.info(f"PVP WS: Player {user_id} disconnected (WebSocketDisconnect code={getattr(e, 'code', 'unknown')})")
             try:
                 await pvp_game_manager.disconnect_player(user_id)
             except Exception as disc_err:
                 logger.error(f"Error during disconnect cleanup: {disc_err}")
         except Exception as e:
-            logger.error(f"PVP Game WebSocket error: {e}")
+            logger.error(f"PVP Game WebSocket error for {user_id}: {type(e).__name__}: {e}")
             import traceback
             logger.error(traceback.format_exc())
             try:
