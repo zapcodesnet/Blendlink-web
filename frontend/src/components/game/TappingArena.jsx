@@ -19,6 +19,7 @@ import { AlertCircle, Zap, Target, Trophy, Skull, Volume2, VolumeX } from 'lucid
 import { toast } from 'sonner';
 import auctionSounds from '../../utils/auctionSounds';
 import { StreakIndicator } from './StreakIndicator';
+import api from '../../services/api';
 
 // Constants from user spec
 const BASE_TAPS_TO_WIN = 200;
