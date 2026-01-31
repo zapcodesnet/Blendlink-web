@@ -1,5 +1,25 @@
 # PVP Testing Guide - Two Device Test
 
+## 🔧 Fixes Applied in This Session
+
+### Critical Bug #1: Temporal Dead Zone (TDZ) Error
+**File**: `/app/mobile/src/screens/PhotoGameArenaScreen.js`
+**Problem**: `routePhotos` variable was used in `useMemo` BEFORE it was declared, causing a JavaScript runtime error.
+**Fix**: Moved `routePhotos` and `routeGameId` declarations to the top of the component alongside other route params.
+
+### Critical Bug #2: WebSocket Join Message Race Condition  
+**File**: `/app/mobile/src/hooks/usePVPWebSocket.js`
+**Problem**: The `join` message was only sent in the `'connected'` event handler, but photos might not be available at that exact moment due to async state updates.
+**Fix**: Added a separate `useEffect` that watches for `isConnected && photos.length > 0` and sends the join message when BOTH conditions are met. This eliminates the race condition between connection and photo availability.
+
+### Verification
+- ✅ Backend WebSocket tests pass
+- ✅ Web app functional (tested via screenshots)
+- ✅ Both test users have sufficient photos (12 and 16)
+- ⏳ Awaiting user verification on physical devices
+
+---
+
 ## Quick Start
 
 ### 1. Start the Expo Development Server
