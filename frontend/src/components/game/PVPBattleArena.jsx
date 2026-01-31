@@ -662,27 +662,32 @@ export const PVPBattleArena = ({
           }
           
           // Check if both players have selected - transition to playing phase
-          if (sessionData.player1_selected && sessionData.player2_selected && gamePhase === 'ready') {
-            console.log('[Polling] Both players selected! Transitioning to playing...');
+          // Allow transition from 'ready' or any state where we're still selecting
+          const canTransitionToPlaying = gamePhase === 'ready' || 
+            (sessionData.player1_selected && sessionData.player2_selected && gamePhase !== 'playing' && gamePhase !== 'result');
             
-            // Get the photos from round result
+          if (sessionData.player1_selected && sessionData.player2_selected && canTransitionToPlaying) {
+            console.log('[Polling] Both players selected! Transitioning to playing...', { gamePhase });
+            
+            // Get the photos from round result or direct fields
+            let myPhoto = null;
+            let oppPhoto = null;
+            
             if (sessionData.round_result) {
-              const myPhoto = isPlayer1 ? sessionData.round_result.player1_photo : sessionData.round_result.player2_photo;
-              const oppPhoto = isPlayer1 ? sessionData.round_result.player2_photo : sessionData.round_result.player1_photo;
-              
-              if (myPhoto) setMySelectedPhoto(myPhoto);
-              if (oppPhoto) setOpponentSelectedPhoto(oppPhoto);
+              myPhoto = isPlayer1 ? sessionData.round_result.player1_photo : sessionData.round_result.player2_photo;
+              oppPhoto = isPlayer1 ? sessionData.round_result.player2_photo : sessionData.round_result.player1_photo;
             } else if (sessionData.player1_photo && sessionData.player2_photo) {
-              // Use direct photo fields if no round_result yet
-              const myPhoto = isPlayer1 ? sessionData.player1_photo : sessionData.player2_photo;
-              const oppPhoto = isPlayer1 ? sessionData.player2_photo : sessionData.player1_photo;
-              
-              if (myPhoto) setMySelectedPhoto(myPhoto);
-              if (oppPhoto) setOpponentSelectedPhoto(oppPhoto);
+              myPhoto = isPlayer1 ? sessionData.player1_photo : sessionData.player2_photo;
+              oppPhoto = isPlayer1 ? sessionData.player2_photo : sessionData.player1_photo;
             }
             
-            // Transition to playing phase
-            setGamePhase('playing');
+            if (myPhoto) setMySelectedPhoto(myPhoto);
+            if (oppPhoto) setOpponentSelectedPhoto(oppPhoto);
+            
+            // Transition to playing phase if we have both photos
+            if (myPhoto && oppPhoto) {
+              setGamePhase('playing');
+            }
           }
           
           // Handle round result status
