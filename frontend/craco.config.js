@@ -62,6 +62,10 @@ const webpackConfig = {
         os: false,
         url: false,
         zlib: false,
+        fs: false,
+        path: false,
+        net: false,
+        tls: false,
       };
 
       // Add resolve alias to fix process/browser issue
