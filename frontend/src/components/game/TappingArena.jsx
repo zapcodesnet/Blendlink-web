@@ -570,6 +570,66 @@ export const TappingArena = ({
     };
   }, [gamePhase]);
   
+  // API POLLING FOR TAP STATE (Critical for real-time sync when WebSocket fails)
+  useEffect(() => {
+    if (gamePhase !== 'active' || !sessionId || isBot) return;
+    
+    const pollTapState = async () => {
+      try {
+        const response = await api.get(`/photo-game/pvp/tap-state/${sessionId}`);
+        const data = response.data;
+        
+        if (data) {
+          // Update opponent taps and dollar from server
+          const serverOpponentTaps = data.opponent_taps || 0;
+          const serverOpponentDollar = data.opponent_dollar || 0;
+          
+          if (serverOpponentTaps > opponentTaps) {
+            console.log('[TapPoll] Opponent taps updated:', serverOpponentTaps, 'dollar:', serverOpponentDollar);
+            setOpponentTaps(serverOpponentTaps);
+            setOpponentDollar(serverOpponentDollar);
+          }
+        }
+      } catch (err) {
+        // Silent fail - polling should not interrupt gameplay
+        console.debug('[TapPoll] Error:', err.message);
+      }
+    };
+    
+    // Poll every 200ms for responsive updates
+    pollIntervalRef.current = setInterval(pollTapState, 200);
+    pollTapState(); // Initial poll
+    
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+      }
+    };
+  }, [gamePhase, sessionId, isBot, opponentTaps]);
+  
+  // Send taps to API (in addition to WebSocket)
+  const sendTapToApi = useCallback(async (tapCount) => {
+    if (!sessionId || isBot) return;
+    
+    try {
+      const response = await api.post('/photo-game/pvp/tap', {
+        session_id: sessionId,
+        tap_count: tapCount,
+      });
+      
+      if (response.data) {
+        // Update dollar display from API response
+        setPlayerDollar(response.data.my_dollar || 0);
+        if (response.data.opponent_taps > opponentTaps) {
+          setOpponentTaps(response.data.opponent_taps);
+          setOpponentDollar(response.data.opponent_dollar || 0);
+        }
+      }
+    } catch (err) {
+      console.debug('[TapAPI] Error:', err.message);
+    }
+  }, [sessionId, isBot, opponentTaps]);
+  
   // Handle player win
   const handlePlayerWin = useCallback(() => {
     if (winner) return; // Prevent duplicate
