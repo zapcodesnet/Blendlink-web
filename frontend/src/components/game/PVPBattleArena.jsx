@@ -128,6 +128,7 @@ export const PVPBattleArena = ({
   const [reconnectAttemptCount, setReconnectAttemptCount] = useState(0);
   const reconnectAttempts = useRef(0);
   const reconnectTimeoutRef = useRef(null);
+  const intentionalCloseRef = useRef(false);  // Track intentional closes
   const MAX_RECONNECT_ATTEMPTS = 5;
   const RECONNECT_INTERVAL = 5000; // 5 seconds
   
