@@ -129,8 +129,9 @@ export const PVPBattleArena = ({
   const reconnectAttempts = useRef(0);
   const reconnectTimeoutRef = useRef(null);
   const intentionalCloseRef = useRef(false);  // Track intentional closes
-  const MAX_RECONNECT_ATTEMPTS = 5;
-  const RECONNECT_INTERVAL = 5000; // 5 seconds
+  const MAX_RECONNECT_ATTEMPTS = 3;  // Reduced to 3 since we have polling fallback
+  const RECONNECT_INTERVAL = 3000; // 3 seconds
+  const [pollingMode, setPollingMode] = useState(false);  // Track if we've switched to polling
   
   // Toast spam prevention
   const lastToastTimeRef = useRef(0);
