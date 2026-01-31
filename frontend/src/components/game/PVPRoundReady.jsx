@@ -351,16 +351,51 @@ export const PVPRoundReady = ({
     setSelectedPhoto(photo);
   }, []);
   
-  // Confirm selection
-  const handleConfirmSelection = useCallback(() => {
+  // Confirm selection - use WebSocket if available, fallback to API
+  const handleConfirmSelection = useCallback(async () => {
     if (!selectedPhoto) return;
     
-    // Send to WebSocket
+    let wsSuccess = false;
+    
+    // Try WebSocket first
     if (websocket && websocket.readyState === WebSocket.OPEN) {
-      websocket.send(JSON.stringify({
-        type: 'select_photo',
-        photo_id: selectedPhoto.mint_id,
-      }));
+      try {
+        websocket.send(JSON.stringify({
+          type: 'select_photo',
+          photo_id: selectedPhoto.mint_id,
+        }));
+        wsSuccess = true;
+      } catch (err) {
+        console.log('[PVPRoundReady] WebSocket send failed, falling back to API');
+      }
+    }
+    
+    // Always also send via API as fallback (in case WebSocket message is lost)
+    if (!wsSuccess || websocket?.readyState !== WebSocket.OPEN) {
+      try {
+        // Get session ID from the URL or context
+        const sessionId = window.location.pathname.split('/').pop() || 
+                          localStorage.getItem('current_pvp_session');
+        
+        if (sessionId) {
+          const response = await api.post('/photo-game/pvp/select-photo', {
+            session_id: sessionId,
+            photo_id: selectedPhoto.mint_id
+          });
+          
+          if (response.data.success) {
+            console.log('[PVPRoundReady] Selection confirmed via API:', response.data);
+            
+            // If both players have selected, the API returns the round result
+            if (response.data.both_selected && response.data.round_result) {
+              // Notify parent component about the round result
+              console.log('[PVPRoundReady] Both players selected! Round result:', response.data.round_result);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('[PVPRoundReady] API selection failed:', err);
+      }
     }
     
     onPhotoSelect?.(selectedPhoto);
