@@ -239,6 +239,7 @@ export const PVPRoundReady = ({
   onRoundStart,
   onPhotoSelect,
   onReady,
+  sessionId, // Add sessionId prop for API calls
 }) => {
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [phase, setPhase] = useState('selecting'); // selecting, ready, countdown
