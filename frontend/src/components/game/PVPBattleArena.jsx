@@ -500,12 +500,12 @@ export const PVPBattleArena = ({
       
       ws.onclose = (event) => {
         clearTimeout(connectionTimeout);
-        console.log('PVP WebSocket closed:', event.code, event.reason);
+        console.log('PVP WebSocket closed:', event.code, event.reason, 'intentional:', intentionalCloseRef.current);
         setWsConnected(false);
         setWebsocketInstance(null);
         
-        // Schedule reconnect if game is still in progress
-        if (gamePhase !== 'result' && reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
+        // Only schedule reconnect if NOT intentional and game is still in progress
+        if (!intentionalCloseRef.current && gamePhase !== 'result' && reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
           setReconnecting(true);
           
           const delay = RECONNECT_INTERVAL;
@@ -521,6 +521,7 @@ export const PVPBattleArena = ({
           toast.error('Connection lost after 5 attempts. Please rejoin or create a new game.');
           setReconnecting(false);
         }
+        intentionalCloseRef.current = false;
       };
       
       wsRef.current = ws;
