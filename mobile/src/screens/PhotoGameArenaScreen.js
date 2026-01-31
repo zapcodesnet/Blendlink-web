@@ -3241,4 +3241,65 @@ const styles = StyleSheet.create({
   pvpWaitingContent: {
     paddingBottom: 40,
   },
+  // Lobby styles
+  connectionBadge: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    alignSelf: 'center',
+    marginTop: 12,
+  },
+  readyStatusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 32,
+    marginBottom: 24,
+  },
+  readyBox: {
+    width: 100,
+    height: 100,
+    borderRadius: 12,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  readyLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  countdownContainer: {
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  countdownText: {
+    fontSize: 32,
+    fontWeight: 'bold',
+  },
+  readyButton: {
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+    marginHorizontal: 24,
+  },
+  readyButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  leaveButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 24,
+    marginHorizontal: 24,
+  },
 });
