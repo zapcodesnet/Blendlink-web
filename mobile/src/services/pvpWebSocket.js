@@ -77,6 +77,9 @@ class PVPWebSocketService {
         this.reconnectAttempts = 0;
         this.startHeartbeat();
         this.emit('connected', { roomId });
+        
+        // NOTE: The caller MUST send a 'join' message with photos after connection
+        // Use joinRoom(username, photos, isCreator) method
       };
 
       this.ws.onclose = (event) => {
