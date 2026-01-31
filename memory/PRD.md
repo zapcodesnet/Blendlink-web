@@ -1,6 +1,51 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 31, 2026 (CRITICAL PVP FIX)
+## Latest Update: January 31, 2026 (Live Spectator Mode Added)
+
+---
+
+## SESSION 68: Live Spectator Mode ✅
+
+### Feature Implementation:
+Added live spectator mode allowing users to watch ongoing PVP battles in real-time.
+
+### Backend Changes:
+1. **SpectatorConnection dataclass** - Tracks spectator WebSocket connections
+2. **PVPGameRoom updates** - Added spectators dict, allow_spectators flag, started_at timestamp
+3. **PVPGameManager methods:**
+   - `connect_spectator()` - Join room as spectator
+   - `disconnect_spectator()` - Leave room
+   - `_send_spectator_state()` - Send current game state to spectator
+   - `_broadcast_to_spectators()` - Broadcast events to all spectators
+   - `_broadcast_spectator_count()` - Update spectator count
+   - `get_live_battles()` - Return list of ongoing battles
+4. **New WebSocket endpoint:** `/api/ws/spectate/{room_id}/{token}`
+5. **New REST API:** `GET /api/photo-game/live-battles` - List ongoing battles
+
+### Frontend Changes:
+1. **SpectatorView.jsx** - Real-time view of ongoing battle with:
+   - Live connection status
+   - Spectator count display
+   - Both players' info and scores
+   - Selected photos display
+   - Round phase indicator
+   - Countdown overlay
+2. **LiveBattles.jsx** - Browse ongoing battles:
+   - Auto-refresh every 10 seconds
+   - Battle cards with player info, scores, round
+   - "Watch" button to join as spectator
+   - Empty state when no live battles
+3. **PhotoGameArena.jsx updates:**
+   - Added "Watch Live Battles" button (red gradient with pulsing dot)
+   - Added `live_battles` and `spectating` game states
+   - Integrated LiveBattles and SpectatorView components
+
+### Files Modified:
+- `/app/backend/pvp_game_websocket.py` - Spectator support
+- `/app/backend/server.py` - WebSocket endpoint and API
+- `/app/frontend/src/components/game/SpectatorView.jsx` (NEW)
+- `/app/frontend/src/components/game/LiveBattles.jsx` (NEW)
+- `/app/frontend/src/pages/PhotoGameArena.jsx` - UI integration
 
 ---
 
