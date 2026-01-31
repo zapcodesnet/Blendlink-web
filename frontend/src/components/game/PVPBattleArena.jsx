@@ -645,29 +645,79 @@ export const PVPBattleArena = ({
         const sessionData = response.data;
         
         if (sessionData) {
-          // Update game phase if it changed
-          if (sessionData.status && sessionData.status !== gamePhase) {
-            console.log('[Polling] Game phase changed:', sessionData.status);
+          console.log('[Polling] Session state:', {
+            status: sessionData.status,
+            round: sessionData.current_round,
+            p1_selected: sessionData.player1_selected,
+            p2_selected: sessionData.player2_selected,
+          });
+          
+          // Update opponent selection status
+          const oppSelected = isPlayer1 ? sessionData.player2_selected : sessionData.player1_selected;
+          if (oppSelected && !opponentHasSelected) {
+            setOpponentHasSelected(true);
+            toast.info(`${opponentUsername || 'Opponent'} has selected their photo`);
+          }
+          
+          // Check if both players have selected - transition to playing phase
+          if (sessionData.player1_selected && sessionData.player2_selected && gamePhase === 'ready') {
+            console.log('[Polling] Both players selected! Transitioning to playing...');
             
-            // Handle phase transitions
-            if (sessionData.status === 'selecting') {
-              setGamePhase('selecting');
-            } else if (sessionData.status === 'round_end') {
-              setGamePhase('round_end');
-            } else if (sessionData.status === 'complete' || sessionData.status === 'finished') {
+            // Get the photos from round result
+            if (sessionData.round_result) {
+              const myPhoto = isPlayer1 ? sessionData.round_result.player1_photo : sessionData.round_result.player2_photo;
+              const oppPhoto = isPlayer1 ? sessionData.round_result.player2_photo : sessionData.round_result.player1_photo;
+              
+              if (myPhoto) setMySelectedPhoto(myPhoto);
+              if (oppPhoto) setOpponentSelectedPhoto(oppPhoto);
+            } else if (sessionData.player1_photo && sessionData.player2_photo) {
+              // Use direct photo fields if no round_result yet
+              const myPhoto = isPlayer1 ? sessionData.player1_photo : sessionData.player2_photo;
+              const oppPhoto = isPlayer1 ? sessionData.player2_photo : sessionData.player1_photo;
+              
+              if (myPhoto) setMySelectedPhoto(myPhoto);
+              if (oppPhoto) setOpponentSelectedPhoto(oppPhoto);
+            }
+            
+            // Transition to playing phase
+            setGamePhase('playing');
+          }
+          
+          // Handle round result status
+          if (sessionData.status === 'round_result' && sessionData.round_result) {
+            console.log('[Polling] Round result detected:', sessionData.round_result);
+            
+            // Update scores
+            setPlayer1Wins(sessionData.player1_wins || 0);
+            setPlayer2Wins(sessionData.player2_wins || 0);
+            
+            // Check if game is complete
+            if (sessionData.player1_wins >= 3 || sessionData.player2_wins >= 3) {
+              setGameWinner(sessionData.winner_id === currentUserId ? 'player1' : 'player2');
               setGamePhase('result');
             }
+          }
+          
+          // Handle complete status
+          if (sessionData.status === 'complete' || sessionData.status === 'finished') {
+            console.log('[Polling] Game complete! Winner:', sessionData.winner_id);
+            setGameWinner(sessionData.winner_id === currentUserId ? 'player1' : 'player2');
+            setGamePhase('result');
           }
           
           // Update round info
           if (sessionData.current_round && sessionData.current_round !== currentRound) {
             setCurrentRound(sessionData.current_round);
+            // Reset for new round
+            setOpponentHasSelected(false);
+            setMySelectedPhoto(null);
+            setOpponentSelectedPhoto(null);
           }
           
           // Update scores
           if (sessionData.player1_wins !== undefined) {
-            setMyScore(isPlayer1 ? sessionData.player1_wins : sessionData.player2_wins);
-            setOpponentScore(isPlayer1 ? sessionData.player2_wins : sessionData.player1_wins);
+            setPlayer1Wins(sessionData.player1_wins);
+            setPlayer2Wins(sessionData.player2_wins);
           }
         }
       } catch (err) {
@@ -676,12 +726,12 @@ export const PVPBattleArena = ({
       }
     };
     
-    // Poll every 2 seconds for responsive updates
-    const pollInterval = setInterval(pollGameState, 2000);
+    // Poll every 1.5 seconds for responsive updates
+    const pollInterval = setInterval(pollGameState, 1500);
     pollGameState(); // Initial poll
     
     return () => clearInterval(pollInterval);
-  }, [pvpRoomId, gameId, gamePhase, currentRound, isPlayer1]);
+  }, [pvpRoomId, gameId, gamePhase, currentRound, isPlayer1, opponentHasSelected, opponentUsername, currentUserId]);
   
   // Handle photo selection - use API when WebSocket is unreliable
   const handlePhotoSelect = useCallback((photo) => {
