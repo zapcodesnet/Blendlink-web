@@ -321,7 +321,7 @@ export function usePVPWebSocket(roomId, options = {}) {
       unsubscribesRef.current.forEach(unsub => unsub?.());
       unsubscribesRef.current = [];
     };
-  }, [roomId, autoConnect, connect, onMessage]);
+  }, [roomId, autoConnect, connect, onMessage, username, photos, isCreator]);
 
   // Cleanup on unmount
   useEffect(() => {
