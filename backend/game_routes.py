@@ -1570,6 +1570,58 @@ async def get_queue_status():
     return await _pvp_service.get_queue_status()
 
 
+@game_router.get("/pvp/session/{game_id}")
+async def get_pvp_session_state(
+    game_id: str,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """
+    Get the current state of a PVP session for polling-based sync.
+    This is a fallback mechanism when WebSocket connections are unreliable.
+    """
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    user_id = current_user.get("user_id")
+    
+    # Try to find the session in pvp_sessions
+    session = await _db.pvp_sessions.find_one(
+        {"$or": [
+            {"session_id": game_id},
+            {"open_game_id": game_id},
+            {"pvp_room_id": game_id}
+        ]},
+        {"_id": 0}
+    )
+    
+    if not session:
+        # Try game_sessions collection
+        session = await _db.game_sessions.find_one(
+            {"session_id": game_id},
+            {"_id": 0}
+        )
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Check if user is part of this session
+    if session.get("player1_id") != user_id and session.get("player2_id") != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to view this session")
+    
+    return {
+        "session_id": session.get("session_id"),
+        "status": session.get("status", "unknown"),
+        "current_round": session.get("current_round", 1),
+        "player1_id": session.get("player1_id"),
+        "player2_id": session.get("player2_id"),
+        "player1_wins": session.get("player1_wins", 0),
+        "player2_wins": session.get("player2_wins", 0),
+        "player1_selected": session.get("player1_selected", False),
+        "player2_selected": session.get("player2_selected", False),
+        "winner_id": session.get("winner_id"),
+        "updated_at": session.get("updated_at", session.get("created_at"))
+    }
+
 
 # ============== BATTLE-READY PHOTOS ==============
 @game_router.get("/battle-photos")
