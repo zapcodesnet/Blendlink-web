@@ -744,6 +744,17 @@ export default function MintedPhotosScreen() {
               tintColor={colors.primary}
             />
           }
+          // Performance optimizations
+          removeClippedSubviews={true}
+          initialNumToRender={6}
+          maxToRenderPerBatch={4}
+          windowSize={5}
+          updateCellsBatchingPeriod={50}
+          getItemLayout={viewMode === 'list' ? (data, index) => ({
+            length: 160,
+            offset: 160 * index,
+            index,
+          }) : undefined}
         />
       )}
 
