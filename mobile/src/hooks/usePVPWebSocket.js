@@ -95,29 +95,46 @@ export function usePVPWebSocket(roomId, options = {}) {
 
     // Connection events
     const unsubConnected = pvpWebSocket.on('connected', () => {
+      console.log('[usePVPWS] Connected to room:', roomId);
       setIsConnected(true);
       setIsConnecting(false);
       setError(null);
+      
+      // Auto-send join message if we have photos
+      if (photos && photos.length > 0 && !joinSentRef.current) {
+        console.log('[usePVPWS] Auto-sending join with', photos.length, 'photos');
+        setTimeout(() => {
+          pvpWebSocket.joinRoom(username || 'Player', photos, isCreator);
+          joinSentRef.current = true;
+        }, 100); // Small delay to ensure connection is stable
+      }
     });
 
     const unsubDisconnected = pvpWebSocket.on('disconnected', (data) => {
+      console.log('[usePVPWS] Disconnected:', data);
       setIsConnected(false);
       setIsConnecting(false);
+      setHasJoined(false);
     });
 
     const unsubError = pvpWebSocket.on('error', (data) => {
+      console.log('[usePVPWS] Error:', data);
       setError(data.error);
       setIsConnecting(false);
     });
 
     // Game state events
     const unsubJoinResult = pvpWebSocket.on('join_result', (data) => {
+      console.log('[usePVPWS] Join result:', data);
       if (data.success) {
+        setHasJoined(true);
         setGameState(prev => ({
           ...prev,
           currentRound: data.current_round || 1,
           roundPhase: data.round_phase || 'waiting',
         }));
+      } else {
+        setError('Failed to join room');
       }
     });
 
