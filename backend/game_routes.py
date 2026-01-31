@@ -1836,6 +1836,240 @@ async def pvp_next_round(
     }
 
 
+# ============== PVP TAP ENDPOINTS (Polling Fallback for Real-time Sync) ==============
+
+class PVPTapRequest(BaseModel):
+    session_id: str
+    tap_count: int = 1
+
+
+@game_router.post("/pvp/tap")
+async def pvp_submit_tap(
+    data: PVPTapRequest,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """
+    Submit taps for the current PVP round via API (polling fallback).
+    This endpoint records taps in the database so both players can poll for updates.
+    """
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    user_id = current_user.get("user_id")
+    
+    # Find the session
+    session = await _db.pvp_sessions.find_one(
+        {"$or": [
+            {"session_id": data.session_id},
+            {"open_game_id": data.session_id},
+            {"pvp_room_id": data.session_id}
+        ]}
+    )
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Determine if user is player1 or player2
+    is_player1 = session.get("player1_id") == user_id
+    is_player2 = session.get("player2_id") == user_id
+    
+    if not is_player1 and not is_player2:
+        raise HTTPException(status_code=403, detail="Not a participant in this session")
+    
+    # Get current taps
+    current_taps = session.get("player1_taps", 0) if is_player1 else session.get("player2_taps", 0)
+    new_taps = current_taps + data.tap_count
+    
+    # Get photo dollar value for calculating dollar amount
+    photo_field = "player1_current_photo" if is_player1 else "player2_current_photo"
+    photo = session.get(photo_field, {})
+    photo_dollar_value = photo.get("dollar_value", 1000000) if photo else 1000000
+    
+    # Calculate current dollar bid (taps * portion of photo value)
+    # Assuming 100 taps = full value
+    required_taps = 100  # Base required taps
+    dollar_per_tap = photo_dollar_value / required_taps
+    current_dollar = new_taps * dollar_per_tap
+    
+    # Update taps in database
+    tap_field = "player1_taps" if is_player1 else "player2_taps"
+    dollar_field = "player1_dollar" if is_player1 else "player2_dollar"
+    
+    await _db.pvp_sessions.update_one(
+        {"session_id": session.get("session_id")},
+        {
+            "$set": {
+                tap_field: new_taps,
+                dollar_field: current_dollar,
+                "updated_at": datetime.now(timezone.utc)
+            }
+        }
+    )
+    
+    # Get updated session for response
+    updated_session = await _db.pvp_sessions.find_one(
+        {"session_id": session.get("session_id")},
+        {"_id": 0}
+    )
+    
+    return {
+        "success": True,
+        "my_taps": new_taps,
+        "my_dollar": current_dollar,
+        "opponent_taps": updated_session.get("player2_taps" if is_player1 else "player1_taps", 0),
+        "opponent_dollar": updated_session.get("player2_dollar" if is_player1 else "player1_dollar", 0),
+    }
+
+
+@game_router.get("/pvp/tap-state/{session_id}")
+async def pvp_get_tap_state(
+    session_id: str,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """
+    Get current tap state for both players (polling endpoint).
+    Poll this every 100-200ms during tapping phase for real-time sync.
+    """
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    user_id = current_user.get("user_id")
+    
+    session = await _db.pvp_sessions.find_one(
+        {"$or": [
+            {"session_id": session_id},
+            {"open_game_id": session_id},
+            {"pvp_room_id": session_id}
+        ]},
+        {"_id": 0}
+    )
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    is_player1 = session.get("player1_id") == user_id
+    
+    return {
+        "session_id": session.get("session_id"),
+        "status": session.get("status"),
+        "current_round": session.get("current_round", 1),
+        "player1_taps": session.get("player1_taps", 0),
+        "player1_dollar": session.get("player1_dollar", 0),
+        "player2_taps": session.get("player2_taps", 0),
+        "player2_dollar": session.get("player2_dollar", 0),
+        "my_taps": session.get("player1_taps" if is_player1 else "player2_taps", 0),
+        "my_dollar": session.get("player1_dollar" if is_player1 else "player2_dollar", 0),
+        "opponent_taps": session.get("player2_taps" if is_player1 else "player1_taps", 0),
+        "opponent_dollar": session.get("player2_dollar" if is_player1 else "player1_dollar", 0),
+        "round_time_remaining": session.get("round_time_remaining"),
+        "updated_at": session.get("updated_at"),
+    }
+
+
+@game_router.post("/pvp/finish-round")
+async def pvp_finish_round(
+    session_id: str,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """
+    Finish the current tapping round and calculate winner.
+    Called when the round timer expires.
+    """
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    user_id = current_user.get("user_id")
+    
+    session = await _db.pvp_sessions.find_one(
+        {"$or": [
+            {"session_id": session_id},
+            {"open_game_id": session_id},
+            {"pvp_room_id": session_id}
+        ]}
+    )
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    if session.get("player1_id") != user_id and session.get("player2_id") != user_id:
+        raise HTTPException(status_code=403, detail="Not a participant")
+    
+    # Get tap counts and dollar values
+    p1_taps = session.get("player1_taps", 0)
+    p2_taps = session.get("player2_taps", 0)
+    p1_dollar = session.get("player1_dollar", 0)
+    p2_dollar = session.get("player2_dollar", 0)
+    
+    # Determine round winner based on dollar value (higher wins)
+    if p1_dollar > p2_dollar:
+        round_winner = "player1"
+        winner_id = session.get("player1_id")
+    elif p2_dollar > p1_dollar:
+        round_winner = "player2"
+        winner_id = session.get("player2_id")
+    else:
+        round_winner = "tie"
+        winner_id = None
+    
+    # Update wins
+    new_p1_wins = session.get("player1_wins", 0)
+    new_p2_wins = session.get("player2_wins", 0)
+    
+    if round_winner == "player1":
+        new_p1_wins += 1
+    elif round_winner == "player2":
+        new_p2_wins += 1
+    
+    current_round = session.get("current_round", 1)
+    game_over = new_p1_wins >= 3 or new_p2_wins >= 3 or current_round >= 5
+    
+    round_result = {
+        "round": current_round,
+        "winner": round_winner,
+        "winner_id": winner_id,
+        "player1_taps": p1_taps,
+        "player1_dollar": p1_dollar,
+        "player2_taps": p2_taps,
+        "player2_dollar": p2_dollar,
+    }
+    
+    game_winner_id = None
+    if game_over:
+        if new_p1_wins > new_p2_wins:
+            game_winner_id = session.get("player1_id")
+        elif new_p2_wins > new_p1_wins:
+            game_winner_id = session.get("player2_id")
+    
+    # Update session
+    await _db.pvp_sessions.update_one(
+        {"session_id": session.get("session_id")},
+        {
+            "$set": {
+                "player1_wins": new_p1_wins,
+                "player2_wins": new_p2_wins,
+                "current_round_result": round_result,
+                "status": "complete" if game_over else "round_result",
+                "winner_id": game_winner_id,
+                # Reset taps for next round
+                "player1_taps": 0,
+                "player2_taps": 0,
+                "player1_dollar": 0,
+                "player2_dollar": 0,
+                "updated_at": datetime.now(timezone.utc)
+            }
+        }
+    )
+    
+    return {
+        "success": True,
+        "round_result": round_result,
+        "player1_wins": new_p1_wins,
+        "player2_wins": new_p2_wins,
+        "game_over": game_over,
+        "game_winner_id": game_winner_id,
+    }
+
+
 # ============== BATTLE-READY PHOTOS ==============
 @game_router.get("/battle-photos")
 async def get_battle_ready_photos(
