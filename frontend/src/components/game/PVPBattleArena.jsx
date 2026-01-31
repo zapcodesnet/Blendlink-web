@@ -991,6 +991,7 @@ export const PVPBattleArena = ({
               onRoundStart={handleRoundStart}
               onPhotoSelect={handlePhotoSelect}
               onReady={handleReady}
+              sessionId={gameId || pvpRoomId}
             />
           </motion.div>
         )}
