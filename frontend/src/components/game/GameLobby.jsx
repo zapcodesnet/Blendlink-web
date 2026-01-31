@@ -328,8 +328,9 @@ export const GameLobby = ({
     const wsUrl = getWebSocketUrl();
     if (!wsUrl) return;
     
-    // Close existing connection
+    // Close existing connection (mark as intentional)
     if (wsRef.current) {
+      intentionalCloseRef.current = true;
       wsRef.current.close();
     }
     
@@ -340,6 +341,7 @@ export const GameLobby = ({
         console.log('Lobby WebSocket connected');
         setWsConnected(true);
         reconnectAttempts.current = 0;
+        intentionalCloseRef.current = false;
       };
       
       ws.onmessage = handleWebSocketMessage;
@@ -349,16 +351,18 @@ export const GameLobby = ({
         setWsConnected(false);
       };
       
-      ws.onclose = () => {
-        console.log('WebSocket closed');
+      ws.onclose = (event) => {
+        console.log('WebSocket closed, code:', event.code, 'intentional:', intentionalCloseRef.current);
         setWsConnected(false);
         
-        // Attempt reconnection
-        if (reconnectAttempts.current < maxReconnectAttempts) {
+        // Only attempt reconnection if close was NOT intentional
+        if (!intentionalCloseRef.current && reconnectAttempts.current < maxReconnectAttempts) {
           reconnectAttempts.current++;
           const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 10000);
+          console.log(`Reconnecting in ${delay}ms (attempt ${reconnectAttempts.current})`);
           setTimeout(connectWebSocket, delay);
         }
+        intentionalCloseRef.current = false;
       };
       
       wsRef.current = ws;
