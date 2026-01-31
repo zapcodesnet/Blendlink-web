@@ -328,6 +328,17 @@ export default function MobileTappingArena({
     };
   }, [gamePhase]);
 
+  // Store refs to avoid stale closures in polling
+  const handleOpponentWinRef = useRef(handleOpponentWin);
+  useEffect(() => {
+    handleOpponentWinRef.current = handleOpponentWin;
+  }, [handleOpponentWin]);
+  
+  const opponentRequiredTapsRef = useRef(opponentRequiredTaps);
+  useEffect(() => {
+    opponentRequiredTapsRef.current = opponentRequiredTaps;
+  }, [opponentRequiredTaps]);
+  
   // API POLLING FOR TAP STATE (Critical for real-time sync when WebSocket fails)
   useEffect(() => {
     if (gamePhase !== 'active' || !sessionId || isBot) return;
@@ -345,6 +356,12 @@ export default function MobileTappingArena({
             console.log('[Mobile TapPoll] Opponent taps updated:', serverOpponentTaps, 'dollar:', serverOpponentDollar);
             setOpponentTaps(serverOpponentTaps);
             setOpponentDollar(serverOpponentDollar);
+            
+            // Check if opponent has won (critical for sync!)
+            if (serverOpponentTaps >= opponentRequiredTapsRef.current && !winner) {
+              console.log('[Mobile TapPoll] Opponent has won via poll!');
+              handleOpponentWinRef.current?.();
+            }
           }
         }
       } catch (err) {
@@ -353,8 +370,8 @@ export default function MobileTappingArena({
       }
     };
     
-    // Poll every 200ms for responsive updates
-    pollIntervalRef.current = setInterval(pollTapState, 200);
+    // Poll every 150ms for more responsive updates
+    pollIntervalRef.current = setInterval(pollTapState, 150);
     pollTapState(); // Initial poll
     
     return () => {
@@ -362,7 +379,7 @@ export default function MobileTappingArena({
         clearInterval(pollIntervalRef.current);
       }
     };
-  }, [gamePhase, sessionId, isBot, opponentTaps]);
+  }, [gamePhase, sessionId, isBot, opponentTaps, winner]);
 
   // Send taps to API (in addition to WebSocket)
   const sendTapToApi = useCallback(async (tapCount) => {
