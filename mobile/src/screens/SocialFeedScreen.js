@@ -428,6 +428,13 @@ export default function SocialFeedScreen({ navigation }) {
         }
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
+        // Performance optimizations
+        removeClippedSubviews={true}
+        initialNumToRender={5}
+        maxToRenderPerBatch={5}
+        windowSize={7}
+        updateCellsBatchingPeriod={50}
+        onEndReachedThreshold={0.5}
       />
 
       {/* AI Create FAB */}
