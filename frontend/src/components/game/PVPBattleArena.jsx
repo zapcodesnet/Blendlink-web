@@ -678,14 +678,58 @@ export const PVPBattleArena = ({
     
     // Poll every 2 seconds for responsive updates
     const pollInterval = setInterval(pollGameState, 2000);
+    pollGameState(); // Initial poll
     
     return () => clearInterval(pollInterval);
   }, [pvpRoomId, gameId, gamePhase, currentRound, isPlayer1]);
   
-  // Handle photo selection
+  // Handle photo selection - use API when WebSocket is unreliable
   const handlePhotoSelect = useCallback((photo) => {
     setMySelectedPhoto(photo);
   }, []);
+  
+  // Confirm photo selection via API (polling fallback)
+  const confirmPhotoSelection = useCallback(async () => {
+    if (!mySelectedPhoto || !gameId) return;
+    
+    try {
+      const response = await api.post('/photo-game/pvp/select-photo', {
+        session_id: gameId,
+        photo_id: mySelectedPhoto.mint_id
+      });
+      
+      if (response.data.success) {
+        console.log('[PVP] Photo selection confirmed:', response.data);
+        
+        // Check if both players selected
+        if (response.data.both_selected && response.data.round_result) {
+          // Both selected - show round result
+          const result = response.data.round_result;
+          setOpponentSelectedPhoto(isPlayer1 ? result.player2_photo : result.player1_photo);
+          setMyScore(isPlayer1 ? response.data.player1_wins : response.data.player2_wins);
+          setOpponentScore(isPlayer1 ? response.data.player2_wins : response.data.player1_wins);
+          
+          // Determine if we won this round
+          const iWon = (isPlayer1 && result.winner === 'player1') || (!isPlayer1 && result.winner === 'player2');
+          
+          // Show result phase
+          setGamePhase('round_end');
+          
+          if (response.data.game_over) {
+            // Game is complete
+            setTimeout(() => {
+              setGamePhase('result');
+            }, 3000);
+          }
+        }
+        
+        return response.data;
+      }
+    } catch (err) {
+      console.error('[PVP] Failed to confirm selection:', err);
+      toast.error('Failed to confirm selection. Retrying...');
+    }
+  }, [mySelectedPhoto, gameId, isPlayer1]);
   
   // Handle ready
   const handleReady = useCallback(() => {
