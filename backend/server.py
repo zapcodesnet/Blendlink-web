@@ -3012,7 +3012,17 @@ try:
         
         try:
             while True:
-                data = await websocket.receive_json()
+                try:
+                    data = await asyncio.wait_for(websocket.receive_json(), timeout=120)  # 2 minute timeout
+                except asyncio.TimeoutError:
+                    # Send ping to keep connection alive
+                    try:
+                        await websocket.send_json({"type": "ping", "timestamp": datetime.now(timezone.utc).isoformat()})
+                        continue
+                    except Exception:
+                        logger.warning(f"PVP WS: Failed to send ping to {user_id}, connection may be dead")
+                        break
+                
                 msg_type = data.get("type")
                 
                 if msg_type == "join":
