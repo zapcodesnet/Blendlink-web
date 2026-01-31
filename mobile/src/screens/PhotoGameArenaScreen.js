@@ -1563,20 +1563,28 @@ export default function PhotoGameArenaScreen() {
     },
   });
   
+  // Get photos for PVP - from route params (creator) or from session data
+  const pvpPhotos = routePhotos || session?.player1_photos || session?.player2_photos || battlePhotos || [];
+  
   // PVP WebSocket Hook - for actual game play (photo selection, tapping, etc.)
   const {
     isConnected: wsConnected,
     isConnecting: wsConnecting,
+    hasJoined: wsHasJoined,
     error: wsError,
     gameState: wsGameState,
     connect: wsConnect,
     disconnect: wsDisconnect,
+    joinRoom: wsJoinRoom,
     selectPhoto: wsSelectPhoto,
     markReady: wsMarkReady,
     sendTap: wsSendTap,
     requestGameState: wsRequestState,
   } = usePVPWebSocket(pvpRoomId, {
-    autoConnect: !!pvpRoomId,
+    autoConnect: !!pvpRoomId && pvpPhotos.length > 0,
+    username: user?.username || 'Player',
+    photos: pvpPhotos,
+    isCreator: isCreator,
     onMessage: (msg) => {
       console.log('[PVP WS]', msg.type);
       
