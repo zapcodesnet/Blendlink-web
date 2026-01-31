@@ -1774,11 +1774,13 @@ const PhotoGameArena = () => {
     // We also store it in session object for redundancy
     const fullSession = { 
       session_id: sessionId, 
+      game_id: gameData?.game_id,
       ...gameData, 
       pvp_room_id: resolvedPvpRoomId 
     };
     
     // Set states - pvpRoomId first for proper propagation
+    // IMPORTANT: Set all state atomically before changing gameState
     setPvpRoomId(resolvedPvpRoomId);
     setSession(fullSession);
     setPlayerBattlePhotos(myPhotos);
@@ -1787,7 +1789,17 @@ const PhotoGameArena = () => {
     setIsAuctionBattleBot(false);
     setOpponentInfo({ id: opponentId, username: opponentUsername });
     
+    // Also update currentOpenGame with game data to ensure gameId is available
+    if (gameData?.game_id) {
+      setCurrentOpenGame(prev => ({
+        ...prev,
+        ...gameData,
+        pvp_room_id: resolvedPvpRoomId
+      }));
+    }
+    
     console.log('[PhotoGameArena] Setting pvpRoomId:', resolvedPvpRoomId);
+    console.log('[PhotoGameArena] Full session:', fullSession);
     
     // Use PVP battle arena for real-time sync
     setGameState('pvp_battle');
