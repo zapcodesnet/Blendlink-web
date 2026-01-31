@@ -99,15 +99,7 @@ export function usePVPWebSocket(roomId, options = {}) {
       setIsConnected(true);
       setIsConnecting(false);
       setError(null);
-      
-      // Auto-send join message if we have photos
-      if (photos && photos.length > 0 && !joinSentRef.current) {
-        console.log('[usePVPWS] Auto-sending join with', photos.length, 'photos');
-        setTimeout(() => {
-          pvpWebSocket.joinRoom(username || 'Player', photos, isCreator);
-          joinSentRef.current = true;
-        }, 100); // Small delay to ensure connection is stable
-      }
+      // Note: Join message is now sent by the separate useEffect below
     });
 
     const unsubDisconnected = pvpWebSocket.on('disconnected', (data) => {
