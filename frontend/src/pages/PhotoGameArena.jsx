@@ -2233,7 +2233,7 @@ const PhotoGameArena = () => {
           )}
           
           {/* PVP Battle with Real-time WebSocket Sync */}
-          {gameState === 'pvp_battle' && (
+          {gameState === 'pvp_battle' && (pvpRoomId || session?.pvp_room_id) && (
             <motion.div 
               key="pvp_battle" 
               initial={{ opacity: 0, y: 20 }} 
@@ -2241,7 +2241,7 @@ const PhotoGameArena = () => {
               exit={{ opacity: 0 }}
             >
               <PVPBattleArena
-                gameId={currentOpenGame?.game_id}
+                gameId={currentOpenGame?.game_id || session?.game_id}
                 session={session}
                 currentUserId={user?.user_id}
                 currentUsername={user?.username}
@@ -2262,6 +2262,20 @@ const PhotoGameArena = () => {
                   setPvpRoomId(null);
                 }}
               />
+            </motion.div>
+          )}
+          
+          {/* Loading state while waiting for pvpRoomId */}
+          {gameState === 'pvp_battle' && !(pvpRoomId || session?.pvp_room_id) && (
+            <motion.div 
+              key="pvp_loading" 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              className="flex flex-col items-center justify-center min-h-[50vh] space-y-4"
+            >
+              <RefreshCw className="w-12 h-12 text-purple-400 animate-spin" />
+              <p className="text-gray-400 text-lg">Connecting to game server...</p>
+              <p className="text-gray-500 text-sm">If this takes too long, try refreshing the page</p>
             </motion.div>
           )}
           
