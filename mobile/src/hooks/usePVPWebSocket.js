@@ -13,14 +13,20 @@ import { pvpWebSocket } from '../services/pvpWebSocket';
  * 
  * @param {string} roomId - The PVP game room ID
  * @param {Object} options - Configuration options
+ * @param {boolean} options.autoConnect - Auto-connect when roomId is provided
+ * @param {function} options.onMessage - Message callback
+ * @param {string} options.username - Username for join message
+ * @param {Array} options.photos - Photos for join message (required for join)
+ * @param {boolean} options.isCreator - Whether this player is the game creator
  * @returns {Object} WebSocket state and actions
  */
 export function usePVPWebSocket(roomId, options = {}) {
-  const { autoConnect = true, onMessage } = options;
+  const { autoConnect = true, onMessage, username, photos, isCreator = false } = options;
 
   // Connection state
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [hasJoined, setHasJoined] = useState(false);
   const [error, setError] = useState(null);
 
   // Game state from server
@@ -38,7 +44,7 @@ export function usePVPWebSocket(roomId, options = {}) {
     opponentTaps: 0,
     roundResult: null,
     gameResult: null,
-    // NEW: Track used photos and opponent selection status
+    // Track used photos and opponent selection status
     usedPhotoIds: [],        // Photos already used in previous rounds
     opponentHasSelected: false,  // Whether opponent has selected their photo
     mySelectedPhotoId: null,     // My current selection (before confirmed)
@@ -46,6 +52,7 @@ export function usePVPWebSocket(roomId, options = {}) {
 
   // Refs for cleanup
   const unsubscribesRef = useRef([]);
+  const joinSentRef = useRef(false);
 
   // Connect to room
   const connect = useCallback(async () => {
@@ -53,6 +60,7 @@ export function usePVPWebSocket(roomId, options = {}) {
 
     setIsConnecting(true);
     setError(null);
+    joinSentRef.current = false;
 
     try {
       await pvpWebSocket.connect(roomId);
@@ -66,7 +74,20 @@ export function usePVPWebSocket(roomId, options = {}) {
   const disconnect = useCallback(() => {
     pvpWebSocket.disconnect();
     setIsConnected(false);
+    setHasJoined(false);
+    joinSentRef.current = false;
   }, []);
+
+  // Join room with photos - MUST be called after connect
+  const joinRoom = useCallback((joinUsername, joinPhotos, joinIsCreator) => {
+    if (joinSentRef.current) {
+      console.log('[usePVPWS] Join already sent');
+      return false;
+    }
+    joinSentRef.current = true;
+    return pvpWebSocket.joinRoom(joinUsername || username, joinPhotos || photos, joinIsCreator ?? isCreator);
+  }, [username, photos, isCreator]);
+
 
   // Setup event listeners
   useEffect(() => {
