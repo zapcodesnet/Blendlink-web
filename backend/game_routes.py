@@ -598,7 +598,7 @@ async def start_pvp_game(
     return {
         "success": True,
         "session_id": session.session_id,
-        "session": session.model_dump(),
+        "session": session.model_dump(mode='json'),
         "pvp_room_id": room_id,
         "websocket_url": f"/api/ws/pvp-game/{room_id}" if room_id else None,
     }
