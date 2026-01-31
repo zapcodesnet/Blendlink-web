@@ -7,6 +7,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { pvpWebSocket } from '../services/pvpWebSocket';
+import { photoGameAPI } from '../services/api';
 
 /**
  * Hook for PVP WebSocket connection
