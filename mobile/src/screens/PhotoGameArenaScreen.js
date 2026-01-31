@@ -3270,12 +3270,8 @@ const styles = StyleSheet.create({
   nextRoundInfoHint: {
     fontSize: 13,
   },
-  // PVP Waiting content container
-  pvpWaitingContent: {
-    paddingBottom: 40,
-  },
   // Lobby styles
-  connectionBadge: {
+  lobbyConnectionBadge: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
@@ -3303,15 +3299,15 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 8,
   },
-  countdownContainer: {
+  lobbyCountdownContainer: {
     alignItems: 'center',
     marginVertical: 20,
   },
-  countdownText: {
+  lobbyCountdownText: {
     fontSize: 32,
     fontWeight: 'bold',
   },
-  readyButton: {
+  lobbyReadyButton: {
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 12,
@@ -3320,7 +3316,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginHorizontal: 24,
   },
-  readyButtonText: {
+  lobbyReadyButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: 'bold',
