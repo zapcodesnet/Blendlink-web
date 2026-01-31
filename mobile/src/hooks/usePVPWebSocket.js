@@ -313,7 +313,20 @@ export function usePVPWebSocket(roomId, options = {}) {
       unsubscribesRef.current.forEach(unsub => unsub?.());
       unsubscribesRef.current = [];
     };
-  }, [roomId, autoConnect, connect, onMessage, username, photos, isCreator]);
+  }, [roomId, autoConnect, connect, onMessage]);
+
+  // CRITICAL: Send join message when connected AND photos are available
+  // This is separate from the connection useEffect to handle the case where
+  // photos become available AFTER the WebSocket connection is established
+  useEffect(() => {
+    if (isConnected && photos && photos.length > 0 && !joinSentRef.current && !hasJoined) {
+      console.log('[usePVPWS] Sending join message with', photos.length, 'photos, isCreator:', isCreator);
+      setTimeout(() => {
+        pvpWebSocket.joinRoom(username || 'Player', photos, isCreator);
+        joinSentRef.current = true;
+      }, 100); // Small delay to ensure connection is fully stable
+    }
+  }, [isConnected, photos, username, isCreator, hasJoined]);
 
   // Cleanup on unmount
   useEffect(() => {
