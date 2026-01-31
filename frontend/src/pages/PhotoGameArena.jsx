@@ -2052,6 +2052,23 @@ const PhotoGameArena = () => {
                   </Button>
                 </motion.div>
                 
+                {/* Watch Live Battles - NEW */}
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button
+                    onClick={() => setGameState('live_battles')}
+                    className="w-full py-6 text-lg font-bold bg-gradient-to-r from-red-600 via-rose-600 to-pink-600 shadow-lg relative overflow-hidden"
+                    size="lg"
+                    data-testid="watch-live-btn"
+                  >
+                    <div className="absolute top-2 right-2">
+                      <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                    </div>
+                    <Radio className="w-6 h-6 mr-2" />
+                    Watch Live Battles
+                    <Eye className="w-6 h-6 ml-2" />
+                  </Button>
+                </motion.div>
+                
                 <Button
                   onClick={() => {
                     // Direct to Bot Battle selector
