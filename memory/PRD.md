@@ -1,6 +1,79 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 31, 2026 (CRITICAL Mobile PVP Fix - Session 70)
+## Latest Update: January 31, 2026 (PVP Tap Sync & Performance Optimization - Session 71)
+
+---
+
+## SESSION 71: PVP Tap Synchronization Fix & Performance Optimization ✅
+
+### Date: January 31, 2026
+
+### Issues Addressed:
+1. **PVP Tap Synchronization** - Opponent taps showing as $0 during battle
+2. **Performance Optimization** - Lag and unresponsiveness across app
+3. **Mobile Touch Responsiveness** - Screen taps not responding
+
+### Root Cause Analysis:
+The WebSocket infrastructure (Kubernetes ingress) terminates connections prematurely (close code 1005). API polling was implemented as a workaround, but needed optimization:
+1. Polling interval was 200ms - too slow for real-time tap sync
+2. Opponent win detection wasn't in the polling loop
+3. Stale closures in useCallback caused outdated state reads
+4. Mobile FlatLists lacked performance optimizations
+
+### Fixes Applied:
+
+#### 1. TappingArena.jsx (Web)
+- Removed duplicate `sendTapToApi` function
+- Added refs to avoid stale closures: `opponentRequiredTapsRef`, `handleOpponentWinRef`
+- **Faster polling**: Reduced from 200ms to 150ms for more responsive sync
+- Added opponent win detection in polling loop
+
+#### 2. MobileTappingArena.js (Mobile)
+- Added refs to avoid stale closures
+- **Faster polling**: 150ms interval
+- Added opponent win detection in polling loop
+- **Improved touch response**: Changed from `onPress` to `onPressIn` for immediate tap feedback
+- Added visual feedback with pressed state styling
+- Added `android_disableSound` and `unstable_pressDelay={0}` for faster response
+
+#### 3. SocialFeedScreen.js (Mobile)
+- Added FlatList performance optimizations:
+  - `removeClippedSubviews={true}`
+  - `initialNumToRender={5}`
+  - `maxToRenderPerBatch={5}`
+  - `windowSize={7}`
+  - `updateCellsBatchingPeriod={50}`
+
+#### 4. MintedPhotosScreen.js (Mobile)
+- Added FlatList performance optimizations:
+  - `removeClippedSubviews={true}`
+  - `initialNumToRender={6}`
+  - `maxToRenderPerBatch={4}`
+  - `windowSize={5}`
+  - `getItemLayout` for list mode
+
+### Testing Results:
+- **Backend Tests**: 100% pass rate (10/10 tests)
+- **Frontend Tests**: 100% pass rate
+- **PVP Tap Sync Verified**: API correctly returns opponent taps and dollar values
+- Fixed bug in FacebookShareOverlay.jsx (API response structure handling)
+
+### Files Modified:
+- `/app/frontend/src/components/game/TappingArena.jsx`
+- `/app/mobile/src/components/MobileTappingArena.js`
+- `/app/mobile/src/screens/SocialFeedScreen.js`
+- `/app/mobile/src/screens/MintedPhotosScreen.js`
+
+### Test Reports:
+- `/app/test_reports/iteration_88.json` - Backend PVP tap sync tests
+- `/app/test_reports/iteration_89.json` - Frontend page load tests
+
+### Status: USER VERIFICATION PENDING
+User should test 2-device PVP to confirm tap sync works correctly.
+
+---
+
+## SESSION 70: Mobile PVP Join Message Race Condition Fix ✅
 
 ---
 
