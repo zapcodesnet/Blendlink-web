@@ -633,29 +633,6 @@ export const TappingArena = ({
     };
   }, [gamePhase, sessionId, isBot, opponentTaps]);
   
-  // Send taps to API (in addition to WebSocket)
-  const sendTapToApi = useCallback(async (tapCount) => {
-    if (!sessionId || isBot) return;
-    
-    try {
-      const response = await api.post('/photo-game/pvp/tap', {
-        session_id: sessionId,
-        tap_count: tapCount,
-      });
-      
-      if (response.data) {
-        // Update dollar display from API response
-        setPlayerDollar(response.data.my_dollar || 0);
-        if (response.data.opponent_taps > opponentTaps) {
-          setOpponentTaps(response.data.opponent_taps);
-          setOpponentDollar(response.data.opponent_dollar || 0);
-        }
-      }
-    } catch (err) {
-      console.debug('[TapAPI] Error:', err.message);
-    }
-  }, [sessionId, isBot, opponentTaps]);
-  
   // Handle player win
   const handlePlayerWin = useCallback(() => {
     if (winner) return; // Prevent duplicate
