@@ -1644,9 +1644,10 @@ export default function PhotoGameArenaScreen() {
       const response = await photoGameAPI.joinOpenGame(joinedGame.game_id, selectedPhotoIds);
       
       if (response.success) {
-        // Get pvp_room_id from response or game data
-        const roomId = response.pvp_room_id || response.game?.pvp_room_id || joinedGame.game_id;
-        setPvpRoomId(roomId);
+        // IMPORTANT: After joining, connect to LOBBY WebSocket (not PVP yet)
+        // The PVP room is only created after countdown completes
+        const gameId = response.game?.game_id || joinedGame.game_id;
+        setLobbyGameId(gameId); // This triggers lobby WebSocket connection
         setSession(response.game || response);
         setGameState('pvp_lobby');
         
