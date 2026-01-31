@@ -1869,6 +1869,108 @@ export default function PhotoGameArenaScreen() {
           />
         )}
         
+        {/* PVP Lobby - Waiting for both players to ready */}
+        {gameState === 'pvp_lobby' && (
+          <ScrollView 
+            style={styles.pvpWaitingContainer}
+            contentContainerStyle={styles.pvpWaitingContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <Text style={[styles.pvpWaitingTitle, { color: colors.text }]}>
+              ⚔️ Battle Lobby
+            </Text>
+            
+            {/* Connection status */}
+            <View style={[styles.connectionBadge, { 
+              backgroundColor: lobbyConnected ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+              borderColor: lobbyConnected ? '#22C55E' : '#EF4444',
+            }]}>
+              <Text style={{ color: lobbyConnected ? '#22C55E' : '#EF4444', fontWeight: '600' }}>
+                {lobbyConnecting ? '⏳ Connecting...' : lobbyConnected ? '🟢 Connected' : '🔴 Disconnected'}
+              </Text>
+            </View>
+            
+            <Text style={[styles.pvpWaitingSubtitle, { color: colors.textMuted, marginTop: 16 }]}>
+              {isCreator 
+                ? 'Waiting for opponent to join...' 
+                : lobbyState.opponentJoined 
+                  ? 'Both players connected! Ready up to start.'
+                  : 'Waiting for creator...'}
+            </Text>
+            
+            {/* Ready status */}
+            <View style={styles.readyStatusContainer}>
+              <View style={[styles.readyBox, { 
+                backgroundColor: lobbyState.creatorReady ? 'rgba(34, 197, 94, 0.2)' : 'rgba(100, 100, 100, 0.2)',
+                borderColor: lobbyState.creatorReady ? '#22C55E' : '#666',
+              }]}>
+                <Text style={[styles.readyLabel, { color: colors.text }]}>Creator</Text>
+                <Text style={{ color: lobbyState.creatorReady ? '#22C55E' : '#888', fontSize: 24 }}>
+                  {lobbyState.creatorReady ? '✅' : '⏳'}
+                </Text>
+              </View>
+              
+              <Text style={{ color: colors.gold, fontSize: 24, fontWeight: 'bold', marginHorizontal: 16 }}>VS</Text>
+              
+              <View style={[styles.readyBox, { 
+                backgroundColor: lobbyState.opponentReady ? 'rgba(34, 197, 94, 0.2)' : 'rgba(100, 100, 100, 0.2)',
+                borderColor: lobbyState.opponentReady ? '#22C55E' : '#666',
+              }]}>
+                <Text style={[styles.readyLabel, { color: colors.text }]}>Opponent</Text>
+                <Text style={{ color: lobbyState.opponentReady ? '#22C55E' : '#888', fontSize: 24 }}>
+                  {lobbyState.opponentReady ? '✅' : '⏳'}
+                </Text>
+              </View>
+            </View>
+            
+            {/* Countdown display */}
+            {lobbyState.countdownActive && lobbyState.countdown && (
+              <View style={styles.countdownContainer}>
+                <Text style={[styles.countdownText, { color: colors.gold }]}>
+                  Starting in {lobbyState.countdown}...
+                </Text>
+              </View>
+            )}
+            
+            {/* Ready button */}
+            {lobbyConnected && !lobbyState.countdownActive && (
+              <TouchableOpacity 
+                style={[
+                  styles.readyButton, 
+                  { 
+                    backgroundColor: (isCreator ? lobbyState.creatorReady : lobbyState.opponentReady) 
+                      ? '#22C55E' 
+                      : colors.primary,
+                    opacity: (isCreator ? lobbyState.creatorReady : lobbyState.opponentReady) ? 0.6 : 1
+                  }
+                ]}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                  lobbyMarkReady();
+                }}
+                disabled={(isCreator ? lobbyState.creatorReady : lobbyState.opponentReady)}
+              >
+                <Text style={styles.readyButtonText}>
+                  {(isCreator ? lobbyState.creatorReady : lobbyState.opponentReady) 
+                    ? '✓ Ready!' 
+                    : '🎮 Ready to Battle!'}
+                </Text>
+              </TouchableOpacity>
+            )}
+            
+            {/* Leave button */}
+            <TouchableOpacity 
+              style={[styles.leaveButton, { borderColor: colors.error }]}
+              onPress={() => {
+                lobbyDisconnect();
+                navigation.goBack();
+              }}
+            >
+              <Text style={{ color: colors.error, fontWeight: '600' }}>Leave Lobby</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        )}
+        
         {/* PVP Waiting for opponent */}
         {(gameState === 'pvp_waiting' || gameState === 'pvp_selecting') && (
           <ScrollView 
