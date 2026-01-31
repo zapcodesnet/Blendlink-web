@@ -1566,7 +1566,15 @@ export default function PhotoGameArenaScreen() {
   // Get photos for PVP - from route params (creator) or from session data
   const pvpPhotos = routePhotos || session?.player1_photos || session?.player2_photos || battlePhotos || [];
   
+  // Debug: Log when pvpPhotos change
+  useEffect(() => {
+    console.log('[Mobile] pvpPhotos updated:', pvpPhotos?.length, 'photos, pvpRoomId:', pvpRoomId);
+  }, [pvpPhotos, pvpRoomId]);
+  
   // PVP WebSocket Hook - for actual game play (photo selection, tapping, etc.)
+  // IMPORTANT: Only auto-connect when we have BOTH roomId AND photos
+  const shouldConnectPVP = !!pvpRoomId && pvpPhotos.length >= 5;
+  
   const {
     isConnected: wsConnected,
     isConnecting: wsConnecting,
@@ -1580,8 +1588,8 @@ export default function PhotoGameArenaScreen() {
     markReady: wsMarkReady,
     sendTap: wsSendTap,
     requestGameState: wsRequestState,
-  } = usePVPWebSocket(pvpRoomId, {
-    autoConnect: !!pvpRoomId && pvpPhotos.length > 0,
+  } = usePVPWebSocket(shouldConnectPVP ? pvpRoomId : null, {
+    autoConnect: shouldConnectPVP,
     username: user?.username || 'Player',
     photos: pvpPhotos,
     isCreator: isCreator,
