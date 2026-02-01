@@ -9,11 +9,13 @@
  * 
  * Design Rules:
  * - Front: Clean image ONLY (no overlays, text, icons on image)
- * - Back: All stats displayed BELOW the image
+ * - Back: All stats displayed BELOW the image including new progression stats
+ * - XP meter bar shown below Base Value
+ * - Golden sparkling animation for Seniority Level 60
  * - Uniform design across all screens
  */
 
-import React, { useState, memo, useRef } from 'react';
+import React, { useState, memo, useRef, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -21,7 +23,8 @@ import {
   StyleSheet, 
   Pressable, 
   Animated,
-  Dimensions 
+  Dimensions,
+  ScrollView 
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
