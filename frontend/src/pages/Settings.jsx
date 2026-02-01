@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../App";
 import api from "../services/api";
@@ -12,21 +12,181 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   ArrowLeft, User, Bell, Moon, Shield, HelpCircle, 
   LogOut, ChevronRight, Camera, Globe, Eye, EyeOff,
-  Lock, UserX, Users, Loader2, X, Check, Image
+  Lock, UserX, Users, Loader2, X, Check, Image,
+  Move, ZoomIn, ZoomOut, RotateCcw
 } from "lucide-react";
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
-// Profile Picture Selector Modal
+// Image Position Editor Component
+const ImagePositionEditor = ({ imageUrl, onPositionChange, initialPosition }) => {
+  const containerRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [position, setPosition] = useState(initialPosition || { x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [startPos, setStartPos] = useState({ x: 0, y: 0 });
+  
+  const handleMouseDown = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+    setStartPos({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y
+    });
+  };
+  
+  const handleTouchStart = (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    setIsDragging(true);
+    setStartPos({
+      x: touch.clientX - position.x,
+      y: touch.clientY - position.y
+    });
+  };
+  
+  const handleMove = useCallback((clientX, clientY) => {
+    if (!isDragging) return;
+    const newX = clientX - startPos.x;
+    const newY = clientY - startPos.y;
+    // Limit movement to reasonable bounds
+    const maxMove = 150;
+    const boundedX = Math.max(-maxMove, Math.min(maxMove, newX));
+    const boundedY = Math.max(-maxMove, Math.min(maxMove, newY));
+    setPosition({ x: boundedX, y: boundedY });
+    onPositionChange?.({ x: boundedX, y: boundedY, zoom });
+  }, [isDragging, startPos, zoom, onPositionChange]);
+  
+  const handleMouseMove = useCallback((e) => {
+    handleMove(e.clientX, e.clientY);
+  }, [handleMove]);
+  
+  const handleTouchMove = useCallback((e) => {
+    const touch = e.touches[0];
+    handleMove(touch.clientX, touch.clientY);
+  }, [handleMove]);
+  
+  const handleEnd = () => {
+    setIsDragging(false);
+  };
+  
+  const handleZoomIn = () => {
+    const newZoom = Math.min(zoom + 0.1, 2);
+    setZoom(newZoom);
+    onPositionChange?.({ ...position, zoom: newZoom });
+  };
+  
+  const handleZoomOut = () => {
+    const newZoom = Math.max(zoom - 0.1, 0.5);
+    setZoom(newZoom);
+    onPositionChange?.({ ...position, zoom: newZoom });
+  };
+  
+  const handleReset = () => {
+    setPosition({ x: 0, y: 0 });
+    setZoom(1);
+    onPositionChange?.({ x: 0, y: 0, zoom: 1 });
+  };
+  
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleEnd);
+      window.addEventListener('touchmove', handleTouchMove);
+      window.addEventListener('touchend', handleEnd);
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleEnd);
+        window.removeEventListener('touchmove', handleTouchMove);
+        window.removeEventListener('touchend', handleEnd);
+      };
+    }
+  }, [isDragging, handleMouseMove, handleTouchMove]);
+  
+  return (
+    <div className="flex flex-col items-center gap-4">
+      {/* Circle Preview Container */}
+      <div 
+        ref={containerRef}
+        className="relative w-48 h-48 rounded-full overflow-hidden border-4 border-purple-500 shadow-lg cursor-move bg-gray-800"
+        onMouseDown={handleMouseDown}
+        onTouchStart={handleTouchStart}
+        data-testid="profile-picture-editor"
+      >
+        <img
+          src={imageUrl}
+          alt="Profile preview"
+          className="absolute w-full h-full object-cover pointer-events-none select-none"
+          style={{
+            transform: `translate(${position.x}px, ${position.y}px) scale(${zoom})`,
+            transformOrigin: 'center',
+          }}
+          draggable={false}
+        />
+        {/* Drag overlay indicator */}
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 hover:opacity-100 transition-opacity">
+          <Move className="w-8 h-8 text-white drop-shadow-lg" />
+        </div>
+      </div>
+      
+      {/* Position hint */}
+      <p className="text-gray-400 text-sm text-center">
+        Drag image to position • Use controls to zoom
+      </p>
+      
+      {/* Zoom Controls */}
+      <div className="flex items-center gap-3">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={handleZoomOut}
+          className="h-10 w-10 border-gray-600"
+          data-testid="zoom-out-btn"
+        >
+          <ZoomOut className="w-5 h-5" />
+        </Button>
+        <div className="px-3 py-1 bg-gray-800 rounded-lg text-sm min-w-[60px] text-center">
+          {Math.round(zoom * 100)}%
+        </div>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={handleZoomIn}
+          className="h-10 w-10 border-gray-600"
+          data-testid="zoom-in-btn"
+        >
+          <ZoomIn className="w-5 h-5" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={handleReset}
+          className="h-10 w-10 border-gray-600"
+          title="Reset position"
+          data-testid="reset-position-btn"
+        >
+          <RotateCcw className="w-5 h-5" />
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+// Profile Picture Selector Modal with Position Editor
 const ProfilePictureModal = ({ isOpen, onClose, onSelect, currentUserId }) => {
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [step, setStep] = useState('select'); // 'select' or 'position'
+  const [imagePosition, setImagePosition] = useState({ x: 0, y: 0, zoom: 1 });
   
   useEffect(() => {
     if (isOpen) {
       fetchMintedPhotos();
+      setStep('select');
+      setSelectedPhoto(null);
+      setImagePosition({ x: 0, y: 0, zoom: 1 });
     }
   }, [isOpen]);
   
