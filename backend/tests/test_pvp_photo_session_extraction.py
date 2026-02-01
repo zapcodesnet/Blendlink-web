@@ -126,7 +126,8 @@ class TestPVPPhotoSessionExtraction:
         user2_photo_ids = [p.get("mint_id") for p in user2_photos]
         print(f"User 2 joining game with photos: {user2_photo_ids}")
         
-        join_response = user2_session.post(f"{BASE_URL}/api/photo-game/open-games/{game_id}/join", json={
+        join_response = user2_session.post(f"{BASE_URL}/api/photo-game/open-games/join", json={
+            "game_id": game_id,
             "photo_ids": user2_photo_ids
         })
         assert join_response.status_code == 200, f"Join game failed: {join_response.text}"
@@ -210,7 +211,8 @@ class TestPVPPhotoSessionExtraction:
         game_id = create_response.json().get("game_id")
         
         # Join game
-        join_response = user2_session.post(f"{BASE_URL}/api/photo-game/open-games/{game_id}/join", json={
+        join_response = user2_session.post(f"{BASE_URL}/api/photo-game/open-games/join", json={
+            "game_id": game_id,
             "photo_ids": user2_photo_ids
         })
         assert join_response.status_code == 200
@@ -327,7 +329,8 @@ class TestPVPPhotoSessionExtraction:
         game_id = create_response.json().get("game_id")
         
         # Join game
-        join_response = user2_session.post(f"{BASE_URL}/api/photo-game/open-games/{game_id}/join", json={
+        join_response = user2_session.post(f"{BASE_URL}/api/photo-game/open-games/join", json={
+            "game_id": game_id,
             "photo_ids": user2_photo_ids
         })
         assert join_response.status_code == 200
@@ -428,7 +431,8 @@ class TestTapSyncAfterPhotoFix:
         game_id = create_response.json().get("game_id")
         
         # Join game
-        join_response = user2_session.post(f"{BASE_URL}/api/photo-game/open-games/{game_id}/join", json={
+        join_response = user2_session.post(f"{BASE_URL}/api/photo-game/open-games/join", json={
+            "game_id": game_id,
             "photo_ids": user2_photo_ids
         })
         assert join_response.status_code == 200
