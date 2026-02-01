@@ -535,15 +535,18 @@ export const TappingArena = ({
       if (response.data) {
         // Update dollar display from API response
         setPlayerDollar(response.data.my_dollar || 0);
-        if (response.data.opponent_taps > opponentTaps) {
-          setOpponentTaps(response.data.opponent_taps);
+        // Use ref to avoid stale closure - always update if server has newer data
+        const serverOpponentTaps = response.data.opponent_taps || 0;
+        if (serverOpponentTaps !== opponentTapsRef.current) {
+          console.log('[TapAPI] Opponent taps updated from tap response:', serverOpponentTaps);
+          setOpponentTaps(serverOpponentTaps);
           setOpponentDollar(response.data.opponent_dollar || 0);
         }
       }
     } catch (err) {
       console.debug('[TapAPI] Error:', err.message);
     }
-  }, [sessionId, isBot, opponentTaps]);
+  }, [sessionId, isBot]);
   
   // Handle player tap
   const handleTap = useCallback((e) => {
