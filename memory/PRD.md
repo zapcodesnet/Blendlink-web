@@ -10,8 +10,9 @@ Blendlink is a minted photo game platform where users mint photos with AI-analyz
 - AI analysis across 11 weighted categories (max $1B total)
 - Face detection + optional selfie match for authenticity bonus
 - Scenery classification (Natural, Water, Man-made, Neutral)
+- **EXIF Orientation Preservation**: Maintains original landscape/portrait orientation
 
-### NEW Progression System
+### Progression System
 Stats on back of photo card (below Authenticity):
 1. **Stars** - Milestone bonuses at L10-L50 (+$1M + 10% each)
 2. **Level** - XP-based progression with bonus percentages
@@ -30,77 +31,78 @@ Stats on back of photo card (below Authenticity):
 - **Bot Mode**: AI opponents (Easy, Medium, Hard, Expert)
 - **Stamina System**: 24/24 max, -1 per win, -2 per loss, +1/hour regen
 
-## UI/UX Fixes Implemented (Feb 2026)
+## Latest Fixes (Feb 2026)
 
-### 1. Referral Link Auto-Populate
-- ✅ URL param `?ref=CODE` auto-populates registration form
-- ✅ Field is locked (readonly) when populated from URL
-- ✅ Green styling with checkmark icon
-- ✅ Message: "✓ Referral code applied!"
+### P0 - PVP Tap Sync Bug ✅
+- Added tap fields to PVPGameSession model: `player1_taps`, `player2_taps`, `player1_dollar`, `player2_dollar`
+- All fields initialize to 0 when session is created
+- Round reset properly clears tap state
+- tap-state endpoint returns all fields with defaults
 
-### 2. Hide Bottom Nav in Game States
-- ✅ NavContext created in App.js
-- ✅ Bottom nav hidden during: pvp_lobby, pvp_browse, pvp_battle, auction_battle, rps_auction, pvp_create, match_history, live_battles, etc.
-- ✅ Nav restored when exiting game views
+### P1 - Profile Picture Controls ✅
+- Two-step flow: Select photo → Adjust position
+- **ImagePositionEditor** component features:
+  - Circular preview with purple border
+  - Drag to reposition image
+  - Zoom controls: -, +, reset
+  - Zoom percentage display (50% - 200%)
+  - Position data saved: {x, y, zoom}
 
-### 3. Auto-Refresh & Highlight New Minted Photo
-- ✅ After minting: auto-refresh photos list
-- ✅ Newly minted photo has glowing purple animation
-- ✅ Sparkle particles around new photo
-- ✅ "✨ NEW" badge in top-right corner
-- ✅ Animation clears when user clicks/views the photo
+### P1 - Image Orientation ✅
+- EXIF orientation handling in minting upload
+- Supports all 8 EXIF orientation values
+- Automatically corrects rotation/flip before storage
+- Preserves landscape/portrait as uploaded
 
-### 4. Casino Access Restriction
-- ✅ Casino accessible to admin users only
-- ✅ Non-admin users see "🚧 Coming Soon" on Games page
-- ✅ /casino page shows restricted message for non-admin
-
-### 5. Scrolling Fixes
-- ✅ Landing page: fully scrollable
-- ✅ Minted-photos page: fully scrollable
-- ✅ Photo-game page: fully scrollable
-- ✅ Touch and mouse scroll working
-
-### 6. Photo Data Sync (photo-game ↔ minted-photos)
-- Both pages fetch from same API endpoints
-- Full-stats endpoint returns all progression data
-- Real-time updates via API polling
+### Previous Fixes
+- Referral link auto-populate & lock
+- Hide bottom nav in game states
+- Auto-refresh & highlight new minted photo
+- Casino admin-only access
+- Scrolling fixes on all pages
 
 ## Architecture
 
 ### Backend (FastAPI + MongoDB)
 - `/app/backend/minting_system.py` - Core minting logic
-- `/app/backend/minting_routes.py` - API endpoints
+- `/app/backend/minting_routes.py` - API endpoints + EXIF handling
 - `/app/backend/game_routes.py` - PVP/Bot battle endpoints
+- `/app/backend/photo_game.py` - PVPGameSession model
 
 ### Frontend (React)
 - `/app/frontend/src/App.js` - NavContext, AuthContext
-- `/app/frontend/src/pages/Register.jsx` - Referral auto-populate
-- `/app/frontend/src/pages/MintedPhotos.jsx` - Photo gallery with highlighting
-- `/app/frontend/src/pages/PhotoGameArena.jsx` - Game arena with nav hiding
-- `/app/frontend/src/pages/Games.jsx` - Casino restriction
-- `/app/frontend/src/pages/Casino.jsx` - Admin-only access check
+- `/app/frontend/src/pages/Settings.jsx` - ImagePositionEditor component
+- `/app/frontend/src/pages/MintedPhotos.jsx` - Photo gallery
+- `/app/frontend/src/pages/PhotoGameArena.jsx` - Game arena
 
 ### Mobile (React Native/Expo)
 - `/app/mobile/src/components/UnifiedPhotoCard.js` - Photo card
 
+## API Endpoints
+
+### Profile
+- `PUT /api/users/me/profile-picture` - Update with position data
+
+### Minting
+- `POST /api/minting/photo/upload` - Upload with EXIF handling
+- `GET /api/minting/photo/{mint_id}/full-stats` - All progression stats
+
+### PVP
+- `GET /api/photo-game/pvp/tap-state/{session_id}` - Get tap counts
+- `POST /api/photo-game/pvp/tap` - Submit tap action
+
+## Test Results
+- Latest test: /app/test_reports/iteration_97.json
+- Backend: 100% pass rate (10/10 tests)
+- Frontend: 100% pass rate
+
 ## Test Credentials
-- Admin: test@blendlink.com / admin
-- User: test@example.com / test123
+- User 1: test@blendlink.com / admin
+- User 2: test@example.com / test123
 
 ## Known Issues / Backlog
 
-### P0 - Critical
-- PVP tap synchronization (ongoing investigation)
-
-### P1 - High Priority
+### Remaining
+- Full PVP end-to-end testing (requires 2 players)
 - Performance optimization on heavy pages
-
-### P2 - Medium Priority
-- Profile picture drag/position controls
-- Image orientation preservation during minting
-
-## Testing Status
-- Latest test report: /app/test_reports/iteration_96.json
-- Frontend tests: 100% pass rate (9/9 tests)
-- All UI/UX fixes verified working
+- Profile picture single/double click behavior
