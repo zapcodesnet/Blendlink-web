@@ -256,9 +256,7 @@ class TestPVPPhotoSelectionFix:
         
         # Step 9: Finish round and verify winner
         print("\n=== Step 9: Finish Round ===")
-        finish_response = user1_session.post(f"{BASE_URL}/api/photo-game/pvp/finish-round", json={
-            "session_id": session_id
-        })
+        finish_response = user1_session.post(f"{BASE_URL}/api/photo-game/pvp/finish-round?session_id={session_id}")
         assert finish_response.status_code == 200, f"Finish round failed: {finish_response.text}"
         finish_data = finish_response.json()
         
