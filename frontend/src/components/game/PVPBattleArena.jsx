@@ -620,10 +620,16 @@ export const PVPBattleArena = ({
         // Still connecting, wait
         console.log('WebSocket still connecting...');
       } else if (!wsConnected && !reconnecting && gamePhase !== 'result') {
-        // Not connected and not reconnecting - trigger reconnect
-        console.log('WebSocket not open and not reconnecting - triggering reconnect');
+        // Not connected and not reconnecting - check if we should try again or switch to polling
         if (reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
+          console.log(`WebSocket not open - attempting reconnect ${reconnectAttempts.current + 1}/${MAX_RECONNECT_ATTEMPTS}`);
           connectWebSocketRef.current?.(true);
+        } else if (!pollingMode) {
+          // Max attempts reached - switch to polling mode permanently
+          console.log('Max reconnect attempts reached - switching to polling mode');
+          setPollingMode(true);
+          setReconnecting(false);
+          showToastThrottled('info', 'Connection unstable - using backup sync');
         }
       }
     }, 10000); // Every 10 seconds
