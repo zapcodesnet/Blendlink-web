@@ -216,7 +216,7 @@ class TestPVPPhotoSelectionFix:
         # User 1 taps 30 times
         tap1_response = user1_session.post(f"{BASE_URL}/api/photo-game/pvp/tap", json={
             "session_id": session_id,
-            "taps": 30
+            "tap_count": 30
         })
         assert tap1_response.status_code == 200, f"User 1 tap failed: {tap1_response.text}"
         tap1_data = tap1_response.json()
@@ -225,7 +225,7 @@ class TestPVPPhotoSelectionFix:
         # User 2 taps 20 times (less than User 1)
         tap2_response = user2_session.post(f"{BASE_URL}/api/photo-game/pvp/tap", json={
             "session_id": session_id,
-            "taps": 20
+            "tap_count": 20
         })
         assert tap2_response.status_code == 200, f"User 2 tap failed: {tap2_response.text}"
         tap2_data = tap2_response.json()
