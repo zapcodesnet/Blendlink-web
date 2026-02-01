@@ -192,11 +192,13 @@ const ProtectedRoute = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{ user, setUser: updateUser, refreshUser }}>
-      <div className="pb-20 md:pb-0 md:pl-20">
-        {children}
-        <BottomNav />
-        <BackToGroupFAB />
-      </div>
+      <NavContext.Provider value={{ hideNav, setHideNav }}>
+        <div className="pb-20 md:pb-0 md:pl-20">
+          {children}
+          {!hideNav && <BottomNav />}
+          <BackToGroupFAB />
+        </div>
+      </NavContext.Provider>
     </AuthContext.Provider>
   );
 };
