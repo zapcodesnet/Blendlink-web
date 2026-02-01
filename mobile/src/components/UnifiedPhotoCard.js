@@ -623,6 +623,29 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 10,
   },
+  sparkleOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#FBBF24',
+    zIndex: 10,
+  },
+  sparkleIcon: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    fontSize: 16,
+  },
+  sparkleIconBack: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    fontSize: 14,
+  },
   cardFace: {
     backfaceVisibility: 'hidden',
   },
@@ -737,19 +760,108 @@ const styles = StyleSheet.create({
   },
   backContent: {
     padding: 8,
+    maxHeight: 300,
   },
-  backValueContainer: {
+  // Base Value Section
+  baseValueSection: {
     alignItems: 'center',
-    marginBottom: 8,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#374151',
   },
-  backDollarValue: {
-    fontSize: 20,
+  baseValueLabel: {
+    fontSize: 9,
+    color: '#6B7280',
+    marginBottom: 2,
+  },
+  baseValueAmount: {
+    fontSize: 16,
     fontWeight: 'bold',
   },
-  backValueLabel: {
-    fontSize: 10,
+  // XP Meter Section
+  xpMeterSection: {
+    backgroundColor: 'rgba(55, 65, 81, 0.5)',
+    borderRadius: 8,
+    padding: 8,
+    marginTop: 8,
+  },
+  xpHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  xpLevelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  xpLevelText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  xpCountText: {
+    fontSize: 9,
+    color: '#9CA3AF',
+  },
+  xpBarContainer: {
+    marginTop: 4,
+  },
+  xpBarBg: {
+    height: 10,
+    backgroundColor: '#374151',
+    borderRadius: 5,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  xpBarFill: {
+    height: '100%',
+    borderRadius: 5,
+  },
+  xpBarPercent: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    textAlign: 'center',
+    fontSize: 7,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    lineHeight: 10,
+  },
+  xpBarFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 2,
+  },
+  xpToNext: {
+    fontSize: 8,
     color: '#6B7280',
   },
+  levelBonusText: {
+    fontSize: 8,
+    color: '#22C55E',
+  },
+  // Total Value Section
+  totalValueSection: {
+    alignItems: 'center',
+    paddingVertical: 8,
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  totalValueLabel: {
+    fontSize: 9,
+    color: '#9CA3AF',
+  },
+  totalValueAmount: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FBBF24',
+  },
+  // Back stat rows
   backStatRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -785,11 +897,21 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#FFFFFF',
   },
+  // Authenticity Section
   authenticitySection: {
     borderTopWidth: 1,
     borderTopColor: '#374151',
     marginTop: 8,
     paddingTop: 8,
+  },
+  authenticityDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 2,
+  },
+  authenticityDetail: {
+    fontSize: 9,
+    color: '#6B7280',
   },
   faceMatchButton: {
     marginTop: 8,
@@ -810,6 +932,79 @@ const styles = StyleSheet.create({
     color: '#22C55E',
     textAlign: 'center',
     marginTop: 4,
+  },
+  // NEW STATS SECTION
+  newStatsSection: {
+    borderTopWidth: 1,
+    borderTopColor: '#374151',
+    marginTop: 8,
+    paddingTop: 8,
+  },
+  newStatsSectionTitle: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#D1D5DB',
+    marginBottom: 8,
+  },
+  newStatRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'rgba(55, 65, 81, 0.3)',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginBottom: 4,
+  },
+  newStatLabel: {
+    fontSize: 10,
+    color: '#9CA3AF',
+  },
+  newStatRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  newStatValue: {
+    fontSize: 10,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  newStatBonus: {
+    fontSize: 9,
+    color: '#22C55E',
+    fontWeight: '500',
+  },
+  reactionsHint: {
+    fontSize: 8,
+    color: '#6B7280',
+    textAlign: 'right',
+    marginTop: -2,
+    marginBottom: 4,
+  },
+  seniorityRowAchieved: {
+    backgroundColor: 'rgba(251, 191, 36, 0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(251, 191, 36, 0.3)',
+  },
+  seniorityLabelAchieved: {
+    color: '#FBBF24',
+  },
+  seniorityMaxText: {
+    fontSize: 10,
+    color: '#FBBF24',
+    fontWeight: 'bold',
+  },
+  seniorityRemaining: {
+    fontSize: 9,
+    color: '#6B7280',
+  },
+  // Scenery & Streak Section
+  sceneryStreakSection: {
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(55, 65, 81, 0.5)',
+    marginTop: 8,
+    paddingTop: 8,
   },
   xpMultiplierBadge: {
     position: 'absolute',
