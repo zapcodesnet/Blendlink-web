@@ -1610,6 +1610,7 @@ export default function PhotoGameArenaScreen() {
   } = usePVPWebSocket(shouldConnectPVP ? pvpRoomId : null, {
     autoConnect: shouldConnectPVP,
     username: user?.username || 'Player',
+    userId: user?.user_id,
     photos: myPhotos,
     isCreator: isCreator,
     onMessage: (msg) => {
