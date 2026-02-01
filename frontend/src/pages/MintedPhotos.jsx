@@ -1241,6 +1241,12 @@ const MintedPhotos = () => {
         onClose={() => setMintDialogOpen(false)}
         onMint={handleMint}
         mintStatus={mintStatus}
+        onMintSuccess={(mintId) => {
+          // Auto-refresh photos and highlight the new one
+          setNewlyMintedId(mintId);
+          fetchPhotos();
+          fetchMintStatus();
+        }}
       />
     </div>
   );
