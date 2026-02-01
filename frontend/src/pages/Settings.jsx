@@ -282,52 +282,55 @@ const ProfilePictureModal = ({ isOpen, onClose, onSelect, currentUserId }) => {
           </button>
         </div>
         
-        {/* Photo Grid */}
+        {/* Content - Photo Selection or Position Editor */}
         <div className="p-4 overflow-y-auto max-h-[50vh]">
-          {loading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
-            </div>
-          ) : photos.length === 0 ? (
-            <div className="text-center py-12">
-              <Image className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400">No minted photos found</p>
-              <p className="text-gray-500 text-sm">Mint some photos first to use as profile picture</p>
-            </div>
+          {step === 'select' ? (
+            // Photo Selection Grid
+            loading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+              </div>
+            ) : photos.length === 0 ? (
+              <div className="text-center py-12">
+                <Image className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-400">No minted photos found</p>
+                <p className="text-gray-500 text-sm">Mint some photos first to use as profile picture</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-3">
+                {photos.map((photo) => (
+                  <button
+                    key={photo.mint_id}
+                    onClick={() => handlePhotoSelect(photo)}
+                    className="relative aspect-square rounded-xl overflow-hidden border-2 transition-all border-gray-700 hover:border-purple-500 hover:scale-105"
+                    data-testid={`photo-option-${photo.mint_id}`}
+                  >
+                    <img 
+                      src={photo.image_url} 
+                      alt={photo.name}
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Medal display */}
+                    {photo.medals?.ten_win_streak > 0 && (
+                      <div className="absolute top-1 right-1 bg-black/70 rounded-full px-1.5 py-0.5 text-xs">
+                        🏅x{photo.medals.ten_win_streak}
+                      </div>
+                    )}
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-1">
+                      <p className="text-white text-xs truncate">{photo.name}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )
           ) : (
-            <div className="grid grid-cols-3 gap-3">
-              {photos.map((photo) => (
-                <button
-                  key={photo.mint_id}
-                  onClick={() => setSelectedPhoto(photo)}
-                  className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${
-                    selectedPhoto?.mint_id === photo.mint_id
-                      ? 'border-purple-500 ring-2 ring-purple-500/50'
-                      : 'border-gray-700 hover:border-gray-500'
-                  }`}
-                  data-testid={`photo-option-${photo.mint_id}`}
-                >
-                  <img 
-                    src={photo.image_url} 
-                    alt={photo.name}
-                    className="w-full h-full object-cover"
-                  />
-                  {selectedPhoto?.mint_id === photo.mint_id && (
-                    <div className="absolute inset-0 bg-purple-500/30 flex items-center justify-center">
-                      <Check className="w-8 h-8 text-white" />
-                    </div>
-                  )}
-                  {/* Medal display */}
-                  {photo.medals?.ten_win_streak > 0 && (
-                    <div className="absolute top-1 right-1 bg-black/70 rounded-full px-1.5 py-0.5 text-xs">
-                      🏅x{photo.medals.ten_win_streak}
-                    </div>
-                  )}
-                  <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-1">
-                    <p className="text-white text-xs truncate">{photo.name}</p>
-                  </div>
-                </button>
-              ))}
+            // Position Editor
+            <div className="py-4">
+              <ImagePositionEditor
+                imageUrl={selectedPhoto?.image_url}
+                onPositionChange={setImagePosition}
+                initialPosition={imagePosition}
+              />
             </div>
           )}
         </div>
@@ -337,7 +340,7 @@ const ProfilePictureModal = ({ isOpen, onClose, onSelect, currentUserId }) => {
           <Button
             variant="outline"
             className="flex-1 border-gray-600"
-            onClick={onClose}
+            onClick={step === 'position' ? handleBackToSelect : onClose}
           >
             Cancel
           </Button>
