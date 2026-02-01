@@ -288,6 +288,32 @@ class MintedPhoto(BaseModel):
     
     # Birthday Bonus Tracking
     last_birthday_bonus_year: int = 0  # Year of last birthday bonus claim
+    
+    # ========== NEW STATS FOR BACK-CARD (below Authenticity) ==========
+    
+    # Age Bonus - +$1M every 30 days automatically
+    age_bonus_value: int = 0  # Accumulated age bonus
+    age_bonus_cycles: int = 0  # Number of 30-day cycles completed
+    
+    # Star Bonus - +$1M + 10% per new star level achieved
+    star_bonus_value: int = 0  # Accumulated star bonus
+    stars_achieved: List[int] = Field(default_factory=list)  # List of star levels achieved (e.g., [1, 2, 3])
+    
+    # Seniority - Level 60 bonus (+$1M + 20%)
+    seniority_bonus_applied: bool = False  # Has seniority bonus been applied
+    seniority_bonus_value: int = 0  # Seniority bonus amount
+    
+    # BL Coins spent on this photo (for Dollar Value boost tracking)
+    bl_coins_spent: int = 0  # Total BL coins spent/invested
+    
+    # Reaction Milestone Tracking (for +$1M per 100 reactions)
+    reaction_milestone_count: int = 0  # Number of 100-reaction milestones reached
+    reactions_since_last_milestone: int = 0  # Counter 0-99, resets at 100
+    
+    # Win/Loss Streaks for battle bonuses
+    win_streak: int = 0  # Current win streak (max 10)
+    lose_streak: int = 0  # Current lose streak
+    highest_win_streak: int = 0  # All-time highest win streak
 
 
 class PhotoAlbum(BaseModel):
