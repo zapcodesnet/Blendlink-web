@@ -22,7 +22,7 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 # ============== CONSTANTS ==============
-MINT_COST_BL = 0  # FREE minting for all users
+MINT_COST_BL = 200  # 200 BL coins per mint
 
 # Monthly Subscription Tiers with benefits
 SUBSCRIPTION_TIERS = {
