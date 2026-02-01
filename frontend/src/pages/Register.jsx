@@ -274,21 +274,29 @@ export default function Register() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="referral">Referral Code (Optional)</Label>
+              <Label htmlFor="referral">Referral Code {referralLocked ? '(Applied)' : '(Optional)'}</Label>
               <div className="relative">
-                <Gift className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Gift className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${referralLocked ? 'text-green-500' : 'text-muted-foreground'}`} />
                 <Input
                   id="referral"
                   type="text"
                   placeholder="Enter referral code"
-                  className="pl-10 h-12"
+                  className={`pl-10 h-12 ${referralLocked ? 'bg-green-500/10 border-green-500/30 text-green-400' : ''}`}
                   value={form.referral_code}
-                  onChange={(e) => setForm({ ...form, referral_code: e.target.value.toUpperCase() })}
+                  onChange={(e) => !referralLocked && setForm({ ...form, referral_code: e.target.value.toUpperCase() })}
+                  disabled={referralLocked}
+                  readOnly={referralLocked}
                   data-testid="referral-input"
                 />
+                {referralLocked && (
+                  <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
+                )}
               </div>
               <p className="text-xs text-muted-foreground">
-                Both you and your referrer get 50,000 BL coins bonus!
+                {referralLocked 
+                  ? '✓ Referral code applied! Both you and your referrer get 50,000 BL coins bonus!'
+                  : 'Both you and your referrer get 50,000 BL coins bonus!'
+                }
               </p>
             </div>
 
