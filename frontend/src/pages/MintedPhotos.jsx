@@ -489,13 +489,21 @@ const formatDollarValue = (value) => {
 };
 
 // Photo Card Component - Clean image display, compact stats below
-const PhotoCard = ({ photo, onSelect, onUpdate, viewMode, onViewFull, onSelfieMatch }) => {
+const PhotoCard = ({ photo, onSelect, onUpdate, viewMode, onViewFull, onSelfieMatch, isNewlyMinted, onRemoveHighlight }) => {
   const [showMenu, setShowMenu] = useState(false);
   const scenery = SCENERY_CONFIG[photo.scenery_type] || SCENERY_CONFIG.natural;
   const stars = photo.stars || 0;
   const hasGoldenFrame = photo.has_golden_frame || false;
   const hasFaceDetected = photo.face_detected || false;
   const canDoSelfieMatch = hasFaceDetected && (photo.selfie_match_attempts || 0) < 3;
+  
+  // Handle click on newly minted photo - remove highlight
+  const handlePhotoClick = () => {
+    if (isNewlyMinted) {
+      onRemoveHighlight?.();
+    }
+    onSelect?.(photo);
+  };
   
   const handleRename = async () => {
     const newName = prompt('Enter new name:', photo.name);
