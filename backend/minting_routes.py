@@ -667,18 +667,13 @@ async def get_photo(mint_id: str):
 async def get_photo_full_stats(mint_id: str, current_user: dict = Depends(get_current_user_from_request)):
     """
     Get complete photo stats for synchronization across all pages.
-    Returns all attributes needed for unified display:
-    - Base dollar value (core power)
-    - Scenery type with strength/weakness
-    - Win/lose streaks and multipliers
-    - XP, level, stars
-    - Reaction bonuses
-    - Monthly growth value
-    - Paid upgrades
-    - Authenticity (face detection + selfie match)
-    - Stamina
-    - Subscription XP multiplier (if active)
+    Returns all attributes needed for unified display INCLUDING new progression stats:
+    - Stars, Level, Age, Reactions, BL Coins, Seniority
+    - XP meter bar with progress percentage
+    - All real-time calculated bonuses
     """
+    from datetime import datetime, timezone
+    
     if _db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
@@ -698,26 +693,94 @@ async def get_photo_full_stats(mint_id: str, current_user: dict = Depends(get_cu
             {"_id": 0}
         )
         if user_sub:
-            from subscription_tiers import SUBSCRIPTION_TIERS
-            tier = user_sub.get("tier", "free")
-            tier_info = SUBSCRIPTION_TIERS.get(tier, SUBSCRIPTION_TIERS["free"])
-            user_subscription = {
-                "tier": tier,
-                "xp_multiplier": tier_info.get("xp_multiplier", 1),
-                "name": tier_info.get("name", "Free"),
-            }
+            try:
+                from subscription_tiers import SUBSCRIPTION_TIERS
+                tier = user_sub.get("tier", "free")
+                tier_info = SUBSCRIPTION_TIERS.get(tier, SUBSCRIPTION_TIERS["free"])
+                user_subscription = {
+                    "tier": tier,
+                    "xp_multiplier": tier_info.get("xp_multiplier", 1),
+                    "name": tier_info.get("name", "Free"),
+                }
+            except:
+                pass
     
     # Calculate derived values
     level = photo.get("level", 1)
+    xp = photo.get("xp", 0)
     level_info = get_level_stars(level)
     stars = photo.get("stars", 0) or level_info.get("stars", 0)
     has_golden_frame = level_info.get("has_golden_frame", False) or level >= 60
     level_bonus_percent = photo.get("level_bonus_percent", 0) or level_info.get("bonus_percent", 0)
     
+    # ========== REAL-TIME CALCULATED BONUSES ==========
+    
+    # Get minted_at timestamp
+    minted_at = photo.get("minted_at") or photo.get("created_at")
+    if isinstance(minted_at, str):
+        try:
+            minted_at = datetime.fromisoformat(minted_at.replace("Z", "+00:00"))
+        except:
+            minted_at = datetime.now(timezone.utc)
+    if minted_at is None:
+        minted_at = datetime.now(timezone.utc)
+    if minted_at.tzinfo is None:
+        minted_at = minted_at.replace(tzinfo=timezone.utc)
+    
+    base_dollar_value = photo.get("base_dollar_value", 1_000_000)
+    total_reactions = photo.get("total_reactions", 0)
+    reaction_milestone_count = photo.get("reaction_milestone_count", 0)
+    
+    # 1. Calculate Age Bonus (+$1M every 30 days automatically)
+    age_bonus_data = calculate_age_bonus(minted_at)
+    age_days = age_bonus_data["days_old"]
+    age_bonus_value = age_bonus_data["age_bonus_value"]
+    age_cycles = age_bonus_data["cycles_completed"]
+    days_until_next_age_bonus = age_bonus_data["days_until_next_bonus"]
+    
+    # 2. Calculate Star Bonus (+$1M + 10% per star milestone)
+    star_bonus_data = calculate_star_bonus(level, base_dollar_value)
+    star_bonus_value = star_bonus_data["total_star_bonus"]
+    star_milestones_achieved = star_bonus_data["milestones_achieved"]
+    
+    # 3. Calculate Reaction Bonus (+$1M per 100 reactions)
+    reaction_bonus_data = calculate_reaction_bonus(total_reactions, reaction_milestone_count)
+    reaction_bonus_value = reaction_bonus_data["reaction_bonus_value"]
+    reactions_since_last_milestone = reaction_bonus_data["reactions_since_last_milestone"]
+    reactions_to_next_bonus = reaction_bonus_data["reactions_to_next_bonus"]
+    
+    # 4. Calculate Seniority Bonus (Level 60: +$1M + 20%)
+    # For seniority, we need the running total before seniority
+    running_total = base_dollar_value + photo.get("total_upgrade_value", 0) + age_bonus_value + star_bonus_value + reaction_bonus_value
+    seniority_bonus_data = calculate_seniority_bonus(level, running_total)
+    seniority_bonus_value = seniority_bonus_data.get("seniority_bonus", 0)
+    seniority_achieved = seniority_bonus_data.get("seniority_achieved", False)
+    levels_to_seniority = seniority_bonus_data.get("levels_remaining", 60 - level)
+    
+    # 5. Calculate XP Progress to next level (for XP meter bar)
+    xp_progress_data = get_xp_to_next_level(level, xp)
+    
+    # 6. Calculate Total Dollar Value with ALL bonuses
+    level_bonus_value = int(base_dollar_value * level_bonus_percent / 100)
+    total_upgrade_value = photo.get("total_upgrade_value", 0)
+    
+    total_dollar_value = (
+        base_dollar_value +
+        level_bonus_value +
+        total_upgrade_value +
+        age_bonus_value +
+        star_bonus_value +
+        reaction_bonus_value +
+        seniority_bonus_value
+    )
+    
     # Win/lose streak calculations
     win_streak = photo.get("win_streak", 0)
     lose_streak = photo.get("lose_streak", 0)
-    streak_multiplier = 1 + (win_streak * 0.1) if win_streak >= 3 else 1.0
+    
+    # Streak multipliers (temporary, for battles)
+    streak_multipliers = {3: 1.25, 4: 1.50, 5: 1.75, 6: 2.00, 7: 2.25, 8: 2.50, 9: 2.75, 10: 3.00}
+    streak_multiplier = streak_multipliers.get(min(win_streak, 10), 1.0) if win_streak >= 3 else 1.0
     has_immunity = lose_streak >= 3
     
     # Authenticity
@@ -725,6 +788,9 @@ async def get_photo_full_stats(mint_id: str, current_user: dict = Depends(get_cu
     selfie_score = photo.get("selfie_match_score", 0)
     total_authenticity = min(face_score + selfie_score, 10)  # Max 10%
     authenticity_bonus = int(1_000_000_000 * (total_authenticity / 100))  # Up to $100M
+    
+    # BL Coins spent tracking
+    bl_coins_spent = photo.get("bl_coins_spent", 0) or total_upgrade_value
     
     # Build comprehensive response
     full_stats = {
@@ -734,14 +800,57 @@ async def get_photo_full_stats(mint_id: str, current_user: dict = Depends(get_cu
         "image_url": photo.get("image_url"),
         "thumbnail_url": photo.get("thumbnail_url"),
         
-        # Dollar values
-        "base_dollar_value": photo.get("base_dollar_value", 1_000_000),
-        "dollar_value": photo.get("dollar_value", photo.get("base_dollar_value", 1_000_000)),
-        "total_upgrade_value": photo.get("total_upgrade_value", 0),
-        "monthly_growth_value": photo.get("monthly_growth_value", 0),
-        "reaction_bonus_value": photo.get("reaction_bonus_value", 0),
+        # Dollar values - Total calculated in real-time
+        "base_dollar_value": base_dollar_value,
+        "dollar_value": total_dollar_value,
+        "total_dollar_value": total_dollar_value,
+        "total_upgrade_value": total_upgrade_value,
         "level_bonus_percent": level_bonus_percent,
+        "level_bonus_value": level_bonus_value,
         "authenticity_bonus_value": authenticity_bonus,
+        
+        # ========== NEW PROGRESSION STATS (below Authenticity) ==========
+        
+        # Stars - +$1M + 10% per star milestone
+        "stars": stars,
+        "star_bonus_value": star_bonus_value,
+        "star_milestones_achieved": star_milestones_achieved,
+        
+        # Level - with XP progress
+        "level": level,
+        "xp": xp,
+        "xp_progress": xp_progress_data,  # Contains progress_percent, xp_needed, remaining, etc.
+        "xp_progress_percent": xp_progress_data["progress_percent"],
+        "xp_to_next_level": xp_progress_data["remaining"],
+        "xp_for_next_level": xp_progress_data["xp_for_next_level"],
+        "has_golden_frame": has_golden_frame,
+        
+        # Age - +$1M every 30 days
+        "age_days": age_days,
+        "age_bonus_value": age_bonus_value,
+        "age_cycles_completed": age_cycles,
+        "days_until_next_age_bonus": days_until_next_age_bonus,
+        
+        # Reactions - +$1M per 100 reactions
+        "total_reactions": total_reactions,
+        "reaction_bonus_value": reaction_bonus_value,
+        "reactions_since_last_milestone": reactions_since_last_milestone,
+        "reactions_to_next_bonus": reactions_to_next_bonus,
+        "reaction_milestone_count": reaction_bonus_data["milestones_reached"],
+        "likes_count": photo.get("likes_count", 0),
+        
+        # BL Coins spent (converts to Dollar Value boost)
+        "bl_coins_spent": bl_coins_spent,
+        
+        # Seniority - Level 60 bonus (+$1M + 20%)
+        "seniority_achieved": seniority_achieved,
+        "seniority_bonus_value": seniority_bonus_value,
+        "levels_to_seniority": levels_to_seniority,
+        
+        # Monthly Growth (legacy - now part of age_bonus)
+        "monthly_growth_value": age_bonus_value,
+        
+        # ========== EXISTING STATS ==========
         
         # Scenery
         "scenery_type": photo.get("scenery_type", "natural"),
@@ -751,23 +860,14 @@ async def get_photo_full_stats(mint_id: str, current_user: dict = Depends(get_cu
         "light_strength_vs": photo.get("light_strength_vs", ""),
         "light_weakness_vs": photo.get("light_weakness_vs", ""),
         
-        # Level & XP
-        "level": level,
-        "xp": photo.get("xp", 0),
-        "stars": stars,
-        "has_golden_frame": has_golden_frame,
-        
-        # Streaks
+        # Streaks (temporary battle bonuses)
         "win_streak": win_streak,
         "lose_streak": lose_streak,
         "streak_multiplier": streak_multiplier,
         "has_immunity": has_immunity,
         "battles_won": photo.get("battles_won", 0),
         "battles_lost": photo.get("battles_lost", 0),
-        
-        # Reactions
-        "total_reactions": photo.get("total_reactions", 0),
-        "likes_count": photo.get("likes_count", 0),
+        "highest_win_streak": photo.get("highest_win_streak", 0),
         
         # Authenticity
         "has_face": photo.get("has_face", False),
@@ -799,6 +899,10 @@ async def get_photo_full_stats(mint_id: str, current_user: dict = Depends(get_cu
         "created_at": photo.get("created_at"),
         "minted_at": photo.get("minted_at"),
         "last_battle_at": photo.get("last_battle_at"),
+        
+        # Star milestones reference
+        "star_milestones_info": STAR_MILESTONES,
+        "seniority_max_level": SENIORITY_MAX_LEVEL,
     }
     
     return full_stats
