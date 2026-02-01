@@ -25,6 +25,15 @@ from minting_system import (
     LEVEL_BONUSES,
     calculate_dollar_value,
     get_level_stars,
+    # New stat calculation functions
+    calculate_total_dollar_value,
+    calculate_age_bonus,
+    calculate_star_bonus,
+    calculate_reaction_bonus,
+    calculate_seniority_bonus,
+    get_xp_to_next_level,
+    STAR_MILESTONES,
+    SENIORITY_MAX_LEVEL,
 )
 
 logger = logging.getLogger(__name__)
