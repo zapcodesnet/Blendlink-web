@@ -630,14 +630,13 @@ export const TappingArena = ({
         const data = response.data;
         
         if (data) {
-          // Update opponent taps and dollar from server
+          // Update opponent taps and dollar from server using refs to get latest values
           const serverOpponentTaps = data.opponent_taps || 0;
           const serverOpponentDollar = data.opponent_dollar || 0;
           
-          // Always update if server has different value (not just greater)
-          // This handles edge cases where opponent taps reset
-          if (serverOpponentTaps !== opponentTaps) {
-            console.log('[TapPoll] Opponent taps updated:', serverOpponentTaps, 'dollar:', serverOpponentDollar);
+          // Always update if server has different value (using ref for comparison)
+          if (serverOpponentTaps !== opponentTapsRef.current) {
+            console.log('[TapPoll] Opponent taps updated:', serverOpponentTaps, 'dollar:', serverOpponentDollar, '(was:', opponentTapsRef.current, ')');
             setOpponentTaps(serverOpponentTaps);
             setOpponentDollar(serverOpponentDollar);
           }
@@ -651,7 +650,7 @@ export const TappingArena = ({
           // Also update our own taps from server (in case of desync)
           const serverMyTaps = data.my_taps || 0;
           const serverMyDollar = data.my_dollar || 0;
-          if (serverMyTaps !== playerTaps && serverMyTaps > 0) {
+          if (serverMyTaps !== playerTapsRef.current && serverMyTaps > 0) {
             console.log('[TapPoll] My taps synced from server:', serverMyTaps);
             setPlayerTaps(serverMyTaps);
             setPlayerDollar(serverMyDollar);
@@ -673,7 +672,7 @@ export const TappingArena = ({
         console.log('[TapPoll] Polling stopped');
       }
     };
-  }, [gamePhase, sessionId, isBot, winner]); // Removed opponentTaps dependency to avoid stale closure
+  }, [gamePhase, sessionId, isBot, winner]); // Using refs for tap values to avoid stale closure
   
   // Handle player win
   const handlePlayerWin = useCallback(() => {
