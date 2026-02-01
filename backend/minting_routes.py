@@ -469,6 +469,139 @@ async def get_level_bonuses():
     return {"bonuses": bonuses}
 
 
+@minting_router.get("/photos/{mint_id}/full-stats")
+async def get_photo_full_stats(
+    mint_id: str,
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """
+    Get complete photo stats with ALL real-time calculated bonuses.
+    This returns everything needed for the back-of-card display.
+    """
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    photo = await _db.minted_photos.find_one(
+        {"mint_id": mint_id},
+        {"_id": 0}
+    )
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    
+    # Calculate all bonuses in real-time
+    total_stats = calculate_total_dollar_value(photo)
+    
+    # Get minter info
+    minter = await _db.users.find_one(
+        {"user_id": photo.get("minted_by", photo.get("user_id"))},
+        {"_id": 0, "username": 1, "profile_picture": 1}
+    )
+    
+    # Win/Loss streak data
+    win_streak = photo.get("win_streak", 0)
+    lose_streak = photo.get("lose_streak", 0)
+    
+    # Streak multipliers (from existing mechanics)
+    streak_multipliers = {
+        3: 1.25, 4: 1.50, 5: 1.75, 6: 2.00,
+        7: 2.25, 8: 2.50, 9: 2.75, 10: 3.00
+    }
+    current_streak_multiplier = 1.0
+    if win_streak >= 3:
+        current_streak_multiplier = streak_multipliers.get(min(win_streak, 10), 1.0)
+    
+    # Has lose streak immunity (3+ losses = immunity to stronger scenery)
+    has_immunity = lose_streak >= 3
+    
+    return {
+        "mint_id": mint_id,
+        "name": photo.get("name", ""),
+        "image_url": photo.get("image_url", ""),
+        
+        # Minter info (permanent)
+        "minted_by": {
+            "user_id": photo.get("minted_by", photo.get("user_id")),
+            "username": minter.get("username") if minter else "Unknown",
+            "profile_picture": minter.get("profile_picture") if minter else None
+        },
+        "minted_at": photo.get("minted_at"),
+        
+        # Core Power / Dollar Value
+        "base_dollar_value": total_stats["base_dollar_value"],
+        "total_dollar_value": total_stats["total_dollar_value"],
+        
+        # Level & XP (for XP meter)
+        "level": total_stats["level"],
+        "xp": total_stats["xp"],
+        "xp_progress": total_stats["xp_progress"],
+        
+        # Stars
+        "stars": total_stats["stars"],
+        "has_golden_frame": total_stats["has_golden_frame"],
+        
+        # All bonuses breakdown
+        "bonuses": total_stats["bonuses"],
+        
+        # Scenery & battle stats
+        "scenery_type": photo.get("scenery_type", "neutral"),
+        "scenery_description": photo.get("scenery_description", ""),
+        
+        # Streaks
+        "win_streak": win_streak,
+        "lose_streak": lose_streak,
+        "highest_win_streak": photo.get("highest_win_streak", 0),
+        "streak_multiplier": current_streak_multiplier,
+        "has_immunity": has_immunity,
+        
+        # Stamina
+        "battles_remaining": photo.get("battles_remaining", 24),
+        "max_battles": 24,
+        "stamina_regen_per_hour": 1,
+        
+        # Reactions (total from all sources)
+        "total_reactions": photo.get("total_reactions", 0),
+        
+        # BL Coins spent
+        "bl_coins_spent": photo.get("bl_coins_spent", 0),
+        "total_upgrade_value": photo.get("total_upgrade_value", 0),
+        
+        # Authenticity
+        "authenticity": {
+            "face_detection_bonus": photo.get("face_bonus_percent", 0),
+            "selfie_match_bonus": photo.get("selfie_bonus_percent", 0),
+            "total_authenticity_percent": photo.get("face_bonus_percent", 0) + photo.get("selfie_bonus_percent", 0)
+        },
+        
+        # Seniority info
+        "seniority": {
+            "level": total_stats["level"],
+            "is_max_level": total_stats["level"] >= SENIORITY_MAX_LEVEL,
+            "levels_to_seniority": max(0, SENIORITY_MAX_LEVEL - total_stats["level"]),
+            "has_golden_frame": total_stats["has_golden_frame"]
+        },
+        
+        # Rating breakdown (AI scores)
+        "ratings": photo.get("ratings", {}),
+        
+        # Star milestones info
+        "star_milestones": STAR_MILESTONES
+    }
+
+
+@minting_router.get("/minting-config")
+async def get_minting_config():
+    """Get minting configuration including fees and limits"""
+    return {
+        "mint_cost_bl": MINT_COST_BL,
+        "daily_limit_free": DAILY_MINT_LIMIT,
+        "subscription_limits": SUBSCRIPTION_LIMITS,
+        "scenery_types": list(SCENERY_TYPES.keys()),
+        "light_types": list(LIGHT_TYPES.keys()),
+        "star_milestones": STAR_MILESTONES,
+        "max_seniority_level": SENIORITY_MAX_LEVEL
+    }
+
+
 @minting_router.delete("/photos/{mint_id}")
 async def delete_minted_photo(
     mint_id: str,
