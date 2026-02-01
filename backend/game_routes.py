@@ -1706,7 +1706,8 @@ async def pvp_select_photo(
         "player2_selected": updated_session.get("player2_selected", False),
     }
     
-    # If both selected, evaluate the round
+    # If both selected, prepare for tapping phase - DON'T determine winner yet!
+    # The winner is determined by who taps more (Photo Auction Bidding)
     if both_selected:
         p1_photo = updated_session.get("player1_current_photo", {})
         p2_photo = updated_session.get("player2_current_photo", {})
@@ -1714,70 +1715,41 @@ async def pvp_select_photo(
         p1_value = p1_photo.get("dollar_value", 0)
         p2_value = p2_photo.get("dollar_value", 0)
         
-        # Determine winner
-        if p1_value > p2_value:
-            round_winner = "player1"
-            winner_id = updated_session.get("player1_id")
-        elif p2_value > p1_value:
-            round_winner = "player2"
-            winner_id = updated_session.get("player2_id")
-        else:
-            round_winner = "tie"
-            winner_id = None
-        
-        # Update wins
-        new_p1_wins = updated_session.get("player1_wins", 0)
-        new_p2_wins = updated_session.get("player2_wins", 0)
-        
-        if round_winner == "player1":
-            new_p1_wins += 1
-        elif round_winner == "player2":
-            new_p2_wins += 1
-        
-        current_round = updated_session.get("current_round", 1)
-        
-        # Check if game is over (best of 5 = first to 3 wins or 5 rounds complete)
-        game_over = new_p1_wins >= 3 or new_p2_wins >= 3 or current_round >= 5
-        
-        round_result = {
-            "round": current_round,
-            "winner": round_winner,
-            "winner_id": winner_id,
-            "player1_photo": p1_photo,
-            "player2_photo": p2_photo,
-            "player1_value": p1_value,
-            "player2_value": p2_value,
-        }
-        
-        # Determine game winner if game over
-        game_winner_id = None
-        if game_over:
-            if new_p1_wins > new_p2_wins:
-                game_winner_id = updated_session.get("player1_id")
-            elif new_p2_wins > new_p1_wins:
-                game_winner_id = updated_session.get("player2_id")
-        
-        # Update session with round results
+        # Reset taps for the new round and set status to "tapping"
         await _db.pvp_sessions.update_one(
             {"session_id": session.get("session_id")},
             {
                 "$set": {
-                    "player1_wins": new_p1_wins,
-                    "player2_wins": new_p2_wins,
-                    "current_round_result": round_result,
-                    "status": "complete" if game_over else "round_result",
-                    "winner_id": game_winner_id,
+                    "player1_taps": 0,
+                    "player2_taps": 0,
+                    "player1_dollar": 0,
+                    "player2_dollar": 0,
+                    "status": "tapping",  # Ready for tapping phase
+                    "round_start_time": datetime.now(timezone.utc),
                     "updated_at": datetime.now(timezone.utc)
                 }
             }
         )
         
-        result["round_result"] = round_result
-        result["player1_wins"] = new_p1_wins
-        result["player2_wins"] = new_p2_wins
-        result["game_over"] = game_over
-        if game_over:
-            result["game_winner_id"] = game_winner_id
+        # Return photo info for display but NO winner yet
+        result["status"] = "tapping"
+        result["player1_photo"] = {
+            "mint_id": p1_photo.get("mint_id"),
+            "image_url": p1_photo.get("image_url"),
+            "dollar_value": p1_value,
+            "scenery_type": p1_photo.get("scenery_type"),
+            "level": p1_photo.get("level", 1),
+        }
+        result["player2_photo"] = {
+            "mint_id": p2_photo.get("mint_id"),
+            "image_url": p2_photo.get("image_url"),
+            "dollar_value": p2_value,
+            "scenery_type": p2_photo.get("scenery_type"),
+            "level": p2_photo.get("level", 1),
+        }
+        result["player1_value"] = p1_value
+        result["player2_value"] = p2_value
+        result["current_round"] = updated_session.get("current_round", 1)
     
     return result
 
