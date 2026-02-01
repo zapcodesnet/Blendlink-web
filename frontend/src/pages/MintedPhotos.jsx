@@ -181,7 +181,7 @@ const ImageLightbox = ({ photo: initialPhoto, isOpen, onClose, onSetProfilePic, 
                       
                       {/* Center: Flip to back - Pink/Purple style */}
                       <button
-                        onClick={(e) => { e.stopPropagation(); setShowBack(true); setShowControls(false); }}
+                        onClick={(e) => { e.stopPropagation(); handleShowBack(); }}
                         className="p-4 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg active:scale-95"
                       >
                         <ChevronRight className="w-6 h-6 text-white" />
