@@ -208,6 +208,11 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   const monthlyGrowth = photo?.monthly_growth_value || 0;
   const upgradeValue = photo?.total_upgrade_value || 0;
   
+  // New stats from back-card
+  const ageBonus = photo?.age_bonus_value || photo?.age_bonus || 0;
+  const xpProgress = photo?.xp_progress?.progress_percent || photo?.xp_progress_percent || 0;
+  const baseDollarValue = photo?.base_dollar_value || dollarValue;
+  
   // Authenticity
   const faceScore = photo?.face_detection_score || 0;
   const selfieScore = photo?.selfie_match_score || 0;
