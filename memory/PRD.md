@@ -3,12 +3,7 @@
 ## Overview
 Blendlink is a minted photo game platform where users mint photos with AI-analyzed dollar values, compete in PVP and bot battles, and build portfolios. The app features real-time synchronization across web and mobile.
 
-## Core User Personas
-1. **Casual Players** - Mint photos, view stats, participate in bot battles
-2. **Competitive Players** - Engage in PVP battles, climb leaderboards
-3. **Collectors** - Focus on building high-value photo portfolios
-
-## Core Platform Features
+## Core Features
 
 ### Photo Minting System
 - **Minting Fee**: 200 BL coins per photo (Updated Feb 2026)
@@ -41,7 +36,6 @@ Blendlink is a minted photo game platform where users mint photos with AI-analyz
 - **PVP Mode**: Real-time battles against other players
 - **Bot Mode**: AI opponents (Easy, Medium, Hard, Expert)
 - **Stamina System**: 24/24 max, -1 per win, -2 per loss, +1/hour regen
-- Tapping mechanics with scenery strengths/weaknesses
 
 ### Subscription Tiers
 - Bronze ($4.99/mo): 40 mints/day, ×2 XP, 15K BL daily
@@ -52,82 +46,47 @@ Blendlink is a minted photo game platform where users mint photos with AI-analyz
 ## Architecture
 
 ### Backend (FastAPI + MongoDB)
-- `/app/backend/minting_system.py` - Core minting logic, MINT_COST_BL, bonus calculations
+- `/app/backend/minting_system.py` - Core minting logic, MINT_COST_BL=200
 - `/app/backend/minting_routes.py` - API endpoints including `/photo/{mint_id}/full-stats`
-- `/app/backend/game_routes.py` - PVP and bot battle endpoints
 
 ### Frontend (React)
-- `/app/frontend/src/components/photo/UnifiedPhotoCard.jsx` - Main photo card component
-- `/app/frontend/src/pages/MintedPhotos.jsx` - Photo gallery with mint dialog
+- `/app/frontend/src/components/photo/UnifiedPhotoCard.jsx` - Photo card component
+- `/app/frontend/src/pages/MintedPhotos.jsx` - Photo gallery with lightbox
 
 ### Mobile (React Native/Expo)
-- `/app/mobile/src/components/UnifiedPhotoCard.js` - Mobile photo card component
+- `/app/mobile/src/components/UnifiedPhotoCard.js` - Mobile photo card
 
 ## API Endpoints
 
 ### Minting
-- `GET /api/minting/config` - Returns mint_cost_bl (200), daily limits
-- `GET /api/minting/photo/{mint_id}/full-stats` - Complete stats with all bonuses
+- `GET /api/minting/config` - Returns mint_cost_bl (200)
+- `GET /api/minting/photo/{mint_id}/full-stats` - Complete stats with bonuses
 - `POST /api/minting/photo/upload` - Mint new photo
 
-### Battle
-- `POST /api/games/pvp/start` - Start PVP game
-- `GET /api/games/pvp/{session_id}/state` - Poll game state
-- `POST /api/games/pvp/tap` - Submit tap action
+## What's Been Implemented (Feb 2026)
 
-## What's Been Implemented
-
-### February 2026
-- ✅ Changed minting fee from 500 to 200 BL coins
-- ✅ Added new stats section to back of photo card (Stars, Level, Age, Reactions, BL Coins, Seniority)
-- ✅ Implemented real-time bonus calculations in backend
-- ✅ Added XP meter bar with percentage and shimmer animation
-- ✅ Implemented Golden Sparkling Frame animation for Level 60 Seniority
-- ✅ Updated mobile UnifiedPhotoCard component to match web
-- ✅ All backend tests passing (100% success rate)
-- ✅ Frontend verification complete
-
-### Previously Completed
-- Photo minting with AI analysis
-- Scenery classification system
-- Win/Lose streak mechanics
-- Stamina system
-- Face detection and selfie match
-- Bot battle system
-- Subscription tiers
-- API polling system for PVP (WebSocket workaround)
+### Verified Working:
+- ✅ Minting fee changed to 200 BL coins (UI + Backend)
+- ✅ XP Meter Bar with percentage and progress tracking
+- ✅ New stats section: Stars, Level, Age, Reactions, BL Coins, Seniority
+- ✅ Full-stats API endpoint returns all new fields
+- ✅ Lightbox fetches full stats on flip to back
+- ✅ Golden frame animation for Level 60 Seniority
+- ✅ Mobile UnifiedPhotoCard updated
 
 ## Known Issues / Backlog
 
 ### P0 - Critical
-- PVP tap synchronization - User reports opponent meter shows $0
+- PVP tap synchronization bug
 
-### P1 - High Priority
-- Performance optimization (lag on feed/photo game pages)
+### P1 - High Priority  
+- Performance optimization
 
 ### P2 - Medium Priority
-- Client-side Face Match button enhancement
-- Full Subscription Tiers functionality
+- Face Match button enhancement
+- Subscription tiers functionality
 
-## Technical Notes
-
-### Real-time Sync
-- API polling used instead of WebSockets for reliability
-- Photo stats calculated on-the-fly when requested
-- Age bonus calculated based on minted_at timestamp
-
-### MongoDB Schema (minted_photos)
-- `mint_id`, `name`, `image_url`, `thumbnail_url`
-- `base_dollar_value`, `dollar_value`, `total_dollar_value`
-- `level`, `xp`, `stars`, `has_golden_frame`
-- `scenery_type`, `strength_vs`, `weakness_vs`
-- `win_streak`, `lose_streak`, `battles_won`, `battles_lost`
-- `total_reactions`, `reaction_milestone_count`
-- `face_detection_score`, `selfie_match_score`, `selfie_match_completed`
-- `current_stamina`, `max_stamina`
-- `minted_at`, `created_at`, `last_battle_at`
-
-### Test Credentials
+## Test Credentials
 - User 1: test@blendlink.com / admin
 - User 2: test@example.com / test123
 
