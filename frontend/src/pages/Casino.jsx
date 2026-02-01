@@ -1317,6 +1317,27 @@ export default function Casino() {
     setUser({ ...user, bl_coins: newBalance });
   }, [user, setUser]);
 
+  // Admin-only access check
+  if (user?.role !== 'admin') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center" data-testid="casino-restricted">
+        <div className="text-center p-8 max-w-md">
+          <div className="w-20 h-20 rounded-full bg-amber-500/20 flex items-center justify-center mx-auto mb-6">
+            <span className="text-4xl">🎰</span>
+          </div>
+          <h1 className="text-2xl font-bold mb-2">Casino Coming Soon</h1>
+          <p className="text-gray-400 mb-6">
+            Our casino games are currently in development. Stay tuned for exciting games like Blackjack, Slots, Roulette, and more!
+          </p>
+          <Button onClick={() => navigate('/games')} className="bg-gradient-to-r from-purple-600 to-pink-600">
+            <ChevronLeft className="w-4 h-4 mr-2" />
+            Back to Games
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   const games = [
     { id: "daily", name: "Daily Spin", icon: "🎁", color: "from-yellow-500 to-amber-600", desc: "FREE spin every day!" },
     { id: "poker_tournament", name: "PKO Poker", icon: "🃏", color: "from-amber-500 to-red-600", desc: "Live tournament!", isNew: true, link: "/poker" },
