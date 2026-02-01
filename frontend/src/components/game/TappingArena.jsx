@@ -603,8 +603,13 @@ export const TappingArena = ({
   }, [opponentRequiredTaps]);
   
   // API POLLING FOR TAP STATE (Critical for real-time sync when WebSocket fails)
+  // Start polling as soon as we have a sessionId, not just during 'active' phase
   useEffect(() => {
-    if (gamePhase !== 'active' || !sessionId || isBot) return;
+    // Poll during countdown AND active phases (not just active)
+    if (!sessionId || isBot) return;
+    if (gamePhase !== 'countdown' && gamePhase !== 'active') return;
+    
+    console.log('[TapPoll] Starting polling for session:', sessionId, 'phase:', gamePhase);
     
     const pollTapState = async () => {
       try {
@@ -616,34 +621,46 @@ export const TappingArena = ({
           const serverOpponentTaps = data.opponent_taps || 0;
           const serverOpponentDollar = data.opponent_dollar || 0;
           
-          if (serverOpponentTaps > opponentTaps) {
+          // Always update if server has different value (not just greater)
+          // This handles edge cases where opponent taps reset
+          if (serverOpponentTaps !== opponentTaps) {
             console.log('[TapPoll] Opponent taps updated:', serverOpponentTaps, 'dollar:', serverOpponentDollar);
             setOpponentTaps(serverOpponentTaps);
             setOpponentDollar(serverOpponentDollar);
-            
-            // Check if opponent has won (critical for sync!)
-            if (serverOpponentTaps >= opponentRequiredTapsRef.current && !winner) {
-              console.log('[TapPoll] Opponent has won via poll!');
-              handleOpponentWinRef.current?.();
-            }
+          }
+          
+          // Check if opponent has won (only during active phase)
+          if (gamePhase === 'active' && serverOpponentTaps >= opponentRequiredTapsRef.current && !winner) {
+            console.log('[TapPoll] Opponent has won via poll!');
+            handleOpponentWinRef.current?.();
+          }
+          
+          // Also update our own taps from server (in case of desync)
+          const serverMyTaps = data.my_taps || 0;
+          const serverMyDollar = data.my_dollar || 0;
+          if (serverMyTaps !== playerTaps && serverMyTaps > 0) {
+            console.log('[TapPoll] My taps synced from server:', serverMyTaps);
+            setPlayerTaps(serverMyTaps);
+            setPlayerDollar(serverMyDollar);
           }
         }
       } catch (err) {
-        // Silent fail - polling should not interrupt gameplay
-        console.debug('[TapPoll] Error:', err.message);
+        // Log the error for debugging but don't spam
+        console.debug('[TapPoll] Error polling tap state:', err.message);
       }
     };
     
-    // Poll every 150ms for more responsive updates
-    pollIntervalRef.current = setInterval(pollTapState, 150);
-    pollTapState(); // Initial poll
+    // Poll every 100ms for more responsive updates (was 150ms)
+    pollIntervalRef.current = setInterval(pollTapState, 100);
+    pollTapState(); // Initial poll immediately
     
     return () => {
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current);
+        console.log('[TapPoll] Polling stopped');
       }
     };
-  }, [gamePhase, sessionId, isBot, opponentTaps, winner]);
+  }, [gamePhase, sessionId, isBot, winner]); // Removed opponentTaps dependency to avoid stale closure
   
   // Handle player win
   const handlePlayerWin = useCallback(() => {
