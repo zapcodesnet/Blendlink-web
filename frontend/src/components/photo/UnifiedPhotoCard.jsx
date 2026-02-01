@@ -498,6 +498,141 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
               )}
             </div>
             
+            {/* ========== NEW STATS SECTION (below Authenticity) ========== */}
+            <div className="border-t border-gray-700 pt-3 mt-3 space-y-2">
+              <div className="text-xs font-semibold text-gray-300 flex items-center gap-1 mb-2">
+                <Award size={12} className="text-amber-400" />
+                Photo Stats & Progression
+              </div>
+              
+              {/* Stars */}
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400 flex items-center gap-1.5 text-xs">
+                  <Star size={12} className="text-amber-400" />
+                  Stars
+                </span>
+                <div className="flex items-center gap-1">
+                  <StarsDisplay count={stars} hasGoldenFrame={hasGoldenFrame} />
+                  {stars > 0 && (
+                    <span className="text-green-400 text-[10px]">
+                      +{formatDollarValue(stars * 1_000_000)}
+                    </span>
+                  )}
+                </div>
+              </div>
+              
+              {/* Level with XP Progress Bar */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400 flex items-center gap-1.5 text-xs">
+                    <Award size={12} className="text-purple-400" />
+                    Level
+                  </span>
+                  <span className="text-white font-bold">
+                    Lv {level}
+                    {levelBonus > 0 && (
+                      <span className="text-green-400 text-[10px] ml-1">+{levelBonus}%</span>
+                    )}
+                  </span>
+                </div>
+                
+                {/* XP Progress Bar */}
+                <div className="space-y-0.5">
+                  <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(xpProgress || 0, 100)}%` }}
+                      transition={{ duration: 0.5, ease: "easeOut" }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-[9px] text-gray-500">
+                    <span>{formatXP(xp)} XP</span>
+                    <span>{Math.round(xpProgress || 0)}%</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Age */}
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400 flex items-center gap-1.5 text-xs">
+                  <Calendar size={12} className="text-blue-400" />
+                  Age
+                </span>
+                <div className="text-right">
+                  <span className="text-white text-xs">
+                    {photo.age_days || Math.floor((Date.now() - new Date(photo.minted_at || Date.now()).getTime()) / (1000 * 60 * 60 * 24))} days
+                  </span>
+                  {(photo.age_bonus || ageBonus || 0) > 0 && (
+                    <span className="text-green-400 text-[10px] ml-1">
+                      +{formatDollarValue(photo.age_bonus || ageBonus || 0)}
+                    </span>
+                  )}
+                </div>
+              </div>
+              
+              {/* Reactions */}
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400 flex items-center gap-1.5 text-xs">
+                  <Heart size={12} className="text-pink-400 fill-pink-400" />
+                  Reactions
+                </span>
+                <div className="text-right">
+                  <span className="text-white text-xs">❤️ {reactions || 0}</span>
+                  {(reactionBonus || 0) > 0 && (
+                    <span className="text-green-400 text-[10px] ml-1">
+                      +{formatDollarValue(reactionBonus || 0)}
+                    </span>
+                  )}
+                </div>
+              </div>
+              
+              {/* BL Coins */}
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400 flex items-center gap-1.5 text-xs">
+                  <Coins size={12} className="text-yellow-400" />
+                  BL Coins Spent
+                </span>
+                <div className="text-right">
+                  <span className="text-yellow-400 text-xs">
+                    {(photo.bl_coins_spent || upgradeValue || 0).toLocaleString()} BL
+                  </span>
+                  {(upgradeValue || 0) > 0 && (
+                    <span className="text-green-400 text-[10px] ml-1">
+                      +{formatDollarValue(upgradeValue || 0)}
+                    </span>
+                  )}
+                </div>
+              </div>
+              
+              {/* Seniority */}
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400 flex items-center gap-1.5 text-xs">
+                  <Zap size={12} className={level >= 60 ? "text-yellow-400" : "text-gray-500"} />
+                  Seniority
+                </span>
+                <div className="text-right">
+                  {level >= 60 ? (
+                    <span className="text-yellow-400 text-xs font-bold animate-pulse">
+                      ✨ MAX (+20%)
+                    </span>
+                  ) : (
+                    <span className="text-gray-500 text-xs">
+                      {60 - level} levels to max
+                    </span>
+                  )}
+                </div>
+              </div>
+              
+              {/* Base Value reminder */}
+              <div className="border-t border-gray-700/50 pt-2 mt-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500 text-[10px]">Base Value</span>
+                  <span className="text-gray-400 text-xs">{formatDollarValue(baseDollarValue)}</span>
+                </div>
+              </div>
+            </div>
+            
             {/* Flip back */}
             <button 
               onClick={handleFlip}
