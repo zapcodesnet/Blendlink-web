@@ -710,8 +710,8 @@ export const PVPBattleArena = ({
               myPhoto = actualIsPlayer1 ? sessionData.round_result.player1_photo : sessionData.round_result.player2_photo;
               oppPhoto = actualIsPlayer1 ? sessionData.round_result.player2_photo : sessionData.round_result.player1_photo;
             } else if (sessionData.player1_photo && sessionData.player2_photo) {
-              myPhoto = isPlayer1 ? sessionData.player1_photo : sessionData.player2_photo;
-              oppPhoto = isPlayer1 ? sessionData.player2_photo : sessionData.player1_photo;
+              myPhoto = actualIsPlayer1 ? sessionData.player1_photo : sessionData.player2_photo;
+              oppPhoto = actualIsPlayer1 ? sessionData.player2_photo : sessionData.player1_photo;
             }
             
             if (myPhoto) setMySelectedPhoto(myPhoto);
@@ -728,11 +728,16 @@ export const PVPBattleArena = ({
           if (sessionData.status === 'tapping') {
             console.log('[Polling] Tapping phase detected');
             
-            // Get photos from session
-            let myPhoto = isPlayer1 ? sessionData.player1_photo : sessionData.player2_photo;
-            let oppPhoto = isPlayer1 ? sessionData.player2_photo : sessionData.player1_photo;
+            // Get photos from session - use actualIsPlayer1 for correct assignment
+            let myPhoto = actualIsPlayer1 ? sessionData.player1_photo : sessionData.player2_photo;
+            let oppPhoto = actualIsPlayer1 ? sessionData.player2_photo : sessionData.player1_photo;
             
             if (myPhoto && oppPhoto) {
+              console.log('[Polling] Setting photos for tapping:', {
+                myPhotoId: myPhoto?.mint_id,
+                oppPhotoId: oppPhoto?.mint_id,
+                actualIsPlayer1
+              });
               setMySelectedPhoto(myPhoto);
               setOpponentSelectedPhoto(oppPhoto);
               if (gamePhase !== 'playing') {
