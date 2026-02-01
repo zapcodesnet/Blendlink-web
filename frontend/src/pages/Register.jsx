@@ -19,10 +19,12 @@ By creating an account, you acknowledge that:
 
 export default function Register() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
+  const [referralLocked, setReferralLocked] = useState(false);
   const [form, setForm] = useState({ 
     email: "", 
     password: "", 
@@ -30,6 +32,15 @@ export default function Register() {
     username: "",
     referral_code: ""
   });
+
+  // Auto-populate referral code from URL parameter and lock it
+  useEffect(() => {
+    const refCode = searchParams.get('ref') || searchParams.get('referral');
+    if (refCode) {
+      setForm(prev => ({ ...prev, referral_code: refCode.toUpperCase() }));
+      setReferralLocked(true);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
