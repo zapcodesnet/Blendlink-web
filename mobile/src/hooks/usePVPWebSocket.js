@@ -17,12 +17,13 @@ import { photoGameAPI } from '../services/api';
  * @param {boolean} options.autoConnect - Auto-connect when roomId is provided
  * @param {function} options.onMessage - Message callback
  * @param {string} options.username - Username for join message
+ * @param {string} options.userId - User ID for player identification
  * @param {Array} options.photos - Photos for join message (required for join)
  * @param {boolean} options.isCreator - Whether this player is the game creator
  * @returns {Object} WebSocket state and actions
  */
 export function usePVPWebSocket(roomId, options = {}) {
-  const { autoConnect = true, onMessage, username, photos, isCreator = false } = options;
+  const { autoConnect = true, onMessage, username, userId, photos, isCreator = false } = options;
 
   // Connection state
   const [isConnected, setIsConnected] = useState(false);
