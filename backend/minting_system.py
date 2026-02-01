@@ -364,6 +364,159 @@ class PhotoBattle(BaseModel):
     completed_at: Optional[datetime] = None
 
 
+# ============== REAL-TIME BONUS CALCULATIONS ==============
+def calculate_age_bonus(minted_at: datetime) -> Dict[str, Any]:
+    """Calculate Age bonus: +$1M every 30 days automatically"""
+    now = datetime.now(timezone.utc)
+    if minted_at.tzinfo is None:
+        minted_at = minted_at.replace(tzinfo=timezone.utc)
+    
+    days_since_mint = (now - minted_at).days
+    cycles_completed = days_since_mint // AGE_BONUS_DAYS
+    age_bonus = cycles_completed * AGE_BONUS_VALUE
+    
+    days_until_next = AGE_BONUS_DAYS - (days_since_mint % AGE_BONUS_DAYS)
+    
+    return {
+        "days_old": days_since_mint,
+        "cycles_completed": cycles_completed,
+        "age_bonus_value": age_bonus,
+        "days_until_next_bonus": days_until_next,
+        "next_bonus_date": now + timedelta(days=days_until_next)
+    }
+
+def calculate_star_bonus(level: int, base_value: int) -> Dict[str, Any]:
+    """Calculate Star bonus based on level milestones"""
+    stars = 0
+    total_star_bonus = 0
+    star_details = []
+    
+    for lvl, data in sorted(STAR_MILESTONES.items()):
+        if level >= lvl:
+            stars = data["stars"]
+            # +$1M flat + 10% of current base value per star milestone
+            milestone_bonus = STAR_BONUS_FLAT + int(base_value * STAR_BONUS_PERCENT / 100)
+            total_star_bonus += milestone_bonus
+            star_details.append({
+                "level": lvl,
+                "stars": data["stars"],
+                "bonus": milestone_bonus,
+                "bl_coins": data.get("bl_coins", 0)
+            })
+    
+    return {
+        "current_stars": stars,
+        "total_star_bonus": total_star_bonus,
+        "milestones_achieved": star_details,
+        "has_golden_frame": level >= SENIORITY_MAX_LEVEL
+    }
+
+def calculate_seniority_bonus(level: int, total_value: int) -> Dict[str, Any]:
+    """Calculate Seniority bonus at Level 60"""
+    if level >= SENIORITY_MAX_LEVEL:
+        # +$1M + 20% of total Dollar Value
+        seniority_bonus = SENIORITY_BONUS_FLAT + int(total_value * SENIORITY_BONUS_PERCENT / 100)
+        return {
+            "seniority_achieved": True,
+            "seniority_bonus": seniority_bonus,
+            "has_golden_frame": True
+        }
+    return {
+        "seniority_achieved": False,
+        "seniority_bonus": 0,
+        "has_golden_frame": False,
+        "levels_remaining": SENIORITY_MAX_LEVEL - level
+    }
+
+def calculate_reaction_bonus(total_reactions: int, current_milestone_count: int = 0) -> Dict[str, Any]:
+    """Calculate reaction bonus: +$1M per 100 reactions"""
+    new_milestones = total_reactions // REACTION_BONUS_THRESHOLD
+    new_bonus_milestones = new_milestones - current_milestone_count
+    reaction_bonus = new_milestones * REACTION_BONUS_VALUE
+    
+    reactions_to_next = REACTION_BONUS_THRESHOLD - (total_reactions % REACTION_BONUS_THRESHOLD)
+    if reactions_to_next == REACTION_BONUS_THRESHOLD:
+        reactions_to_next = 0  # Just hit a milestone
+    
+    return {
+        "total_reactions": total_reactions,
+        "milestones_reached": new_milestones,
+        "new_milestones": max(0, new_bonus_milestones),
+        "reaction_bonus_value": reaction_bonus,
+        "reactions_since_last_milestone": total_reactions % REACTION_BONUS_THRESHOLD,
+        "reactions_to_next_bonus": reactions_to_next
+    }
+
+def calculate_total_dollar_value(photo_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Calculate total Dollar Value with ALL bonuses applied in real-time.
+    This is the master calculation that combines all boost sources.
+    """
+    base_value = photo_data.get("base_dollar_value", 1_000_000)
+    minted_at = photo_data.get("minted_at", datetime.now(timezone.utc))
+    if isinstance(minted_at, str):
+        minted_at = datetime.fromisoformat(minted_at.replace("Z", "+00:00"))
+    
+    level = photo_data.get("level", 1)
+    xp = photo_data.get("xp", 0)
+    total_reactions = photo_data.get("total_reactions", 0)
+    reaction_milestone_count = photo_data.get("reaction_milestone_count", 0)
+    
+    # 1. Base Dollar Value (from AI scoring)
+    total = base_value
+    
+    # 2. Level Bonus (cumulative %)
+    level_bonus_percent = photo_data.get("level_bonus_percent", 0)
+    level_bonus_value = int(base_value * level_bonus_percent / 100)
+    total += level_bonus_value
+    
+    # 3. Age Bonus (+$1M per 30 days)
+    age_data = calculate_age_bonus(minted_at)
+    total += age_data["age_bonus_value"]
+    
+    # 4. Star Bonus (+$1M + 10% per star milestone)
+    star_data = calculate_star_bonus(level, base_value)
+    total += star_data["total_star_bonus"]
+    
+    # 5. Reaction Bonus (+$1M per 100 reactions)
+    reaction_data = calculate_reaction_bonus(total_reactions, reaction_milestone_count)
+    total += reaction_data["reaction_bonus_value"]
+    
+    # 6. Monthly Growth (legacy - also tracked as age bonus)
+    monthly_growth = photo_data.get("monthly_growth_value", 0)
+    # Don't double-count - age bonus replaces monthly growth
+    
+    # 7. Upgrade Value (BL coins spent)
+    upgrade_value = photo_data.get("total_upgrade_value", 0)
+    total += upgrade_value
+    
+    # 8. Seniority Bonus (Level 60: +$1M + 20%)
+    seniority_data = calculate_seniority_bonus(level, total)
+    if seniority_data["seniority_achieved"]:
+        total += seniority_data["seniority_bonus"]
+    
+    # 9. XP Progress to next level
+    xp_progress = get_xp_to_next_level(level, xp)
+    
+    return {
+        "base_dollar_value": base_value,
+        "total_dollar_value": total,
+        "level": level,
+        "xp": xp,
+        "xp_progress": xp_progress,
+        "stars": star_data["current_stars"],
+        "has_golden_frame": star_data["has_golden_frame"] or seniority_data["has_golden_frame"],
+        "bonuses": {
+            "level_bonus": {"percent": level_bonus_percent, "value": level_bonus_value},
+            "age_bonus": age_data,
+            "star_bonus": star_data,
+            "reaction_bonus": reaction_data,
+            "upgrade_bonus": {"value": upgrade_value},
+            "seniority_bonus": seniority_data,
+        }
+    }
+
+
 # ============== AI PHOTO ANALYSIS ==============
 async def analyze_photo_with_ai(image_base64: str, mime_type: str = "image/jpeg") -> Dict[str, Any]:
     """
