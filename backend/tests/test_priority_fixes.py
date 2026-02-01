@@ -172,7 +172,8 @@ class TestProfilePictureControls:
         
         self.session.headers.update({"Authorization": f"Bearer {token}"})
         
-        response = self.session.get(f"{BASE_URL}/api/users/me")
+        # Use auth/me endpoint instead of users/me
+        response = self.session.get(f"{BASE_URL}/api/auth/me")
         assert response.status_code == 200, f"Failed to get user data: {response.text}"
         
         user_data = response.json()
@@ -291,7 +292,8 @@ class TestPVPSessionCreation:
         
         self.session.headers.update({"Authorization": f"Bearer {token}"})
         
-        response = self.session.get(f"{BASE_URL}/api/photo-game/pvp/open-games")
+        # Correct endpoint is /api/photo-game/open-games (not /pvp/open-games)
+        response = self.session.get(f"{BASE_URL}/api/photo-game/open-games")
         assert response.status_code == 200, f"Failed to get open games: {response.text}"
         
         data = response.json()
