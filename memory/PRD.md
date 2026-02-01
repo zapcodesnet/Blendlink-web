@@ -1,6 +1,47 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 31, 2026 (CRITICAL PVP isPlayer1 Bug Fix - Session 73)
+## Latest Update: February 1, 2026 (CRITICAL PVP Photo Selection Fix - Session 74)
+
+---
+
+## SESSION 74: CRITICAL PVP Photo Selection Bug Fix ✅
+
+### Date: February 1, 2026
+
+### Critical Bug Fixed:
+**Creator sees opponent's photos instead of their own during Round 1 selection**
+
+### Root Cause Analysis:
+The `handleGameStart` function was accessing `gameData.player1_photos` directly, but the backend returns photos nested under `gameData.session.player1_photos`. The frontend wasn't extracting the nested session object.
+
+### Fixes Applied:
+
+#### PhotoGameArena.jsx - handleGameStart (Lines 1744-1830)
+```javascript
+// BEFORE (broken):
+const myPhotos = amICreator 
+  ? (gameData?.creator_photos || gameData?.player1_photos || ...) // ❌ Wrong!
+
+// AFTER (fixed):
+const sessionData = gameData?.session || gameData;  // ✅ Extract nested session
+const myPhotos = amICreator 
+  ? (sessionData?.player1_photos || gameData?.creator_photos || ...) // ✅ Correct!
+```
+
+Also ensured `player1_id` and `player2_id` are included in `fullSession` for correct `isPlayer1` determination.
+
+### Test Results:
+- ✅ Backend: 100% (4/4 tests passed)
+- ✅ Frontend: 100% (UI loads correctly)
+- ✅ Creator sees their own photos (mint_test_*)
+- ✅ Joiner sees their own photos (mint_15c*, etc.)
+- ✅ player1_id correctly identifies creator
+
+### Files Modified:
+- `/app/frontend/src/pages/PhotoGameArena.jsx` (Lines 1744-1830)
+
+### Test Reports:
+- `/app/test_reports/iteration_94.json` - Photo session extraction fix verification
 
 ---
 
