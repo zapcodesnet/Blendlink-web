@@ -1544,8 +1544,8 @@ const PhotoGameArena = () => {
   useEffect(() => {
     const activeGameStates = [
       'pvp_lobby', 'pvp_browse', 'pvp_select_join', 'pvp_battle',
-      'rps_auction', 'auction_battle', 'photo_battle', 'tiebreaker',
-      'matchmaking', 'result', 'spectating'
+      'pvp_create', 'rps_auction', 'auction_battle', 'photo_battle', 'tiebreaker',
+      'matchmaking', 'result', 'spectating', 'match_history', 'live_battles'
     ];
     const shouldHide = activeGameStates.includes(gameState);
     setHideNav(shouldHide);
