@@ -168,8 +168,8 @@ class TestPVPPhotoSessionExtraction:
         session = start_data.get("session", {})
         print(f"Session keys: {list(session.keys())}")
         
-        # Step 5: Verify session contains player1_photos and player2_photos
-        print("\n=== Step 5: Verify Session Contains Photos ===")
+        # Step 6: Verify session contains player1_photos and player2_photos
+        print("\n=== Step 6: Verify Session Contains Photos ===")
         assert "player1_photos" in session, "player1_photos not in session object!"
         assert "player2_photos" in session, "player2_photos not in session object!"
         
