@@ -6,89 +6,101 @@ Blendlink is a minted photo game platform where users mint photos with AI-analyz
 ## Core Features
 
 ### Photo Minting System
-- **Minting Fee**: 200 BL coins per photo (Updated Feb 2026)
+- **Minting Fee**: 200 BL coins per photo
 - AI analysis across 11 weighted categories (max $1B total)
 - Face detection + optional selfie match for authenticity bonus
 - Scenery classification (Natural, Water, Man-made, Neutral)
 
-### Dollar Value (Core Power) System
-- Base value from AI scoring (0-100% → $1M-$1B)
-- Permanent bonuses from: Level, Stars, Age, Reactions, BL Coins, Seniority
-- Temporary multipliers from Win Streaks (×1.25 to ×3.00)
-- Lose Streak immunity (3+ losses = scenery immunity)
-
-### NEW Progression System (Implemented Feb 2026)
-#### Stats on Back of Photo Card (Below Authenticity):
-1. **Stars** - Milestone bonuses at L10, L20, L30, L40, L50 (+$1M + 10% each)
+### NEW Progression System
+Stats on back of photo card (below Authenticity):
+1. **Stars** - Milestone bonuses at L10-L50 (+$1M + 10% each)
 2. **Level** - XP-based progression with bonus percentages
-3. **Age** - +$1M every 30 days automatically (endless cycle)
-4. **Reactions** - +$1M per 100 reactions (counter resets, total visible)
+3. **Age** - +$1M every 30 days automatically
+4. **Reactions** - +$1M per 100 reactions
 5. **BL Coins** - Direct conversion to Dollar Value boost
 6. **Seniority** - Level 60 = +$1M + 20% + Golden Sparkling Frame
 
-#### XP Meter Bar
+### XP Meter Bar
 - Located BELOW Base Value section on back of card
 - Shows: Current XP / XP needed for next level
 - Percentage indicator with shimmer animation
-- Progress toward next level displayed
 
 ### Battle System
 - **PVP Mode**: Real-time battles against other players
 - **Bot Mode**: AI opponents (Easy, Medium, Hard, Expert)
 - **Stamina System**: 24/24 max, -1 per win, -2 per loss, +1/hour regen
 
-### Subscription Tiers
-- Bronze ($4.99/mo): 40 mints/day, ×2 XP, 15K BL daily
-- Silver ($9.99/mo): 100 mints/day, ×3 XP, 35K BL daily
-- Gold ($14.99/mo): 300 mints/day, ×4 XP, 80K BL daily
-- Platinum ($24.99/mo): Unlimited mints, ×5 XP, 200K BL daily
+## UI/UX Fixes Implemented (Feb 2026)
+
+### 1. Referral Link Auto-Populate
+- ✅ URL param `?ref=CODE` auto-populates registration form
+- ✅ Field is locked (readonly) when populated from URL
+- ✅ Green styling with checkmark icon
+- ✅ Message: "✓ Referral code applied!"
+
+### 2. Hide Bottom Nav in Game States
+- ✅ NavContext created in App.js
+- ✅ Bottom nav hidden during: pvp_lobby, pvp_browse, pvp_battle, auction_battle, rps_auction, pvp_create, match_history, live_battles, etc.
+- ✅ Nav restored when exiting game views
+
+### 3. Auto-Refresh & Highlight New Minted Photo
+- ✅ After minting: auto-refresh photos list
+- ✅ Newly minted photo has glowing purple animation
+- ✅ Sparkle particles around new photo
+- ✅ "✨ NEW" badge in top-right corner
+- ✅ Animation clears when user clicks/views the photo
+
+### 4. Casino Access Restriction
+- ✅ Casino accessible to admin users only
+- ✅ Non-admin users see "🚧 Coming Soon" on Games page
+- ✅ /casino page shows restricted message for non-admin
+
+### 5. Scrolling Fixes
+- ✅ Landing page: fully scrollable
+- ✅ Minted-photos page: fully scrollable
+- ✅ Photo-game page: fully scrollable
+- ✅ Touch and mouse scroll working
+
+### 6. Photo Data Sync (photo-game ↔ minted-photos)
+- Both pages fetch from same API endpoints
+- Full-stats endpoint returns all progression data
+- Real-time updates via API polling
 
 ## Architecture
 
 ### Backend (FastAPI + MongoDB)
-- `/app/backend/minting_system.py` - Core minting logic, MINT_COST_BL=200
-- `/app/backend/minting_routes.py` - API endpoints including `/photo/{mint_id}/full-stats`
+- `/app/backend/minting_system.py` - Core minting logic
+- `/app/backend/minting_routes.py` - API endpoints
+- `/app/backend/game_routes.py` - PVP/Bot battle endpoints
 
 ### Frontend (React)
-- `/app/frontend/src/components/photo/UnifiedPhotoCard.jsx` - Photo card component
-- `/app/frontend/src/pages/MintedPhotos.jsx` - Photo gallery with lightbox
+- `/app/frontend/src/App.js` - NavContext, AuthContext
+- `/app/frontend/src/pages/Register.jsx` - Referral auto-populate
+- `/app/frontend/src/pages/MintedPhotos.jsx` - Photo gallery with highlighting
+- `/app/frontend/src/pages/PhotoGameArena.jsx` - Game arena with nav hiding
+- `/app/frontend/src/pages/Games.jsx` - Casino restriction
+- `/app/frontend/src/pages/Casino.jsx` - Admin-only access check
 
 ### Mobile (React Native/Expo)
-- `/app/mobile/src/components/UnifiedPhotoCard.js` - Mobile photo card
+- `/app/mobile/src/components/UnifiedPhotoCard.js` - Photo card
 
-## API Endpoints
-
-### Minting
-- `GET /api/minting/config` - Returns mint_cost_bl (200)
-- `GET /api/minting/photo/{mint_id}/full-stats` - Complete stats with bonuses
-- `POST /api/minting/photo/upload` - Mint new photo
-
-## What's Been Implemented (Feb 2026)
-
-### Verified Working:
-- ✅ Minting fee changed to 200 BL coins (UI + Backend)
-- ✅ XP Meter Bar with percentage and progress tracking
-- ✅ New stats section: Stars, Level, Age, Reactions, BL Coins, Seniority
-- ✅ Full-stats API endpoint returns all new fields
-- ✅ Lightbox fetches full stats on flip to back
-- ✅ Golden frame animation for Level 60 Seniority
-- ✅ Mobile UnifiedPhotoCard updated
+## Test Credentials
+- Admin: test@blendlink.com / admin
+- User: test@example.com / test123
 
 ## Known Issues / Backlog
 
 ### P0 - Critical
-- PVP tap synchronization bug
+- PVP tap synchronization (ongoing investigation)
 
-### P1 - High Priority  
-- Performance optimization
+### P1 - High Priority
+- Performance optimization on heavy pages
 
 ### P2 - Medium Priority
-- Face Match button enhancement
-- Subscription tiers functionality
+- Profile picture drag/position controls
+- Image orientation preservation during minting
 
-## Test Credentials
-- User 1: test@blendlink.com / admin
-- User 2: test@example.com / test123
-
-## Mocked APIs
-- Facebook social reaction counters (EmbedSocial integration)
+## Testing Status
+- Latest test report: /app/test_reports/iteration_96.json
+- Frontend tests: 100% pass rate (9/9 tests)
+- All UI/UX fixes verified working
