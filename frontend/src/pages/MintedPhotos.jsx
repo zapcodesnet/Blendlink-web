@@ -637,15 +637,21 @@ const PhotoCard = ({ photo, onSelect, onUpdate, viewMode, onViewFull, onSelfieMa
               ease: "easeInOut"
             }}
           />
-          {/* Sparkle particles */}
-          {[...Array(8)].map((_, i) => (
+          {/* Sparkle particles - fixed positions around corners */}
+          {[
+            { top: '10%', left: '10%' },
+            { top: '10%', left: '90%' },
+            { top: '90%', left: '10%' },
+            { top: '90%', left: '90%' },
+            { top: '50%', left: '5%' },
+            { top: '50%', left: '95%' },
+            { top: '5%', left: '50%' },
+            { top: '95%', left: '50%' },
+          ].map((pos, i) => (
             <motion.div
               key={i}
               className="absolute w-2 h-2 bg-white rounded-full pointer-events-none"
-              style={{
-                top: `${Math.random() * 100}%`,
-                left: `${Math.random() * 100}%`,
-              }}
+              style={pos}
               animate={{
                 scale: [0, 1.5, 0],
                 opacity: [0, 1, 0],
