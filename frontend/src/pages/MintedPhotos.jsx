@@ -617,12 +617,63 @@ const PhotoCard = ({ photo, onSelect, onUpdate, viewMode, onViewFull, onSelfieMa
   // Grid view card - compact bottom section with only essential stats
   return (
     <motion.div
-      className="relative group cursor-pointer"
+      className={`relative group cursor-pointer ${isNewlyMinted ? 'z-10' : ''}`}
       whileHover={{ scale: 1.02 }}
-      onClick={() => onSelect?.(photo)}
+      onClick={handlePhotoClick}
     >
+      {/* Glowing/Sparkling animation for newly minted photos */}
+      {isNewlyMinted && (
+        <>
+          {/* Outer glow pulse */}
+          <motion.div
+            className="absolute -inset-1 rounded-xl bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 opacity-75 blur-md"
+            animate={{
+              opacity: [0.5, 0.9, 0.5],
+              scale: [0.98, 1.02, 0.98],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+          {/* Sparkle particles */}
+          {[...Array(8)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-2 h-2 bg-white rounded-full pointer-events-none"
+              style={{
+                top: `${Math.random() * 100}%`,
+                left: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                scale: [0, 1.5, 0],
+                opacity: [0, 1, 0],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                delay: i * 0.2,
+              }}
+            />
+          ))}
+        </>
+      )}
+      
       {/* Card */}
-      <div className={`bg-gray-800/80 rounded-xl overflow-hidden border ${hasGoldenFrame ? 'border-yellow-500 ring-2 ring-yellow-500/50' : 'border-gray-700/50 hover:border-purple-500/50'} transition-all`}>
+      <div className={`relative bg-gray-800/80 rounded-xl overflow-hidden border ${
+        isNewlyMinted 
+          ? 'border-purple-400 ring-2 ring-purple-500/50 shadow-[0_0_30px_rgba(168,85,247,0.5)]' 
+          : hasGoldenFrame 
+            ? 'border-yellow-500 ring-2 ring-yellow-500/50' 
+            : 'border-gray-700/50 hover:border-purple-500/50'
+      } transition-all`}>
+        {/* NEW badge for newly minted */}
+        {isNewlyMinted && (
+          <div className="absolute top-2 right-2 z-20 px-2 py-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full text-xs font-bold text-white shadow-lg animate-bounce">
+            ✨ NEW
+          </div>
+        )}
         {/* Image - Clean, no overlays */}
         <div className="relative aspect-square">
           {photo.image_url ? (
