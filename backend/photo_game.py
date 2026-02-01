@@ -383,6 +383,14 @@ class PVPGameSession(BaseModel):
     # Current round's selected photos
     player1_current_photo_id: Optional[str] = None
     player2_current_photo_id: Optional[str] = None
+    player1_current_photo: Optional[Dict] = None  # Current round photo data
+    player2_current_photo: Optional[Dict] = None  # Current round photo data
+    
+    # Tapping round state (critical for real-time sync)
+    player1_taps: int = 0
+    player2_taps: int = 0
+    player1_dollar: float = 0.0
+    player2_dollar: float = 0.0
     
     # Scores (first to 3 wins)
     player1_wins: int = 0
@@ -400,6 +408,7 @@ class PVPGameSession(BaseModel):
     status: OpenGameStatus = OpenGameStatus.IN_PROGRESS
     winner_id: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
 
 
