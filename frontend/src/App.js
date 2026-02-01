@@ -101,6 +101,12 @@ export const AuthContext = createContext(null);
 // Cart context for global cart state
 export const CartContext = createContext(null);
 
+// Nav visibility context - controls bottom nav visibility in game states
+export const NavContext = createContext({ 
+  hideNav: false, 
+  setHideNav: () => {} 
+});
+
 // Re-export api for backward compatibility
 export { api };
 
