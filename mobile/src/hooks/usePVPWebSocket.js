@@ -406,6 +406,28 @@ export function usePVPWebSocket(roomId, options = {}) {
               }));
             }
           }
+          
+          // Handle tapping status - both selected, ready to tap
+          if (sessionData.status === 'tapping') {
+            console.log('[usePVPWS Polling] Tapping phase detected!');
+            
+            const myPhoto = amPlayer1 ? sessionData.player1_photo : sessionData.player2_photo;
+            const oppPhoto = amPlayer1 ? sessionData.player2_photo : sessionData.player1_photo;
+            
+            if (myPhoto && oppPhoto) {
+              console.log('[usePVPWS Polling] Setting up tapping phase with photos:', {
+                myPhoto: myPhoto?.mint_id,
+                oppPhoto: oppPhoto?.mint_id,
+              });
+              setGameState(prev => ({
+                ...prev,
+                myPhoto,
+                opponentPhoto: oppPhoto,
+                roundPhase: 'playing',
+                opponentHasSelected: true,
+              }));
+            }
+          }
 
           // Handle game completion
           if (sessionData.status === 'complete' || sessionData.status === 'finished') {
