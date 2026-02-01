@@ -691,9 +691,28 @@ export const PVPBattleArena = ({
             if (myPhoto) setMySelectedPhoto(myPhoto);
             if (oppPhoto) setOpponentSelectedPhoto(oppPhoto);
             
-            // Transition to playing phase if we have both photos
-            if (myPhoto && oppPhoto) {
+            // Transition to playing phase if we have both photos and status is 'tapping'
+            if (myPhoto && oppPhoto && sessionData.status === 'tapping') {
+              console.log('[Polling] Both players selected - transitioning to tapping phase');
               setGamePhase('playing');
+            }
+          }
+          
+          // Handle tapping status (both selected, ready to tap)
+          if (sessionData.status === 'tapping') {
+            console.log('[Polling] Tapping phase detected');
+            
+            // Get photos from session
+            let myPhoto = isPlayer1 ? sessionData.player1_photo : sessionData.player2_photo;
+            let oppPhoto = isPlayer1 ? sessionData.player2_photo : sessionData.player1_photo;
+            
+            if (myPhoto && oppPhoto) {
+              setMySelectedPhoto(myPhoto);
+              setOpponentSelectedPhoto(oppPhoto);
+              if (gamePhase !== 'playing') {
+                console.log('[Polling] Transitioning to playing phase for tapping');
+                setGamePhase('playing');
+              }
             }
           }
           
