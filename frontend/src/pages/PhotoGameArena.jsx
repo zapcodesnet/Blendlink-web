@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../services/api';
-import { AuthContext } from '../App';
+import { AuthContext, NavContext } from '../App';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import auctionSounds from '../utils/auctionSounds';
