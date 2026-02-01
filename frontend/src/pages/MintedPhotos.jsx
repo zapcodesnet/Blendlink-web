@@ -970,6 +970,7 @@ const MintedPhotos = () => {
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [lightboxPhoto, setLightboxPhoto] = useState(null);  // For full image view
   const [selfieMatchPhoto, setSelfieMatchPhoto] = useState(null); // For selfie match modal
+  const [newlyMintedId, setNewlyMintedId] = useState(null); // Track newly minted photo for highlighting
   
   const { isAnimating, startAnimation, handleComplete, MintAnimationComponent } = useMintAnimation();
   
