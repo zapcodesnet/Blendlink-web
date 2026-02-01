@@ -9,17 +9,83 @@
  * 
  * Design Rules:
  * - Front: Clean image ONLY (no overlays, text, icons on image)
- * - Back: All stats displayed BELOW the image
+ * - Back: All stats displayed BELOW the image including new progression stats
+ * - XP meter bar shown below Base Value
+ * - Golden sparkling frame animation for Seniority Level 60
  * - Uniform design across all pages
  */
 
-import React, { useState, memo } from 'react';
+import React, { useState, memo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Star, Zap, Shield, Flame, Heart, TrendingUp,
-  Award, Calendar, Coins, Camera, Lock, Eye
+  Award, Calendar, Coins, Camera, Lock, Eye, Sparkles
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+
+// Golden Sparkling Frame Animation Component for Level 60 Seniority
+const GoldenSparklingFrame = ({ children }) => {
+  return (
+    <div className="relative">
+      {/* Animated sparkle particles */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
+        {[...Array(12)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1.5 h-1.5 bg-yellow-300 rounded-full shadow-[0_0_6px_2px_rgba(250,204,21,0.8)]"
+            initial={{
+              x: `${(i % 4) * 33}%`,
+              y: i < 4 ? '-10%' : i < 8 ? '110%' : `${(i - 8) * 50}%`,
+              opacity: 0
+            }}
+            animate={{
+              x: [
+                `${(i % 4) * 33}%`,
+                `${((i + 1) % 4) * 33}%`,
+                `${((i + 2) % 4) * 33}%`,
+              ],
+              y: i < 4 
+                ? ['-10%', '110%']
+                : i < 8 
+                  ? ['110%', '-10%'] 
+                  : [`${(i - 8) * 50}%`, `${100 - (i - 8) * 50}%`],
+              opacity: [0, 1, 1, 0],
+            }}
+            transition={{
+              duration: 3 + (i * 0.3),
+              repeat: Infinity,
+              delay: i * 0.25,
+              ease: "linear"
+            }}
+          />
+        ))}
+      </div>
+      
+      {/* Pulsing golden border */}
+      <motion.div
+        className="absolute inset-0 rounded-xl pointer-events-none"
+        style={{
+          background: 'linear-gradient(45deg, rgba(250,204,21,0.3), rgba(234,179,8,0.1), rgba(250,204,21,0.3))',
+          boxShadow: '0 0 20px rgba(250,204,21,0.4), inset 0 0 15px rgba(250,204,21,0.2)',
+        }}
+        animate={{
+          boxShadow: [
+            '0 0 20px rgba(250,204,21,0.4), inset 0 0 15px rgba(250,204,21,0.2)',
+            '0 0 35px rgba(250,204,21,0.6), inset 0 0 25px rgba(250,204,21,0.3)',
+            '0 0 20px rgba(250,204,21,0.4), inset 0 0 15px rgba(250,204,21,0.2)',
+          ]
+        }}
+        transition={{
+          duration: 2,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+      />
+      
+      {children}
+    </div>
+  );
+};
 
 // Scenery configuration - matches backend
 export const SCENERY_CONFIG = {
