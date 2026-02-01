@@ -353,28 +353,42 @@ export default function MobileTappingArena({
   }, [opponentRequiredTaps]);
   
   // API POLLING FOR TAP STATE (Critical for real-time sync when WebSocket fails)
+  // Start polling during countdown AND active phases
   useEffect(() => {
-    if (gamePhase !== 'active' || !sessionId || isBot) return;
+    if (!sessionId || isBot) return;
+    if (gamePhase !== 'countdown' && gamePhase !== 'active') return;
+    
+    console.log('[Mobile TapPoll] Starting polling for session:', sessionId, 'phase:', gamePhase);
     
     const pollTapState = async () => {
       try {
         const data = await photoGameAPI.pvpGetTapState(sessionId);
         
         if (data) {
-          // Update opponent taps and dollar from server
+          // Update opponent taps and dollar from server using refs for comparison
           const serverOpponentTaps = data.opponent_taps || 0;
           const serverOpponentDollar = data.opponent_dollar || 0;
           
-          if (serverOpponentTaps > opponentTaps) {
-            console.log('[Mobile TapPoll] Opponent taps updated:', serverOpponentTaps, 'dollar:', serverOpponentDollar);
+          // Always update if server has different value
+          if (serverOpponentTaps !== opponentTapsRef.current) {
+            console.log('[Mobile TapPoll] Opponent taps updated:', serverOpponentTaps, 'dollar:', serverOpponentDollar, '(was:', opponentTapsRef.current, ')');
             setOpponentTaps(serverOpponentTaps);
             setOpponentDollar(serverOpponentDollar);
-            
-            // Check if opponent has won (critical for sync!)
-            if (serverOpponentTaps >= opponentRequiredTapsRef.current && !winner) {
-              console.log('[Mobile TapPoll] Opponent has won via poll!');
-              handleOpponentWinRef.current?.();
-            }
+          }
+          
+          // Check if opponent has won (only during active phase)
+          if (gamePhase === 'active' && serverOpponentTaps >= opponentRequiredTapsRef.current && !winner) {
+            console.log('[Mobile TapPoll] Opponent has won via poll!');
+            handleOpponentWinRef.current?.();
+          }
+          
+          // Also update our own taps from server (in case of desync)
+          const serverMyTaps = data.my_taps || 0;
+          const serverMyDollar = data.my_dollar || 0;
+          if (serverMyTaps !== playerTapsRef.current && serverMyTaps > 0) {
+            console.log('[Mobile TapPoll] My taps synced from server:', serverMyTaps);
+            setPlayerTaps(serverMyTaps);
+            setPlayerDollar(serverMyDollar);
           }
         }
       } catch (err) {
@@ -383,16 +397,17 @@ export default function MobileTappingArena({
       }
     };
     
-    // Poll every 150ms for more responsive updates
-    pollIntervalRef.current = setInterval(pollTapState, 150);
-    pollTapState(); // Initial poll
+    // Poll every 100ms for more responsive updates
+    pollIntervalRef.current = setInterval(pollTapState, 100);
+    pollTapState(); // Initial poll immediately
     
     return () => {
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current);
+        console.log('[Mobile TapPoll] Polling stopped');
       }
     };
-  }, [gamePhase, sessionId, isBot, opponentTaps, winner]);
+  }, [gamePhase, sessionId, isBot, winner]); // Using refs for tap values
 
   // Send taps to API (in addition to WebSocket)
   const sendTapToApi = useCallback(async (tapCount) => {
@@ -404,8 +419,9 @@ export default function MobileTappingArena({
       if (response) {
         // Update dollar display from API response
         setPlayerDollar(response.my_dollar || 0);
-        if (response.opponent_taps > opponentTaps) {
-          setOpponentTaps(response.opponent_taps);
+        // Update opponent from response if newer
+        if (response.opponent_taps !== opponentTapsRef.current) {
+          setOpponentTaps(response.opponent_taps || 0);
           setOpponentDollar(response.opponent_dollar || 0);
         }
       }
