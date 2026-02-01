@@ -174,27 +174,48 @@ export default function Games() {
           </button>
         </div>
 
-        {/* Casino CTA Banner */}
-        <button
-          onClick={() => navigate("/casino")}
-          className="w-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 rounded-2xl p-6 text-white mb-6 text-left hover:scale-[1.02] transition-transform shadow-lg"
-          data-testid="casino-cta"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-white/80 text-sm font-medium">🎰 CASINO</p>
-              <p className="text-2xl font-bold mt-1">Casino Games</p>
-              <p className="text-sm text-white/90 mt-1">Blackjack • Slots • Roulette • Poker & More!</p>
+        {/* Casino CTA Banner - Admin Only or Coming Soon */}
+        {user?.role === 'admin' ? (
+          <button
+            onClick={() => navigate("/casino")}
+            className="w-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 rounded-2xl p-6 text-white mb-6 text-left hover:scale-[1.02] transition-transform shadow-lg"
+            data-testid="casino-cta"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-white/80 text-sm font-medium">🎰 CASINO</p>
+                <p className="text-2xl font-bold mt-1">Casino Games</p>
+                <p className="text-sm text-white/90 mt-1">Blackjack • Slots • Roulette • Poker & More!</p>
+              </div>
+              <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
+                <Spade className="w-8 h-8" />
+              </div>
             </div>
-            <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
-              <Spade className="w-8 h-8" />
+            <div className="mt-4 flex items-center gap-2 text-sm">
+              <span className="px-3 py-1 bg-white/20 rounded-full">Bet 10-10,000 BL</span>
+              <span className="px-3 py-1 bg-white/20 rounded-full">Provably Fair</span>
+            </div>
+          </button>
+        ) : (
+          <div
+            className="w-full bg-gradient-to-r from-gray-600 via-gray-700 to-gray-600 rounded-2xl p-6 text-white mb-6 text-left opacity-70 cursor-not-allowed"
+            data-testid="casino-cta-coming-soon"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-white/80 text-sm font-medium">🎰 CASINO</p>
+                <p className="text-2xl font-bold mt-1">Casino Games</p>
+                <p className="text-lg text-amber-400 mt-2 font-bold">🚧 Coming Soon</p>
+              </div>
+              <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
+                <Spade className="w-8 h-8" />
+              </div>
+            </div>
+            <div className="mt-4 flex items-center gap-2 text-sm">
+              <span className="px-3 py-1 bg-white/20 rounded-full">Stay Tuned!</span>
             </div>
           </div>
-          <div className="mt-4 flex items-center gap-2 text-sm">
-            <span className="px-3 py-1 bg-white/20 rounded-full">Bet 10-10,000 BL</span>
-            <span className="px-3 py-1 bg-white/20 rounded-full">Provably Fair</span>
-          </div>
-        </button>
+        )}
 
         {/* Balance Card */}
         <div className="bl-coin-gradient rounded-2xl p-6 text-white mb-6">
