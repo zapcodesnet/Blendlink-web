@@ -1,10 +1,80 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 31, 2026 (CRITICAL PVP Photo Selection Bug Fix - Session 72)
+## Latest Update: January 31, 2026 (CRITICAL PVP isPlayer1 Bug Fix - Session 73)
 
 ---
 
-## SESSION 72: CRITICAL PVP Bug Fix - Photo Selection & Winner Determination ✅
+## SESSION 73: CRITICAL PVP isPlayer1 Determination Bug Fix ✅
+
+### Date: January 31, 2026
+
+### Critical Bug Fixed:
+**Both players were tapping on joined player's photo only. Creator locked out. Endless reconnecting spinner.**
+
+### Root Cause Analysis:
+The `isPlayer1` determination in PVPBattleArena.jsx used `session?.player1_id === currentUserId`, but the `session` prop was STALE or didn't have `player1_id`. This caused `isPlayer1` to be `false` for BOTH players, making both see player2's photos!
+
+### Fixes Applied:
+
+#### 1. PVPBattleArena.jsx - isPlayer1 Determination (Lines 184-205)
+```javascript
+// CRITICAL FIX: Track player1_id from API response
+const [confirmedPlayer1Id, setConfirmedPlayer1Id] = useState(session?.player1_id || null);
+
+// Use confirmedPlayer1Id from API response if available
+const isPlayer1 = (confirmedPlayer1Id || session?.player1_id) === currentUserId;
+```
+
+#### 2. PVPBattleArena.jsx - Polling Logic (Lines 670-740)
+```javascript
+// Save player1_id from API response
+if (sessionData.player1_id && !confirmedPlayer1Id) {
+  setConfirmedPlayer1Id(sessionData.player1_id);
+}
+
+// Use correct isPlayer1 based on API response
+const actualIsPlayer1 = (sessionData.player1_id || confirmedPlayer1Id || session?.player1_id) === currentUserId;
+
+// All photo assignments now use actualIsPlayer1
+let myPhoto = actualIsPlayer1 ? sessionData.player1_photo : sessionData.player2_photo;
+let oppPhoto = actualIsPlayer1 ? sessionData.player2_photo : sessionData.player1_photo;
+```
+
+#### 3. PVPBattleArena.jsx - Reconnect Limit (Lines 615-640)
+```javascript
+// Max attempts reached - switch to polling mode permanently
+if (reconnectAttempts.current >= MAX_RECONNECT_ATTEMPTS && !pollingMode) {
+  setPollingMode(true);
+  setReconnecting(false);
+  showToastThrottled('info', 'Connection unstable - using backup sync');
+}
+```
+
+#### 4. Mobile usePVPWebSocket.js (Lines 340-395)
+```javascript
+// Added userId parameter for correct player determination
+const amPlayer1 = sessionData.player1_id === userId || isCreator;
+```
+
+### Test Results:
+- ✅ Backend: 100% (7/7 tests passed)
+- ✅ Creator sees THEIR photo on left (verified)
+- ✅ Joiner sees THEIR photo on left (verified)
+- ✅ Both players see opponent taps via polling (verified)
+- ✅ MAX_RECONNECT_ATTEMPTS = 3, then polling mode (verified)
+- ✅ No endless reconnecting spinner (verified)
+
+### Files Modified:
+- `/app/frontend/src/components/game/PVPBattleArena.jsx` (Lines 184-205, 670-740, 615-640)
+- `/app/mobile/src/hooks/usePVPWebSocket.js` (Lines 15-26, 340-395)
+- `/app/mobile/src/screens/PhotoGameArenaScreen.js` (Line 1610 - added userId)
+
+### Test Reports:
+- `/app/test_reports/iteration_92.json` - Full verification of isPlayer1 fix
+
+---
+
+## SESSION 72: PVP Photo Selection & Winner Determination Fix ✅
 
 ### Date: January 31, 2026
 
