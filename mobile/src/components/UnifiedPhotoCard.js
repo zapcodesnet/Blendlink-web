@@ -170,6 +170,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   const [showXPMultiplier, setShowXPMultiplier] = useState(false);
   const flipAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const sparkleAnim = useRef(new Animated.Value(0)).current;
   
   const scenery = SCENERY_CONFIG[photo?.scenery_type] || SCENERY_CONFIG.natural;
   
@@ -182,14 +183,15 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   const config = sizeConfig[size] || sizeConfig.medium;
   
   // Photo stats
-  const dollarValue = photo?.dollar_value || photo?.base_dollar_value || 0;
+  const dollarValue = photo?.dollar_value || photo?.total_dollar_value || photo?.base_dollar_value || 0;
+  const baseDollarValue = photo?.base_dollar_value || 1000000;
   const level = photo?.level || 1;
   const xp = photo?.xp || 0;
   const stars = photo?.stars || getStarsFromLevel(level);
   const hasGoldenFrame = photo?.has_golden_frame || level >= 60;
   const stamina = photo?.current_stamina ?? photo?.stamina ?? 24;
   const maxStamina = photo?.max_stamina || 24;
-  const staminaPercent = (stamina / maxStamina) * 100;
+  const staminaPercent = Math.min((stamina / maxStamina) * 100, 100);
   
   // Win/Loss streaks
   const winStreak = photo?.win_streak || 0;
@@ -198,8 +200,23 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   // Reactions and bonuses
   const reactions = photo?.total_reactions || 0;
   const reactionBonus = photo?.reaction_bonus_value || 0;
-  const monthlyGrowth = photo?.monthly_growth_value || 0;
   const upgradeValue = photo?.total_upgrade_value || 0;
+  
+  // NEW PROGRESSION STATS
+  const ageDays = photo?.age_days || 0;
+  const ageBonus = photo?.age_bonus_value || 0;
+  const starBonusValue = photo?.star_bonus_value || 0;
+  const seniorityAchieved = photo?.seniority_achieved || level >= 60;
+  const seniorityBonusValue = photo?.seniority_bonus_value || 0;
+  const levelsToSeniority = photo?.levels_to_seniority || Math.max(0, 60 - level);
+  const blCoinsSpent = photo?.bl_coins_spent || upgradeValue || 0;
+  const reactionsToNextBonus = photo?.reactions_to_next_bonus || (100 - (reactions % 100));
+  
+  // XP Progress data
+  const xpProgress = photo?.xp_progress || {};
+  const xpProgressPercent = photo?.xp_progress_percent || xpProgress.progress_percent || 0;
+  const xpToNextLevel = xpProgress.remaining || photo?.xp_to_next_level || 10;
+  const xpForNextLevel = xpProgress.xp_for_next_level || photo?.xp_for_next_level || 10;
   
   // Authenticity
   const faceScore = photo?.face_detection_score || 0;
@@ -209,6 +226,18 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   
   // Level bonus
   const levelBonus = photo?.level_bonus_percent || Math.floor(level / 5) * 2;
+  
+  // Start sparkle animation for Level 60
+  useEffect(() => {
+    if (seniorityAchieved) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(sparkleAnim, { toValue: 1, duration: 1500, useNativeDriver: true }),
+          Animated.timing(sparkleAnim, { toValue: 0, duration: 1500, useNativeDriver: true }),
+        ])
+      ).start();
+    }
+  }, [seniorityAchieved, sparkleAnim]);
   
   const handlePress = () => {
     if (disabled) return;
@@ -257,6 +286,11 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
     transform: [{ rotateY: backInterpolate }],
   };
   
+  const sparkleOpacity = sparkleAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.4, 1],
+  });
+  
   const getStaminaColor = () => {
     if (staminaPercent > 50) return '#22C55E';
     if (staminaPercent > 25) return '#EAB308';
@@ -275,6 +309,17 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
           style,
         ]}
       >
+        {/* Golden sparkle overlay for Level 60 */}
+        {seniorityAchieved && (
+          <Animated.View 
+            style={[
+              styles.sparkleOverlay,
+              { opacity: sparkleOpacity }
+            ]}
+            pointerEvents="none"
+          />
+        )}
+        
         {/* FRONT: Clean image only */}
         <Animated.View style={[styles.cardFace, frontAnimatedStyle]}>
           {/* Clean image - NO overlays */}
@@ -284,6 +329,12 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
               style={styles.image}
               resizeMode="cover"
             />
+            {/* Seniority sparkle icon */}
+            {seniorityAchieved && (
+              <Animated.Text style={[styles.sparkleIcon, { opacity: sparkleOpacity }]}>
+                ✨
+              </Animated.Text>
+            )}
           </View>
           
           {/* Stats BELOW image only */}
@@ -337,7 +388,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
           )}
         </Animated.View>
         
-        {/* BACK: All stats */}
+        {/* BACK: All stats - Scrollable */}
         <Animated.View style={[styles.cardFace, styles.cardBack, backAnimatedStyle]}>
           {/* Small preview */}
           <View style={styles.backPreview}>
@@ -346,6 +397,11 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
               style={styles.backPreviewImage}
               resizeMode="cover"
             />
+            {seniorityAchieved && (
+              <Animated.Text style={[styles.sparkleIconBack, { opacity: sparkleOpacity }]}>
+                ✨
+              </Animated.Text>
+            )}
             {showXPMultiplier && subscription?.xp_multiplier > 1 && (
               <XPMultiplierBadge 
                 multiplier={subscription.xp_multiplier} 
@@ -354,62 +410,65 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
             )}
           </View>
           
-          <View style={[styles.backContent, { backgroundColor: colors.card }]}>
-            {/* Core Dollar Value */}
-            <View style={styles.backValueContainer}>
-              <Text style={[styles.backDollarValue, { color: scenery.gradient[0] }]}>
+          <ScrollView 
+            style={[styles.backContent, { backgroundColor: colors.card }]}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Base Value */}
+            <View style={styles.baseValueSection}>
+              <Text style={styles.baseValueLabel}>Base Value</Text>
+              <Text style={[styles.baseValueAmount, { color: scenery.gradient[0] }]}>
+                {formatDollarValue(baseDollarValue)}
+              </Text>
+            </View>
+            
+            {/* ========== XP METER BAR (Below Base Value) ========== */}
+            <View style={styles.xpMeterSection}>
+              <View style={styles.xpHeader}>
+                <View style={styles.xpLevelRow}>
+                  <Text style={styles.xpLevelText}>🏆 Lv {level}</Text>
+                  <StarsDisplay count={stars} hasGoldenFrame={hasGoldenFrame} />
+                </View>
+                <Text style={styles.xpCountText}>{formatXP(xp)} / {formatXP(xpForNextLevel)} XP</Text>
+              </View>
+              
+              {/* XP Progress Bar */}
+              <View style={styles.xpBarContainer}>
+                <View style={styles.xpBarBg}>
+                  <LinearGradient
+                    colors={['#A855F7', '#EC4899']}
+                    style={[styles.xpBarFill, { width: `${Math.min(xpProgressPercent, 100)}%` }]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  />
+                  <Text style={styles.xpBarPercent}>{Math.round(xpProgressPercent)}%</Text>
+                </View>
+                <View style={styles.xpBarFooter}>
+                  <Text style={styles.xpToNext}>{xpToNextLevel} XP to Lv{level + 1}</Text>
+                  {levelBonus > 0 && (
+                    <Text style={styles.levelBonusText}>+{levelBonus}% boost</Text>
+                  )}
+                </View>
+              </View>
+            </View>
+            
+            {/* Total Dollar Value */}
+            <View style={styles.totalValueSection}>
+              <Text style={styles.totalValueLabel}>Total Dollar Value</Text>
+              <Text style={styles.totalValueAmount}>
                 {formatDollarValue(dollarValue)}
               </Text>
-              <Text style={styles.backValueLabel}>Total Power</Text>
             </View>
             
-            {/* Level & XP */}
-            <View style={styles.backStatRow}>
-              <Text style={styles.backStatLabel}>🏆 Lv {level}</Text>
-              <StarsDisplay count={stars} hasGoldenFrame={hasGoldenFrame} />
-              <Text style={styles.backStatValue}>{formatXP(xp)} XP</Text>
-            </View>
-            
-            {/* Level Bonus */}
-            {levelBonus > 0 && (
-              <View style={styles.backStatRow}>
-                <Text style={styles.backStatLabel}>📈 Level Bonus</Text>
-                <Text style={[styles.backStatValue, { color: '#22C55E' }]}>+{levelBonus}%</Text>
-              </View>
-            )}
-            
-            {/* Scenery */}
-            <View style={styles.backStatRow}>
-              <Text style={styles.backStatLabel}>{scenery.emoji} {scenery.label}</Text>
-              {scenery.strong && (
-                <Text style={styles.backStatHint}>Strong vs {scenery.strong}</Text>
-              )}
-            </View>
-            
-            {/* Streak */}
-            <StreakBadge winStreak={winStreak} loseStreak={loseStreak} />
-            
-            {/* Reactions */}
-            {reactions > 0 && (
-              <View style={styles.backStatRow}>
-                <Text style={[styles.backStatLabel, { color: '#EC4899' }]}>❤️ {reactions}</Text>
-                <Text style={[styles.backStatValue, { color: '#EC4899' }]}>+{formatDollarValue(reactionBonus)}</Text>
-              </View>
-            )}
-            
-            {/* Monthly Growth */}
-            {monthlyGrowth > 0 && (
-              <View style={styles.backStatRow}>
-                <Text style={[styles.backStatLabel, { color: '#3B82F6' }]}>📅 Monthly</Text>
-                <Text style={[styles.backStatValue, { color: '#3B82F6' }]}>+{formatDollarValue(monthlyGrowth)}</Text>
-              </View>
-            )}
-            
-            {/* Authenticity */}
+            {/* Authenticity Section */}
             <View style={styles.authenticitySection}>
               <View style={styles.backStatRow}>
                 <Text style={styles.backStatLabel}>🔐 Authenticity</Text>
                 <Text style={[styles.backStatValue, { color: '#22C55E' }]}>{faceScore + selfieScore}%</Text>
+              </View>
+              <View style={styles.authenticityDetails}>
+                <Text style={styles.authenticityDetail}>Face: {faceScore}%/5%</Text>
+                <Text style={styles.authenticityDetail}>Selfie: {selfieScore > 0 ? `${selfieScore}%/5%` : 'Not done'}</Text>
               </View>
               
               {/* Face Match Button */}
@@ -430,15 +489,112 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
               )}
               
               {selfieCompleted && (
-                <Text style={styles.authenticityLocked}>🔒 Authenticity Locked</Text>
+                <Text style={styles.authenticityLocked}>🔒 Authenticity Locked Forever</Text>
               )}
+            </View>
+            
+            {/* ========== NEW STATS SECTION (Below Authenticity) ========== */}
+            <View style={styles.newStatsSection}>
+              <Text style={styles.newStatsSectionTitle}>✨ Photo Stats & Bonuses</Text>
+              
+              {/* 1. Stars */}
+              <View style={styles.newStatRow}>
+                <Text style={styles.newStatLabel}>⭐ Stars</Text>
+                <View style={styles.newStatRight}>
+                  <StarsDisplay count={stars} hasGoldenFrame={hasGoldenFrame} />
+                  {starBonusValue > 0 && (
+                    <Text style={styles.newStatBonus}>+{formatDollarValue(starBonusValue)}</Text>
+                  )}
+                </View>
+              </View>
+              
+              {/* 2. Level */}
+              <View style={styles.newStatRow}>
+                <Text style={styles.newStatLabel}>🏆 Level</Text>
+                <View style={styles.newStatRight}>
+                  <Text style={styles.newStatValue}>Lv {level}</Text>
+                  {levelBonus > 0 && (
+                    <Text style={styles.newStatBonus}>+{levelBonus}%</Text>
+                  )}
+                </View>
+              </View>
+              
+              {/* 3. Age */}
+              <View style={styles.newStatRow}>
+                <Text style={styles.newStatLabel}>📅 Age</Text>
+                <View style={styles.newStatRight}>
+                  <Text style={styles.newStatValue}>{ageDays} days</Text>
+                  {ageBonus > 0 && (
+                    <Text style={styles.newStatBonus}>+{formatDollarValue(ageBonus)}</Text>
+                  )}
+                </View>
+              </View>
+              
+              {/* 4. Reactions */}
+              <View style={styles.newStatRow}>
+                <Text style={styles.newStatLabel}>❤️ Reactions</Text>
+                <View style={styles.newStatRight}>
+                  <Text style={[styles.newStatValue, { color: '#EC4899' }]}>{reactions}</Text>
+                  {reactionBonus > 0 && (
+                    <Text style={styles.newStatBonus}>+{formatDollarValue(reactionBonus)}</Text>
+                  )}
+                </View>
+              </View>
+              {reactions > 0 && reactionsToNextBonus < 100 && (
+                <Text style={styles.reactionsHint}>{reactionsToNextBonus} to next +$1M</Text>
+              )}
+              
+              {/* 5. BL Coins */}
+              <View style={styles.newStatRow}>
+                <Text style={styles.newStatLabel}>🪙 BL Coins</Text>
+                <View style={styles.newStatRight}>
+                  <Text style={[styles.newStatValue, { color: '#FBBF24' }]}>{blCoinsSpent.toLocaleString()} BL</Text>
+                  {upgradeValue > 0 && (
+                    <Text style={styles.newStatBonus}>+{formatDollarValue(upgradeValue)}</Text>
+                  )}
+                </View>
+              </View>
+              
+              {/* 6. Seniority */}
+              <View style={[
+                styles.newStatRow, 
+                seniorityAchieved && styles.seniorityRowAchieved
+              ]}>
+                <Text style={[
+                  styles.newStatLabel, 
+                  seniorityAchieved && styles.seniorityLabelAchieved
+                ]}>⚡ Seniority</Text>
+                <View style={styles.newStatRight}>
+                  {seniorityAchieved ? (
+                    <>
+                      <Text style={styles.seniorityMaxText}>✨ MAX</Text>
+                      <Text style={styles.newStatBonus}>+{formatDollarValue(seniorityBonusValue)}</Text>
+                    </>
+                  ) : (
+                    <Text style={styles.seniorityRemaining}>{levelsToSeniority} levels to max</Text>
+                  )}
+                </View>
+              </View>
+            </View>
+            
+            {/* Scenery & Streaks */}
+            <View style={styles.sceneryStreakSection}>
+              <View style={styles.backStatRow}>
+                <Text style={styles.backStatLabel}>{scenery.emoji} {scenery.label}</Text>
+                {scenery.strong && (
+                  <Text style={styles.backStatHint}>💪 vs {scenery.strong}</Text>
+                )}
+              </View>
+              
+              {/* Streak */}
+              <StreakBadge winStreak={winStreak} loseStreak={loseStreak} />
             </View>
             
             {/* Flip back */}
             <Pressable onPress={handleFlip} style={styles.flipButton}>
               <Text style={styles.flipText}>← Tap to flip back</Text>
             </Pressable>
-          </View>
+          </ScrollView>
         </Animated.View>
       </Animated.View>
     </Pressable>
