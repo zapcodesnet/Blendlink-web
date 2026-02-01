@@ -1496,6 +1496,7 @@ const Matchmaking = ({ onMatchFound, selectedPhoto, onPhotoSelect, onPracticeSta
 // ============== MAIN BATTLE ARENA COMPONENT ==============
 const PhotoGameArena = () => {
   const { user } = useContext(AuthContext);
+  const { setHideNav } = useContext(NavContext);
   const [gameState, setGameState] = useState('pvp_menu'); // NEW: Start with PVP menu
   const [session, setSession] = useState(null);
   const [stats, setStats] = useState(null);
@@ -1538,6 +1539,20 @@ const PhotoGameArena = () => {
   const [showBotSelector, setShowBotSelector] = useState(false);
   const [userBalance, setUserBalance] = useState(0);
   const [botWinStats, setBotWinStats] = useState({});
+  
+  // Hide bottom nav during active game states
+  useEffect(() => {
+    const activeGameStates = [
+      'pvp_lobby', 'pvp_browse', 'pvp_select_join', 'pvp_battle',
+      'rps_auction', 'auction_battle', 'photo_battle', 'tiebreaker',
+      'matchmaking', 'result', 'spectating'
+    ];
+    const shouldHide = activeGameStates.includes(gameState);
+    setHideNav(shouldHide);
+    
+    // Cleanup: restore nav when component unmounts
+    return () => setHideNav(false);
+  }, [gameState, setHideNav]);
   
   useEffect(() => {
     auctionSounds.init();
