@@ -236,8 +236,21 @@ class TestPVPPhotoSessionExtraction:
         
         time.sleep(0.5)
         
+        # Both players mark ready
+        ready1_response = user1_session.post(f"{BASE_URL}/api/photo-game/open-games/ready", json={
+            "game_id": game_id
+        })
+        assert ready1_response.status_code == 200
+        
+        ready2_response = user2_session.post(f"{BASE_URL}/api/photo-game/open-games/ready", json={
+            "game_id": game_id
+        })
+        assert ready2_response.status_code == 200
+        
+        time.sleep(0.5)
+        
         # Start game
-        start_response = user1_session.post(f"{BASE_URL}/api/photo-game/open-games/{game_id}/start")
+        start_response = user1_session.post(f"{BASE_URL}/api/photo-game/open-games/start/{game_id}")
         assert start_response.status_code == 200
         game_data = start_response.json()
         
@@ -354,8 +367,21 @@ class TestPVPPhotoSessionExtraction:
         
         time.sleep(0.5)
         
+        # Both players mark ready
+        ready1_response = user1_session.post(f"{BASE_URL}/api/photo-game/open-games/ready", json={
+            "game_id": game_id
+        })
+        assert ready1_response.status_code == 200
+        
+        ready2_response = user2_session.post(f"{BASE_URL}/api/photo-game/open-games/ready", json={
+            "game_id": game_id
+        })
+        assert ready2_response.status_code == 200
+        
+        time.sleep(0.5)
+        
         # Start game
-        start_response = user1_session.post(f"{BASE_URL}/api/photo-game/open-games/{game_id}/start")
+        start_response = user1_session.post(f"{BASE_URL}/api/photo-game/open-games/start/{game_id}")
         assert start_response.status_code == 200
         game_data = start_response.json()
         
@@ -456,8 +482,21 @@ class TestTapSyncAfterPhotoFix:
         
         time.sleep(0.5)
         
+        # Both players mark ready
+        ready1_response = user1_session.post(f"{BASE_URL}/api/photo-game/open-games/ready", json={
+            "game_id": game_id
+        })
+        assert ready1_response.status_code == 200
+        
+        ready2_response = user2_session.post(f"{BASE_URL}/api/photo-game/open-games/ready", json={
+            "game_id": game_id
+        })
+        assert ready2_response.status_code == 200
+        
+        time.sleep(0.5)
+        
         # Start game
-        start_response = user1_session.post(f"{BASE_URL}/api/photo-game/open-games/{game_id}/start")
+        start_response = user1_session.post(f"{BASE_URL}/api/photo-game/open-games/start/{game_id}")
         assert start_response.status_code == 200
         start_data = start_response.json()
         
