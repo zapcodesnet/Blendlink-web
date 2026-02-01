@@ -182,8 +182,8 @@ class TestPVPPhotoSessionExtraction:
         assert len(player1_photos_in_session) == 5, f"Expected 5 player1_photos, got {len(player1_photos_in_session)}"
         assert len(player2_photos_in_session) == 5, f"Expected 5 player2_photos, got {len(player2_photos_in_session)}"
         
-        # Step 6: Verify photo assignment is correct
-        print("\n=== Step 6: Verify Photo Assignment ===")
+        # Step 7: Verify photo assignment is correct
+        print("\n=== Step 7: Verify Photo Assignment ===")
         player1_photo_ids_in_session = [p.get("mint_id") for p in player1_photos_in_session]
         player2_photo_ids_in_session = [p.get("mint_id") for p in player2_photos_in_session]
         
