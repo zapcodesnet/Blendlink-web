@@ -288,8 +288,14 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   // Level bonus
   const levelBonus = photo?.level_bonus_percent || Math.floor(level / 5) * 2;
   
-  // New stats from API
-  const ageDays = photo?.age_days || Math.floor((Date.now() - new Date(photo?.minted_at || Date.now()).getTime()) / (1000 * 60 * 60 * 24));
+  // New stats from API - Use memoized calculation for age
+  const ageDays = React.useMemo(() => {
+    if (photo?.age_days) return photo.age_days;
+    if (!photo?.minted_at) return 0;
+    const now = new Date();
+    const mintDate = new Date(photo.minted_at);
+    return Math.floor((now.getTime() - mintDate.getTime()) / (1000 * 60 * 60 * 24));
+  }, [photo?.age_days, photo?.minted_at]);
   const starBonusValue = photo?.star_bonus_value || 0;
   const seniorityAchieved = photo?.seniority_achieved || level >= 60;
   const seniorityBonusValue = photo?.seniority_bonus_value || 0;
