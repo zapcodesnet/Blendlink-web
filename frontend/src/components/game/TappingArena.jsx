@@ -458,6 +458,19 @@ export const TappingArena = ({
   // Polling ref
   const pollIntervalRef = useRef(null);
   
+  // Refs for polling to avoid stale closures
+  const playerTapsRef = useRef(playerTaps);
+  const opponentTapsRef = useRef(opponentTaps);
+  
+  // Keep refs updated
+  useEffect(() => {
+    playerTapsRef.current = playerTaps;
+  }, [playerTaps]);
+  
+  useEffect(() => {
+    opponentTapsRef.current = opponentTaps;
+  }, [opponentTaps]);
+  
   // Calculate effective values with ALL modifiers (scenery, streaks, level, age, likes)
   const playerValueCalc = calculateEffectiveValue(playerPhoto, opponentPhoto, playerStats);
   const opponentValueCalc = calculateEffectiveValue(opponentPhoto, playerPhoto, opponentStats);
