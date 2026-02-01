@@ -419,16 +419,18 @@ export default function MobileTappingArena({
       if (response) {
         // Update dollar display from API response
         setPlayerDollar(response.my_dollar || 0);
-        // Update opponent from response if newer
-        if (response.opponent_taps !== opponentTapsRef.current) {
-          setOpponentTaps(response.opponent_taps || 0);
+        // Use ref to avoid stale closure - always update if different
+        const serverOpponentTaps = response.opponent_taps || 0;
+        if (serverOpponentTaps !== opponentTapsRef.current) {
+          console.log('[Mobile TapAPI] Opponent taps updated:', serverOpponentTaps);
+          setOpponentTaps(serverOpponentTaps);
           setOpponentDollar(response.opponent_dollar || 0);
         }
       }
     } catch (err) {
       console.debug('[Mobile TapAPI] Error:', err.message);
     }
-  }, [sessionId, isBot, opponentTaps]);
+  }, [sessionId, isBot]); // Removed opponentTaps dependency - using ref instead
 
   // Auto-start countdown
   useEffect(() => {
