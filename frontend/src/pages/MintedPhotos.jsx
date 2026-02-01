@@ -51,31 +51,34 @@ const ImageLightbox = ({ photo: initialPhoto, isOpen, onClose, onSetProfilePic, 
   const [showControls, setShowControls] = useState(false);
   const [showBack, setShowBack] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [photo, setPhoto] = useState(initialPhoto);
+  const [fullStats, setFullStats] = useState(null);
   const [loadingStats, setLoadingStats] = useState(false);
+  const fetchedRef = React.useRef(null);
   
-  // Fetch full stats when lightbox opens
-  useEffect(() => {
-    if (isOpen && initialPhoto?.mint_id) {
+  // Merge initial photo with full stats
+  const photo = fullStats?.mint_id === initialPhoto?.mint_id 
+    ? { ...initialPhoto, ...fullStats } 
+    : initialPhoto;
+  
+  // Fetch full stats when back is shown (lazy load)
+  const handleShowBack = useCallback(async () => {
+    setShowBack(true);
+    setShowControls(false);
+    
+    // Only fetch if not already fetched for this photo
+    if (initialPhoto?.mint_id && fetchedRef.current !== initialPhoto.mint_id) {
       setLoadingStats(true);
-      api.get(`/minting/photo/${initialPhoto.mint_id}/full-stats`)
-        .then(res => {
-          setPhoto({ ...initialPhoto, ...res.data });
-        })
-        .catch(err => {
-          console.error('Failed to fetch full stats:', err);
-          setPhoto(initialPhoto);
-        })
-        .finally(() => setLoadingStats(false));
+      try {
+        const res = await api.get(`/minting/photo/${initialPhoto.mint_id}/full-stats`);
+        setFullStats(res.data);
+        fetchedRef.current = initialPhoto.mint_id;
+      } catch (err) {
+        console.error('Failed to fetch full stats:', err);
+      } finally {
+        setLoadingStats(false);
+      }
     }
-  }, [isOpen, initialPhoto?.mint_id]);
-  
-  // Update photo when initialPhoto changes
-  useEffect(() => {
-    if (initialPhoto) {
-      setPhoto(prev => prev?.mint_id === initialPhoto.mint_id ? prev : initialPhoto);
-    }
-  }, [initialPhoto]);
+  }, [initialPhoto?.mint_id]);
   
   if (!isOpen || !photo) return null;
   
