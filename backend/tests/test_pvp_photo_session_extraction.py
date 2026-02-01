@@ -134,11 +134,28 @@ class TestPVPPhotoSessionExtraction:
         join_data = join_response.json()
         print(f"Join response: {join_data.get('message')}")
         
-        # Step 3: Start game (either player can start)
-        print("\n=== Step 3: Start Game ===")
+        # Step 3: Both players mark ready
+        print("\n=== Step 3: Both Players Mark Ready ===")
         time.sleep(0.5)  # Small delay for DB consistency
         
-        start_response = user1_session.post(f"{BASE_URL}/api/photo-game/open-games/{game_id}/start")
+        ready1_response = user1_session.post(f"{BASE_URL}/api/photo-game/open-games/ready", json={
+            "game_id": game_id
+        })
+        assert ready1_response.status_code == 200, f"User1 ready failed: {ready1_response.text}"
+        print(f"User1 ready: {ready1_response.json().get('success')}")
+        
+        ready2_response = user2_session.post(f"{BASE_URL}/api/photo-game/open-games/ready", json={
+            "game_id": game_id
+        })
+        assert ready2_response.status_code == 200, f"User2 ready failed: {ready2_response.text}"
+        print(f"User2 ready: {ready2_response.json().get('success')}")
+        print(f"Both ready: {ready2_response.json().get('both_ready')}")
+        
+        # Step 4: Start game
+        print("\n=== Step 4: Start Game ===")
+        time.sleep(0.5)  # Small delay for countdown
+        
+        start_response = user1_session.post(f"{BASE_URL}/api/photo-game/open-games/start/{game_id}")
         assert start_response.status_code == 200, f"Start game failed: {start_response.text}"
         start_data = start_response.json()
         
