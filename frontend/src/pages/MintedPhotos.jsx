@@ -47,10 +47,35 @@ const formatValue = (value) => {
 
 // Full Image Lightbox Modal Component - Clean view with flip-to-back
 // MOBILE-FIRST DESIGN - Fixed bottom bar visibility
-const ImageLightbox = ({ photo, isOpen, onClose, onSetProfilePic, onDelete }) => {
+const ImageLightbox = ({ photo: initialPhoto, isOpen, onClose, onSetProfilePic, onDelete }) => {
   const [showControls, setShowControls] = useState(false);
   const [showBack, setShowBack] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [photo, setPhoto] = useState(initialPhoto);
+  const [loadingStats, setLoadingStats] = useState(false);
+  
+  // Fetch full stats when lightbox opens
+  useEffect(() => {
+    if (isOpen && initialPhoto?.mint_id) {
+      setLoadingStats(true);
+      api.get(`/minting/photo/${initialPhoto.mint_id}/full-stats`)
+        .then(res => {
+          setPhoto({ ...initialPhoto, ...res.data });
+        })
+        .catch(err => {
+          console.error('Failed to fetch full stats:', err);
+          setPhoto(initialPhoto);
+        })
+        .finally(() => setLoadingStats(false));
+    }
+  }, [isOpen, initialPhoto?.mint_id]);
+  
+  // Update photo when initialPhoto changes
+  useEffect(() => {
+    if (initialPhoto) {
+      setPhoto(prev => prev?.mint_id === initialPhoto.mint_id ? prev : initialPhoto);
+    }
+  }, [initialPhoto]);
   
   if (!isOpen || !photo) return null;
   
@@ -60,7 +85,7 @@ const ImageLightbox = ({ photo, isOpen, onClose, onSetProfilePic, onDelete }) =>
   
   // Calculate star display
   const stars = photo.stars || 0;
-  const hasGoldenFrame = photo.has_golden_frame || false;
+  const hasGoldenFrame = photo.has_golden_frame || (photo.level || 1) >= 60;
   
   // Handle image tap to toggle controls
   const handleImageTap = () => {
