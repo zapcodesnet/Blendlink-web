@@ -824,7 +824,7 @@ const MintPhotoDialog = ({ isOpen, onClose, onMint, mintStatus }) => {
             ) : (
               <>
                 <Sparkles className="w-4 h-4 mr-2" />
-                Mint Photo (500 BL)
+                Mint Photo ({mintCost.toLocaleString()} BL)
               </>
             )}
           </Button>
