@@ -206,6 +206,37 @@ async def mint_photo_upload(
         img = Image.open(io.BytesIO(content))
         original_format = img.format or 'JPEG'
         
+        # IMPORTANT: Preserve original orientation from EXIF data
+        # This prevents landscape/portrait orientation from being lost
+        try:
+            from PIL import ExifTags
+            exif = img._getexif()
+            if exif is not None:
+                for orientation in ExifTags.TAGS.keys():
+                    if ExifTags.TAGS[orientation] == 'Orientation':
+                        break
+                exif_orientation = exif.get(orientation)
+                if exif_orientation:
+                    # Apply orientation transformation to match EXIF
+                    if exif_orientation == 2:
+                        img = img.transpose(Image.FLIP_LEFT_RIGHT)
+                    elif exif_orientation == 3:
+                        img = img.rotate(180)
+                    elif exif_orientation == 4:
+                        img = img.transpose(Image.FLIP_TOP_BOTTOM)
+                    elif exif_orientation == 5:
+                        img = img.rotate(-90, expand=True).transpose(Image.FLIP_LEFT_RIGHT)
+                    elif exif_orientation == 6:
+                        img = img.rotate(-90, expand=True)
+                    elif exif_orientation == 7:
+                        img = img.rotate(90, expand=True).transpose(Image.FLIP_LEFT_RIGHT)
+                    elif exif_orientation == 8:
+                        img = img.rotate(90, expand=True)
+                    logger.info(f"Applied EXIF orientation correction: {exif_orientation}")
+        except (AttributeError, KeyError, IndexError) as e:
+            logger.debug(f"No EXIF orientation data found: {e}")
+            pass
+        
         # Convert RGBA to RGB for JPEG
         if img.mode == 'RGBA' and content_type == 'image/jpeg':
             img = img.convert('RGB')
