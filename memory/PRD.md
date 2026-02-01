@@ -1,6 +1,66 @@
 # Blendlink Platform - PRD
 
-## Latest Update: January 31, 2026 (PVP Tap Sync & Performance Optimization - Session 71)
+## Latest Update: January 31, 2026 (CRITICAL PVP Photo Selection Bug Fix - Session 72)
+
+---
+
+## SESSION 72: CRITICAL PVP Bug Fix - Photo Selection & Winner Determination ✅
+
+### Date: January 31, 2026
+
+### Critical Bug Fixed:
+**Both players were bidding on joined player's photo only, creator couldn't tap, both "won" Round 1**
+
+### Root Cause Analysis:
+The `/pvp/select-photo` endpoint was **incorrectly determining the round winner immediately** by comparing photo dollar values when both players selected. This caused:
+1. No actual tapping competition occurred
+2. Both players "won" because winner was pre-determined
+3. Creator's taps didn't count because competition was already over
+4. Photos were displayed incorrectly because game state was wrong
+
+### Fixes Applied:
+
+#### 1. Backend: `/pvp/select-photo` endpoint (game_routes.py lines 1700-1755)
+**BEFORE (BUG):** When both selected → immediately determined winner by photo dollar value
+**AFTER (FIX):** When both selected → set status="tapping", reset taps to 0, NO winner yet
+
+```python
+# Fixed code now:
+if both_selected:
+    # Reset taps for fair competition
+    await _db.pvp_sessions.update_one(
+        {"session_id": session.get("session_id")},
+        {"$set": {
+            "player1_taps": 0, "player2_taps": 0,
+            "player1_dollar": 0, "player2_dollar": 0,
+            "status": "tapping",  # Ready for tapping phase
+        }}
+    )
+```
+
+#### 2. Backend: `/pvp/finish-round` endpoint (game_routes.py lines 1969-2042)
+Winner now correctly determined by comparing tap counts and dollar values AFTER tapping completes.
+
+#### 3. Frontend: PVPBattleArena.jsx (lines 686-713)
+Added handling for new "tapping" status to properly transition to playing phase.
+
+#### 4. Mobile: usePVPWebSocket.js (lines 364-420)
+Added handling for "tapping" status in polling.
+
+### Test Results:
+- ✅ Backend: 100% (3/3 tests passed)
+- ✅ Photo Selection: Each player selects their OWN photo (verified different mint_ids)
+- ✅ Status Transition: selecting → tapping (not auto-win)
+- ✅ Tap Sync: Both players see opponent's taps via polling
+- ✅ Winner: Determined by who taps more, not photo value
+
+### Files Modified:
+- `/app/backend/game_routes.py` - Photo selection and finish-round logic
+- `/app/frontend/src/components/game/PVPBattleArena.jsx` - Tapping status handling
+- `/app/mobile/src/hooks/usePVPWebSocket.js` - Tapping status handling
+
+### Test Reports:
+- `/app/test_reports/iteration_90.json` - PVP photo selection bug fix verification
 
 ---
 
