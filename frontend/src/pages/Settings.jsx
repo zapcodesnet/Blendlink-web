@@ -342,12 +342,12 @@ const ProfilePictureModal = ({ isOpen, onClose, onSelect, currentUserId }) => {
             className="flex-1 border-gray-600"
             onClick={step === 'position' ? handleBackToSelect : onClose}
           >
-            Cancel
+            {step === 'position' ? 'Back' : 'Cancel'}
           </Button>
           <Button
             className="flex-1 bg-purple-600 hover:bg-purple-500"
             onClick={handleSave}
-            disabled={!selectedPhoto || saving}
+            disabled={!selectedPhoto || saving || step === 'select'}
             data-testid="save-profile-picture-btn"
           >
             {saving ? (
@@ -358,7 +358,7 @@ const ProfilePictureModal = ({ isOpen, onClose, onSelect, currentUserId }) => {
             ) : (
               <>
                 <Check className="w-4 h-4 mr-2" />
-                Save
+                Save Changes
               </>
             )}
           </Button>
