@@ -116,6 +116,7 @@ const ProtectedRoute = ({ children }) => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(null);
   const [user, setUser] = useState(null);
+  const [hideNav, setHideNav] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
