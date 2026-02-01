@@ -1743,20 +1743,38 @@ const PhotoGameArena = () => {
   
   const handleGameStart = useCallback((sessionId, gameData, incomingPvpRoomId) => {
     // Transition from lobby to actual PVP battle
-    // Determine which photos are mine and which are the opponent's
-    const amICreator = gameData?.creator_id === user?.user_id || gameData?.player1_id === user?.user_id;
+    // gameData might have session nested, so extract it
+    const sessionData = gameData?.session || gameData;
     
+    // Determine which photos are mine and which are the opponent's
+    const amICreator = sessionData?.player1_id === user?.user_id || gameData?.creator_id === user?.user_id;
+    
+    console.log('[PhotoGameArena] handleGameStart - amICreator:', amICreator, {
+      player1_id: sessionData?.player1_id,
+      userId: user?.user_id,
+      creator_id: gameData?.creator_id,
+    });
+    
+    // Get photos from session data (session object has player1_photos, player2_photos)
     const myPhotos = amICreator 
-      ? (gameData?.creator_photos || gameData?.player1_photos || selectedPhotosData || [])
-      : (gameData?.opponent_photos || gameData?.player2_photos || selectedPhotosData || []);
+      ? (sessionData?.player1_photos || gameData?.creator_photos || selectedPhotosData || [])
+      : (sessionData?.player2_photos || gameData?.opponent_photos || selectedPhotosData || []);
     
     const theirPhotos = amICreator 
-      ? (gameData?.opponent_photos || gameData?.player2_photos || [])
-      : (gameData?.creator_photos || gameData?.player1_photos || []);
+      ? (sessionData?.player2_photos || gameData?.opponent_photos || [])
+      : (sessionData?.player1_photos || gameData?.creator_photos || []);
+    
+    console.log('[PhotoGameArena] Photos assignment:', {
+      amICreator,
+      myPhotosCount: myPhotos?.length,
+      theirPhotosCount: theirPhotos?.length,
+      myPhotos: myPhotos?.map(p => p?.mint_id),
+      theirPhotos: theirPhotos?.map(p => p?.mint_id),
+    });
     
     const opponentId = amICreator
-      ? (gameData?.opponent_id || gameData?.player2_id)
-      : (gameData?.creator_id || gameData?.player1_id);
+      ? (sessionData?.player2_id || gameData?.opponent_id)
+      : (sessionData?.player1_id || gameData?.creator_id);
     
     const opponentUsername = amICreator
       ? (gameData?.opponent_username || 'Opponent')
