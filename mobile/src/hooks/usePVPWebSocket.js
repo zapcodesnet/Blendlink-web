@@ -339,17 +339,22 @@ export function usePVPWebSocket(roomId, options = {}) {
         const sessionData = await photoGameAPI.getPVPSessionState(roomId);
         
         if (sessionData) {
+          // CRITICAL FIX: Determine if we're player1 based on API response
+          // The API returns player1_id and player2_id which we can compare with our userId
+          // Fall back to isCreator flag if userId is not available in response
+          const amPlayer1 = sessionData.player1_id === userId || isCreator;
+          
           console.log('[usePVPWS Polling] Session state:', {
             status: sessionData.status,
             round: sessionData.current_round,
             p1_selected: sessionData.player1_selected,
             p2_selected: sessionData.player2_selected,
+            player1_id: sessionData.player1_id,
+            userId,
+            amPlayer1,
           });
 
           // Update opponent selection status
-          // Determine if we're player1 - check both username and isCreator flag
-          // Note: player1_id is a user ID, not username, so we need to check isCreator
-          const amPlayer1 = isCreator;
           const oppSelected = amPlayer1 ? sessionData.player2_selected : sessionData.player1_selected;
           
           if (oppSelected && !gameState.opponentHasSelected) {
@@ -364,7 +369,7 @@ export function usePVPWebSocket(roomId, options = {}) {
           if (sessionData.player1_selected && sessionData.player2_selected) {
             console.log('[usePVPWS Polling] Both players selected!');
             
-            // Get photos from round result or direct fields
+            // Get photos from round result or direct fields - use correct player determination
             const myPhoto = amPlayer1 ? 
               (sessionData.round_result?.player1_photo || sessionData.player1_photo) :
               (sessionData.round_result?.player2_photo || sessionData.player2_photo);
@@ -376,6 +381,7 @@ export function usePVPWebSocket(roomId, options = {}) {
               console.log('[usePVPWS Polling] Setting roundPhase to playing with photos:', {
                 myPhoto: myPhoto?.mint_id,
                 oppPhoto: oppPhoto?.mint_id,
+                amPlayer1,
               });
               setGameState(prev => ({
                 ...prev,
