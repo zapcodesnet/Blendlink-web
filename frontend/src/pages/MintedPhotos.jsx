@@ -272,16 +272,46 @@ const ImageLightbox = ({ photo, isOpen, onClose, onSetProfilePic, onDelete }) =>
                     <span className="text-gray-400">Base Value</span>
                     <span className="text-green-400">{formatValue(photo.base_dollar_value || photo.dollar_value)}</span>
                   </div>
+                  
+                  {/* XP Meter Bar - Below Base Value */}
+                  <div className="my-2 p-2 bg-gray-900/50 rounded-lg">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-purple-400 font-bold text-sm">🏆 Lv {photo.level || 1}</span>
+                      <span className="text-gray-400 text-xs">{photo.xp || 0} / {photo.xp_progress?.xp_for_next_level || 10} XP</span>
+                    </div>
+                    <div className="h-3 bg-gray-700 rounded-full overflow-hidden relative">
+                      <div 
+                        className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
+                        style={{ width: `${Math.min(photo.xp_progress?.progress_percent || photo.xp_progress_percent || 0, 100)}%` }}
+                      />
+                      <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-white">
+                        {Math.round(photo.xp_progress?.progress_percent || photo.xp_progress_percent || 0)}%
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-[10px] mt-1">
+                      <span className="text-gray-500">{photo.xp_progress?.remaining || 10} XP to Lv{(photo.level || 1) + 1}</span>
+                      {(photo.level_bonus_percent > 0) && (
+                        <span className="text-green-400">+{photo.level_bonus_percent}% boost</span>
+                      )}
+                    </div>
+                  </div>
+                  
                   {(photo.level_bonus_percent > 0) && (
                     <div className="flex justify-between">
                       <span className="text-gray-400">Level Bonus (+{photo.level_bonus_percent}%)</span>
                       <span className="text-purple-400">+{formatValue(Math.floor((photo.base_dollar_value || 0) * (photo.level_bonus_percent || 0) / 100))}</span>
                     </div>
                   )}
-                  {(photo.monthly_growth_value > 0) && (
+                  {(photo.monthly_growth_value > 0 || photo.age_bonus_value > 0) && (
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Monthly Growth</span>
-                      <span className="text-blue-400">+{formatValue(photo.monthly_growth_value)}</span>
+                      <span className="text-gray-400">Age Bonus ({photo.age_days || 0} days)</span>
+                      <span className="text-blue-400">+{formatValue(photo.age_bonus_value || photo.monthly_growth_value || 0)}</span>
+                    </div>
+                  )}
+                  {(photo.star_bonus_value > 0) && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Star Bonus</span>
+                      <span className="text-amber-400">+{formatValue(photo.star_bonus_value)}</span>
                     </div>
                   )}
                   {(photo.reaction_bonus_value > 0) && (
@@ -290,12 +320,75 @@ const ImageLightbox = ({ photo, isOpen, onClose, onSetProfilePic, onDelete }) =>
                       <span className="text-pink-400">+{formatValue(photo.reaction_bonus_value)}</span>
                     </div>
                   )}
-                  {(photo.total_upgrade_value > 0) && (
+                  {(photo.total_upgrade_value > 0 || photo.bl_coins_spent > 0) && (
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Upgrades</span>
-                      <span className="text-orange-400">+{formatValue(photo.total_upgrade_value)}</span>
+                      <span className="text-gray-400">BL Coins Upgrades</span>
+                      <span className="text-orange-400">+{formatValue(photo.total_upgrade_value || photo.bl_coins_spent || 0)}</span>
                     </div>
                   )}
+                  {(photo.seniority_bonus_value > 0 || photo.seniority_achieved) && (
+                    <div className="flex justify-between bg-gradient-to-r from-yellow-500/20 to-amber-500/20 rounded px-1 py-0.5">
+                      <span className="text-yellow-400 font-bold">✨ Seniority MAX</span>
+                      <span className="text-yellow-400 font-bold">+{formatValue(photo.seniority_bonus_value || 0)}</span>
+                    </div>
+                  )}
+                </div>
+                
+                {/* NEW STATS SECTION - Below Authenticity equivalent */}
+                <div className="mt-3 p-3 bg-gradient-to-br from-purple-900/30 to-pink-900/30 rounded-lg border border-purple-500/20">
+                  <h4 className="text-xs font-bold text-gray-300 mb-2 flex items-center gap-1">
+                    ✨ Photo Stats & Bonuses
+                  </h4>
+                  
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    {/* Stars */}
+                    <div className="flex items-center justify-between bg-gray-800/50 rounded px-2 py-1">
+                      <span className="text-amber-400">⭐ Stars</span>
+                      <div className="flex items-center gap-1">
+                        {[...Array(5)].map((_, i) => (
+                          <span key={i} className={i < (photo.stars || 0) ? 'text-amber-400' : 'text-gray-600'}>★</span>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Level */}
+                    <div className="flex items-center justify-between bg-gray-800/50 rounded px-2 py-1">
+                      <span className="text-purple-400">🏆 Level</span>
+                      <span className="text-white font-bold">Lv {photo.level || 1}</span>
+                    </div>
+                    
+                    {/* Age */}
+                    <div className="flex items-center justify-between bg-gray-800/50 rounded px-2 py-1">
+                      <span className="text-blue-400">📅 Age</span>
+                      <span className="text-white">{photo.age_days || 0} days</span>
+                    </div>
+                    
+                    {/* Reactions */}
+                    <div className="flex items-center justify-between bg-gray-800/50 rounded px-2 py-1">
+                      <span className="text-pink-400">❤️ Reactions</span>
+                      <span className="text-white">{photo.total_reactions || photo.likes_count || 0}</span>
+                    </div>
+                    
+                    {/* BL Coins */}
+                    <div className="flex items-center justify-between bg-gray-800/50 rounded px-2 py-1">
+                      <span className="text-yellow-400">🪙 BL Coins</span>
+                      <span className="text-yellow-400">{(photo.bl_coins_spent || photo.total_upgrade_value || 0).toLocaleString()}</span>
+                    </div>
+                    
+                    {/* Seniority */}
+                    <div className={`flex items-center justify-between rounded px-2 py-1 ${
+                      (photo.seniority_achieved || (photo.level || 1) >= 60) 
+                        ? 'bg-gradient-to-r from-yellow-500/20 to-amber-500/20 border border-yellow-500/30' 
+                        : 'bg-gray-800/50'
+                    }`}>
+                      <span className={`${(photo.seniority_achieved || (photo.level || 1) >= 60) ? 'text-yellow-400' : 'text-gray-400'}`}>⚡ Seniority</span>
+                      {(photo.seniority_achieved || (photo.level || 1) >= 60) ? (
+                        <span className="text-yellow-400 font-bold text-[10px]">✨ MAX</span>
+                      ) : (
+                        <span className="text-gray-500 text-[10px]">{Math.max(0, 60 - (photo.level || 1))} to max</span>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 
                 {/* Reactions Counter */}
