@@ -412,12 +412,12 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         )}
       </div>
         
-        {/* BACK: All stats */}
+        {/* BACK: All stats - Scrollable content for smaller cards */}
         <div 
           className={cn(
             "absolute w-full backface-hidden rounded-xl overflow-hidden",
             "bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700",
-            hasGoldenFrame && "ring-2 ring-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]"
+            hasGoldenFrame && !seniorityAchieved && "ring-2 ring-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]"
           )}
           style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
         >
@@ -430,6 +430,18 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
             />
             <div className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-900" />
             
+            {/* Seniority Level 60 sparkle on back too */}
+            {seniorityAchieved && (
+              <div className="absolute top-1 right-1">
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                >
+                  <Sparkles size={20} className="text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" />
+                </motion.div>
+              </div>
+            )}
+            
             {/* XP Multiplier (temporary on tap) */}
             {showXPMultiplier && subscription?.xp_multiplier > 1 && (
               <XPMultiplierBadge 
@@ -439,90 +451,72 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
             )}
           </div>
           
-          {/* Stats content */}
-          <div className="p-3 space-y-2 text-xs">
-            {/* Core Dollar Value */}
-            <div className="text-center">
+          {/* Stats content - Scrollable */}
+          <div className="p-3 space-y-2 text-xs max-h-[calc(100%-4rem)] overflow-y-auto custom-scrollbar">
+            {/* ========== BASE VALUE SECTION ========== */}
+            <div className="text-center border-b border-gray-700/50 pb-2">
+              <div className="text-gray-500 text-[10px] mb-1">Base Value</div>
               <div className={cn(
-                "text-2xl font-bold bg-gradient-to-r bg-clip-text text-transparent",
+                "text-lg font-bold bg-gradient-to-r bg-clip-text text-transparent",
                 scenery.gradient
+              )}>
+                {formatDollarValue(baseDollarValue)}
+              </div>
+            </div>
+            
+            {/* ========== XP METER BAR (Below Base Value) ========== */}
+            <div className="bg-gray-800/50 rounded-lg p-2 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Award size={14} className="text-purple-400" />
+                  <span className="font-semibold">Lv {level}</span>
+                  <StarsDisplay count={stars} hasGoldenFrame={hasGoldenFrame} />
+                </div>
+                <div className="text-gray-400 text-[10px]">
+                  {formatXP(xp)} / {formatXP(xpForNextLevel)} XP
+                </div>
+              </div>
+              
+              {/* XP Progress Bar with percentage */}
+              <div className="space-y-0.5">
+                <div className="h-2.5 bg-gray-700 rounded-full overflow-hidden relative">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 relative"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min(xpProgress || 0, 100)}%` }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                  >
+                    {/* Shimmer effect */}
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                      animate={{ x: ['-100%', '100%'] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    />
+                  </motion.div>
+                  {/* Percentage text inside bar */}
+                  <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-white drop-shadow-md">
+                    {Math.round(xpProgress || 0)}%
+                  </span>
+                </div>
+                <div className="flex justify-between text-[9px] text-gray-500">
+                  <span>{xpToNextLevel} XP to Lv{level + 1}</span>
+                  {levelBonus > 0 && <span className="text-green-400">+{levelBonus}% boost</span>}
+                </div>
+              </div>
+            </div>
+            
+            {/* ========== TOTAL POWER (All bonuses combined) ========== */}
+            <div className="text-center py-2 bg-gradient-to-r from-amber-500/10 via-yellow-500/10 to-amber-500/10 rounded-lg">
+              <div className="text-gray-400 text-[10px]">Total Dollar Value (Core Power)</div>
+              <div className={cn(
+                "text-2xl font-bold bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-400 bg-clip-text text-transparent"
               )}>
                 {formatDollarValue(dollarValue)}
               </div>
-              <div className="text-gray-500 text-[10px]">Total Power</div>
             </div>
             
-            {/* Level & XP */}
-            <div className="flex items-center justify-between bg-gray-800/50 rounded-lg p-2">
-              <div className="flex items-center gap-2">
-                <Award size={14} className="text-amber-400" />
-                <span>Lv {level}</span>
-                <StarsDisplay count={stars} hasGoldenFrame={hasGoldenFrame} />
-              </div>
-              <div className="text-gray-400">
-                {formatXP(xp)} XP
-              </div>
-            </div>
-            
-            {/* Level Bonus */}
-            {levelBonus > 0 && (
-              <div className="flex items-center justify-between text-green-400">
-                <span className="flex items-center gap-1">
-                  <TrendingUp size={12} />
-                  Level Bonus
-                </span>
-                <span>+{levelBonus}%</span>
-              </div>
-            )}
-            
-            {/* Scenery */}
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1">
-                {scenery.emoji} {scenery.label}
-              </span>
-              <span className="text-gray-400 text-[10px]">
-                {scenery.strong && `Strong vs ${scenery.strong}`}
-              </span>
-            </div>
-            
-            {/* Win/Lose Streak */}
-            <StreakBadge winStreak={winStreak} loseStreak={loseStreak} />
-            
-            {/* Reactions Bonus */}
-            {reactions > 0 && (
-              <div className="flex items-center justify-between text-pink-400">
-                <span className="flex items-center gap-1">
-                  <Heart size={12} className="fill-pink-400" />
-                  {reactions} Reactions
-                </span>
-                <span>+{formatDollarValue(reactionBonus)}</span>
-              </div>
-            )}
-            
-            {/* Monthly Growth */}
-            {monthlyGrowth > 0 && (
-              <div className="flex items-center justify-between text-blue-400">
-                <span className="flex items-center gap-1">
-                  <Calendar size={12} />
-                  Monthly Growth
-                </span>
-                <span>+{formatDollarValue(monthlyGrowth)}</span>
-              </div>
-            )}
-            
-            {/* Upgrades */}
-            {upgradeValue > 0 && (
-              <div className="flex items-center justify-between text-purple-400">
-                <span className="flex items-center gap-1">
-                  <Coins size={12} />
-                  Upgrades
-                </span>
-                <span>+{formatDollarValue(upgradeValue)}</span>
-              </div>
-            )}
-            
-            {/* Authenticity Section */}
-            <div className="border-t border-gray-700 pt-2 mt-2">
+            {/* ========== AUTHENTICITY SECTION ========== */}
+            <div className="border-t border-gray-700 pt-2">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-gray-400 flex items-center gap-1">
                   <Shield size={12} />
@@ -544,10 +538,219 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
                 </div>
               </div>
               
-              {/* Face Match Button - Only shows for photos with detected face and not yet matched */}
+              {/* Face Match Button */}
               {showFaceMatch && hasFace && !selfieCompleted && (
                 <button
                   onClick={(e) => {
+                    e.stopPropagation();
+                    onFaceMatchClick?.(photo);
+                  }}
+                  className={cn(
+                    "w-full mt-2 py-2.5 px-3 rounded-lg",
+                    "bg-gradient-to-r from-purple-500 to-pink-500",
+                    "text-white text-xs font-semibold",
+                    "flex items-center justify-center gap-2",
+                    "hover:from-purple-600 hover:to-pink-600 transition-all",
+                    "shadow-lg shadow-purple-500/20",
+                    "min-h-[44px]"
+                  )}
+                  data-testid="face-match-button"
+                >
+                  <Camera size={16} />
+                  Face Match (+5%)
+                </button>
+              )}
+              
+              {selfieCompleted && (
+                <div className="flex items-center justify-center gap-1.5 text-green-400 text-xs mt-2 py-1.5 bg-green-500/10 rounded-lg">
+                  <Lock size={12} />
+                  Authenticity Locked Forever
+                </div>
+              )}
+            </div>
+            
+            {/* ========== NEW STATS SECTION (Below Authenticity) ========== */}
+            <div className="border-t border-gray-700 pt-3 space-y-2">
+              <div className="text-xs font-semibold text-gray-300 flex items-center gap-1 mb-2">
+                <Sparkles size={12} className="text-amber-400" />
+                Photo Stats & Bonuses
+              </div>
+              
+              {/* 1. Stars - +$1M + 10% per star milestone */}
+              <div className="flex items-center justify-between bg-gray-800/30 rounded-lg px-2 py-1.5">
+                <span className="text-gray-400 flex items-center gap-1.5 text-xs">
+                  <Star size={12} className="text-amber-400 fill-amber-400" />
+                  Stars
+                </span>
+                <div className="flex items-center gap-2">
+                  <StarsDisplay count={stars} hasGoldenFrame={hasGoldenFrame} />
+                  {starBonusValue > 0 && (
+                    <span className="text-green-400 text-[10px] font-medium">
+                      +{formatDollarValue(starBonusValue)}
+                    </span>
+                  )}
+                </div>
+              </div>
+              
+              {/* 2. Level (already shown above in XP meter) */}
+              <div className="flex items-center justify-between bg-gray-800/30 rounded-lg px-2 py-1.5">
+                <span className="text-gray-400 flex items-center gap-1.5 text-xs">
+                  <Award size={12} className="text-purple-400" />
+                  Level
+                </span>
+                <div className="text-right">
+                  <span className="text-white font-bold">Lv {level}</span>
+                  {levelBonus > 0 && (
+                    <span className="text-green-400 text-[10px] ml-1">+{levelBonus}%</span>
+                  )}
+                </div>
+              </div>
+              
+              {/* 3. Age - +$1M every 30 days */}
+              <div className="flex items-center justify-between bg-gray-800/30 rounded-lg px-2 py-1.5">
+                <span className="text-gray-400 flex items-center gap-1.5 text-xs">
+                  <Calendar size={12} className="text-blue-400" />
+                  Age
+                </span>
+                <div className="text-right">
+                  <span className="text-white text-xs">{ageDays} days</span>
+                  {ageBonus > 0 && (
+                    <span className="text-green-400 text-[10px] ml-1">
+                      +{formatDollarValue(ageBonus)}
+                    </span>
+                  )}
+                </div>
+              </div>
+              
+              {/* 4. Reactions - +$1M per 100 reactions */}
+              <div className="flex items-center justify-between bg-gray-800/30 rounded-lg px-2 py-1.5">
+                <span className="text-gray-400 flex items-center gap-1.5 text-xs">
+                  <Heart size={12} className="text-pink-400 fill-pink-400" />
+                  Reactions
+                </span>
+                <div className="text-right">
+                  <span className="text-white text-xs">❤️ {reactions}</span>
+                  {reactionBonus > 0 && (
+                    <span className="text-green-400 text-[10px] ml-1">
+                      +{formatDollarValue(reactionBonus)}
+                    </span>
+                  )}
+                  {reactions > 0 && reactionsToNextBonus < 100 && (
+                    <div className="text-[9px] text-gray-500">
+                      {reactionsToNextBonus} to next +$1M
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* 5. BL Coins - Dollar Value boost */}
+              <div className="flex items-center justify-between bg-gray-800/30 rounded-lg px-2 py-1.5">
+                <span className="text-gray-400 flex items-center gap-1.5 text-xs">
+                  <Coins size={12} className="text-yellow-400" />
+                  BL Coins
+                </span>
+                <div className="text-right">
+                  <span className="text-yellow-400 text-xs">
+                    {blCoinsSpent.toLocaleString()} BL
+                  </span>
+                  {upgradeValue > 0 && (
+                    <span className="text-green-400 text-[10px] ml-1">
+                      +{formatDollarValue(upgradeValue)}
+                    </span>
+                  )}
+                </div>
+              </div>
+              
+              {/* 6. Seniority - Level 60 bonus (+$1M + 20%) */}
+              <div className={cn(
+                "flex items-center justify-between rounded-lg px-2 py-1.5",
+                seniorityAchieved 
+                  ? "bg-gradient-to-r from-yellow-500/20 via-amber-500/20 to-yellow-500/20 border border-yellow-500/30" 
+                  : "bg-gray-800/30"
+              )}>
+                <span className={cn(
+                  "flex items-center gap-1.5 text-xs",
+                  seniorityAchieved ? "text-yellow-400" : "text-gray-400"
+                )}>
+                  <Zap size={12} className={seniorityAchieved ? "text-yellow-400 fill-yellow-400" : "text-gray-500"} />
+                  Seniority
+                </span>
+                <div className="text-right">
+                  {seniorityAchieved ? (
+                    <div className="flex items-center gap-1">
+                      <motion.span
+                        className="text-yellow-400 text-xs font-bold"
+                        animate={{ 
+                          textShadow: [
+                            '0 0 4px rgba(250,204,21,0.4)',
+                            '0 0 12px rgba(250,204,21,0.8)',
+                            '0 0 4px rgba(250,204,21,0.4)'
+                          ]
+                        }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        ✨ MAX
+                      </motion.span>
+                      <span className="text-green-400 text-[10px]">
+                        +{formatDollarValue(seniorityBonusValue)}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-gray-500 text-xs">
+                      {levelsToSeniority} levels to max
+                    </span>
+                  )}
+                </div>
+              </div>
+              
+              {/* Scenery & Streaks */}
+              <div className="border-t border-gray-700/50 pt-2 mt-2 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1">
+                    {scenery.emoji} {scenery.label}
+                  </span>
+                  <span className="text-gray-400 text-[10px]">
+                    {scenery.strong && `💪 vs ${scenery.strong}`}
+                  </span>
+                </div>
+                
+                {/* Win/Lose Streak */}
+                <StreakBadge winStreak={winStreak} loseStreak={loseStreak} />
+              </div>
+            </div>
+            
+            {/* Flip back */}
+            <button 
+              onClick={handleFlip}
+              className="w-full text-center text-[10px] text-gray-500 hover:text-gray-300 transition-colors mt-2"
+            >
+              ← Tap to flip back
+            </button>
+          </div>
+        </div>
+      </motion.div>
+  );
+  
+  return (
+    <div 
+      className={cn(
+        "relative perspective-1000",
+        config.width,
+        disabled && "opacity-50 cursor-not-allowed",
+        selected && "ring-2 ring-primary ring-offset-2 ring-offset-background",
+        className
+      )}
+      onClick={handleClick}
+      data-testid={`photo-card-${photo?.mint_id}`}
+    >
+      {/* Wrap in Golden Sparkling Frame for Level 60 Seniority */}
+      {seniorityAchieved ? (
+        <GoldenSparklingFrame>
+          {cardContent}
+        </GoldenSparklingFrame>
+      ) : (
+        cardContent
+      )}
                     e.stopPropagation();
                     onFaceMatchClick?.(photo);
                   }}
