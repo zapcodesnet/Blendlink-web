@@ -188,8 +188,22 @@ export const PVPBattleArena = ({
   const [showMedalCelebration, setShowMedalCelebration] = useState(false);
   const [celebrationData, setCelebrationData] = useState(null);
   
+  // CRITICAL FIX: Track player1_id from API response, not just from stale session prop
+  const [confirmedPlayer1Id, setConfirmedPlayer1Id] = useState(session?.player1_id || null);
+  
   // Determine if we're player1 (creator) or player2 (joiner)
-  const isPlayer1 = session?.player1_id === currentUserId;
+  // Use confirmedPlayer1Id from API response if available, fallback to session prop
+  const isPlayer1 = (confirmedPlayer1Id || session?.player1_id) === currentUserId;
+  
+  // Debug log for isPlayer1 determination
+  useEffect(() => {
+    console.log('[PVPBattleArena] isPlayer1 determination:', {
+      confirmedPlayer1Id,
+      sessionPlayer1Id: session?.player1_id,
+      currentUserId,
+      isPlayer1,
+    });
+  }, [confirmedPlayer1Id, session?.player1_id, currentUserId, isPlayer1]);
   
   // Get WebSocket URL
   const getWebSocketUrl = useCallback(() => {
