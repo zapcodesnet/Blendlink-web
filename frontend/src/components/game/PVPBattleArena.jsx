@@ -668,15 +668,27 @@ export const PVPBattleArena = ({
         const sessionData = response.data;
         
         if (sessionData) {
+          // CRITICAL FIX: Save player1_id from API response for correct photo assignment
+          if (sessionData.player1_id && !confirmedPlayer1Id) {
+            console.log('[Polling] Confirmed player1_id from API:', sessionData.player1_id);
+            setConfirmedPlayer1Id(sessionData.player1_id);
+          }
+          
+          // Use the correct isPlayer1 based on API response
+          const actualIsPlayer1 = (sessionData.player1_id || confirmedPlayer1Id || session?.player1_id) === currentUserId;
+          
           console.log('[Polling] Session state:', {
             status: sessionData.status,
             round: sessionData.current_round,
             p1_selected: sessionData.player1_selected,
             p2_selected: sessionData.player2_selected,
+            player1_id: sessionData.player1_id,
+            currentUserId,
+            actualIsPlayer1,
           });
           
-          // Update opponent selection status
-          const oppSelected = isPlayer1 ? sessionData.player2_selected : sessionData.player1_selected;
+          // Update opponent selection status using correct player determination
+          const oppSelected = actualIsPlayer1 ? sessionData.player2_selected : sessionData.player1_selected;
           if (oppSelected && !opponentHasSelected) {
             setOpponentHasSelected(true);
             toast.info(`${opponentUsername || 'Opponent'} has selected their photo`);
@@ -688,15 +700,15 @@ export const PVPBattleArena = ({
             (sessionData.player1_selected && sessionData.player2_selected && gamePhase !== 'playing' && gamePhase !== 'result');
             
           if (sessionData.player1_selected && sessionData.player2_selected && canTransitionToPlaying) {
-            console.log('[Polling] Both players selected! Transitioning to playing...', { gamePhase });
+            console.log('[Polling] Both players selected! Transitioning to playing...', { gamePhase, actualIsPlayer1 });
             
-            // Get the photos from round result or direct fields
+            // Get the photos from round result or direct fields - use actualIsPlayer1
             let myPhoto = null;
             let oppPhoto = null;
             
             if (sessionData.round_result) {
-              myPhoto = isPlayer1 ? sessionData.round_result.player1_photo : sessionData.round_result.player2_photo;
-              oppPhoto = isPlayer1 ? sessionData.round_result.player2_photo : sessionData.round_result.player1_photo;
+              myPhoto = actualIsPlayer1 ? sessionData.round_result.player1_photo : sessionData.round_result.player2_photo;
+              oppPhoto = actualIsPlayer1 ? sessionData.round_result.player2_photo : sessionData.round_result.player1_photo;
             } else if (sessionData.player1_photo && sessionData.player2_photo) {
               myPhoto = isPlayer1 ? sessionData.player1_photo : sessionData.player2_photo;
               oppPhoto = isPlayer1 ? sessionData.player2_photo : sessionData.player1_photo;
