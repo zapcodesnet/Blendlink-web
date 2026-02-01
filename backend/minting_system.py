@@ -137,6 +137,60 @@ BIRTHDAY_BONUS_BL = 5_000  # 5,000 BL coins yearly
 REACTION_BONUS_THRESHOLD = 100  # Per 100 new reactions
 REACTION_BONUS_VALUE = 1_000_000  # +$1M per threshold
 
+# Age Bonus (same as monthly growth but tracked separately)
+AGE_BONUS_DAYS = 30  # Every 30 days
+AGE_BONUS_VALUE = 1_000_000  # +$1M per cycle
+
+# Star Bonus (per new star level)
+STAR_BONUS_FLAT = 1_000_000  # +$1M flat bonus
+STAR_BONUS_PERCENT = 10  # +10% of current total Dollar Value
+
+# Seniority Bonus (Level 60)
+SENIORITY_MAX_LEVEL = 60
+SENIORITY_BONUS_FLAT = 1_000_000  # +$1M flat
+SENIORITY_BONUS_PERCENT = 20  # +20% of total Dollar Value
+
+# XP Requirements per Level (L1=0, L2=10, each next = +50% marginal XP)
+def get_xp_for_level(level):
+    """Calculate total XP required for a given level"""
+    if level <= 1:
+        return 0
+    if level == 2:
+        return 10
+    
+    total_xp = 10  # Level 2 requirement
+    marginal = 10
+    for lvl in range(3, level + 1):
+        marginal = int(marginal * 1.5)  # +50% more per level
+        total_xp += marginal
+    return total_xp
+
+def get_xp_to_next_level(current_level, current_xp):
+    """Calculate XP needed for next level and progress percentage"""
+    current_level_xp = get_xp_for_level(current_level)
+    next_level_xp = get_xp_for_level(current_level + 1)
+    xp_needed = next_level_xp - current_level_xp
+    xp_progress = current_xp - current_level_xp
+    progress_percent = min(100, max(0, (xp_progress / xp_needed * 100) if xp_needed > 0 else 0))
+    return {
+        "xp_for_current_level": current_level_xp,
+        "xp_for_next_level": next_level_xp,
+        "xp_needed": xp_needed,
+        "xp_progress": xp_progress,
+        "progress_percent": round(progress_percent, 1),
+        "remaining": max(0, xp_needed - xp_progress)
+    }
+
+# Star Level Milestones (matches XP & Level Progression rules)
+STAR_MILESTONES = {
+    10: {"stars": 1, "bonus_percent": 10, "bl_coins": 10_000},
+    20: {"stars": 2, "bonus_percent": 10, "bl_coins": 20_000},
+    30: {"stars": 3, "bonus_percent": 10, "bl_coins": 30_000},
+    40: {"stars": 4, "bonus_percent": 10, "bl_coins": 40_000},
+    50: {"stars": 5, "bonus_percent": 10, "bl_coins": 50_000},
+    60: {"stars": 5, "bonus_percent": 20, "bl_coins": 100_000, "golden_frame": True},
+}
+
 # Legacy list for backward compatibility
 RATING_CRITERIA_LIST = list(RATING_CRITERIA.keys())
 
