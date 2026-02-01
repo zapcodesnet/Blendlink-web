@@ -640,6 +640,20 @@ const MintPhotoDialog = ({ isOpen, onClose, onMint, mintStatus }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mintCost, setMintCost] = useState(200); // Default 200 BL
+  
+  // Fetch mint config on dialog open
+  useEffect(() => {
+    if (isOpen) {
+      api.get('/minting/config')
+        .then(res => {
+          if (res.data?.mint_cost_bl) {
+            setMintCost(res.data.mint_cost_bl);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [isOpen]);
   
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
@@ -728,7 +742,7 @@ const MintPhotoDialog = ({ isOpen, onClose, onMint, mintStatus }) => {
               </div>
               <div className="flex justify-between text-sm mt-1">
                 <span className="text-gray-400">Cost</span>
-                <span className="text-purple-400 font-bold">500 BL</span>
+                <span className="text-purple-400 font-bold">{mintCost.toLocaleString()} BL</span>
               </div>
             </div>
           )}
