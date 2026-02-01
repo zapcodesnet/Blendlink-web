@@ -194,6 +194,19 @@ export default function MobileTappingArena({
   const tapResetRef = useRef(null);
   const pollIntervalRef = useRef(null);
   
+  // Refs for polling to avoid stale closures
+  const playerTapsRef = useRef(playerTaps);
+  const opponentTapsRef = useRef(opponentTaps);
+  
+  // Keep refs updated
+  useEffect(() => {
+    playerTapsRef.current = playerTaps;
+  }, [playerTaps]);
+  
+  useEffect(() => {
+    opponentTapsRef.current = opponentTaps;
+  }, [opponentTaps]);
+  
   // Calculate effective values with all bonuses
   const playerEffectiveValue = playerPhoto?.dollar_value || 0;
   const opponentEffectiveValue = opponentPhoto?.dollar_value || 0;
