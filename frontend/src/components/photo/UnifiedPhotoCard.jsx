@@ -288,6 +288,20 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   // Level bonus
   const levelBonus = photo?.level_bonus_percent || Math.floor(level / 5) * 2;
   
+  // New stats from API
+  const ageDays = photo?.age_days || Math.floor((Date.now() - new Date(photo?.minted_at || Date.now()).getTime()) / (1000 * 60 * 60 * 24));
+  const starBonusValue = photo?.star_bonus_value || 0;
+  const seniorityAchieved = photo?.seniority_achieved || level >= 60;
+  const seniorityBonusValue = photo?.seniority_bonus_value || 0;
+  const levelsToSeniority = photo?.levels_to_seniority || Math.max(0, 60 - level);
+  const blCoinsSpent = photo?.bl_coins_spent || upgradeValue || 0;
+  const reactionsToNextBonus = photo?.reactions_to_next_bonus || (100 - (reactions % 100));
+  
+  // XP Progress data
+  const xpProgressData = photo?.xp_progress || {};
+  const xpToNextLevel = xpProgressData.remaining || photo?.xp_to_next_level || 10;
+  const xpForNextLevel = xpProgressData.xp_for_next_level || photo?.xp_for_next_level || 10;
+  
   const handleClick = () => {
     if (disabled) return;
     onClick?.(photo);
@@ -302,100 +316,101 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
     onFlip?.(!isFlipped);
   };
   
-  return (
-    <div 
-      className={cn(
-        "relative perspective-1000",
-        config.width,
-        disabled && "opacity-50 cursor-not-allowed",
-        selected && "ring-2 ring-primary ring-offset-2 ring-offset-background",
-        className
-      )}
-      onClick={handleClick}
-      data-testid={`photo-card-${photo?.mint_id}`}
+  // Card content (shared between normal and golden frame versions)
+  const cardContent = (
+    <motion.div
+      className="relative w-full preserve-3d cursor-pointer"
+      animate={{ rotateY: isFlipped ? 180 : 0 }}
+      transition={{ duration: 0.5 }}
+      style={{ transformStyle: 'preserve-3d' }}
     >
-      <motion.div
-        className="relative w-full preserve-3d cursor-pointer"
-        animate={{ rotateY: isFlipped ? 180 : 0 }}
-        transition={{ duration: 0.5 }}
-        style={{ transformStyle: 'preserve-3d' }}
+      {/* FRONT: Clean image only */}
+      <div 
+        className={cn(
+          "absolute w-full backface-hidden rounded-xl overflow-hidden",
+          "bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700",
+          hasGoldenFrame && !seniorityAchieved && "ring-2 ring-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]"
+        )}
+        style={{ backfaceVisibility: 'hidden' }}
       >
-        {/* FRONT: Clean image only */}
-        <div 
-          className={cn(
-            "absolute w-full backface-hidden rounded-xl overflow-hidden",
-            "bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700",
-            hasGoldenFrame && "ring-2 ring-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]"
-          )}
-          style={{ backfaceVisibility: 'hidden' }}
-        >
-          {/* Clean image - NO overlays */}
-          <div className={cn("relative w-full", config.imageH)}>
-            <img
-              src={photo?.image_url || photo?.thumbnail_url || '/placeholder-photo.jpg'}
-              alt={photo?.name || 'Minted Photo'}
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
-          </div>
-          
-          {/* Stats BELOW image only */}
-          {showStats && (
-            <div className="p-2 space-y-1 bg-black/60">
-              {/* Dollar Value & Level */}
-              <div className="flex items-center justify-between">
-                <span className={cn(
-                  "font-bold bg-gradient-to-r bg-clip-text text-transparent",
-                  scenery.gradient,
-                  config.textSize
-                )}>
-                  {formatDollarValue(dollarValue)}
-                </span>
-                <div className="flex items-center gap-1">
-                  <span className="text-gray-400 text-xs">Lv{level}</span>
-                  <StarsDisplay count={stars} hasGoldenFrame={hasGoldenFrame} />
-                </div>
-              </div>
-              
-              {/* Scenery Badge */}
-              <div className={cn(
-                "flex items-center gap-1 px-2 py-0.5 rounded-full w-fit",
-                `bg-gradient-to-r ${scenery.bgGradient}`
-              )}>
-                <span className="text-sm">{scenery.emoji}</span>
-                <span className="text-xs text-white/90">{scenery.label}</span>
-              </div>
-              
-              {/* Stamina Bar */}
-              {showStamina && (
-                <div className="space-y-0.5">
-                  <div className="flex justify-between text-[10px] text-gray-400">
-                    <span>⚡ Stamina</span>
-                    <span>{stamina}/{maxStamina}</span>
-                  </div>
-                  <div className="h-1.5 bg-gray-700 rounded-full overflow-hidden">
-                    <div 
-                      className={cn(
-                        "h-full rounded-full transition-all",
-                        staminaPercent > 50 ? "bg-green-500" : 
-                        staminaPercent > 25 ? "bg-yellow-500" : "bg-red-500"
-                      )}
-                      style={{ width: `${staminaPercent}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-              
-              {/* Flip indicator */}
-              <button 
-                onClick={handleFlip}
-                className="w-full text-center text-[10px] text-gray-500 hover:text-gray-300 transition-colors"
+        {/* Clean image - NO overlays */}
+        <div className={cn("relative w-full", config.imageH)}>
+          <img
+            src={photo?.image_url || photo?.thumbnail_url || '/placeholder-photo.jpg'}
+            alt={photo?.name || 'Minted Photo'}
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
+          {/* Seniority Level 60 sparkle indicator */}
+          {seniorityAchieved && (
+            <div className="absolute top-1 right-1">
+              <motion.div
+                animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
+                transition={{ duration: 3, repeat: Infinity }}
               >
-                Tap to flip →
-              </button>
+                <Sparkles size={20} className="text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" />
+              </motion.div>
             </div>
           )}
         </div>
+        
+        {/* Stats BELOW image only */}
+        {showStats && (
+          <div className="p-2 space-y-1 bg-black/60">
+            {/* Dollar Value & Level */}
+            <div className="flex items-center justify-between">
+              <span className={cn(
+                "font-bold bg-gradient-to-r bg-clip-text text-transparent",
+                scenery.gradient,
+                config.textSize
+              )}>
+                {formatDollarValue(dollarValue)}
+              </span>
+              <div className="flex items-center gap-1">
+                <span className="text-gray-400 text-xs">Lv{level}</span>
+                <StarsDisplay count={stars} hasGoldenFrame={hasGoldenFrame} />
+              </div>
+            </div>
+            
+            {/* Scenery Badge */}
+            <div className={cn(
+              "flex items-center gap-1 px-2 py-0.5 rounded-full w-fit",
+              `bg-gradient-to-r ${scenery.bgGradient}`
+            )}>
+              <span className="text-sm">{scenery.emoji}</span>
+              <span className="text-xs text-white/90">{scenery.label}</span>
+            </div>
+            
+            {/* Stamina Bar */}
+            {showStamina && (
+              <div className="space-y-0.5">
+                <div className="flex justify-between text-[10px] text-gray-400">
+                  <span>⚡ Stamina</span>
+                  <span>{stamina}/{maxStamina}</span>
+                </div>
+                <div className="h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                  <div 
+                    className={cn(
+                      "h-full rounded-full transition-all",
+                      staminaPercent > 50 ? "bg-green-500" : 
+                      staminaPercent > 25 ? "bg-yellow-500" : "bg-red-500"
+                    )}
+                    style={{ width: `${staminaPercent}%` }}
+                  />
+                </div>
+              </div>
+            )}
+            
+            {/* Flip indicator */}
+            <button 
+              onClick={handleFlip}
+              className="w-full text-center text-[10px] text-gray-500 hover:text-gray-300 transition-colors"
+            >
+              Tap to flip →
+            </button>
+          </div>
+        )}
+      </div>
         
         {/* BACK: All stats */}
         <div 
