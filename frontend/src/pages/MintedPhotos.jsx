@@ -1257,6 +1257,8 @@ const MintedPhotos = () => {
                 onSelect={() => setLightboxPhoto(photo)}
                 onUpdate={fetchPhotos}
                 onSelfieMatch={setSelfieMatchPhoto}
+                isNewlyMinted={photo.mint_id === newlyMintedId}
+                onRemoveHighlight={() => setNewlyMintedId(null)}
               />
             ))}
           </div>
@@ -1270,6 +1272,8 @@ const MintedPhotos = () => {
                 onSelect={() => setLightboxPhoto(photo)}
                 onUpdate={fetchPhotos}
                 onSelfieMatch={setSelfieMatchPhoto}
+                isNewlyMinted={photo.mint_id === newlyMintedId}
+                onRemoveHighlight={() => setNewlyMintedId(null)}
               />
             ))}
           </div>
