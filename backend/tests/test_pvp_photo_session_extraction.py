@@ -159,8 +159,8 @@ class TestPVPPhotoSessionExtraction:
         assert start_response.status_code == 200, f"Start game failed: {start_response.text}"
         start_data = start_response.json()
         
-        # Step 4: Verify response structure
-        print("\n=== Step 4: Verify Response Structure ===")
+        # Step 5: Verify response structure
+        print("\n=== Step 5: Verify Response Structure ===")
         assert start_data.get("success") == True, "Start game not successful"
         assert "session_id" in start_data, "No session_id in response"
         assert "session" in start_data, "No session object in response - THIS IS THE BUG!"
