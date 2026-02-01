@@ -754,7 +754,7 @@ const PhotoCard = ({ photo, onSelect, onUpdate, viewMode, onViewFull, onSelfieMa
 };
 
 // Mint Photo Dialog
-const MintPhotoDialog = ({ isOpen, onClose, onMint, mintStatus }) => {
+const MintPhotoDialog = ({ isOpen, onClose, onMint, mintStatus, onMintSuccess }) => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [isPrivate, setIsPrivate] = useState(false);
@@ -784,6 +784,7 @@ const MintPhotoDialog = ({ isOpen, onClose, onMint, mintStatus }) => {
         return;
       }
       setSelectedFile(file);
+      // Preserve original image quality - use createObjectURL instead of re-encoding
       setPreview(URL.createObjectURL(file));
     }
   };
@@ -824,6 +825,8 @@ const MintPhotoDialog = ({ isOpen, onClose, onMint, mintStatus }) => {
       
       if (response.data.success) {
         toast.success('Photo minted successfully!');
+        // Call success callback with mint_id for highlighting
+        onMintSuccess?.(response.data.mint_id || response.data.photo?.mint_id);
         onClose?.();
         // Reset form
         setName('');
