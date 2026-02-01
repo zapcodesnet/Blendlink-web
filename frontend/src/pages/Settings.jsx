@@ -217,7 +217,8 @@ const ProfilePictureModal = ({ isOpen, onClose, onSelect, currentUserId }) => {
         },
         body: JSON.stringify({
           image_url: selectedPhoto.image_url,
-          mint_id: selectedPhoto.mint_id
+          mint_id: selectedPhoto.mint_id,
+          position: imagePosition  // Include position data
         })
       });
       
@@ -234,6 +235,17 @@ const ProfilePictureModal = ({ isOpen, onClose, onSelect, currentUserId }) => {
     } finally {
       setSaving(false);
     }
+  };
+  
+  const handlePhotoSelect = (photo) => {
+    setSelectedPhoto(photo);
+    setStep('position');
+    setImagePosition({ x: 0, y: 0, zoom: 1 });
+  };
+  
+  const handleBackToSelect = () => {
+    setStep('select');
+    setSelectedPhoto(null);
   };
   
   if (!isOpen) return null;
@@ -257,8 +269,13 @@ const ProfilePictureModal = ({ isOpen, onClose, onSelect, currentUserId }) => {
         {/* Header */}
         <div className="p-4 border-b border-gray-700 flex items-center justify-between">
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
+            {step === 'position' && (
+              <button onClick={handleBackToSelect} className="mr-2 p-1 hover:bg-gray-800 rounded">
+                <ArrowLeft className="w-5 h-5 text-gray-400" />
+              </button>
+            )}
             <Image className="w-5 h-5 text-purple-400" />
-            Choose Profile Picture
+            {step === 'select' ? 'Choose Profile Picture' : 'Adjust Position'}
           </h3>
           <button onClick={onClose} className="p-2 hover:bg-gray-800 rounded-full">
             <X className="w-5 h-5 text-gray-400" />
