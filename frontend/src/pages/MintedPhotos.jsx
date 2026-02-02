@@ -1465,16 +1465,17 @@ const MintedPhotos = () => {
             </Button>
           </div>
         ) : viewMode === 'card' ? (
-          // New Unified Card View - clean image front, stats on back
-          // ROBUST SCROLLING FIX: 
-          // - Container has overflow-y-auto for scrollable area
-          // - touch-action: pan-y on all elements
-          // - Large gap-6 spacing for easy tapping between cards
+          // UNIFIED CARD VIEW with ROBUST SCROLLING & Z-INDEX FIXES
+          // 1. Container uses overflow-y-auto for native scrolling
+          // 2. touch-action: pan-y ensures touch scroll works
+          // 3. Cards elevate z-index when flipped to appear above others
+          // 4. Nav bar hides when any card is flipped
           <div 
             className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 p-2 md:p-4"
             style={{ 
               touchAction: 'pan-y',
-              WebkitOverflowScrolling: 'touch'
+              WebkitOverflowScrolling: 'touch',
+              overflowY: 'auto',
             }}
           >
             {photos.map(photo => (
@@ -1482,9 +1483,15 @@ const MintedPhotos = () => {
                 key={photo.mint_id}
                 className={cn(
                   "relative transition-all duration-300",
-                  newlyMintedId === photo.mint_id && "animate-pulse ring-2 ring-yellow-400 ring-offset-2 ring-offset-gray-900 rounded-xl"
+                  newlyMintedId === photo.mint_id && "animate-pulse ring-2 ring-yellow-400 ring-offset-2 ring-offset-gray-900 rounded-xl",
+                  // Dim other cards when one is flipped
+                  flippedCardId && flippedCardId !== photo.mint_id && "opacity-30"
                 )}
-                style={{ touchAction: 'pan-y' }}
+                style={{ 
+                  touchAction: 'pan-y',
+                  // Lower z-index for non-flipped cards when another is flipped
+                  zIndex: flippedCardId === photo.mint_id ? 50 : (flippedCardId ? 0 : 'auto'),
+                }}
                 onClick={() => {
                   // Remove glow on click
                   if (newlyMintedId === photo.mint_id) {
@@ -1500,6 +1507,7 @@ const MintedPhotos = () => {
                   showFaceMatch={photo.has_face && !photo.selfie_match_completed}
                   onFaceMatchClick={setSelfieMatchPhoto}
                   onUpgradeClick={setUpgradePhoto}
+                  onFlipStateChange={(isFlipped) => handleCardFlipChange(photo.mint_id, isFlipped)}
                   size="medium"
                 />
               </div>
