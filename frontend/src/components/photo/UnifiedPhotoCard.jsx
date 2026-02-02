@@ -335,11 +335,12 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
     if (e) {
       e.stopPropagation();
     }
-    setIsFlipped(!isFlipped);
+    const newFlippedState = !isFlipped;
+    setIsFlipped(newFlippedState);
     setShowXPMultiplier(true);
     // Hide XP multiplier after 3 seconds
     setTimeout(() => setShowXPMultiplier(false), 3000);
-    onFlip?.(!isFlipped);
+    onFlip?.(newFlippedState);
   }, [isFlipped, onFlip]);
   
   // Card content (shared between normal and golden frame versions)
@@ -348,13 +349,24 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   const cardContent = (
     <motion.div
       ref={cardRef}
-      className="relative w-full preserve-3d"
-      animate={{ rotateY: isFlipped ? 180 : 0 }}
+      className={cn(
+        "relative w-full preserve-3d",
+        // When flipped, make card more prominent with shadow
+        isFlipped && "shadow-2xl shadow-black/50"
+      )}
+      animate={{ 
+        rotateY: isFlipped ? 180 : 0,
+        // Scale up slightly when flipped for emphasis
+        scale: isFlipped ? 1.05 : 1,
+      }}
       transition={{ duration: 0.5 }}
       style={{ 
         transformStyle: 'preserve-3d', 
         touchAction: 'pan-y',  // Allow vertical scroll
-        WebkitOverflowScrolling: 'touch'
+        WebkitOverflowScrolling: 'touch',
+        // Critical: Higher z-index when flipped
+        zIndex: isFlipped ? 100 : 1,
+        position: 'relative',
       }}
     >
       {/* FRONT: Photo + Stats in new vertical order */}
