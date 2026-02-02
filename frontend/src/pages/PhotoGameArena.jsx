@@ -504,7 +504,7 @@ const PhotoSelectionScreen = ({ photos, loading, onSelectPhoto, selectedPhotoId,
             <Clock className="w-4 h-4" />
             Resting ({unavailablePhotos.length})
           </h4>
-          <div className="grid gap-3">
+          <div className="grid gap-3" style={{ touchAction: 'pan-y' }}>
             {unavailablePhotos.map((photo) => {
               const scenery = SCENERY_CONFIG[photo.scenery_type] || SCENERY_CONFIG.natural;
               
@@ -512,6 +512,7 @@ const PhotoSelectionScreen = ({ photos, loading, onSelectPhoto, selectedPhotoId,
                 <div
                   key={photo.mint_id}
                   className="relative flex items-center gap-4 p-4 rounded-xl border border-gray-700/50 bg-gray-800/30 opacity-50 cursor-not-allowed"
+                  style={{ touchAction: 'pan-y' }}
                 >
                   {/* Photo thumbnail - show actual image if available */}
                   <div className={`w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 grayscale ${!photo.image_url ? `bg-gradient-to-br ${scenery.color}` : 'bg-gray-900'}`}>
@@ -520,7 +521,9 @@ const PhotoSelectionScreen = ({ photos, loading, onSelectPhoto, selectedPhotoId,
                         src={photo.image_url} 
                         alt={photo.name}
                         className="w-full h-full object-cover"
+                        style={{ pointerEvents: 'none' }}
                         loading="lazy"
+                        draggable={false}
                       />
                     ) : (
                       <div className={`w-full h-full bg-gradient-to-br ${scenery.color} flex items-center justify-center`}>
