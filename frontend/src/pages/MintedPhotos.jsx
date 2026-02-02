@@ -1027,6 +1027,167 @@ const MintPhotoDialog = ({ isOpen, onClose, onMint, mintStatus, onMintSuccess })
   );
 };
 
+// Upgrade Dollar Value Modal Component
+const UpgradeModal = ({ photo, isOpen, onClose, onSuccess, userBlCoins }) => {
+  const [selectedUpgrade, setSelectedUpgrade] = useState(null);
+  const [isUpgrading, setIsUpgrading] = useState(false);
+  
+  // Upgrade tiers - $1M = 1M BL, etc.
+  const UPGRADE_OPTIONS = [
+    { amount: 1_000_000, cost: 1_000_000, label: '+$1M' },
+    { amount: 2_000_000, cost: 2_000_000, label: '+$2M' },
+    { amount: 5_000_000, cost: 5_000_000, label: '+$5M' },
+    { amount: 10_000_000, cost: 10_000_000, label: '+$10M' },
+    { amount: 50_000_000, cost: 50_000_000, label: '+$50M' },
+    { amount: 100_000_000, cost: 100_000_000, label: '+$100M' },
+    { amount: 500_000_000, cost: 500_000_000, label: '+$500M' },
+    { amount: 1_000_000_000, cost: 1_000_000_000, label: '+$1B' },
+  ];
+  
+  // Get purchased upgrades for this photo
+  const purchasedUpgrades = photo?.upgrades_purchased || [];
+  
+  const handleUpgrade = async () => {
+    if (!selectedUpgrade || !photo) return;
+    
+    setIsUpgrading(true);
+    try {
+      const response = await api.post(`/minting/photos/${photo.mint_id}/upgrade`, {
+        upgrade_amount: selectedUpgrade.amount
+      });
+      
+      if (response.data.success) {
+        toast.success(`Upgraded! New value: ${formatValue(response.data.new_dollar_value)}`);
+        onSuccess?.(response.data);
+        onClose?.();
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Upgrade failed');
+    } finally {
+      setIsUpgrading(false);
+    }
+  };
+  
+  if (!photo) return null;
+  
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="bg-gray-900 border-gray-700 max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-white">
+            <TrendingUp className="w-5 h-5 text-yellow-400" />
+            Upgrade Dollar Value
+          </DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          {/* Photo preview */}
+          <div className="flex items-center gap-4 p-3 bg-gray-800/50 rounded-lg">
+            <img 
+              src={photo.thumbnail_url || photo.image_url} 
+              alt={photo.name}
+              className="w-16 h-16 rounded-lg object-cover"
+            />
+            <div>
+              <p className="text-white font-semibold">{photo.name}</p>
+              <p className="text-gray-400 text-sm">
+                Current Value: <span className="text-yellow-400">{formatValue(photo.dollar_value)}</span>
+              </p>
+            </div>
+          </div>
+          
+          {/* User's BL Coin balance */}
+          <div className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
+            <span className="text-gray-400 flex items-center gap-2">
+              <Coins className="w-4 h-4 text-yellow-400" />
+              Your BL Coins
+            </span>
+            <span className="text-yellow-400 font-bold">{(userBlCoins || 0).toLocaleString()} BL</span>
+          </div>
+          
+          {/* Upgrade options */}
+          <div className="space-y-2">
+            <p className="text-gray-400 text-sm">Select upgrade amount:</p>
+            <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto">
+              {UPGRADE_OPTIONS.map((option) => {
+                const isPurchased = purchasedUpgrades.includes(option.amount);
+                const canAfford = (userBlCoins || 0) >= option.cost;
+                const isSelected = selectedUpgrade?.amount === option.amount;
+                
+                return (
+                  <button
+                    key={option.amount}
+                    onClick={() => !isPurchased && canAfford && setSelectedUpgrade(option)}
+                    disabled={isPurchased || !canAfford}
+                    className={`p-3 rounded-lg border transition-all ${
+                      isPurchased 
+                        ? 'bg-gray-800/30 border-gray-700 text-gray-500 cursor-not-allowed' 
+                        : isSelected
+                          ? 'bg-yellow-500/20 border-yellow-500 text-yellow-400'
+                          : canAfford
+                            ? 'bg-gray-800/50 border-gray-700 hover:border-yellow-500/50 text-white cursor-pointer'
+                            : 'bg-gray-800/30 border-gray-700 text-gray-500 cursor-not-allowed'
+                    }`}
+                    data-testid={`upgrade-option-${option.amount}`}
+                  >
+                    <div className="text-lg font-bold">{option.label}</div>
+                    <div className="text-xs mt-1">
+                      {isPurchased ? (
+                        <span className="text-green-400">✓ Purchased</span>
+                      ) : (
+                        <span className={canAfford ? 'text-gray-400' : 'text-red-400'}>
+                          {option.cost.toLocaleString()} BL
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          
+          {/* Selected upgrade summary */}
+          {selectedUpgrade && (
+            <div className="p-3 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 rounded-lg border border-yellow-500/30">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-300">After upgrade:</span>
+                <span className="text-yellow-400 font-bold text-lg">
+                  {formatValue((photo.dollar_value || 0) + selectedUpgrade.amount)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center mt-1 text-sm">
+                <span className="text-gray-400">Cost:</span>
+                <span className="text-yellow-400">{selectedUpgrade.cost.toLocaleString()} BL</span>
+              </div>
+            </div>
+          )}
+          
+          {/* Upgrade button */}
+          <Button
+            onClick={handleUpgrade}
+            disabled={!selectedUpgrade || isUpgrading}
+            className="w-full bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black font-bold"
+          >
+            {isUpgrading ? (
+              <>
+                <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                Upgrading...
+              </>
+            ) : selectedUpgrade ? (
+              <>
+                <TrendingUp className="w-4 h-4 mr-2" />
+                Upgrade for {selectedUpgrade.cost.toLocaleString()} BL
+              </>
+            ) : (
+              'Select an upgrade'
+            )}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 // Main Component
 const MintedPhotos = () => {
   const { user, setUser } = useContext(AuthContext);
