@@ -327,13 +327,18 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   
   const handleClick = useCallback((e) => {
     if (disabled) return;
+    // Don't trigger onClick if the card is flipped (back side showing)
+    // This prevents lightbox from opening when interacting with back content
+    if (isFlipped) {
+      return;
+    }
     // Don't trigger onClick if the click was on the flip button or flip back button
     if (e?.target?.closest('[data-testid="flip-card-btn"]') || 
         e?.target?.closest('[data-testid="flip-back-btn"]')) {
       return;
     }
     onClick?.(photo);
-  }, [disabled, onClick, photo]);
+  }, [disabled, onClick, photo, isFlipped]);
   
   const handleFlip = useCallback((e) => {
     // Stop all event propagation to prevent parent onClick from firing
