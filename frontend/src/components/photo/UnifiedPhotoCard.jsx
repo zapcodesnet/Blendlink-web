@@ -842,10 +842,16 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         config.width,
         disabled && "opacity-50 cursor-not-allowed",
         selected && "ring-2 ring-primary ring-offset-2 ring-offset-background",
+        // CRITICAL: Elevate z-index when flipped so card appears ABOVE other cards
+        isFlipped && "z-50",
         className
       )}
       onClick={handleClick}
-      style={{ touchAction: 'pan-y' }}  // SCROLLING FIX: Allow vertical scroll
+      style={{ 
+        touchAction: 'pan-y',
+        // When flipped, ensure card is visible above all others
+        zIndex: isFlipped ? 50 : 'auto',
+      }}
       data-testid={`photo-card-${photo?.mint_id}`}
     >
       {/* Wrap in Golden Sparkling Frame for Level 60 Seniority */}
