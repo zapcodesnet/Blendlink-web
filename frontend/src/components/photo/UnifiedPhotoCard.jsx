@@ -896,7 +896,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         selected && "ring-2 ring-primary ring-offset-2 ring-offset-background",
         className
       )}
-      onClick={handleClick}
+      onClick={(e) => handleClick(e)}
       style={{ 
         touchAction: 'pan-y',
         // CRITICAL: When flipped, card must appear ABOVE all other cards
