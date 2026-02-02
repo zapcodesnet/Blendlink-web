@@ -1268,9 +1268,55 @@ const MintedPhotos = () => {
     }
   };
   
+  // Initial load
   useEffect(() => {
     fetchPhotos();
     fetchMintStatus();
+  }, []);
+  
+  // Real-time stat refresh polling (every 5 seconds)
+  // Keeps stats updated after battles
+  useEffect(() => {
+    const POLL_INTERVAL = 5000; // 5 seconds
+    
+    const pollStats = async () => {
+      try {
+        // Silently refresh photos to get latest stats (XP, stamina, level, etc.)
+        const response = await api.get('/minting/photos');
+        const newPhotos = response.data.photos || [];
+        
+        // Only update if there are actual changes to avoid unnecessary re-renders
+        setPhotos(prevPhotos => {
+          // Quick check if any stats changed
+          const hasChanges = newPhotos.some((newPhoto, index) => {
+            const oldPhoto = prevPhotos[index];
+            if (!oldPhoto) return true;
+            return (
+              newPhoto.xp !== oldPhoto.xp ||
+              newPhoto.level !== oldPhoto.level ||
+              newPhoto.stamina !== oldPhoto.stamina ||
+              newPhoto.dollar_value !== oldPhoto.dollar_value ||
+              newPhoto.wins !== oldPhoto.wins ||
+              newPhoto.losses !== oldPhoto.losses
+            );
+          });
+          
+          return hasChanges ? newPhotos : prevPhotos;
+        });
+      } catch (err) {
+        // Silently fail - don't spam errors for background polling
+        console.debug('[StatPoll] Silent refresh failed:', err.message);
+      }
+    };
+    
+    // Start polling
+    const pollInterval = setInterval(pollStats, POLL_INTERVAL);
+    console.log('[MintedPhotos] Started real-time stat polling (every 5s)');
+    
+    return () => {
+      clearInterval(pollInterval);
+      console.log('[MintedPhotos] Stopped stat polling');
+    };
   }, []);
   
   const handleMint = (data) => {
