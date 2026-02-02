@@ -1448,15 +1448,19 @@ const MintedPhotos = () => {
           </div>
         ) : viewMode === 'card' ? (
           // New Unified Card View - clean image front, stats on back
-          // Updated: Better spacing (gap-6), fewer columns for larger cards
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-2">
+          // FIXED: Much larger spacing (gap-8), touch-action for scrolling
+          <div 
+            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 p-4"
+            style={{ touchAction: 'pan-y' }}
+          >
             {photos.map(photo => (
               <div 
                 key={photo.mint_id}
                 className={cn(
-                  "relative transition-all duration-300",
+                  "relative transition-all duration-300 touch-pan-y",
                   newlyMintedId === photo.mint_id && "animate-pulse ring-2 ring-yellow-400 ring-offset-2 ring-offset-gray-900 rounded-xl"
                 )}
+                style={{ touchAction: 'pan-y' }}
                 onClick={() => {
                   // Remove glow on click
                   if (newlyMintedId === photo.mint_id) {
@@ -1475,7 +1479,7 @@ const MintedPhotos = () => {
                   size="medium"
                 />
                 {/* Photo name below card */}
-                <div className="mt-2 px-1">
+                <div className="mt-3 px-1">
                   <p className="text-white text-sm font-medium truncate text-center">{photo.name}</p>
                   {/* Win/Loss streak */}
                   {(photo.win_streak > 0 || photo.lose_streak > 0) && (
