@@ -1514,6 +1514,7 @@ const MintedPhotos = () => {
                     onFaceMatchClick={setSelfieMatchPhoto}
                     onUpgradeClick={setUpgradePhoto}
                     onFlipStateChange={(isFlipped) => handleCardFlipChange(photo.mint_id, isFlipped)}
+                    flipped={flippedCardId === photo.mint_id}
                     size="medium"
                   />
                 </div>
