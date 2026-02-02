@@ -449,7 +449,6 @@ export const TappingArena = ({
   const [playerTaps, setPlayerTaps] = useState(0);
   const [opponentTaps, setOpponentTaps] = useState(0);
   const [tapsThisSecond, setTapsThisSecond] = useState(0);
-  const [showAntiCheatWarning, setShowAntiCheatWarning] = useState(false);
   
   // Dollar amounts for display
   const [playerDollar, setPlayerDollar] = useState(0);
