@@ -1227,17 +1227,21 @@ async def selfie_match(
     """
     Match a selfie against the minted photo for Authenticity bonus.
     
-    - Costs 100 BL coins per attempt (max 3 attempts)
+    - First 3 attempts are FREE during initial minting
+    - Later attempts: 100 BL coins per try (max 3 additional tries)
     - Uses GPT-4o Vision to compare faces
-    - Awards 5% Authenticity bonus if match > 80%
-    - Once added, Authenticity is permanent
+    - If match score > 90%, treat as 100% match
+    - Awards 5% Authenticity bonus if match > 90% (treated as 100%)
+    - Combined with face detection (+5%) = up to +10% total Authenticity
+    - Once successful, Authenticity is permanent and locked
     """
     if _db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
-    SELFIE_MATCH_COST = 100  # BL coins per attempt
+    SELFIE_MATCH_COST = 100  # BL coins per attempt (after free tries)
     MAX_ATTEMPTS = 3
-    MATCH_THRESHOLD = 80  # 80% match required for full bonus
+    FREE_ATTEMPTS = 3  # First 3 are free during minting
+    MATCH_THRESHOLD = 90  # >90% match = treat as 100%
     
     # Get the photo
     photo = await _db.minted_photos.find_one(
@@ -1251,28 +1255,34 @@ async def selfie_match(
     if photo["user_id"] != current_user["user_id"]:
         raise HTTPException(status_code=403, detail="You can only match your own photos")
     
-    # Check if authenticity already added
-    if photo.get("selfie_match_score", 0) > 0:
-        raise HTTPException(status_code=400, detail="Authenticity already added to this photo")
+    # Check if authenticity already successfully added (locked)
+    if photo.get("selfie_match_completed") or photo.get("authenticity_locked"):
+        raise HTTPException(status_code=400, detail="Authenticity already verified and locked for this photo")
     
     # Check if photo has face detection
-    if not photo.get("has_face") or photo.get("face_detection_score", 0) < 10:
-        raise HTTPException(status_code=400, detail="Photo must have a clear face for selfie match")
+    if not photo.get("has_face"):
+        logger.warning(f"[SelfieMatch] Photo {mint_id} has_face={photo.get('has_face')}, face_detection_score={photo.get('face_detection_score', 0)}")
+        raise HTTPException(status_code=400, detail="Photo must have a detected face for selfie match")
     
     # Check attempts
     attempts = photo.get("selfie_match_attempts", 0)
     if attempts >= MAX_ATTEMPTS:
         raise HTTPException(status_code=400, detail=f"Maximum {MAX_ATTEMPTS} attempts reached")
     
-    # Check user balance
-    if current_user.get("bl_coins", 0) < SELFIE_MATCH_COST:
+    # Check if this is a paid attempt (after free tries)
+    is_paid_attempt = attempts >= FREE_ATTEMPTS
+    actual_cost = SELFIE_MATCH_COST if is_paid_attempt else 0
+    
+    # Check user balance if paid attempt
+    if is_paid_attempt and current_user.get("bl_coins", 0) < SELFIE_MATCH_COST:
         raise HTTPException(status_code=400, detail=f"Insufficient BL coins. Need {SELFIE_MATCH_COST} BL")
     
-    # Deduct BL coins
-    await _db.users.update_one(
-        {"user_id": current_user["user_id"]},
-        {"$inc": {"bl_coins": -SELFIE_MATCH_COST}}
-    )
+    # Deduct BL coins if paid attempt
+    if is_paid_attempt:
+        await _db.users.update_one(
+            {"user_id": current_user["user_id"]},
+            {"$inc": {"bl_coins": -SELFIE_MATCH_COST}}
+        )
     
     # Increment attempt count
     await _db.minted_photos.update_one(
@@ -1289,36 +1299,47 @@ async def selfie_match(
         if not api_key:
             raise HTTPException(status_code=500, detail="AI service not configured")
         
-        # Get photo image
+        # Get photo image data
         photo_image_data = photo.get("image_data")
-        if not photo_image_data:
-            # Fetch from URL if not stored
-            photo_with_data = await _db.minted_photos.find_one({"mint_id": mint_id})
-            photo_image_data = photo_with_data.get("image_data") if photo_with_data else None
+        photo_mime_type = photo.get("mime_type", "image/jpeg")
         
         if not photo_image_data:
-            raise HTTPException(status_code=500, detail="Photo image not found")
+            # Try to get from full document
+            full_photo = await _db.minted_photos.find_one({"mint_id": mint_id})
+            if full_photo:
+                photo_image_data = full_photo.get("image_data")
+                photo_mime_type = full_photo.get("mime_type", "image/jpeg")
         
-        # Prepare prompt for face comparison
-        comparison_prompt = """Compare the faces in these two images and provide a face similarity score.
+        if not photo_image_data:
+            logger.error(f"[SelfieMatch] No image data found for photo {mint_id}")
+            raise HTTPException(status_code=500, detail="Photo image data not found. Please try re-minting the photo.")
+        
+        # Log for debugging
+        logger.info(f"[SelfieMatch] Processing match for {mint_id}, image_data_length={len(photo_image_data) if photo_image_data else 0}")
+        
+        # Prepare prompt for face comparison with enhanced instructions
+        comparison_prompt = """You are a facial recognition expert. Compare the faces in these two images.
 
-Image 1: The minted photo (may contain one or more faces)
-Image 2: A live selfie for verification
+Image 1: The original minted photo
+Image 2: A live selfie for identity verification
 
-Instructions:
-1. Focus ONLY on facial features (eyes, nose, mouth, face shape, etc.)
-2. Ignore differences in lighting, angle, image quality, or background
-3. Score from 0-100% where:
-   - 90-100%: Definitely the same person
-   - 80-89%: Very likely the same person
-   - 60-79%: Possibly the same person
-   - 40-59%: Unclear/uncertain
-   - 0-39%: Likely different people
+IMPORTANT INSTRUCTIONS:
+1. Focus ONLY on facial features: eyes, nose, mouth, face shape, eyebrows, ears
+2. IGNORE differences in: lighting, camera angle, image quality, background, accessories (glasses, hats)
+3. IGNORE minor differences like: facial expression, slight aging, makeup, facial hair changes
+4. Be GENEROUS with matching - if the core facial structure matches, score high
 
-Return ONLY a JSON object with this exact format:
-{"match_score": <number>, "confidence": "<high/medium/low>", "notes": "<brief explanation>"}"""
+SCORING GUIDE:
+- 95-100%: Clear same person (features match despite different conditions)
+- 90-94%: Very likely same person (most features match)
+- 80-89%: Probably same person (some features match clearly)
+- 60-79%: Uncertain (some similarities but notable differences)
+- Below 60%: Likely different people
 
-        # Call GPT-4o Vision
+Return ONLY a valid JSON object:
+{"match_score": <integer 0-100>, "confidence": "<high/medium/low>", "notes": "<brief reason for score>"}"""
+
+        # Call GPT-4o Vision with both images
         config = ChatConfig(
             model="gpt-4o",
             api_key=api_key,
@@ -1328,11 +1349,12 @@ Return ONLY a JSON object with this exact format:
         messages = [
             Message(role="user", content=[
                 {"type": "text", "text": comparison_prompt},
-                {"type": "image_url", "image_url": {"url": f"data:{photo.get('mime_type', 'image/jpeg')};base64,{photo_image_data}"}},
+                {"type": "image_url", "image_url": {"url": f"data:{photo_mime_type};base64,{photo_image_data}"}},
                 {"type": "image_url", "image_url": {"url": f"data:{request.mime_type};base64,{request.selfie_base64}"}},
             ])
         ]
         
+        logger.info(f"[SelfieMatch] Sending images to GPT-4o Vision for {mint_id}")
         response = await chat(config, messages)
         
         # Parse response
@@ -1340,12 +1362,13 @@ Return ONLY a JSON object with this exact format:
         import re
         
         response_text = response.content if hasattr(response, 'content') else str(response)
+        logger.info(f"[SelfieMatch] GPT-4o response: {response_text[:500]}")
         
         # Extract JSON from response
         json_match = re.search(r'\{[^}]+\}', response_text)
         if json_match:
             result = json.loads(json_match.group())
-            match_score = result.get("match_score", 0)
+            match_score = int(result.get("match_score", 0))
             confidence = result.get("confidence", "low")
             notes = result.get("notes", "")
         else:
@@ -1355,18 +1378,40 @@ Return ONLY a JSON object with this exact format:
             confidence = "low"
             notes = "Score extracted from response"
         
-        # Calculate authenticity bonus
-        if match_score >= MATCH_THRESHOLD:
-            # Award full 5% bonus (5% of max = 5% of $100M = $5M equivalent, but stored as score)
-            authenticity_bonus = 5.0
-            bonus_message = f"🎉 Face match successful! +{authenticity_bonus}% Authenticity"
-        else:
-            authenticity_bonus = match_score / 20  # Partial bonus: 0-4% based on score
-            bonus_message = f"Face match: {match_score}%. Partial Authenticity bonus: +{authenticity_bonus:.1f}%"
+        logger.info(f"[SelfieMatch] Match result for {mint_id}: score={match_score}, confidence={confidence}")
         
-        # Update photo with match result (only if this is the best attempt)
+        # NEW: If match > 90%, treat as 100% match
+        effective_score = match_score
+        if match_score > MATCH_THRESHOLD:
+            effective_score = 100
+            logger.info(f"[SelfieMatch] Score {match_score}% > {MATCH_THRESHOLD}%, treating as 100% match")
+        
+        # Calculate authenticity bonus based on effective score
+        if effective_score >= 100:
+            # Full 5% bonus for >90% match (treated as 100%)
+            authenticity_bonus = 5.0
+            bonus_message = f"🎉 Perfect match! +{authenticity_bonus}% Authenticity bonus added!"
+            match_success = True
+        elif match_score >= 80:
+            # Good match but not perfect - still give bonus
+            authenticity_bonus = 4.0
+            bonus_message = f"✅ Good match ({match_score}%)! +{authenticity_bonus}% Authenticity bonus"
+            match_success = True
+        elif match_score >= 60:
+            # Partial bonus
+            authenticity_bonus = match_score / 25  # 2.4% - 3.2%
+            bonus_message = f"Partial match ({match_score}%). +{authenticity_bonus:.1f}% Authenticity"
+            match_success = False
+        else:
+            # Low match - minimal bonus
+            authenticity_bonus = match_score / 50  # 0-1.2%
+            bonus_message = f"Low match ({match_score}%). Partial bonus: +{authenticity_bonus:.1f}%"
+            match_success = False
+        
+        # Update photo with match result
         current_best = photo.get("selfie_match_score", 0)
-        if match_score > current_best:
+        
+        if match_score > current_best or effective_score >= 100:
             # Recalculate dollar value with authenticity bonus
             base_value = photo.get("base_dollar_value", photo.get("dollar_value", 0))
             
@@ -1380,45 +1425,59 @@ Return ONLY a JSON object with this exact format:
             # Total authenticity (capped at 10%)
             total_authenticity = min(10, face_detection_bonus + selfie_match_bonus)
             
-            # Apply to dollar value (10% = $100M max from authenticity)
+            # Apply to dollar value (10% = up to $100M from authenticity based on base value)
             authenticity_value = int(base_value * (total_authenticity / 100))
             new_dollar_value = base_value + authenticity_value
             
+            update_data = {
+                "selfie_match_score": match_score,
+                "selfie_bonus_percent": selfie_match_bonus,
+                "selfie_match_confidence": confidence,
+                "selfie_match_notes": notes,
+                "authenticity_bonus": total_authenticity,
+                "dollar_value": new_dollar_value,
+            }
+            
+            # Lock if successful match (>90% treated as 100%)
+            if effective_score >= 100:
+                update_data["selfie_match_completed"] = True
+                update_data["authenticity_locked"] = True
+                logger.info(f"[SelfieMatch] Locking authenticity for {mint_id} with {total_authenticity}% bonus")
+            
             await _db.minted_photos.update_one(
                 {"mint_id": mint_id},
-                {
-                    "$set": {
-                        "selfie_match_score": match_score,
-                        "selfie_match_confidence": confidence,
-                        "selfie_match_notes": notes,
-                        "authenticity_bonus": total_authenticity,
-                        "dollar_value": new_dollar_value,
-                        "authenticity_locked": True,
-                    }
-                }
+                {"$set": update_data}
             )
         
         remaining_attempts = MAX_ATTEMPTS - attempts - 1
         
         return {
-            "success": True,
+            "success": match_success,
             "match_score": match_score,
+            "effective_score": effective_score,
             "confidence": confidence,
             "notes": notes,
-            "authenticity_bonus": authenticity_bonus,
+            "authenticity_bonus_added": authenticity_bonus,
+            "total_authenticity": min(10, photo.get("face_bonus_percent", 0) + authenticity_bonus),
             "message": bonus_message,
             "remaining_attempts": remaining_attempts,
-            "cost_paid": SELFIE_MATCH_COST,
+            "cost_paid": actual_cost,
             "is_best_score": match_score > current_best,
+            "is_locked": effective_score >= 100,
         }
         
     except Exception as e:
-        logger.error(f"Selfie match error: {e}")
-        # Refund on error
-        await _db.users.update_one(
-            {"user_id": current_user["user_id"]},
-            {"$inc": {"bl_coins": SELFIE_MATCH_COST}}
-        )
+        logger.error(f"[SelfieMatch] Error for {mint_id}: {str(e)}")
+        import traceback
+        logger.error(f"[SelfieMatch] Traceback: {traceback.format_exc()}")
+        
+        # Refund on error (if paid)
+        if is_paid_attempt:
+            await _db.users.update_one(
+                {"user_id": current_user["user_id"]},
+                {"$inc": {"bl_coins": SELFIE_MATCH_COST}}
+            )
+        # Revert attempt count on error
         await _db.minted_photos.update_one(
             {"mint_id": mint_id},
             {"$inc": {"selfie_match_attempts": -1}}
