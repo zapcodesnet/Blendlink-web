@@ -1241,3 +1241,41 @@ body, html {
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch !important;
 }
+
+/* ==============================================
+   ENHANCED: Touch Scrolling Fix v2
+   ============================================== */
+
+/* Force page body to be scrollable */
+html, body, #root {
+  touch-action: pan-y !important;
+  -webkit-overflow-scrolling: touch !important;
+  overflow-y: auto !important;
+  height: auto !important;
+  min-height: 100vh !important;
+}
+
+/* Card front stats should not block scroll */
+.photo-card-stats,
+[data-testid^="photo-card-"] .bg-black\/70 {
+  pointer-events: none !important;
+}
+
+/* But flip button must remain interactive */
+[data-testid="flip-card-btn"] {
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+}
+
+/* Flipped card back content must be scrollable internally */
+.card-back-content,
+[data-testid^="photo-card-"][data-flipped="true"] > div > div:last-child {
+  overflow-y: auto !important;
+  touch-action: pan-y !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* Ensure motion div doesn't block scroll */
+.preserve-3d {
+  touch-action: pan-y !important;
+}
