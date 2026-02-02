@@ -402,10 +402,14 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
               </div>
             )}
             
-            {/* Flip indicator */}
+            {/* Flip indicator - Larger tap target with clear spacing */}
             <button 
-              onClick={handleFlip}
-              className="w-full text-center text-[10px] text-gray-500 hover:text-gray-300 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleFlip(e);
+              }}
+              className="w-full py-2 text-center text-xs text-gray-400 hover:text-white hover:bg-gray-800/50 transition-all rounded-b-xl border-t border-gray-700/50"
+              style={{ touchAction: 'manipulation' }}
             >
               Tap to flip →
             </button>
@@ -413,7 +417,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         )}
       </div>
         
-        {/* BACK: All stats - Scrollable content for smaller cards */}
+        {/* BACK: All stats - Scrollable content with extra bottom padding for nav bar */}
         <div 
           className={cn(
             "absolute w-full backface-hidden rounded-xl overflow-hidden",
