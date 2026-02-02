@@ -233,6 +233,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   showStamina = true,
   showFaceMatch = false,
   onFaceMatchClick,
+  onUpgradeClick, // New: Callback when upgrade button is clicked
   size = 'medium', // 'small' | 'medium' | 'large' | 'full'
   className,
   flipped = false,
