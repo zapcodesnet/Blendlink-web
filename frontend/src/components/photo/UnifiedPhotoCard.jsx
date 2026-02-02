@@ -362,33 +362,45 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   }, [isFlipped, onFlip]);
   
   // Card content (shared between normal and golden frame versions)
+  // SCROLLING FIX: Using pointer-events-none on non-interactive elements
+  // and ensuring touch-action: pan-y allows vertical scrolling
   const cardContent = (
     <motion.div
-      className="relative w-full preserve-3d cursor-pointer touch-pan-y"
+      ref={cardRef}
+      className="relative w-full preserve-3d"
       animate={{ rotateY: isFlipped ? 180 : 0 }}
       transition={{ duration: 0.5 }}
-      style={{ transformStyle: 'preserve-3d', touchAction: 'pan-y' }}
+      style={{ 
+        transformStyle: 'preserve-3d', 
+        touchAction: 'pan-y',  // Allow vertical scroll
+        WebkitOverflowScrolling: 'touch'
+      }}
     >
-      {/* FRONT: Clean image only */}
+      {/* FRONT: Photo + Stats in new vertical order */}
       <div 
         className={cn(
-          "absolute w-full backface-hidden rounded-xl overflow-hidden touch-pan-y",
+          "absolute w-full backface-hidden rounded-xl overflow-hidden",
           "bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700",
           hasGoldenFrame && !seniorityAchieved && "ring-2 ring-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]"
         )}
-        style={{ backfaceVisibility: 'hidden', touchAction: 'pan-y' }}
+        style={{ 
+          backfaceVisibility: 'hidden', 
+          touchAction: 'pan-y'  // Critical: allow scroll on card
+        }}
       >
-        {/* Clean image - NO overlays */}
+        {/* 1. Photo Image (top, takes ~60-65% of card) */}
         <div className={cn("relative w-full", config.imageH)}>
           <img
             src={photo?.image_url || photo?.thumbnail_url || '/placeholder-photo.jpg'}
             alt={photo?.name || 'Minted Photo'}
-            className="w-full h-full object-cover touch-none pointer-events-none"
+            className="w-full h-full object-cover"
+            style={{ pointerEvents: 'none' }}  // Don't block scroll
             loading="lazy"
+            draggable={false}
           />
           {/* Seniority Level 60 sparkle indicator */}
           {seniorityAchieved && (
-            <div className="absolute top-1 right-1">
+            <div className="absolute top-1 right-1 pointer-events-none">
               <motion.div
                 animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
                 transition={{ duration: 3, repeat: Infinity }}
@@ -399,34 +411,43 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
           )}
         </div>
         
-        {/* Stats BELOW image only */}
+        {/* Stats Section - NEW LAYOUT ORDER */}
         {showStats && (
-          <div className="p-2 space-y-1 bg-black/60">
-            {/* Dollar Value & Level */}
+          <div 
+            className="p-2 space-y-1.5 bg-black/70"
+            style={{ touchAction: 'pan-y' }}
+          >
+            {/* 2. NAME */}
+            <div className="text-center">
+              <p className="text-white font-semibold text-xs truncate px-1">
+                {photo?.name || 'Unnamed Photo'}
+              </p>
+            </div>
+            
+            {/* 3. DOLLAR VALUE & STARS */}
             <div className="flex items-center justify-between">
               <span className={cn(
-                "font-bold bg-gradient-to-r bg-clip-text text-transparent",
-                scenery.gradient,
-                config.textSize
+                "font-bold bg-gradient-to-r bg-clip-text text-transparent text-base",
+                scenery.gradient
               )}>
                 {formatDollarValue(dollarValue)}
               </span>
-              <div className="flex items-center gap-1">
-                <span className="text-gray-400 text-xs">Lv{level}</span>
-                <StarsDisplay count={stars} hasGoldenFrame={hasGoldenFrame} />
+              <StarsDisplay count={stars} hasGoldenFrame={hasGoldenFrame} />
+            </div>
+            
+            {/* 4. SCENERY & LEVEL */}
+            <div className="flex items-center justify-between">
+              <div className={cn(
+                "flex items-center gap-1 px-2 py-0.5 rounded-full",
+                `bg-gradient-to-r ${scenery.bgGradient}`
+              )}>
+                <span className="text-xs">{scenery.emoji}</span>
+                <span className="text-[10px] text-white/90">{scenery.label}</span>
               </div>
+              <span className="text-purple-400 text-xs font-bold">Lv {level}</span>
             </div>
             
-            {/* Scenery Badge */}
-            <div className={cn(
-              "flex items-center gap-1 px-2 py-0.5 rounded-full w-fit",
-              `bg-gradient-to-r ${scenery.bgGradient}`
-            )}>
-              <span className="text-sm">{scenery.emoji}</span>
-              <span className="text-xs text-white/90">{scenery.label}</span>
-            </div>
-            
-            {/* Stamina Bar */}
+            {/* 5. STAMINA BAR */}
             {showStamina && (
               <div className="space-y-0.5">
                 <div className="flex justify-between text-[10px] text-gray-400">
@@ -446,14 +467,39 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
               </div>
             )}
             
-            {/* Flip indicator - Larger tap target with clear spacing */}
+            {/* 6. STREAKS (Win/Loss) */}
+            {(winStreak > 0 || loseStreak > 0) && (
+              <div className="flex items-center justify-center gap-2 text-[10px]">
+                {winStreak >= 3 && (
+                  <span className="flex items-center gap-0.5 px-1.5 py-0.5 bg-orange-500/20 text-orange-400 rounded-full">
+                    <Flame size={10} className="fill-orange-400" />
+                    {winStreak}🔥
+                  </span>
+                )}
+                {loseStreak >= 3 && (
+                  <span className="flex items-center gap-0.5 px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded-full">
+                    <Shield size={10} />
+                    🛡️ Protected
+                  </span>
+                )}
+                {winStreak > 0 && winStreak < 3 && (
+                  <span className="text-green-400">{winStreak}W</span>
+                )}
+                {loseStreak > 0 && loseStreak < 3 && (
+                  <span className="text-red-400">{loseStreak}L</span>
+                )}
+              </div>
+            )}
+            
+            {/* 7. TAP TO FLIP BUTTON (50% smaller, at very bottom) */}
             <button 
               onClick={(e) => {
                 e.stopPropagation();
                 handleFlip(e);
               }}
-              className="w-full py-2 text-center text-xs text-gray-400 hover:text-white hover:bg-gray-800/50 transition-all rounded-b-xl border-t border-gray-700/50"
+              className="w-full py-1 text-center text-[10px] text-gray-500 hover:text-white hover:bg-gray-800/50 transition-all rounded-b-lg border-t border-gray-700/30 mt-1"
               style={{ touchAction: 'manipulation' }}
+              data-testid="flip-card-btn"
             >
               Tap to flip →
             </button>
@@ -461,13 +507,13 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         )}
       </div>
         
-        {/* BACK: All stats - Scrollable content with extra bottom padding for nav bar */}
-        <div 
-          className={cn(
-            "absolute w-full backface-hidden rounded-xl overflow-hidden",
-            "bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700",
-            hasGoldenFrame && !seniorityAchieved && "ring-2 ring-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]"
-          )}
+      {/* BACK: All stats - Scrollable content with extra bottom padding for nav bar */}
+      <div 
+        className={cn(
+          "absolute w-full backface-hidden rounded-xl overflow-hidden",
+          "bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700",
+          hasGoldenFrame && !seniorityAchieved && "ring-2 ring-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]"
+        )}
           style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
         >
           {/* Small preview image at top */}
