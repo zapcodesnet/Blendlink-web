@@ -270,8 +270,8 @@ const ImageLightbox = ({ photo: initialPhoto, isOpen, onClose, onSetProfilePic, 
                 </span>
               </div>
               
-              {/* Rating categories - Scrollable */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-2">
+              {/* Rating categories - Scrollable with extra bottom padding */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-2 pb-8" style={{ touchAction: 'pan-y' }}>
                 {Object.entries(RATING_LABELS).map(([key, label]) => {
                   const score = ratings[key] || 0;
                   const value = categoryValues[key] || 0;
