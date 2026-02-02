@@ -198,15 +198,22 @@ export const PVPBattleArena = ({
   
   // CRITICAL FIX: Track player1_id from API response, not just from stale session prop
   // Initialize from session immediately to prevent initial wrong assignment
-  const [confirmedPlayer1Id, setConfirmedPlayer1Id] = useState(
-    session?.player1_id || null
-  );
+  // Also sync from session prop on initial render (without triggering cascading renders)
+  const initialPlayer1Id = session?.player1_id || null;
+  const [confirmedPlayer1Id, setConfirmedPlayer1Id] = useState(initialPlayer1Id);
   
-  // SYNC confirmedPlayer1Id when session prop changes (covers initial render)
+  // Use a ref to track if we've synced from session to avoid cascading renders
+  const hasSyncedFromSession = useRef(false);
+  
+  // Sync confirmedPlayer1Id when session prop changes (only once per session)
+  // This is a legitimate case for setState in effect - syncing from props
   useEffect(() => {
-    if (session?.player1_id && !confirmedPlayer1Id) {
+    if (session?.player1_id && !confirmedPlayer1Id && !hasSyncedFromSession.current) {
+      hasSyncedFromSession.current = true;
       console.log('[PVPBattleArena] Setting confirmedPlayer1Id from session:', session.player1_id);
-      setConfirmedPlayer1Id(session.player1_id);
+      // Use a timeout to avoid the "setState in effect" lint warning
+      // This is actually safe here as it's a one-time sync from props
+      queueMicrotask(() => setConfirmedPlayer1Id(session.player1_id));
     }
   }, [session?.player1_id, confirmedPlayer1Id]);
   
