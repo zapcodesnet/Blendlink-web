@@ -2,7 +2,32 @@
 
 ## Latest Update: February 2, 2026
 
-### Session Fixes Completed (February 2, 2026)
+### Session Fixes Completed (February 2, 2026) - LATEST
+
+#### P0 SCROLLING FIX - ROBUST SOLUTION ✅
+- **Passive Touch Listeners**: Added useRef and useEffect with `{ passive: true }` event listeners
+- **touch-action: pan-y**: Applied to all containers, cards, and grids
+- **pointerEvents: none**: Applied to images to prevent blocking scroll
+- **WebkitOverflowScrolling**: Added for smooth iOS scrolling
+- **Pages Fixed**: `/minted-photos` Card View and `/photo-game` selection screen
+- **Testing Status**: VERIFIED by testing agent - scrolling works when finger is over cards
+
+#### P0 NEW UNIFIED PHOTO CARD LAYOUT ✅
+Card front layout order (top to bottom):
+1. **Photo Image** (~65% of card height)
+2. **Name** (centered, truncated)
+3. **Dollar Value & Stars** (value left, stars right)
+4. **Scenery Badge & Level** (badge left, Lv X right)
+5. **Stamina Bar** (with percentage)
+6. **Streaks** (win/loss indicators - 🔥 for wins, 🛡️ for protection)
+7. **"Tap to flip →" button** (50% smaller, at very bottom)
+
+Card dimensions:
+- **Medium size**: w-44, h-80 (taller to fit all elements)
+- **Image height**: h-40
+- **Grid gap**: gap-6 on mobile, gap-8 on desktop
+
+### Previous Session Fixes (February 2, 2026)
 
 #### P0 PVP Synchronization Fixes
 - **Server-Authoritative Winner Determination**: /pvp/finish-round endpoint now idempotent - caches and returns same result if called multiple times
@@ -16,35 +41,20 @@
 - **RPS Move Timer**: 5 seconds (RPS_SELECTION_TIME constant)
 - **Auto-Select Logic**: On timeout, selects photo with highest dollar_value automatically
 
-#### P1 Real-Time Stat Refresh (NEW)
+#### P1 Real-Time Stat Refresh
 - **Polling Interval**: Every 5 seconds on both pages
 - **MintedPhotos.jsx**: Silently refreshes photos to get latest XP, level, stamina, dollar_value, wins, losses
 - **PhotoGameArena.jsx**: Refreshes battle photos and stats when on pvp_menu; immediate refresh on battle exit
 - **Smart Update**: Only triggers re-render if actual stat changes detected
 
-#### P1 Selfie Verification Fixes (February 2, 2026) - UPDATED
+#### P1 Selfie Verification Fixes
 - **Match Threshold LOWERED**: Changed from 90% to **80%** - if match > 80%, treat as 100%
 - **CRITICAL FIX**: Attempts ONLY counted after successful AI analysis, NOT on processing errors
 - **Free Attempts**: First 3 attempts during minting are FREE
 - **Paid Attempts**: 100 BL coins per try after free tries (max 3 additional)
-- **Helpful Error Messages**: Specific messages for different error types:
-  - "This photo doesn't have a detected face"
-  - "Network issue - please check connection (attempt NOT counted)"
-  - "AI service temporarily unavailable (attempt NOT counted)"
+- **Helpful Error Messages**: Specific messages for different error types
 - **Enhanced AI Prompt**: More lenient matching, focuses on core facial structure
 - **Combined Boost**: Face detection (+5%) + Selfie match (+5%) = up to +10% total
-- **Detailed Logging**: Full logging for debugging match failures
-
-#### P2 Card View Layout Improvements (February 2, 2026) - UPDATED
-- **25% Larger Cards**: Medium size now w-44 h-72 (taller for flip button)
-- **75% Image Area**: Image height h-44
-- **LARGE Spacing**: Gap-8 (32px) between cards for easy tap targeting
-- **Touch Scrolling**: Added touch-pan-y CSS to cards and containers
-- **Photo Name**: Displayed below each card
-- **Win/Loss Streaks**: Shown below photo name (🔥 Wins, 🛡️ Losses)
-- **"Tap to flip →"** button clearly visible with larger tap target (py-2)
-- **Back-card scrolling**: Enabled with touchAction pan-y and extra padding
-- **Nav Hidden**: Bottom nav hides when lightbox, selfie modal, or upgrade modal is open
 
 #### P1 Hide Bottom Nav During Selfie Verification
 - **SelfieMatchModal**: Uses NavContext to hide bottom navigation when modal is open
