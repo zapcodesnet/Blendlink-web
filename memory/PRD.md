@@ -16,6 +16,12 @@
 - **RPS Move Timer**: 5 seconds (RPS_SELECTION_TIME constant)
 - **Auto-Select Logic**: On timeout, selects photo with highest dollar_value automatically
 
+#### P1 Real-Time Stat Refresh (NEW)
+- **Polling Interval**: Every 5 seconds on both pages
+- **MintedPhotos.jsx**: Silently refreshes photos to get latest XP, level, stamina, dollar_value, wins, losses
+- **PhotoGameArena.jsx**: Refreshes battle photos and stats when on pvp_menu; immediate refresh on battle exit
+- **Smart Update**: Only triggers re-render if actual stat changes detected
+
 #### P1 Tap Rate Notification Hidden
 - Removed "Tap Rate Exceeded" toast notification completely
 - Rate limit (30 TPS) still enforced - excess taps silently ignored
