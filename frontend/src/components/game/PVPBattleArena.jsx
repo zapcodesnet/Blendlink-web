@@ -562,8 +562,9 @@ export const PVPBattleArena = ({
         if (!intentionalCloseRef.current && gamePhase !== 'result' && reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
           setReconnecting(true);
           
-          const delay = RECONNECT_INTERVAL;
-          console.log(`Scheduling reconnect in ${delay}ms (attempt ${reconnectAttempts.current + 1}/${MAX_RECONNECT_ATTEMPTS})`);
+          // Use exponential backoff for reconnection delay
+          const delay = getReconnectDelay(reconnectAttempts.current);
+          console.log(`Scheduling reconnect in ${delay}ms (attempt ${reconnectAttempts.current + 1}/${MAX_RECONNECT_ATTEMPTS}) - exponential backoff`);
           
           reconnectTimeoutRef.current = setTimeout(() => {
             // Use ref to call the latest version
@@ -575,7 +576,7 @@ export const PVPBattleArena = ({
           console.log('Max reconnect attempts reached - switching to polling-only mode');
           setPollingMode(true);
           setReconnecting(false);
-          toast.info('Sync mode: Using polling (WebSocket unavailable)');
+          toast.info('📡 Using backup sync mode (polling)');
         }
         intentionalCloseRef.current = false;
       };
@@ -587,7 +588,7 @@ export const PVPBattleArena = ({
       setReconnecting(false);
       toast.error('Failed to connect to game server');
     }
-  }, [getWebSocketUrl, handleWebSocketMessage, currentUsername, playerPhotos, isPlayer1, gamePhase, showToastThrottled]);
+  }, [getWebSocketUrl, handleWebSocketMessage, currentUsername, playerPhotos, isPlayer1, gamePhase, showToastThrottled, getReconnectDelay]);
   
   // Keep ref updated
   useEffect(() => {
