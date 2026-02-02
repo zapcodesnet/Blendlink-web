@@ -589,7 +589,7 @@ export const TappingArena = ({
     if (newTaps >= playerRequiredTaps) {
       handlePlayerWinRef.current?.();
     }
-  }, [gamePhase, playerTaps, playerRequiredTaps, tapsThisSecond, soundEnabled, websocket, vibrate, onTap, showAntiCheatWarning, sendTapToApi]);
+  }, [gamePhase, playerTaps, playerRequiredTaps, tapsThisSecond, soundEnabled, websocket, vibrate, onTap, sendTapToApi]);
   
   // Reset taps counter every second
   useEffect(() => {
