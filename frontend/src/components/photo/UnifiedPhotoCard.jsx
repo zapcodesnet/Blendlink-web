@@ -864,6 +864,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         className
       )}
       onClick={handleClick}
+      style={{ touchAction: 'pan-y' }}  // SCROLLING FIX: Allow vertical scroll
       data-testid={`photo-card-${photo?.mint_id}`}
     >
       {/* Wrap in Golden Sparkling Frame for Level 60 Seniority */}
