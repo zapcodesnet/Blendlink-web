@@ -1478,49 +1478,60 @@ const MintedPhotos = () => {
           // 2. touch-action: pan-y ensures touch scroll works
           // 3. Cards elevate z-index when flipped to appear above others
           // 4. Nav bar hides when any card is flipped
-          <div 
-            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 p-2 md:p-4"
-            style={{ 
-              touchAction: 'pan-y',
-              WebkitOverflowScrolling: 'touch',
-              overflowY: 'auto',
-            }}
-          >
-            {photos.map(photo => (
+          <>
+            {/* Backdrop overlay when a card is flipped - click to dismiss */}
+            {flippedCardId && (
               <div 
-                key={photo.mint_id}
-                className={cn(
-                  "relative transition-all duration-300",
-                  newlyMintedId === photo.mint_id && "animate-pulse ring-2 ring-yellow-400 ring-offset-2 ring-offset-gray-900 rounded-xl",
-                  // Dim other cards when one is flipped
-                  flippedCardId && flippedCardId !== photo.mint_id && "opacity-30"
-                )}
-                style={{ 
-                  touchAction: 'pan-y',
-                  // Lower z-index for non-flipped cards when another is flipped
-                  zIndex: flippedCardId === photo.mint_id ? 50 : (flippedCardId ? 0 : 'auto'),
-                }}
-                onClick={() => {
-                  // Remove glow on click
-                  if (newlyMintedId === photo.mint_id) {
-                    setNewlyMintedId(null);
-                  }
-                }}
-              >
-                <UnifiedPhotoCard
-                  photo={photo}
-                  onClick={() => setLightboxPhoto(photo)}
-                  showStats={true}
-                  showStamina={true}
-                  showFaceMatch={photo.has_face && !photo.selfie_match_completed}
-                  onFaceMatchClick={setSelfieMatchPhoto}
-                  onUpgradeClick={setUpgradePhoto}
-                  onFlipStateChange={(isFlipped) => handleCardFlipChange(photo.mint_id, isFlipped)}
-                  size="medium"
-                />
-              </div>
-            ))}
-          </div>
+                className="fixed inset-0 bg-black/60 z-40"
+                onClick={() => setFlippedCardId(null)}
+                style={{ touchAction: 'none' }}
+              />
+            )}
+            <div 
+              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 p-2 md:p-4 relative"
+              style={{ 
+                touchAction: 'pan-y',
+                WebkitOverflowScrolling: 'touch',
+                overflowY: 'auto',
+              }}
+            >
+              {photos.map(photo => (
+                <div 
+                  key={photo.mint_id}
+                  className={cn(
+                    "relative transition-all duration-300",
+                    newlyMintedId === photo.mint_id && "animate-pulse ring-2 ring-yellow-400 ring-offset-2 ring-offset-gray-900 rounded-xl",
+                    // Dim other cards when one is flipped
+                    flippedCardId && flippedCardId !== photo.mint_id && "opacity-30 pointer-events-none"
+                  )}
+                  style={{ 
+                    touchAction: 'pan-y',
+                    // CRITICAL: Flipped card gets z-index 100, others get z-index 1
+                    zIndex: flippedCardId === photo.mint_id ? 100 : 1,
+                    position: 'relative',
+                  }}
+                  onClick={() => {
+                    // Remove glow on click
+                    if (newlyMintedId === photo.mint_id) {
+                      setNewlyMintedId(null);
+                    }
+                  }}
+                >
+                  <UnifiedPhotoCard
+                    photo={photo}
+                    onClick={() => setLightboxPhoto(photo)}
+                    showStats={true}
+                    showStamina={true}
+                    showFaceMatch={photo.has_face && !photo.selfie_match_completed}
+                    onFaceMatchClick={setSelfieMatchPhoto}
+                    onUpgradeClick={setUpgradePhoto}
+                    onFlipStateChange={(isFlipped) => handleCardFlipChange(photo.mint_id, isFlipped)}
+                    size="medium"
+                  />
+                </div>
+              ))}
+            </div>
+          </>
         ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {photos.map(photo => (
