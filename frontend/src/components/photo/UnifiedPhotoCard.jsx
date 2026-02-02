@@ -466,19 +466,17 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
               </div>
             )}
             
-            {/* 6. STREAKS (Win/Loss) */}
+            {/* STREAKS (Win/Loss) - Compact */}
             {(winStreak > 0 || loseStreak > 0) && (
-              <div className="flex items-center justify-center gap-2 text-[10px] pointer-events-none">
+              <div className="flex items-center justify-center gap-1 text-[9px]">
                 {winStreak >= 3 && (
-                  <span className="flex items-center gap-0.5 px-1.5 py-0.5 bg-orange-500/20 text-orange-400 rounded-full">
-                    <Flame size={10} className="fill-orange-400" />
-                    {winStreak}🔥
+                  <span className="px-1 py-0.5 bg-orange-500/20 text-orange-400 rounded">
+                    🔥{winStreak}
                   </span>
                 )}
                 {loseStreak >= 3 && (
-                  <span className="flex items-center gap-0.5 px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded-full">
-                    <Shield size={10} />
-                    🛡️ Protected
+                  <span className="px-1 py-0.5 bg-blue-500/20 text-blue-400 rounded">
+                    🛡️
                   </span>
                 )}
                 {winStreak > 0 && winStreak < 3 && (
@@ -490,21 +488,15 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
               </div>
             )}
             
-            {/* 7. TAP TO FLIP BUTTON (50% smaller, at very bottom) - THIS button must be interactive */}
+            {/* TAP TO FLIP BUTTON */}
             <button 
               onClick={(e) => {
-                // CRITICAL: Prevent event from bubbling to parent card's onClick (which opens lightbox)
                 e.preventDefault();
                 e.stopPropagation();
-                e.nativeEvent.stopImmediatePropagation();
+                if (e.nativeEvent) e.nativeEvent.stopImmediatePropagation();
                 handleFlip(e);
               }}
-              onTouchStart={(e) => {
-                // Also stop touch event propagation
-                e.stopPropagation();
-              }}
-              className="w-full py-1 text-center text-[10px] text-gray-500 hover:text-white hover:bg-gray-800/50 transition-all rounded-b-lg border-t border-gray-700/30 mt-1 pointer-events-auto"
-              style={{ touchAction: 'manipulation' }}
+              className="w-full py-0.5 text-center text-[9px] text-gray-500 hover:text-white transition-colors border-t border-gray-700/30 mt-1"
               data-testid="flip-card-btn"
             >
               Tap to flip →
@@ -513,10 +505,10 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         )}
       </div>
         
-      {/* BACK: All stats - SCROLLABLE content */}
+      {/* BACK: Stats view */}
       <div 
         className={cn(
-          "absolute w-full h-full rounded-xl overflow-hidden",
+          "absolute inset-0 rounded-xl overflow-hidden",
           "bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700",
           hasGoldenFrame && !seniorityAchieved && "ring-2 ring-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]"
         )}
