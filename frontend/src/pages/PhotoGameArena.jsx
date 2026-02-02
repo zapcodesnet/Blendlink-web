@@ -1736,8 +1736,15 @@ const PhotoGameArena = () => {
     setCurrentOpenGame(null);
     setIsAuctionBattleBot(false);
     setBotDifficulty('easy');
-    // Refresh stats
-    api.get('/photo-game/stats').then(res => setStats(res.data)).catch(() => {});
+    
+    // Immediately refresh all stats after battle
+    Promise.all([
+      api.get('/photo-game/stats').then(res => setStats(res.data)).catch(() => {}),
+      api.get('/photo-game/battle-photos').then(res => setBattlePhotos(res.data.photos || [])).catch(() => {}),
+      api.get('/auth/me').then(res => setUserBalance(res.data?.bl_coins || 0)).catch(() => {})
+    ]).then(() => {
+      console.log('[PhotoGame] Stats refreshed after battle exit');
+    });
   }, []);
   
   // Handle Bot Battle start from main menu's BotDifficultySelector
