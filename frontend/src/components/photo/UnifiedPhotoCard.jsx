@@ -380,41 +380,25 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
       }}
       transition={{ duration: 0.5 }}
       style={{ 
-        transformStyle: 'preserve-3d', 
-        // CRITICAL: Allow vertical scroll to pass through to parent
-        touchAction: 'pan-y',
-        WebkitOverflowScrolling: 'touch',
-        // Critical: Higher z-index when flipped
+        transformStyle: 'preserve-3d',
         zIndex: isFlipped ? 100 : 1,
-        position: 'relative',
       }}
     >
-      {/* FRONT: Photo + Stats in new vertical order */}
+      {/* FRONT: Photo + Stats */}
       <div 
         className={cn(
-          "absolute w-full backface-hidden rounded-xl overflow-hidden",
+          "absolute inset-0 backface-hidden rounded-xl overflow-hidden",
           "bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700",
           hasGoldenFrame && !seniorityAchieved && "ring-2 ring-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]"
         )}
-        style={{ 
-          backfaceVisibility: 'hidden', 
-          // CRITICAL: Allow page scroll when touching this element
-          touchAction: 'pan-y',
-        }}
+        style={{ backfaceVisibility: 'hidden' }}
       >
-        {/* 1. Photo Image (top, takes ~60-65% of card) */}
-        <div 
-          className={cn("relative w-full", config.imageH)}
-          style={{ touchAction: 'pan-y' }}
-        >
+        {/* Photo Image */}
+        <div className={cn("relative w-full", config.imageH)}>
           <img
             src={photo?.image_url || photo?.thumbnail_url || '/placeholder-photo.jpg'}
             alt={photo?.name || 'Minted Photo'}
-            className="w-full h-full object-cover"
-            style={{ 
-              pointerEvents: 'none',  // Don't block scroll
-              touchAction: 'pan-y',   // Allow scroll through
-            }}
+            className="w-full h-full object-cover pointer-events-none"
             loading="lazy"
             draggable={false}
           />
