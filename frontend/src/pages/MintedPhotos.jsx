@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { SelfieMatchModal } from '../components/minting/SelfieMatchModal';
 import { LikeButton } from '../components/game/LikeButton';
 import UnifiedPhotoCard from '../components/photo/UnifiedPhotoCard';
+import { cn } from '../lib/utils';
 
 // Category labels for the back of card
 const RATING_LABELS = {
