@@ -288,6 +288,25 @@ html, body {
   touch-action: pan-y;
 }
 
+/* Photo card specific - ensure scrolling works when touching cards */
+.touch-pan-y {
+  touch-action: pan-y !important;
+}
+
+/* Image elements should not capture touch for scrolling */
+img {
+  -webkit-user-drag: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Make flip button have proper touch target */
+button[class*="flip"], [data-flip-trigger] {
+  touch-action: manipulation !important;
+  min-height: 44px;
+  min-width: 44px;
+}
+
 /* Specific fix for iOS scroll issues */
 @supports (-webkit-touch-callout: none) {
   html, body {
