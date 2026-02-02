@@ -1520,37 +1520,29 @@ const MintedPhotos = () => {
               ))}
             </div>
           </>
-        ) : viewMode === 'grid' ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {photos.map(photo => (
-              <PhotoCard
-                key={photo.mint_id}
-                photo={photo}
-                viewMode="grid"
-                onSelect={() => setLightboxPhoto(photo)}
-                onUpdate={fetchPhotos}
-                onSelfieMatch={setSelfieMatchPhoto}
-                isNewlyMinted={photo.mint_id === newlyMintedId}
-                onRemoveHighlight={() => setNewlyMintedId(null)}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {photos.map(photo => (
-              <PhotoCard
-                key={photo.mint_id}
-                photo={photo}
-                viewMode="list"
-                onSelect={() => setLightboxPhoto(photo)}
-                onUpdate={fetchPhotos}
-                onSelfieMatch={setSelfieMatchPhoto}
-                isNewlyMinted={photo.mint_id === newlyMintedId}
-                onRemoveHighlight={() => setNewlyMintedId(null)}
-              />
-            ))}
-          </div>
-        )}
+        ) : null /* Grid and List views hidden - code preserved below but never rendered */ }
+        
+        {/* 
+          GRID VIEW CODE PRESERVED BUT HIDDEN - Per user request
+          Grid View and List View code kept for potential future revival
+          but never rendered since viewMode is always 'card'
+          
+          {viewMode === 'grid' && (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {photos.map(photo => (
+                <PhotoCard key={photo.mint_id} photo={photo} viewMode="grid" ... />
+              ))}
+            </div>
+          )}
+          
+          {viewMode === 'list' && (
+            <div className="space-y-3">
+              {photos.map(photo => (
+                <PhotoCard key={photo.mint_id} photo={photo} viewMode="list" ... />
+              ))}
+            </div>
+          )}
+        */}
       </div>
       
       {/* Full Image Lightbox Modal */}
