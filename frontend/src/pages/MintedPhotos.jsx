@@ -1471,43 +1471,32 @@ const MintedPhotos = () => {
             {flippedCardId && (
               <div 
                 className="fixed inset-0 bg-black/60 z-40"
-                onClick={() => setFlippedCardId(null)}
-                style={{ touchAction: 'none' }}
+                onClick={() => {
+                  // Reset flipped state for the specific card
+                  setFlippedCardId(null);
+                }}
               />
             )}
-            <div 
-              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 p-2 md:p-4 relative"
-              style={{ 
-                touchAction: 'pan-y',
-                WebkitOverflowScrolling: 'touch',
-                overflowY: 'auto',
-              }}
-            >
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-2">
               {photos.map(photo => (
                 <div 
                   key={photo.mint_id}
                   className={cn(
-                    "relative transition-all duration-300",
-                    newlyMintedId === photo.mint_id && "animate-pulse ring-2 ring-yellow-400 ring-offset-2 ring-offset-gray-900 rounded-xl",
-                    // Dim other cards when one is flipped
-                    flippedCardId && flippedCardId !== photo.mint_id && "opacity-30 pointer-events-none"
+                    "relative",
+                    newlyMintedId === photo.mint_id && "animate-pulse ring-2 ring-yellow-400 rounded-xl",
+                    flippedCardId && flippedCardId !== photo.mint_id && "opacity-30"
                   )}
                   style={{ 
-                    touchAction: 'pan-y',
-                    // CRITICAL: Flipped card gets z-index 100, others get z-index 1
                     zIndex: flippedCardId === photo.mint_id ? 100 : 1,
-                    position: 'relative',
-                  }}
-                  onClick={() => {
-                    // Remove glow on click
-                    if (newlyMintedId === photo.mint_id) {
-                      setNewlyMintedId(null);
-                    }
                   }}
                 >
                   <UnifiedPhotoCard
                     photo={photo}
-                    onClick={() => setLightboxPhoto(photo)}
+                    onClick={() => {
+                      if (!flippedCardId) {
+                        setLightboxPhoto(photo);
+                      }
+                    }}
                     showStats={true}
                     showStamina={true}
                     showFaceMatch={photo.has_face && !photo.selfie_match_completed}
