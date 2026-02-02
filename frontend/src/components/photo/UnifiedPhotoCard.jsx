@@ -542,11 +542,13 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
       {/* BACK: All stats - SCROLLABLE content */}
       <div 
         className={cn(
-          "absolute w-full h-full backface-hidden rounded-xl overflow-hidden",
+          "absolute w-full h-full rounded-xl overflow-hidden",
           "bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700",
           hasGoldenFrame && !seniorityAchieved && "ring-2 ring-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]"
         )}
         style={{ 
+          // CRITICAL: Back side is pre-rotated 180deg and uses backface-visibility
+          // When parent rotates 180deg, this becomes visible
           backfaceVisibility: 'hidden', 
           transform: 'rotateY(180deg)',
           // CRITICAL: Allow touch scrolling within the back view
