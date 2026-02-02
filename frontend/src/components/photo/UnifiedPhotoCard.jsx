@@ -456,8 +456,15 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
             )}
           </div>
           
-          {/* Stats content - Scrollable */}
-          <div className="p-3 space-y-2 text-xs max-h-[calc(100%-4rem)] overflow-y-auto custom-scrollbar">
+          {/* Stats content - Scrollable with extra bottom padding */}
+          <div 
+            className="p-3 space-y-2 text-xs overflow-y-auto custom-scrollbar pb-6"
+            style={{ 
+              maxHeight: 'calc(100% - 4rem)', 
+              touchAction: 'pan-y',
+              WebkitOverflowScrolling: 'touch'
+            }}
+          >
             {/* ========== BASE VALUE SECTION ========== */}
             <div className="text-center border-b border-gray-700/50 pb-2">
               <div className="text-gray-500 text-[10px] mb-1">Base Value</div>
