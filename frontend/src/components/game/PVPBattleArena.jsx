@@ -25,6 +25,8 @@ import api from '../../services/api';
 // Constants
 const STARTING_RPS_MONEY = 5_000_000;
 const WINS_NEEDED = 3;
+const PHOTO_SELECTION_TIME = 10;  // 10 seconds for photo selection
+const RPS_SELECTION_TIME = 5;     // 5 seconds for RPS move selection
 
 // Round types
 const ROUND_TYPES = ['auction', 'rps', 'auction', 'rps', 'auction'];
