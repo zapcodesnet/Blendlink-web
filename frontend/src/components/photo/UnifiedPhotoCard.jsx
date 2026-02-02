@@ -344,8 +344,10 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   }, [isFlipped, onFlip]);
   
   // Card content (shared between normal and golden frame versions)
-  // SCROLLING FIX: Using pointer-events-none on non-interactive elements
-  // and ensuring touch-action: pan-y allows vertical scrolling
+  // SCROLLING FIX: Card should NOT block page scrolling
+  // - Parent page handles scrolling via touch-action: pan-y on body
+  // - Card images have pointer-events: none
+  // - Only buttons capture touch for manipulation
   const cardContent = (
     <motion.div
       ref={cardRef}
@@ -362,7 +364,8 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
       transition={{ duration: 0.5 }}
       style={{ 
         transformStyle: 'preserve-3d', 
-        touchAction: 'pan-y',  // Allow vertical scroll
+        // CRITICAL: Allow vertical scroll to pass through to parent
+        touchAction: 'pan-y',
         WebkitOverflowScrolling: 'touch',
         // Critical: Higher z-index when flipped
         zIndex: isFlipped ? 100 : 1,
@@ -378,16 +381,23 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         )}
         style={{ 
           backfaceVisibility: 'hidden', 
-          touchAction: 'pan-y'  // Critical: allow scroll on card
+          // CRITICAL: Allow page scroll when touching this element
+          touchAction: 'pan-y',
         }}
       >
         {/* 1. Photo Image (top, takes ~60-65% of card) */}
-        <div className={cn("relative w-full", config.imageH)}>
+        <div 
+          className={cn("relative w-full", config.imageH)}
+          style={{ touchAction: 'pan-y' }}
+        >
           <img
             src={photo?.image_url || photo?.thumbnail_url || '/placeholder-photo.jpg'}
             alt={photo?.name || 'Minted Photo'}
             className="w-full h-full object-cover"
-            style={{ pointerEvents: 'none' }}  // Don't block scroll
+            style={{ 
+              pointerEvents: 'none',  // Don't block scroll
+              touchAction: 'pan-y',   // Allow scroll through
+            }}
             loading="lazy"
             draggable={false}
           />
