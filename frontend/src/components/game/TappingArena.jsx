@@ -557,16 +557,8 @@ export const TappingArena = ({
     
     // Anti-cheat: Max 30 taps per second (rolling window)
     if (tapsThisSecond >= MAX_TAPS_PER_SECOND) {
-      // Show warning toast (debounced to prevent spam)
-      if (!showAntiCheatWarning) {
-        toast.warning('⚠️ Tap rate exceeded! Slow down.', {
-          duration: 1500,
-          id: 'tap-rate-warning', // Prevent duplicate toasts
-        });
-        setShowAntiCheatWarning(true);
-        setTimeout(() => setShowAntiCheatWarning(false), 1000);
-      }
-      // Discard excess taps - they don't count toward meter
+      // Silently ignore excess taps - they don't count toward meter
+      // No notification shown to user (as per requirement)
       return;
     }
     
