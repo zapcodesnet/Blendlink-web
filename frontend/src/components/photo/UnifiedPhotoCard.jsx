@@ -852,16 +852,11 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
       )}
       onClick={(e) => handleClick(e)}
       style={{ 
-        touchAction: 'pan-y',
-        // CRITICAL: When flipped, card must appear ABOVE all other cards
-        // Using z-index 100 to ensure it's above everything
         zIndex: isFlipped ? 100 : 'auto',
-        position: isFlipped ? 'relative' : 'static',
       }}
       data-testid={`photo-card-${photo?.mint_id}`}
       data-flipped={isFlipped}
     >
-      {/* Wrap in Golden Sparkling Frame for Level 60 Seniority */}
       {seniorityAchieved ? (
         <GoldenSparklingFrame>
           {cardContent}
@@ -869,9 +864,6 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
       ) : (
         cardContent
       )}
-      
-      {/* Static height placeholder to prevent layout shift */}
-      <div className={cn(config.height, "invisible")} />
     </div>
   );
 });
