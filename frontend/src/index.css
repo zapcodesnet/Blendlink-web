@@ -1186,3 +1186,58 @@ a,
 .embedsocial-hashtag [class*="loading"] {
   animation-duration: 0.5s !important;
 }
+
+/* ==============================================
+   CRITICAL: Touch Scrolling Fix for Photo Cards
+   Ensures finger-touch scrolling works on card views
+   ============================================== */
+
+/* Allow touch scrolling on all photo cards and containers */
+.photo-card,
+.photo-card-container,
+[data-testid^="photo-card-"],
+.grid[style*="touch-action"] {
+  touch-action: pan-y !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* Images inside cards should NOT block touch scroll */
+.photo-card img,
+[data-testid^="photo-card-"] img {
+  pointer-events: none !important;
+  touch-action: pan-y !important;
+}
+
+/* Ensure buttons can still be tapped (manipulation) */
+.photo-card button,
+[data-testid^="photo-card-"] button,
+[data-testid="flip-card-btn"] {
+  touch-action: manipulation !important;
+}
+
+/* Card flip - elevated z-index when flipped */
+[data-testid^="photo-card-"].z-50,
+.card-flipped {
+  z-index: 50 !important;
+  position: relative !important;
+}
+
+/* Dim other cards when one is flipped */
+.card-dimmed {
+  opacity: 0.3 !important;
+  pointer-events: none !important;
+}
+
+/* Ensure page body is scrollable */
+body, html {
+  touch-action: pan-y !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* Card grid container - ensure scrolling */
+.card-grid-container {
+  touch-action: pan-y !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
