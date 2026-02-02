@@ -1203,15 +1203,25 @@ const MintedPhotos = () => {
   const [upgradePhoto, setUpgradePhoto] = useState(null);    // For upgrade modal
   const [selfieMatchPhoto, setSelfieMatchPhoto] = useState(null); // For selfie match modal
   const [newlyMintedId, setNewlyMintedId] = useState(null); // Track newly minted photo for highlighting
+  const [flippedCardId, setFlippedCardId] = useState(null); // Track which card is flipped (for nav hiding)
   
   const { isAnimating, startAnimation, handleComplete, MintAnimationComponent } = useMintAnimation();
   
-  // Hide bottom nav when lightbox, selfie modal, or upgrade modal is open
+  // Hide bottom nav when lightbox, selfie modal, upgrade modal is open, OR when a card is flipped
   useEffect(() => {
-    const shouldHideNav = !!lightboxPhoto || !!selfieMatchPhoto || !!upgradePhoto;
+    const shouldHideNav = !!lightboxPhoto || !!selfieMatchPhoto || !!upgradePhoto || !!flippedCardId;
     setHideNav(shouldHideNav);
     return () => setHideNav(false);
-  }, [lightboxPhoto, selfieMatchPhoto, upgradePhoto, setHideNav]);
+  }, [lightboxPhoto, selfieMatchPhoto, upgradePhoto, flippedCardId, setHideNav]);
+  
+  // Handle card flip state change - track which card is flipped
+  const handleCardFlipChange = useCallback((photoId, isFlipped) => {
+    if (isFlipped) {
+      setFlippedCardId(photoId);
+    } else if (flippedCardId === photoId) {
+      setFlippedCardId(null);
+    }
+  }, [flippedCardId]);
   
   // Handle selfie match success
   const handleSelfieMatchSuccess = (data) => {
