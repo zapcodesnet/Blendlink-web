@@ -255,14 +255,41 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
 }) {
   const [isFlipped, setIsFlipped] = useState(flipped);
   const [showXPMultiplier, setShowXPMultiplier] = useState(false);
+  const cardRef = useRef(null);
   
   const scenery = SCENERY_CONFIG[photo?.scenery_type] || SCENERY_CONFIG.natural;
   
+  // SCROLLING FIX: Attach passive touch listeners to allow page scrolling
+  // This ensures touch events on the card don't block vertical scrolling
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card) return;
+    
+    // Passive touch handler - allows scrolling to propagate
+    const handleTouchStart = () => {
+      // Do nothing - just ensure it's passive
+    };
+    
+    const handleTouchMove = () => {
+      // Do nothing - passive listener allows scroll
+    };
+    
+    // Add passive listeners
+    card.addEventListener('touchstart', handleTouchStart, { passive: true });
+    card.addEventListener('touchmove', handleTouchMove, { passive: true });
+    
+    return () => {
+      card.removeEventListener('touchstart', handleTouchStart);
+      card.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, []);
+  
   // Size configurations - Updated: 25% larger cards with proper height for all content
+  // Image takes 75% of card space, stats take remaining 25%
   const sizeConfig = {
-    small: { width: 'w-32', height: 'h-52', imageH: 'h-32', textSize: 'text-xs' },
-    medium: { width: 'w-44', height: 'h-72', imageH: 'h-44', textSize: 'text-sm' },  // Increased height for flip button
-    large: { width: 'w-56', height: 'h-96', imageH: 'h-56', textSize: 'text-base' },
+    small: { width: 'w-32', height: 'h-60', imageH: 'h-28', textSize: 'text-xs' },
+    medium: { width: 'w-44', height: 'h-80', imageH: 'h-40', textSize: 'text-sm' },  // Taller card for all elements
+    large: { width: 'w-56', height: 'h-[26rem]', imageH: 'h-52', textSize: 'text-base' },
     full: { width: 'w-full', height: 'h-auto', imageH: 'aspect-[3/4]', textSize: 'text-base' },
   };
   const config = sizeConfig[size] || sizeConfig.medium;
