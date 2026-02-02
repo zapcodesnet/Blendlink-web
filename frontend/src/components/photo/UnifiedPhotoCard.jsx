@@ -344,19 +344,22 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   const xpToNextLevel = xpProgressData.remaining || photo?.xp_to_next_level || 10;
   const xpForNextLevel = xpProgressData.xp_for_next_level || photo?.xp_for_next_level || 10;
   
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     if (disabled) return;
     onClick?.(photo);
-  };
+  }, [disabled, onClick, photo]);
   
-  const handleFlip = (e) => {
-    e?.stopPropagation();
+  const handleFlip = useCallback((e) => {
+    // Only stop propagation for click events, not touch scroll
+    if (e) {
+      e.stopPropagation();
+    }
     setIsFlipped(!isFlipped);
     setShowXPMultiplier(true);
     // Hide XP multiplier after 3 seconds
     setTimeout(() => setShowXPMultiplier(false), 3000);
     onFlip?.(!isFlipped);
-  };
+  }, [isFlipped, onFlip]);
   
   // Card content (shared between normal and golden frame versions)
   const cardContent = (
