@@ -1438,9 +1438,6 @@ const MintedPhotos = () => {
             >
               <LayoutGrid className="w-5 h-5" />
             </button>
-            >
-              <List className="w-5 h-5" />
-            </button>
           </div>
         </div>
         
