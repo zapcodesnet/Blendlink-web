@@ -718,6 +718,38 @@ export const PVPBattleArena = ({
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [wsConnected, gamePhase]);
   
+  // Selection countdown timer with auto-select logic
+  useEffect(() => {
+    // Only run during 'ready' phase when player hasn't selected yet
+    if (gamePhase !== 'ready' || mySelectedPhoto) return;
+    
+    const timer = setInterval(() => {
+      setSelectionTimeRemaining(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          
+          // Auto-select: Find the photo with highest dollar value
+          if (playerPhotos && playerPhotos.length > 0 && !mySelectedPhoto) {
+            const sortedPhotos = [...playerPhotos].sort((a, b) => 
+              (b.dollar_value || 0) - (a.dollar_value || 0)
+            );
+            const bestPhoto = sortedPhotos[0];
+            
+            console.log('[AutoSelect] Time expired - selecting best photo:', bestPhoto?.mint_id);
+            toast.warning('⏰ Time expired - auto-selecting your best photo');
+            
+            // Trigger selection of best photo
+            handleSelectPhoto(bestPhoto);
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, [gamePhase, mySelectedPhoto, playerPhotos]);
+  
   // Polling fallback for game state synchronization
   // This ensures the game stays in sync even when WebSocket is unreliable
   useEffect(() => {
