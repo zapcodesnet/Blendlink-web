@@ -738,8 +738,8 @@ export const PVPBattleArena = ({
             console.log('[AutoSelect] Time expired - selecting best photo:', bestPhoto?.mint_id);
             toast.warning('⏰ Time expired - auto-selecting your best photo');
             
-            // Trigger selection of best photo
-            handleSelectPhoto(bestPhoto);
+            // Set the selected photo (this triggers the confirmation flow)
+            setMySelectedPhoto(bestPhoto);
           }
           return 0;
         }
