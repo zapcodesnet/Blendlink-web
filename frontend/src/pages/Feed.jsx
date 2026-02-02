@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useCallback } from "react";
+import React, { useState, useEffect, useContext, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../App";
 import api from "../services/api";
@@ -7,10 +7,11 @@ import { Button } from "../components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import ComingSoonPlaceholder from "../components/ComingSoonPlaceholder";
 import LinkPreview, { extractUrls } from "../components/LinkPreview";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Heart, MessageCircle, Share2, Plus, MoreHorizontal,
   Home as HomeIcon, Building, Briefcase, Settings, Bell, Search,
-  RefreshCw, Coins, Users, ShoppingBag, Gavel, ExternalLink
+  RefreshCw, Coins, Users, ShoppingBag, Gavel, ExternalLink, X
 } from "lucide-react";
 
 // Loading skeleton component for posts
