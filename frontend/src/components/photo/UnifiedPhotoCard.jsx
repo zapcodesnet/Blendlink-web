@@ -320,26 +320,26 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   // Card content (shared between normal and golden frame versions)
   const cardContent = (
     <motion.div
-      className="relative w-full preserve-3d cursor-pointer"
+      className="relative w-full preserve-3d cursor-pointer touch-pan-y"
       animate={{ rotateY: isFlipped ? 180 : 0 }}
       transition={{ duration: 0.5 }}
-      style={{ transformStyle: 'preserve-3d' }}
+      style={{ transformStyle: 'preserve-3d', touchAction: 'pan-y' }}
     >
       {/* FRONT: Clean image only */}
       <div 
         className={cn(
-          "absolute w-full backface-hidden rounded-xl overflow-hidden",
+          "absolute w-full backface-hidden rounded-xl overflow-hidden touch-pan-y",
           "bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700",
           hasGoldenFrame && !seniorityAchieved && "ring-2 ring-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]"
         )}
-        style={{ backfaceVisibility: 'hidden' }}
+        style={{ backfaceVisibility: 'hidden', touchAction: 'pan-y' }}
       >
         {/* Clean image - NO overlays */}
         <div className={cn("relative w-full", config.imageH)}>
           <img
             src={photo?.image_url || photo?.thumbnail_url || '/placeholder-photo.jpg'}
             alt={photo?.name || 'Minted Photo'}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover touch-none pointer-events-none"
             loading="lazy"
           />
           {/* Seniority Level 60 sparkle indicator */}
