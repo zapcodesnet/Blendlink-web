@@ -372,6 +372,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
       ref={cardRef}
       className={cn(
         "relative w-full preserve-3d",
+        config.height, // CRITICAL: Add height so FRONT/BACK absolute children know how tall to be
         // When flipped, make card more prominent with shadow
         isFlipped && "shadow-2xl shadow-black/50"
       )}
