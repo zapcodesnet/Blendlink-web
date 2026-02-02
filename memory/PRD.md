@@ -1,5 +1,23 @@
 # Blendlink Platform - Product Requirements Document
 
+## Latest Update: February 2, 2026
+
+### P0 PVP Connection & Synchronization Fixes (COMPLETED)
+- **isPlayer1Ref**: Added ref to track latest player role for WebSocket handlers, avoiding stale closures
+- **confirmedPlayer1Id state**: Synced from API responses for reliable player identification
+- **Exponential backoff reconnection**: Implemented with delays of 1s → 2s → 4s → 8s → 10s (capped)
+- **MAX_RECONNECT_ATTEMPTS**: Increased from 3 to 5 for more robust reconnection
+- **Verified**: Photo assignment is now correct - creator sees their photos, joiner sees their own photos (not swapped)
+- **Testing**: All 16 backend tests passed (100% success rate)
+
+### P1 Profile Picture Click Behavior (COMPLETED)
+- **Single click**: Navigates to user's profile (250ms delay to detect double click)
+- **Double click**: Opens full-size image in modal
+- **Implementation**: Added to Feed.jsx with AnimatePresence modal
+- **Test IDs**: `post-avatar-{post_id}`, `full-size-avatar-modal`, `close-avatar-modal-btn`
+
+---
+
 ## Overview
 Blendlink is a minted photo game platform where users mint photos with AI-analyzed dollar values, compete in PVP and bot battles, and build portfolios. The app features real-time synchronization across web and mobile.
 
