@@ -1351,7 +1351,15 @@ const MintedPhotos = () => {
   const totalBattles = photos.reduce((sum, p) => sum + (p.battles_won || 0) + (p.battles_lost || 0), 0);
   
   return (
-    <div className="min-h-screen bg-gray-900 pb-24">
+    <div 
+      className="min-h-screen bg-gray-900 pb-24"
+      style={{
+        // CRITICAL SCROLLING FIX: Ensure page is scrollable with touch
+        touchAction: 'pan-y',
+        overflowY: 'auto',
+        WebkitOverflowScrolling: 'touch',
+      }}
+    >
       {/* Mint Animation Overlay */}
       {MintAnimationComponent}
       
