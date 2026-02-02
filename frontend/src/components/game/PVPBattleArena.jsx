@@ -461,7 +461,7 @@ export const PVPBattleArena = ({
     } catch (err) {
       console.error('Failed to parse PVP WebSocket message:', err);
     }
-  }, [currentUserId, opponentId, opponentUsername, isPlayer1, mySelectedPhoto, showToastThrottled]);
+  }, [currentUserId, opponentId, opponentUsername, mySelectedPhoto, showToastThrottled]); // Removed isPlayer1 since we use isPlayer1Ref
   
   // Connect to WebSocket ref to avoid circular dependency
   const connectWebSocketRef = useRef(null);
