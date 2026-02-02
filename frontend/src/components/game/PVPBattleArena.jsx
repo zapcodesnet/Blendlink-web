@@ -189,21 +189,38 @@ export const PVPBattleArena = ({
   const [celebrationData, setCelebrationData] = useState(null);
   
   // CRITICAL FIX: Track player1_id from API response, not just from stale session prop
-  const [confirmedPlayer1Id, setConfirmedPlayer1Id] = useState(session?.player1_id || null);
+  // Initialize from session immediately to prevent initial wrong assignment
+  const [confirmedPlayer1Id, setConfirmedPlayer1Id] = useState(
+    session?.player1_id || null
+  );
+  
+  // SYNC confirmedPlayer1Id when session prop changes (covers initial render)
+  useEffect(() => {
+    if (session?.player1_id && !confirmedPlayer1Id) {
+      console.log('[PVPBattleArena] Setting confirmedPlayer1Id from session:', session.player1_id);
+      setConfirmedPlayer1Id(session.player1_id);
+    }
+  }, [session?.player1_id, confirmedPlayer1Id]);
   
   // Determine if we're player1 (creator) or player2 (joiner)
-  // Use confirmedPlayer1Id from API response if available, fallback to session prop
-  const isPlayer1 = (confirmedPlayer1Id || session?.player1_id) === currentUserId;
+  // CRITICAL: Use the most reliable source - compare against ALL known player1 IDs
+  const isPlayer1 = useMemo(() => {
+    const p1Id = confirmedPlayer1Id || session?.player1_id;
+    const result = p1Id === currentUserId;
+    return result;
+  }, [confirmedPlayer1Id, session?.player1_id, currentUserId]);
   
-  // Debug log for isPlayer1 determination
+  // Debug log for isPlayer1 determination - only log on actual changes
   useEffect(() => {
     console.log('[PVPBattleArena] isPlayer1 determination:', {
       confirmedPlayer1Id,
       sessionPlayer1Id: session?.player1_id,
       currentUserId,
       isPlayer1,
+      playerPhotosCount: playerPhotos?.length,
+      opponentPhotosCount: opponentPhotos?.length,
     });
-  }, [confirmedPlayer1Id, session?.player1_id, currentUserId, isPlayer1]);
+  }, [confirmedPlayer1Id, session?.player1_id, currentUserId, isPlayer1, playerPhotos?.length, opponentPhotos?.length]);
   
   // Get WebSocket URL
   const getWebSocketUrl = useCallback(() => {
