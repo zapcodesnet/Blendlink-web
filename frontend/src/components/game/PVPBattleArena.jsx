@@ -210,6 +210,12 @@ export const PVPBattleArena = ({
     return result;
   }, [confirmedPlayer1Id, session?.player1_id, currentUserId]);
   
+  // REF to track latest isPlayer1 value for use in callbacks to avoid stale closures
+  const isPlayer1Ref = useRef(isPlayer1);
+  useEffect(() => {
+    isPlayer1Ref.current = isPlayer1;
+  }, [isPlayer1]);
+  
   // Debug log for isPlayer1 determination - only log on actual changes
   useEffect(() => {
     console.log('[PVPBattleArena] isPlayer1 determination:', {
