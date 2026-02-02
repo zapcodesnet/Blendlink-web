@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../services/api';
-import { AuthContext } from '../App';
+import { AuthContext, NavContext } from '../App';
 import { MintAnimation, useMintAnimation } from '../components/MintAnimation';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
