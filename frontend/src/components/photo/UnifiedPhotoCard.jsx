@@ -13,9 +13,23 @@
  * - XP meter bar shown below Base Value
  * - Golden sparkling frame animation for Seniority Level 60
  * - Uniform design across all pages
+ * 
+ * CARD FRONT LAYOUT (Top to Bottom):
+ * 1. Photo Image (75% of card height)
+ * 2. Name
+ * 3. Dollar Value & Stars
+ * 4. Scenery & Level
+ * 5. Stamina
+ * 6. Streaks (Win/Loss)
+ * 7. Small "Tap to flip" button at bottom
+ * 
+ * SCROLLING FIX:
+ * - All interactive elements use pointer-events-none where appropriate
+ * - Touch events use passive listeners
+ * - Cards do NOT block page scrolling
  */
 
-import React, { useState, memo, useEffect } from 'react';
+import React, { useState, memo, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Star, Zap, Shield, Flame, Heart, TrendingUp,
