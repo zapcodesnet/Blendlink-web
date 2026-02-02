@@ -1946,6 +1946,7 @@ async def pvp_finish_round(
     """
     Finish the current tapping round and calculate winner.
     Called when the round timer expires.
+    IDEMPOTENT: Can be called by both players - returns cached result if already finished.
     """
     if _db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
@@ -1965,6 +1966,21 @@ async def pvp_finish_round(
     
     if session.get("player1_id") != user_id and session.get("player2_id") != user_id:
         raise HTTPException(status_code=403, detail="Not a participant")
+    
+    # IDEMPOTENT CHECK: If this round already has a result, return it
+    current_round = session.get("current_round", 1)
+    existing_result = session.get("current_round_result")
+    if existing_result and existing_result.get("round") == current_round:
+        # Round already finished - return cached result
+        return {
+            "success": True,
+            "round_result": existing_result,
+            "player1_wins": session.get("player1_wins", 0),
+            "player2_wins": session.get("player2_wins", 0),
+            "game_over": session.get("status") in ["complete", "finished"],
+            "game_winner_id": session.get("winner_id"),
+            "already_finished": True,
+        }
     
     # Get tap counts and dollar values
     p1_taps = session.get("player1_taps", 0)
