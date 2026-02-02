@@ -500,64 +500,76 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         )}
       </div>
         
-      {/* BACK: All stats - Scrollable content with extra bottom padding for nav bar */}
+      {/* BACK: All stats - SCROLLABLE content */}
       <div 
         className={cn(
-          "absolute w-full backface-hidden rounded-xl overflow-hidden",
+          "absolute w-full h-full backface-hidden rounded-xl overflow-hidden",
           "bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700",
           hasGoldenFrame && !seniorityAchieved && "ring-2 ring-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]"
         )}
-          style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
-        >
-          {/* Small preview image at top */}
-          <div className="relative h-16 w-full">
-            <img
-              src={photo?.image_url || photo?.thumbnail_url}
-              alt={photo?.name}
-              className="w-full h-full object-cover opacity-50"
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-900" />
-            
-            {/* Seniority Level 60 sparkle on back too */}
-            {seniorityAchieved && (
-              <div className="absolute top-1 right-1">
-                <motion.div
-                  animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
-                  transition={{ duration: 3, repeat: Infinity }}
-                >
-                  <Sparkles size={20} className="text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" />
-                </motion.div>
-              </div>
-            )}
-            
-            {/* XP Multiplier (temporary on tap) */}
-            {showXPMultiplier && subscription?.xp_multiplier > 1 && (
-              <XPMultiplierBadge 
-                multiplier={subscription.xp_multiplier} 
-                tier={subscription.tier} 
-              />
-            )}
-          </div>
+        style={{ 
+          backfaceVisibility: 'hidden', 
+          transform: 'rotateY(180deg)',
+          // CRITICAL: Allow touch scrolling within the back view
+          touchAction: 'pan-y',
+          overflowY: 'auto',
+          WebkitOverflowScrolling: 'touch',
+        }}
+      >
+        {/* Small preview image at top */}
+        <div className="relative h-16 w-full flex-shrink-0">
+          <img
+            src={photo?.image_url || photo?.thumbnail_url}
+            alt={photo?.name}
+            className="w-full h-full object-cover opacity-50"
+            style={{ pointerEvents: 'none' }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-900 pointer-events-none" />
           
-          {/* Stats content - Scrollable with extra bottom padding */}
-          <div 
-            className="p-3 space-y-2 text-xs overflow-y-auto custom-scrollbar pb-6"
-            style={{ 
-              maxHeight: 'calc(100% - 4rem)', 
-              touchAction: 'pan-y',
-              WebkitOverflowScrolling: 'touch'
-            }}
-          >
-            {/* ========== BASE VALUE SECTION ========== */}
-            <div className="text-center border-b border-gray-700/50 pb-2">
-              <div className="text-gray-500 text-[10px] mb-1">Base Value</div>
-              <div className={cn(
-                "text-lg font-bold bg-gradient-to-r bg-clip-text text-transparent",
-                scenery.gradient
-              )}>
-                {formatDollarValue(baseDollarValue)}
-              </div>
+          {/* Seniority Level 60 sparkle on back too */}
+          {seniorityAchieved && (
+            <div className="absolute top-1 right-1 pointer-events-none">
+              <motion.div
+                animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
+                transition={{ duration: 3, repeat: Infinity }}
+              >
+                <Sparkles size={20} className="text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" />
+              </motion.div>
             </div>
+          )}
+          
+          {/* XP Multiplier (temporary on tap) */}
+          {showXPMultiplier && subscription?.xp_multiplier > 1 && (
+            <XPMultiplierBadge 
+              multiplier={subscription.xp_multiplier} 
+              tier={subscription.tier} 
+            />
+          )}
+        </div>
+        
+        {/* Stats content - SCROLLABLE with proper height */}
+        <div 
+          className="p-3 space-y-2 text-xs pb-8"
+          style={{ 
+            // CRITICAL: Make this scrollable with fixed height
+            maxHeight: 'calc(100% - 4rem)',
+            overflowY: 'auto',
+            touchAction: 'pan-y',
+            WebkitOverflowScrolling: 'touch',
+          }}
+          onTouchStart={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
+        >
+          {/* ========== BASE VALUE SECTION ========== */}
+          <div className="text-center border-b border-gray-700/50 pb-2">
+            <div className="text-gray-500 text-[10px] mb-1">Base Value</div>
+            <div className={cn(
+              "text-lg font-bold bg-gradient-to-r bg-clip-text text-transparent",
+              scenery.gradient
+            )}>
+              {formatDollarValue(baseDollarValue)}
+            </div>
+          </div>
             
             {/* ========== XP METER BAR (Below Base Value) ========== */}
             <div className="bg-gray-800/50 rounded-lg p-2 space-y-1.5">
