@@ -1421,33 +1421,23 @@ const MintedPhotos = () => {
       
       {/* Content */}
       <div className="max-w-6xl mx-auto px-4 py-6">
-        {/* Toolbar */}
+        {/* Toolbar - GRID VIEW HIDDEN (code preserved but UI hidden) */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
+            {/* 
+              GRID VIEW BUTTONS HIDDEN - Per user request, only Card View is shown.
+              Code preserved for potential future revival.
+              
+              <button onClick={() => setViewMode('grid')} ... />
+              <button onClick={() => setViewMode('list')} ... />
+            */}
+            {/* Only Card View button shown (always active) */}
             <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-lg transition-colors ${
-                viewMode === 'grid' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'
-              }`}
-              title="Grid View"
-            >
-              <Grid className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => setViewMode('card')}
-              className={`p-2 rounded-lg transition-colors ${
-                viewMode === 'card' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'
-              }`}
-              title="Card View (Flip for Stats)"
+              className="p-2 rounded-lg transition-colors bg-purple-600 text-white"
+              title="Card View"
             >
               <LayoutGrid className="w-5 h-5" />
             </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded-lg transition-colors ${
-                viewMode === 'list' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'
-              }`}
-              title="List View"
             >
               <List className="w-5 h-5" />
             </button>
