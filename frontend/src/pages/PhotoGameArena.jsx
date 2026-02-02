@@ -375,7 +375,7 @@ const PhotoSelectionScreen = ({ photos, loading, onSelectPhoto, selectedPhotoId,
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" style={{ touchAction: 'pan-y' }}>
       <div className="text-center mb-6">
         <h3 className="text-xl font-bold text-white mb-2">Select Your Battle Photo</h3>
         <p className="text-gray-400">
@@ -390,7 +390,7 @@ const PhotoSelectionScreen = ({ photos, loading, onSelectPhoto, selectedPhotoId,
             <Check className="w-4 h-4" />
             Available for Battle ({availablePhotos.length})
           </h4>
-          <div className="grid gap-3">
+          <div className="grid gap-3" style={{ touchAction: 'pan-y' }}>
             {availablePhotos.map((photo) => {
               const scenery = SCENERY_CONFIG[photo.scenery_type] || SCENERY_CONFIG.natural;
               const isSelected = selectedPhotoId === photo.mint_id;
@@ -407,6 +407,7 @@ const PhotoSelectionScreen = ({ photos, loading, onSelectPhoto, selectedPhotoId,
                   whileHover={{ scale: 1.01, x: 5 }}
                   whileTap={{ scale: 0.99 }}
                   onHoverStart={() => auctionSounds.buttonHover()}
+                  style={{ touchAction: 'manipulation' }}
                   data-testid={`photo-select-${photo.mint_id}`}
                 >
                   {/* Photo thumbnail - show actual image if available */}
@@ -416,7 +417,9 @@ const PhotoSelectionScreen = ({ photos, loading, onSelectPhoto, selectedPhotoId,
                         src={photo.image_url} 
                         alt={photo.name}
                         className="w-full h-full object-cover"
+                        style={{ pointerEvents: 'none' }}
                         loading="lazy"
+                        draggable={false}
                       />
                     ) : (
                       <div className={`w-full h-full bg-gradient-to-br ${scenery.color} flex items-center justify-center`}>
