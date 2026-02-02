@@ -257,25 +257,24 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   const [isFlipped, setIsFlipped] = useState(flipped);
   const [showXPMultiplier, setShowXPMultiplier] = useState(false);
   const cardRef = useRef(null);
+  const prevFlippedRef = useRef(flipped);
   
   const scenery = SCENERY_CONFIG[photo?.scenery_type] || SCENERY_CONFIG.natural;
   
-  // Sync internal state with flipped prop (for external control like backdrop click)
+  // Sync internal state with flipped prop ONLY when prop actually changes from parent
+  // This prevents infinite loops from circular updates
   useEffect(() => {
-    setIsFlipped(flipped);
+    if (flipped !== prevFlippedRef.current) {
+      prevFlippedRef.current = flipped;
+      setIsFlipped(flipped);
+    }
   }, [flipped]);
   
-  // Notify parent when flip state changes (for hiding nav bar)
-  useEffect(() => {
-    onFlipStateChange?.(isFlipped);
-  }, [isFlipped, onFlipStateChange]);
-  
-  // Size configurations - Updated: 25% larger cards with proper height for all content
-  // Image takes 75% of card space, stats take remaining 25%
+  // Size configurations - Cards should NOT have excessive height
   const sizeConfig = {
-    small: { width: 'w-32', height: 'h-60', imageH: 'h-28', textSize: 'text-xs' },
-    medium: { width: 'w-44', height: 'h-80', imageH: 'h-40', textSize: 'text-sm' },  // Taller card for all elements
-    large: { width: 'w-56', height: 'h-[26rem]', imageH: 'h-52', textSize: 'text-base' },
+    small: { width: 'w-32', height: 'h-52', imageH: 'h-28', textSize: 'text-xs' },
+    medium: { width: 'w-40', height: 'h-64', imageH: 'h-36', textSize: 'text-sm' },
+    large: { width: 'w-52', height: 'h-80', imageH: 'h-48', textSize: 'text-base' },
     full: { width: 'w-full', height: 'h-auto', imageH: 'aspect-[3/4]', textSize: 'text-base' },
   };
   const config = sizeConfig[size] || sizeConfig.medium;
