@@ -442,7 +442,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
             </div>
             
             {/* 4. SCENERY & LEVEL */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between pointer-events-none">
               <div className={cn(
                 "flex items-center gap-1 px-2 py-0.5 rounded-full",
                 `bg-gradient-to-r ${scenery.bgGradient}`
@@ -455,7 +455,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
             
             {/* 5. STAMINA BAR */}
             {showStamina && (
-              <div className="space-y-0.5">
+              <div className="space-y-0.5 pointer-events-none">
                 <div className="flex justify-between text-[10px] text-gray-400">
                   <span>⚡ Stamina</span>
                   <span>{stamina}/{maxStamina}</span>
@@ -475,7 +475,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
             
             {/* 6. STREAKS (Win/Loss) */}
             {(winStreak > 0 || loseStreak > 0) && (
-              <div className="flex items-center justify-center gap-2 text-[10px]">
+              <div className="flex items-center justify-center gap-2 text-[10px] pointer-events-none">
                 {winStreak >= 3 && (
                   <span className="flex items-center gap-0.5 px-1.5 py-0.5 bg-orange-500/20 text-orange-400 rounded-full">
                     <Flame size={10} className="fill-orange-400" />
@@ -497,13 +497,13 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
               </div>
             )}
             
-            {/* 7. TAP TO FLIP BUTTON (50% smaller, at very bottom) */}
+            {/* 7. TAP TO FLIP BUTTON (50% smaller, at very bottom) - THIS button must be interactive */}
             <button 
               onClick={(e) => {
                 e.stopPropagation();
                 handleFlip(e);
               }}
-              className="w-full py-1 text-center text-[10px] text-gray-500 hover:text-white hover:bg-gray-800/50 transition-all rounded-b-lg border-t border-gray-700/30 mt-1"
+              className="w-full py-1 text-center text-[10px] text-gray-500 hover:text-white hover:bg-gray-800/50 transition-all rounded-b-lg border-t border-gray-700/30 mt-1 pointer-events-auto"
               style={{ touchAction: 'manipulation' }}
               data-testid="flip-card-btn"
             >
