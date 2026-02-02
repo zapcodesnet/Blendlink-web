@@ -418,17 +418,20 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         {showStats && (
           <div 
             className="p-2 space-y-1.5 bg-black/70"
-            style={{ touchAction: 'pan-y' }}
+            style={{ 
+              touchAction: 'pan-y',
+              pointerEvents: 'none',  // Don't block scroll on stats area
+            }}
           >
             {/* 2. NAME */}
-            <div className="text-center">
+            <div className="text-center pointer-events-none">
               <p className="text-white font-semibold text-xs truncate px-1">
                 {photo?.name || 'Unnamed Photo'}
               </p>
             </div>
             
             {/* 3. DOLLAR VALUE & STARS */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between pointer-events-none">
               <span className={cn(
                 "font-bold bg-gradient-to-r bg-clip-text text-transparent text-base",
                 scenery.gradient
