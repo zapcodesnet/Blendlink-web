@@ -22,6 +22,19 @@
 - **PhotoGameArena.jsx**: Refreshes battle photos and stats when on pvp_menu; immediate refresh on battle exit
 - **Smart Update**: Only triggers re-render if actual stat changes detected
 
+#### P1 Selfie Verification Fixes (February 2, 2026)
+- **Match Threshold**: Changed from 80% to 90% - if match > 90%, treat as 100%
+- **Free Attempts**: First 3 attempts during minting are FREE
+- **Paid Attempts**: 100 BL coins per try after free tries (max 3 additional)
+- **Enhanced Scoring**: 
+  - >90% = 100% match = +5% Authenticity (locked permanently)
+  - 80-89% = +4% Authenticity
+  - 60-79% = Partial bonus (2.4-3.2%)
+  - <60% = Minimal bonus (0-1.2%)
+- **Combined Boost**: Face detection (+5%) + Selfie match (+5%) = up to +10% total
+- **Detailed Logging**: Added comprehensive logging for debugging match failures
+- **Improved AI Prompt**: Enhanced GPT-4o prompt to be more generous with matching
+
 #### P1 Hide Bottom Nav During Selfie Verification
 - **SelfieMatchModal**: Uses NavContext to hide bottom navigation when modal is open
 - **Purpose**: Allows users to click capture button without navigation bar blocking
