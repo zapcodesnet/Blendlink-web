@@ -1456,16 +1456,22 @@ const MintedPhotos = () => {
           </div>
         ) : viewMode === 'card' ? (
           // New Unified Card View - clean image front, stats on back
-          // FIXED: Much larger spacing (gap-8), touch-action for scrolling
+          // ROBUST SCROLLING FIX: 
+          // - Container has overflow-y-auto for scrollable area
+          // - touch-action: pan-y on all elements
+          // - Large gap-6 spacing for easy tapping between cards
           <div 
-            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 p-4"
-            style={{ touchAction: 'pan-y' }}
+            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 p-2 md:p-4"
+            style={{ 
+              touchAction: 'pan-y',
+              WebkitOverflowScrolling: 'touch'
+            }}
           >
             {photos.map(photo => (
               <div 
                 key={photo.mint_id}
                 className={cn(
-                  "relative transition-all duration-300 touch-pan-y",
+                  "relative transition-all duration-300",
                   newlyMintedId === photo.mint_id && "animate-pulse ring-2 ring-yellow-400 ring-offset-2 ring-offset-gray-900 rounded-xl"
                 )}
                 style={{ touchAction: 'pan-y' }}
@@ -1486,18 +1492,6 @@ const MintedPhotos = () => {
                   onUpgradeClick={setUpgradePhoto}
                   size="medium"
                 />
-                {/* Photo name below card */}
-                <div className="mt-3 px-1">
-                  <p className="text-white text-sm font-medium truncate text-center">{photo.name}</p>
-                  {/* Win/Loss streak */}
-                  {(photo.win_streak > 0 || photo.lose_streak > 0) && (
-                    <p className="text-xs text-gray-400 text-center mt-1">
-                      {photo.win_streak > 0 && <span className="text-green-400">🔥 {photo.win_streak}W</span>}
-                      {photo.win_streak > 0 && photo.lose_streak > 0 && ' / '}
-                      {photo.lose_streak > 0 && <span className="text-blue-400">🛡️ {photo.lose_streak}L</span>}
-                    </p>
-                  )}
-                </div>
               </div>
             ))}
           </div>
