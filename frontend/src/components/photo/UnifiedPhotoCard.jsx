@@ -354,25 +354,23 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
       }
     }
     const newFlippedState = !isFlipped;
+    prevFlippedRef.current = newFlippedState; // Update ref to prevent loop
     setIsFlipped(newFlippedState);
     setShowXPMultiplier(true);
-    // Hide XP multiplier after 3 seconds
     setTimeout(() => setShowXPMultiplier(false), 3000);
+    // Notify parent of the flip state change
+    onFlipStateChange?.(newFlippedState);
     onFlip?.(newFlippedState);
-  }, [isFlipped, onFlip]);
+  }, [isFlipped, onFlip, onFlipStateChange]);
   
-  // Card content (shared between normal and golden frame versions)
-  // SCROLLING FIX: Card should NOT block page scrolling
-  // - Parent page handles scrolling via touch-action: pan-y on body
-  // - Card images have pointer-events: none
-  // - Only buttons capture touch for manipulation
+  // Card content - SIMPLIFIED for proper scrolling
+  // Remove all touch-action interference, let parent handle scrolling
   const cardContent = (
     <motion.div
       ref={cardRef}
       className={cn(
         "relative w-full preserve-3d",
-        config.height, // CRITICAL: Add height so FRONT/BACK absolute children know how tall to be
-        // When flipped, make card more prominent with shadow
+        config.height,
         isFlipped && "shadow-2xl shadow-black/50"
       )}
       animate={{ 
