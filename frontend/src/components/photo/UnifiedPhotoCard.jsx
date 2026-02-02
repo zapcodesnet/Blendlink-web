@@ -327,8 +327,9 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   
   const handleClick = useCallback((e) => {
     if (disabled) return;
-    // Don't trigger onClick if the click was on the flip button
-    if (e?.target?.closest('[data-testid="flip-card-btn"]')) {
+    // Don't trigger onClick if the click was on the flip button or flip back button
+    if (e?.target?.closest('[data-testid="flip-card-btn"]') || 
+        e?.target?.closest('[data-testid="flip-back-btn"]')) {
       return;
     }
     onClick?.(photo);
