@@ -1,172 +1,186 @@
 <analysis>**original_problem_statement:**
-The user is extremely frustrated with the Player-vs-Player (PVP) mode, which has remained broken despite numerous fix attempts. The absolute priority is to resolve all PVP connection, synchronization, and state issues. After the agent implemented a large new progression feature set, the user re-iterated the urgency of the PVP bugs and provided a detailed list of persistent failures and required fixes.
+The user is extremely frustrated with the application's core functionality, reporting numerous critical bugs across multiple interactions. The primary complaints revolve around the broken Player-vs-Player (PVP) mode, severe page scrolling issues, unreliable real-time data synchronization, and regressions in previously working features. The user has provided highly detailed, iterative lists of required fixes and UI/UX improvements, emphasizing the need for robust, permanent solutions that work flawlessly on both web and mobile devices.
 
-**PRODUCT REQUIREMENTS (Strictly in order):**
-1.  **Fix All PVP Connection & Synchronization Issues (P0 - BLOCKER):**
-    *   Eliminate bugs like the creator seeing the opponent's photos, endless Reconnecting... loops, slashed sync bars, and getting stuck Waiting for opponent.
-    *   Implement robust reconnection logic with exponential backoff and timeouts.
-    *   Correctly leverage Supabase Realtime: use Broadcast for moves and Postgres Changes for persistent state.
-    *   Prevent race conditions with atomic server-side validation.
-    *   Guarantee 100% real-time sync between creator and joiner.
-    *   **Mandatory:** Conduct and report on end-to-end testing with two real devices, including simulating disconnections.
+**PRODUCT REQUIREMENTS (Consolidated & Prioritized from user messages):**
 
-2.  **Validate Profile Picture Click Behavior (P1):**
-    *   Verify that a single click on a profile picture navigates to the user's profile and a double click opens the full-size image in a modal.
-    *   Confirm this works on web and mobile, preserving original image quality.
+1.  **Fix All Scrolling & Layout Issues (P0 - BLOCKER):**
+    *   **Scrolling:** Pages (especially , , ) are unresponsive to finger-touch and mouse-wheel scrolling when the cursor/finger is over photo cards. This must be fixed to allow smooth, uninterrupted scrolling. The user has specifically requested a robust fix using passive touch listeners and explicit  CSS.
+    *   **Card Spacing:** Add significant vertical and horizontal spacing between cards in the  Card View to make them easily tappable.
+    *   **Flipped Card View:** When a card is flipped to show its back stats, the content must be fully scrollable, and the bottom navigation bar must be hidden to prevent overlap.
+    *   **New Card Layout:** Re-order the elements on the front of the minted photo cards to a specific vertical layout: Name -> Dollar Value/Stars -> Scenery/Level -> Stamina -> Streaks -> a smaller Tap to flip button at the very bottom.
 
-3.  **Continue Performance Optimization (P2):**
-    *   Ensure smooth vertical scrolling on  and  pages, especially on mobile touch devices.
-    *   Ensure zero-lag real-time updates for all game mechanics.
-    *   Optimize image loading.
-    *   Verify the bottom navigation bar hides correctly during game states.
+2.  **Fix All PVP & Data Synchronization Issues (P0 - BLOCKER):**
+    *   **PVP Sync:** Eliminate desync bugs where opponent bids are not shown, and both players are declared winners. Game logic must be atomic and server-authoritative.
+    *   **Post-Battle Updates:** All stat changes (XP, stamina, streaks, levels) from any battle (PVP or PVB) must update instantly across the entire application (, ) in real-time.
+    *   **Missing Photos:** Ensure minted photos are always loaded correctly for the logged-in user.
+    *   **Countdown Timers:** Implement a 10s timer for photo selection (with auto-select) and a 5s timer for RPS moves.
+
+3.  **Fix Selfie Verification & Minting Flow (P1):**
+    *   **Processing Failures:** Fix the bug causing selfie verification to fail immediately and consume all attempts. The attempt counter should not decrement on processing errors.
+    *   **Threshold:** A match score >80% should be treated as 100%, granting a permanent +5% Dollar Value boost.
+    *   **UI/UX:** Hide the bottom navigation bar during selfie verification.
+    *   **Mint Limit:** The daily mint limit for non-subscribed users must be 10.
+    *   **Post-Mint Animation:** After a successful mint, the  page should auto-refresh, and the new card should have a glowing/sparkling animation that is removed upon the first click.
+
+4.  **Fix Other UI/UX Issues (P2):**
+    *   **Profile Picture:** A single click should navigate to the user's profile, and a double-click should open the full-size image in a modal. The profile page itself needs to load faster.
+    *   **BL Coins Upgrade:** Implement the Upgrade button on the back of photo cards to allow users to convert BL Coins into a permanent Dollar Value boost.
+    *   **Tap Rate Notification:** The Tap Rate Exceeded notification should be completely hidden, and excess taps ignored.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application is a full-stack React and FastAPI app. The agent has successfully implemented a comprehensive new progression system, including backend calculations for new stats (Stars, Level, Age, Reactions) and frontend updates to display them in  and the  lightbox. Several other UI/UX features were also completed, such as referral code handling, casino page restrictions, and highlighting newly minted photos. All this new work was verified by the testing agent.
+The application is a full-stack React/FastAPI/MongoDB app. The agent has made numerous attempts to fix the reported issues within the existing WebSocket and API polling architecture, as explicitly instructed by the user (rejecting a migration to Supabase).
 
-However, the core PVP gameplay still relies on a buggy API-polling system. The agent has just begun a new investigation into the P0 PVP bugs based on the user's latest, highly detailed instructions, which suggest a shift to a proper Supabase Realtime architecture.
+Many features have been implemented or fixed, including: an initial PVP sync fix, countdown timers, the BL Coins upgrade feature, server-side selfie verification logic, and iterative improvements to the Card View layout. However, the user continues to report that core usability issues, especially scrolling and PVP reliability, remain broken. The agent's fixes have not been robust enough to satisfy the user's requirements.
 
 **Last working item**:
--   **Last item agent was working**: The agent had just started a fresh investigation into the P0 PVP connection and synchronization bugs, as per the user's explicit and detailed instructions. The agent was analyzing the existing (and failing) WebSocket/polling implementation across , , and  to understand the root cause of desync, connection loss, and incorrect state issues (like the creator seeing the wrong photos).
+-   **Last item agent was working**: The agent was starting to implement a robust fix for the finger-touch scrolling issue on the  page and re-arranging the  layout according to the user's latest, very specific instructions. This was in response to the user's repeated complaints that previous CSS-based fixes were insufficient.
 -   **Status**: IN PROGRESS
 -   **Agent Testing Done**: N
--   **Which testing method agent to use?**: both. First, the testing agent should be used to validate the implementation of the new Supabase logic. Crucially, this must be followed by manual testing on two separate devices/browsers (as explicitly requested by the user), with screenshots taken using the  tool to provide visual proof of synchronization.
+-   **Which testing method agent to use?**: both. The layout changes can be verified with the screenshot tool, but the scrolling fix requires interaction. A frontend testing agent should be used to simulate touch-scrolling gestures. Manual testing on a real device/emulator is highly recommended as a final check.
 -   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   Issue 1: CRITICAL - Fix All PVP Connection & Synchronization Issues (P0 - BLOCKER)
--   Issue 2: Validate Profile Picture Click Behavior (P1)
--   Issue 3: Fix Scrolling and Performance on Key Pages (P2)
+-   Issue 1: Fix Finger-Touch Scrolling on All Pages (P0)
+-   Issue 2: Implement New  Layout (P0)
+-   Issue 3: Fix PVP Synchronization and Post-Battle Stat Updates (P0)
+-   Issue 4: Fix Selfie Verification Processing and Attempt Counter (P1)
 
 **Issues Detail:**
--   **Issue 1: CRITICAL - Fix All PVP Connection & Synchronization Issues**
-    -   **Attempted fixes**: Numerous past fixes focused on patching the API polling logic (using  to prevent stale state, fixing  logic). The most recent attempt involved adding default  and  value fields to the  model in . None of these have resolved the fundamental instability.
+-   **Issue 1: Fix Finger-Touch Scrolling on All Pages**
+    -   **Attempted fixes**: The agent applied  CSS rules and adjusted card container styles, but these failed to resolve the issue. The cards continue to block page scrolling on touch devices.
     -   **Next debug checklist**:
-        1.  Refactor the real-time communication architecture away from API polling to Supabase Realtime as instructed by the user.
-        2.  Implement Supabase **Broadcast** channels for ephemeral, real-time events like tap submissions.
-        3.  Implement Supabase **Postgres Changes** for durable state updates (round results, XP, stamina).
-        4.  Create a robust reconnection mechanism in the frontend with exponential backoff and clear user feedback.
-        5.  Ensure the backend has atomic operations (e.g., Postgres transactions) to prevent race conditions when determining round winners.
-        6.  Verify the photo selection logic in  to ensure  and  are assigned correctly based on the user's role (creator/joiner).
-    -   **Why fix this issue and what will be achieved with the fix?**: This is a critical P0 blocker. The core PVP gameplay is unusable and the user's trust is extremely low. A reliable fix is required to make the app functional.
+        1.  Implement the user's specified robust solution: use **passive touch listeners** ().
+        2.  Ensure  is applied correctly to the card containers and any interactive child elements.
+        3.  Investigate and remove any  or  calls on touch events that might be blocking scrolling.
+        4.  Wrap the card grid in a container with  and verify no parent element blocks scrolling.
+    -   **Why fix this issue and what will be achieved with the fix?**: This is a critical usability blocker, making the app's core collections page unusable on mobile.
     -   **Status**: IN PROGRESS
+    -   **Is recurring issue?**: Y
+    -   **Should Test frontend/backend/both after fix?**: Frontend.
+    -   **Blocked on other issue**: None.
+
+-   **Issue 2: Implement New  Layout**
+    -   **Attempted fixes**: The agent made several iterative layout changes, but the user has now provided a final, precise vertical order for all elements on the card's front.
+    -   **Next debug checklist**:
+        1.  Edit .
+        2.  Restructure the JSX to display elements in this exact order: Name -> Dollar Value & Stars -> Scenery & Level -> Stamina -> Streaks.
+        3.  Place a 50% smaller Tap to flip button at the very bottom of the card.
+        4.  Ensure the card's image area is 75% larger than the stats area below it.
+    -   **Why fix this issue and what will be achieved with the fix?**: Fulfills a direct and detailed UI requirement from the user.
+    -   **Status**: IN PROGRESS
+    -   **Is recurring issue?**: Y (layout has been changed multiple times)
+    -   **Should Test frontend/backend/both after fix?**: Frontend.
+    -   **Blocked on other issue**: None.
+
+-   **Issue 3: Fix PVP Synchronization and Post-Battle Stat Updates**
+    -   **Attempted fixes**: Agent implemented server-authoritative round finishing and used  to prevent stale state. A testing agent verified the fix. However, the user still reports desync (opponent bids at /bin/bash, both players winning).
+    -   **Next debug checklist**:
+        1.  Re-run the two-device manual test to reproduce the user's reported bugs.
+        2.  Analyze the WebSocket message flow in  and  to find why tap data isn't syncing.
+        3.  Ensure the post-battle stat update calls are being triggered and the real-time polling on  and  is effectively refreshing the UI.
+    -   **Why fix this issue and what will be achieved with the fix?**: PVP is the app's core gameplay loop and is currently broken.
+    -   **Status**: USER VERIFICATION PENDING
     -   **Is recurring issue?**: Y
     -   **Should Test frontend/backend/both after fix?**: Both.
     -   **Blocked on other issue**: None.
 
--   **Issue 2: Validate Profile Picture Click Behavior**
-    -   **Attempted fixes**: The agent implemented a new profile picture editor with drag/zoom controls and the logic for single/double click.
+-   **Issue 4: Fix Selfie Verification Processing and Attempt Counter**
+    -   **Attempted fixes**: The agent refactored the backend  endpoint to not increment the attempt counter on processing errors.
     -   **Next debug checklist**:
-        1.  Perform manual tests as requested by the user.
-        2.  On desktop and mobile, single-click the profile picture and verify it navigates to the profile page.
-        3.  On desktop and mobile, double-click the profile picture and verify it opens the full-sized, original quality image in a modal. Report pass/fail.
-    -   **Why fix this issue and what will be achieved with the fix?**: To confirm a previously implemented feature works as requested by the user.
+        1.  Manually test the selfie verification flow by minting a new photo with a face.
+        2.  Simulate a processing error (e.g., poor lighting, no face) and confirm the attempt counter does not decrease.
+        3.  Simulate a successful match (>80%) and confirm the +5% bonus is applied and the verification is locked.
+    -   **Why fix this issue and what will be achieved with the fix?**: The feature is unusable and penalizes users for server-side errors.
     -   **Status**: USER VERIFICATION PENDING
-    -   **Is recurring issue?**: N
-    -   **Should Test frontend/backend/both after fix?**: Frontend.
-    -   **Blocked on other issue**: None.
-
--   **Issue 3: Fix Scrolling and Performance on Key Pages**
-    -   **Attempted fixes**: Minimal. Past attempts were not sufficient as the user raised the issue again.
-    -   **Next debug checklist**:
-        1.  Inspect the CSS for  and .
-        2.  Identify and remove any  or other properties that block vertical scrolling, especially on touch devices when interacting with photo elements.
-        3.  Ensure the page layout is fully responsive and scrollable.
-    -   **Why fix this issue and what will be achieved with the fix?**: Improves usability and addresses a direct user complaint about core navigation.
-    -   **Status**: NOT STARTED
     -   **Is recurring issue?**: Y
-    -   **Should Test frontend/backend/both after fix?**: Frontend.
+    -   **Should Test frontend/backend/both after fix?**: Both.
     -   **Blocked on other issue**: None.
 
 **In progress Task List**:
-None. All current work is categorized under the pending issues list above.
+-   **Task 1: Complete Scrolling and Layout Overhaul**
+    -   **Where to resume**: Continue editing  and  to implement the robust scrolling fix and the new card layout.
+    -   **What will be achieved with this?**: A usable and visually correct Card View on the  page.
+    -   **Status**: IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?**: Frontend.
+    -   **Blocked on something**: None.
 
 **Upcoming and Future Tasks**
 **Upcoming Tasks:**
--   **P2:** Implement client-side Face Match button.
-
-**Future Tasks:**
 -   **P2:** Implement full Subscription Tiers functionality.
+-   **P1:** Implement auto-refresh and glowing animation for newly minted photos.
 
 **Completed work in this session**
--   **Photo Progression System (COMPLETE & VERIFIED):**
-    -   Backend: The  endpoint in  was updated to calculate and serve all new progression stats (Stars, Level, Age, Reactions, XP, Seniority). The mint cost was set to 200 BL.
-    -   Frontend (Web):  was enhanced to display the XP meter and all new stats.  was updated to reflect the 200 BL mint cost and to show the new stats in the photo details lightbox.
-    -   Frontend (Mobile):  was updated to mirror the new stats display of the web version.
-    -   Verified via  in report  and visual confirmation.
--   **UI/UX Fixes (COMPLETE & VERIFIED):**
-    -   **Referral Link:**  now auto-populates and locks the referral code from a URL parameter.
-    -   **Hide Bottom Nav:** A  was created in  and used in  to hide the bottom navigation during active game states.
-    -   **Highlight New Mint:**  now auto-refreshes and applies a glowing animation to newly minted photos.
-    -   **Casino Page Restriction:** Access to  and its link on the  page is now restricted to admin users.
-    -   Verified via  in report  and visual confirmation.
--   **Priority Fixes (COMPLETE & VERIFIED):**
-    -   **Profile Picture Controls:**  was updated with a new modal for selecting and positioning a profile picture, including drag and zoom controls.
-    -   **Image Orientation:** Image upload logic in  was fixed to preserve EXIF orientation using PIL's .
-    -   **PVP Sync (Attempted Fix):** The  model in  was updated to initialize tap and dollar-related fields to prevent errors from uninitialized values.
-    -   Verified via  in report  and visual confirmation.
+-   **PVP Synchronization (Initial Fix):** Refactored  and  to use refs to avoid stale state and implemented exponential backoff for reconnection. Made the backend  endpoint idempotent.
+-   **Selfie Verification (Backend Fix):** Reworked the  endpoint in  to prevent incrementing attempts on processing errors and implemented the >80% success threshold.
+-   **Card View Layout (Iterative Fixes):** Increased card size by 25% and increased grid spacing in .
+-   **Profile Picture Click Behavior:** Implemented single-click (navigate) and double-click (view modal) functionality on user avatars in .
+-   **Stat Synchronization:** Added a 5-second polling interval to  and  to keep stats refreshed.
+-   **BL Coins Upgrade Feature:** Added the Upgrade button and modal flow in  and .
+-   **Nav Bar Hiding:** Implemented logic to hide the bottom navigation bar during selfie verification and when viewing a photo in the lightbox.
+-   **Countdown Timers:** Added 10s (selection) and 5s (RPS) timers to the PVP flow.
+-   **Database Performance:** Added indexes to , , and  collections in MongoDB.
+-   **UI Fixes:** Removed the Tap Rate Exceeded toast and confirmed the daily mint limit is correctly set at 10.
 
 **Earlier issues found/mentioned but not fixed**
--   Severe lag and unresponsiveness across the app, especially on the feed and photo game pages. This is part of the pending issue Fix Scrolling and Performance on Key Pages.
+All known issues are captured in the Pending/In progress Issue list above. The main challenge is the recurrence of issues that were thought to be fixed.
 
 **Known issue recurrence from previous fork**
--   **Issue recurrence in previous fork**: PVP mode failure is a severe, recurring issue.
+-   **Issue recurrence in previous fork**: PVP mode failure.
 -   **Recurrence count**: 10+
+-   **Status**: IN PROGRESS
+
+-   **Issue recurrence in previous fork**: Scrolling performance on key pages.
+-   **Recurrence count**: 3+
 -   **Status**: IN PROGRESS
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Real-time Architecture:** The app currently uses a failing API-polling system. The user has mandated a move to **Supabase Realtime**, using **Broadcast** for moves and **Postgres Changes** for state.
--   **React Frontend:** Extensive use of hooks (, , , , ) for state management and side effects.
--   **FastAPI Backend:** Serves the REST API and contains game logic.
--   **Image Processing:** The backend uses Python's PIL library for image handling, including a new fix for EXIF orientation.
+-   **Real-time Architecture:** The user has mandated fixing the existing **FastAPI WebSocket + API Polling** system, rejecting a migration to Supabase.
+-   **Frontend State Management:** Heavy use of React hooks (, , , , ). The  hook is critical for accessing the latest state inside callbacks to prevent stale closures.
+-   **Backend Logic:** Focus on creating idempotent API endpoints () to handle potential race conditions from multiple clients.
+-   **UI/UX:** Responsive design using TailwindCSS and  components. Key challenges involve managing touch events for scrolling vs. interactive elements like card flips.
 
 **key DB schema**
--   : (in MongoDB)
-    -   Includes progression fields like , , , , .
--   : (Pydantic Model for a MongoDB document)
-    -   
-    -   
-    -   
-    -   
+-   **minted_photos** (MongoDB): Added indexes on , , .
+-   **pvp_sessions** (MongoDB): Added index on .
+-   **users** (MongoDB): Added index on .
 
 **All files of reference**
--   **/app/backend/game_routes.py**: Contains the PVP API endpoints that need to be refactored.
--   **/app/backend/photo_game.py**: Defines the  data model.
--   **/app/frontend/src/pages/PhotoGameArena.jsx**: Main page for PVP gameplay.
--   **/app/frontend/src/components/game/PVPBattleArena.jsx**: Core component for managing PVP state.
--   **/app/frontend/src/components/game/TappingArena.jsx**: Component for the tapping battle where sync issues are critical.
--   **/app/frontend/src/pages/Settings.jsx**: Contains the profile picture functionality to be validated.
--   **/app/frontend/src/pages/MintedPhotos.jsx**: Page for viewing photo collections, needs scrolling fixes.
+-   **/app/frontend/src/pages/MintedPhotos.jsx**: Main page for viewing photo collections; requires major layout and scrolling fixes.
+-   **/app/frontend/src/components/photo/UnifiedPhotoCard.jsx**: The core component for displaying a photo card; requires layout re-ordering and scrolling interaction fixes.
+-   **/app/frontend/src/components/game/PVPBattleArena.jsx**: Core component for managing PVP state; needs re-verification for sync issues.
+-   **/app/backend/minting_routes.py**: Contains the selfie verification logic that needs to be tested.
+-   **/app/backend/game_routes.py**: Contains the PVP endpoints that need re-verification.
 
 **Critical Info for New Agent**
--   **USER TRUST IS EXTREMELY LOW.** The user is highly frustrated by repeated, failed fixes. Do not claim the PVP task is fixed without providing concrete proof (e.g., side-by-side screenshots/video from two devices) that it works end-to-end.
--   **FOLLOW USER'S ARCHITECTURE.** The user has explicitly directed the use of Supabase Realtime (Broadcast and Postgres Changes). Do not try to patch the old polling system. The new implementation must follow this directive.
--   **PRIORITIZE THE PVP BUG.** This is the absolute P0 blocker. All other tasks are secondary until the PVP mode is stable, verified, and the user confirms the fix.
+-   **STICK TO THE CURRENT STACK.** The user has explicitly rejected a migration to Supabase. You must fix the existing FastAPI WebSocket and polling architecture.
+-   **RECURRING BUGS ARE THE PRIORITY.** Scrolling and PVP synchronization are the user's biggest pain points and have been reported multiple times. Your fixes must be robust and permanent. Do not mark these tasks as done without extensive testing.
+-   **FOLLOW USER'S EXACT INSTRUCTIONS.** For UI changes, the user has provided very specific layout and sizing requirements (e.g., the vertical order of elements on the photo card). Follow these instructions precisely. For technical fixes like scrolling, implement the user's suggested approach (passive listeners).
+-   **TESTING IS PARAMOUNT.** The user expects end-to-end testing with two browser sessions/devices. Provide visual evidence (screenshots) of your fixes. The testing agent has passed previously, yet the user still found bugs, indicating that manual, scenario-based testing is critical.
 
 **documents and test reports created in this job**
 -   /app/memory/PRD.md
--   /app/test_reports/iteration_95.json
--   /app/test_reports/iteration_96.json
--   /app/test_reports/iteration_97.json
+-   /app/test_reports/iteration_98.json
+-   /app/test_reports/iteration_99.json
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (Message 427):** Thank you, now fix everything. Provides a long, detailed list of P0 bugs for PVP (wrong photos, reconnect loops, sync issues) and demands a new architecture using Supabase Realtime. Also requests validation of profile picture clicks and performance optimizations. (IN PROGRESS)
-2.  **Agent (Message 426):** Finishes implementing priority fixes (PVP tap init, Profile Pic controls, Image orientation) and reports 100% test pass rate. (DONE)
-3.  ... (Agent implements Profile Pic controls and Image Orientation fix) ... (DONE)
-4.  **Agent (Message 319):** Acknowledges next steps and starts investigating the P0 PVP tap sync bug. (DONE)
-5.  **User (Message 318):** Provides the next action items: Fix P0 PVP tap sync bug, implement P1 Profile Pic controls, and P1 Image Orientation fix. (DONE)
-6.  **Agent (Message 317):** Finishes implementing UI/UX fixes (Referral link, Hide Nav, Highlight mint, Casino restrict) and reports 100% test pass rate. (DONE)
-7.  ... (Agent implements the UI/UX fixes from message 178) ... (DONE)
-8.  **User (Message 178):** Provides a new list of high-priority fixes and features: sync  and  pages, fix PVP round sync, preserve image quality, implement referral link auto-populate, fix scrolling, add auto-refresh/highlight for new mints, hide nav bar in game states, and reorganize casino games. (DONE)
-9.  **Agent (Message 177):** Finishes implementing the Progression System and reports it's verified and working. (DONE)
-10. **User (Message 116):** Reports that they don't see any of the progression system updates on the website or mobile app and asks the agent to fix it. (This led to the agent discovering the stats were only in  and not the  lightbox, which was then fixed). (RESOLVED)
+1.  **User (Msg 609):** Reports scrolling on  is still broken and provides a new, highly specific layout for the photo cards. Demands a more robust fix for touch scrolling. (IN PROGRESS)
+2.  **Agent (Msg 608):** Finishes implementing card view spacing and scrolling fixes, believes it is complete. (INCORRECT)
+3.  **User (Msg 542):** Reports card spacing is missing, scrolling is blocked by cards, and the nav bar overlaps the flipped card view. Provides a screenshot. (IN PROGRESS)
+4.  **Agent (Msg 541):** Finishes implementing selfie verification and card view layout fixes. (INCORRECT)
+5.  **User (Msg 494):** Reports selfie verification fails immediately, consumes all attempts, and provides layout requirements for the card view. (IN PROGRESS)
+6.  **Agent (Msg 493):** Finishes implementing selfie verification fixes. (INCORRECT)
+7.  **User (Msg 465):** Reports selfie verification returns 0% on clear matches and that the nav bar is still blocking the UI. (RESOLVED, but new issues arose)
+8.  **Agent (Msg 464):** Finishes fixing the nav bar hiding during selfie verification. (INCORRECT)
+9.  **User (Msg 440):** Asks to hide the bottom nav bar during selfie verification, providing a screenshot showing it blocking the button. (IN PROGRESS)
+10. **Agent (Msg 439):** Finishes implementing real-time stat refresh across pages. (DONE)
 
 **Project Health Check:**
--   **Broken**: The core PVP game mode is critically broken and unusable.
+-   **Broken**: Core user interactions like page scrolling on mobile are critically broken. The main PVP game mode is reported as unstable. Selfie verification is unusable.
 -   **Mocked**: Social reaction counters (Facebook).
 
 **3rd Party Integrations**
@@ -175,19 +189,18 @@ None. All current work is categorized under the pending issues list above.
 -   EmbedSocial
 -   ffmpeg
 -   face-api.js
--   Supabase (intended for Realtime, but implementation is flawed)
+-   Supabase (present in project files but user has directed agent NOT to use its Realtime features)
 
 **Testing status**
--   **Testing agent used after significant changes**: YES (most recently for UI fixes and profile picture controls in )
+-   **Testing agent used after significant changes**: YES, most recently in , but user-reported bugs persist.
 -   **Troubleshoot agent used after agent stuck in loop**: NO
 -   **Test files created**: None.
--   **Known regressions**: The entire PVP feature is in a state of constant regression. The primary task is to fix this without introducing new failure modes.
+-   **Known regressions**: Page scrolling, PVP sync reliability, and mint limits have all been reported as regressing or having failed fixes.
 
 **Credentials to test flow:**
 -   **User 1 (Admin)**:  / 
 -   **User 2 (Regular)**:  / 
 
 **What agent forgot to execute**
--   The agent has not yet implemented the user's latest, very specific architectural requirements from message #427 for fixing the PVP bug (i.e., using Supabase Broadcast and Postgres Changes). The current investigation is a precursor to this major refactor.
--   The agent has not yet performed the explicit manual validation of the profile picture click behavior as requested.
--   The agent has not yet addressed the scrolling performance issues on the  and  pages.</analysis>
+-   The agent has repeatedly failed to create a robust, permanent fix for the finger-touch scrolling issue, leading to user frustration. The latest, more technical approach suggested by the user has not been fully implemented.
+-   The agent has not yet implemented the user's latest, highly specific vertical layout for the .</analysis>
