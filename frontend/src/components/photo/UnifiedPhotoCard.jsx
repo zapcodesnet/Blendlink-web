@@ -241,13 +241,14 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   photo,
   onClick,
   onFlip,
+  onFlipStateChange, // NEW: Callback to notify parent when card is flipped (for nav hiding)
   selected = false,
   disabled = false,
   showStats = true,
   showStamina = true,
   showFaceMatch = false,
   onFaceMatchClick,
-  onUpgradeClick, // New: Callback when upgrade button is clicked
+  onUpgradeClick, // Callback when upgrade button is clicked
   size = 'medium', // 'small' | 'medium' | 'large' | 'full'
   className,
   flipped = false,
@@ -259,30 +260,10 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   
   const scenery = SCENERY_CONFIG[photo?.scenery_type] || SCENERY_CONFIG.natural;
   
-  // SCROLLING FIX: Attach passive touch listeners to allow page scrolling
-  // This ensures touch events on the card don't block vertical scrolling
+  // Notify parent when flip state changes (for hiding nav bar)
   useEffect(() => {
-    const card = cardRef.current;
-    if (!card) return;
-    
-    // Passive touch handler - allows scrolling to propagate
-    const handleTouchStart = () => {
-      // Do nothing - just ensure it's passive
-    };
-    
-    const handleTouchMove = () => {
-      // Do nothing - passive listener allows scroll
-    };
-    
-    // Add passive listeners
-    card.addEventListener('touchstart', handleTouchStart, { passive: true });
-    card.addEventListener('touchmove', handleTouchMove, { passive: true });
-    
-    return () => {
-      card.removeEventListener('touchstart', handleTouchStart);
-      card.removeEventListener('touchmove', handleTouchMove);
-    };
-  }, []);
+    onFlipStateChange?.(isFlipped);
+  }, [isFlipped, onFlipStateChange]);
   
   // Size configurations - Updated: 25% larger cards with proper height for all content
   // Image takes 75% of card space, stats take remaining 25%
