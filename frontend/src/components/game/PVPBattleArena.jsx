@@ -248,6 +248,9 @@ export const PVPBattleArena = ({
       const data = JSON.parse(event.data);
       console.log('PVP WS message:', data.type, data);
       
+      // CRITICAL: Use ref to get latest isPlayer1 value to avoid stale closures
+      const getIsPlayer1 = () => isPlayer1Ref.current;
+      
       switch (data.type) {
         case 'connected':
           // Initial connection confirmation from server
@@ -277,16 +280,17 @@ export const PVPBattleArena = ({
           }
           break;
         
-        case 'reconnect_state':
+        case 'reconnect_state': {
           // Restore game state after reconnection
           setCurrentRound(data.current_round || 1);
           setRoundType(data.round_type || ROUND_TYPES[(data.current_round || 1) - 1]);
           setPlayer1Wins(data.player1_wins || 0);
           setPlayer2Wins(data.player2_wins || 0);
           
-          // Restore selection states
-          const myState = isPlayer1 ? data.player1 : data.player2;
-          const oppState = isPlayer1 ? data.player2 : data.player1;
+          // Restore selection states - use ref for latest isPlayer1
+          const currentIsPlayer1 = getIsPlayer1();
+          const myState = currentIsPlayer1 ? data.player1 : data.player2;
+          const oppState = currentIsPlayer1 ? data.player2 : data.player1;
           
           if (myState?.selected_photo) {
             setMySelectedPhoto(myState.selected_photo);
@@ -307,6 +311,7 @@ export const PVPBattleArena = ({
             setGamePhase('ready');
           }
           break;
+        }
           
         case 'player_connected':
           toast.success(`${data.username} connected`);
@@ -342,13 +347,14 @@ export const PVPBattleArena = ({
           setSelectionTimeRemaining(30);
           break;
         
-        case 'selection_timeout_tick':
+        case 'selection_timeout_tick': {
           // Update countdown timer
           setSelectionTimeRemaining(data.seconds_remaining);
-          // Update opponent selection status
-          const oppSelected = isPlayer1 ? data.player2_selected : data.player1_selected;
+          // Update opponent selection status - use ref for latest isPlayer1
+          const oppSelected = getIsPlayer1() ? data.player2_selected : data.player1_selected;
           setOpponentHasSelected(oppSelected);
           break;
+        }
           
         case 'player_selected_photo':
           if (data.user_id !== currentUserId) {
@@ -361,10 +367,10 @@ export const PVPBattleArena = ({
           // Our selection confirmed
           break;
           
-        case 'round_ready':
-          // Both selected - show photos and ready buttons
+        case 'round_ready': {
+          // Both selected - show photos and ready buttons - use ref for latest isPlayer1
           if (data.player1_photo && data.player2_photo) {
-            if (isPlayer1) {
+            if (getIsPlayer1()) {
               setMySelectedPhoto(data.player1_photo);
               setOpponentSelectedPhoto(data.player2_photo);
             } else {
@@ -373,6 +379,7 @@ export const PVPBattleArena = ({
             }
           }
           break;
+        }
           
         case 'player_ready':
           if (data.user_id === currentUserId) {
@@ -387,15 +394,17 @@ export const PVPBattleArena = ({
           toast.success('🔥 Both ready! Starting countdown...');
           break;
           
-        case 'round_start':
-          // Transition to playing phase with correct photos
-          const myPhoto = isPlayer1 ? data.player1?.photo : data.player2?.photo;
-          const oppPhoto = isPlayer1 ? data.player2?.photo : data.player1?.photo;
+        case 'round_start': {
+          // Transition to playing phase with correct photos - use ref for latest isPlayer1
+          const currentIsPlayer1 = getIsPlayer1();
+          const myPhoto = currentIsPlayer1 ? data.player1?.photo : data.player2?.photo;
+          const oppPhoto = currentIsPlayer1 ? data.player2?.photo : data.player1?.photo;
           
           setMySelectedPhoto(myPhoto);
           setOpponentSelectedPhoto(oppPhoto);
           setGamePhase('playing');
           break;
+        }
           
         case 'round_result':
           // Round ended
