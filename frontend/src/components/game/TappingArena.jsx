@@ -797,16 +797,54 @@ export const TappingArena = ({
       gameTimerRef.current = setInterval(() => {
         setTimeRemaining(prev => {
           if (prev <= 1) {
-            // Time's up - determine winner by progress
+            // Time's up - call server to determine winner atomically
             clearInterval(gameTimerRef.current);
             
-            const playerProgress = playerTaps / playerRequiredTaps;
-            const opponentProgress = opponentTaps / opponentRequiredTaps;
-            
-            if (playerProgress >= opponentProgress) {
-              handlePlayerWinRef.current?.();
+            // For PVP matches, call the server to get authoritative result
+            if (!isBot && sessionId) {
+              // Call server to finish round and get result
+              api.post(`/photo-game/pvp/finish-round?session_id=${sessionId}`)
+                .then(response => {
+                  const result = response.data;
+                  console.log('[TappingArena] Server round result:', result);
+                  
+                  if (result.round_result) {
+                    // Determine winner based on server response
+                    const myUserId = localStorage.getItem('current_user_id');
+                    const iWon = result.round_result.winner_id === myUserId;
+                    
+                    if (iWon) {
+                      handlePlayerWinRef.current?.();
+                    } else if (result.round_result.winner === 'tie') {
+                      // Handle tie - default to player win for now
+                      handlePlayerWinRef.current?.();
+                    } else {
+                      handleOpponentWinRef.current?.();
+                    }
+                  }
+                })
+                .catch(err => {
+                  console.error('[TappingArena] Error finishing round:', err);
+                  // Fallback to local determination if server call fails
+                  const playerProgress = playerTapsRef.current / playerRequiredTaps;
+                  const opponentProgress = opponentTapsRef.current / opponentRequiredTaps;
+                  
+                  if (playerProgress >= opponentProgress) {
+                    handlePlayerWinRef.current?.();
+                  } else {
+                    handleOpponentWinRef.current?.();
+                  }
+                });
             } else {
-              handleOpponentWinRef.current?.();
+              // For bot matches, use local determination
+              const playerProgress = playerTaps / playerRequiredTaps;
+              const opponentProgress = opponentTaps / opponentRequiredTaps;
+              
+              if (playerProgress >= opponentProgress) {
+                handlePlayerWinRef.current?.();
+              } else {
+                handleOpponentWinRef.current?.();
+              }
             }
             
             return 0;
@@ -819,7 +857,7 @@ export const TappingArena = ({
         if (gameTimerRef.current) clearInterval(gameTimerRef.current);
       };
     }
-  }, [gamePhase, playerTaps, opponentTaps, playerRequiredTaps, opponentRequiredTaps, soundEnabled]);
+  }, [gamePhase, playerTaps, opponentTaps, playerRequiredTaps, opponentRequiredTaps, soundEnabled, isBot, sessionId]);
   
   // Bot tapping (if bot match) - UPDATED with new exact tap rates
   useEffect(() => {
