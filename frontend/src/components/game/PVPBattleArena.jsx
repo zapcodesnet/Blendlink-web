@@ -365,7 +365,9 @@ export const PVPBattleArena = ({
           setMySelectedPhoto(null);
           setOpponentSelectedPhoto(null);
           setOpponentHasSelected(false);
-          setSelectionTimeRemaining(30);
+          // Set timer based on round type (10s for auction, 5s for RPS)
+          const newRoundType = data.round_type || ROUND_TYPES[(data.round || 1) - 1];
+          setSelectionTimeRemaining(newRoundType === 'rps' ? RPS_SELECTION_TIME : PHOTO_SELECTION_TIME);
           break;
         
         case 'selection_timeout_tick': {
