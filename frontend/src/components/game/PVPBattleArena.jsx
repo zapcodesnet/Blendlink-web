@@ -712,8 +712,14 @@ export const PVPBattleArena = ({
             setConfirmedPlayer1Id(sessionData.player1_id);
           }
           
-          // Use the correct isPlayer1 based on API response
+          // Use the correct isPlayer1 based on API response - this is the authoritative source
           const actualIsPlayer1 = (sessionData.player1_id || confirmedPlayer1Id || session?.player1_id) === currentUserId;
+          
+          // CRITICAL: Also update the ref for WebSocket handlers if they were using stale value
+          if (actualIsPlayer1 !== isPlayer1Ref.current) {
+            console.log('[Polling] Updating isPlayer1Ref:', actualIsPlayer1, '(was:', isPlayer1Ref.current, ')');
+            isPlayer1Ref.current = actualIsPlayer1;
+          }
           
           console.log('[Polling] Session state:', {
             status: sessionData.status,
