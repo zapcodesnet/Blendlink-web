@@ -1467,6 +1467,18 @@ const MintedPhotos = () => {
         userBalance={mintStatus?.bl_coins || 0}
       />
       
+      {/* Upgrade Dollar Value Modal */}
+      <UpgradeModal
+        photo={upgradePhoto}
+        isOpen={!!upgradePhoto}
+        onClose={() => setUpgradePhoto(null)}
+        onSuccess={() => {
+          fetchPhotos();
+          fetchMintStatus();
+        }}
+        userBlCoins={user?.bl_coins || mintStatus?.bl_coins || 0}
+      />
+      
       {/* Mint Dialog */}
       <MintPhotoDialog
         isOpen={mintDialogOpen}
