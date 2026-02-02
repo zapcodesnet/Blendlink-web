@@ -348,11 +348,9 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
       }
     }
     const newFlippedState = !isFlipped;
-    prevFlippedRef.current = newFlippedState; // Update ref to prevent loop
-    setIsFlipped(newFlippedState);
     setShowXPMultiplier(true);
     setTimeout(() => setShowXPMultiplier(false), 3000);
-    // Notify parent of the flip state change
+    // Notify parent of the flip state change - parent will update flipped prop
     onFlipStateChange?.(newFlippedState);
     onFlip?.(newFlippedState);
   }, [isFlipped, onFlip, onFlipStateChange]);
