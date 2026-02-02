@@ -9,7 +9,7 @@
  * - Adds up to 5% Authenticity bonus to minted photos
  */
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Camera, X, RefreshCw, Check, AlertCircle, 
@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import { Button } from '../ui/button';
 import api from '../../services/api';
 import { faceDetectionService } from '../../services/faceDetection';
+import { NavContext } from '../../App';
 
 // Constants per spec
 const COST_PER_ATTEMPT = 100; // BL coins
