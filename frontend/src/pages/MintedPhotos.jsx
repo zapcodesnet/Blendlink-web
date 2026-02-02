@@ -1177,7 +1177,7 @@ const MintedPhotos = () => {
                 <span className="text-sm">Mints Today</span>
               </div>
               <p className="text-2xl font-bold text-white">
-                {mintStatus?.mints_today || 0}/{mintStatus?.daily_limit || 3}
+                {mintStatus?.mints_today || 0}/{mintStatus?.daily_limit || 10}
               </p>
             </div>
           </div>
