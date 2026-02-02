@@ -325,15 +325,23 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   const xpToNextLevel = xpProgressData.remaining || photo?.xp_to_next_level || 10;
   const xpForNextLevel = xpProgressData.xp_for_next_level || photo?.xp_for_next_level || 10;
   
-  const handleClick = useCallback(() => {
+  const handleClick = useCallback((e) => {
     if (disabled) return;
+    // Don't trigger onClick if the click was on the flip button
+    if (e?.target?.closest('[data-testid="flip-card-btn"]')) {
+      return;
+    }
     onClick?.(photo);
   }, [disabled, onClick, photo]);
   
   const handleFlip = useCallback((e) => {
-    // Only stop propagation for click events, not touch scroll
+    // Stop all event propagation to prevent parent onClick from firing
     if (e) {
+      e.preventDefault();
       e.stopPropagation();
+      if (e.nativeEvent) {
+        e.nativeEvent.stopImmediatePropagation();
+      }
     }
     const newFlippedState = !isFlipped;
     setIsFlipped(newFlippedState);
