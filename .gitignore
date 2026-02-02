@@ -85,4 +85,4 @@ frontend/node_modules/.cache/
 
 # IMPORTANT: Base .env files (frontend/.env, backend/.env, mobile/.env) are NOT ignored
 # They are REQUIRED for Emergent deployment - do not add *.env to this file
-frontend/node_modules/.cache/default-development/2.pack
+frontend/node_modules/.cache/default-development/0.pack
