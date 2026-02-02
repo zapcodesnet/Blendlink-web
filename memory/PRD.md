@@ -4,57 +4,42 @@
 
 ### Session Fixes Completed (February 2, 2026) - LATEST
 
+#### P0 FRANTIC ROTATION BUG FIXED ✅ VERIFIED
+- **Root Cause**: Circular state updates between internal `isFlipped` state and `flipped` prop
+- **Fix**: Removed internal state, now using `flipped` prop directly from parent
+- **Result**: Clicking backdrop dismisses flip smoothly - NO frantic rotation
+
+#### P0 CARD GAP REDUCED ✅ VERIFIED  
+- **Grid gap**: Reduced from `gap-6 md:gap-8` to `gap-3`
+- **Card size**: Reduced from `w-44 h-80` to `w-40 h-64`
+- **Image height**: Reduced from `h-40` to `h-36`
+- **Result**: Cards are now closer together on mobile
+
+#### P0 CSS CLEANUP ✅
+- Removed excessive `touch-action` CSS rules that were interfering with scrolling
+- Removed duplicate and conflicting CSS from `index.css`
+- CSS file cleaned from 1260+ lines to ~1188 lines
+
 #### P0 GRID VIEW HIDDEN ✅ VERIFIED
-- **Grid View and List View buttons HIDDEN from UI** (code preserved for future revival)
-- **Only Card View button visible** in toolbar
-- **viewMode defaults to 'card'** - Card View loads automatically
-- **Code preserved**: Grid/List rendering code kept but never rendered since viewMode is always 'card'
+- Grid View and List View buttons HIDDEN from UI
+- Only Card View button visible
+- `viewMode` defaults to 'card'
 
-#### P0 CARD FLIP FIX ✅ VERIFIED  
-- **"Tap to flip" button flips card in place** (no longer opens lightbox)
-- **Back side shows all stats**: Base Value, XP bar, Total Dollar Value, Authenticity, Photo Stats
-- **"Tap to flip back" button works** correctly to return to front view
-- **Event handling fixed**: handleClick checks for flip button selectors and isFlipped state
-- **stopImmediatePropagation** used to prevent event bubbling to parent onClick
+#### P0 DEPLOYMENT FIX ✅
+- **Fixed corrupted `.gitignore`**: File had 461 lines with repeated `*.env` entries
+- **Clean `.gitignore`**: Now 86 lines, NOT ignoring base `.env` files
+- **Note**: User needs to REDEPLOY for changes to appear on production
 
-#### P0 SCROLLING FIX - ROBUST SOLUTION ✅ VERIFIED
-- **touch-action: pan-y**: Applied to html, body, grid containers, and all cards
-- **pointer-events: none**: Applied to images and stats section (non-interactive elements)
-- **pointer-events: auto**: Applied to flip buttons (must remain interactive)
-- **CSS Rules**: Global touch-scrolling rules added to `/app/frontend/src/index.css`
-- **Pages Fixed**: `/minted-photos` Card View and `/photo-game` selection screen
-
-#### P0 FLIPPED CARD Z-INDEX FIX ✅ VERIFIED
-When "Tap to flip" is clicked:
-- **Flipped card z-index: 100** - Card appears ABOVE all other cards
-- **Scale animation: 1.05x** - Slight zoom for emphasis
-- **Shadow: shadow-2xl** - Deep shadow for depth effect
-- **Backdrop overlay: bg-black/60** - Dark semi-transparent overlay (z-index: 40)
-- **Other cards dimmed: opacity-30 + pointer-events-none**
-- **Click backdrop to dismiss** - Clicking outside flipped card closes it
-
-#### P0 NAV BAR HIDING DURING FLIP ✅ VERIFIED
-- **flippedCardId state**: Tracks which card is currently flipped
-- **onFlipStateChange callback**: UnifiedPhotoCard notifies parent when flip state changes
-- **NavContext integration**: setHideNav(true) called when any card is flipped
-- **BottomNav removed from DOM**: Component conditionally rendered: `{!hideNav && <BottomNav />}`
-- **Nav returns on unflip**: Clicking "Tap to flip back" or backdrop restores nav bar
-
-#### P0 NEW UNIFIED PHOTO CARD LAYOUT ✅ VERIFIED
-Card front layout order (top to bottom):
-1. **Photo Image** (~65% of card height)
-2. **Name** (centered, truncated)
-3. **Dollar Value & Stars** (value left, stars right)
-4. **Scenery Badge & Level** (badge left, Lv X right)
-5. **Stamina Bar** (with percentage)
-6. **Streaks** (win/loss indicators - 🔥 for wins, 🛡️ for protection)
-7. **"Tap to flip →" button** (50% smaller, at very bottom)
-
-Card back content:
-- Base Value, XP bar with %, Total Dollar Value (Core Power)
-- Authenticity (Face Detection + Selfie Match)
-- Photo Stats & Bonuses: Stars, Level, Age, Reactions, BL Coins, Seniority
-- "← Tap to flip back" button
+### All Features Verified Working (iteration_104 - 100% pass)
+1. ✅ Card flip works - tap shows back view
+2. ✅ Backdrop click dismisses flip smoothly (NO frantic rotation)
+3. ✅ Reduced card gap (gap-3)
+4. ✅ Card layout: Photo → Name → Dollar Value & Stars → Scenery & Level → Stamina → Tap to flip
+5. ✅ Grid View button hidden
+6. ✅ Nav bar hides when card flipped
+7. ✅ Nav bar returns when unflipped
+8. ✅ Other cards dimmed when one is flipped
+9. ✅ Touch scrolling CSS set to pan-y
 
 Card dimensions:
 - **Medium size**: w-44, h-80 (taller to fit all elements)
