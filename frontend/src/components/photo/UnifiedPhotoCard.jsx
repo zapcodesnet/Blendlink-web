@@ -513,59 +513,24 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
           hasGoldenFrame && !seniorityAchieved && "ring-2 ring-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]"
         )}
         style={{ 
-          // CRITICAL: Back side is pre-rotated 180deg and uses backface-visibility
-          // When parent rotates 180deg, this becomes visible
           backfaceVisibility: 'hidden', 
           transform: 'rotateY(180deg)',
-          // CRITICAL: Allow touch scrolling within the back view
-          touchAction: 'pan-y',
-          overflowY: 'auto',
-          WebkitOverflowScrolling: 'touch',
         }}
       >
         {/* Small preview image at top */}
-        <div className="relative h-16 w-full flex-shrink-0">
+        <div className="relative h-12 w-full">
           <img
             src={photo?.image_url || photo?.thumbnail_url}
             alt={photo?.name}
-            className="w-full h-full object-cover opacity-50"
-            style={{ pointerEvents: 'none' }}
+            className="w-full h-full object-cover opacity-50 pointer-events-none"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-900 pointer-events-none" />
-          
-          {/* Seniority Level 60 sparkle on back too */}
-          {seniorityAchieved && (
-            <div className="absolute top-1 right-1 pointer-events-none">
-              <motion.div
-                animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
-                transition={{ duration: 3, repeat: Infinity }}
-              >
-                <Sparkles size={20} className="text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" />
-              </motion.div>
-            </div>
-          )}
-          
-          {/* XP Multiplier (temporary on tap) */}
-          {showXPMultiplier && subscription?.xp_multiplier > 1 && (
-            <XPMultiplierBadge 
-              multiplier={subscription.xp_multiplier} 
-              tier={subscription.tier} 
-            />
-          )}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-900" />
         </div>
         
-        {/* Stats content - SCROLLABLE with proper height */}
+        {/* Stats content - Scrollable */}
         <div 
-          className="p-3 space-y-2 text-xs pb-8"
-          style={{ 
-            // CRITICAL: Make this scrollable with fixed height
-            maxHeight: 'calc(100% - 4rem)',
-            overflowY: 'auto',
-            touchAction: 'pan-y',
-            WebkitOverflowScrolling: 'touch',
-          }}
-          onTouchStart={(e) => e.stopPropagation()}
-          onTouchMove={(e) => e.stopPropagation()}
+          className="p-2 space-y-1 text-[10px] overflow-y-auto"
+          style={{ maxHeight: 'calc(100% - 3rem)' }}
         >
           {/* ========== BASE VALUE SECTION ========== */}
           <div className="text-center border-b border-gray-700/50 pb-2">
