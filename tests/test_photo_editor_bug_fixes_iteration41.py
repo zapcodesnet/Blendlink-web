@@ -13,7 +13,7 @@ import requests
 import os
 import base64
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pvpconnect-fix.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pvpturbo.preview.emergentagent.com')
 
 # Test credentials
 TEST_EMAIL = "test@example.com"

@@ -9,7 +9,7 @@ import os
 import json
 from datetime import datetime
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pvpconnect-fix.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pvpturbo.preview.emergentagent.com')
 
 class TestMarketplaceCategories:
     """Test marketplace categories including Digital Goods & NFTs"""

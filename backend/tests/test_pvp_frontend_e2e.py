@@ -26,7 +26,7 @@ import os
 import time
 from datetime import datetime
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pvpconnect-fix.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pvpturbo.preview.emergentagent.com')
 
 # Test users
 USER1 = {"email": "test@blendlink.com", "password": "admin"}

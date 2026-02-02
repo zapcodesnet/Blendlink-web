@@ -11,7 +11,7 @@ import requests
 import os
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pvpconnect-fix.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pvpturbo.preview.emergentagent.com')
 
 class TestPVP2PlayerFlow:
     """Test full 2-player PVP flow"""
