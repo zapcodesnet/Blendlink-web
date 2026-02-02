@@ -248,29 +248,23 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   showStamina = true,
   showFaceMatch = false,
   onFaceMatchClick,
-  onUpgradeClick, // Callback when upgrade button is clicked
-  size = 'medium', // 'small' | 'medium' | 'large' | 'full'
+  onUpgradeClick,
+  size = 'medium',
   className,
   flipped = false,
-  subscription = null, // User's subscription for XP multiplier display
+  subscription = null,
 }) {
-  const [isFlipped, setIsFlipped] = useState(flipped);
+  // Use the flipped prop directly - no internal state needed for flip
+  // Parent controls the flip state via flippedCardId
   const [showXPMultiplier, setShowXPMultiplier] = useState(false);
   const cardRef = useRef(null);
-  const prevFlippedRef = useRef(flipped);
+  
+  // Use flipped prop directly instead of internal state
+  const isFlipped = flipped;
   
   const scenery = SCENERY_CONFIG[photo?.scenery_type] || SCENERY_CONFIG.natural;
   
-  // Sync internal state with flipped prop ONLY when prop actually changes from parent
-  // This prevents infinite loops from circular updates
-  useEffect(() => {
-    if (flipped !== prevFlippedRef.current) {
-      prevFlippedRef.current = flipped;
-      setIsFlipped(flipped);
-    }
-  }, [flipped]);
-  
-  // Size configurations - Cards should NOT have excessive height
+  // Size configurations - Compact cards to reduce gap
   const sizeConfig = {
     small: { width: 'w-32', height: 'h-52', imageH: 'h-28', textSize: 'text-xs' },
     medium: { width: 'w-40', height: 'h-64', imageH: 'h-36', textSize: 'text-sm' },
