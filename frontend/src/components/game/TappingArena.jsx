@@ -609,12 +609,6 @@ export const TappingArena = ({
     opponentRequiredTapsRef.current = opponentRequiredTaps;
   }, [opponentRequiredTaps]);
   
-  // Ref for player taps to use in async callbacks
-  const playerTapsRef = useRef(playerTaps);
-  useEffect(() => {
-    playerTapsRef.current = playerTaps;
-  }, [playerTaps]);
-  
   // API POLLING FOR TAP STATE (Critical for real-time sync when WebSocket fails)
   // Start polling as soon as we have a sessionId, not just during 'active' phase
   useEffect(() => {
