@@ -257,17 +257,24 @@ export const SelfieMatchModal = ({
       
       setAttemptsUsed(prev => prev + 1);
       
-      if (data.success) {
+      // Handle both success formats
+      const matchSuccessful = data.success || data.effective_score >= 100;
+      const displayScore = data.effective_score || data.match_score;
+      
+      if (matchSuccessful) {
         setMatchResult({
           success: true,
           score: data.match_score,
+          effectiveScore: data.effective_score || data.match_score,
           confidence: data.confidence,
-          bonus: data.authenticity_bonus_added,
+          bonus: data.authenticity_bonus_added || data.authenticity_bonus,
           totalAuthenticity: data.total_authenticity,
           notes: data.notes,
+          isLocked: data.is_locked,
         });
         
-        toast.success(`Match successful! +${data.authenticity_bonus_added}% Authenticity bonus added!`);
+        const bonusPercent = data.authenticity_bonus_added || data.authenticity_bonus || 5;
+        toast.success(`🎉 Match successful! +${bonusPercent}% Authenticity bonus added!`);
         
         // Callback on success
         if (onSuccess) {
@@ -277,11 +284,17 @@ export const SelfieMatchModal = ({
         setMatchResult({
           success: false,
           score: data.match_score,
-          message: data.message || 'Face match failed',
+          effectiveScore: data.effective_score || data.match_score,
+          message: data.message || 'Face match needs better alignment',
           notes: data.notes,
+          remainingAttempts: data.remaining_attempts,
         });
         
-        toast.error(data.message || 'Face match failed. Try again with better lighting.');
+        if (data.match_score >= 60) {
+          toast.warning(`Match score: ${data.match_score}%. Try again for better accuracy!`);
+        } else {
+          toast.error(data.message || 'Face match failed. Ensure good lighting and face alignment.');
+        }
       }
     } catch (err) {
       console.error('Match error:', err);
