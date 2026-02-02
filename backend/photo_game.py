@@ -80,7 +80,7 @@ NEUTRAL_WEAKNESS_MULTIPLIER = 0.90  # Neutral is 10% weaker
 
 # Auction Bidding Constants
 BASE_BIDS_TO_WIN = 200  # Base number of taps needed if equal power
-MAX_TAPS_PER_SECOND = 25  # Anti-cheat limit (updated from 20)
+MAX_TAPS_PER_SECOND = 30  # Anti-cheat limit - matches frontend
 AUCTION_COUNTDOWN_SECONDS = 10  # Countdown before round starts
 AUCTION_ROUND_DURATION = 15  # Seconds to complete tapping
 
