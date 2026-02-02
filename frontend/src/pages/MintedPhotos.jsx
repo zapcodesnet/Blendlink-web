@@ -1192,6 +1192,7 @@ const UpgradeModal = ({ photo, isOpen, onClose, onSuccess, userBlCoins }) => {
 // Main Component
 const MintedPhotos = () => {
   const { user, setUser } = useContext(AuthContext);
+  const { setHideNav } = useContext(NavContext);
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('grid');
@@ -1204,6 +1205,13 @@ const MintedPhotos = () => {
   const [newlyMintedId, setNewlyMintedId] = useState(null); // Track newly minted photo for highlighting
   
   const { isAnimating, startAnimation, handleComplete, MintAnimationComponent } = useMintAnimation();
+  
+  // Hide bottom nav when lightbox, selfie modal, or upgrade modal is open
+  useEffect(() => {
+    const shouldHideNav = !!lightboxPhoto || !!selfieMatchPhoto || !!upgradePhoto;
+    setHideNav(shouldHideNav);
+    return () => setHideNav(false);
+  }, [lightboxPhoto, selfieMatchPhoto, upgradePhoto, setHideNav]);
   
   // Handle selfie match success
   const handleSelfieMatchSuccess = (data) => {
