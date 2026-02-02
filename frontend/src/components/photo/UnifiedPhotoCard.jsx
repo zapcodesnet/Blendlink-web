@@ -260,6 +260,11 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   
   const scenery = SCENERY_CONFIG[photo?.scenery_type] || SCENERY_CONFIG.natural;
   
+  // Sync internal state with flipped prop (for external control like backdrop click)
+  useEffect(() => {
+    setIsFlipped(flipped);
+  }, [flipped]);
+  
   // Notify parent when flip state changes (for hiding nav bar)
   useEffect(() => {
     onFlipStateChange?.(isFlipped);
