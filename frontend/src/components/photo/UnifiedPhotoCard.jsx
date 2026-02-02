@@ -650,14 +650,35 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
                   <Coins size={12} className="text-yellow-400" />
                   BL Coins
                 </span>
-                <div className="text-right">
-                  <span className="text-yellow-400 text-xs">
-                    {blCoinsSpent.toLocaleString()} BL
-                  </span>
-                  {upgradeValue > 0 && (
-                    <span className="text-green-400 text-[10px] ml-1">
-                      +{formatDollarValue(upgradeValue)}
+                <div className="flex items-center gap-2">
+                  <div className="text-right">
+                    <span className="text-yellow-400 text-xs">
+                      {blCoinsSpent.toLocaleString()} BL
                     </span>
+                    {upgradeValue > 0 && (
+                      <span className="text-green-400 text-[10px] ml-1">
+                        +{formatDollarValue(upgradeValue)}
+                      </span>
+                    )}
+                  </div>
+                  {/* Upgrade Button */}
+                  {onUpgradeClick && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onUpgradeClick?.(photo);
+                      }}
+                      className={cn(
+                        "px-2 py-1 rounded text-[10px] font-bold",
+                        "bg-gradient-to-r from-yellow-500 to-amber-500",
+                        "hover:from-yellow-600 hover:to-amber-600",
+                        "text-black transition-all",
+                        "shadow-md shadow-yellow-500/30"
+                      )}
+                      data-testid="upgrade-dollar-value-btn"
+                    >
+                      Upgrade
+                    </button>
                   )}
                 </div>
               </div>
