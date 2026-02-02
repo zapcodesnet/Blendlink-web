@@ -162,7 +162,11 @@ export const PVPBattleArena = ({
   const [websocketInstance, setWebsocketInstance] = useState(null);
   
   // Selection timeout
-  const [selectionTimeRemaining, setSelectionTimeRemaining] = useState(30);
+  // Selection timer - updated based on round type
+  const getSelectionTime = useCallback((roundType) => {
+    return roundType === 'rps' ? RPS_SELECTION_TIME : PHOTO_SELECTION_TIME;
+  }, []);
+  const [selectionTimeRemaining, setSelectionTimeRemaining] = useState(PHOTO_SELECTION_TIME);
   
   // Game state
   const [gamePhase, setGamePhase] = useState('ready'); // ready, playing, result
