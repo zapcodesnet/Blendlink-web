@@ -22,6 +22,10 @@
 - **PhotoGameArena.jsx**: Refreshes battle photos and stats when on pvp_menu; immediate refresh on battle exit
 - **Smart Update**: Only triggers re-render if actual stat changes detected
 
+#### P1 Hide Bottom Nav During Selfie Verification
+- **SelfieMatchModal**: Uses NavContext to hide bottom navigation when modal is open
+- **Purpose**: Allows users to click capture button without navigation bar blocking
+
 #### P1 Tap Rate Notification Hidden
 - Removed "Tap Rate Exceeded" toast notification completely
 - Rate limit (30 TPS) still enforced - excess taps silently ignored
