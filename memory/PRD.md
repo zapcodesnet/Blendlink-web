@@ -22,18 +22,26 @@
 - **PhotoGameArena.jsx**: Refreshes battle photos and stats when on pvp_menu; immediate refresh on battle exit
 - **Smart Update**: Only triggers re-render if actual stat changes detected
 
-#### P1 Selfie Verification Fixes (February 2, 2026)
-- **Match Threshold**: Changed from 80% to 90% - if match > 90%, treat as 100%
+#### P1 Selfie Verification Fixes (February 2, 2026) - UPDATED
+- **Match Threshold LOWERED**: Changed from 90% to **80%** - if match > 80%, treat as 100%
+- **CRITICAL FIX**: Attempts ONLY counted after successful AI analysis, NOT on processing errors
 - **Free Attempts**: First 3 attempts during minting are FREE
 - **Paid Attempts**: 100 BL coins per try after free tries (max 3 additional)
-- **Enhanced Scoring**: 
-  - >90% = 100% match = +5% Authenticity (locked permanently)
-  - 80-89% = +4% Authenticity
-  - 60-79% = Partial bonus (2.4-3.2%)
-  - <60% = Minimal bonus (0-1.2%)
+- **Helpful Error Messages**: Specific messages for different error types:
+  - "This photo doesn't have a detected face"
+  - "Network issue - please check connection (attempt NOT counted)"
+  - "AI service temporarily unavailable (attempt NOT counted)"
+- **Enhanced AI Prompt**: More lenient matching, focuses on core facial structure
 - **Combined Boost**: Face detection (+5%) + Selfie match (+5%) = up to +10% total
-- **Detailed Logging**: Added comprehensive logging for debugging match failures
-- **Improved AI Prompt**: Enhanced GPT-4o prompt to be more generous with matching
+- **Detailed Logging**: Full logging for debugging match failures
+
+#### P2 Card View Layout Improvements (February 2, 2026)
+- **25% Larger Cards**: Medium size now w-44 h-60 (was w-36 h-48)
+- **75% Image Area**: Image height h-44 (was h-28)
+- **Better Spacing**: Gap-6 between cards (was gap-4)
+- **Fewer Columns**: 4 columns on desktop (was 5) for larger cards
+- **Photo Name**: Displayed below each card
+- **Win/Loss Streaks**: Shown below photo name (🔥 Wins, 🛡️ Losses)
 
 #### P1 Hide Bottom Nav During Selfie Verification
 - **SelfieMatchModal**: Uses NavContext to hide bottom navigation when modal is open
