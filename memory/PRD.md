@@ -35,13 +35,16 @@
 - **Combined Boost**: Face detection (+5%) + Selfie match (+5%) = up to +10% total
 - **Detailed Logging**: Full logging for debugging match failures
 
-#### P2 Card View Layout Improvements (February 2, 2026)
-- **25% Larger Cards**: Medium size now w-44 h-60 (was w-36 h-48)
-- **75% Image Area**: Image height h-44 (was h-28)
-- **Better Spacing**: Gap-6 between cards (was gap-4)
-- **Fewer Columns**: 4 columns on desktop (was 5) for larger cards
+#### P2 Card View Layout Improvements (February 2, 2026) - UPDATED
+- **25% Larger Cards**: Medium size now w-44 h-72 (taller for flip button)
+- **75% Image Area**: Image height h-44
+- **LARGE Spacing**: Gap-8 (32px) between cards for easy tap targeting
+- **Touch Scrolling**: Added touch-pan-y CSS to cards and containers
 - **Photo Name**: Displayed below each card
 - **Win/Loss Streaks**: Shown below photo name (🔥 Wins, 🛡️ Losses)
+- **"Tap to flip →"** button clearly visible with larger tap target (py-2)
+- **Back-card scrolling**: Enabled with touchAction pan-y and extra padding
+- **Nav Hidden**: Bottom nav hides when lightbox, selfie modal, or upgrade modal is open
 
 #### P1 Hide Bottom Nav During Selfie Verification
 - **SelfieMatchModal**: Uses NavContext to hide bottom navigation when modal is open
