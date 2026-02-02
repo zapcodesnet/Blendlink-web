@@ -1447,19 +1447,45 @@ const MintedPhotos = () => {
           </div>
         ) : viewMode === 'card' ? (
           // New Unified Card View - clean image front, stats on back
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          // Updated: Better spacing (gap-6), fewer columns for larger cards
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-2">
             {photos.map(photo => (
-              <UnifiedPhotoCard
+              <div 
                 key={photo.mint_id}
-                photo={photo}
-                onClick={() => setLightboxPhoto(photo)}
-                showStats={true}
-                showStamina={true}
-                showFaceMatch={photo.has_face && !photo.selfie_match_completed}
-                onFaceMatchClick={setSelfieMatchPhoto}
-                onUpgradeClick={setUpgradePhoto}
-                size="medium"
-              />
+                className={cn(
+                  "relative transition-all duration-300",
+                  newlyMintedId === photo.mint_id && "animate-pulse ring-2 ring-yellow-400 ring-offset-2 ring-offset-gray-900 rounded-xl"
+                )}
+                onClick={() => {
+                  // Remove glow on click
+                  if (newlyMintedId === photo.mint_id) {
+                    setNewlyMintedId(null);
+                  }
+                }}
+              >
+                <UnifiedPhotoCard
+                  photo={photo}
+                  onClick={() => setLightboxPhoto(photo)}
+                  showStats={true}
+                  showStamina={true}
+                  showFaceMatch={photo.has_face && !photo.selfie_match_completed}
+                  onFaceMatchClick={setSelfieMatchPhoto}
+                  onUpgradeClick={setUpgradePhoto}
+                  size="medium"
+                />
+                {/* Photo name below card */}
+                <div className="mt-2 px-1">
+                  <p className="text-white text-sm font-medium truncate text-center">{photo.name}</p>
+                  {/* Win/Loss streak */}
+                  {(photo.win_streak > 0 || photo.lose_streak > 0) && (
+                    <p className="text-xs text-gray-400 text-center mt-1">
+                      {photo.win_streak > 0 && <span className="text-green-400">🔥 {photo.win_streak}W</span>}
+                      {photo.win_streak > 0 && photo.lose_streak > 0 && ' / '}
+                      {photo.lose_streak > 0 && <span className="text-blue-400">🛡️ {photo.lose_streak}L</span>}
+                    </p>
+                  )}
+                </div>
+              </div>
             ))}
           </div>
         ) : viewMode === 'grid' ? (
