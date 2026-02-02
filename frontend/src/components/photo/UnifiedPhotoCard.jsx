@@ -500,8 +500,15 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
             {/* 7. TAP TO FLIP BUTTON (50% smaller, at very bottom) - THIS button must be interactive */}
             <button 
               onClick={(e) => {
+                // CRITICAL: Prevent event from bubbling to parent card's onClick (which opens lightbox)
+                e.preventDefault();
                 e.stopPropagation();
+                e.nativeEvent.stopImmediatePropagation();
                 handleFlip(e);
+              }}
+              onTouchStart={(e) => {
+                // Also stop touch event propagation
+                e.stopPropagation();
               }}
               className="w-full py-1 text-center text-[10px] text-gray-500 hover:text-white hover:bg-gray-800/50 transition-all rounded-b-lg border-t border-gray-700/30 mt-1 pointer-events-auto"
               style={{ touchAction: 'manipulation' }}
