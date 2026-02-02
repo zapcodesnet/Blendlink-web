@@ -1118,21 +1118,6 @@ export const TappingArena = ({
         )}
       </button>
       
-      {/* Anti-cheat warning */}
-      <AnimatePresence>
-        {showAntiCheatWarning && (
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 50 }}
-            className="absolute bottom-32 left-1/2 -translate-x-1/2 px-4 py-2 bg-red-500 text-white rounded-lg flex items-center gap-2 z-40"
-          >
-            <AlertCircle className="w-5 h-5" />
-            <span>Slow down! Max {MAX_TAPS_PER_SECOND} taps/sec</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      
       {/* Result overlay */}
       <AnimatePresence>
         {gamePhase === 'finished' && winner && (
