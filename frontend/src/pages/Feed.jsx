@@ -315,8 +315,13 @@ export default function Feed() {
                 {/* Post Header */}
                 <div className="flex items-center gap-3 mb-3">
                   <Avatar 
-                    className="w-10 h-10 cursor-pointer" 
-                    onClick={() => navigate(`/profile/${post.user?.user_id}`)}
+                    className="w-10 h-10 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all" 
+                    onClick={() => handleAvatarClick(
+                      post.user?.user_id, 
+                      post.user?.avatar || post.user?.picture,
+                      post.user?.name
+                    )}
+                    data-testid={`post-avatar-${post.post_id}`}
                   >
                     <AvatarImage src={post.user?.avatar || post.user?.picture} />
                     <AvatarFallback>{post.user?.name?.[0]}</AvatarFallback>
