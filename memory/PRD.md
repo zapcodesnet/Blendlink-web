@@ -2,19 +2,38 @@
 
 ## Latest Update: February 2, 2026
 
-### P0 PVP Connection & Synchronization Fixes (COMPLETED)
+### Session Fixes Completed (February 2, 2026)
+
+#### P0 PVP Synchronization Fixes
+- **Server-Authoritative Winner Determination**: /pvp/finish-round endpoint now idempotent - caches and returns same result if called multiple times
 - **isPlayer1Ref**: Added ref to track latest player role for WebSocket handlers, avoiding stale closures
 - **confirmedPlayer1Id state**: Synced from API responses for reliable player identification
-- **Exponential backoff reconnection**: Implemented with delays of 1s → 2s → 4s → 8s → 10s (capped)
-- **MAX_RECONNECT_ATTEMPTS**: Increased from 3 to 5 for more robust reconnection
-- **Verified**: Photo assignment is now correct - creator sees their photos, joiner sees their own photos (not swapped)
-- **Testing**: All 16 backend tests passed (100% success rate)
+- **Exponential backoff reconnection**: 1s → 2s → 4s → 8s → 10s (capped)
+- **MAX_RECONNECT_ATTEMPTS**: Increased from 3 to 5
 
-### P1 Profile Picture Click Behavior (COMPLETED)
+#### P1 Selection Timers & Auto-Select
+- **Photo Selection Timer**: 10 seconds (PHOTO_SELECTION_TIME constant)
+- **RPS Move Timer**: 5 seconds (RPS_SELECTION_TIME constant)
+- **Auto-Select Logic**: On timeout, selects photo with highest dollar_value automatically
+
+#### P1 Tap Rate Notification Hidden
+- Removed "Tap Rate Exceeded" toast notification completely
+- Rate limit (30 TPS) still enforced - excess taps silently ignored
+
+#### P1 Mint Limit Fixed
+- Daily limit displays as X/10 (was incorrectly showing X/3)
+- Backend confirms: free users = 10 mints/day
+
+#### P2 BL Coins Upgrade Feature
+- **Upgrade Button**: Added to photo card back, next to BL Coins stat
+- **UpgradeModal**: New modal with upgrade tiers ($1M - $1B)
+- **Backend Endpoint**: /minting/photos/{mint_id}/upgrade already implemented
+- **Cost**: $1M = 1M BL, $2M = 2M BL, etc.
+
+#### P1 Profile Picture Click Behavior
 - **Single click**: Navigates to user's profile (250ms delay to detect double click)
 - **Double click**: Opens full-size image in modal
 - **Implementation**: Added to Feed.jsx with AnimatePresence modal
-- **Test IDs**: `post-avatar-{post_id}`, `full-size-avatar-modal`, `close-avatar-modal-btn`
 
 ---
 
