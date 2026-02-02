@@ -244,11 +244,11 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   
   const scenery = SCENERY_CONFIG[photo?.scenery_type] || SCENERY_CONFIG.natural;
   
-  // Size configurations
+  // Size configurations - Updated: 25% larger cards, 75% image area
   const sizeConfig = {
-    small: { width: 'w-24', height: 'h-32', imageH: 'h-20', textSize: 'text-xs' },
-    medium: { width: 'w-36', height: 'h-48', imageH: 'h-28', textSize: 'text-sm' },
-    large: { width: 'w-48', height: 'h-64', imageH: 'h-40', textSize: 'text-base' },
+    small: { width: 'w-28', height: 'h-40', imageH: 'h-28', textSize: 'text-xs' },
+    medium: { width: 'w-44', height: 'h-60', imageH: 'h-44', textSize: 'text-sm' },  // 25% larger (was w-36 h-48)
+    large: { width: 'w-56', height: 'h-80', imageH: 'h-56', textSize: 'text-base' },  // 25% larger
     full: { width: 'w-full', height: 'h-auto', imageH: 'aspect-[3/4]', textSize: 'text-base' },
   };
   const config = sizeConfig[size] || sizeConfig.medium;
