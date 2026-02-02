@@ -53,18 +53,18 @@ export const SelfieMatchModal = ({
   userBalance = 0, // User's BL coin balance
 }) => {
   // Get NavContext to hide bottom navigation during selfie verification
-  const { setShowNav } = useContext(NavContext);
+  const { setHideNav } = useContext(NavContext);
   
   // Hide bottom navigation when modal is open
   useEffect(() => {
     if (isOpen) {
-      setShowNav(false);
+      setHideNav(true);  // Hide navigation
     }
     return () => {
       // Show navigation again when modal closes
-      setShowNav(true);
+      setHideNav(false);
     };
-  }, [isOpen, setShowNav]);
+  }, [isOpen, setHideNav]);
   
   // Confirmation state - shows accept/decline before camera
   const [showConfirmation, setShowConfirmation] = useState(true);
