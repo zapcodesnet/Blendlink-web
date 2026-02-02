@@ -1411,6 +1411,7 @@ const MintedPhotos = () => {
                 showStamina={true}
                 showFaceMatch={photo.has_face && !photo.selfie_match_completed}
                 onFaceMatchClick={setSelfieMatchPhoto}
+                onUpgradeClick={setUpgradePhoto}
                 size="medium"
               />
             ))}
