@@ -417,24 +417,16 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         
         {/* Stats Section - NEW LAYOUT ORDER */}
         {showStats && (
-          <div 
-            className="p-2 space-y-1.5 bg-black/70"
-            style={{ 
-              touchAction: 'pan-y',
-              pointerEvents: 'none',  // Don't block scroll on stats area
-            }}
-          >
-            {/* 2. NAME */}
-            <div className="text-center pointer-events-none">
-              <p className="text-white font-semibold text-xs truncate px-1">
-                {photo?.name || 'Unnamed Photo'}
-              </p>
-            </div>
+          <div className="p-2 space-y-1 bg-black/70">
+            {/* NAME */}
+            <p className="text-white font-semibold text-xs truncate px-1 text-center">
+              {photo?.name || 'Unnamed Photo'}
+            </p>
             
-            {/* 3. DOLLAR VALUE & STARS */}
-            <div className="flex items-center justify-between pointer-events-none">
+            {/* DOLLAR VALUE & STARS */}
+            <div className="flex items-center justify-between">
               <span className={cn(
-                "font-bold bg-gradient-to-r bg-clip-text text-transparent text-base",
+                "font-bold bg-gradient-to-r bg-clip-text text-transparent text-sm",
                 scenery.gradient
               )}>
                 {formatDollarValue(dollarValue)}
@@ -442,26 +434,26 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
               <StarsDisplay count={stars} hasGoldenFrame={hasGoldenFrame} />
             </div>
             
-            {/* 4. SCENERY & LEVEL */}
-            <div className="flex items-center justify-between pointer-events-none">
+            {/* SCENERY & LEVEL */}
+            <div className="flex items-center justify-between">
               <div className={cn(
-                "flex items-center gap-1 px-2 py-0.5 rounded-full",
+                "flex items-center gap-1 px-1.5 py-0.5 rounded-full",
                 `bg-gradient-to-r ${scenery.bgGradient}`
               )}>
-                <span className="text-xs">{scenery.emoji}</span>
-                <span className="text-[10px] text-white/90">{scenery.label}</span>
+                <span className="text-[10px]">{scenery.emoji}</span>
+                <span className="text-[9px] text-white/90">{scenery.label}</span>
               </div>
-              <span className="text-purple-400 text-xs font-bold">Lv {level}</span>
+              <span className="text-purple-400 text-[10px] font-bold">Lv {level}</span>
             </div>
             
-            {/* 5. STAMINA BAR */}
+            {/* STAMINA BAR */}
             {showStamina && (
-              <div className="space-y-0.5 pointer-events-none">
-                <div className="flex justify-between text-[10px] text-gray-400">
+              <div className="space-y-0.5">
+                <div className="flex justify-between text-[9px] text-gray-400">
                   <span>⚡ Stamina</span>
                   <span>{stamina}/{maxStamina}</span>
                 </div>
-                <div className="h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                <div className="h-1 bg-gray-700 rounded-full overflow-hidden">
                   <div 
                     className={cn(
                       "h-full rounded-full transition-all",
