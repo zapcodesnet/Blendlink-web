@@ -56,6 +56,28 @@ export default function Feed() {
   const [storiesLoading, setStoriesLoading] = useState(true);
   const [claiming, setClaiming] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  
+  // Profile picture modal state (for double-click to view full size)
+  const [fullSizeAvatar, setFullSizeAvatar] = useState(null);
+  const clickTimeoutRef = useRef(null);
+  
+  // Handle avatar click with single/double click detection
+  const handleAvatarClick = useCallback((userId, avatarUrl, userName) => {
+    if (clickTimeoutRef.current) {
+      // Double click detected - show full size modal
+      clearTimeout(clickTimeoutRef.current);
+      clickTimeoutRef.current = null;
+      if (avatarUrl) {
+        setFullSizeAvatar({ url: avatarUrl, name: userName });
+      }
+    } else {
+      // Single click - navigate to profile after delay
+      clickTimeoutRef.current = setTimeout(() => {
+        clickTimeoutRef.current = null;
+        navigate(`/profile/${userId}`);
+      }, 250); // 250ms delay to detect double click
+    }
+  }, [navigate]);
 
   // Fetch feed data with error handling
   const fetchFeed = useCallback(async (showLoading = true) => {
