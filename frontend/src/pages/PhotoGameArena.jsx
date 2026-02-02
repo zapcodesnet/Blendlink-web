@@ -1596,6 +1596,54 @@ const PhotoGameArena = () => {
     }
   }, [gameState]);
   
+  // Real-time stat refresh polling (every 5 seconds)
+  // Keeps battle photo stats updated after battles
+  useEffect(() => {
+    // Only poll when on the main menu (not during active battles)
+    if (gameState !== 'pvp_menu') return;
+    
+    const POLL_INTERVAL = 5000; // 5 seconds
+    
+    const pollBattlePhotoStats = async () => {
+      try {
+        // Silently refresh battle photos to get latest stats
+        const response = await api.get('/photo-game/battle-photos');
+        const newPhotos = response.data.photos || [];
+        
+        // Only update if there are actual changes
+        setBattlePhotos(prevPhotos => {
+          const hasChanges = newPhotos.some((newPhoto, index) => {
+            const oldPhoto = prevPhotos[index];
+            if (!oldPhoto) return true;
+            return (
+              newPhoto.xp !== oldPhoto.xp ||
+              newPhoto.level !== oldPhoto.level ||
+              newPhoto.stamina !== oldPhoto.stamina ||
+              newPhoto.dollar_value !== oldPhoto.dollar_value ||
+              newPhoto.wins !== oldPhoto.wins ||
+              newPhoto.losses !== oldPhoto.losses ||
+              newPhoto.streak !== oldPhoto.streak
+            );
+          });
+          
+          if (hasChanges) {
+            console.log('[PhotoGame] Stats updated via polling');
+          }
+          return hasChanges ? newPhotos : prevPhotos;
+        });
+      } catch (err) {
+        console.debug('[PhotoGame] Silent stat refresh failed:', err.message);
+      }
+    };
+    
+    const pollInterval = setInterval(pollBattlePhotoStats, POLL_INTERVAL);
+    console.log('[PhotoGameArena] Started real-time stat polling (every 5s)');
+    
+    return () => {
+      clearInterval(pollInterval);
+    };
+  }, [gameState]);
+  
   const handleSoundToggle = () => {
     const newValue = !soundEnabled;
     setSoundEnabled(newValue);
