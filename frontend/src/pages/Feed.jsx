@@ -423,6 +423,54 @@ export default function Feed() {
       >
         <Plus className="w-6 h-6" />
       </Button>
+      
+      {/* Full-size Profile Picture Modal (opens on double-click) */}
+      <AnimatePresence>
+        {fullSizeAvatar && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4"
+            onClick={() => setFullSizeAvatar(null)}
+            data-testid="full-size-avatar-modal"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: "spring", damping: 25 }}
+              className="relative max-w-lg w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute -top-12 right-0 text-white hover:bg-white/20"
+                onClick={() => setFullSizeAvatar(null)}
+                data-testid="close-avatar-modal-btn"
+              >
+                <X className="w-6 h-6" />
+              </Button>
+              
+              <div className="bg-card rounded-2xl overflow-hidden shadow-2xl">
+                <img
+                  src={fullSizeAvatar.url}
+                  alt={`${fullSizeAvatar.name}'s profile picture`}
+                  className="w-full aspect-square object-cover"
+                  data-testid="full-size-avatar-image"
+                />
+                {fullSizeAvatar.name && (
+                  <div className="p-4 text-center border-t border-border">
+                    <p className="font-semibold text-lg">{fullSizeAvatar.name}</p>
+                    <p className="text-muted-foreground text-sm">Profile Picture</p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
