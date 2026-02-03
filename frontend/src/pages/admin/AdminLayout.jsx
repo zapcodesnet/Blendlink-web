@@ -41,7 +41,7 @@ export const AdminContext = createContext(null);
 // Admin API
 const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
 
-// Safe fetch helper - reads body only once to avoid "body stream already read" errors
+// Safe fetch helper - uses clone() to prevent "body stream already read" errors
 const adminApiRequest = async (endpoint, options = {}) => {
   const token = localStorage.getItem('blendlink_token');
   const headers = {
@@ -52,20 +52,42 @@ const adminApiRequest = async (endpoint, options = {}) => {
     headers['Authorization'] = `Bearer ${token}`;
   }
   
-  const response = await fetch(`${API_BASE}/api${endpoint}`, { ...options, headers });
+  let response;
+  try {
+    response = await fetch(`${API_BASE}/api${endpoint}`, { ...options, headers });
+  } catch (networkError) {
+    throw new Error('Network error: Unable to connect to server');
+  }
   
-  // Read body as text first to avoid body stream errors
-  const rawText = await response.text();
+  // Clone response BEFORE any read operation to safely handle both success and error paths
+  const responseClone = response.clone();
   
   let data = {};
   try {
-    data = rawText ? JSON.parse(rawText) : {};
-  } catch (e) {
-    console.error('JSON parse error:', e);
+    // Try parsing as JSON first (most common case)
+    data = await response.json();
+  } catch (parseError) {
+    // If JSON parsing fails, try getting raw text from the clone
+    try {
+      const rawText = await responseClone.text();
+      console.error('JSON parse error, raw response:', rawText?.substring(0, 200));
+      // If we got text, try to use it as error message
+      if (rawText && !response.ok) {
+        throw new Error(rawText.substring(0, 200) || 'Invalid server response');
+      }
+    } catch (textError) {
+      console.error('Failed to read response:', textError);
+    }
+    // If response was OK but not JSON, return empty object
+    if (response.ok) {
+      return {};
+    }
   }
   
   if (!response.ok) {
-    throw new Error(data.detail || 'Request failed');
+    // Extract error message from various possible formats
+    const errorMsg = data?.detail?.message || data?.detail || data?.message || data?.error || 'Request failed';
+    throw new Error(typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg));
   }
   
   return data;
