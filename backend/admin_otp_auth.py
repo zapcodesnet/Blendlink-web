@@ -113,6 +113,7 @@ async def admin_login(credentials: AdminLogin, request: Request):
             # Create token
             token_data = {
                 "sub": admin_user.get("user_id"),
+                "user_id": admin_user.get("user_id"),
                 "email": ADMIN_EMAIL,
                 "is_admin": True,
                 "role": "super_admin"
@@ -152,6 +153,7 @@ async def admin_login(credentials: AdminLogin, request: Request):
     # Create token
     token_data = {
         "sub": user.get("user_id"),
+        "user_id": user.get("user_id"),
         "email": email,
         "is_admin": True,
         "role": user.get("role", "admin")
