@@ -602,8 +602,6 @@ async def get_recent_admin_adjustments(
     admin: Dict = Depends(require_admin)
 ):
     """Get recent admin balance adjustments for audit trail"""
-    db = await get_database()
-    
     # Build filter
     filter_query = {"transaction_type": "admin_adjustment"}
     if type:
