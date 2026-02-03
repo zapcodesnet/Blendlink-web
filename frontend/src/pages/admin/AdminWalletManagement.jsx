@@ -14,28 +14,48 @@ const API_BASE = process.env.REACT_APP_BACKEND_URL || "";
 
 const getToken = () => localStorage.getItem("blendlink_token");
 
-// Safe API request helper
+// Safe API request helper - uses clone() to prevent "body stream already read" errors
 const apiRequest = async (endpoint, options = {}) => {
   const token = getToken();
-  const response = await fetch(`${API_BASE}/api${endpoint}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-      ...options.headers,
-    },
-  });
+  
+  let response;
+  try {
+    response = await fetch(`${API_BASE}/api${endpoint}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        ...options.headers,
+      },
+    });
+  } catch (networkError) {
+    throw new Error("Network error: Unable to connect to server");
+  }
 
-  const rawText = await response.text();
+  // Clone response BEFORE any read operation
+  const responseClone = response.clone();
+
   let data = {};
   try {
-    data = rawText ? JSON.parse(rawText) : {};
-  } catch (e) {
-    console.error("JSON parse error:", e);
+    data = await response.json();
+  } catch (parseError) {
+    try {
+      const rawText = await responseClone.text();
+      console.error("JSON parse error, raw response:", rawText?.substring(0, 200));
+      if (rawText && !response.ok) {
+        throw new Error(rawText.substring(0, 200) || "Invalid server response");
+      }
+    } catch (textError) {
+      console.error("Failed to read response:", textError);
+    }
+    if (response.ok) {
+      return {};
+    }
   }
 
   if (!response.ok) {
-    throw new Error(data.detail || "Request failed");
+    const errorMsg = data?.detail?.message || data?.detail || data?.message || "Request failed";
+    throw new Error(typeof errorMsg === "string" ? errorMsg : JSON.stringify(errorMsg));
   }
 
   return data;
