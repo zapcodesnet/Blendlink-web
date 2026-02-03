@@ -4,6 +4,55 @@
 
 ### Session Fixes Completed (February 3, 2026) - LATEST
 
+#### P0 MOBILE SCROLLING & DARK OVERLAY FIX ✅ VERIFIED (iteration_106 - 100% pass)
+
+**User Report**: Real mobile device testing revealed critical bugs - touch scrolling blocked, dark overlay blocking all interactions when card flipped.
+
+**Root Causes Found**:
+1. **Dark Overlay**: `MintedPhotos.jsx` had a `fixed inset-0 bg-black/60 z-40` div appearing when any card was flipped
+2. **Opacity Dimming**: Non-flipped cards were dimmed to `opacity-30` blocking visual clarity
+3. **Swipe Thresholds**: Too strict (60px) for some mobile devices
+
+**Solutions Implemented**:
+1. **REMOVED dark backdrop overlay** (lines 1462-1470 in MintedPhotos.jsx deleted)
+2. **REMOVED opacity-30 dimming** on non-flipped cards
+3. **Added `touchAction: 'pan-y'`** inline styles to ALL page containers:
+   - Landing.jsx
+   - Marketplace.jsx
+   - MintedPhotos.jsx
+   - PhotoGameArena.jsx
+4. **Lowered swipe thresholds v4**:
+   - Horizontal: >40px (was 60px)
+   - Vertical: <60px (was 40px)
+   - Time: <500ms (was 400ms)
+   - Ratio: 1.5x (was 2x)
+5. **Passive event listeners** for better scroll performance
+
+**Results Verified**:
+- ✅ Touch scrolling works on landing, marketplace, minted-photos, photo-game
+- ✅ NO dark overlay when card is flipped
+- ✅ All cards remain at full opacity (not dimmed)
+- ✅ Users can interact with ANY card while one is flipped
+- ✅ Swipe-to-flip works on ALL cards (including top-right)
+- ✅ Mouse wheel scrolling works on desktop
+
+#### P1 SELFIE VERIFICATION DISPLAY FIX ✅ VERIFIED
+- **MAX_ATTEMPTS**: 6 total (3 free + 3 paid) - matches backend
+- **Display**: "Attempts: X/6" in SelfieMatchModal
+- **z-index**: 9999/10000 ensures modal appears above flipped cards
+
+### Files Modified (February 3, 2026)
+- `/app/frontend/src/pages/MintedPhotos.jsx` - Removed dark overlay & opacity dimming
+- `/app/frontend/src/components/photo/UnifiedPhotoCard.jsx` - v4 swipe gesture, passive listeners
+- `/app/frontend/src/pages/Landing.jsx` - Added touchAction inline style
+- `/app/frontend/src/pages/Marketplace.jsx` - Added touchAction inline style
+- `/app/frontend/src/pages/PhotoGameArena.jsx` - Added touchAction inline style
+- `/app/frontend/src/index.css` - Global scrolling CSS v3
+
+---
+
+### Previous Session Fixes (February 3, 2026 - Earlier)
+
 #### P0 SCROLLING BUG FIX v3 ✅ VERIFIED (iteration_105 - 100% pass)
 **Root Cause**: Previous fixes used JavaScript preventDefault() in touch handlers, which blocked native scrolling.
 
