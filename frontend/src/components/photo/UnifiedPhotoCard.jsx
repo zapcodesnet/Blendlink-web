@@ -903,6 +903,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   
   return (
     <div 
+      ref={cardRef}
       className={cn(
         "relative perspective-1000",
         config.width,
@@ -911,11 +912,9 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         className
       )}
       onClick={(e) => handleClick(e)}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
       style={{ 
-        zIndex: isFlipped ? 100 : 'auto',
-        // CRITICAL: Always allow vertical scrolling - swipe detection is passive
+        zIndex: isFlipped ? 50 : 'auto',
+        // CRITICAL: Always allow vertical scrolling
         touchAction: 'pan-y',
       }}
       data-testid={`photo-card-${photo?.mint_id}`}
