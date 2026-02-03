@@ -281,7 +281,12 @@ const RecentlyViewedSection = ({ onViewDetails }) => {
           <div 
             ref={scrollRef}
             className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 snap-x snap-mandatory"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            style={{ 
+              scrollbarWidth: 'none', 
+              msOverflowStyle: 'none',
+              WebkitOverflowScrolling: 'touch',
+              touchAction: 'pan-x pan-y'  // Allow both horizontal and vertical scroll
+            }}
           >
             {recentItems.map((item, i) => (
               <div
