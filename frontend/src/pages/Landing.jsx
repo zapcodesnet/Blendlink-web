@@ -296,13 +296,15 @@ const RecentlyViewedSection = ({ onViewDetails }) => {
                 className="flex-shrink-0 w-48 bg-card rounded-xl overflow-hidden shadow hover:shadow-lg transition-all duration-300 cursor-pointer group snap-start"
                 onClick={() => onViewDetails({ id: item.listing_id }, 'product')}
                 data-testid={`recent-${item.listing_id}`}
+                style={{ touchAction: 'pan-y' }}
               >
-                <div className="relative h-32 overflow-hidden bg-muted">
+                <div className="relative h-32 overflow-hidden bg-muted" style={{ touchAction: 'pan-y' }}>
                   {item.image ? (
                     <img 
                       src={item.image} 
                       alt={item.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 pointer-events-none"
+                      draggable={false}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
