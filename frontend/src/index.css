@@ -1296,7 +1296,7 @@ canvas[data-interactive="true"] {
 
 /* Grid and flex containers - scroll through */
 .grid, .flex, .flex-wrap {
-  touch-action: pan-y;
+  touch-action: auto !important;
 }
 
 /* Card components - allow scroll through them */
@@ -1304,7 +1304,7 @@ canvas[data-interactive="true"] {
 [data-testid*="listing"],
 [class*="card"],
 [class*="Card"] {
-  touch-action: pan-y;
+  touch-action: auto !important;
 }
 
 /* ONLY interactive controls should block pan (use manipulation) */
