@@ -807,12 +807,12 @@ export const SelfieMatchModal = ({
                     {isMatching ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Matching...
+                        Analyzing...
                       </>
                     ) : (
                       <>
                         <Check className="w-4 h-4 mr-2" />
-                        Verify ({COST_PER_ATTEMPT} BL)
+                        {isFreeAttempt ? 'Verify (FREE)' : `Verify (${currentCost} BL)`}
                       </>
                     )}
                   </Button>
