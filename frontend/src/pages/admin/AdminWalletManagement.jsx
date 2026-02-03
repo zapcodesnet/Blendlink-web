@@ -326,7 +326,7 @@ export default function AdminWalletManagement() {
             Manual BL Coins Credit
           </h1>
           <p className="text-slate-400 mt-1">
-            Add BL Coins to any user's wallet with full audit trail
+            Add BL Coins to any user&apos;s wallet with full audit trail
           </p>
         </div>
         <Button
