@@ -605,6 +605,7 @@ export default function AdminLayout() {
             <Routes>
               <Route index element={<AdminDashboardHome realtimeMetrics={realtimeMetrics} wsConnected={wsConnected} />} />
               <Route path="users/*" element={<AdminUsers />} />
+              <Route path="wallet-management" element={<AdminWalletManagement />} />
               <Route path="diamonds" element={<AdminDiamondLeaders />} />
               <Route path="orphans" element={<AdminOrphans />} />
               <Route path="admins" element={<AdminManagement />} />
