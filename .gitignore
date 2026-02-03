@@ -85,58 +85,8 @@ frontend/node_modules/.cache/
 
 # IMPORTANT: Base .env files (frontend/.env, backend/.env, mobile/.env) are NOT ignored
 # They are REQUIRED for Emergent deployment - do not add *.env to this file
-frontend/node_modules/.cache/default-development/0.pack
--e 
-# Environment files
-*.env
-*.env.*
-frontend/node_modules/.cache/default-development/2.pack
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
-frontend/node_modules/.cache/default-development/6.pack
--e 
-# Environment files
-*.env
-*.env.*
-frontend/node_modules/.cache/default-development/8.pack
--e 
-# Environment files
-*.env
-*.env.*
+
+# Cache files (auto-generated)
+frontend/node_modules/.cache/
 frontend/node_modules/.cache/default-development/11.pack
-frontend/node_modules/.cache/default-development/10.pack
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
-frontend/node_modules/.cache/default-development/1.pack
--e 
-# Environment files
-*.env
-*.env.*
+frontend/node_modules/.cache/default-development/6.pack
