@@ -41,7 +41,7 @@ export const AdminContext = createContext(null);
 // Admin API
 const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
 
-// Bulletproof fetch helper - reads body only once, no clone needed
+// Ultra-robust fetch helper with detailed error logging
 const adminApiRequest = async (endpoint, options = {}) => {
   const token = localStorage.getItem('blendlink_token');
   const headers = {
@@ -52,39 +52,72 @@ const adminApiRequest = async (endpoint, options = {}) => {
     headers['Authorization'] = `Bearer ${token}`;
   }
   
+  const url = `${API_BASE}/api${endpoint}`;
+  console.log(`[AdminAPI] Fetching: ${url}`);
+  
   let response;
   try {
-    response = await fetch(`${API_BASE}/api${endpoint}`, { ...options, headers });
+    response = await fetch(url, { 
+      ...options, 
+      headers,
+      // Ensure we don't use cached responses
+      cache: 'no-store',
+    });
+    console.log(`[AdminAPI] Response status: ${response.status}`);
   } catch (networkError) {
-    throw new Error('Network error: Unable to connect to server');
+    console.error('[AdminAPI] Network error:', networkError);
+    throw new Error(`Network error: ${networkError.message || 'Unable to connect to server'}`);
   }
   
-  // Read body as text ONCE - this is the only read operation
+  // Check if response has a body
+  const contentLength = response.headers.get('content-length');
+  const contentType = response.headers.get('content-type');
+  console.log(`[AdminAPI] Content-Type: ${contentType}, Content-Length: ${contentLength}`);
+  
+  // Handle empty responses
+  if (contentLength === '0' || response.status === 204) {
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+    return {};
+  }
+  
+  // Read body safely
   let rawText = '';
   try {
     rawText = await response.text();
+    console.log(`[AdminAPI] Raw response (first 200 chars):`, rawText?.substring(0, 200));
   } catch (readError) {
-    throw new Error('Failed to read response from server');
+    console.error('[AdminAPI] Failed to read response body:', readError);
+    // If we can't read the body but response was OK, return empty
+    if (response.ok) {
+      return {};
+    }
+    throw new Error(`Server error (${response.status}): Could not read response`);
   }
   
-  // Now parse the text we already have
+  // Parse JSON if we have content
   let data = {};
-  if (rawText) {
+  if (rawText && rawText.trim()) {
     try {
       data = JSON.parse(rawText);
     } catch (parseError) {
-      // Not JSON - if error response, use raw text as message
+      console.error('[AdminAPI] JSON parse error:', parseError);
       if (!response.ok) {
-        throw new Error(rawText.substring(0, 300) || `Request failed with status ${response.status}`);
+        // Return raw text as error for non-OK responses
+        throw new Error(rawText.substring(0, 300) || `Request failed (${response.status})`);
       }
-      // OK response but not JSON - return empty object
+      // OK but not JSON - might be HTML error page
+      if (rawText.includes('<!DOCTYPE') || rawText.includes('<html')) {
+        throw new Error('Server returned HTML instead of JSON - possible proxy/routing error');
+      }
       return {};
     }
   }
   
   // Handle error responses
   if (!response.ok) {
-    const errorMsg = data?.detail?.message || data?.detail || data?.message || data?.error || 'Request failed';
+    const errorMsg = data?.detail?.message || data?.detail || data?.message || data?.error || `Request failed (${response.status})`;
     throw new Error(typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg));
   }
   
