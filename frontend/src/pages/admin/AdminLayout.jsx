@@ -41,7 +41,7 @@ export const AdminContext = createContext(null);
 // Admin API
 const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
 
-// Safe fetch helper - uses clone() to prevent "body stream already read" errors
+// Bulletproof fetch helper - reads body only once, no clone needed
 const adminApiRequest = async (endpoint, options = {}) => {
   const token = localStorage.getItem('blendlink_token');
   const headers = {
@@ -59,33 +59,31 @@ const adminApiRequest = async (endpoint, options = {}) => {
     throw new Error('Network error: Unable to connect to server');
   }
   
-  // Clone response BEFORE any read operation to safely handle both success and error paths
-  const responseClone = response.clone();
-  
-  let data = {};
+  // Read body as text ONCE - this is the only read operation
+  let rawText = '';
   try {
-    // Try parsing as JSON first (most common case)
-    data = await response.json();
-  } catch (parseError) {
-    // If JSON parsing fails, try getting raw text from the clone
+    rawText = await response.text();
+  } catch (readError) {
+    throw new Error('Failed to read response from server');
+  }
+  
+  // Now parse the text we already have
+  let data = {};
+  if (rawText) {
     try {
-      const rawText = await responseClone.text();
-      console.error('JSON parse error, raw response:', rawText?.substring(0, 200));
-      // If we got text, try to use it as error message
-      if (rawText && !response.ok) {
-        throw new Error(rawText.substring(0, 200) || 'Invalid server response');
+      data = JSON.parse(rawText);
+    } catch (parseError) {
+      // Not JSON - if error response, use raw text as message
+      if (!response.ok) {
+        throw new Error(rawText.substring(0, 300) || `Request failed with status ${response.status}`);
       }
-    } catch (textError) {
-      console.error('Failed to read response:', textError);
-    }
-    // If response was OK but not JSON, return empty object
-    if (response.ok) {
+      // OK response but not JSON - return empty object
       return {};
     }
   }
   
+  // Handle error responses
   if (!response.ok) {
-    // Extract error message from various possible formats
     const errorMsg = data?.detail?.message || data?.detail || data?.message || data?.error || 'Request failed';
     throw new Error(typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg));
   }
