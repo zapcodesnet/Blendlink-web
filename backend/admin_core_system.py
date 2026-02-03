@@ -594,6 +594,31 @@ async def adjust_user_balance(
         "balance_after": new_balance,
     }
 
+@admin_finance_router.get("/recent-adjustments")
+async def get_recent_admin_adjustments(
+    request: Request,
+    limit: int = Query(20, ge=1, le=100),
+    type: Optional[str] = Query(None),
+    admin: Dict = Depends(require_admin)
+):
+    """Get recent admin balance adjustments for audit trail"""
+    db = await get_database()
+    
+    # Build filter
+    filter_query = {"transaction_type": "admin_adjustment"}
+    if type:
+        filter_query["transaction_type"] = type
+    
+    # Fetch recent transactions
+    cursor = db.transactions.find(filter_query).sort("created_at", -1).limit(limit)
+    transactions = await cursor.to_list(length=limit)
+    
+    # Clean up for JSON serialization
+    for txn in transactions:
+        txn.pop("_id", None)
+    
+    return {"transactions": transactions, "count": len(transactions)}
+
 # ============== GENEALOGY MANAGEMENT ==============
 
 @admin_genealogy_router.get("/tree")
