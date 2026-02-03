@@ -48,6 +48,37 @@
 **Critical Note for User**:
 These fixes have been verified in the Playwright browser environment. **Please test on REAL iPhone and Android devices** after deploying to blendlink.net to confirm touch scrolling works on actual hardware.
 
+#### P1 SCROLL FIX APPLIED TO ALL PAGES ✅ VERIFIED (iteration_108 - 15/15 tests pass)
+
+Applied the same bulletproof scroll fix pattern to:
+
+**1. Marketplace Page** (`Marketplace.jsx`):
+- Added `.marketplace-scroll-container` class
+- `touch-action: auto`, `overflow-y: scroll`
+- All 7 images: `pointer-events: none`
+
+**2. MintedPhotos Page** (`MintedPhotos.jsx`):
+- Added `.minted-photos-scroll-container` class
+- `touch-action: auto`, `overflow-y: scroll`
+- All 24 images: `pointer-events: none`
+
+**3. PhotoGame Page** (`PhotoGameArena.jsx`):
+- Added `.photo-game-scroll-container` class
+- `touch-action: auto`, `overflow-y: scroll`
+- All 13 images: `pointer-events: none`
+
+#### P1 SELFIE VERIFICATION FLOW ✅ VERIFIED
+
+**Backend Configuration** (`minting_routes.py`):
+- `MAX_ATTEMPTS = 6` (3 free + 3 paid)
+- `MATCH_THRESHOLD = 80` (>80% treated as 100% match)
+- Attempts only counted AFTER successful AI analysis
+- +5% Authenticity bonus on successful match
+
+**Frontend Display** (`SelfieMatchModal.jsx`):
+- Shows "Attempts: X/6"
+- z-index 9999/10000 ensures modal appears above flipped cards
+
 ---
 
 #### Previous Session Fixes (February 3, 2026 - Earlier)
