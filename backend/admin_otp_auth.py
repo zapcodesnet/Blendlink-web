@@ -80,8 +80,8 @@ def verify_token(token: str) -> Optional[dict]:
 @secure_admin_router.post("/login")
 async def admin_login(credentials: AdminLogin, request: Request):
     """
-    Simple password-based admin login
-    - No OTP required
+    Password-based admin login
+    - Supports multiple admin users from database
     - Returns JWT token on success
     """
     email = credentials.email.lower().strip()
@@ -91,33 +91,85 @@ async def admin_login(credentials: AdminLogin, request: Request):
     client_ip = request.client.host if request.client else "unknown"
     logger.info(f"Admin login attempt from {client_ip} for {email}")
     
-    # Verify credentials
-    if email != ADMIN_EMAIL:
-        logger.warning(f"Admin login failed: Invalid email {email}")
+    # First check if it's the hardcoded super admin
+    if email == ADMIN_EMAIL:
+        if verify_password(password, ADMIN_PASSWORD_HASH):
+            # Super admin login successful
+            admin_user = await db.users.find_one({"email": ADMIN_EMAIL})
+            if not admin_user:
+                admin_user = {
+                    "user_id": f"admin_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}",
+                    "email": ADMIN_EMAIL,
+                    "name": "Super Admin",
+                    "is_admin": True,
+                    "role": "super_admin",
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                }
+                await db.users.insert_one(admin_user)
+                logger.info(f"Created admin user: {ADMIN_EMAIL}")
+            
+            # Create token
+            token_data = {
+                "sub": admin_user.get("user_id"),
+                "email": ADMIN_EMAIL,
+                "is_admin": True,
+                "role": "super_admin"
+            }
+            token = create_access_token(token_data)
+            
+            logger.info(f"Admin login successful for {email} (super admin)")
+            return TokenResponse(
+                success=True,
+                token=token,
+                user={
+                    "user_id": admin_user.get("user_id"),
+                    "email": ADMIN_EMAIL,
+                    "name": admin_user.get("name", "Super Admin"),
+                    "is_admin": True,
+                    "role": "super_admin"
+                },
+                message="Login successful"
+            )
+    
+    # Check database for other admin users
+    user = await db.users.find_one({"email": email}, {"_id": 0})
+    if not user:
+        logger.warning(f"Admin login failed: User not found {email}")
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    # Check password
-    if not verify_password(password, ADMIN_PASSWORD_HASH):
+    # Check if user is admin
+    if not user.get("is_admin"):
+        logger.warning(f"Admin login failed: User {email} is not an admin")
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # Verify password
+    if not user.get("password_hash") or not verify_password(password, user.get("password_hash")):
         logger.warning(f"Admin login failed: Invalid password for {email}")
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    # Get or create admin user in database
-    admin_user = await db.users.find_one({"email": ADMIN_EMAIL})
-    if not admin_user:
-        # Create admin user if doesn't exist
-        admin_user = {
-            "user_id": f"admin_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}",
-            "email": ADMIN_EMAIL,
-            "name": "Super Admin",
+    # Create token
+    token_data = {
+        "sub": user.get("user_id"),
+        "email": email,
+        "is_admin": True,
+        "role": user.get("role", "admin")
+    }
+    token = create_access_token(token_data)
+    
+    logger.info(f"Admin login successful for {email}")
+    return TokenResponse(
+        success=True,
+        token=token,
+        user={
+            "user_id": user.get("user_id"),
+            "email": email,
+            "name": user.get("name", email.split("@")[0]),
             "is_admin": True,
-            "role": "super_admin",
-            "created_at": datetime.now(timezone.utc).isoformat(),
-        }
-        await db.users.insert_one(admin_user)
-        logger.info(f"Created admin user: {ADMIN_EMAIL}")
-    else:
-        # Ensure admin flag is set
-        if not admin_user.get("is_admin"):
+            "role": user.get("role", "admin"),
+            "avatar": user.get("avatar")
+        },
+        message="Login successful"
+    )
             await db.users.update_one(
                 {"email": ADMIN_EMAIL},
                 {"$set": {"is_admin": True, "role": "super_admin"}}
