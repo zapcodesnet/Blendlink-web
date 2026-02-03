@@ -14,7 +14,7 @@ const API_BASE = process.env.REACT_APP_BACKEND_URL || "";
 
 const getToken = () => localStorage.getItem("blendlink_token");
 
-// Safe API request helper - uses clone() to prevent "body stream already read" errors
+// Bulletproof API request helper - reads body only once, no clone needed
 const apiRequest = async (endpoint, options = {}) => {
   const token = getToken();
   
@@ -32,27 +32,30 @@ const apiRequest = async (endpoint, options = {}) => {
     throw new Error("Network error: Unable to connect to server");
   }
 
-  // Clone response BEFORE any read operation
-  const responseClone = response.clone();
-
-  let data = {};
+  // Read body as text ONCE - this is the only read operation
+  let rawText = "";
   try {
-    data = await response.json();
-  } catch (parseError) {
+    rawText = await response.text();
+  } catch (readError) {
+    throw new Error("Failed to read response from server");
+  }
+  
+  // Now parse the text we already have
+  let data = {};
+  if (rawText) {
     try {
-      const rawText = await responseClone.text();
-      console.error("JSON parse error, raw response:", rawText?.substring(0, 200));
-      if (rawText && !response.ok) {
-        throw new Error(rawText.substring(0, 200) || "Invalid server response");
+      data = JSON.parse(rawText);
+    } catch (parseError) {
+      // Not JSON - if error response, use raw text as message
+      if (!response.ok) {
+        throw new Error(rawText.substring(0, 300) || `Request failed with status ${response.status}`);
       }
-    } catch (textError) {
-      console.error("Failed to read response:", textError);
-    }
-    if (response.ok) {
+      // OK response but not JSON - return empty object
       return {};
     }
   }
 
+  // Handle error responses
   if (!response.ok) {
     const errorMsg = data?.detail?.message || data?.detail || data?.message || "Request failed";
     throw new Error(typeof errorMsg === "string" ? errorMsg : JSON.stringify(errorMsg));
