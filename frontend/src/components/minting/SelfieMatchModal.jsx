@@ -96,10 +96,12 @@ export const SelfieMatchModal = ({
   const streamRef = useRef(null);
   const stopDetectionRef = useRef(null);
   
-  // Check if user can afford an attempt
-  const canAffordAttempt = userBalance >= COST_PER_ATTEMPT;
+  // Check if user can afford an attempt (only matters for paid attempts)
+  const isFreeAttempt = attemptsUsed < FREE_ATTEMPTS;
+  const canAffordAttempt = isFreeAttempt || userBalance >= COST_PER_ATTEMPT;
   const attemptsRemaining = MAX_ATTEMPTS - attemptsUsed;
   const hasAttemptsLeft = attemptsRemaining > 0;
+  const currentCost = isFreeAttempt ? 0 : COST_PER_ATTEMPT;
   
   // Initialize face detection models
   useEffect(() => {
