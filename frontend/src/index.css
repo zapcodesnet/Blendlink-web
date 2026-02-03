@@ -1234,39 +1234,57 @@ a,
 }
 
 /* ==============================================
-   GLOBAL SCROLLING FIX v3 - Robust Solution
+   GLOBAL SCROLLING FIX v4 - Maximum Compatibility
    ============================================== 
    
-   The key insight: touch-action CSS is the ONLY reliable way
-   to control touch scrolling behavior. JavaScript event handlers
-   cannot reliably prevent scroll without breaking UX.
+   CRITICAL INSIGHT: Using touch-action: auto (not pan-y) is more
+   compatible with all browsers. pan-y can sometimes be interpreted
+   incorrectly on certain iOS/Android versions.
    
    RULES:
-   1. Default everything to pan-y (vertical scroll always works)
-   2. Only buttons use 'manipulation' (tap/click only, no scroll)
-   3. Never use 'none' on containers - breaks scrolling
-   4. Images are non-interactive (pointer-events: none)
+   1. Default everything to auto (browser handles naturally)
+   2. Only buttons use 'manipulation' (tap/click only)
+   3. Images are non-interactive (pointer-events: none)
 */
 
-/* Root scrolling setup */
-html, body {
-  overflow-x: hidden;
-  overflow-y: scroll;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
+/* Root scrolling setup - maximum compatibility */
+html {
+  overflow-x: hidden !important;
+  overflow-y: scroll !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: auto !important;
+  height: auto !important;
 }
 
-/* Make all containers scroll-friendly */
-#root, main, .min-h-screen, section, div {
-  touch-action: pan-y;
+body {
+  overflow-x: hidden !important;
+  overflow-y: scroll !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: auto !important;
+  touch-action: auto !important;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Make all containers scroll-friendly - use auto not pan-y */
+#root {
+  touch-action: auto !important;
+  overflow: visible !important;
+  height: auto !important;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+main, .min-h-screen, section, article {
+  touch-action: auto !important;
 }
 
 /* CRITICAL: Images must not capture touch events */
 img, video, svg, picture, canvas {
-  pointer-events: none;
-  touch-action: pan-y;
-  user-select: none;
-  -webkit-user-drag: none;
+  pointer-events: none !important;
+  touch-action: auto !important;
+  user-select: none !important;
+  -webkit-user-drag: none !important;
 }
 
 /* Re-enable pointer events on images that need interaction */
