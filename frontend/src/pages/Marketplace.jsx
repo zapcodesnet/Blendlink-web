@@ -248,7 +248,10 @@ export default function Marketplace() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div 
+      className="min-h-screen bg-background pb-20"
+      style={{ touchAction: 'pan-y', overflowY: 'auto' }}
+    >
       {/* Header */}
       <header className="glass sticky top-0 z-40 border-b border-border/50 safe-top">
         <div className="max-w-6xl mx-auto px-4 py-3">
