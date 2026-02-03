@@ -1,137 +1,136 @@
 <analysis>**original_problem_statement:**
-The user is extremely frustrated with the application's core functionality, reporting numerous critical bugs across multiple interactions. The primary complaints revolve around the broken Player-vs-Player (PVP) mode, severe page scrolling issues, unreliable real-time data synchronization, and regressions in previously working features. The user has provided highly detailed, iterative lists of required fixes and UI/UX improvements, emphasizing the need for robust, permanent solutions that work flawlessly on both web and mobile devices.
+The user is facing several critical, recurring usability bugs that are severely impacting the application experience on both web (blendlink.net) and mobile. Despite numerous attempts to fix them, the issues persist, leading to significant user frustration. The core problems revolve around non-functional touch/mouse scrolling, UI elements overlapping or being hidden, and broken core features like Selfie Verification.
 
-**PRODUCT REQUIREMENTS (Consolidated & Prioritized from user messages):**
+**PRODUCT REQUIREMENTS (Consolidated from latest user message):**
 
-1.  **Fix All Scrolling & Layout Issues (P0 - BLOCKER):**
-    *   **Scrolling:** Pages (especially , , ) are unresponsive to finger-touch and mouse-wheel scrolling when the cursor/finger is over photo cards. This must be fixed to allow smooth, uninterrupted scrolling. The user has specifically requested a robust fix using passive touch listeners and explicit  CSS.
-    *   **Card Spacing:** Add significant vertical and horizontal spacing between cards in the  Card View to make them easily tappable.
-    *   **Flipped Card View:** When a card is flipped to show its back stats, the content must be fully scrollable, and the bottom navigation bar must be hidden to prevent overlap.
-    *   **New Card Layout:** Re-order the elements on the front of the minted photo cards to a specific vertical layout: Name -> Dollar Value/Stars -> Scenery/Level -> Stamina -> Streaks -> a smaller Tap to flip button at the very bottom.
+1.  **Implement Swipe-to-Flip Gesture (P0):**
+    *   Add a swipe gesture (left/right or up/down) to flip  components across all pages (, ).
+    *   The swipe should be the primary interaction, but the Tap to flip button should remain as a fallback.
+    *   The gesture must not conflict with vertical page scrolling.
 
-2.  **Fix All PVP & Data Synchronization Issues (P0 - BLOCKER):**
-    *   **PVP Sync:** Eliminate desync bugs where opponent bids are not shown, and both players are declared winners. Game logic must be atomic and server-authoritative.
-    *   **Post-Battle Updates:** All stat changes (XP, stamina, streaks, levels) from any battle (PVP or PVB) must update instantly across the entire application (, ) in real-time.
-    *   **Missing Photos:** Ensure minted photos are always loaded correctly for the logged-in user.
-    *   **Countdown Timers:** Implement a 10s timer for photo selection (with auto-select) and a 5s timer for RPS moves.
+2.  **Fix All Scrolling Bugs (P0 - BLOCKER):**
+    *   Page scrolling (touch and mouse wheel) is blocked when the cursor/finger is over interactive cards. This affects , , the landing page, and others.
+    *   A permanent, robust solution is required using , passive listeners, and correct  properties to ensure smooth scrolling everywhere.
 
-3.  **Fix Selfie Verification & Minting Flow (P1):**
-    *   **Processing Failures:** Fix the bug causing selfie verification to fail immediately and consume all attempts. The attempt counter should not decrement on processing errors.
-    *   **Threshold:** A match score >80% should be treated as 100%, granting a permanent +5% Dollar Value boost.
-    *   **UI/UX:** Hide the bottom navigation bar during selfie verification.
-    *   **Mint Limit:** The daily mint limit for non-subscribed users must be 10.
-    *   **Post-Mint Animation:** After a successful mint, the  page should auto-refresh, and the new card should have a glowing/sparkling animation that is removed upon the first click.
+3.  **Fix Modal Overlap Issues (P0):**
+    *   The Selfie Verification screen is partially hidden behind the flipped photo card.
+    *   The Upgrade Dollar Value screen is also obscured by the flipped photo card.
+    *   These screens must be displayed in front of all other content (using a high z-index or modal overlay) and be fully visible and usable.
 
-4.  **Fix Other UI/UX Issues (P2):**
-    *   **Profile Picture:** A single click should navigate to the user's profile, and a double-click should open the full-size image in a modal. The profile page itself needs to load faster.
-    *   **BL Coins Upgrade:** Implement the Upgrade button on the back of photo cards to allow users to convert BL Coins into a permanent Dollar Value boost.
-    *   **Tap Rate Notification:** The Tap Rate Exceeded notification should be completely hidden, and excess taps ignored.
+4.  **Fix Selfie Photo Match Bugs (P1):**
+    *   The matching algorithm fails even on 100% matches.
+    *   The attempts counter incorrectly consumes all 3 attempts on the first try.
+    *   The counter logic must be fixed to only decrement on a valid analysis, not on processing errors. The algorithm needs to be more reliable.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application is a full-stack React/FastAPI/MongoDB app. The agent has made numerous attempts to fix the reported issues within the existing WebSocket and API polling architecture, as explicitly instructed by the user (rejecting a migration to Supabase).
-
-Many features have been implemented or fixed, including: an initial PVP sync fix, countdown timers, the BL Coins upgrade feature, server-side selfie verification logic, and iterative improvements to the Card View layout. However, the user continues to report that core usability issues, especially scrolling and PVP reliability, remain broken. The agent's fixes have not been robust enough to satisfy the user's requirements.
+A full-stack React/FastAPI/MongoDB application for a photo-based game. The agent has been engaged in a prolonged effort to fix a series of critical UI/UX bugs reported by the user. In this session, the agent successfully resolved complex DNS and deployment issues (Cloudflare Error 1001) that were preventing the live site from updating. The agent also implemented several UI fixes, including hiding the Grid View, fixing a frantic rotation bug on card flips, and resolving layout gaps. However, the core issues of scrolling, modal overlap, and selfie verification remain unresolved, prompting another detailed bug report from the user.
 
 **Last working item**:
--   **Last item agent was working**: The agent was starting to implement a robust fix for the finger-touch scrolling issue on the  page and re-arranging the  layout according to the user's latest, very specific instructions. This was in response to the user's repeated complaints that previous CSS-based fixes were insufficient.
+-   **Last item agent was working**: The agent was in the middle of a major overhaul to address the four critical issues from the user's latest message. This included:
+    1.  Adding swipe-to-flip functionality to  using .
+    2.  Increasing the  of the  and the shared  component to  to fix modal overlap.
+    3.  Adjusting the selfie verification backend logic in  to allow for more attempts ().
+    4.  Adding global CSS to  to try and force correct scrolling behavior.
 -   **Status**: IN PROGRESS
 -   **Agent Testing Done**: N
--   **Which testing method agent to use?**: both. The layout changes can be verified with the screenshot tool, but the scrolling fix requires interaction. A frontend testing agent should be used to simulate touch-scrolling gestures. Manual testing on a real device/emulator is highly recommended as a final check.
+-   **Which testing method agent to use?**: both. The swipe gesture, modal visibility, and scrolling fixes require extensive frontend testing with a testing agent to simulate user interactions. The backend selfie-match logic changes require backend testing via API calls or a dedicated test script.
 -   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   Issue 1: Fix Finger-Touch Scrolling on All Pages (P0)
--   Issue 2: Implement New  Layout (P0)
--   Issue 3: Fix PVP Synchronization and Post-Battle Stat Updates (P0)
--   Issue 4: Fix Selfie Verification Processing and Attempt Counter (P1)
+-   Issue 1: Implement and Test Swipe Gesture for Flipping Cards (P0)
+-   Issue 2: Fix Overlap Issues in Selfie Verification and Upgrade Screens (P0)
+-   Issue 3: Fix All Touch and Mouse Scrolling Bugs Across Pages (P0)
+-   Issue 4: Fix Selfie Photo Match Logic and Counter (P1)
 
 **Issues Detail:**
--   **Issue 1: Fix Finger-Touch Scrolling on All Pages**
-    -   **Attempted fixes**: The agent applied  CSS rules and adjusted card container styles, but these failed to resolve the issue. The cards continue to block page scrolling on touch devices.
+-   **Issue 1: Implement and Test Swipe Gesture for Flipping Cards**
+    -   **Attempted fixes**: The agent added 's  and  handlers to  to trigger the flip state change.
     -   **Next debug checklist**:
-        1.  Implement the user's specified robust solution: use **passive touch listeners** ().
-        2.  Ensure  is applied correctly to the card containers and any interactive child elements.
-        3.  Investigate and remove any  or  calls on touch events that might be blocking scrolling.
-        4.  Wrap the card grid in a container with  and verify no parent element blocks scrolling.
-    -   **Why fix this issue and what will be achieved with the fix?**: This is a critical usability blocker, making the app's core collections page unusable on mobile.
+        1.  Verify that a horizontal swipe on a card flips it.
+        2.  Test that a vertical scroll gesture on the same card does not trigger a flip and correctly scrolls the page.
+        3.  Test on  and  to ensure consistent behavior.
+    -   **Why fix this issue and what will be achieved with the fix?**: Fulfills a direct user request for a smoother, mobile-first UX.
+    -   **Status**: IN PROGRESS
+    -   **Is recurring issue?**: N
+    -   **Should Test frontend/backend/both after fix?**: Frontend.
+    -   **Blocked on other issue**: None.
+
+-   **Issue 2: Fix Overlap Issues in Selfie Verification and Upgrade Screens**
+    -   **Attempted fixes**: The agent increased the  of  and the  (used by UpgradeModal) to , which should be higher than the flipped card's .
+    -   **Next debug checklist**:
+        1.  Flip a card on .
+        2.  From the back of the card, trigger the Selfie Verification flow. Verify the modal appears on top and is fully usable.
+        3.  Trigger the Upgrade flow. Verify the dialog appears on top and is fully usable.
+    -   **Why fix this issue and what will be achieved with the fix?**: These features are completely unusable as they are hidden. Fixing this will restore core functionality.
     -   **Status**: IN PROGRESS
     -   **Is recurring issue?**: Y
     -   **Should Test frontend/backend/both after fix?**: Frontend.
     -   **Blocked on other issue**: None.
 
--   **Issue 2: Implement New  Layout**
-    -   **Attempted fixes**: The agent made several iterative layout changes, but the user has now provided a final, precise vertical order for all elements on the card's front.
+-   **Issue 3: Fix All Touch and Mouse Scrolling Bugs Across Pages**
+    -   **Attempted fixes**: This is a highly recurring issue. Previous fixes included ,  on images, and using passive listeners. The latest attempt involves adding more generic scrolling CSS to .
     -   **Next debug checklist**:
-        1.  Edit .
-        2.  Restructure the JSX to display elements in this exact order: Name -> Dollar Value & Stars -> Scenery & Level -> Stamina -> Streaks.
-        3.  Place a 50% smaller Tap to flip button at the very bottom of the card.
-        4.  Ensure the card's image area is 75% larger than the stats area below it.
-    -   **Why fix this issue and what will be achieved with the fix?**: Fulfills a direct and detailed UI requirement from the user.
+        1.  On a touch device/emulator, go to , , and the landing page.
+        2.  Place a finger directly on a card/listing and attempt to scroll the page up and down. Verify it scrolls smoothly.
+        3.  On a desktop, use the mouse wheel over the same elements and verify the page scrolls.
+    -   **Why fix this issue and what will be achieved with the fix?**: This is a critical usability blocker that makes navigating the app frustrating and difficult.
     -   **Status**: IN PROGRESS
-    -   **Is recurring issue?**: Y (layout has been changed multiple times)
+    -   **Is recurring issue?**: Y
     -   **Should Test frontend/backend/both after fix?**: Frontend.
     -   **Blocked on other issue**: None.
 
--   **Issue 3: Fix PVP Synchronization and Post-Battle Stat Updates**
-    -   **Attempted fixes**: Agent implemented server-authoritative round finishing and used  to prevent stale state. A testing agent verified the fix. However, the user still reports desync (opponent bids at /bin/bash, both players winning).
+-   **Issue 4: Fix Selfie Photo Match Logic and Counter**
+    -   **Attempted fixes**: The agent modified  to change  from 3 to 6, aiming to allow 3 free and 3 paid attempts. The backend code already prevents decrementing attempts on processing errors.
     -   **Next debug checklist**:
-        1.  Re-run the two-device manual test to reproduce the user's reported bugs.
-        2.  Analyze the WebSocket message flow in  and  to find why tap data isn't syncing.
-        3.  Ensure the post-battle stat update calls are being triggered and the real-time polling on  and  is effectively refreshing the UI.
-    -   **Why fix this issue and what will be achieved with the fix?**: PVP is the app's core gameplay loop and is currently broken.
-    -   **Status**: USER VERIFICATION PENDING
+        1.  Test a selfie match with a clear, matching photo. Confirm it returns a success (>80%) and the +5% bonus is applied.
+        2.  Verify the  counter in the database is not incremented on server errors (e.g., if the image is invalid).
+        3.  Verify the frontend UI correctly reflects the attempt count and doesn't consume all attempts at once.
+    -   **Why fix this issue and what will be achieved with the fix?**: The feature is broken and unfairly penalizes users. Fixing it is essential for user trust and engagement.
+    -   **Status**: IN PROGRESS
     -   **Is recurring issue?**: Y
     -   **Should Test frontend/backend/both after fix?**: Both.
-    -   **Blocked on other issue**: None.
-
--   **Issue 4: Fix Selfie Verification Processing and Attempt Counter**
-    -   **Attempted fixes**: The agent refactored the backend  endpoint to not increment the attempt counter on processing errors.
-    -   **Next debug checklist**:
-        1.  Manually test the selfie verification flow by minting a new photo with a face.
-        2.  Simulate a processing error (e.g., poor lighting, no face) and confirm the attempt counter does not decrease.
-        3.  Simulate a successful match (>80%) and confirm the +5% bonus is applied and the verification is locked.
-    -   **Why fix this issue and what will be achieved with the fix?**: The feature is unusable and penalizes users for server-side errors.
-    -   **Status**: USER VERIFICATION PENDING
-    -   **Is recurring issue?**: Y
-    -   **Should Test frontend/backend/both after fix?**: Both.
-    -   **Blocked on other issue**: None.
+    -   **Blocked on other issue**: Blocked by **Issue 2**, as the UI is unusable.
 
 **In progress Task List**:
--   **Task 1: Complete Scrolling and Layout Overhaul**
-    -   **Where to resume**: Continue editing  and  to implement the robust scrolling fix and the new card layout.
-    -   **What will be achieved with this?**: A usable and visually correct Card View on the  page.
+-   **Task 1: Complete and Test Critical UI/UX Overhaul**
+    -   **Where to resume**: The agent has implemented the initial code changes for all four pending issues. The next step is to run the linter, fix any errors, and then begin a comprehensive testing phase using screenshots and the testing agent to verify all fixes.
+    -   **What will be achieved with this?**: A stable, usable application that resolves the user's most critical and long-standing complaints.
     -   **Status**: IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?**: Frontend.
+    -   **Should Test frontend/backend/both after fix?**: Both.
     -   **Blocked on something**: None.
 
 **Upcoming and Future Tasks**
 **Upcoming Tasks:**
--   **P2:** Implement full Subscription Tiers functionality.
+-   **P0:** Re-verify PVP synchronization and post-battle stat updates. This was a recurring P0 issue that has not been mentioned recently but should be regression tested.
 -   **P1:** Implement auto-refresh and glowing animation for newly minted photos.
 
+**Future Tasks:**
+-   **P2:** Implement full Subscription Tiers functionality.
+
 **Completed work in this session**
--   **PVP Synchronization (Initial Fix):** Refactored  and  to use refs to avoid stale state and implemented exponential backoff for reconnection. Made the backend  endpoint idempotent.
--   **Selfie Verification (Backend Fix):** Reworked the  endpoint in  to prevent incrementing attempts on processing errors and implemented the >80% success threshold.
--   **Card View Layout (Iterative Fixes):** Increased card size by 25% and increased grid spacing in .
--   **Profile Picture Click Behavior:** Implemented single-click (navigate) and double-click (view modal) functionality on user avatars in .
--   **Stat Synchronization:** Added a 5-second polling interval to  and  to keep stats refreshed.
--   **BL Coins Upgrade Feature:** Added the Upgrade button and modal flow in  and .
--   **Nav Bar Hiding:** Implemented logic to hide the bottom navigation bar during selfie verification and when viewing a photo in the lightbox.
--   **Countdown Timers:** Added 10s (selection) and 5s (RPS) timers to the PVP flow.
--   **Database Performance:** Added indexes to , , and  collections in MongoDB.
--   **UI Fixes:** Removed the Tap Rate Exceeded toast and confirmed the daily mint limit is correctly set at 10.
+-   **DNS & Deployment Troubleshooting (RESOLVED):** Guided the user through a complex process to fix a Cloudflare Error 1001 by correcting DNS records (removing conflicting A records, adding the correct A record/CNAME for the Emergent environment) and advising on the deploy/link domain process. The live site  is now up.
+-   **UI Bug Fixes (Iterative):**
+    -   **Frantic Rotation Bug:** Fixed a state loop in  that caused the card to rotate uncontrollably when clicking the backdrop.
+    -   **Grid View Hidden:** Removed the UI for switching to Grid View in , making Card View the only mode.
+    -   **Layout Gap:** Fixed a large vertical gap between cards by removing an invisible placeholder div.
+    -   **Flip Button Bug:** Corrected an event propagation issue where the Tap to flip button was incorrectly triggering the lightbox instead of flipping the card.
+    -   **Flipped Card Visibility:** Fixed a CSS issue that was preventing the back of the flipped card from rendering, making it appear as a blank space.
 
 **Earlier issues found/mentioned but not fixed**
-All known issues are captured in the Pending/In progress Issue list above. The main challenge is the recurrence of issues that were thought to be fixed.
+All currently known issues are captured in the All Pending/In progress Issue list. The primary challenge is the high recurrence rate of these bugs.
 
 **Known issue recurrence from previous fork**
--   **Issue recurrence in previous fork**: PVP mode failure.
--   **Recurrence count**: 10+
+-   **Issue recurrence in previous fork**: Scrolling performance on key pages.
+-   **Recurrence count**: 5+
 -   **Status**: IN PROGRESS
 
--   **Issue recurrence in previous fork**: Scrolling performance on key pages.
+-   **Issue recurrence in previous fork**: UI element visibility and overlap (flipped cards, modals).
+-   **Recurrence count**: 3+
+-   **Status**: IN PROGRESS
+
+-   **Issue recurrence in previous fork**: Selfie match functionality.
 -   **Recurrence count**: 3+
 -   **Status**: IN PROGRESS
 
@@ -139,48 +138,40 @@ All known issues are captured in the Pending/In progress Issue list above. The m
 
 
 **Key Technical Concepts**
--   **Real-time Architecture:** The user has mandated fixing the existing **FastAPI WebSocket + API Polling** system, rejecting a migration to Supabase.
--   **Frontend State Management:** Heavy use of React hooks (, , , , ). The  hook is critical for accessing the latest state inside callbacks to prevent stale closures.
--   **Backend Logic:** Focus on creating idempotent API endpoints () to handle potential race conditions from multiple clients.
--   **UI/UX:** Responsive design using TailwindCSS and  components. Key challenges involve managing touch events for scrolling vs. interactive elements like card flips.
-
-**key DB schema**
--   **minted_photos** (MongoDB): Added indexes on , , .
--   **pvp_sessions** (MongoDB): Added index on .
--   **users** (MongoDB): Added index on .
+-   **Frontend Interaction:** Using  for complex UI gestures like swipe-to-flip (, ).
+-   **State Management:** Correctly managing component state by moving control to the parent ( manages ) to prevent -driven infinite loops in child components ().
+-   **CSS Stacking Context:** Managing UI layers with  to ensure modals and dialogs appear over other content, especially content that also has an elevated  (like a flipped card).
+-   **DNS Management:** Troubleshooting and configuring custom domains, involving A records, CNAME records, and domain forwarding (specifically for GoDaddy).
+-   **Deployment Environments:** Understanding and debugging differences between a  preview environment and a  deployment, particularly regarding environment variables and DNS.
 
 **All files of reference**
--   **/app/frontend/src/pages/MintedPhotos.jsx**: Main page for viewing photo collections; requires major layout and scrolling fixes.
--   **/app/frontend/src/components/photo/UnifiedPhotoCard.jsx**: The core component for displaying a photo card; requires layout re-ordering and scrolling interaction fixes.
--   **/app/frontend/src/components/game/PVPBattleArena.jsx**: Core component for managing PVP state; needs re-verification for sync issues.
--   **/app/backend/minting_routes.py**: Contains the selfie verification logic that needs to be tested.
--   **/app/backend/game_routes.py**: Contains the PVP endpoints that need re-verification.
+-   **/app/frontend/src/components/photo/UnifiedPhotoCard.jsx**: Core component for card display, flip, and swipe logic.
+-   **/app/frontend/src/pages/MintedPhotos.jsx**: Main page for photo collections; orchestrates card state and modals.
+-   **/app/frontend/src/components/minting/SelfieMatchModal.jsx**: Modal for selfie verification, requires z-index fix.
+-   **/app/frontend/src/components/ui/dialog.jsx**: Base component for dialogs (like the UpgradeModal), requires z-index fix.
+-   **/app/backend/minting_routes.py**: Backend logic for selfie verification attempts and matching.
+-   **/app/frontend/src/index.css**: Global stylesheet for sitewide fixes like scrolling.
 
 **Critical Info for New Agent**
--   **STICK TO THE CURRENT STACK.** The user has explicitly rejected a migration to Supabase. You must fix the existing FastAPI WebSocket and polling architecture.
--   **RECURRING BUGS ARE THE PRIORITY.** Scrolling and PVP synchronization are the user's biggest pain points and have been reported multiple times. Your fixes must be robust and permanent. Do not mark these tasks as done without extensive testing.
--   **FOLLOW USER'S EXACT INSTRUCTIONS.** For UI changes, the user has provided very specific layout and sizing requirements (e.g., the vertical order of elements on the photo card). Follow these instructions precisely. For technical fixes like scrolling, implement the user's suggested approach (passive listeners).
--   **TESTING IS PARAMOUNT.** The user expects end-to-end testing with two browser sessions/devices. Provide visual evidence (screenshots) of your fixes. The testing agent has passed previously, yet the user still found bugs, indicating that manual, scenario-based testing is critical.
-
-**documents and test reports created in this job**
--   /app/memory/PRD.md
--   /app/test_reports/iteration_98.json
--   /app/test_reports/iteration_99.json
+-   **User Frustration is Extremely High:** The user has reported the same bugs multiple times. Your fixes must be robust, permanent, and thoroughly tested on real devices/emulators before you declare them done.
+-   **Scrolling is the #1 Blocker:** This is the most persistent and critical bug. Do not assume a simple CSS fix will work, as many have failed before. Test scrolling by initiating the gesture *directly on top of cards* on all specified pages.
+-   **Test All Scenarios:** When fixing modals, test them from the context of a flipped card. When fixing selfie verification, test the success case, failure case, and error case (e.g., bad image) to ensure the counter logic is flawless.
+-   **The DNS/Deployment issues are likely resolved.** Focus on the application-level bugs in the user's last message. Do not get sidetracked unless the user reports another deployment or domain issue.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (Msg 609):** Reports scrolling on  is still broken and provides a new, highly specific layout for the photo cards. Demands a more robust fix for touch scrolling. (IN PROGRESS)
-2.  **Agent (Msg 608):** Finishes implementing card view spacing and scrolling fixes, believes it is complete. (INCORRECT)
-3.  **User (Msg 542):** Reports card spacing is missing, scrolling is blocked by cards, and the nav bar overlaps the flipped card view. Provides a screenshot. (IN PROGRESS)
-4.  **Agent (Msg 541):** Finishes implementing selfie verification and card view layout fixes. (INCORRECT)
-5.  **User (Msg 494):** Reports selfie verification fails immediately, consumes all attempts, and provides layout requirements for the card view. (IN PROGRESS)
-6.  **Agent (Msg 493):** Finishes implementing selfie verification fixes. (INCORRECT)
-7.  **User (Msg 465):** Reports selfie verification returns 0% on clear matches and that the nav bar is still blocking the UI. (RESOLVED, but new issues arose)
-8.  **Agent (Msg 464):** Finishes fixing the nav bar hiding during selfie verification. (INCORRECT)
-9.  **User (Msg 440):** Asks to hide the bottom nav bar during selfie verification, providing a screenshot showing it blocking the button. (IN PROGRESS)
-10. **Agent (Msg 439):** Finishes implementing real-time stat refresh across pages. (DONE)
+1.  **User (Msg 425):** New critical bug report: asks for swipe-to-flip, fix for modal overlaps, fix for selfie match bugs, and a permanent fix for all scrolling issues. (CURRENT TASK)
+2.  **User (Msg 421):** Confirms they have unlinked, deployed, and re-linked the domain. Asks for verification. (Resolved by Agent)
+3.  **User (Msg 413):** Reports that the deployment failed. (Resolved)
+4.  **User (Msg 411):** Asks if they should unlink and relink the domain to fix deployment. (Agent advised to try redeploying first).
+5.  **User (Msg 405):** Reports the live site shows a GoDaddy parked page and requests a full redeploy. (Resolved by Agent)
+6.  **User (Msg 401):** Confirms they added the A record for the root and CNAME for www. (Resolved)
+7.  **User (Msg 397):** Reports the live site is showing a GoDaddy parked page. (Resolved by Agent)
+8.  **User (Msg 393):** Shares a screenshot confirming the CNAME record is correct. (Resolved by Agent)
+9.  **User (Msg 389):** Confirms they have set up CNAME and forwarding in GoDaddy and asks for a redeploy. (Resolved)
+10. **User (Msg 385):** Confirms A records are deleted and asks for confirmation on CNAME and root domain handling. (Resolved by Agent)
 
 **Project Health Check:**
--   **Broken**: Core user interactions like page scrolling on mobile are critically broken. The main PVP game mode is reported as unstable. Selfie verification is unusable.
+-   **Broken**: Core user interactions (scrolling), selfie verification flow, and upgrade modal flow are broken or unusable due to UI bugs.
 -   **Mocked**: Social reaction counters (Facebook).
 
 **3rd Party Integrations**
@@ -189,18 +180,19 @@ All known issues are captured in the Pending/In progress Issue list above. The m
 -   EmbedSocial
 -   ffmpeg
 -   face-api.js
+-   framer-motion (for gestures and animations)
 -   Supabase (present in project files but user has directed agent NOT to use its Realtime features)
 
 **Testing status**
--   **Testing agent used after significant changes**: YES, most recently in , but user-reported bugs persist.
+-   **Testing agent used after significant changes**: YES, multiple times throughout the session to verify previous fixes.
 -   **Troubleshoot agent used after agent stuck in loop**: NO
 -   **Test files created**: None.
--   **Known regressions**: Page scrolling, PVP sync reliability, and mint limits have all been reported as regressing or having failed fixes.
+-   **Known regressions**: Scrolling, UI element visibility (z-index), and selfie verification logic are all regressions or have had multiple failed fixes.
 
 **Credentials to test flow:**
 -   **User 1 (Admin)**:  / 
 -   **User 2 (Regular)**:  / 
 
 **What agent forgot to execute**
--   The agent has repeatedly failed to create a robust, permanent fix for the finger-touch scrolling issue, leading to user frustration. The latest, more technical approach suggested by the user has not been fully implemented.
--   The agent has not yet implemented the user's latest, highly specific vertical layout for the .</analysis>
+-   The agent has repeatedly failed to create a permanent fix for the scrolling issue, underestimating its complexity. Each CSS-based attempt has been insufficient.
+-   The agent did not initially test the modal flows (Selfie/Upgrade) in the context of a flipped card, which would have revealed the z-index conflict sooner.</analysis>
