@@ -21,9 +21,11 @@ import api from '../../services/api';
 import { faceDetectionService } from '../../services/faceDetection';
 import { NavContext } from '../../App';
 
-// Constants per spec
+// Constants per spec - Backend allows 6 total (3 free + 3 paid)
 const COST_PER_ATTEMPT = 100; // BL coins
-const MAX_ATTEMPTS = 3;
+const FREE_ATTEMPTS = 3;
+const PAID_ATTEMPTS = 3;
+const MAX_ATTEMPTS = FREE_ATTEMPTS + PAID_ATTEMPTS; // 6 total
 
 // Convert file/blob to base64
 const toBase64 = (file) => {
