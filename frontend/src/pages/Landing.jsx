@@ -31,21 +31,23 @@ const FeaturedItemCard = ({ item, type, onViewDetails }) => {
       className="flex-shrink-0 w-64 md:w-72 bg-card rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
       onClick={() => onViewDetails(item, type)}
       data-testid={`featured-${type}-${item.id}`}
+      style={{ touchAction: 'pan-y' }}
     >
-      <div className="relative h-40 overflow-hidden">
+      <div className="relative h-40 overflow-hidden" style={{ touchAction: 'pan-y' }}>
         <img 
           src={item.image || `https://ui-avatars.com/api/?name=${item.title.replace(/\s/g, '+')}&background=random&size=256`}
           alt={item.title}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 pointer-events-none"
+          draggable={false}
         />
-        <div className={`absolute top-2 left-2 px-2 py-1 rounded-full text-xs text-white bg-gradient-to-r ${typeColors[type]}`}>
+        <div className={`absolute top-2 left-2 px-2 py-1 rounded-full text-xs text-white bg-gradient-to-r ${typeColors[type]} pointer-events-none`}>
           {typeLabels[type]}
         </div>
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 pointer-events-none">
           <p className="text-white font-bold text-lg">${item.price}</p>
         </div>
       </div>
-      <div className="p-4">
+      <div className="p-4" style={{ touchAction: 'pan-y' }}>
         <h3 className="font-semibold truncate">{item.title}</h3>
         <p className="text-sm text-muted-foreground truncate">{item.description}</p>
         <div className="flex items-center justify-between mt-3">
