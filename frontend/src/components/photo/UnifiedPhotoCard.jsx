@@ -23,10 +23,11 @@
  * 6. Streaks (Win/Loss)
  * 7. Small "Tap to flip" button at bottom
  * 
- * SCROLLING FIX:
- * - All interactive elements use pointer-events-none where appropriate
- * - Touch events use passive listeners
- * - Cards do NOT block page scrolling
+ * SCROLLING FIX (v3 - Robust):
+ * - Default touch-action: pan-y on all elements - NEVER prevents scroll by default
+ * - Swipe gesture detection happens WITHOUT preventDefault - scroll always works
+ * - Only flip is triggered when horizontal swipe threshold is met
+ * - No touch event cancellation - let browser handle scroll natively
  */
 
 import React, { useState, memo, useEffect, useRef, useCallback } from 'react';
