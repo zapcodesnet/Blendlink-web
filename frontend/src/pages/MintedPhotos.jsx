@@ -1453,39 +1453,35 @@ const MintedPhotos = () => {
             </Button>
           </div>
         ) : viewMode === 'card' ? (
-          // UNIFIED CARD VIEW with ROBUST SCROLLING & Z-INDEX FIXES
-          // 1. Container uses overflow-y-auto for native scrolling
-          // 2. touch-action: pan-y ensures touch scroll works
-          // 3. Cards elevate z-index when flipped to appear above others
-          // 4. Nav bar hides when any card is flipped
+          // UNIFIED CARD VIEW with ROBUST SCROLLING - NO DARK OVERLAY
+          // 1. Container uses native scrolling
+          // 2. touch-action: pan-y ensures touch scroll ALWAYS works
+          // 3. Cards elevate z-index when flipped but DON'T block other interactions
+          // 4. NO BACKDROP OVERLAY - page stays fully interactive
           <>
-            {/* Backdrop overlay when a card is flipped - click to dismiss */}
-            {flippedCardId && (
-              <div 
-                className="fixed inset-0 bg-black/60 z-40"
-                onClick={() => {
-                  // Reset flipped state for the specific card
-                  setFlippedCardId(null);
-                }}
-              />
-            )}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-2">
+            {/* NO DARK OVERLAY - users can scroll and interact with any card anytime */}
+            <div 
+              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-2"
+              style={{ touchAction: 'pan-y' }}
+            >
               {photos.map(photo => (
                 <div 
                   key={photo.mint_id}
                   className={cn(
                     "relative",
                     newlyMintedId === photo.mint_id && "animate-pulse ring-2 ring-yellow-400 rounded-xl",
-                    flippedCardId && flippedCardId !== photo.mint_id && "opacity-30"
+                    // NO opacity dimming - all cards remain fully visible and interactive
                   )}
                   style={{ 
-                    zIndex: flippedCardId === photo.mint_id ? 100 : 1,
+                    zIndex: flippedCardId === photo.mint_id ? 50 : 1,
+                    touchAction: 'pan-y',
                   }}
                 >
                   <UnifiedPhotoCard
                     photo={photo}
                     onClick={() => {
-                      if (!flippedCardId) {
+                      // Allow clicking any card regardless of flip state
+                      if (flippedCardId !== photo.mint_id) {
                         setLightboxPhoto(photo);
                       }
                     }}
