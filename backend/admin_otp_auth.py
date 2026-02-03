@@ -33,7 +33,9 @@ ADMIN_EMAIL = "blendlinknet@gmail.com"
 ADMIN_PASSWORD_HASH = bcrypt.hashpw("Blend!Admin2026Link".encode(), bcrypt.gensalt()).decode()
 
 # JWT Configuration - Use same secret as main server
-SECRET_KEY = os.environ.get("JWT_SECRET", os.environ.get("SECRET_KEY", "blendlink-secret-key-2026"))
+SECRET_KEY = os.environ.get("JWT_SECRET")
+if not SECRET_KEY:
+    raise ValueError("JWT_SECRET environment variable is required")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_HOURS = 24
 
