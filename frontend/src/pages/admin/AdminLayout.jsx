@@ -233,19 +233,21 @@ export default function AdminLayout() {
           return;
         }
         
-        // Clone response before reading to prevent body stream errors
-        const responseClone = response.clone();
-        
-        let sessionData = {};
+        // Read body as text ONCE - bulletproof approach
+        let rawText = '';
         try {
-          sessionData = await response.json();
-        } catch (parseError) {
-          // If JSON parsing fails, try text from clone
+          rawText = await response.text();
+        } catch (readError) {
+          console.error('Failed to read session response:', readError);
+        }
+        
+        // Parse the text we have
+        let sessionData = {};
+        if (rawText) {
           try {
-            const rawText = await responseClone.text();
-            console.error('Session check JSON parse error, raw:', rawText?.substring(0, 100));
-          } catch (textError) {
-            console.error('Failed to read session response:', textError);
+            sessionData = JSON.parse(rawText);
+          } catch (parseError) {
+            console.error('Session check JSON parse error');
           }
         }
         
