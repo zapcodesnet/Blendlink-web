@@ -378,7 +378,10 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden">
+    <div 
+      className="min-h-screen bg-background overflow-x-hidden"
+      style={{ touchAction: 'pan-y', overflowY: 'auto' }}
+    >
       {/* Header - Mobile Optimized */}
       <header className="glass sticky top-0 z-50 border-b border-border/50 safe-top">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
