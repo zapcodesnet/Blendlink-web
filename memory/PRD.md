@@ -4,6 +4,30 @@
 
 ### Session Fixes Completed (February 3, 2026) - LATEST
 
+#### P0 BUG FIX: "body stream already read" Error ✅ FIXED (February 3, 2026)
+
+**Issue**: Admin user search in `/admin/wallet-management` was failing with error: "Search failed: Failed to execute 'text' on 'Response': body stream already read"
+
+**Root Cause**: The JavaScript Fetch API does not allow reading the response body twice. If an error occurred during JSON parsing, the code tried to read the body again for error logging, causing the "body stream already read" error.
+
+**Solution**: Implemented `response.clone()` pattern to safely handle both success and error paths:
+1. Clone response BEFORE any read operation
+2. Use original response for JSON parsing
+3. Use cloned response as fallback for text error logging
+
+**Files Modified**:
+- `/app/frontend/src/pages/admin/AdminLayout.jsx` - Updated `adminApiRequest` function and session check
+- `/app/frontend/src/pages/admin/AdminWalletManagement.jsx` - Updated local `apiRequest` function
+
+**Test Results**: 
+- ✅ User search works correctly
+- ✅ User selection works
+- ✅ BL Coins credit submission works
+- ✅ Recent Admin Credits history updates
+- ✅ No more "body stream already read" errors
+
+---
+
 #### ADMIN BL COINS CREDIT TOOL ✅ VERIFIED (iteration_109 - 14/14 tests pass)
 
 **New Feature**: Secure admin-only tool at `/admin/wallet-management` to manually add BL Coins to any user's wallet.
