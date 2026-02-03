@@ -234,8 +234,10 @@ export const SelfieMatchModal = ({
   const submitMatch = useCallback(async () => {
     if (!capturedImage || !photo?.mint_id) return;
     
-    if (!canAffordAttempt) {
-      toast.error(`Insufficient balance. Need ${COST_PER_ATTEMPT} BL coins.`);
+    // Check if this is a paid attempt and user can afford it
+    const isPaidAttempt = attemptsUsed >= FREE_ATTEMPTS;
+    if (isPaidAttempt && userBalance < COST_PER_ATTEMPT) {
+      toast.error(`Insufficient balance. Need ${COST_PER_ATTEMPT} BL coins for paid attempts.`);
       return;
     }
     
@@ -252,66 +254,88 @@ export const SelfieMatchModal = ({
       const base64Data = capturedImage.split(',')[1];
       const mimeType = getMimeType(capturedImage);
       
+      console.log('[SelfieMatch] Submitting selfie for', photo.mint_id, 'attempt', attemptsUsed + 1);
+      
       const response = await api.post(`/minting/photo/${photo.mint_id}/selfie-match`, {
         selfie_base64: base64Data,
         mime_type: mimeType,
       });
       
       const data = response.data;
+      console.log('[SelfieMatch] Response:', data);
       
-      setAttemptsUsed(prev => prev + 1);
+      // Update attempts ONLY after successful API response
+      if (data.remaining_attempts !== undefined) {
+        setAttemptsUsed(MAX_ATTEMPTS - data.remaining_attempts);
+      } else {
+        setAttemptsUsed(prev => prev + 1);
+      }
       
       // Handle both success formats
-      const matchSuccessful = data.success || data.effective_score >= 100;
-      const displayScore = data.effective_score || data.match_score;
+      const matchSuccessful = data.success || data.effective_score >= 100 || data.match_score > 80;
       
       if (matchSuccessful) {
         setMatchResult({
           success: true,
           score: data.match_score,
-          effectiveScore: data.effective_score || data.match_score,
+          effectiveScore: data.effective_score || (data.match_score > 80 ? 100 : data.match_score),
           confidence: data.confidence,
-          bonus: data.authenticity_bonus_added || data.authenticity_bonus,
+          bonus: data.authenticity_bonus_added || data.authenticity_bonus || 5,
           totalAuthenticity: data.total_authenticity,
           notes: data.notes,
-          isLocked: data.is_locked,
+          isLocked: data.is_locked || data.match_score > 80,
         });
         
         const bonusPercent = data.authenticity_bonus_added || data.authenticity_bonus || 5;
-        toast.success(`🎉 Match successful! +${bonusPercent}% Authenticity bonus added!`);
+        toast.success(`🎉 Perfect match! +${bonusPercent}% Authenticity bonus permanently added!`);
         
         // Callback on success
         if (onSuccess) {
           onSuccess(data);
         }
       } else {
+        // Provide helpful feedback based on score
+        let helpMessage = data.message || 'Face match needs better alignment';
+        if (data.match_score < 30) {
+          helpMessage = 'Face not clearly detected. Please ensure your face is well-lit and centered.';
+        } else if (data.match_score < 50) {
+          helpMessage = 'Low match score. Try better lighting and align your face like in the original photo.';
+        } else if (data.match_score < 70) {
+          helpMessage = 'Partial match detected. Adjust your angle to match the original photo.';
+        } else if (data.match_score < 80) {
+          helpMessage = 'Close match! Try once more with similar expression and angle.';
+        }
+        
         setMatchResult({
           success: false,
           score: data.match_score,
           effectiveScore: data.effective_score || data.match_score,
-          message: data.message || 'Face match needs better alignment',
+          message: helpMessage,
           notes: data.notes,
           remainingAttempts: data.remaining_attempts,
         });
         
         if (data.match_score >= 60) {
-          toast.warning(`Match score: ${data.match_score}%. Try again for better accuracy!`);
+          toast.warning(`Match score: ${data.match_score}%. ${helpMessage}`);
         } else {
-          toast.error(data.message || 'Face match failed. Ensure good lighting and face alignment.');
+          toast.error(helpMessage);
         }
       }
     } catch (err) {
-      console.error('Match error:', err);
+      console.error('[SelfieMatch] Error:', err);
       const errorMsg = err.response?.data?.detail || 'Failed to process selfie match';
-      toast.error(errorMsg);
+      
+      // DON'T increment attempts on errors - backend doesn't count them
+      toast.error(`${errorMsg} (This attempt was NOT counted)`);
       setMatchResult({
         success: false,
         message: errorMsg,
+        isError: true, // Flag to show retry without cost
       });
     } finally {
       setIsMatching(false);
     }
-  }, [capturedImage, photo, canAffordAttempt, hasAttemptsLeft, onSuccess]);
+  }, [capturedImage, photo, attemptsUsed, userBalance, hasAttemptsLeft, onSuccess]);
   
   // Toggle camera facing mode
   const toggleCamera = useCallback(() => {
