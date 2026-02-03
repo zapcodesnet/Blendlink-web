@@ -685,8 +685,8 @@ export const SelfieMatchModal = ({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className={`absolute inset-0 flex flex-col items-center justify-center ${
-                      matchResult.success ? 'bg-green-500/20' : 'bg-red-500/20'
+                    className={`absolute inset-0 flex flex-col items-center justify-center p-4 ${
+                      matchResult.success ? 'bg-green-500/20' : matchResult.isError ? 'bg-yellow-500/20' : 'bg-red-500/20'
                     }`}
                   >
                     {matchResult.success ? (
@@ -703,10 +703,34 @@ export const SelfieMatchModal = ({
                           +{matchResult.bonus}% Authenticity Added
                         </p>
                         <p className="text-sm text-gray-300 mt-1">
-                          Match Score: {matchResult.score}%
+                          Match Score: {matchResult.score}% → 100%
+                        </p>
+                        {matchResult.isLocked && (
+                          <p className="text-xs text-green-300 mt-2">
+                            ✓ Permanently verified & locked!
+                          </p>
+                        )}
+                      </>
+                    ) : matchResult.isError ? (
+                      // Processing error - no attempt counted
+                      <>
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="w-20 h-20 rounded-full bg-yellow-500 flex items-center justify-center mb-4"
+                        >
+                          <AlertCircle className="w-10 h-10 text-white" />
+                        </motion.div>
+                        <p className="text-xl font-bold text-yellow-400">Processing Error</p>
+                        <p className="text-sm text-gray-300 mt-2 text-center">
+                          {matchResult.message}
+                        </p>
+                        <p className="text-xs text-green-400 mt-2">
+                          ✓ This attempt was NOT counted - retry free!
                         </p>
                       </>
                     ) : (
+                      // Match failed
                       <>
                         <motion.div
                           initial={{ scale: 0 }}
@@ -715,14 +739,21 @@ export const SelfieMatchModal = ({
                         >
                           <X className="w-10 h-10 text-white" />
                         </motion.div>
-                        <p className="text-2xl font-bold text-red-400">Match Failed</p>
-                        <p className="text-sm text-gray-300 mt-2">
+                        <p className="text-xl font-bold text-red-400">Match Failed</p>
+                        <p className="text-sm text-gray-300 mt-2 text-center px-4">
                           {matchResult.message}
                         </p>
-                        {matchResult.score !== undefined && (
-                          <p className="text-xs text-gray-400 mt-1">
-                            Score: {matchResult.score}% (need higher)
-                          </p>
+                        {matchResult.score !== undefined && matchResult.score > 0 && (
+                          <div className="mt-2 text-center">
+                            <p className="text-xs text-gray-400">
+                              Score: {matchResult.score}% (need &gt;80% to succeed)
+                            </p>
+                            {matchResult.score >= 50 && (
+                              <p className="text-xs text-yellow-400 mt-1">
+                                Tip: Try matching the pose and lighting from your photo
+                              </p>
+                            )}
+                          </div>
                         )}
                       </>
                     )}
