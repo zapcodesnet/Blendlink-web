@@ -4,60 +4,46 @@
 
 ### Session Fixes Completed (February 3, 2026) - LATEST
 
-#### P0 BUG FIX: "Response body is already used" Error ✅ FIXED (February 3, 2026 - v2)
+#### P0 BUG FIX: Fetch Response Errors + Deduct Feature ✅ FIXED (February 3, 2026 - v3)
 
-**Issue**: Admin user search in `/admin/wallet-management` was failing with TWO related errors:
-1. First: "Failed to execute 'text' on 'Response': body stream already read"
-2. After initial fix: "Failed to execute 'clone' on 'Response': Response body is already used"
+**Issues Fixed**:
+1. "Failed to execute 'text' on 'Response': body stream already read"
+2. "Failed to execute 'clone' on 'Response': Response body is already used"
+3. "Search failed: Failed to read response from server"
+4. Missing Deduct/Remove functionality
 
 **Root Cause Analysis**:
 - The JavaScript Fetch API Response body can only be read ONCE
-- Initial fix using `response.clone()` failed because clone() must be called IMMEDIATELY after fetch(), before ANY body consumption
-- The clone() was being called after an implicit read attempt
+- Various attempts (clone, text-first) failed due to complex async timing
+- The response body may be intercepted by browser extensions, service workers, or dev tools
 
-**Final Solution - Bulletproof Approach**:
-Instead of using clone(), read the body as TEXT once, then parse:
-```javascript
-const response = await fetch(url, options);
+**Final Solution - Ultra-Robust Approach**:
+1. Added detailed console logging for debugging
+2. Read body as text with graceful error handling
+3. Handle empty/204 responses properly
+4. Added `cache: 'no-store'` to prevent cached responses
+5. Better error messages for debugging
 
-// Read body as text ONCE - this is the only read operation
-let rawText = '';
-try {
-  rawText = await response.text();
-} catch (readError) {
-  throw new Error('Failed to read response from server');
-}
-
-// Parse the text we already have (no second read needed)
-let data = {};
-if (rawText) {
-  try {
-    data = JSON.parse(rawText);
-  } catch (parseError) {
-    if (!response.ok) {
-      throw new Error(rawText.substring(0, 300) || 'Request failed');
-    }
-    return {};
-  }
-}
-
-if (!response.ok) {
-  throw new Error(data?.detail || 'Request failed');
-}
-return data;
-```
+**New Features Added**:
+- **Add / Credit** button (green) - adds BL Coins
+- **Remove / Deduct** button (red) - removes BL Coins
+- **Confirmation dialog** for all deductions with warning message
+- **Preview panel** showing new balance calculation
+- **Quick amount buttons** (100, 500, 1K, 5K, 10K, 100K)
+- **Validation** to prevent over-deduction (can't deduct more than balance)
 
 **Files Modified**:
-- `/app/frontend/src/pages/admin/AdminLayout.jsx` - Updated `adminApiRequest` and session check
-- `/app/frontend/src/pages/admin/AdminWalletManagement.jsx` - Updated local `apiRequest`
+- `/app/frontend/src/pages/admin/AdminLayout.jsx` - Ultra-robust `adminApiRequest`
+- `/app/frontend/src/pages/admin/AdminWalletManagement.jsx` - Complete rewrite with Add/Deduct UI
 
 **Test Results**: 
-- ✅ User search works correctly - returns users without errors
+- ✅ User search works - returns results
 - ✅ User selection and display works
-- ✅ BL Coins credit submission works (+500 BL test successful)
-- ✅ Balance updates immediately after credit
-- ✅ Recent Admin Credits history updates
-- ✅ NO console errors related to "clone" or "body stream"
+- ✅ Credit (+500 BL) works
+- ✅ Deduction (-50 BL) works with confirmation
+- ✅ Balance updates immediately
+- ✅ Transaction history shows both credits and deductions
+- ✅ Deductions shown in red, credits in green
 
 ---
 
