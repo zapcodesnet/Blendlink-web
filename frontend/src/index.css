@@ -1188,44 +1188,87 @@ a,
 }
 
 /* ==============================================
-   GLOBAL SCROLLING FIX - All Pages
-   ============================================== */
+   GLOBAL SCROLLING FIX v3 - Robust Solution
+   ============================================== 
+   
+   The key insight: touch-action CSS is the ONLY reliable way
+   to control touch scrolling behavior. JavaScript event handlers
+   cannot reliably prevent scroll without breaking UX.
+   
+   RULES:
+   1. Default everything to pan-y (vertical scroll always works)
+   2. Only buttons use 'manipulation' (tap/click only, no scroll)
+   3. Never use 'none' on containers - breaks scrolling
+   4. Images are non-interactive (pointer-events: none)
+*/
 
-/* Allow scrolling on html and body */
+/* Root scrolling setup */
 html, body {
-  overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch !important;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
 }
 
-/* All containers should allow vertical scroll */
-#root, main, .min-h-screen {
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+/* Make all containers scroll-friendly */
+#root, main, .min-h-screen, section, div {
+  touch-action: pan-y;
 }
 
-/* Cards and images should NOT block page scroll */
-img, video, .photo-card, [data-testid*="photo-card"] {
-  touch-action: pan-y !important;
+/* CRITICAL: Images must not capture touch events */
+img, video, svg, picture, canvas {
+  pointer-events: none;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Re-enable pointer events on images that need interaction */
+img[data-interactive="true"],
+video[controls],
+canvas[data-interactive="true"] {
   pointer-events: auto;
 }
 
-/* Grid containers should allow scroll through */
-.grid {
-  touch-action: pan-y !important;
+/* Grid and flex containers - scroll through */
+.grid, .flex, .flex-wrap {
+  touch-action: pan-y;
 }
 
-/* Marketplace cards, listing cards should not block scroll */
-[class*="card"], [class*="listing"], [class*="Card"] {
-  touch-action: pan-y !important;
+/* Card components - allow scroll through them */
+[data-testid*="photo-card"],
+[data-testid*="listing"],
+[class*="card"],
+[class*="Card"] {
+  touch-action: pan-y;
 }
 
-/* Only buttons and interactive elements should block pan */
-button, a, input, textarea, select, [role="button"] {
+/* ONLY interactive controls should block pan (use manipulation) */
+button, 
+a, 
+input, 
+textarea, 
+select, 
+[role="button"],
+[data-testid*="btn"],
+[data-testid*="button"] {
   touch-action: manipulation;
 }
 
-/* Ensure mouse wheel scroll works */
-* {
-  scroll-behavior: smooth;
+/* Scrollable containers (modals with overflow-y-auto) */
+.overflow-y-auto,
+.overflow-y-scroll,
+[style*="overflow-y: auto"],
+[style*="overflow-y: scroll"] {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }
+
+/* Horizontal scrollers need pan-x but also pan-y for page scroll */
+.overflow-x-auto,
+.overflow-x-scroll,
+.hide-scrollbar {
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
