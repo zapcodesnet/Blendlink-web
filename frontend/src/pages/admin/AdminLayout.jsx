@@ -223,17 +223,32 @@ export default function AdminLayout() {
         }
         
         // Verify admin session with secure endpoint
-        const response = await fetch(`${API_BASE}/api/admin-auth/secure/check-session`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        let response;
+        try {
+          response = await fetch(`${API_BASE}/api/admin-auth/secure/check-session`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+        } catch (networkError) {
+          console.error('Network error during session check:', networkError);
+          toast.error("Network error. Please check your connection.");
+          navigate('/admin/login');
+          return;
+        }
         
-        // Read body as text first to avoid body stream errors
-        const rawText = await response.text();
+        // Clone response before reading to prevent body stream errors
+        const responseClone = response.clone();
+        
         let sessionData = {};
         try {
-          sessionData = rawText ? JSON.parse(rawText) : {};
-        } catch (e) {
-          console.error('Session check JSON parse error:', e);
+          sessionData = await response.json();
+        } catch (parseError) {
+          // If JSON parsing fails, try text from clone
+          try {
+            const rawText = await responseClone.text();
+            console.error('Session check JSON parse error, raw:', rawText?.substring(0, 100));
+          } catch (textError) {
+            console.error('Failed to read session response:', textError);
+          }
         }
         
         if (!response.ok) {
