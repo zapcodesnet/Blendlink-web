@@ -895,11 +895,11 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
       )}
       onClick={(e) => handleClick(e)}
       onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       style={{ 
         zIndex: isFlipped ? 100 : 'auto',
-        touchAction: isSwiping ? 'none' : 'pan-y', // Allow scroll unless actively swiping
+        // CRITICAL: Always allow vertical scrolling - swipe detection is passive
+        touchAction: 'pan-y',
       }}
       data-testid={`photo-card-${photo?.mint_id}`}
       data-flipped={isFlipped}
