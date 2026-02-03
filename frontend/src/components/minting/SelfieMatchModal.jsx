@@ -829,27 +829,27 @@ export const SelfieMatchModal = ({
                       data-testid="try-again-btn"
                     >
                       <RefreshCw className="w-4 h-4 mr-2" />
-                      Try Again
+                      {matchResult.isError ? 'Retry (FREE - no cost)' : 'Try Again'}
                     </Button>
                   )}
                   <Button
                     onClick={onClose}
-                    className="flex-1 bg-gray-700 hover:bg-gray-600"
+                    className={`flex-1 ${matchResult.success ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-700 hover:bg-gray-600'}`}
                     data-testid="done-btn"
                   >
-                    Done
+                    {matchResult.success ? 'Done ✓' : 'Close'}
                   </Button>
                 </>
               )}
             </div>
             
-            {/* Balance warning */}
-            {!canAffordAttempt && (
+            {/* Balance warning - only for paid attempts */}
+            {!isFreeAttempt && !canAffordAttempt && (
               <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
                 <div className="flex items-center gap-2 text-red-400">
                   <AlertCircle className="w-4 h-4" />
                   <span className="text-sm">
-                    Insufficient balance. You need {COST_PER_ATTEMPT} BL coins.
+                    Insufficient balance. You need {COST_PER_ATTEMPT} BL coins for paid attempts.
                   </span>
                 </div>
               </div>
