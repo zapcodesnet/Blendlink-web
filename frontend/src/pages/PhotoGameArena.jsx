@@ -2049,9 +2049,8 @@ const PhotoGameArena = () => {
   
   return (
     <div 
-      className="min-h-screen bg-gray-900 pb-24" 
+      className="photo-game-scroll-container" 
       data-testid="photo-game-arena"
-      style={{ touchAction: 'pan-y', overflowY: 'auto' }}
     >
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-900/50 via-pink-900/30 to-orange-900/50 border-b border-gray-700/50">
