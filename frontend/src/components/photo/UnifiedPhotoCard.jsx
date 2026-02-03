@@ -258,35 +258,28 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   const [showXPMultiplier, setShowXPMultiplier] = useState(false);
   const cardRef = useRef(null);
   
-  // Swipe gesture state
-  const touchStartRef = useRef({ x: 0, y: 0, time: 0 });
-  const [isSwiping, setIsSwiping] = useState(false);
-  
   // Use flipped prop directly instead of internal state
   const isFlipped = flipped;
   
-  // SWIPE GESTURE HANDLER - Detect horizontal swipe for flip
+  /**
+   * SWIPE GESTURE HANDLER v3 - Robust implementation
+   * 
+   * KEY DESIGN PRINCIPLES:
+   * 1. NEVER call preventDefault() - let browser handle scrolling naturally
+   * 2. Only detect swipe gesture AFTER touch ends (no interference during scroll)
+   * 3. Swipe must be intentional: fast, mostly horizontal, significant distance
+   * 4. All touch-action is set to 'pan-y' - vertical scroll always works
+   */
+  const touchStartRef = useRef({ x: 0, y: 0, time: 0 });
+  
   const handleTouchStart = useCallback((e) => {
+    // Just record start position - don't interfere with anything
     const touch = e.touches[0];
     touchStartRef.current = {
       x: touch.clientX,
       y: touch.clientY,
       time: Date.now()
     };
-    setIsSwiping(false);
-  }, []);
-  
-  const handleTouchMove = useCallback((e) => {
-    if (!touchStartRef.current.time) return;
-    
-    const touch = e.touches[0];
-    const deltaX = Math.abs(touch.clientX - touchStartRef.current.x);
-    const deltaY = Math.abs(touch.clientY - touchStartRef.current.y);
-    
-    // If horizontal movement is greater than vertical, it's a swipe (not scroll)
-    if (deltaX > 30 && deltaX > deltaY * 1.5) {
-      setIsSwiping(true);
-    }
   }, []);
   
   const handleTouchEnd = useCallback((e) => {
@@ -294,13 +287,23 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
     
     const touch = e.changedTouches[0];
     const deltaX = touch.clientX - touchStartRef.current.x;
-    const deltaY = Math.abs(touch.clientY - touchStartRef.current.y);
+    const deltaY = touch.clientY - touchStartRef.current.y;
     const deltaTime = Date.now() - touchStartRef.current.time;
     
-    // Swipe detection: horizontal > 50px, vertical < 50px, time < 300ms
-    const isHorizontalSwipe = Math.abs(deltaX) > 50 && deltaY < 50 && deltaTime < 300;
+    // Reset early
+    const startData = { ...touchStartRef.current };
+    touchStartRef.current = { x: 0, y: 0, time: 0 };
     
-    if (isHorizontalSwipe && isSwiping) {
+    // SWIPE DETECTION CRITERIA (must meet ALL):
+    // 1. Horizontal distance > 60px (intentional swipe)
+    // 2. Vertical distance < 40px (not a scroll attempt)  
+    // 3. Time < 400ms (quick gesture)
+    // 4. Horizontal movement is at least 2x vertical (clearly horizontal)
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+    const isHorizontalSwipe = absX > 60 && absY < 40 && deltaTime < 400 && absX > absY * 2;
+    
+    if (isHorizontalSwipe) {
       // Trigger flip on horizontal swipe
       const newFlippedState = !isFlipped;
       setShowXPMultiplier(true);
@@ -308,11 +311,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
       onFlipStateChange?.(newFlippedState);
       onFlip?.(newFlippedState);
     }
-    
-    // Reset
-    touchStartRef.current = { x: 0, y: 0, time: 0 };
-    setIsSwiping(false);
-  }, [isFlipped, isSwiping, onFlip, onFlipStateChange]);
+  }, [isFlipped, onFlip, onFlipStateChange]);
   
   const scenery = SCENERY_CONFIG[photo?.scenery_type] || SCENERY_CONFIG.natural;
   
