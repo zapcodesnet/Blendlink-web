@@ -351,7 +351,8 @@ export const SelfieMatchModal = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+        className="fixed inset-0 bg-black/90 flex items-center justify-center p-4"
+        style={{ zIndex: 9999 }} // CRITICAL: Highest z-index to appear above all cards
         onClick={(e) => e.target === e.currentTarget && onClose()}
       >
         <motion.div
@@ -359,6 +360,7 @@ export const SelfieMatchModal = ({
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           className="bg-gray-900 rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto border border-gray-700"
+          style={{ zIndex: 10000 }} // Even higher for modal content
           data-testid="selfie-match-modal"
         >
           {/* Header */}
