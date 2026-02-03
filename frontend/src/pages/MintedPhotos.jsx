@@ -1353,8 +1353,8 @@ const MintedPhotos = () => {
   
   return (
     <div 
-      className="min-h-screen bg-gray-900 pb-24"
-      style={{ touchAction: 'pan-y', overflowY: 'auto' }}
+      className="minted-photos-scroll-container"
+      data-testid="minted-photos-page"
     >
       {/* Mint Animation Overlay */}
       {MintAnimationComponent}
