@@ -351,6 +351,7 @@ export default function AdminLayout() {
   const menuItems = [
     { icon: Home, label: 'Dashboard', path: '/admin' },
     { icon: Users, label: 'Users', path: '/admin/users' },
+    { icon: Coins, label: 'BL Coins Credit', path: '/admin/wallet-management' },
     { icon: Crown, label: 'Diamond Leaders', path: '/admin/diamonds' },
     { icon: UserPlus, label: 'Orphans', path: '/admin/orphans' },
     { icon: Shield, label: 'Admins', path: '/admin/admins' },
