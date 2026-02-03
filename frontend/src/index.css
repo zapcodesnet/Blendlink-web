@@ -273,31 +273,12 @@ button:active, a:active {
 
 /* ==================== MOBILE-FIRST RESPONSIVE OPTIMIZATIONS ==================== */
 
-/* Critical: Ensure smooth vertical scrolling on all devices */
-html, body {
-  overflow-x: hidden !important;
-  overflow-y: scroll !important;
-  width: 100%;
-  max-width: 100vw;
-  -webkit-overflow-scrolling: touch !important;
-  touch-action: pan-y !important;
-}
-
-/* Ensure all elements allow vertical scrolling */
-* {
-  touch-action: pan-y;
-}
+/* NOTE: Global scrolling rules are consolidated at the bottom of this file 
+   in the "GLOBAL SCROLLING FIX v3" section. Avoid duplicating rules here. */
 
 /* Photo card specific - ensure scrolling works when touching cards */
 .touch-pan-y {
   touch-action: pan-y !important;
-}
-
-/* Image elements should not capture touch for scrolling */
-img {
-  -webkit-user-drag: none;
-  user-select: none;
-  pointer-events: none;
 }
 
 /* Make flip button have proper touch target */
@@ -312,14 +293,7 @@ button[class*="flip"], [data-flip-trigger] {
   html, body {
     position: relative;
     min-height: 100%;
-    overflow-y: scroll !important;
-    -webkit-overflow-scrolling: touch !important;
   }
-}
-
-/* Prevent any element from blocking scroll */
-div, section, header, footer, main, article, aside, nav {
-  touch-action: pan-y;
 }
 
 /* Mobile-optimized typography */
