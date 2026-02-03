@@ -170,43 +170,6 @@ async def admin_login(credentials: AdminLogin, request: Request):
         },
         message="Login successful"
     )
-            await db.users.update_one(
-                {"email": ADMIN_EMAIL},
-                {"$set": {"is_admin": True, "role": "super_admin"}}
-            )
-    
-    # Create JWT token
-    token_data = {
-        "user_id": admin_user.get("user_id", "admin"),
-        "email": ADMIN_EMAIL,
-        "role": "super_admin",
-        "is_admin": True,
-    }
-    token = create_access_token(token_data)
-    
-    # Log successful login
-    await db.admin_audit_logs.insert_one({
-        "action": "admin_login",
-        "admin_email": ADMIN_EMAIL,
-        "ip_address": client_ip,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "success": True,
-    })
-    
-    logger.info(f"Admin login successful for {email}")
-    
-    return {
-        "success": True,
-        "token": token,
-        "user": {
-            "user_id": admin_user.get("user_id", "admin"),
-            "email": ADMIN_EMAIL,
-            "name": admin_user.get("name", "Super Admin"),
-            "role": "super_admin",
-            "is_admin": True,
-        },
-        "message": "Login successful"
-    }
 
 @secure_admin_router.get("/check-session")
 async def check_admin_session(authorization: Optional[str] = Header(None)):
