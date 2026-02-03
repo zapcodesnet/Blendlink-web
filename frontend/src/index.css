@@ -1162,6 +1162,62 @@ a,
 }
 
 /* ==============================================
+   LANDING PAGE SCROLL FIX - BULLETPROOF SOLUTION
+   ==============================================
+   This is a dedicated fix for the landing page scroll issue.
+   The key principles:
+   1. The container must be the scroll parent
+   2. No fixed/sticky elements can block touch
+   3. All touch events pass through to browser
+*/
+
+.landing-page-scroll-container {
+  /* Make this the scroll container */
+  min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height for mobile */
+  width: 100%;
+  background: hsl(var(--background));
+  
+  /* CRITICAL: Enable scrolling */
+  overflow-x: hidden;
+  overflow-y: scroll !important;
+  -webkit-overflow-scrolling: touch !important;
+  
+  /* CRITICAL: Allow touch to scroll */
+  touch-action: pan-y !important;
+  
+  /* Ensure smooth momentum scrolling on iOS */
+  scroll-behavior: smooth;
+  overscroll-behavior-y: auto;
+  
+  /* Prevent any transform or will-change that could create new stacking context */
+  transform: none;
+  will-change: auto;
+}
+
+/* Ensure all children allow scroll-through */
+.landing-page-scroll-container * {
+  touch-action: inherit;
+}
+
+/* Only buttons should capture taps */
+.landing-page-scroll-container button,
+.landing-page-scroll-container a,
+.landing-page-scroll-container [role="button"] {
+  touch-action: manipulation;
+}
+
+/* Images must not block scroll */
+.landing-page-scroll-container img,
+.landing-page-scroll-container video,
+.landing-page-scroll-container svg {
+  pointer-events: none;
+  touch-action: pan-y;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+/* ==============================================
    GLOBAL SCROLLING FIX v3 - Robust Solution
    ============================================== 
    
