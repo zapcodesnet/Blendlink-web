@@ -516,7 +516,7 @@ export default function AdminWalletManagement() {
                 <div className="flex items-center gap-2 text-amber-400">
                   <AlertTriangle className="w-4 h-4" />
                   <span className="text-sm">
-                    Large amount detected. You'll need to confirm this action.
+                    Large amount detected. You&apos;ll need to confirm this action.
                   </span>
                 </div>
               </div>
