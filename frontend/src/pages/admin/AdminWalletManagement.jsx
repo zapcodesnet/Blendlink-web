@@ -6,58 +6,65 @@ import { toast } from "sonner";
 import { adminAPI } from "./AdminLayout";
 import {
   Coins, Search, RefreshCw, User, AlertTriangle, CheckCircle,
-  Plus, ArrowRight, Wallet, History, X, DollarSign, Gift,
-  FileText, Clock, ChevronLeft, ChevronRight
+  Plus, Minus, Wallet, History, X, Gift, FileText
 } from "lucide-react";
 
 const API_BASE = process.env.REACT_APP_BACKEND_URL || "";
-
 const getToken = () => localStorage.getItem("blendlink_token");
 
-// Bulletproof API request helper - reads body only once, no clone needed
+// Robust API request helper with detailed logging
 const apiRequest = async (endpoint, options = {}) => {
   const token = getToken();
+  const url = `${API_BASE}/api${endpoint}`;
+  
+  console.log(`[WalletAPI] Request: ${url}`);
   
   let response;
   try {
-    response = await fetch(`${API_BASE}/api${endpoint}`, {
+    response = await fetch(url, {
       ...options,
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
         ...options.headers,
       },
+      cache: 'no-store',
     });
+    console.log(`[WalletAPI] Status: ${response.status}`);
   } catch (networkError) {
-    throw new Error("Network error: Unable to connect to server");
+    console.error("[WalletAPI] Network error:", networkError);
+    throw new Error(`Network error: ${networkError.message}`);
   }
 
-  // Read body as text ONCE - this is the only read operation
+  // Handle empty responses
+  if (response.status === 204) {
+    return {};
+  }
+  
   let rawText = "";
   try {
     rawText = await response.text();
   } catch (readError) {
-    throw new Error("Failed to read response from server");
+    console.error("[WalletAPI] Read error:", readError);
+    if (response.ok) return {};
+    throw new Error(`Server error (${response.status})`);
   }
-  
-  // Now parse the text we already have
+
   let data = {};
-  if (rawText) {
+  if (rawText && rawText.trim()) {
     try {
       data = JSON.parse(rawText);
     } catch (parseError) {
-      // Not JSON - if error response, use raw text as message
+      console.error("[WalletAPI] Parse error:", parseError);
       if (!response.ok) {
-        throw new Error(rawText.substring(0, 300) || `Request failed with status ${response.status}`);
+        throw new Error(rawText.substring(0, 200) || `Error ${response.status}`);
       }
-      // OK response but not JSON - return empty object
       return {};
     }
   }
 
-  // Handle error responses
   if (!response.ok) {
-    const errorMsg = data?.detail?.message || data?.detail || data?.message || "Request failed";
+    const errorMsg = data?.detail?.message || data?.detail || data?.message || `Error ${response.status}`;
     throw new Error(typeof errorMsg === "string" ? errorMsg : JSON.stringify(errorMsg));
   }
 
@@ -65,18 +72,24 @@ const apiRequest = async (endpoint, options = {}) => {
 };
 
 // Confirmation Dialog Component
-const ConfirmationDialog = ({ isOpen, onClose, onConfirm, amount, user, loading }) => {
+const ConfirmationDialog = ({ isOpen, onClose, onConfirm, amount, user, loading, isDeduction }) => {
   if (!isOpen) return null;
 
+  const absAmount = Math.abs(amount);
+  
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
       <div className="bg-slate-800 rounded-xl border border-slate-700 max-w-md w-full p-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
-            <AlertTriangle className="w-6 h-6 text-amber-400" />
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+            isDeduction ? 'bg-red-500/20' : 'bg-amber-500/20'
+          }`}>
+            <AlertTriangle className={`w-6 h-6 ${isDeduction ? 'text-red-400' : 'text-amber-400'}`} />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white">Confirm Large Credit</h3>
+            <h3 className="text-lg font-bold text-white">
+              Confirm {isDeduction ? 'Deduction' : 'Large Credit'}
+            </h3>
             <p className="text-sm text-slate-400">This action cannot be easily undone</p>
           </div>
         </div>
@@ -87,9 +100,9 @@ const ConfirmationDialog = ({ isOpen, onClose, onConfirm, amount, user, loading 
             <span className="text-white font-medium">{user?.name || user?.email}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-400">Amount:</span>
-            <span className="text-amber-400 font-bold text-xl">
-              +{Number(amount).toLocaleString()} BL
+            <span className="text-slate-400">Action:</span>
+            <span className={`font-bold text-xl ${isDeduction ? 'text-red-400' : 'text-green-400'}`}>
+              {isDeduction ? '-' : '+'}{absAmount.toLocaleString()} BL
             </span>
           </div>
           <div className="flex justify-between">
@@ -98,11 +111,20 @@ const ConfirmationDialog = ({ isOpen, onClose, onConfirm, amount, user, loading 
           </div>
           <div className="flex justify-between border-t border-slate-600 pt-2 mt-2">
             <span className="text-slate-400">New Balance:</span>
-            <span className="text-green-400 font-bold">
-              {((user?.bl_coins || 0) + Number(amount)).toLocaleString()} BL
+            <span className={`font-bold ${isDeduction ? 'text-red-400' : 'text-green-400'}`}>
+              {((user?.bl_coins || 0) + (isDeduction ? -absAmount : absAmount)).toLocaleString()} BL
             </span>
           </div>
         </div>
+
+        {isDeduction && (
+          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-4">
+            <p className="text-red-400 text-sm flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" />
+              Warning: You are about to REMOVE coins from this user's balance.
+            </p>
+          </div>
+        )}
 
         <div className="flex gap-3">
           <Button
@@ -115,7 +137,7 @@ const ConfirmationDialog = ({ isOpen, onClose, onConfirm, amount, user, loading 
           </Button>
           <Button
             onClick={onConfirm}
-            className="flex-1 bg-amber-600 hover:bg-amber-700"
+            className={`flex-1 ${isDeduction ? 'bg-red-600 hover:bg-red-700' : 'bg-amber-600 hover:bg-amber-700'}`}
             disabled={loading}
           >
             {loading ? (
@@ -123,7 +145,7 @@ const ConfirmationDialog = ({ isOpen, onClose, onConfirm, amount, user, loading 
             ) : (
               <CheckCircle className="w-4 h-4 mr-2" />
             )}
-            Confirm Credit
+            Confirm {isDeduction ? 'Deduction' : 'Credit'}
           </Button>
         </div>
       </div>
@@ -140,17 +162,18 @@ const UserSearchItem = ({ user, onSelect, selected }) => (
         ? "bg-blue-600/20 border border-blue-500/50"
         : "bg-slate-700/50 hover:bg-slate-700 border border-transparent"
     }`}
+    data-testid={`user-result-${user.user_id}`}
   >
     <div className="flex items-center gap-3">
       <div className="w-10 h-10 rounded-full bg-slate-600 flex items-center justify-center overflow-hidden">
-        {user.avatar ? (
-          <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+        {user.avatar || user.profile_picture ? (
+          <img src={user.avatar || user.profile_picture} alt="" className="w-full h-full object-cover" />
         ) : (
           <User className="w-5 h-5 text-slate-400" />
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-white truncate">{user.name || "Unknown"}</p>
+        <p className="font-medium text-white truncate">{user.name || user.username || "Unknown"}</p>
         <p className="text-sm text-slate-400 truncate">{user.email}</p>
       </div>
       <div className="text-right">
@@ -173,7 +196,7 @@ const TransactionItem = ({ txn }) => (
         {txn.amount > 0 ? (
           <Plus className="w-4 h-4 text-green-400" />
         ) : (
-          <ArrowRight className="w-4 h-4 text-red-400" />
+          <Minus className="w-4 h-4 text-red-400" />
         )}
       </div>
       <div>
@@ -203,33 +226,49 @@ export default function AdminWalletManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
 
-  // Credit form state
-  const [creditAmount, setCreditAmount] = useState("");
-  const [creditReason, setCreditReason] = useState("");
+  // Form state
+  const [amount, setAmount] = useState("");
+  const [reason, setReason] = useState("");
+  const [actionType, setActionType] = useState("credit"); // "credit" or "deduct"
   const [submitting, setSubmitting] = useState(false);
 
   // Confirmation dialog
   const [showConfirm, setShowConfirm] = useState(false);
-  const LARGE_AMOUNT_THRESHOLD = 10000;
+  const LARGE_CREDIT_THRESHOLD = 10000;
 
   // Transaction history
-  const [recentCredits, setRecentCredits] = useState([]);
+  const [recentTransactions, setRecentTransactions] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
-  // Search users
+  // Search users with robust error handling
   const searchUsers = useCallback(async () => {
-    if (!searchQuery.trim()) {
+    if (!searchQuery.trim() || searchQuery.trim().length < 2) {
       setSearchResults([]);
+      setSearchError(null);
       return;
     }
 
     setSearching(true);
+    setSearchError(null);
+    
     try {
-      const data = await adminAPI.searchUsers({ query: searchQuery, limit: 10 });
-      setSearchResults(data.users || []);
+      console.log("[Search] Starting search for:", searchQuery);
+      const data = await adminAPI.searchUsers({ query: searchQuery, limit: 15 });
+      console.log("[Search] Results:", data);
+      
+      const users = data.users || data || [];
+      setSearchResults(Array.isArray(users) ? users : []);
+      
+      if (Array.isArray(users) && users.length === 0) {
+        setSearchError("No users found matching your search");
+      }
     } catch (error) {
+      console.error("[Search] Error:", error);
+      setSearchError(error.message || "Search failed");
+      setSearchResults([]);
       toast.error("Search failed: " + error.message);
     } finally {
       setSearching(false);
@@ -241,64 +280,78 @@ export default function AdminWalletManagement() {
     const timer = setTimeout(() => {
       if (searchQuery.length >= 2) {
         searchUsers();
+      } else {
+        setSearchResults([]);
+        setSearchError(null);
       }
-    }, 300);
+    }, 400);
     return () => clearTimeout(timer);
   }, [searchQuery, searchUsers]);
 
-  // Load recent admin credits
-  const loadRecentCredits = useCallback(async () => {
+  // Load recent transactions
+  const loadRecentTransactions = useCallback(async () => {
     setLoadingHistory(true);
     try {
-      // Fetch recent admin adjustment transactions
-      const data = await apiRequest("/admin/finance/recent-adjustments?limit=20&type=admin_adjustment");
-      setRecentCredits(data.transactions || []);
+      const data = await apiRequest("/admin/finance/recent-adjustments?limit=25");
+      setRecentTransactions(data.transactions || []);
     } catch (error) {
-      console.log("Could not load recent credits:", error.message);
+      console.log("Could not load recent transactions:", error.message);
     } finally {
       setLoadingHistory(false);
     }
   }, []);
 
   useEffect(() => {
-    loadRecentCredits();
-  }, [loadRecentCredits]);
+    loadRecentTransactions();
+  }, [loadRecentTransactions]);
 
   // Handle user selection
   const handleSelectUser = async (user) => {
     setSelectedUser(user);
     setSearchQuery("");
     setSearchResults([]);
+    setSearchError(null);
 
     // Fetch fresh user data
     try {
       const userData = await adminAPI.getUser(user.user_id);
-      setSelectedUser(userData.user);
+      if (userData.user) {
+        setSelectedUser(userData.user);
+      }
     } catch (error) {
-      console.log("Could not refresh user data");
+      console.log("Could not refresh user data:", error.message);
     }
   };
 
-  // Handle credit submission
-  const handleSubmitCredit = async () => {
+  // Handle form submission
+  const handleSubmit = async () => {
     if (!selectedUser) {
       toast.error("Please select a user first");
       return;
     }
 
-    const amount = parseFloat(creditAmount);
-    if (!amount || amount <= 0) {
+    const numAmount = parseFloat(amount);
+    if (!numAmount || numAmount <= 0) {
       toast.error("Please enter a valid positive amount");
       return;
     }
 
-    if (!creditReason.trim()) {
-      toast.error("Please provide a reason for this credit");
+    if (!reason.trim()) {
+      toast.error("Please provide a reason for this adjustment");
       return;
     }
 
-    // Show confirmation for large amounts
-    if (amount >= LARGE_AMOUNT_THRESHOLD && !showConfirm) {
+    const isDeduction = actionType === "deduct";
+    const finalAmount = isDeduction ? -Math.abs(numAmount) : Math.abs(numAmount);
+
+    // Check if deduction would result in negative balance
+    if (isDeduction && (selectedUser.bl_coins || 0) < Math.abs(numAmount)) {
+      toast.error("Cannot deduct more than user's current balance");
+      return;
+    }
+
+    // Show confirmation for deductions or large credits
+    if ((isDeduction || numAmount >= LARGE_CREDIT_THRESHOLD) && !showConfirm) {
       setShowConfirm(true);
       return;
     }
@@ -308,12 +361,13 @@ export default function AdminWalletManagement() {
       const result = await adminAPI.adjustBalance(
         selectedUser.user_id,
         "bl_coins",
-        amount,
-        creditReason
+        finalAmount,
+        reason
       );
 
+      const actionWord = isDeduction ? "deducted" : "credited";
       toast.success(
-        `Successfully credited ${amount.toLocaleString()} BL Coins to ${selectedUser.name || selectedUser.email}`
+        `Successfully ${actionWord} ${Math.abs(numAmount).toLocaleString()} BL Coins ${isDeduction ? 'from' : 'to'} ${selectedUser.name || selectedUser.email}`
       );
 
       // Update selected user with new balance
@@ -323,21 +377,21 @@ export default function AdminWalletManagement() {
       });
 
       // Reset form
-      setCreditAmount("");
-      setCreditReason("");
+      setAmount("");
+      setReason("");
       setShowConfirm(false);
 
       // Refresh history
-      loadRecentCredits();
+      loadRecentTransactions();
     } catch (error) {
-      toast.error("Failed to credit: " + error.message);
+      toast.error("Failed: " + error.message);
     } finally {
       setSubmitting(false);
     }
   };
 
   // Quick amount buttons
-  const quickAmounts = [100, 1000, 10000, 100000, 1000000, 1000000000];
+  const quickAmounts = [100, 500, 1000, 5000, 10000, 100000];
 
   return (
     <div className="space-y-6">
@@ -346,14 +400,14 @@ export default function AdminWalletManagement() {
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-3">
             <Coins className="w-8 h-8 text-amber-400" />
-            Manual BL Coins Credit
+            BL Coins Management
           </h1>
           <p className="text-slate-400 mt-1">
-            Add BL Coins to any user&apos;s wallet with full audit trail
+            Add or remove BL Coins from any user&apos;s wallet
           </p>
         </div>
         <Button
-          onClick={loadRecentCredits}
+          onClick={loadRecentTransactions}
           variant="outline"
           className="border-slate-600"
           disabled={loadingHistory}
@@ -364,11 +418,11 @@ export default function AdminWalletManagement() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Credit Form Section */}
+        {/* Adjustment Form Section */}
         <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
           <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <Gift className="w-5 h-5 text-green-400" />
-            Credit BL Coins
+            <Wallet className="w-5 h-5 text-blue-400" />
+            Adjust User Balance
           </h2>
 
           {/* User Search */}
@@ -382,7 +436,7 @@ export default function AdminWalletManagement() {
                 <Input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Type to search users..."
+                  placeholder="Type at least 2 characters to search..."
                   className="pl-10 bg-slate-700 border-slate-600"
                   data-testid="user-search-input"
                 />
@@ -391,17 +445,24 @@ export default function AdminWalletManagement() {
                 )}
               </div>
 
-              {/* Search Results Dropdown */}
+              {/* Search Results */}
               {searchResults.length > 0 && (
                 <div className="mt-2 max-h-60 overflow-y-auto space-y-2 bg-slate-900/50 rounded-lg p-2">
                   {searchResults.map((user) => (
                     <UserSearchItem
-                      key={user.user_id}
+                      key={user.user_id || user._id}
                       user={user}
                       onSelect={handleSelectUser}
                       selected={selectedUser?.user_id === user.user_id}
                     />
                   ))}
+                </div>
+              )}
+
+              {/* Search Error/Empty State */}
+              {searchError && !searching && searchQuery.length >= 2 && (
+                <div className="mt-2 p-3 bg-slate-700/50 rounded-lg text-center">
+                  <p className="text-slate-400 text-sm">{searchError}</p>
                 </div>
               )}
             </div>
@@ -422,9 +483,9 @@ export default function AdminWalletManagement() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-slate-600 flex items-center justify-center overflow-hidden">
-                    {selectedUser.avatar ? (
+                    {selectedUser.avatar || selectedUser.profile_picture ? (
                       <img
-                        src={selectedUser.avatar}
+                        src={selectedUser.avatar || selectedUser.profile_picture}
                         alt=""
                         className="w-full h-full object-cover"
                       />
@@ -433,7 +494,7 @@ export default function AdminWalletManagement() {
                     )}
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium text-white">{selectedUser.name || "Unknown"}</p>
+                    <p className="font-medium text-white">{selectedUser.name || selectedUser.username || "Unknown"}</p>
                     <p className="text-sm text-slate-400">{selectedUser.email}</p>
                   </div>
                   <div className="text-right">
@@ -446,19 +507,52 @@ export default function AdminWalletManagement() {
               </div>
             )}
 
+            {/* Action Type Toggle */}
+            <div>
+              <label className="block text-sm text-slate-300 mb-2">Action Type</label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  onClick={() => setActionType("credit")}
+                  className={`flex-1 ${
+                    actionType === "credit"
+                      ? "bg-green-600 hover:bg-green-700 text-white"
+                      : "bg-slate-700 hover:bg-slate-600 text-slate-300"
+                  }`}
+                  data-testid="action-credit-btn"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add / Credit
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => setActionType("deduct")}
+                  className={`flex-1 ${
+                    actionType === "deduct"
+                      ? "bg-red-600 hover:bg-red-700 text-white"
+                      : "bg-slate-700 hover:bg-slate-600 text-slate-300"
+                  }`}
+                  data-testid="action-deduct-btn"
+                >
+                  <Minus className="w-4 h-4 mr-2" />
+                  Remove / Deduct
+                </Button>
+              </div>
+            </div>
+
             {/* Amount Input */}
             <div>
               <label className="block text-sm text-slate-300 mb-2">
-                Amount to Credit (BL Coins)
+                Amount (BL Coins)
               </label>
               <Input
                 type="number"
-                value={creditAmount}
-                onChange={(e) => setCreditAmount(e.target.value)}
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
                 placeholder="Enter amount..."
                 min={1}
                 className="bg-slate-700 border-slate-600 text-lg"
-                data-testid="credit-amount-input"
+                data-testid="amount-input"
               />
               {/* Quick Amount Buttons */}
               <div className="flex flex-wrap gap-2 mt-2">
@@ -467,10 +561,10 @@ export default function AdminWalletManagement() {
                     key={amt}
                     variant="outline"
                     size="sm"
-                    onClick={() => setCreditAmount(amt.toString())}
+                    onClick={() => setAmount(amt.toString())}
                     className="border-slate-600 text-xs"
                   >
-                    +{amt >= 1000000000 ? `${amt / 1000000000}B` : amt >= 1000000 ? `${amt / 1000000}M` : amt >= 1000 ? `${amt / 1000}K` : amt}
+                    {amt >= 1000 ? `${amt / 1000}K` : amt}
                   </Button>
                 ))}
               </div>
@@ -479,35 +573,44 @@ export default function AdminWalletManagement() {
             {/* Reason Input */}
             <div>
               <label className="block text-sm text-slate-300 mb-2">
-                Reason / Note (for audit log)
+                Reason / Note (required for audit log)
               </label>
               <textarea
-                value={creditReason}
-                onChange={(e) => setCreditReason(e.target.value)}
-                placeholder="e.g., Event reward, Compensation, Promotional bonus..."
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="e.g., Event reward, Compensation, Promotional bonus, Refund..."
                 className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white min-h-[80px] resize-none"
-                data-testid="credit-reason-input"
+                data-testid="reason-input"
               />
             </div>
 
             {/* Preview */}
-            {selectedUser && creditAmount && parseFloat(creditAmount) > 0 && (
-              <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3">
-                <div className="flex items-center gap-2 text-green-400 mb-2">
-                  <CheckCircle className="w-4 h-4" />
+            {selectedUser && amount && parseFloat(amount) > 0 && (
+              <div className={`border rounded-lg p-3 ${
+                actionType === "deduct" 
+                  ? "bg-red-500/10 border-red-500/30" 
+                  : "bg-green-500/10 border-green-500/30"
+              }`}>
+                <div className={`flex items-center gap-2 mb-2 ${
+                  actionType === "deduct" ? "text-red-400" : "text-green-400"
+                }`}>
+                  {actionType === "deduct" ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
                   <span className="text-sm font-medium">Preview</span>
                 </div>
                 <div className="text-sm text-slate-300">
                   <span className="text-white font-medium">{selectedUser.name || selectedUser.email}</span>
-                  {" will receive "}
-                  <span className="text-amber-400 font-bold">
-                    +{parseFloat(creditAmount).toLocaleString()} BL Coins
+                  {actionType === "deduct" ? " will lose " : " will receive "}
+                  <span className={`font-bold ${actionType === "deduct" ? "text-red-400" : "text-green-400"}`}>
+                    {actionType === "deduct" ? "-" : "+"}{parseFloat(amount).toLocaleString()} BL Coins
                   </span>
                 </div>
                 <div className="text-sm text-slate-400 mt-1">
                   New balance:{" "}
-                  <span className="text-green-400 font-medium">
-                    {((selectedUser.bl_coins || 0) + parseFloat(creditAmount)).toLocaleString()} BL
+                  <span className={`font-medium ${actionType === "deduct" ? "text-red-400" : "text-green-400"}`}>
+                    {(
+                      (selectedUser.bl_coins || 0) + 
+                      (actionType === "deduct" ? -parseFloat(amount) : parseFloat(amount))
+                    ).toLocaleString()} BL
                   </span>
                 </div>
               </div>
@@ -515,15 +618,24 @@ export default function AdminWalletManagement() {
 
             {/* Submit Button */}
             <Button
-              onClick={handleSubmitCredit}
-              disabled={!selectedUser || !creditAmount || !creditReason || submitting}
-              className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold"
-              data-testid="submit-credit-btn"
+              onClick={handleSubmit}
+              disabled={!selectedUser || !amount || !reason || submitting}
+              className={`w-full font-semibold ${
+                actionType === "deduct"
+                  ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
+                  : "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+              } text-white`}
+              data-testid="submit-btn"
             >
               {submitting ? (
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin mr-2" />
                   Processing...
+                </>
+              ) : actionType === "deduct" ? (
+                <>
+                  <Minus className="w-4 h-4 mr-2" />
+                  Deduct BL Coins
                 </>
               ) : (
                 <>
@@ -533,13 +645,13 @@ export default function AdminWalletManagement() {
               )}
             </Button>
 
-            {/* Warning for large amounts */}
-            {creditAmount && parseFloat(creditAmount) >= LARGE_AMOUNT_THRESHOLD && (
-              <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3">
-                <div className="flex items-center gap-2 text-amber-400">
+            {/* Deduction Warning */}
+            {actionType === "deduct" && (
+              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+                <div className="flex items-center gap-2 text-red-400">
                   <AlertTriangle className="w-4 h-4" />
                   <span className="text-sm">
-                    Large amount detected. You&apos;ll need to confirm this action.
+                    Deductions require confirmation and are logged for audit purposes.
                   </span>
                 </div>
               </div>
@@ -547,26 +659,26 @@ export default function AdminWalletManagement() {
           </div>
         </div>
 
-        {/* Recent Credits History */}
+        {/* Recent Transactions History */}
         <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
           <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
             <History className="w-5 h-5 text-blue-400" />
-            Recent Admin Credits
+            Recent Admin Adjustments
           </h2>
 
           {loadingHistory ? (
             <div className="flex items-center justify-center h-40">
               <RefreshCw className="w-6 h-6 text-slate-400 animate-spin" />
             </div>
-          ) : recentCredits.length === 0 ? (
+          ) : recentTransactions.length === 0 ? (
             <div className="text-center py-8">
               <FileText className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-              <p className="text-slate-400">No recent admin credits</p>
-              <p className="text-sm text-slate-500">Credits made here will appear in this list</p>
+              <p className="text-slate-400">No recent adjustments</p>
+              <p className="text-sm text-slate-500">Adjustments made here will appear in this list</p>
             </div>
           ) : (
             <div className="space-y-3 max-h-[500px] overflow-y-auto">
-              {recentCredits.map((txn, i) => (
+              {recentTransactions.map((txn, i) => (
                 <TransactionItem key={txn.transaction_id || i} txn={txn} />
               ))}
             </div>
@@ -578,10 +690,11 @@ export default function AdminWalletManagement() {
       <ConfirmationDialog
         isOpen={showConfirm}
         onClose={() => setShowConfirm(false)}
-        onConfirm={handleSubmitCredit}
-        amount={creditAmount}
+        onConfirm={handleSubmit}
+        amount={parseFloat(amount) || 0}
         user={selectedUser}
         loading={submitting}
+        isDeduction={actionType === "deduct"}
       />
     </div>
   );
