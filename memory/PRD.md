@@ -1,8 +1,50 @@
 # Blendlink Platform - Product Requirements Document
 
-## Latest Update: February 2, 2026
+## Latest Update: February 3, 2026
 
-### Session Fixes Completed (February 2, 2026) - LATEST
+### Session Fixes Completed (February 3, 2026) - LATEST
+
+#### P0 SCROLLING BUG FIX v3 ✅ VERIFIED (iteration_105 - 100% pass)
+**Root Cause**: Previous fixes used JavaScript preventDefault() in touch handlers, which blocked native scrolling.
+
+**Solution**: 
+- Removed `handleTouchMove` handler entirely - no interference during scroll
+- `touchAction: 'pan-y'` is now ALWAYS set on card container (never 'none')
+- Swipe detection is purely passive - only checks gesture on `touchEnd`
+- Images have `pointer-events: none` to prevent touch capture
+
+**Swipe Gesture Detection Criteria** (must meet ALL):
+1. Horizontal distance > 60px (intentional swipe)
+2. Vertical distance < 40px (not scroll attempt)
+3. Time < 400ms (quick gesture)
+4. Horizontal > 2x vertical (clearly horizontal)
+
+**Result**: 
+- ✅ Vertical scrolling works on landing page carousels
+- ✅ Vertical scrolling works on marketplace listing cards
+- ✅ Vertical scrolling works on minted-photos photo cards
+- ✅ Swipe-to-flip gesture works without blocking scroll
+
+#### P0 MODAL OVERLAP FIX ✅ VERIFIED
+- **SelfieMatchModal**: z-index 9999 (overlay), 10000 (content)
+- **UpgradeModal (dialog.jsx)**: z-index 9999 (overlay), 10000 (content)
+- **Flipped cards**: z-index 100
+- **Result**: Modals appear ABOVE flipped cards
+
+#### P1 SELFIE MATCH ATTEMPTS FIX ✅ VERIFIED
+- **MAX_ATTEMPTS**: Updated frontend constant from 3 to 6 (3 free + 3 paid)
+- **Display**: Shows "Attempts: X/6" in SelfieMatchModal
+- **Backend**: Already had 6 attempts configured
+
+### Files Modified (February 3, 2026)
+- `/app/frontend/src/components/photo/UnifiedPhotoCard.jsx` - Robust swipe detection
+- `/app/frontend/src/components/minting/SelfieMatchModal.jsx` - MAX_ATTEMPTS = 6
+- `/app/frontend/src/index.css` - Global scrolling CSS v3 fix
+- `/app/frontend/src/pages/Landing.jsx` - Carousel touch-action: pan-x pan-y
+
+---
+
+### Previous Session Fixes (February 2, 2026)
 
 #### P0 FRANTIC ROTATION BUG FIXED ✅ VERIFIED
 - **Root Cause**: Circular state updates between internal `isFlipped` state and `flipped` prop
