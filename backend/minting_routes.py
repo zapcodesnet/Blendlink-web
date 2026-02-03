@@ -1504,6 +1504,11 @@ async def get_authenticity_status(mint_id: str):
     if _db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
+    # Constants matching selfie-match endpoint
+    FREE_ATTEMPTS = 3
+    PAID_ATTEMPTS = 3
+    MAX_ATTEMPTS = FREE_ATTEMPTS + PAID_ATTEMPTS  # 6 total
+    
     photo = await _db.minted_photos.find_one(
         {"mint_id": mint_id},
         {"_id": 0, "image_data": 0}
@@ -1511,6 +1516,9 @@ async def get_authenticity_status(mint_id: str):
     
     if not photo:
         raise HTTPException(status_code=404, detail="Photo not found")
+    
+    attempts_used = photo.get("selfie_match_attempts", 0)
+    is_free_attempt = attempts_used < FREE_ATTEMPTS
     
     return {
         "mint_id": mint_id,
@@ -1520,12 +1528,16 @@ async def get_authenticity_status(mint_id: str):
         "selfie_match_confidence": photo.get("selfie_match_confidence"),
         "authenticity_bonus": photo.get("authenticity_bonus", 0),
         "authenticity_locked": photo.get("authenticity_locked", False),
-        "selfie_match_attempts": photo.get("selfie_match_attempts", 0),
-        "max_attempts": 3,
+        "selfie_match_attempts": attempts_used,
+        "max_attempts": MAX_ATTEMPTS,
+        "free_attempts": FREE_ATTEMPTS,
+        "paid_attempts": PAID_ATTEMPTS,
+        "is_free_attempt": is_free_attempt,
+        "free_attempts_remaining": max(0, FREE_ATTEMPTS - attempts_used),
         "can_add_selfie": (
             photo.get("has_face", False) and 
             not photo.get("authenticity_locked", False) and
-            photo.get("selfie_match_attempts", 0) < 3
+            attempts_used < MAX_ATTEMPTS
         ),
     }
 
