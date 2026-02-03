@@ -67,17 +67,44 @@ Applied the same bulletproof scroll fix pattern to:
 - `touch-action: auto`, `overflow-y: scroll`
 - All 13 images: `pointer-events: none`
 
-#### P1 SELFIE VERIFICATION FLOW ✅ VERIFIED
+#### P1 SELFIE VERIFICATION FLOW ✅ FIXED
 
-**Backend Configuration** (`minting_routes.py`):
-- `MAX_ATTEMPTS = 6` (3 free + 3 paid)
-- `MATCH_THRESHOLD = 80` (>80% treated as 100% match)
-- Attempts only counted AFTER successful AI analysis
-- +5% Authenticity bonus on successful match
+**Issue**: Selfie verification failed even on 100% matches. Attempts counter jumped to max after first try. Balance check blocked ALL attempts even free ones.
 
-**Frontend Display** (`SelfieMatchModal.jsx`):
-- Shows "Attempts: X/6"
-- z-index 9999/10000 ensures modal appears above flipped cards
+**Root Causes Found**:
+1. `canAffordAttempt` was checking balance for ALL attempts, blocking free attempts
+2. Attempts were being incremented in frontend regardless of API response
+3. No distinction between free (first 3) and paid (next 3) attempts in UI
+
+**Solutions Implemented**:
+
+**Frontend** (`SelfieMatchModal.jsx`):
+```javascript
+// Lines 100-104 - Fixed attempt cost calculation
+const isFreeAttempt = attemptsUsed < FREE_ATTEMPTS;
+const canAffordAttempt = isFreeAttempt || userBalance >= COST_PER_ATTEMPT;
+const currentCost = isFreeAttempt ? 0 : COST_PER_ATTEMPT;
+```
+
+- Shows "FREE (X left)" for first 3 attempts
+- Shows "100 BL/try" for paid attempts
+- Button text: "Verify (FREE)" or "Verify (100 BL)"
+- Processing errors show "This attempt was NOT counted"
+- Helpful feedback messages based on match score
+
+**Backend** (`minting_routes.py`):
+```python
+# Lines 1244-1247
+FREE_ATTEMPTS = 3
+PAID_ATTEMPTS = 3  
+MAX_ATTEMPTS = 6
+MATCH_THRESHOLD = 80  # >80% = 100% success
+```
+
+- Attempts only incremented AFTER successful AI analysis
+- >80% match treated as 100% success
+- +5% Authenticity bonus on success
+- Errors don't consume attempts
 
 ---
 
