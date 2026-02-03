@@ -1186,3 +1186,46 @@ a,
 .embedsocial-hashtag [class*="loading"] {
   animation-duration: 0.5s !important;
 }
+
+/* ==============================================
+   GLOBAL SCROLLING FIX - All Pages
+   ============================================== */
+
+/* Allow scrolling on html and body */
+html, body {
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: contain;
+}
+
+/* All containers should allow vertical scroll */
+#root, main, .min-h-screen {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Cards and images should NOT block page scroll */
+img, video, .photo-card, [data-testid*="photo-card"] {
+  touch-action: pan-y !important;
+  pointer-events: auto;
+}
+
+/* Grid containers should allow scroll through */
+.grid {
+  touch-action: pan-y !important;
+}
+
+/* Marketplace cards, listing cards should not block scroll */
+[class*="card"], [class*="listing"], [class*="Card"] {
+  touch-action: pan-y !important;
+}
+
+/* Only buttons and interactive elements should block pan */
+button, a, input, textarea, select, [role="button"] {
+  touch-action: manipulation;
+}
+
+/* Ensure mouse wheel scroll works */
+* {
+  scroll-behavior: smooth;
+}
