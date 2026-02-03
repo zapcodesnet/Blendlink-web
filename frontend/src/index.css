@@ -1179,42 +1179,58 @@ a,
   background: hsl(var(--background));
   
   /* CRITICAL: Enable scrolling */
-  overflow-x: hidden;
+  overflow-x: hidden !important;
   overflow-y: scroll !important;
   -webkit-overflow-scrolling: touch !important;
   
-  /* CRITICAL: Allow touch to scroll */
-  touch-action: pan-y !important;
+  /* CRITICAL: Allow touch to scroll - use auto for maximum compatibility */
+  touch-action: auto !important;
   
   /* Ensure smooth momentum scrolling on iOS */
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   overscroll-behavior-y: auto;
   
   /* Prevent any transform or will-change that could create new stacking context */
-  transform: none;
-  will-change: auto;
+  transform: none !important;
+  will-change: auto !important;
+  
+  /* Ensure no height constraint blocks scrolling */
+  height: auto !important;
+  max-height: none !important;
 }
 
-/* Ensure all children allow scroll-through */
-.landing-page-scroll-container * {
-  touch-action: inherit;
+/* Reset touch-action on all children to allow inheritance */
+.landing-page-scroll-container *:not(button):not(a):not([role="button"]):not(input):not(select):not(textarea) {
+  touch-action: auto !important;
 }
 
-/* Only buttons should capture taps */
+/* Only buttons should capture taps - use manipulation instead of none */
 .landing-page-scroll-container button,
 .landing-page-scroll-container a,
-.landing-page-scroll-container [role="button"] {
-  touch-action: manipulation;
+.landing-page-scroll-container [role="button"],
+.landing-page-scroll-container input,
+.landing-page-scroll-container select,
+.landing-page-scroll-container textarea {
+  touch-action: manipulation !important;
 }
 
-/* Images must not block scroll */
+/* Images MUST not block scroll - this is critical */
 .landing-page-scroll-container img,
 .landing-page-scroll-container video,
-.landing-page-scroll-container svg {
-  pointer-events: none;
-  touch-action: pan-y;
-  -webkit-user-drag: none;
-  user-select: none;
+.landing-page-scroll-container svg,
+.landing-page-scroll-container picture {
+  pointer-events: none !important;
+  touch-action: auto !important;
+  -webkit-user-drag: none !important;
+  user-select: none !important;
+}
+
+/* Ensure the sticky header doesn't break scrolling on iOS */
+.landing-page-scroll-container header.sticky,
+.landing-page-scroll-container .sticky {
+  touch-action: auto !important;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 /* ==============================================
