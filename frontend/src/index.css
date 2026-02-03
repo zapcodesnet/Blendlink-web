@@ -1227,10 +1227,127 @@ a,
 
 /* Ensure the sticky header doesn't break scrolling on iOS */
 .landing-page-scroll-container header.sticky,
-.landing-page-scroll-container .sticky {
+.landing-page-scroll-container .sticky,
+.marketplace-scroll-container header.sticky,
+.marketplace-scroll-container .sticky,
+.minted-photos-scroll-container header.sticky,
+.minted-photos-scroll-container .sticky,
+.photo-game-scroll-container header.sticky,
+.photo-game-scroll-container .sticky {
   touch-action: auto !important;
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
+}
+
+/* ==============================================
+   MARKETPLACE PAGE SCROLL FIX
+   ============================================== */
+.marketplace-scroll-container {
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  background: hsl(var(--background));
+  padding-bottom: 5rem;
+  overflow-x: hidden !important;
+  overflow-y: scroll !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: auto !important;
+  transform: none !important;
+  will-change: auto !important;
+}
+
+.marketplace-scroll-container *:not(button):not(a):not([role="button"]):not(input):not(select):not(textarea) {
+  touch-action: auto !important;
+}
+
+.marketplace-scroll-container button,
+.marketplace-scroll-container a,
+.marketplace-scroll-container [role="button"],
+.marketplace-scroll-container input {
+  touch-action: manipulation !important;
+}
+
+.marketplace-scroll-container img,
+.marketplace-scroll-container video,
+.marketplace-scroll-container svg {
+  pointer-events: none !important;
+  touch-action: auto !important;
+  -webkit-user-drag: none !important;
+  user-select: none !important;
+}
+
+/* ==============================================
+   MINTED PHOTOS PAGE SCROLL FIX
+   ============================================== */
+.minted-photos-scroll-container {
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  background: rgb(17 24 39); /* bg-gray-900 */
+  padding-bottom: 6rem;
+  overflow-x: hidden !important;
+  overflow-y: scroll !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: auto !important;
+  transform: none !important;
+  will-change: auto !important;
+}
+
+.minted-photos-scroll-container *:not(button):not(a):not([role="button"]):not(input):not(select):not(textarea) {
+  touch-action: auto !important;
+}
+
+.minted-photos-scroll-container button,
+.minted-photos-scroll-container a,
+.minted-photos-scroll-container [role="button"],
+.minted-photos-scroll-container input {
+  touch-action: manipulation !important;
+}
+
+.minted-photos-scroll-container img,
+.minted-photos-scroll-container video,
+.minted-photos-scroll-container svg {
+  pointer-events: none !important;
+  touch-action: auto !important;
+  -webkit-user-drag: none !important;
+  user-select: none !important;
+}
+
+/* ==============================================
+   PHOTO GAME PAGE SCROLL FIX
+   ============================================== */
+.photo-game-scroll-container {
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  background: rgb(17 24 39); /* bg-gray-900 */
+  padding-bottom: 6rem;
+  overflow-x: hidden !important;
+  overflow-y: scroll !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: auto !important;
+  transform: none !important;
+  will-change: auto !important;
+}
+
+.photo-game-scroll-container *:not(button):not(a):not([role="button"]):not(input):not(select):not(textarea) {
+  touch-action: auto !important;
+}
+
+.photo-game-scroll-container button,
+.photo-game-scroll-container a,
+.photo-game-scroll-container [role="button"],
+.photo-game-scroll-container input {
+  touch-action: manipulation !important;
+}
+
+.photo-game-scroll-container img,
+.photo-game-scroll-container video,
+.photo-game-scroll-container svg {
+  pointer-events: none !important;
+  touch-action: auto !important;
+  -webkit-user-drag: none !important;
+  user-select: none !important;
 }
 
 /* ==============================================
