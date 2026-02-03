@@ -1241,8 +1241,9 @@ async def selfie_match(
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     SELFIE_MATCH_COST = 100  # BL coins per attempt (after free tries)
-    MAX_ATTEMPTS = 3
     FREE_ATTEMPTS = 3  # First 3 are free during minting
+    PAID_ATTEMPTS = 3  # Can buy up to 3 more attempts
+    MAX_ATTEMPTS = FREE_ATTEMPTS + PAID_ATTEMPTS  # 6 total attempts
     MATCH_THRESHOLD = 80  # >80% match = treat as 100% (lowered from 90%)
     
     # Get the photo with full data including image_data
@@ -1271,7 +1272,7 @@ async def selfie_match(
     if attempts >= MAX_ATTEMPTS:
         raise HTTPException(status_code=400, detail=f"Maximum {MAX_ATTEMPTS} attempts reached. No more tries available.")
     
-    # Calculate cost - first 3 are free
+    # Calculate cost - first 3 are free, next 3 cost BL coins
     is_paid_attempt = attempts >= FREE_ATTEMPTS
     actual_cost = SELFIE_MATCH_COST if is_paid_attempt else 0
     
