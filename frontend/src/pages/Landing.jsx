@@ -379,8 +379,8 @@ export default function Landing() {
 
   return (
     <div 
-      className="min-h-screen bg-background overflow-x-hidden"
-      style={{ touchAction: 'pan-y', overflowY: 'auto' }}
+      className="landing-page-scroll-container"
+      data-testid="landing-page"
     >
       {/* Header - Mobile Optimized */}
       <header className="glass sticky top-0 z-50 border-b border-border/50 safe-top">
