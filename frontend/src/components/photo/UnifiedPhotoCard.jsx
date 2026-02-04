@@ -806,7 +806,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
             </button>
           </div>
         </div>
-      </motion.div>
+      </div>
   );
   
   return (
