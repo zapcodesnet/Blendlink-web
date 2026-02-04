@@ -231,143 +231,42 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   // Use flipped prop directly instead of internal state
   const isFlipped = flipped;
   
-  // SCROLL FIX: Removed all touch event handlers and onClick from card container
-  // Card flipping now ONLY works via "Tap to flip" button
-  // pointer-events: none on most elements allows touch events to pass through for scrolling
-  
-  const scenery = SCENERY_CONFIG[photo?.scenery_type] || SCENERY_CONFIG.natural;
-  
-  // Size configurations - INCREASED by 3% to fit Name and Tap to flip
-  // Original: small=128x208, medium=160x256, large=208x320
-  // +3%: small=132x214, medium=165x264, large=214x330
-  const sizeConfig = {
-    small: { width: 'w-[132px]', height: 'h-[214px]' },
-    medium: { width: 'w-[165px]', height: 'h-[264px]' },
-    large: { width: 'w-[214px]', height: 'h-[330px]' },
-    full: { width: 'w-full', height: 'h-auto' },
-  };
-  const config = sizeConfig[size] || sizeConfig.medium;
-  
-  // Photo stats
-  const dollarValue = photo?.dollar_value || photo?.base_dollar_value || 0;
-  const level = photo?.level || 1;
-  const xp = photo?.xp || 0;
-  const stars = photo?.stars || getStarsFromLevel(level);
-  const hasGoldenFrame = photo?.has_golden_frame || level >= 60;
-  const maxStamina = photo?.max_stamina || 24;
-  // Normalize stamina to not exceed max
-  const rawStamina = photo?.current_stamina ?? photo?.stamina ?? maxStamina;
-  const stamina = Math.min(rawStamina, maxStamina);
-  const staminaPercent = Math.min((stamina / maxStamina) * 100, 100);
-  
-  // Win/Loss streaks
-  const winStreak = photo?.win_streak || 0;
-  const loseStreak = photo?.lose_streak || 0;
-  
-  // Reactions and bonuses
-  const reactions = photo?.total_reactions || 0;
-  const reactionBonus = photo?.reaction_bonus_value || 0;
-  const monthlyGrowth = photo?.monthly_growth_value || 0;
-  const upgradeValue = photo?.total_upgrade_value || 0;
-  
-  // New stats from back-card
-  const ageBonus = photo?.age_bonus_value || photo?.age_bonus || 0;
-  const xpProgress = photo?.xp_progress?.progress_percent || photo?.xp_progress_percent || 0;
-  const baseDollarValue = photo?.base_dollar_value || dollarValue;
-  
-  // Authenticity
-  const faceScore = photo?.face_detection_score || 0;
-  const selfieScore = photo?.selfie_match_score || 0;
-  const selfieCompleted = photo?.selfie_match_completed || false;
-  const hasFace = photo?.has_face || false;
-  
-  // Level bonus
-  const levelBonus = photo?.level_bonus_percent || Math.floor(level / 5) * 2;
-  
-  // New stats from API - Prefer server-calculated values
-  const ageDays = photo?.age_days ?? 0;
-  const starBonusValue = photo?.star_bonus_value || 0;
-  const seniorityAchieved = photo?.seniority_achieved || level >= 60;
-  const seniorityBonusValue = photo?.seniority_bonus_value || 0;
-  const levelsToSeniority = photo?.levels_to_seniority || Math.max(0, 60 - level);
-  const blCoinsSpent = photo?.bl_coins_spent || upgradeValue || 0;
-  const reactionsToNextBonus = photo?.reactions_to_next_bonus || (100 - (reactions % 100));
-  
-  // XP Progress data
-  const xpProgressData = photo?.xp_progress || {};
-  const xpToNextLevel = xpProgressData.remaining || photo?.xp_to_next_level || 10;
-  const xpForNextLevel = xpProgressData.xp_for_next_level || photo?.xp_for_next_level || 10;
-  
-  const handleClick = useCallback((e) => {
-    if (disabled) return;
-    // Don't trigger onClick if the card is flipped (back side showing)
-    // This prevents lightbox from opening when interacting with back content
-    if (isFlipped) {
-      return;
-    }
-    // Don't trigger onClick if the click was on the flip button or flip back button
-    if (e?.target?.closest('[data-testid="flip-card-btn"]') || 
-        e?.target?.closest('[data-testid="flip-back-btn"]')) {
-      return;
-    }
-    onClick?.(photo);
-  }, [disabled, onClick, photo, isFlipped]);
-  
-  const handleFlip = useCallback((e) => {
-    // SCROLL FIX: Only stop propagation, NOT preventDefault
-    // This allows the browser to continue handling scroll events
-    if (e) {
-      e.stopPropagation();
-    }
-    const newFlippedState = !isFlipped;
-    setShowXPMultiplier(true);
-    setTimeout(() => setShowXPMultiplier(false), 3000);
-    onFlipStateChange?.(newFlippedState);
-    onFlip?.(newFlippedState);
-  }, [isFlipped, onFlip, onFlipStateChange]);
-  
-  // Card content - SINGLE-FINGER SCROLL FIX
-  // Key: Use touch-action: pan-y on ALL elements, NOT pointer-events: none
-  // pointer-events: none breaks scroll because browser doesn't receive events
+  // SCROLL FIX v4: Removed ALL touch-action inline styles
+  // CSS in index.css handles touch-action globally
+  // Key insight: touch-action: auto is more compatible than pan-y
   const cardContent = (
     <div
       className={cn(
-        "relative w-full preserve-3d transition-all duration-500 ease-in-out",
+        "relative w-full photo-card-flipper",
         config.height,
-        isFlipped && "shadow-2xl shadow-black/50"
+        isFlipped && "flipped shadow-2xl shadow-black/50"
       )}
       style={{ 
         transformStyle: 'preserve-3d',
         transform: isFlipped ? 'rotateY(180deg) scale(1.05)' : 'rotateY(0deg) scale(1)',
         zIndex: isFlipped ? 100 : 1,
-        touchAction: 'pan-y',
       }}
     >
       {/* FRONT: Photo + Stats - 70% image / 30% details */}
       <div 
         className={cn(
-          "absolute inset-0 backface-hidden rounded-xl overflow-hidden flex flex-col",
+          "absolute inset-0 photo-card-front rounded-xl overflow-hidden flex flex-col",
           "bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700",
           hasGoldenFrame && !seniorityAchieved && "ring-2 ring-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]"
         )}
-        style={{ backfaceVisibility: 'hidden', touchAction: 'pan-y' }}
       >
         {/* Photo Image - 70% of card height */}
-        <div 
-          className="relative w-full"
-          style={{ height: '70%', minHeight: '70%', touchAction: 'pan-y' }}
-        >
+        <div className="relative w-full" style={{ height: '70%', minHeight: '70%' }}>
           <img
             src={photo?.image_url || photo?.thumbnail_url || '/placeholder-photo.jpg'}
             alt={photo?.name || 'Minted Photo'}
             className="w-full h-full object-cover select-none"
             loading="lazy"
             draggable={false}
-            style={{ touchAction: 'pan-y', pointerEvents: 'none' }}
           />
           {/* Seniority Level 60 sparkle indicator */}
           {seniorityAchieved && (
-            <div className="absolute top-1 right-1" style={{ touchAction: 'pan-y' }}>
+            <div className="absolute top-1 right-1">
               <Sparkles size={16} className="text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] animate-pulse" />
             </div>
           )}
@@ -377,18 +276,10 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         {showStats && (
           <div 
             className="bg-gradient-to-b from-black/90 to-black/70 flex flex-col px-1.5 py-1"
-            style={{ 
-              height: '30%', 
-              maxHeight: '30%', 
-              overflow: 'hidden',
-              touchAction: 'pan-y',
-            }}
+            style={{ height: '30%', maxHeight: '30%', overflow: 'hidden' }}
           >
             {/* NAME - Top of details */}
-            <div 
-              className="text-yellow-400 font-bold truncate text-center text-[11px] sm:text-[10px] leading-tight bg-black/50 rounded mb-0.5 py-0.5 min-h-[14px]"
-              style={{ touchAction: 'pan-y' }}
-            >
+            <div className="text-yellow-400 font-bold truncate text-center text-[11px] sm:text-[10px] leading-tight bg-black/50 rounded mb-0.5 py-0.5 min-h-[14px]">
               {photo?.name || photo?.title || 'Unnamed Photo'}
             </div>
             
