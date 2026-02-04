@@ -256,7 +256,6 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   subscription = null,
 }) {
   const [showXPMultiplier, setShowXPMultiplier] = useState(false);
-  const cardRef = useRef(null);
   
   // Use flipped prop directly instead of internal state
   const isFlipped = flipped;
