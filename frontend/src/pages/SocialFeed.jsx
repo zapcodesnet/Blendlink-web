@@ -1196,12 +1196,23 @@ export default function SocialFeed() {
     }
   }, []);
   
-  // Initial load
+  // Initial load - optimized for faster perceived load time
   useEffect(() => {
     const init = async () => {
       setIsLoading(true);
-      await Promise.all([loadFeed(), loadStories()]);
+      
+      // Load feed first (critical content), then stories (non-critical)
+      try {
+        await loadFeed();
+      } catch (e) {
+        console.error('Feed load error:', e);
+      }
+      
+      // Show UI immediately after feed loads
       setIsLoading(false);
+      
+      // Load stories in background (non-blocking)
+      loadStories().catch(e => console.error('Stories load error:', e));
     };
     init();
   }, [loadFeed, loadStories]);
