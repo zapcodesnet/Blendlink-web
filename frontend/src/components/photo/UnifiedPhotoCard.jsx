@@ -231,6 +231,85 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   // Use flipped prop directly instead of internal state
   const isFlipped = flipped;
   
+  const scenery = SCENERY_CONFIG[photo?.scenery_type] || SCENERY_CONFIG.natural;
+  
+  // Size configurations - INCREASED by 3% to fit Name and Tap to flip
+  const sizeConfig = {
+    small: { width: 'w-[132px]', height: 'h-[214px]' },
+    medium: { width: 'w-[165px]', height: 'h-[264px]' },
+    large: { width: 'w-[214px]', height: 'h-[330px]' },
+    full: { width: 'w-full', height: 'h-auto' },
+  };
+  const config = sizeConfig[size] || sizeConfig.medium;
+  
+  // Photo stats
+  const dollarValue = photo?.dollar_value || photo?.base_dollar_value || 0;
+  const level = photo?.level || 1;
+  const xp = photo?.xp || 0;
+  const stars = photo?.stars || getStarsFromLevel(level);
+  const hasGoldenFrame = photo?.has_golden_frame || level >= 60;
+  const maxStamina = photo?.max_stamina || 24;
+  const rawStamina = photo?.current_stamina ?? photo?.stamina ?? maxStamina;
+  const stamina = Math.min(rawStamina, maxStamina);
+  const staminaPercent = Math.min((stamina / maxStamina) * 100, 100);
+  
+  // Win/Loss streaks
+  const winStreak = photo?.win_streak || 0;
+  const loseStreak = photo?.lose_streak || 0;
+  
+  // Reactions and bonuses
+  const reactions = photo?.total_reactions || 0;
+  const reactionBonus = photo?.reaction_bonus_value || 0;
+  const upgradeValue = photo?.total_upgrade_value || 0;
+  
+  // New stats from back-card
+  const ageBonus = photo?.age_bonus_value || photo?.age_bonus || 0;
+  const xpProgress = photo?.xp_progress?.progress_percent || photo?.xp_progress_percent || 0;
+  const baseDollarValue = photo?.base_dollar_value || dollarValue;
+  
+  // Authenticity
+  const faceScore = photo?.face_detection_score || 0;
+  const selfieScore = photo?.selfie_match_score || 0;
+  const selfieCompleted = photo?.selfie_match_completed || false;
+  const hasFace = photo?.has_face || false;
+  
+  // Level bonus
+  const levelBonus = photo?.level_bonus_percent || Math.floor(level / 5) * 2;
+  
+  // New stats from API
+  const ageDays = photo?.age_days ?? 0;
+  const starBonusValue = photo?.star_bonus_value || 0;
+  const seniorityAchieved = photo?.seniority_achieved || level >= 60;
+  const seniorityBonusValue = photo?.seniority_bonus_value || 0;
+  const levelsToSeniority = photo?.levels_to_seniority || Math.max(0, 60 - level);
+  const blCoinsSpent = photo?.bl_coins_spent || upgradeValue || 0;
+  const reactionsToNextBonus = photo?.reactions_to_next_bonus || (100 - (reactions % 100));
+  
+  // XP Progress data
+  const xpProgressData = photo?.xp_progress || {};
+  const xpToNextLevel = xpProgressData.remaining || photo?.xp_to_next_level || 10;
+  const xpForNextLevel = xpProgressData.xp_for_next_level || photo?.xp_for_next_level || 10;
+  
+  // Event handlers
+  const handleClick = useCallback((e) => {
+    if (disabled) return;
+    if (isFlipped) return;
+    if (e?.target?.closest('[data-testid="flip-card-btn"]') || 
+        e?.target?.closest('[data-testid="flip-back-btn"]')) {
+      return;
+    }
+    onClick?.(photo);
+  }, [disabled, onClick, photo, isFlipped]);
+  
+  const handleFlip = useCallback((e) => {
+    if (e) e.stopPropagation();
+    const newFlippedState = !isFlipped;
+    setShowXPMultiplier(true);
+    setTimeout(() => setShowXPMultiplier(false), 3000);
+    onFlipStateChange?.(newFlippedState);
+    onFlip?.(newFlippedState);
+  }, [isFlipped, onFlip, onFlipStateChange]);
+  
   // SCROLL FIX v4: Removed ALL touch-action inline styles
   // CSS in index.css handles touch-action globally
   // Key insight: touch-action: auto is more compatible than pan-y
