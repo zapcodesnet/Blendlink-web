@@ -445,17 +445,17 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         zIndex: isFlipped ? 100 : 1,
       }}
     >
-      {/* FRONT: Photo + Stats */}
+      {/* FRONT: Photo + Stats - 75% image / 25% details */}
       <div 
         className={cn(
-          "absolute inset-0 backface-hidden rounded-xl overflow-hidden",
+          "absolute inset-0 backface-hidden rounded-xl overflow-hidden flex flex-col",
           "bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700",
           hasGoldenFrame && !seniorityAchieved && "ring-2 ring-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]"
         )}
-        style={{ backfaceVisibility: 'hidden' }}
+        style={{ backfaceVisibility: 'hidden', touchAction: 'pan-y' }}
       >
-        {/* Photo Image */}
-        <div className={cn("relative w-full", config.imageH)}>
+        {/* Photo Image - 75% of card height */}
+        <div className="relative w-full flex-[3]" style={{ minHeight: '75%' }}>
           <img
             src={photo?.image_url || photo?.thumbnail_url || '/placeholder-photo.jpg'}
             alt={photo?.name || 'Minted Photo'}
