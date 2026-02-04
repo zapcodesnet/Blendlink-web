@@ -14,7 +14,7 @@ import os
 import time
 import threading
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://card-layout-enhance-1.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://scroll-repair-2.preview.emergentagent.com')
 WS_BASE_URL = BASE_URL.replace('https://', 'wss://').replace('http://', 'ws://')
 
 class TestPVPWebSocketFlow:
