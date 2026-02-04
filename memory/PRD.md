@@ -2,64 +2,86 @@
 
 ## Latest Update: February 4, 2026
 
-### Games Page Update (February 4, 2026) - LATEST
+### Games Page & Casino Screen Update (February 4, 2026) - LATEST
 
 #### Changes Implemented:
 
-**1. CONSOLIDATED Casino Games Section**
-- All mini-games (Spin Wheel, Scratch Card, Memory Match) now NESTED INSIDE single "Casino Games" card
-- Removed duplicate/separate game cards that were outside the casino section
-- Single "Casino Games" title - no duplicates anywhere
-- Clean, professional layout with games as child elements inside the card
+**1. Games Page - Casino Teaser Card (Pure Redirect)**
+- Converted Casino Games card to a pure teaser/redirect
+- **REMOVED** all nested mini-games (Spin Wheel, Scratch Card, Memory Match) from Games page
+- Card now shows:
+  - "🎰 CASINO" label + "Coming Soon" badge
+  - "Casino Games" title
+  - "Exciting games launching soon!" description
+  - Game icons preview (🎰🃏🎡🎲🎴) + "+4 more games"
+  - "Stay Tuned!" tag
+  - "View Casino Games →" footer link
+- **Entire card is clickable** - navigates to `/casino` route
 
-**2. Regular User View (Locked State)**
-- Grey gradient background
-- "Coming Soon" badge next to title
-- Lock icon in header (instead of spade)
-- "Stay Tuned!" tag
-- Each game shows:
-  - Greyed-out icon with small lock badge
-  - Greyed text
-  - "Locked" badge instead of Play button
-- No interaction possible - clicks don't work
+**2. Casino Screen - Full Games Lobby**
+- All mini-games (Spin Wheel, Scratch Card, Memory Match) **relocated here**
+- Now contains **12 total games**:
+  - Original: Daily Spin, PKO Poker, Slots, Blackjack, Roulette, Wheel of Fortune, Video Poker, Baccarat, Craps
+  - Relocated: Spin Wheel, Scratch Card, Memory Match
 
-**3. Admin View (blendlinknet@gmail.com)**
-- Orange/red gradient background (active state)
-- Spade icon in header
-- "Bet 10-10,000 BL" and "Provably Fair" tags
-- Each game shows:
-  - Colorful icon (purple/green/blue)
-  - White text
-  - "Play" button - fully clickable
-- "View All Casino Games →" footer link
-- Full functionality unlocked
+**3. Non-Admin View (Locked/Teaser Mode)**
+- "Coming Soon" badge in header
+- Grey balance card with lock icon
+- "Casino Games Coming Soon!" warning banner
+- All games visible but:
+  - Greyed out (opacity: 0.6, grayscale)
+  - Lock icons on each game card
+  - "Locked" badges
+  - Non-interactive (clicks do nothing)
 
-**4. BL Coins Balance REMOVED from Games page**
+**4. Admin View (blendlinknet@gmail.com) - Fully Unlocked**
+- No "Coming Soon" badge
+- Orange balance card with slot emoji
+- All 12 games fully colorful and interactive
+- Stats button visible
+- PKO Poker shows "NEW!" badge
+- Games launch on click
+
+**5. Admin Check Logic (Shared)**
+```javascript
+const ADMIN_EMAIL = "blendlinknet@gmail.com";
+const isAdmin = user?.email === ADMIN_EMAIL || user?.role === 'admin' || user?.is_admin === true;
+```
+
+**6. BL Coins Balance - REMOVED from Games page only**
 - Header shows only "Games" title
-- Balance still visible on Wallet, Profile, other pages
-
-**5. Web & Mobile 100% Synchronized**
-- Identical structure, logic, and appearance
-- Same admin check: `user.email === "blendlinknet@gmail.com"`
+- Balance still visible on Wallet, Profile, Casino (for admin), and other pages
 
 **Files Modified:**
-- `/app/frontend/src/pages/Games.jsx` (Web)
-- `/app/mobile/src/screens/GamesScreen.js` (Mobile)
+- `/app/frontend/src/pages/Games.jsx` - Teaser card redirect
+- `/app/frontend/src/pages/Casino.jsx` - Fixed admin check, added locked mode
+- `/app/mobile/src/screens/GamesScreen.js` - Teaser card redirect
+- `/app/mobile/src/screens/CasinoScreen.js` - Fixed admin check, added locked mode
 
-**Structure - Games Page:**
+**Test Results:**
+- ✅ Games page shows clean teaser card with no nested games
+- ✅ Clicking teaser navigates to Casino screen
+- ✅ Non-admin sees all 12 games locked with preview styling
+- ✅ Admin sees all 12 games fully unlocked and playable
+- ✅ No games disappear for admin - bug FIXED
+- ✅ No BL Coins balance on Games page
+
+**Structure:**
 ```
-Games Page
-├── Photo Battle Arena (Public - Featured)
-├── Quick Links Row
-│   ├── Minted Photos
-│   └── Marketplace
-├── Casino Games Section (SINGLE CARD)
-│   ├── Header (Title + Coming Soon/Admin tags)
-│   └── Mini-Games (NESTED INSIDE)
-│       ├── Spin Wheel [Locked/Play]
-│       ├── Scratch Card [Locked/Play]
-│       └── Memory Match [Locked/Play]
-└── Raffles & Contests
+Games Page (blendlink.net/games)
+├── Photo Battle Arena (Public)
+├── Minted Photos / Marketplace (Public)
+├── Casino Games Teaser Card (Redirects to /casino)
+│   └── Click → Navigate to Casino Screen
+└── Raffles & Contests (Public)
+
+Casino Screen (blendlink.net/casino)
+├── Balance Card (Orange/Grey based on admin status)
+├── Coming Soon Banner (Non-admin only)
+└── Games Grid (12 games)
+    ├── Daily Spin, PKO Poker, Slots, Blackjack
+    ├── Roulette, Wheel of Fortune, Video Poker, Baccarat
+    └── Craps, Spin Wheel, Scratch Card, Memory Match
 ```
 
 ---
