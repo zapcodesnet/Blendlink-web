@@ -1286,31 +1286,28 @@ a,
   background: rgb(17 24 39); /* bg-gray-900 */
   padding-bottom: 6rem;
   overflow-x: hidden !important;
-  overflow-y: scroll !important;
+  overflow-y: auto !important;
   -webkit-overflow-scrolling: touch !important;
-  touch-action: auto !important;
+  touch-action: manipulation !important;
+  overscroll-behavior: contain;
   transform: none !important;
   will-change: auto !important;
 }
 
-.minted-photos-scroll-container *:not(button):not(a):not([role="button"]):not(input):not(select):not(textarea) {
-  touch-action: auto !important;
-}
-
-.minted-photos-scroll-container button,
-.minted-photos-scroll-container a,
-.minted-photos-scroll-container [role="button"],
-.minted-photos-scroll-container input {
+/* ALL elements inside scroll container must allow touch scrolling */
+.minted-photos-scroll-container * {
   touch-action: manipulation !important;
 }
 
+/* Images MUST NOT capture touch events */
 .minted-photos-scroll-container img,
 .minted-photos-scroll-container video,
 .minted-photos-scroll-container svg {
   pointer-events: none !important;
-  touch-action: auto !important;
+  touch-action: manipulation !important;
   -webkit-user-drag: none !important;
   user-select: none !important;
+  -webkit-user-select: none !important;
 }
 
 /* ==============================================
@@ -1323,15 +1320,28 @@ a,
   background: rgb(17 24 39); /* bg-gray-900 */
   padding-bottom: 6rem;
   overflow-x: hidden !important;
-  overflow-y: scroll !important;
+  overflow-y: auto !important;
   -webkit-overflow-scrolling: touch !important;
-  touch-action: auto !important;
+  touch-action: manipulation !important;
+  overscroll-behavior: contain;
   transform: none !important;
   will-change: auto !important;
 }
 
-.photo-game-scroll-container *:not(button):not(a):not([role="button"]):not(input):not(select):not(textarea) {
-  touch-action: auto !important;
+/* ALL elements inside scroll container must allow touch scrolling */
+.photo-game-scroll-container * {
+  touch-action: manipulation !important;
+}
+
+/* Images MUST NOT capture touch events */
+.photo-game-scroll-container img,
+.photo-game-scroll-container video,
+.photo-game-scroll-container svg {
+  pointer-events: none !important;
+  touch-action: manipulation !important;
+  -webkit-user-drag: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
 }
 
 .photo-game-scroll-container button,
