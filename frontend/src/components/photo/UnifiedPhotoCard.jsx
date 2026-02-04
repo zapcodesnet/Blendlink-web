@@ -530,10 +530,11 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         style={{ 
           backfaceVisibility: 'hidden', 
           transform: 'rotateY(180deg)',
+          touchAction: 'pan-y',
         }}
       >
         {/* Small preview image at top */}
-        <div className="relative h-12 w-full">
+        <div className="relative h-12 w-full" style={{ pointerEvents: 'none' }}>
           <img
             src={photo?.image_url || photo?.thumbnail_url}
             alt={photo?.name}
