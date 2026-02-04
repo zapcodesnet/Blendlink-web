@@ -1,8 +1,8 @@
 /**
- * Games Screen - Consolidated Casino Games Section
- * All mini-games (Spin Wheel, Scratch Card, Memory Match) nested inside single Casino Games card
+ * Games Screen - Main Games Hub
+ * Casino Games teaser redirects to dedicated Casino screen
  * BL Coins balance REMOVED from this screen
- * Admin (blendlinknet@gmail.com) has full access
+ * 100% synchronized with web version
  */
 
 import React, { useState, useEffect } from 'react';
@@ -18,46 +18,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { casinoAPI, photoGameAPI } from '../services/api';
+import { photoGameAPI } from '../services/api';
 
 const { width } = Dimensions.get('window');
-
-// Admin email for full casino access
-const ADMIN_EMAIL = "blendlinknet@gmail.com";
-
-// Casino mini-games data
-const CASINO_MINI_GAMES = [
-  {
-    id: "spin_wheel",
-    name: "Spin Wheel",
-    description: "Spin to win up to 5x your bet!",
-    emoji: "🎡",
-    color: "#8B5CF6",
-  },
-  {
-    id: "scratch_card",
-    name: "Scratch Card",
-    description: "Match 3 symbols to win big!",
-    emoji: "🎫",
-    color: "#10B981",
-  },
-  {
-    id: "memory_match",
-    name: "Memory Match",
-    description: "Free to play! Earn coins for matching pairs",
-    emoji: "🧠",
-    color: "#3B82F6",
-  }
-];
 
 export default function GamesScreen() {
   const navigation = useNavigation();
   const { user } = useAuth();
   const { colors, toggleTheme, isDark } = useTheme();
   const [gameStats, setGameStats] = useState(null);
-
-  // Check if current user is admin
-  const isAdmin = user?.email === ADMIN_EMAIL || user?.role === 'admin' || user?.is_admin === true;
 
   useEffect(() => {
     loadData();
@@ -72,11 +41,9 @@ export default function GamesScreen() {
     }
   };
 
-  // Handle casino game press - only for admin
-  const handleCasinoGamePress = (gameId) => {
-    if (isAdmin) {
-      navigation.navigate('CasinoGame', { gameId });
-    }
+  // Handle Casino card press - navigates to Casino screen
+  const handleCasinoPress = () => {
+    navigation.navigate('Casino');
   };
 
   return (
@@ -150,110 +117,59 @@ export default function GamesScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* SINGLE CONSOLIDATED Casino Games Section */}
-        <View style={[
-          styles.casinoSection,
-          { backgroundColor: isAdmin ? '#D97706' : '#4B5563' }
-        ]}>
-          {/* Casino Header */}
-          <View style={styles.casinoHeader}>
-            <View style={styles.casinoHeaderLeft}>
+        {/* Casino Games Teaser Card - PURE REDIRECT, NO NESTED GAMES */}
+        <TouchableOpacity
+          style={styles.casinoTeaser}
+          onPress={handleCasinoPress}
+          activeOpacity={0.9}
+        >
+          <View style={styles.casinoTeaserHeader}>
+            <View style={styles.casinoTeaserLeft}>
               <View style={styles.casinoTitleRow}>
                 <Text style={styles.casinoLabel}>🎰 CASINO</Text>
-                {!isAdmin && (
-                  <View style={styles.comingSoonBadge}>
-                    <Text style={styles.comingSoonBadgeText}>Coming Soon</Text>
-                  </View>
-                )}
+                <View style={styles.comingSoonBadge}>
+                  <Text style={styles.comingSoonBadgeText}>Coming Soon</Text>
+                </View>
               </View>
               <Text style={styles.casinoTitle}>Casino Games</Text>
-              {!isAdmin && (
-                <Text style={styles.casinoSubtitle}>Exciting games launching soon!</Text>
-              )}
+              <Text style={styles.casinoSubtitle}>Exciting games launching soon!</Text>
             </View>
-            <View style={[styles.casinoHeaderIcon, { backgroundColor: isAdmin ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.1)' }]}>
-              <Text style={styles.casinoHeaderEmoji}>{isAdmin ? '♠️' : '🔒'}</Text>
+            <View style={styles.casinoTeaserIcon}>
+              <Text style={styles.casinoTeaserEmoji}>🔒</Text>
             </View>
           </View>
 
-          {/* Tags */}
-          <View style={styles.casinoTags}>
-            {isAdmin ? (
-              <>
-                <View style={styles.casinoTag}>
-                  <Text style={styles.casinoTagText}>Bet 10-10,000 BL</Text>
-                </View>
-                <View style={styles.casinoTag}>
-                  <Text style={styles.casinoTagText}>Provably Fair</Text>
-                </View>
-              </>
-            ) : (
-              <View style={[styles.casinoTag, { opacity: 0.7 }]}>
-                <Text style={styles.casinoTagText}>Stay Tuned!</Text>
+          {/* Game Icons Preview */}
+          <View style={styles.gameIconsPreview}>
+            <View style={styles.gameIconsRow}>
+              <View style={[styles.gameIconCircle, { backgroundColor: '#9333EA' }]}>
+                <Text style={styles.gameIconEmoji}>🎰</Text>
               </View>
-            )}
+              <View style={[styles.gameIconCircle, { backgroundColor: '#16A34A', marginLeft: -8 }]}>
+                <Text style={styles.gameIconEmoji}>🃏</Text>
+              </View>
+              <View style={[styles.gameIconCircle, { backgroundColor: '#D97706', marginLeft: -8 }]}>
+                <Text style={styles.gameIconEmoji}>🎡</Text>
+              </View>
+              <View style={[styles.gameIconCircle, { backgroundColor: '#2563EB', marginLeft: -8 }]}>
+                <Text style={styles.gameIconEmoji}>🎲</Text>
+              </View>
+              <View style={[styles.gameIconCircle, { backgroundColor: '#E11D48', marginLeft: -8 }]}>
+                <Text style={styles.gameIconEmoji}>🎴</Text>
+              </View>
+            </View>
+            <Text style={styles.gameIconsCount}>+7 more games</Text>
           </View>
 
-          {/* Mini-Games Grid - NESTED INSIDE */}
-          <View style={[styles.miniGamesContainer, { backgroundColor: isAdmin ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.2)' }]}>
-            {CASINO_MINI_GAMES.map((game) => (
-              <TouchableOpacity
-                key={game.id}
-                style={[
-                  styles.miniGameItem,
-                  { backgroundColor: isAdmin ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.05)' }
-                ]}
-                onPress={() => handleCasinoGamePress(game.id)}
-                disabled={!isAdmin}
-                activeOpacity={isAdmin ? 0.7 : 1}
-              >
-                {/* Game Icon */}
-                <View style={[
-                  styles.miniGameIcon,
-                  { backgroundColor: isAdmin ? game.color : '#6B7280' }
-                ]}>
-                  <Text style={styles.miniGameEmoji}>{game.emoji}</Text>
-                  {!isAdmin && (
-                    <View style={styles.miniLockBadge}>
-                      <Text style={styles.miniLockText}>🔒</Text>
-                    </View>
-                  )}
-                </View>
-
-                {/* Game Info */}
-                <View style={styles.miniGameInfo}>
-                  <Text style={[styles.miniGameName, { color: isAdmin ? '#fff' : '#9CA3AF' }]}>
-                    {game.name}
-                  </Text>
-                  <Text style={[styles.miniGameDesc, { color: isAdmin ? 'rgba(255,255,255,0.7)' : '#6B7280' }]}>
-                    {game.description}
-                  </Text>
-                </View>
-
-                {/* Action */}
-                {isAdmin ? (
-                  <View style={[styles.playButton, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
-                    <Text style={styles.playButtonText}>Play</Text>
-                  </View>
-                ) : (
-                  <View style={[styles.lockedBadge, { backgroundColor: 'rgba(0,0,0,0.3)' }]}>
-                    <Text style={styles.lockedBadgeText}>Locked</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            ))}
+          <View style={styles.stayTunedTag}>
+            <Text style={styles.stayTunedText}>Stay Tuned!</Text>
           </View>
 
-          {/* View All Button (Admin Only) */}
-          {isAdmin && (
-            <TouchableOpacity
-              style={styles.viewAllButton}
-              onPress={() => navigation.navigate('Casino')}
-            >
-              <Text style={styles.viewAllText}>View All Casino Games →</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+          {/* View Casino Link */}
+          <View style={styles.viewCasinoLink}>
+            <Text style={styles.viewCasinoText}>View Casino Games →</Text>
+          </View>
+        </TouchableOpacity>
 
         {/* Raffles Section */}
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Contests</Text>
@@ -413,19 +329,19 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  // CONSOLIDATED Casino Section
-  casinoSection: {
+  // Casino Teaser Card - PURE REDIRECT
+  casinoTeaser: {
+    backgroundColor: '#374151',
     borderRadius: 20,
     overflow: 'hidden',
     marginBottom: 24,
   },
-  casinoHeader: {
+  casinoTeaserHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
     padding: 20,
   },
-  casinoHeaderLeft: {
+  casinoTeaserLeft: {
     flex: 1,
   },
   casinoTitleRow: {
@@ -460,111 +376,65 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: 4,
   },
-  casinoHeaderIcon: {
+  casinoTeaserIcon: {
     width: 50,
     height: 50,
     borderRadius: 25,
+    backgroundColor: 'rgba(255,255,255,0.1)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  casinoHeaderEmoji: {
+  casinoTeaserEmoji: {
     fontSize: 24,
   },
-  casinoTags: {
+  gameIconsPreview: {
     flexDirection: 'row',
-    gap: 8,
+    alignItems: 'center',
     paddingHorizontal: 20,
-    paddingBottom: 16,
+    marginBottom: 12,
   },
-  casinoTag: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  casinoTagText: {
-    color: '#fff',
-    fontSize: 11,
-  },
-
-  // Mini-Games Container (NESTED)
-  miniGamesContainer: {
-    padding: 12,
-    gap: 10,
-  },
-  miniGameItem: {
+  gameIconsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    padding: 14,
-    borderRadius: 14,
-    gap: 12,
+    marginRight: 12,
   },
-  miniGameIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
+  gameIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    position: 'relative',
+    borderWidth: 2,
+    borderColor: '#374151',
   },
-  miniGameEmoji: {
-    fontSize: 22,
+  gameIconEmoji: {
+    fontSize: 16,
   },
-  miniLockBadge: {
-    position: 'absolute',
-    bottom: -4,
-    right: -4,
-    backgroundColor: '#374151',
-    borderRadius: 10,
-    width: 18,
-    height: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#4B5563',
-  },
-  miniLockText: {
-    fontSize: 9,
-  },
-  miniGameInfo: {
-    flex: 1,
-  },
-  miniGameName: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  miniGameDesc: {
+  gameIconsCount: {
+    color: '#9CA3AF',
     fontSize: 12,
-    marginTop: 2,
   },
-  playButton: {
+  stayTunedTag: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  playButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 13,
-  },
-  lockedBadge: {
-    paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
+    alignSelf: 'flex-start',
+    marginLeft: 20,
+    marginBottom: 16,
   },
-  lockedBadgeText: {
-    color: '#9CA3AF',
-    fontSize: 11,
+  stayTunedText: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 12,
   },
-  viewAllButton: {
-    backgroundColor: 'rgba(0,0,0,0.2)',
+  viewCasinoLink: {
+    backgroundColor: 'rgba(0,0,0,0.3)',
     paddingVertical: 14,
     alignItems: 'center',
   },
-  viewAllText: {
-    color: '#fff',
-    fontWeight: '600',
+  viewCasinoText: {
+    color: 'rgba(255,255,255,0.7)',
     fontSize: 14,
+    fontWeight: '500',
   },
 
   // Section Title
