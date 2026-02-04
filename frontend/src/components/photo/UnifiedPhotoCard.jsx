@@ -40,10 +40,10 @@ import {
 import { cn } from '../../lib/utils';
 
 // Golden Sparkling Frame Animation Component for Level 60 Seniority
-// SCROLLING FIX: Using pure CSS animations instead of framer-motion
+// SCROLLING FIX v5: Using pure CSS animations + touch-action: pan-y
 const GoldenSparklingFrame = ({ children }) => {
   return (
-    <div className="relative golden-frame-container">
+    <div className="relative golden-frame-container" style={{ touchAction: 'pan-y' }}>
       {/* Animated sparkle particles using CSS animations */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
         {[...Array(8)].map((_, i) => (
