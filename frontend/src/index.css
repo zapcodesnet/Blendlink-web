@@ -77,7 +77,7 @@ html {
   /* Critical for smooth mobile scrolling */
   -webkit-tap-highlight-color: transparent;
   -webkit-overflow-scrolling: touch !important;
-  touch-action: auto !important;
+  touch-action: pan-y !important;
   overflow-x: hidden !important;
   overflow-y: scroll !important;
 }
@@ -97,7 +97,7 @@ body {
   /* Allow natural overscroll behavior */
   overscroll-behavior: auto !important;
   /* Ensure touch scrolling works - use auto for max compatibility */
-  touch-action: auto !important;
+  touch-action: pan-y !important;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -1184,7 +1184,7 @@ a,
   -webkit-overflow-scrolling: touch !important;
   
   /* CRITICAL: Allow touch to scroll - use auto for maximum compatibility */
-  touch-action: auto !important;
+  touch-action: pan-y !important;
   
   /* Ensure smooth momentum scrolling on iOS */
   scroll-behavior: auto;
@@ -1201,7 +1201,7 @@ a,
 
 /* Reset touch-action on all children to allow inheritance */
 .landing-page-scroll-container *:not(button):not(a):not([role="button"]):not(input):not(select):not(textarea) {
-  touch-action: auto !important;
+  touch-action: pan-y !important;
 }
 
 /* Only buttons should capture taps - use manipulation instead of none */
@@ -1220,7 +1220,7 @@ a,
 .landing-page-scroll-container svg,
 .landing-page-scroll-container picture {
   pointer-events: none !important;
-  touch-action: auto !important;
+  touch-action: pan-y !important;
   -webkit-user-drag: none !important;
   user-select: none !important;
 }
@@ -1234,7 +1234,7 @@ a,
 .minted-photos-scroll-container .sticky,
 .photo-game-scroll-container header.sticky,
 .photo-game-scroll-container .sticky {
-  touch-action: auto !important;
+  touch-action: pan-y !important;
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
 }
@@ -1251,13 +1251,13 @@ a,
   overflow-x: hidden !important;
   overflow-y: scroll !important;
   -webkit-overflow-scrolling: touch !important;
-  touch-action: auto !important;
+  touch-action: pan-y !important;
   transform: none !important;
   will-change: auto !important;
 }
 
 .marketplace-scroll-container *:not(button):not(a):not([role="button"]):not(input):not(select):not(textarea) {
-  touch-action: auto !important;
+  touch-action: pan-y !important;
 }
 
 .marketplace-scroll-container button,
@@ -1271,7 +1271,7 @@ a,
 .marketplace-scroll-container video,
 .marketplace-scroll-container svg {
   pointer-events: none !important;
-  touch-action: auto !important;
+  touch-action: pan-y !important;
   -webkit-user-drag: none !important;
   user-select: none !important;
 }
@@ -1343,7 +1343,7 @@ a,
 .photo-game-scroll-container video,
 .photo-game-scroll-container svg {
   pointer-events: none !important;
-  touch-action: auto !important;
+  touch-action: pan-y !important;
   -webkit-user-drag: none !important;
   user-select: none !important;
 }
