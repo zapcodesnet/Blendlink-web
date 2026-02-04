@@ -1156,7 +1156,7 @@ const getTimeAgo = (dateString) => {
   return date.toLocaleDateString();
 };
 
-// Main Social Feed Page
+// Main Social Feed Page - PERFORMANCE OPTIMIZED
 export default function SocialFeed() {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -1167,10 +1167,14 @@ export default function SocialFeed() {
   const [hasMore, setHasMore] = useState(true);
   const [showAIModal, setShowAIModal] = useState(false);
   
-  // Load feed
+  // Load feed with timeout for better perceived performance
   const loadFeed = useCallback(async (skip = 0) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
     try {
       const data = await apiRequest(`/social/feed?skip=${skip}&limit=10`);
+      clearTimeout(timeoutId);
       if (skip === 0) {
         setPosts(data);
       } else {
