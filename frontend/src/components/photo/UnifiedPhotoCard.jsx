@@ -472,15 +472,15 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
               </div>
             )}
             
-            {/* TAP TO FLIP - VISIBLE on mobile with larger text */}
+            {/* TAP TO FLIP - VISIBLE on mobile with larger text - HAS pointer-events */}
             <button 
               onClick={(e) => {
                 e.stopPropagation();
                 handleFlip(e);
               }}
-              className="text-center text-[9px] text-gray-300 hover:text-white border-t border-gray-500 pt-1 mt-auto -mx-1.5 px-1.5 font-medium"
+              className="text-center text-[9px] text-gray-300 hover:text-white border-t border-gray-500 pt-1 mt-auto -mx-1.5 px-1.5 font-medium pointer-events-auto"
               data-testid="flip-card-btn"
-              style={{ touchAction: 'manipulation', minHeight: '18px' }}
+              style={{ minHeight: '18px' }}
             >
               Tap to flip →
             </button>
