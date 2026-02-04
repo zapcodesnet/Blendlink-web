@@ -838,11 +838,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
             {/* Flip back */}
             <button 
               onClick={(e) => {
-                e.preventDefault();
                 e.stopPropagation();
-                if (e.nativeEvent) {
-                  e.nativeEvent.stopImmediatePropagation();
-                }
                 handleFlip(e);
               }}
               className="w-full text-center text-[10px] text-gray-500 hover:text-gray-300 transition-colors mt-2 pointer-events-auto"
