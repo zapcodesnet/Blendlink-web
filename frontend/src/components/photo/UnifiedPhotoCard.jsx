@@ -476,18 +476,21 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
           )}
         </div>
         
-        {/* Stats Section - NEW LAYOUT ORDER */}
+        {/* Stats Section - 25% of card height - COMPACT layout */}
         {showStats && (
-          <div className="p-2 space-y-1 bg-black/70">
+          <div 
+            className="flex-[1] p-1.5 bg-black/70 flex flex-col justify-between overflow-hidden"
+            style={{ maxHeight: '25%', touchAction: 'pan-y' }}
+          >
             {/* NAME */}
-            <p className="text-white font-semibold text-xs truncate px-1 text-center">
+            <p className="text-white font-semibold text-[10px] truncate text-center leading-tight">
               {photo?.name || 'Unnamed Photo'}
             </p>
             
-            {/* DOLLAR VALUE & STARS */}
+            {/* DOLLAR VALUE & STARS - Single row */}
             <div className="flex items-center justify-between">
               <span className={cn(
-                "font-bold bg-gradient-to-r bg-clip-text text-transparent text-sm",
+                "font-bold bg-gradient-to-r bg-clip-text text-transparent text-xs",
                 scenery.gradient
               )}>
                 {formatDollarValue(dollarValue)}
@@ -495,26 +498,23 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
               <StarsDisplay count={stars} hasGoldenFrame={hasGoldenFrame} />
             </div>
             
-            {/* SCENERY & LEVEL */}
+            {/* SCENERY & LEVEL - Single row */}
             <div className="flex items-center justify-between">
               <div className={cn(
-                "flex items-center gap-1 px-1.5 py-0.5 rounded-full",
+                "flex items-center gap-0.5 px-1 py-0.5 rounded-full",
                 `bg-gradient-to-r ${scenery.bgGradient}`
               )}>
-                <span className="text-[10px]">{scenery.emoji}</span>
-                <span className="text-[9px] text-white/90">{scenery.label}</span>
+                <span className="text-[8px]">{scenery.emoji}</span>
+                <span className="text-[8px] text-white/90">{scenery.label}</span>
               </div>
-              <span className="text-purple-400 text-[10px] font-bold">Lv {level}</span>
+              <span className="text-purple-400 text-[9px] font-bold">Lv {level}</span>
             </div>
             
-            {/* STAMINA BAR */}
+            {/* STAMINA BAR - Compact */}
             {showStamina && (
-              <div className="space-y-0.5">
-                <div className="flex justify-between text-[9px] text-gray-400">
-                  <span>⚡ Stamina</span>
-                  <span>{stamina}/{maxStamina}</span>
-                </div>
-                <div className="h-1 bg-gray-700 rounded-full overflow-hidden">
+              <div className="flex items-center gap-1">
+                <span className="text-[8px] text-gray-400">⚡</span>
+                <div className="flex-1 h-1 bg-gray-700 rounded-full overflow-hidden">
                   <div 
                     className={cn(
                       "h-full rounded-full transition-all",
@@ -524,32 +524,11 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
                     style={{ width: `${staminaPercent}%` }}
                   />
                 </div>
+                <span className="text-[8px] text-gray-400">{stamina}/{maxStamina}</span>
               </div>
             )}
             
-            {/* STREAKS (Win/Loss) - Compact */}
-            {(winStreak > 0 || loseStreak > 0) && (
-              <div className="flex items-center justify-center gap-1 text-[9px]">
-                {winStreak >= 3 && (
-                  <span className="px-1 py-0.5 bg-orange-500/20 text-orange-400 rounded">
-                    🔥{winStreak}
-                  </span>
-                )}
-                {loseStreak >= 3 && (
-                  <span className="px-1 py-0.5 bg-blue-500/20 text-blue-400 rounded">
-                    🛡️
-                  </span>
-                )}
-                {winStreak > 0 && winStreak < 3 && (
-                  <span className="text-green-400">{winStreak}W</span>
-                )}
-                {loseStreak > 0 && loseStreak < 3 && (
-                  <span className="text-red-400">{loseStreak}L</span>
-                )}
-              </div>
-            )}
-            
-            {/* TAP TO FLIP BUTTON */}
+            {/* TAP TO FLIP - Very compact */}
             <button 
               onClick={(e) => {
                 e.preventDefault();
@@ -557,8 +536,9 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
                 if (e.nativeEvent) e.nativeEvent.stopImmediatePropagation();
                 handleFlip(e);
               }}
-              className="w-full py-0.5 text-center text-[9px] text-gray-500 hover:text-white transition-colors border-t border-gray-700/30 mt-1"
+              className="text-center text-[8px] text-gray-500 hover:text-white transition-colors border-t border-gray-700/30 pt-0.5"
               data-testid="flip-card-btn"
+              style={{ touchAction: 'manipulation' }}
             >
               Tap to flip →
             </button>
