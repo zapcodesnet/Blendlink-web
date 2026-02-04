@@ -6,44 +6,61 @@
 
 #### Changes Implemented:
 
-**1. BL Coins Balance REMOVED from Games Page**
-- Removed from header on both web (`/games`) and mobile (`GamesScreen`)
-- Balance display still visible on Wallet, Profile, and other pages
-- No impact on BL Coins functionality elsewhere
+**1. CONSOLIDATED Casino Games Section**
+- All mini-games (Spin Wheel, Scratch Card, Memory Match) now NESTED INSIDE single "Casino Games" card
+- Removed duplicate/separate game cards that were outside the casino section
+- Single "Casino Games" title - no duplicates anywhere
+- Clean, professional layout with games as child elements inside the card
 
-**2. Casino Games Section - Locked for Regular Users**
-- Spin Wheel, Scratch Card, Memory Match moved into dedicated "Casino Games" section
-- For regular users:
-  - Section shows "Coming Soon" badge
-  - Games are greyed out with lock icons
-  - Overlay message: "These games are currently in development"
-  - All interactions disabled (no clicks/taps work)
-- Premium teaser appearance with attractive locked state
+**2. Regular User View (Locked State)**
+- Grey gradient background
+- "Coming Soon" badge next to title
+- Lock icon in header (instead of spade)
+- "Stay Tuned!" tag
+- Each game shows:
+  - Greyed-out icon with small lock badge
+  - Greyed text
+  - "Locked" badge instead of Play button
+- No interaction possible - clicks don't work
 
-**3. Admin-Only Access (blendlinknet@gmail.com)**
-- Admin users have FULL access to Casino Games
-- Admin check: `user.email === "blendlinknet@gmail.com" || user.role === "admin" || user.is_admin === true`
-- For admin:
-  - Casino banner is fully clickable (orange/red gradient)
-  - All casino games show "Play" buttons
-  - Games are fully functional and playable
-  - No lock icons or restrictions
+**3. Admin View (blendlinknet@gmail.com)**
+- Orange/red gradient background (active state)
+- Spade icon in header
+- "Bet 10-10,000 BL" and "Provably Fair" tags
+- Each game shows:
+  - Colorful icon (purple/green/blue)
+  - White text
+  - "Play" button - fully clickable
+- "View All Casino Games →" footer link
+- Full functionality unlocked
 
-**4. Web & Mobile 100% Synchronized**
-- Both platforms use identical admin check logic
-- Same visual treatment for locked/unlocked states
-- Same game list and section structure
+**4. BL Coins Balance REMOVED from Games page**
+- Header shows only "Games" title
+- Balance still visible on Wallet, Profile, other pages
+
+**5. Web & Mobile 100% Synchronized**
+- Identical structure, logic, and appearance
+- Same admin check: `user.email === "blendlinknet@gmail.com"`
 
 **Files Modified:**
-- `/app/frontend/src/pages/Games.jsx` - Complete rewrite for web
-- `/app/mobile/src/screens/GamesScreen.js` - Complete rewrite for mobile
+- `/app/frontend/src/pages/Games.jsx` (Web)
+- `/app/mobile/src/screens/GamesScreen.js` (Mobile)
 
-**Test Results:**
-- ✅ Regular user sees locked Casino Games with "Coming Soon"
-- ✅ Admin user sees fully unlocked Casino Games with "Play" buttons
-- ✅ BL Coins balance removed from Games header
-- ✅ BL Coins still visible on Wallet page
-- ✅ Photo Battle Arena, Minted Photos, Marketplace unaffected
+**Structure - Games Page:**
+```
+Games Page
+├── Photo Battle Arena (Public - Featured)
+├── Quick Links Row
+│   ├── Minted Photos
+│   └── Marketplace
+├── Casino Games Section (SINGLE CARD)
+│   ├── Header (Title + Coming Soon/Admin tags)
+│   └── Mini-Games (NESTED INSIDE)
+│       ├── Spin Wheel [Locked/Play]
+│       ├── Scratch Card [Locked/Play]
+│       └── Memory Match [Locked/Play]
+└── Raffles & Contests
+```
 
 ---
 
