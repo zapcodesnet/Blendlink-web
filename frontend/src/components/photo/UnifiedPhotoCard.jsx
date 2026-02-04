@@ -491,18 +491,17 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
       {/* BACK: Stats view */}
       <div 
         className={cn(
-          "absolute inset-0 rounded-xl overflow-hidden",
+          "absolute inset-0 rounded-xl overflow-hidden pointer-events-none",
           "bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700",
           hasGoldenFrame && !seniorityAchieved && "ring-2 ring-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]"
         )}
         style={{ 
           backfaceVisibility: 'hidden', 
           transform: 'rotateY(180deg)',
-          touchAction: 'pan-y',
         }}
       >
         {/* Small preview image at top */}
-        <div className="relative h-12 w-full" style={{ pointerEvents: 'none' }}>
+        <div className="relative h-12 w-full pointer-events-none">
           <img
             src={photo?.image_url || photo?.thumbnail_url}
             alt={photo?.name}
