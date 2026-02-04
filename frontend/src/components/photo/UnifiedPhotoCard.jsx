@@ -751,7 +751,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         selected && "ring-2 ring-primary ring-offset-2 ring-offset-background",
         className
       )}
-      style={{ zIndex: isFlipped ? 50 : 'auto' }}
+      style={{ zIndex: isFlipped ? 50 : 'auto', touchAction: 'pan-y' }}
       data-testid={`photo-card-${photo?.mint_id}`}
       data-flipped={isFlipped}
     >
