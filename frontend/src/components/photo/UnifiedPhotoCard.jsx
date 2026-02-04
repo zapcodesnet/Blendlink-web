@@ -356,11 +356,9 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
     onFlip?.(newFlippedState);
   }, [isFlipped, onFlip, onFlipStateChange]);
   
-  // Card content - SINGLE-FINGER SCROLL FIX
-  // CRITICAL: Disable ALL framer-motion gesture handling to allow touch scrolling
+  // Card content - SCROLL FIX: Minimal framer-motion, no touch interference
   const cardContent = (
     <motion.div
-      ref={cardRef}
       className={cn(
         "relative w-full preserve-3d",
         config.height,
@@ -371,55 +369,44 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         scale: isFlipped ? 1.05 : 1,
       }}
       transition={{ duration: 0.5 }}
-      // CRITICAL: Disable ALL gesture/drag detection to prevent touch capture
-      drag={false}
-      dragListener={false}
-      whileTap={undefined}
-      whileHover={undefined}
-      onPan={undefined}
-      onPanStart={undefined}
-      onPanEnd={undefined}
-      onTap={undefined}
-      onTapStart={undefined}
-      onTapCancel={undefined}
       style={{ 
         transformStyle: 'preserve-3d',
         zIndex: isFlipped ? 100 : 1,
-        // Allow touch events to pass through for scrolling
-        touchAction: 'pan-y',
       }}
     >
-      {/* FRONT: Photo + Stats - 70% image / 30% details for better text fit */}
+      {/* FRONT: Photo + Stats - 70% image / 30% details */}
       <div 
         className={cn(
           "absolute inset-0 backface-hidden rounded-xl overflow-hidden flex flex-col",
           "bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700",
           hasGoldenFrame && !seniorityAchieved && "ring-2 ring-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]"
         )}
-        style={{ 
-          backfaceVisibility: 'hidden',
-          touchAction: 'pan-y',
-        }}
+        style={{ backfaceVisibility: 'hidden' }}
       >
-        {/* Photo Image - 70% of card height */}
+        {/* Photo Image - 70% of card height - NO pointer events */}
         <div 
-          className="relative w-full"
-          style={{ 
-            height: '70%', 
-            minHeight: '70%',
-            touchAction: 'pan-y',
-            pointerEvents: 'none',
-          }}
+          className="relative w-full pointer-events-none"
+          style={{ height: '70%', minHeight: '70%' }}
         >
           <img
             src={photo?.image_url || photo?.thumbnail_url || '/placeholder-photo.jpg'}
             alt={photo?.name || 'Minted Photo'}
-            className="w-full h-full object-cover select-none"
+            className="w-full h-full object-cover select-none pointer-events-none"
             loading="lazy"
             draggable={false}
-            style={{ 
-              pointerEvents: 'none',
-              touchAction: 'pan-y',
+          />
+          {/* Seniority Level 60 sparkle indicator */}
+          {seniorityAchieved && (
+            <div className="absolute top-1 right-1 pointer-events-none">
+              <motion.div
+                animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
+                transition={{ duration: 3, repeat: Infinity }}
+              >
+                <Sparkles size={16} className="text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" />
+              </motion.div>
+            </div>
+          )}
+        </div>
               userSelect: 'none',
               WebkitUserSelect: 'none',
               WebkitTouchCallout: 'none',
