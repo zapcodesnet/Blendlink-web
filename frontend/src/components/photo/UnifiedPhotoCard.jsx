@@ -498,7 +498,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         {/* Stats Section - 25% of card height - ALL TEXT VISIBLE */}
         {showStats && (
           <div 
-            className="bg-gradient-to-b from-black/90 to-black/70 flex flex-col px-1.5 py-1 space-y-0.5"
+            className="bg-gradient-to-b from-black/90 to-black/70 flex flex-col px-1.5 py-1"
             style={{ 
               height: '25%', 
               maxHeight: '25%',
@@ -506,8 +506,8 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
               overflow: 'hidden',
             }}
           >
-            {/* NAME - Top of details, directly below image - PROMINENT */}
-            <div className="text-yellow-300 font-bold truncate text-center text-[11px] leading-tight py-0.5">
+            {/* NAME - Top of details, directly below image - YELLOW PROMINENT */}
+            <div className="text-yellow-400 font-bold truncate text-center text-[10px] leading-tight bg-black/50 rounded mb-0.5 py-0.5">
               {photo?.name || photo?.title || 'Unnamed Photo'}
             </div>
             
