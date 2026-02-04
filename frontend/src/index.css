@@ -1288,14 +1288,21 @@ a,
   overflow-x: hidden !important;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch !important;
-  touch-action: manipulation !important;
+  touch-action: pan-y !important;
   overscroll-behavior: contain;
   transform: none !important;
   will-change: auto !important;
 }
 
-/* ALL elements inside scroll container must allow touch scrolling */
+/* ALL elements inside must allow vertical scrolling */
 .minted-photos-scroll-container * {
+  touch-action: pan-y !important;
+}
+
+/* Interactive elements can use manipulation for tap */
+.minted-photos-scroll-container button,
+.minted-photos-scroll-container a,
+.minted-photos-scroll-container [role="button"] {
   touch-action: manipulation !important;
 }
 
@@ -1304,10 +1311,11 @@ a,
 .minted-photos-scroll-container video,
 .minted-photos-scroll-container svg {
   pointer-events: none !important;
-  touch-action: manipulation !important;
+  touch-action: pan-y !important;
   -webkit-user-drag: none !important;
   user-select: none !important;
   -webkit-user-select: none !important;
+  -webkit-touch-callout: none !important;
 }
 
 /* ==============================================
@@ -1322,14 +1330,21 @@ a,
   overflow-x: hidden !important;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch !important;
-  touch-action: manipulation !important;
+  touch-action: pan-y !important;
   overscroll-behavior: contain;
   transform: none !important;
   will-change: auto !important;
 }
 
-/* ALL elements inside scroll container must allow touch scrolling */
+/* ALL elements inside must allow vertical scrolling */
 .photo-game-scroll-container * {
+  touch-action: pan-y !important;
+}
+
+/* Interactive elements can use manipulation for tap */
+.photo-game-scroll-container button,
+.photo-game-scroll-container a,
+.photo-game-scroll-container [role="button"] {
   touch-action: manipulation !important;
 }
 
@@ -1338,10 +1353,11 @@ a,
 .photo-game-scroll-container video,
 .photo-game-scroll-container svg {
   pointer-events: none !important;
-  touch-action: manipulation !important;
+  touch-action: pan-y !important;
   -webkit-user-drag: none !important;
   user-select: none !important;
   -webkit-user-select: none !important;
+  -webkit-touch-callout: none !important;
 }
 
 .photo-game-scroll-container button,
