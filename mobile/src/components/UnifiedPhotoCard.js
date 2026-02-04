@@ -174,11 +174,13 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   
   const scenery = SCENERY_CONFIG[photo?.scenery_type] || SCENERY_CONFIG.natural;
   
-  // Size configurations
+  // Size configurations - INCREASED by 3% to fit Name and Tap to flip
+  // Original: small=100, medium=140, large=180
+  // +3%: small=103, medium=144, large=185
   const sizeConfig = {
-    small: { width: 100, imageHeight: 80, fontSize: 10 },
-    medium: { width: 140, imageHeight: 110, fontSize: 12 },
-    large: { width: 180, imageHeight: 150, fontSize: 14 },
+    small: { width: 103, imageHeight: 82, fontSize: 10 },
+    medium: { width: 144, imageHeight: 113, fontSize: 12 },
+    large: { width: 185, imageHeight: 155, fontSize: 14 },
   };
   const config = sizeConfig[size] || sizeConfig.medium;
   
