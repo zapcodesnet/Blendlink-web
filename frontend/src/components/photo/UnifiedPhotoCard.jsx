@@ -356,8 +356,8 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
     onFlip?.(newFlippedState);
   }, [isFlipped, onFlip, onFlipStateChange]);
   
-  // Card content - OPTIMIZED FOR SINGLE-FINGER TOUCH SCROLLING
-  // touch-action: pan-y explicitly tells browser to allow vertical scrolling
+  // Card content - SCROLL-FRIENDLY DESIGN
+  // No touch-action overrides - let browser handle scrolling naturally
   const cardContent = (
     <motion.div
       ref={cardRef}
@@ -374,8 +374,6 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
       style={{ 
         transformStyle: 'preserve-3d',
         zIndex: isFlipped ? 100 : 1,
-        // CRITICAL: pan-y allows single-finger vertical scrolling
-        touchAction: 'pan-y',
       }}
     >
       {/* FRONT: Photo + Stats - 75% image / 25% details */}
@@ -385,19 +383,12 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
           "bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700",
           hasGoldenFrame && !seniorityAchieved && "ring-2 ring-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]"
         )}
-        style={{ 
-          backfaceVisibility: 'hidden', 
-          touchAction: 'pan-y',
-        }}
+        style={{ backfaceVisibility: 'hidden' }}
       >
         {/* Photo Image - 72% of card height */}
         <div 
           className="relative w-full"
-          style={{ 
-            height: '72%', 
-            minHeight: '72%',
-            touchAction: 'pan-y',
-          }}
+          style={{ height: '72%', minHeight: '72%' }}
         >
           <img
             src={photo?.image_url || photo?.thumbnail_url || '/placeholder-photo.jpg'}
@@ -407,7 +398,6 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
             draggable={false}
             style={{ 
               pointerEvents: 'none',
-              touchAction: 'pan-y',
               userSelect: 'none',
               WebkitUserSelect: 'none',
               WebkitTouchCallout: 'none',
@@ -430,12 +420,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         {showStats && (
           <div 
             className="bg-gradient-to-b from-black/90 to-black/70 flex flex-col px-1.5 py-1"
-            style={{ 
-              height: '28%', 
-              maxHeight: '28%',
-              touchAction: 'pan-y',
-              overflow: 'hidden',
-            }}
+            style={{ height: '28%', maxHeight: '28%', overflow: 'hidden' }}
           >
             {/* NAME - Top of details, directly below image - YELLOW PROMINENT */}
             <div className="text-yellow-400 font-bold truncate text-center text-[10px] leading-tight bg-black/50 rounded mb-0.5 py-0.5">
