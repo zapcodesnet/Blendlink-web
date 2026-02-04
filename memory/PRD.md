@@ -1,49 +1,49 @@
 # Blendlink Platform - Product Requirements Document
 
-## Latest Update: February 3, 2026
+## Latest Update: February 4, 2026
 
-### Session Fixes Completed (February 3, 2026) - LATEST
+### Games Page Update (February 4, 2026) - LATEST
 
-#### P0 BUG FIX: Fetch Response Errors + Deduct Feature ✅ FIXED (February 3, 2026 - v3)
+#### Changes Implemented:
 
-**Issues Fixed**:
-1. "Failed to execute 'text' on 'Response': body stream already read"
-2. "Failed to execute 'clone' on 'Response': Response body is already used"
-3. "Search failed: Failed to read response from server"
-4. Missing Deduct/Remove functionality
+**1. BL Coins Balance REMOVED from Games Page**
+- Removed from header on both web (`/games`) and mobile (`GamesScreen`)
+- Balance display still visible on Wallet, Profile, and other pages
+- No impact on BL Coins functionality elsewhere
 
-**Root Cause Analysis**:
-- The JavaScript Fetch API Response body can only be read ONCE
-- Various attempts (clone, text-first) failed due to complex async timing
-- The response body may be intercepted by browser extensions, service workers, or dev tools
+**2. Casino Games Section - Locked for Regular Users**
+- Spin Wheel, Scratch Card, Memory Match moved into dedicated "Casino Games" section
+- For regular users:
+  - Section shows "Coming Soon" badge
+  - Games are greyed out with lock icons
+  - Overlay message: "These games are currently in development"
+  - All interactions disabled (no clicks/taps work)
+- Premium teaser appearance with attractive locked state
 
-**Final Solution - Ultra-Robust Approach**:
-1. Added detailed console logging for debugging
-2. Read body as text with graceful error handling
-3. Handle empty/204 responses properly
-4. Added `cache: 'no-store'` to prevent cached responses
-5. Better error messages for debugging
+**3. Admin-Only Access (blendlinknet@gmail.com)**
+- Admin users have FULL access to Casino Games
+- Admin check: `user.email === "blendlinknet@gmail.com" || user.role === "admin" || user.is_admin === true`
+- For admin:
+  - Casino banner is fully clickable (orange/red gradient)
+  - All casino games show "Play" buttons
+  - Games are fully functional and playable
+  - No lock icons or restrictions
 
-**New Features Added**:
-- **Add / Credit** button (green) - adds BL Coins
-- **Remove / Deduct** button (red) - removes BL Coins
-- **Confirmation dialog** for all deductions with warning message
-- **Preview panel** showing new balance calculation
-- **Quick amount buttons** (100, 500, 1K, 5K, 10K, 100K)
-- **Validation** to prevent over-deduction (can't deduct more than balance)
+**4. Web & Mobile 100% Synchronized**
+- Both platforms use identical admin check logic
+- Same visual treatment for locked/unlocked states
+- Same game list and section structure
 
-**Files Modified**:
-- `/app/frontend/src/pages/admin/AdminLayout.jsx` - Ultra-robust `adminApiRequest`
-- `/app/frontend/src/pages/admin/AdminWalletManagement.jsx` - Complete rewrite with Add/Deduct UI
+**Files Modified:**
+- `/app/frontend/src/pages/Games.jsx` - Complete rewrite for web
+- `/app/mobile/src/screens/GamesScreen.js` - Complete rewrite for mobile
 
-**Test Results**: 
-- ✅ User search works - returns results
-- ✅ User selection and display works
-- ✅ Credit (+500 BL) works
-- ✅ Deduction (-50 BL) works with confirmation
-- ✅ Balance updates immediately
-- ✅ Transaction history shows both credits and deductions
-- ✅ Deductions shown in red, credits in green
+**Test Results:**
+- ✅ Regular user sees locked Casino Games with "Coming Soon"
+- ✅ Admin user sees fully unlocked Casino Games with "Play" buttons
+- ✅ BL Coins balance removed from Games header
+- ✅ BL Coins still visible on Wallet page
+- ✅ Photo Battle Arena, Minted Photos, Marketplace unaffected
 
 ---
 
