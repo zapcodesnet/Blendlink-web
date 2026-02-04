@@ -829,6 +829,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
       )}
       style={{ 
         zIndex: isFlipped ? 50 : 'auto',
+        touchAction: 'pan-y',
       }}
       data-testid={`photo-card-${photo?.mint_id}`}
       data-flipped={isFlipped}
