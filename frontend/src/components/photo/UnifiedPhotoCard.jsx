@@ -424,8 +424,9 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
     onFlip?.(newFlippedState);
   }, [isFlipped, onFlip, onFlipStateChange]);
   
-  // Card content - SIMPLIFIED for proper scrolling
-  // Remove all touch-action interference, let parent handle scrolling
+  // Card content - OPTIMIZED FOR TOUCH SCROLLING
+  // touch-action: manipulation allows pan and pinch but not double-tap zoom
+  // This is the most compatible setting for scrollable card grids
   const cardContent = (
     <motion.div
       ref={cardRef}
@@ -436,13 +437,14 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
       )}
       animate={{ 
         rotateY: isFlipped ? 180 : 0,
-        // Scale up slightly when flipped for emphasis
         scale: isFlipped ? 1.05 : 1,
       }}
       transition={{ duration: 0.5 }}
       style={{ 
         transformStyle: 'preserve-3d',
         zIndex: isFlipped ? 100 : 1,
+        // CRITICAL: Allow touch scrolling - manipulation is more compatible than pan-y
+        touchAction: 'manipulation',
       }}
     >
       {/* FRONT: Photo + Stats - 75% image / 25% details */}
@@ -452,16 +454,32 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
           "bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700",
           hasGoldenFrame && !seniorityAchieved && "ring-2 ring-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]"
         )}
-        style={{ backfaceVisibility: 'hidden', touchAction: 'pan-y' }}
+        style={{ 
+          backfaceVisibility: 'hidden', 
+          touchAction: 'manipulation',
+        }}
       >
         {/* Photo Image - 75% of card height */}
-        <div className="relative w-full flex-[3]" style={{ minHeight: '75%' }}>
+        <div 
+          className="relative w-full"
+          style={{ 
+            height: '75%', 
+            minHeight: '75%',
+            touchAction: 'manipulation',
+          }}
+        >
           <img
             src={photo?.image_url || photo?.thumbnail_url || '/placeholder-photo.jpg'}
             alt={photo?.name || 'Minted Photo'}
-            className="w-full h-full object-cover pointer-events-none"
+            className="w-full h-full object-cover select-none"
             loading="lazy"
             draggable={false}
+            style={{ 
+              pointerEvents: 'none',
+              touchAction: 'manipulation',
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+            }}
           />
           {/* Seniority Level 60 sparkle indicator */}
           {seniorityAchieved && (
@@ -470,7 +488,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
                 animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
                 transition={{ duration: 3, repeat: Infinity }}
               >
-                <Sparkles size={20} className="text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" />
+                <Sparkles size={16} className="text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" />
               </motion.div>
             </div>
           )}
@@ -479,18 +497,26 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         {/* Stats Section - 25% of card height - COMPACT layout */}
         {showStats && (
           <div 
-            className="flex-[1] p-1.5 bg-black/70 flex flex-col justify-between overflow-hidden"
-            style={{ maxHeight: '25%', touchAction: 'pan-y' }}
+            className="bg-black/80 flex flex-col justify-between overflow-hidden px-1.5 py-1"
+            style={{ 
+              height: '25%', 
+              maxHeight: '25%',
+              touchAction: 'manipulation',
+            }}
           >
-            {/* NAME */}
-            <p className="text-white font-semibold text-[10px] truncate text-center leading-tight">
+            {/* NAME - Top of details, directly below image */}
+            <p className={cn(
+              "text-white font-semibold truncate text-center leading-tight",
+              config.textSize
+            )}>
               {photo?.name || 'Unnamed Photo'}
             </p>
             
             {/* DOLLAR VALUE & STARS - Single row */}
             <div className="flex items-center justify-between">
               <span className={cn(
-                "font-bold bg-gradient-to-r bg-clip-text text-transparent text-xs",
+                "font-bold bg-gradient-to-r bg-clip-text text-transparent",
+                config.textSize,
                 scenery.gradient
               )}>
                 {formatDollarValue(dollarValue)}
@@ -504,16 +530,16 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
                 "flex items-center gap-0.5 px-1 py-0.5 rounded-full",
                 `bg-gradient-to-r ${scenery.bgGradient}`
               )}>
-                <span className="text-[8px]">{scenery.emoji}</span>
-                <span className="text-[8px] text-white/90">{scenery.label}</span>
+                <span className="text-[7px]">{scenery.emoji}</span>
+                <span className="text-[7px] text-white/90">{scenery.label}</span>
               </div>
-              <span className="text-purple-400 text-[9px] font-bold">Lv {level}</span>
+              <span className={cn("text-purple-400 font-bold", config.textSize)}>Lv {level}</span>
             </div>
             
             {/* STAMINA BAR - Compact */}
             {showStamina && (
-              <div className="flex items-center gap-1">
-                <span className="text-[8px] text-gray-400">⚡</span>
+              <div className="flex items-center gap-0.5">
+                <span className="text-[7px] text-gray-400">⚡</span>
                 <div className="flex-1 h-1 bg-gray-700 rounded-full overflow-hidden">
                   <div 
                     className={cn(
@@ -524,11 +550,29 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
                     style={{ width: `${staminaPercent}%` }}
                   />
                 </div>
-                <span className="text-[8px] text-gray-400">{stamina}/{maxStamina}</span>
+                <span className="text-[7px] text-gray-400">{stamina}/{maxStamina}</span>
               </div>
             )}
             
-            {/* TAP TO FLIP - Very compact */}
+            {/* WIN/LOSE STREAKS - Compact inline */}
+            {(winStreak > 0 || loseStreak > 0) && (
+              <div className="flex items-center justify-center gap-1">
+                {winStreak >= 3 && (
+                  <span className="text-[7px] text-orange-400">🔥{winStreak}</span>
+                )}
+                {loseStreak >= 3 && (
+                  <span className="text-[7px] text-blue-400">🛡️</span>
+                )}
+                {winStreak > 0 && winStreak < 3 && (
+                  <span className="text-[6px] text-green-400">{winStreak}W</span>
+                )}
+                {loseStreak > 0 && loseStreak < 3 && (
+                  <span className="text-[6px] text-red-400">{loseStreak}L</span>
+                )}
+              </div>
+            )}
+            
+            {/* TAP TO FLIP - Border touching text */}
             <button 
               onClick={(e) => {
                 e.preventDefault();
@@ -536,7 +580,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
                 if (e.nativeEvent) e.nativeEvent.stopImmediatePropagation();
                 handleFlip(e);
               }}
-              className="text-center text-[8px] text-gray-500 hover:text-white transition-colors border-t border-gray-700/30 pt-0.5"
+              className="text-center text-[7px] text-gray-500 hover:text-white transition-colors border-t border-gray-700/50 mt-auto"
               data-testid="flip-card-btn"
               style={{ touchAction: 'manipulation' }}
             >
