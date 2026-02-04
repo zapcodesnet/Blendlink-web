@@ -506,7 +506,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
             }}
           >
             {/* NAME - Top of details, directly below image - PROMINENT */}
-            <div className="text-white font-bold truncate text-center text-[10px] leading-tight bg-gray-800/50 rounded px-1">
+            <div className="text-yellow-300 font-bold truncate text-center text-[11px] leading-tight py-0.5">
               {photo?.name || photo?.title || 'Unnamed Photo'}
             </div>
             
