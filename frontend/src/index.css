@@ -1447,7 +1447,6 @@ canvas[data-interactive="true"] {
   pointer-events: none !important;
   touch-action: pan-y !important;
 }
-}
 
 /* ONLY interactive controls should block pan (use manipulation) */
 button, 
