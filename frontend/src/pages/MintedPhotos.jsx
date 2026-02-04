@@ -1356,9 +1356,10 @@ const MintedPhotos = () => {
       className="minted-photos-scroll-container min-h-screen pb-24"
       data-testid="minted-photos-page"
       style={{ 
-        touchAction: 'pan-y',
+        touchAction: 'manipulation',
         WebkitOverflowScrolling: 'touch',
         overflowY: 'auto',
+        overscrollBehavior: 'contain',
       }}
     >
       {/* Mint Animation Overlay */}
