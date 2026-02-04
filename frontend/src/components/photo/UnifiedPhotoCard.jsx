@@ -261,74 +261,9 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   // Use flipped prop directly instead of internal state
   const isFlipped = flipped;
   
-  /**
-   * SWIPE GESTURE HANDLER v4 - Ultra-Reliable Mobile Implementation
-   * 
-   * KEY DESIGN PRINCIPLES:
-   * 1. NEVER call preventDefault() - browser handles scrolling natively
-   * 2. Detect swipe ONLY on touchEnd - no interference during scroll
-   * 3. Lower thresholds for better detection on all devices
-   * 4. touch-action: pan-y ALWAYS - vertical scroll never blocked
-   * 5. Use passive event listeners for better performance
-   */
-  const touchStartRef = useRef({ x: 0, y: 0, time: 0 });
-  
-  const handleTouchStart = useCallback((e) => {
-    // Record start position - don't interfere with scrolling
-    const touch = e.touches[0];
-    touchStartRef.current = {
-      x: touch.clientX,
-      y: touch.clientY,
-      time: Date.now()
-    };
-  }, []);
-  
-  const handleTouchEnd = useCallback((e) => {
-    if (!touchStartRef.current.time) return;
-    
-    const touch = e.changedTouches[0];
-    const deltaX = touch.clientX - touchStartRef.current.x;
-    const deltaY = touch.clientY - touchStartRef.current.y;
-    const deltaTime = Date.now() - touchStartRef.current.time;
-    
-    // Reset
-    touchStartRef.current = { x: 0, y: 0, time: 0 };
-    
-    const absX = Math.abs(deltaX);
-    const absY = Math.abs(deltaY);
-    
-    // SWIPE DETECTION (v4 - MORE LENIENT):
-    // 1. Horizontal distance > 40px (reduced from 60px for better sensitivity)
-    // 2. Vertical distance < 60px (increased tolerance for diagonal swipes)
-    // 3. Time < 500ms (increased from 400ms for slower swipes)
-    // 4. Horizontal > 1.5x vertical (reduced ratio for better detection)
-    const isHorizontalSwipe = absX > 40 && absY < 60 && deltaTime < 500 && absX > absY * 1.5;
-    
-    if (isHorizontalSwipe) {
-      // Trigger flip
-      const newFlippedState = !isFlipped;
-      setShowXPMultiplier(true);
-      setTimeout(() => setShowXPMultiplier(false), 3000);
-      onFlipStateChange?.(newFlippedState);
-      onFlip?.(newFlippedState);
-    }
-  }, [isFlipped, onFlip, onFlipStateChange]);
-  
-  // Register passive touch listeners for better scroll performance
-  useEffect(() => {
-    const card = cardRef.current;
-    if (!card) return;
-    
-    // Passive listeners allow browser to scroll without waiting for JS
-    const options = { passive: true };
-    card.addEventListener('touchstart', handleTouchStart, options);
-    card.addEventListener('touchend', handleTouchEnd, options);
-    
-    return () => {
-      card.removeEventListener('touchstart', handleTouchStart, options);
-      card.removeEventListener('touchend', handleTouchEnd, options);
-    };
-  }, [handleTouchStart, handleTouchEnd]);
+  // REMOVED: All swipe gesture handlers to ensure single-finger scroll works
+  // Flip functionality is now ONLY via the "Tap to flip" button
+  // This ensures touch events pass through to the browser for native scrolling
   
   const scenery = SCENERY_CONFIG[photo?.scenery_type] || SCENERY_CONFIG.natural;
   
