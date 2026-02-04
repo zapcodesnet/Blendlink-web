@@ -1341,29 +1341,9 @@ a,
 .photo-game-scroll-container video,
 .photo-game-scroll-container svg {
   pointer-events: none !important;
-  touch-action: pan-y !important;
+  touch-action: auto !important;
   -webkit-user-drag: none !important;
   user-select: none !important;
-}
-
-/* ==============================================
-   UNIFIED PHOTO CARD - SINGLE FINGER SCROLL FIX
-   ============================================== */
-[data-testid^="photo-card-"] {
-  touch-action: pan-y !important;
-}
-
-[data-testid^="photo-card-"] * {
-  touch-action: pan-y !important;
-}
-
-[data-testid^="photo-card-"] img {
-  pointer-events: none !important;
-  touch-action: pan-y !important;
-}
-
-[data-testid^="photo-card-"] button {
-  touch-action: manipulation !important;
 }
 
 /* ==============================================
