@@ -495,13 +495,13 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
           )}
         </div>
         
-        {/* Stats Section - 25% of card height - ALL TEXT VISIBLE */}
+        {/* Stats Section - 28% of card height - ALL TEXT VISIBLE */}
         {showStats && (
           <div 
             className="bg-gradient-to-b from-black/90 to-black/70 flex flex-col px-1.5 py-1"
             style={{ 
-              height: '25%', 
-              maxHeight: '25%',
+              height: '28%', 
+              maxHeight: '28%',
               touchAction: 'pan-y',
               overflow: 'hidden',
             }}
