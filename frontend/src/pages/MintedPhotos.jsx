@@ -1456,16 +1456,9 @@ const MintedPhotos = () => {
             </Button>
           </div>
         ) : viewMode === 'card' ? (
-          // UNIFIED CARD VIEW with SINGLE-FINGER SCROLL SUPPORT
-          // touch-action: pan-y tells browser to handle vertical scrolling natively
+          // UNIFIED CARD VIEW - SCROLLING ENABLED
           <>
-            <div 
-              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-2"
-              style={{ 
-                touchAction: 'pan-y',
-                WebkitOverflowScrolling: 'touch',
-              }}
-            >
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-2">
               {photos.map(photo => (
                 <div 
                   key={photo.mint_id}
@@ -1473,10 +1466,7 @@ const MintedPhotos = () => {
                     "relative",
                     newlyMintedId === photo.mint_id && "animate-pulse ring-2 ring-yellow-400 rounded-xl",
                   )}
-                  style={{ 
-                    zIndex: flippedCardId === photo.mint_id ? 50 : 1,
-                    touchAction: 'pan-y',
-                  }}
+                  style={{ zIndex: flippedCardId === photo.mint_id ? 50 : 1 }}
                 >
                   <UnifiedPhotoCard
                     photo={photo}
