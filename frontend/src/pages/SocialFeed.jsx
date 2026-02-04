@@ -47,11 +47,12 @@ import {
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
-// EmbedSocial Facebook Widget Component - PERFORMANCE OPTIMIZED
+// EmbedSocial Facebook Widget Component - PERFORMANCE OPTIMIZED v2
 const EmbedSocialWidget = () => {
-  const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [widgetState, setWidgetState] = useState('loading'); // 'loading', 'loaded', 'error'
   const containerRef = useRef(null);
   const scriptLoadedRef = useRef(false);
+  const timeoutRef = useRef(null);
 
   // Load EmbedSocial script with IntersectionObserver for lazy loading
   useEffect(() => {
@@ -68,9 +69,14 @@ const EmbedSocialWidget = () => {
           
           // Check if script already exists
           if (document.getElementById('EmbedSocialHashtagScript')) {
-            setScriptLoaded(true);
+            setWidgetState('loaded');
             return;
           }
+
+          // Set a timeout to show fallback if widget doesn't load
+          timeoutRef.current = setTimeout(() => {
+            setWidgetState('error');
+          }, 8000); // 8 second timeout
 
           // Load script asynchronously without blocking
           const script = document.createElement('script');
@@ -78,8 +84,14 @@ const EmbedSocialWidget = () => {
           script.src = 'https://embedsocial.com/cdn/ht.js';
           script.async = true;
           script.defer = true;
-          script.onload = () => setScriptLoaded(true);
-          script.onerror = () => setScriptLoaded(true); // Still show widget area on error
+          script.onload = () => {
+            clearTimeout(timeoutRef.current);
+            setWidgetState('loaded');
+          };
+          script.onerror = () => {
+            clearTimeout(timeoutRef.current);
+            setWidgetState('error');
+          };
           document.head.appendChild(script);
         }
       },
@@ -87,8 +99,34 @@ const EmbedSocialWidget = () => {
     );
 
     observer.observe(container);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
   }, []);
+
+  // Fallback content when widget fails to load
+  const FallbackContent = () => (
+    <div className="p-4 text-center" data-testid="facebook-widget-fallback">
+      <div className="bg-blue-600 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3">
+        <Facebook className="w-8 h-8 text-white" />
+      </div>
+      <h4 className="font-semibold text-foreground mb-2">Follow Us on Facebook</h4>
+      <p className="text-sm text-muted-foreground mb-4">
+        Join our community for the latest updates, giveaways, and BL coin rewards!
+      </p>
+      <a 
+        href="https://www.facebook.com/blendlinknet" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
+      >
+        <Facebook className="w-4 h-4" />
+        Visit Our Page
+        <ExternalLink className="w-3 h-3" />
+      </a>
+    </div>
+  );
 
   return (
     <div 
@@ -98,7 +136,7 @@ const EmbedSocialWidget = () => {
       style={{
         contain: 'content',
         contentVisibility: 'auto',
-        containIntrinsicSize: '0 450px',
+        containIntrinsicSize: '0 400px',
       }}
     >
       {/* Header - Minimal */}
@@ -114,19 +152,20 @@ const EmbedSocialWidget = () => {
         </p>
       </div>
 
-      {/* Widget Area - Let EmbedSocial handle its own scrolling */}
-      <div 
-        style={{
-          minHeight: '380px',
-          position: 'relative',
-        }}
-      >
-        {/* Loading indicator - hidden when script loads */}
-        {!scriptLoaded && (
+      {/* Widget Area */}
+      <div style={{ minHeight: '340px', position: 'relative' }}>
+        {/* Loading indicator */}
+        {widgetState === 'loading' && (
           <div className="absolute inset-0 flex items-center justify-center bg-card">
-            <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
+            <div className="text-center">
+              <Loader2 className="w-6 h-6 text-blue-500 animate-spin mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">Loading Facebook feed...</p>
+            </div>
           </div>
         )}
+
+        {/* Error/Fallback state */}
+        {widgetState === 'error' && <FallbackContent />}
 
         {/* EmbedSocial Widget - Always render the container for the script to find */}
         <div 
@@ -134,7 +173,8 @@ const EmbedSocialWidget = () => {
           data-ref="560ae8788f1563d17ee4889e68ebc5732f2b47f7"
           style={{
             width: '100%',
-            minHeight: '380px',
+            minHeight: widgetState === 'loaded' ? '340px' : '0',
+            visibility: widgetState === 'loaded' ? 'visible' : 'hidden',
           }}
         />
       </div>
