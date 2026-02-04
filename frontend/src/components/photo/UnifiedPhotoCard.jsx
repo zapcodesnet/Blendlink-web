@@ -344,18 +344,14 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   }, [disabled, onClick, photo, isFlipped]);
   
   const handleFlip = useCallback((e) => {
-    // Stop all event propagation to prevent parent onClick from firing
+    // SCROLL FIX: Only stop propagation, NOT preventDefault
+    // This allows the browser to continue handling scroll events
     if (e) {
-      e.preventDefault();
       e.stopPropagation();
-      if (e.nativeEvent) {
-        e.nativeEvent.stopImmediatePropagation();
-      }
     }
     const newFlippedState = !isFlipped;
     setShowXPMultiplier(true);
     setTimeout(() => setShowXPMultiplier(false), 3000);
-    // Notify parent of the flip state change - parent will update flipped prop
     onFlipStateChange?.(newFlippedState);
     onFlip?.(newFlippedState);
   }, [isFlipped, onFlip, onFlipStateChange]);
