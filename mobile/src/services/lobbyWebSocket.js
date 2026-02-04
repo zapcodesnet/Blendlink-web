@@ -22,7 +22,7 @@
 
 import { getToken } from './api';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://fetch-api-patch.preview.emergentagent.com';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://card-layout-enhance-1.preview.emergentagent.com';
 
 class LobbyWebSocketService {
   constructor() {

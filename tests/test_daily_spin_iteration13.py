@@ -11,7 +11,7 @@ import requests
 import os
 from datetime import datetime, timezone
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://fetch-api-patch.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://card-layout-enhance-1.preview.emergentagent.com')
 
 # Expected rewards as per user specification
 EXPECTED_REWARDS = [1000, 5000, 15000, 35000, 80000, 200000]

@@ -19,7 +19,7 @@ from io import BytesIO
 from PIL import Image
 
 # Get BASE_URL from environment
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://fetch-api-patch.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://card-layout-enhance-1.preview.emergentagent.com')
 
 # Test credentials
 TEST_EMAIL = "test@example.com"

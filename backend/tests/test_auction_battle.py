@@ -10,7 +10,7 @@ import jwt
 from datetime import datetime, timedelta, timezone
 
 # Get base URL from environment
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://fetch-api-patch.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://card-layout-enhance-1.preview.emergentagent.com')
 JWT_SECRET = "blendlink-jwt-secret-key-2024"
 JWT_ALGORITHM = "HS256"
 
