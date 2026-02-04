@@ -1289,8 +1289,8 @@ a,
   overflow-y: auto !important;
   overflow-x: hidden !important;
   -webkit-overflow-scrolling: touch !important;
-  /* Use auto for maximum compatibility */
-  touch-action: auto !important;
+  /* pan-y enables single-finger vertical scrolling */
+  touch-action: pan-y !important;
   overscroll-behavior: contain;
 }
 
@@ -1298,6 +1298,7 @@ a,
 .minted-photos-scroll-container img,
 .minted-photos-scroll-container video {
   pointer-events: none !important;
+  touch-action: pan-y !important;
   user-select: none !important;
   -webkit-user-select: none !important;
   -webkit-touch-callout: none !important;
@@ -1316,8 +1317,8 @@ a,
   overflow-y: auto !important;
   overflow-x: hidden !important;
   -webkit-overflow-scrolling: touch !important;
-  /* Use auto for maximum compatibility */
-  touch-action: auto !important;
+  /* pan-y enables single-finger vertical scrolling */
+  touch-action: pan-y !important;
   overscroll-behavior: contain;
 }
 
@@ -1325,6 +1326,7 @@ a,
 .photo-game-scroll-container img,
 .photo-game-scroll-container video {
   pointer-events: none !important;
+  touch-action: pan-y !important;
   user-select: none !important;
   -webkit-user-select: none !important;
   -webkit-touch-callout: none !important;
