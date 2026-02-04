@@ -36,6 +36,9 @@ const apiRequest = async (endpoint, options = {}) => {
     throw new Error(`Network error: ${networkError.message}`);
   }
 
+  // Clone response immediately to prevent "body already read" errors
+  const clonedResponse = response.clone();
+
   // Handle empty responses
   if (response.status === 204) {
     return {};
@@ -43,7 +46,7 @@ const apiRequest = async (endpoint, options = {}) => {
   
   let rawText = "";
   try {
-    rawText = await response.text();
+    rawText = await clonedResponse.text();
   } catch (readError) {
     console.error("[WalletAPI] Read error:", readError);
     if (response.ok) return {};
