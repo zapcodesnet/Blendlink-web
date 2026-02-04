@@ -861,12 +861,9 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         selected && "ring-2 ring-primary ring-offset-2 ring-offset-background",
         className
       )}
-      onClick={(e) => handleClick(e)}
+      // REMOVED onClick from outer container - it was blocking scroll
       style={{ 
         zIndex: isFlipped ? 50 : 'auto',
-        // CRITICAL: Allow vertical scrolling - touch events pass through to parent
-        touchAction: 'pan-y',
-        WebkitOverflowScrolling: 'touch',
       }}
       data-testid={`photo-card-${photo?.mint_id}`}
       data-flipped={isFlipped}
