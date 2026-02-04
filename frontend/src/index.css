@@ -1469,3 +1469,96 @@ select,
   -webkit-overflow-scrolling: touch;
 }
 
+/* ==============================================
+   UNIFIED PHOTO CARD CSS ANIMATIONS
+   (Replaces framer-motion to fix touch scrolling)
+   ============================================== */
+
+/* Golden sparkle animation for Level 60 frames */
+@keyframes golden-sparkle-float {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-50px) scale(1.2);
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+}
+
+.golden-sparkle {
+  animation: golden-sparkle-float 3s ease-in-out infinite;
+}
+
+/* Golden frame pulse animation */
+@keyframes golden-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(250,204,21,0.4), inset 0 0 15px rgba(250,204,21,0.2);
+  }
+  50% {
+    box-shadow: 0 0 35px rgba(250,204,21,0.6), inset 0 0 25px rgba(250,204,21,0.3);
+  }
+}
+
+.golden-pulse-border {
+  animation: golden-pulse 2s ease-in-out infinite;
+}
+
+/* XP bar fill transition */
+.xp-bar-fill {
+  transition: width 0.8s ease-out;
+}
+
+/* XP bar shimmer effect */
+@keyframes xp-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.xp-shimmer {
+  animation: xp-shimmer 2s linear infinite;
+}
+
+/* Seniority MAX glow animation */
+@keyframes seniority-glow {
+  0%, 100% {
+    text-shadow: 0 0 4px rgba(250,204,21,0.4);
+  }
+  50% {
+    text-shadow: 0 0 12px rgba(250,204,21,0.8);
+  }
+}
+
+.seniority-glow {
+  animation: seniority-glow 2s ease-in-out infinite;
+}
+
+/* Card flip animation using pure CSS (no framer-motion) */
+.photo-card-flipper {
+  transition: transform 0.5s ease-in-out;
+  transform-style: preserve-3d;
+}
+
+.photo-card-flipper.flipped {
+  transform: rotateY(180deg);
+}
+
+.photo-card-front,
+.photo-card-back {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.photo-card-back {
+  transform: rotateY(180deg);
+}
