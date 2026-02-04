@@ -820,7 +820,6 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   
   return (
     <div 
-      ref={cardRef}
       className={cn(
         "relative perspective-1000",
         config.width,
@@ -828,7 +827,6 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         selected && "ring-2 ring-primary ring-offset-2 ring-offset-background",
         className
       )}
-      // REMOVED onClick from outer container - it was blocking scroll
       style={{ 
         zIndex: isFlipped ? 50 : 'auto',
       }}
