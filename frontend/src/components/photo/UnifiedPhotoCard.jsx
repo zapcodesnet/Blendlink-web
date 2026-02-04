@@ -261,9 +261,74 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   // Use flipped prop directly instead of internal state
   const isFlipped = flipped;
   
-  // REMOVED: All swipe gesture handlers to ensure single-finger scroll works
-  // Flip functionality is now ONLY via the "Tap to flip" button
-  // This ensures touch events pass through to the browser for native scrolling
+  /**
+   * SWIPE GESTURE HANDLER v5 - SINGLE-FINGER SCROLL COMPATIBLE
+   * 
+   * KEY DESIGN PRINCIPLES:
+   * 1. NEVER call preventDefault() or stopPropagation() - browser handles scrolling
+   * 2. Detect ONLY horizontal swipes for flip - vertical swipes are for scrolling
+   * 3. Use passive event listeners - browser doesn't wait for JS
+   * 4. touch-action: pan-y tells browser to handle vertical scrolling natively
+   * 5. Swipe detection happens AFTER scroll decision is made by browser
+   */
+  const touchStartRef = useRef({ x: 0, y: 0, time: 0 });
+  
+  const handleTouchStart = useCallback((e) => {
+    // Record start position - don't interfere with scrolling
+    const touch = e.touches[0];
+    touchStartRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+      time: Date.now()
+    };
+  }, []);
+  
+  const handleTouchEnd = useCallback((e) => {
+    if (!touchStartRef.current.time) return;
+    
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStartRef.current.x;
+    const deltaY = touch.clientY - touchStartRef.current.y;
+    const deltaTime = Date.now() - touchStartRef.current.time;
+    
+    // Reset
+    touchStartRef.current = { x: 0, y: 0, time: 0 };
+    
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+    
+    // HORIZONTAL SWIPE DETECTION:
+    // Only flip if movement is clearly horizontal (not vertical scroll)
+    // - Horizontal > 50px
+    // - Vertical < 30px (strict - if user scrolled vertically, don't flip)
+    // - Time < 400ms (quick swipe)
+    // - Horizontal must be 2x vertical (clearly horizontal intent)
+    const isHorizontalSwipe = absX > 50 && absY < 30 && deltaTime < 400 && absX > absY * 2;
+    
+    if (isHorizontalSwipe) {
+      const newFlippedState = !isFlipped;
+      setShowXPMultiplier(true);
+      setTimeout(() => setShowXPMultiplier(false), 3000);
+      onFlipStateChange?.(newFlippedState);
+      onFlip?.(newFlippedState);
+    }
+  }, [isFlipped, onFlip, onFlipStateChange]);
+  
+  // Register passive touch listeners - CRITICAL for single-finger scroll
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card) return;
+    
+    // Passive: true means browser won't wait for our JS before scrolling
+    const options = { passive: true };
+    card.addEventListener('touchstart', handleTouchStart, options);
+    card.addEventListener('touchend', handleTouchEnd, options);
+    
+    return () => {
+      card.removeEventListener('touchstart', handleTouchStart, options);
+      card.removeEventListener('touchend', handleTouchEnd, options);
+    };
+  }, [handleTouchStart, handleTouchEnd]);
   
   const scenery = SCENERY_CONFIG[photo?.scenery_type] || SCENERY_CONFIG.natural;
   
