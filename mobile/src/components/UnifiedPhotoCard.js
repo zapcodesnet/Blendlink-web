@@ -673,6 +673,12 @@ const styles = StyleSheet.create({
   statsContainer: {
     padding: 8,
   },
+  photoName: {
+    color: '#FBBF24',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
