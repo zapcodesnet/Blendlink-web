@@ -47,6 +47,29 @@ import {
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
+// Facebook Widget Fallback content when widget fails to load
+const FacebookFallbackContent = () => (
+  <div className="p-4 text-center" data-testid="facebook-widget-fallback">
+    <div className="bg-blue-600 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3">
+      <Facebook className="w-8 h-8 text-white" />
+    </div>
+    <h4 className="font-semibold text-foreground mb-2">Follow Us on Facebook</h4>
+    <p className="text-sm text-muted-foreground mb-4">
+      Join our community for the latest updates, giveaways, and BL coin rewards!
+    </p>
+    <a 
+      href="https://www.facebook.com/blendlinknet" 
+      target="_blank" 
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
+    >
+      <Facebook className="w-4 h-4" />
+      Visit Our Page
+      <ExternalLink className="w-3 h-3" />
+    </a>
+  </div>
+);
+
 // EmbedSocial Facebook Widget Component - PERFORMANCE OPTIMIZED v2
 const EmbedSocialWidget = () => {
   const [widgetState, setWidgetState] = useState('loading'); // 'loading', 'loaded', 'error'
@@ -105,29 +128,6 @@ const EmbedSocialWidget = () => {
     };
   }, []);
 
-  // Fallback content when widget fails to load
-  const FallbackContent = () => (
-    <div className="p-4 text-center" data-testid="facebook-widget-fallback">
-      <div className="bg-blue-600 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3">
-        <Facebook className="w-8 h-8 text-white" />
-      </div>
-      <h4 className="font-semibold text-foreground mb-2">Follow Us on Facebook</h4>
-      <p className="text-sm text-muted-foreground mb-4">
-        Join our community for the latest updates, giveaways, and BL coin rewards!
-      </p>
-      <a 
-        href="https://www.facebook.com/blendlinknet" 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
-      >
-        <Facebook className="w-4 h-4" />
-        Visit Our Page
-        <ExternalLink className="w-3 h-3" />
-      </a>
-    </div>
-  );
-
   return (
     <div 
       ref={containerRef}
@@ -165,7 +165,7 @@ const EmbedSocialWidget = () => {
         )}
 
         {/* Error/Fallback state */}
-        {widgetState === 'error' && <FallbackContent />}
+        {widgetState === 'error' && <FacebookFallbackContent />}
 
         {/* EmbedSocial Widget - Always render the container for the script to find */}
         <div 
