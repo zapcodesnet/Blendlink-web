@@ -332,13 +332,13 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   
   const scenery = SCENERY_CONFIG[photo?.scenery_type] || SCENERY_CONFIG.natural;
   
-  // Size configurations - 15% LARGER cards for better mobile UX
+  // Size configurations - DECREASED by 5% for better mobile scrolling
   // Layout: 75% image height, 25% details section
   const sizeConfig = {
-    small: { width: 'w-[148px]', height: 'h-[240px]', imageH: 'h-[180px]', detailsH: 'h-[60px]', textSize: 'text-xs' },
-    medium: { width: 'w-[184px]', height: 'h-[294px]', imageH: 'h-[220px]', detailsH: 'h-[74px]', textSize: 'text-xs' },
-    large: { width: 'w-[240px]', height: 'h-[368px]', imageH: 'h-[276px]', detailsH: 'h-[92px]', textSize: 'text-sm' },
-    full: { width: 'w-full', height: 'h-auto', imageH: 'aspect-[3/4]', detailsH: 'auto', textSize: 'text-base' },
+    small: { width: 'w-[122px]', height: 'h-[198px]', textSize: 'text-[7px]' },
+    medium: { width: 'w-[152px]', height: 'h-[243px]', textSize: 'text-[8px]' },
+    large: { width: 'w-[198px]', height: 'h-[304px]', textSize: 'text-[9px]' },
+    full: { width: 'w-full', height: 'h-auto', textSize: 'text-xs' },
   };
   const config = sizeConfig[size] || sizeConfig.medium;
   
