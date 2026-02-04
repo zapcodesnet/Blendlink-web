@@ -291,12 +291,39 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   const xpToNextLevel = xpProgressData.remaining || photo?.xp_to_next_level || 10;
   const xpForNextLevel = xpProgressData.xp_for_next_level || photo?.xp_for_next_level || 10;
   
-  // Event handlers
-  const handleClick = useCallback((e) => {
+  // Event handlers - DOUBLE-TAP to open lightbox (allows single-finger scrolling)
+  const handleDoubleTap = useCallback((e) => {
+    if (disabled) return;
+    if (isFlipped) return;
+    // Don't trigger on buttons
+    if (e?.target?.closest('[data-testid="flip-card-btn"]') || 
+        e?.target?.closest('[data-testid="flip-back-btn"]') ||
+        e?.target?.closest('button')) {
+      return;
+    }
+    
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 300; // ms
+    
+    if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
+      // Double tap detected - open lightbox
+      e.preventDefault();
+      e.stopPropagation();
+      onClick?.(photo);
+      lastTapRef.current = 0; // Reset
+    } else {
+      // First tap - record time, don't do anything else (allow scroll)
+      lastTapRef.current = now;
+    }
+  }, [disabled, onClick, photo, isFlipped]);
+  
+  // Desktop double-click handler
+  const handleDoubleClick = useCallback((e) => {
     if (disabled) return;
     if (isFlipped) return;
     if (e?.target?.closest('[data-testid="flip-card-btn"]') || 
-        e?.target?.closest('[data-testid="flip-back-btn"]')) {
+        e?.target?.closest('[data-testid="flip-back-btn"]') ||
+        e?.target?.closest('button')) {
       return;
     }
     onClick?.(photo);
@@ -311,7 +338,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
     onFlip?.(newFlippedState);
   }, [isFlipped, onFlip, onFlipStateChange]);
   
-  // SCROLL FIX v5: Explicit touch-action: pan-y for single-finger scrolling
+  // SCROLL FIX v6: Using touch-action: manipulation for single+two finger scrolling
   // Combined CSS + inline styles for maximum compatibility
   const cardContent = (
     <div
