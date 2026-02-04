@@ -1547,6 +1547,8 @@ select,
 .photo-card-flipper {
   transition: transform 0.5s ease-in-out;
   transform-style: preserve-3d;
+  /* CRITICAL: Allow touch through for scrolling */
+  touch-action: auto !important;
 }
 
 .photo-card-flipper.flipped {
@@ -1557,8 +1559,41 @@ select,
 .photo-card-back {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+  /* CRITICAL: Allow touch through for scrolling */
+  touch-action: auto !important;
 }
 
 .photo-card-back {
   transform: rotateY(180deg);
+}
+
+/* ==============================================
+   UNIFIED PHOTO CARD - TOUCH SCROLL FIX v4
+   ==============================================
+   CRITICAL: This ensures touch events pass through the card
+   to the parent scroll container. The card and all its children
+   use touch-action: auto to allow native browser scrolling.
+*/
+
+/* Photo card wrapper - must allow touch through */
+[data-testid^="photo-card-"] {
+  touch-action: auto !important;
+}
+
+/* All card children - allow touch through */
+[data-testid^="photo-card-"] * {
+  touch-action: auto !important;
+}
+
+/* ONLY buttons should have manipulation (for tap response) */
+[data-testid^="photo-card-"] button,
+[data-testid^="photo-card-"] a,
+[data-testid^="photo-card-"] [role="button"] {
+  touch-action: manipulation !important;
+}
+
+/* Images are non-interactive */
+[data-testid^="photo-card-"] img {
+  pointer-events: none !important;
+  touch-action: auto !important;
 }
