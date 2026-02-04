@@ -1383,9 +1383,9 @@ body {
   min-height: 100dvh;
 }
 
-/* Make all containers scroll-friendly - use auto not pan-y */
+/* Make all containers scroll-friendly */
 #root {
-  touch-action: auto !important;
+  touch-action: pan-y !important;
   overflow: visible !important;
   height: auto !important;
   min-height: 100vh;
@@ -1393,13 +1393,13 @@ body {
 }
 
 main, .min-h-screen, section, article {
-  touch-action: auto !important;
+  touch-action: pan-y !important;
 }
 
 /* CRITICAL: Images must not capture touch events */
 img, video, svg, picture, canvas {
   pointer-events: none !important;
-  touch-action: auto !important;
+  touch-action: pan-y !important;
   user-select: none !important;
   -webkit-user-drag: none !important;
 }
