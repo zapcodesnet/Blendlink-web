@@ -310,9 +310,8 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
     onFlip?.(newFlippedState);
   }, [isFlipped, onFlip, onFlipStateChange]);
   
-  // SCROLL FIX v4: Removed ALL touch-action inline styles
-  // CSS in index.css handles touch-action globally
-  // Key insight: touch-action: auto is more compatible than pan-y
+  // SCROLL FIX v5: Explicit touch-action: pan-y for single-finger scrolling
+  // Combined CSS + inline styles for maximum compatibility
   const cardContent = (
     <div
       className={cn(
@@ -324,6 +323,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         transformStyle: 'preserve-3d',
         transform: isFlipped ? 'rotateY(180deg) scale(1.05)' : 'rotateY(0deg) scale(1)',
         zIndex: isFlipped ? 100 : 1,
+        touchAction: 'pan-y', // CRITICAL for single-finger scroll
       }}
     >
       {/* FRONT: Photo + Stats - 70% image / 30% details */}
@@ -333,15 +333,17 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
           "bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700",
           hasGoldenFrame && !seniorityAchieved && "ring-2 ring-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]"
         )}
+        style={{ touchAction: 'pan-y' }}
       >
         {/* Photo Image - 70% of card height */}
-        <div className="relative w-full" style={{ height: '70%', minHeight: '70%' }}>
+        <div className="relative w-full" style={{ height: '70%', minHeight: '70%', touchAction: 'pan-y' }}>
           <img
             src={photo?.image_url || photo?.thumbnail_url || '/placeholder-photo.jpg'}
             alt={photo?.name || 'Minted Photo'}
             className="w-full h-full object-cover select-none"
             loading="lazy"
             draggable={false}
+            style={{ pointerEvents: 'none', touchAction: 'pan-y' }}
           />
           {/* Seniority Level 60 sparkle indicator */}
           {seniorityAchieved && (
@@ -355,7 +357,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         {showStats && (
           <div 
             className="bg-gradient-to-b from-black/90 to-black/70 flex flex-col px-1.5 py-1"
-            style={{ height: '30%', maxHeight: '30%', overflow: 'hidden' }}
+            style={{ height: '30%', maxHeight: '30%', overflow: 'hidden', touchAction: 'pan-y' }}
           >
             {/* NAME - Top of details */}
             <div className="text-yellow-400 font-bold truncate text-center text-[11px] sm:text-[10px] leading-tight bg-black/50 rounded mb-0.5 py-0.5 min-h-[14px]">
