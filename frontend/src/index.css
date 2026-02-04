@@ -1321,6 +1321,11 @@ a,
   touch-action: manipulation !important;
 }
 
+/* ALL elements inside container must allow touch passthrough */
+.photo-game-scroll-container * {
+  touch-action: manipulation !important;
+}
+
 /* Cards and images should not block scrolling */
 .photo-game-scroll-container img,
 .photo-game-scroll-container video {
