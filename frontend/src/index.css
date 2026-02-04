@@ -1291,6 +1291,11 @@ a,
   touch-action: manipulation !important;
 }
 
+/* ALL elements inside container must allow touch passthrough */
+.minted-photos-scroll-container * {
+  touch-action: manipulation !important;
+}
+
 /* Cards and images should not block scrolling */
 .minted-photos-scroll-container img,
 .minted-photos-scroll-container video {
