@@ -355,21 +355,18 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
     onFlip?.(newFlippedState);
   }, [isFlipped, onFlip, onFlipStateChange]);
   
-  // Card content - SCROLL FIX: Minimal framer-motion, no touch interference
+  // Card content - PURE CSS ANIMATION (no framer-motion to block touch)
+  // Using CSS transform and transition instead of motion.div
   const cardContent = (
-    <motion.div
+    <div
       className={cn(
-        "relative w-full preserve-3d",
+        "relative w-full preserve-3d transition-all duration-500 ease-in-out",
         config.height,
         isFlipped && "shadow-2xl shadow-black/50"
       )}
-      animate={{ 
-        rotateY: isFlipped ? 180 : 0,
-        scale: isFlipped ? 1.05 : 1,
-      }}
-      transition={{ duration: 0.5 }}
       style={{ 
         transformStyle: 'preserve-3d',
+        transform: isFlipped ? 'rotateY(180deg) scale(1.05)' : 'rotateY(0deg) scale(1)',
         zIndex: isFlipped ? 100 : 1,
       }}
     >
@@ -397,12 +394,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
           {/* Seniority Level 60 sparkle indicator */}
           {seniorityAchieved && (
             <div className="absolute top-1 right-1 pointer-events-none">
-              <motion.div
-                animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
-                transition={{ duration: 3, repeat: Infinity }}
-              >
-                <Sparkles size={16} className="text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" />
-              </motion.div>
+              <Sparkles size={16} className="text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] animate-pulse" />
             </div>
           )}
         </div>
