@@ -1310,13 +1310,10 @@ a,
   width: 100%;
   background: rgb(17 24 39);
   padding-bottom: 6rem;
-  /* CRITICAL: Allow scrolling */
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
+  /* SCROLL FIX v6: Let body scroll instead of creating inner scroll container */
+  overflow: visible !important;
   -webkit-overflow-scrolling: touch !important;
-  /* pan-y enables single-finger vertical scrolling */
   touch-action: manipulation !important;
-  overscroll-behavior: contain;
 }
 
 /* Cards and images should not block scrolling */
