@@ -423,7 +423,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
             style={{ height: '28%', maxHeight: '28%', overflow: 'hidden' }}
           >
             {/* NAME - Top of details, directly below image - YELLOW PROMINENT */}
-            <div className="text-yellow-400 font-bold truncate text-center text-[10px] leading-tight bg-black/50 rounded mb-0.5 py-0.5">
+            <div className="text-yellow-400 font-bold truncate text-center text-[11px] sm:text-[10px] leading-tight bg-black/50 rounded mb-0.5 py-0.5 min-h-[16px]">
               {photo?.name || photo?.title || 'Unnamed Photo'}
             </div>
             
