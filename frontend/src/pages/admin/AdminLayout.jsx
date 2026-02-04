@@ -708,17 +708,30 @@ function AdminDashboardHome({ realtimeMetrics, wsConnected }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isCancelled = false; // Prevent state updates after unmount
+    
     const loadStats = async () => {
       try {
         const data = await adminAPI.getDashboard();
-        setStats(data);
+        if (!isCancelled) {
+          setStats(data);
+        }
       } catch (error) {
-        toast.error("Failed to load dashboard");
+        if (!isCancelled) {
+          // Silently ignore errors - dashboard will still render
+          console.log("Dashboard stats load failed:", error.message);
+        }
       } finally {
-        setLoading(false);
+        if (!isCancelled) {
+          setLoading(false);
+        }
       }
     };
     loadStats();
+    
+    return () => {
+      isCancelled = true;
+    };
   }, []);
 
   if (loading) {
