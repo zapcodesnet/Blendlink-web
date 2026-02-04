@@ -1,6 +1,8 @@
 /**
  * Casino Screen - Main casino lobby with all games
- * Synced 100% with website using same API endpoints
+ * Shows all games in locked/teaser mode for non-admin users
+ * Full access for admin (blendlinknet@gmail.com)
+ * 100% synchronized with web version
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -12,8 +14,6 @@ import {
   TouchableOpacity,
   Dimensions,
   RefreshControl,
-  ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -23,30 +23,37 @@ import { casinoAPI, walletAPI } from '../services/api';
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 48) / 2;
 
-// Color scheme matching website
+// Admin email for full access
+const ADMIN_EMAIL = "blendlinknet@gmail.com";
+
+// Color scheme
 const COLORS = {
   background: '#0F172A',
   card: '#1E293B',
   primary: '#F59E0B',
-  primaryDark: '#D97706',
   text: '#FFFFFF',
   textMuted: '#9CA3AF',
   border: '#334155',
   success: '#22C55E',
   error: '#EF4444',
+  locked: '#4B5563',
 };
 
-// Game configurations
+// All casino games - always visible
 const GAMES = [
-  { id: 'pko_poker', name: 'PKO Poker', icon: '🃏', gradient: ['#8B5CF6', '#6366F1'], desc: 'Tournament!', isNew: true, route: 'PokerLobby' },
   { id: 'daily', name: 'Daily Spin', icon: '🎁', gradient: ['#EAB308', '#D97706'], desc: 'FREE spin every day!' },
+  { id: 'pko_poker', name: 'PKO Poker', icon: '🃏', gradient: ['#8B5CF6', '#6366F1'], desc: 'Tournament!', isNew: true, route: 'PokerLobby' },
   { id: 'slots', name: 'Slots', icon: '🎰', gradient: ['#9333EA', '#EC4899'], desc: 'Win up to 500x!' },
   { id: 'blackjack', name: 'Blackjack', icon: '🃏', gradient: ['#16A34A', '#059669'], desc: 'Beat the dealer' },
   { id: 'roulette', name: 'Roulette', icon: '🎡', gradient: ['#D97706', '#EA580C'], desc: 'Red or black' },
-  { id: 'wheel', name: 'Wheel', icon: '🎡', gradient: ['#4F46E5', '#7C3AED'], desc: 'Up to 50x jackpot' },
+  { id: 'wheel', name: 'Wheel of Fortune', icon: '🎡', gradient: ['#4F46E5', '#7C3AED'], desc: 'Up to 50x jackpot' },
   { id: 'poker', name: 'Video Poker', icon: '🃏', gradient: ['#2563EB', '#0891B2'], desc: 'Jacks or better' },
   { id: 'baccarat', name: 'Baccarat', icon: '🎴', gradient: ['#E11D48', '#EC4899'], desc: 'Player or banker' },
   { id: 'craps', name: 'Craps', icon: '🎲', gradient: ['#DC2626', '#EA580C'], desc: 'Roll the dice!' },
+  // Mini-games from Games page (relocated here)
+  { id: 'spin_wheel', name: 'Spin Wheel', icon: '🎡', gradient: ['#8B5CF6', '#EC4899'], desc: 'Win up to 5x your bet!' },
+  { id: 'scratch_card', name: 'Scratch Card', icon: '✨', gradient: ['#10B981', '#14B8A6'], desc: 'Match 3 to win!' },
+  { id: 'memory_match', name: 'Memory Match', icon: '🧠', gradient: ['#3B82F6', '#6366F1'], desc: 'Free to play!' },
 ];
 
 export default function CasinoScreen() {
@@ -55,7 +62,9 @@ export default function CasinoScreen() {
   const [balance, setBalance] = useState(user?.bl_coins || 0);
   const [refreshing, setRefreshing] = useState(false);
   const [stats, setStats] = useState(null);
-  const [dailySpinAvailable, setDailySpinAvailable] = useState(false);
+
+  // Check if user is admin by email
+  const isAdmin = user?.email === ADMIN_EMAIL || user?.role === 'admin' || user?.is_admin === true;
 
   useEffect(() => {
     loadData();
@@ -63,14 +72,12 @@ export default function CasinoScreen() {
 
   const loadData = async () => {
     try {
-      const [balanceData, statsData, dailyStatus] = await Promise.all([
-        walletAPI.getBalance(),
+      const [balanceData, statsData] = await Promise.all([
+        walletAPI.getBalance().catch(() => ({ balance: user?.bl_coins || 0 })),
         casinoAPI.getStats().catch(() => null),
-        casinoAPI.getDailySpinStatus().catch(() => ({ can_spin: false })),
       ]);
       setBalance(balanceData.balance);
       setStats(statsData);
-      setDailySpinAvailable(dailyStatus.can_spin);
     } catch (error) {
       console.error('Failed to load casino data:', error);
     }
@@ -83,13 +90,17 @@ export default function CasinoScreen() {
     setRefreshing(false);
   }, [refreshUser]);
 
-  const navigateToGame = (gameId) => {
-    // Special handling for PKO Poker (navigate to separate screen)
-    if (gameId === 'pko_poker') {
-      navigation.navigate('PokerLobby');
+  // Handle game press - only works for admin
+  const handleGamePress = (game) => {
+    if (!isAdmin) {
+      // Show toast or alert for non-admin
       return;
     }
-    navigation.navigate('CasinoGame', { gameId });
+    if (game.route) {
+      navigation.navigate(game.route);
+    } else {
+      navigation.navigate('CasinoGame', { gameId: game.id });
+    }
   };
 
   return (
@@ -99,13 +110,23 @@ export default function CasinoScreen() {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Text style={styles.backText}>← Back</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>🎰 Casino</Text>
-        <TouchableOpacity 
-          style={styles.statsButton}
-          onPress={() => navigation.navigate('CasinoStats')}
-        >
-          <Text style={styles.statsIcon}>📊</Text>
-        </TouchableOpacity>
+        <View style={styles.headerTitleContainer}>
+          <Text style={styles.headerTitle}>🎰 Casino</Text>
+          {!isAdmin && (
+            <View style={styles.comingSoonHeaderBadge}>
+              <Text style={styles.comingSoonHeaderText}>Coming Soon</Text>
+            </View>
+          )}
+        </View>
+        {isAdmin && (
+          <TouchableOpacity 
+            style={styles.statsButton}
+            onPress={() => navigation.navigate('CasinoStats')}
+          >
+            <Text style={styles.statsIcon}>📊</Text>
+          </TouchableOpacity>
+        )}
+        {!isAdmin && <View style={styles.statsButton} />}
       </View>
 
       <ScrollView
@@ -121,19 +142,32 @@ export default function CasinoScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Balance Card */}
-        <View style={styles.balanceCard}>
+        <View style={[
+          styles.balanceCard,
+          { backgroundColor: isAdmin ? COLORS.primary : COLORS.locked }
+        ]}>
           <View style={styles.balanceLeft}>
             <Text style={styles.balanceLabel}>Your Balance</Text>
             <Text style={styles.balanceAmount}>{Math.floor(balance).toLocaleString()} BL</Text>
-            <Text style={styles.balanceSubtext}>Min: 10 BL • Max: 10,000 BL</Text>
+            <Text style={styles.balanceSubtext}>
+              {isAdmin ? 'Min: 10 BL • Max: 10,000 BL' : 'Games unlocking soon!'}
+            </Text>
           </View>
-          <View style={styles.balanceIcon}>
-            <Text style={styles.balanceEmoji}>🎰</Text>
+          <View style={[styles.balanceIcon, { backgroundColor: isAdmin ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.1)' }]}>
+            <Text style={styles.balanceEmoji}>{isAdmin ? '🎰' : '🔒'}</Text>
           </View>
         </View>
 
-        {/* Stats Summary */}
-        {stats && (
+        {/* Status Banner for non-admin */}
+        {!isAdmin && (
+          <View style={styles.comingSoonBanner}>
+            <Text style={styles.comingSoonTitle}>🚧 Casino Games Coming Soon!</Text>
+            <Text style={styles.comingSoonDesc}>All games below are in development. Stay tuned for launch!</Text>
+          </View>
+        )}
+
+        {/* Stats Summary - Admin only */}
+        {isAdmin && stats && (
           <View style={styles.statsCard}>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{stats.totals?.games_played || 0}</Text>
@@ -158,32 +192,45 @@ export default function CasinoScreen() {
         )}
 
         {/* Games Section */}
-        <Text style={styles.sectionTitle}>Choose Your Game</Text>
+        <Text style={styles.sectionTitle}>
+          Choose Your Game {!isAdmin && <Text style={styles.previewText}>(Preview)</Text>}
+        </Text>
         
         <View style={styles.gamesGrid}>
           {GAMES.map((game) => (
             <TouchableOpacity
               key={game.id}
-              style={[styles.gameCard, { 
-                backgroundColor: game.gradient[0],
-                shadowColor: game.gradient[0],
-              }]}
-              onPress={() => navigateToGame(game.id)}
-              activeOpacity={0.8}
+              style={[
+                styles.gameCard,
+                { 
+                  backgroundColor: isAdmin ? game.gradient[0] : COLORS.locked,
+                  shadowColor: isAdmin ? game.gradient[0] : '#000',
+                  opacity: isAdmin ? 1 : 0.6,
+                }
+              ]}
+              onPress={() => handleGamePress(game)}
+              activeOpacity={isAdmin ? 0.8 : 1}
+              disabled={!isAdmin}
             >
-              {game.id === 'daily' && dailySpinAvailable && (
-                <View style={styles.freeBadge}>
-                  <Text style={styles.freeBadgeText}>FREE!</Text>
+              {/* Lock overlay for non-admin */}
+              {!isAdmin && (
+                <View style={styles.lockOverlay}>
+                  <Text style={styles.lockIcon}>🔒</Text>
                 </View>
               )}
-              {game.isNew && (
-                <View style={[styles.freeBadge, { backgroundColor: '#EF4444' }]}>
-                  <Text style={styles.freeBadgeText}>NEW!</Text>
+              {game.isNew && isAdmin && (
+                <View style={[styles.newBadge, { backgroundColor: '#EF4444' }]}>
+                  <Text style={styles.newBadgeText}>NEW!</Text>
                 </View>
               )}
-              <Text style={styles.gameIcon}>{game.icon}</Text>
+              <Text style={[styles.gameIcon, { opacity: isAdmin ? 1 : 0.5 }]}>{game.icon}</Text>
               <Text style={styles.gameName}>{game.name}</Text>
-              <Text style={styles.gameDesc}>{game.desc}</Text>
+              <Text style={[styles.gameDesc, { color: isAdmin ? 'rgba(255,255,255,0.8)' : '#6B7280' }]}>{game.desc}</Text>
+              {!isAdmin && (
+                <View style={styles.lockedBadge}>
+                  <Text style={styles.lockedBadgeText}>Locked</Text>
+                </View>
+              )}
             </TouchableOpacity>
           ))}
         </View>
@@ -231,18 +278,37 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 8,
+    width: 70,
   },
   backText: {
     color: COLORS.text,
     fontSize: 16,
+  },
+  headerTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   headerTitle: {
     color: COLORS.text,
     fontSize: 20,
     fontWeight: 'bold',
   },
+  comingSoonHeaderBadge: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  comingSoonHeaderText: {
+    color: '#000',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
   statsButton: {
     padding: 8,
+    width: 70,
+    alignItems: 'flex-end',
   },
   statsIcon: {
     fontSize: 24,
@@ -255,21 +321,22 @@ const styles = StyleSheet.create({
   },
   balanceCard: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: COLORS.primary,
+    justifyContent: 'space-between',
     borderRadius: 20,
     padding: 20,
     marginBottom: 16,
   },
-  balanceLeft: {},
+  balanceLeft: {
+    flex: 1,
+  },
   balanceLabel: {
     color: 'rgba(255,255,255,0.8)',
     fontSize: 14,
   },
   balanceAmount: {
     color: COLORS.text,
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
     marginVertical: 4,
   },
@@ -278,15 +345,34 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   balanceIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
   },
   balanceEmoji: {
     fontSize: 32,
+  },
+  comingSoonBanner: {
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.3)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  comingSoonTitle: {
+    color: COLORS.primary,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  comingSoonDesc: {
+    color: COLORS.textMuted,
+    fontSize: 13,
+    marginTop: 4,
+    textAlign: 'center',
   },
   statsCard: {
     flexDirection: 'row',
@@ -294,16 +380,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 20,
-    borderWidth: 1,
-    borderColor: COLORS.border,
   },
   statItem: {
     flex: 1,
     alignItems: 'center',
-  },
-  statDivider: {
-    width: 1,
-    backgroundColor: COLORS.border,
   },
   statValue: {
     color: COLORS.text,
@@ -315,11 +395,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
   },
+  statDivider: {
+    width: 1,
+    backgroundColor: COLORS.border,
+  },
   sectionTitle: {
     color: COLORS.text,
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 16,
+  },
+  previewText: {
+    color: COLORS.textMuted,
+    fontSize: 14,
+    fontWeight: 'normal',
   },
   gamesGrid: {
     flexDirection: 'row',
@@ -330,68 +419,91 @@ const styles = StyleSheet.create({
     width: CARD_WIDTH,
     borderRadius: 16,
     padding: 16,
-    marginBottom: 16,
+    marginBottom: 12,
+    position: 'relative',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 5,
-    position: 'relative',
   },
-  freeBadge: {
+  lockOverlay: {
     position: 'absolute',
     top: 8,
     right: 8,
-    backgroundColor: COLORS.success,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    width: 24,
+    height: 24,
     borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
   },
-  freeBadgeText: {
+  lockIcon: {
+    fontSize: 12,
+  },
+  newBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  newBadgeText: {
     color: COLORS.text,
     fontSize: 10,
     fontWeight: 'bold',
   },
   gameIcon: {
-    fontSize: 40,
+    fontSize: 36,
     marginBottom: 8,
   },
   gameName: {
     color: COLORS.text,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: 'bold',
   },
   gameDesc: {
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: 12,
+    fontSize: 11,
     marginTop: 4,
+  },
+  lockedBadge: {
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginTop: 8,
+    alignSelf: 'flex-start',
+  },
+  lockedBadgeText: {
+    color: COLORS.textMuted,
+    fontSize: 10,
   },
   infoCard: {
     backgroundColor: COLORS.card,
     borderRadius: 16,
     padding: 20,
     marginTop: 8,
-    borderWidth: 1,
-    borderColor: COLORS.border,
   },
   infoTitle: {
     color: COLORS.text,
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   infoItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   infoCheck: {
     color: COLORS.success,
     fontSize: 14,
-    marginRight: 8,
+    marginRight: 10,
   },
   infoText: {
     color: COLORS.textMuted,
-    fontSize: 14,
+    fontSize: 13,
     flex: 1,
   },
   bottomPadding: {
