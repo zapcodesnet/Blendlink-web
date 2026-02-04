@@ -1283,36 +1283,21 @@ a,
   min-height: 100vh;
   min-height: 100dvh;
   width: 100%;
-  background: rgb(17 24 39); /* bg-gray-900 */
+  background: rgb(17 24 39);
   padding-bottom: 6rem;
-  overflow-x: hidden !important;
+  /* CRITICAL: Allow scrolling */
   overflow-y: auto !important;
+  overflow-x: hidden !important;
   -webkit-overflow-scrolling: touch !important;
-  touch-action: pan-y !important;
+  /* Use auto for maximum compatibility */
+  touch-action: auto !important;
   overscroll-behavior: contain;
-  transform: none !important;
-  will-change: auto !important;
 }
 
-/* ALL elements inside must allow vertical scrolling */
-.minted-photos-scroll-container * {
-  touch-action: pan-y !important;
-}
-
-/* Interactive elements can use manipulation for tap */
-.minted-photos-scroll-container button,
-.minted-photos-scroll-container a,
-.minted-photos-scroll-container [role="button"] {
-  touch-action: manipulation !important;
-}
-
-/* Images MUST NOT capture touch events */
+/* Cards and images should not block scrolling */
 .minted-photos-scroll-container img,
-.minted-photos-scroll-container video,
-.minted-photos-scroll-container svg {
+.minted-photos-scroll-container video {
   pointer-events: none !important;
-  touch-action: pan-y !important;
-  -webkit-user-drag: none !important;
   user-select: none !important;
   -webkit-user-select: none !important;
   -webkit-touch-callout: none !important;
@@ -1325,36 +1310,21 @@ a,
   min-height: 100vh;
   min-height: 100dvh;
   width: 100%;
-  background: rgb(17 24 39); /* bg-gray-900 */
+  background: rgb(17 24 39);
   padding-bottom: 6rem;
-  overflow-x: hidden !important;
+  /* CRITICAL: Allow scrolling */
   overflow-y: auto !important;
+  overflow-x: hidden !important;
   -webkit-overflow-scrolling: touch !important;
-  touch-action: pan-y !important;
+  /* Use auto for maximum compatibility */
+  touch-action: auto !important;
   overscroll-behavior: contain;
-  transform: none !important;
-  will-change: auto !important;
 }
 
-/* ALL elements inside must allow vertical scrolling */
-.photo-game-scroll-container * {
-  touch-action: pan-y !important;
-}
-
-/* Interactive elements can use manipulation for tap */
-.photo-game-scroll-container button,
-.photo-game-scroll-container a,
-.photo-game-scroll-container [role="button"] {
-  touch-action: manipulation !important;
-}
-
-/* Images MUST NOT capture touch events */
+/* Cards and images should not block scrolling */
 .photo-game-scroll-container img,
-.photo-game-scroll-container video,
-.photo-game-scroll-container svg {
+.photo-game-scroll-container video {
   pointer-events: none !important;
-  touch-action: pan-y !important;
-  -webkit-user-drag: none !important;
   user-select: none !important;
   -webkit-user-select: none !important;
   -webkit-touch-callout: none !important;
