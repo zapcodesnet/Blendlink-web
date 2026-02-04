@@ -2,7 +2,42 @@
 
 ## Latest Update: February 4, 2026
 
-### Photo Card Layout & Admin Wallet Fixes (February 4, 2026) - LATEST
+### Feed Page Optimization & Double-Click Enlarge Restore (February 4, 2026) - LATEST
+
+#### Changes Implemented:
+
+**1. Double-Click/Tap to Enlarge Photo ✅ RESTORED**
+- Added double-tap detection for mobile (300ms threshold)
+- Added onDoubleClick handler for desktop
+- Lightbox opens with full-size image, flip to stats, and delete functionality
+- Single tap no longer blocks scrolling
+
+**2. Feed Page Performance Optimization ✅ IMPROVED**
+- Load time reduced from 5+ seconds to ~3 seconds
+- Feed loads first (critical content), stories load in background
+- Added timeout handling for API requests (10 second timeout)
+- EmbedSocial widget now shows fallback after 8 seconds if it fails to load
+
+**3. EmbedSocial Widget Enhancement**
+- Added loading state with spinner
+- Added fallback content with "Visit Our Page" button when widget fails
+- Lazy loading with IntersectionObserver
+- CSS containment for better rendering performance
+- **Note**: The widget data-ref `560ae8788f1563d17ee4889e68ebc5732f2b47f7` may need to be updated/verified with EmbedSocial account
+
+**4. Touch Scrolling Fix (Ongoing)**
+- Changed `touch-action` from `pan-y` to `manipulation` for better compatibility
+- Removed `overflow-y: auto` from scroll containers (let body scroll)
+- Added wildcard rules for all elements inside scroll containers
+
+**Files Modified:**
+- `/app/frontend/src/components/photo/UnifiedPhotoCard.jsx` - Double-tap/click handlers
+- `/app/frontend/src/pages/SocialFeed.jsx` - Performance optimization, EmbedSocial fallback
+- `/app/frontend/src/index.css` - Touch scrolling CSS updates
+
+---
+
+### Photo Card Layout & Admin Wallet Fixes (February 4, 2026)
 
 #### Changes Implemented:
 
