@@ -2,7 +2,61 @@
 
 ## Latest Update: February 4, 2026
 
-### Games Page & Casino Screen Update (February 4, 2026) - LATEST
+### Photo Card Layout & Admin Wallet Fixes (February 4, 2026) - LATEST
+
+#### Changes Implemented:
+
+**1. Photo Card Touch Scrolling Fix ✅ VERIFIED (iteration_110)**
+- Applied `touch-action: pan-y` to card container, inner elements, and page containers
+- Added `-webkit-overflow-scrolling: touch` for iOS smooth scrolling
+- Scroll test confirmed working (scrollY 0 → 300)
+
+**2. Photo Card Size Increase (15%) ✅ VERIFIED**
+- Updated size configurations in `UnifiedPhotoCard.jsx`:
+  - Small: 128px → 148px wide, 208px → 240px tall
+  - Medium: 160px → 184px wide, 256px → 294px tall
+  - Large: 208px → 240px wide, 320px → 368px tall
+- Cards now display prominently on mobile devices
+
+**3. Photo Card Layout (75% Image / 25% Details) ✅ VERIFIED**
+- Image container uses `flex-[3]` with `min-height: 75%`
+- Details section uses `flex-[1]` with `max-height: 25%`
+- Compact text styling: font sizes reduced to 8-10px for clean fit
+- Text truncation applied to prevent overflow
+- Card flip functionality working correctly
+
+**4. Admin Wallet Management "Body Stream Already Read" Fix ✅ VERIFIED**
+- Root cause: React 18 Strict Mode double-rendering caused response to be read twice
+- Solution: Added `response.clone()` before reading body in both:
+  - `AdminLayout.jsx` - `adminApiRequest()` function
+  - `AdminWalletManagement.jsx` - `apiRequest()` function
+- Added cleanup flag in useEffect to prevent state updates after unmount
+
+**Files Modified:**
+- `/app/frontend/src/components/photo/UnifiedPhotoCard.jsx` - Layout & sizing
+- `/app/frontend/src/pages/MintedPhotos.jsx` - Scroll container styles
+- `/app/frontend/src/pages/admin/AdminLayout.jsx` - response.clone() fix
+- `/app/frontend/src/pages/admin/AdminWalletManagement.jsx` - response.clone() fix
+
+**Test Results (iteration_110 - 100% frontend pass):**
+- ✅ Photo card touch scrolling with pan-y
+- ✅ Card size increased 15% (184x294px medium)
+- ✅ 75/25 image/details layout
+- ✅ Text fits cleanly without overflow
+- ✅ Card flip functionality working
+- ✅ Admin wallet management loads correctly
+- ✅ User search works
+- ✅ Add/Credit mode working
+- ✅ Remove/Deduct mode working
+- ✅ Deduction confirmation modal appears
+- ✅ Transaction history shows credits and deductions
+
+**Critical Note for User**:
+These fixes have been verified in Playwright. **Please test on REAL iPhone and Android devices** to confirm touch scrolling works on actual hardware.
+
+---
+
+### Games Page & Casino Screen Update (February 4, 2026)
 
 #### Changes Implemented:
 
