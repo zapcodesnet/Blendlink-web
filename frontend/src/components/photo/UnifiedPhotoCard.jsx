@@ -30,8 +30,8 @@
  * - No touch event cancellation - let browser handle scroll natively
  */
 
-import React, { useState, memo, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, memo, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { 
   Star, Zap, Shield, Flame, Heart, TrendingUp,
   Award, Calendar, Coins, Camera, Lock, Eye, Sparkles
