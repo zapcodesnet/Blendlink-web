@@ -1462,14 +1462,13 @@ const MintedPhotos = () => {
             </Button>
           </div>
         ) : viewMode === 'card' ? (
-          // UNIFIED CARD VIEW with ROBUST SCROLLING
-          // touch-action: manipulation allows scroll + pinch, prevents double-tap zoom
-          // -webkit-overflow-scrolling: touch enables iOS momentum scrolling
+          // UNIFIED CARD VIEW with SINGLE-FINGER SCROLL SUPPORT
+          // touch-action: pan-y tells browser to handle vertical scrolling natively
           <>
             <div 
               className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-2"
               style={{ 
-                touchAction: 'manipulation',
+                touchAction: 'pan-y',
                 WebkitOverflowScrolling: 'touch',
               }}
             >
@@ -1482,7 +1481,7 @@ const MintedPhotos = () => {
                   )}
                   style={{ 
                     zIndex: flippedCardId === photo.mint_id ? 50 : 1,
-                    touchAction: 'manipulation',
+                    touchAction: 'pan-y',
                   }}
                 >
                   <UnifiedPhotoCard
