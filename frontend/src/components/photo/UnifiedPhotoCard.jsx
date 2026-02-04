@@ -424,9 +424,8 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
     onFlip?.(newFlippedState);
   }, [isFlipped, onFlip, onFlipStateChange]);
   
-  // Card content - OPTIMIZED FOR TOUCH SCROLLING
-  // touch-action: manipulation allows pan and pinch but not double-tap zoom
-  // This is the most compatible setting for scrollable card grids
+  // Card content - OPTIMIZED FOR SINGLE-FINGER TOUCH SCROLLING
+  // touch-action: pan-y explicitly tells browser to allow vertical scrolling
   const cardContent = (
     <motion.div
       ref={cardRef}
@@ -443,8 +442,8 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
       style={{ 
         transformStyle: 'preserve-3d',
         zIndex: isFlipped ? 100 : 1,
-        // CRITICAL: Allow touch scrolling - manipulation is more compatible than pan-y
-        touchAction: 'manipulation',
+        // CRITICAL: pan-y allows single-finger vertical scrolling
+        touchAction: 'pan-y',
       }}
     >
       {/* FRONT: Photo + Stats - 75% image / 25% details */}
@@ -456,7 +455,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         )}
         style={{ 
           backfaceVisibility: 'hidden', 
-          touchAction: 'manipulation',
+          touchAction: 'pan-y',
         }}
       >
         {/* Photo Image - 75% of card height */}
@@ -465,7 +464,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
           style={{ 
             height: '75%', 
             minHeight: '75%',
-            touchAction: 'manipulation',
+            touchAction: 'pan-y',
           }}
         >
           <img
@@ -476,9 +475,10 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
             draggable={false}
             style={{ 
               pointerEvents: 'none',
-              touchAction: 'manipulation',
+              touchAction: 'pan-y',
               userSelect: 'none',
               WebkitUserSelect: 'none',
+              WebkitTouchCallout: 'none',
             }}
           />
           {/* Seniority Level 60 sparkle indicator */}
@@ -494,29 +494,26 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
           )}
         </div>
         
-        {/* Stats Section - 25% of card height - COMPACT layout */}
+        {/* Stats Section - 25% of card height - ALL TEXT VISIBLE */}
         {showStats && (
           <div 
-            className="bg-black/80 flex flex-col justify-between overflow-hidden px-1.5 py-1"
+            className="bg-black/80 flex flex-col justify-between px-1 py-0.5"
             style={{ 
               height: '25%', 
               maxHeight: '25%',
-              touchAction: 'manipulation',
+              touchAction: 'pan-y',
+              overflow: 'hidden',
             }}
           >
             {/* NAME - Top of details, directly below image */}
-            <p className={cn(
-              "text-white font-semibold truncate text-center leading-tight",
-              config.textSize
-            )}>
+            <p className="text-white font-semibold truncate text-center leading-none text-[8px]">
               {photo?.name || 'Unnamed Photo'}
             </p>
             
             {/* DOLLAR VALUE & STARS - Single row */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between leading-none">
               <span className={cn(
-                "font-bold bg-gradient-to-r bg-clip-text text-transparent",
-                config.textSize,
+                "font-bold bg-gradient-to-r bg-clip-text text-transparent text-[8px]",
                 scenery.gradient
               )}>
                 {formatDollarValue(dollarValue)}
@@ -525,54 +522,46 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
             </div>
             
             {/* SCENERY & LEVEL - Single row */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between leading-none">
               <div className={cn(
-                "flex items-center gap-0.5 px-1 py-0.5 rounded-full",
+                "flex items-center gap-0.5 px-0.5 rounded-full",
                 `bg-gradient-to-r ${scenery.bgGradient}`
               )}>
-                <span className="text-[7px]">{scenery.emoji}</span>
-                <span className="text-[7px] text-white/90">{scenery.label}</span>
+                <span className="text-[6px]">{scenery.emoji}</span>
+                <span className="text-[6px] text-white/90">{scenery.label}</span>
               </div>
-              <span className={cn("text-purple-400 font-bold", config.textSize)}>Lv {level}</span>
+              <span className="text-purple-400 font-bold text-[7px]">Lv{level}</span>
             </div>
             
             {/* STAMINA BAR - Compact */}
             {showStamina && (
-              <div className="flex items-center gap-0.5">
-                <span className="text-[7px] text-gray-400">⚡</span>
-                <div className="flex-1 h-1 bg-gray-700 rounded-full overflow-hidden">
+              <div className="flex items-center gap-0.5 leading-none">
+                <span className="text-[6px] text-gray-400">⚡</span>
+                <div className="flex-1 h-0.5 bg-gray-700 rounded-full overflow-hidden">
                   <div 
                     className={cn(
-                      "h-full rounded-full transition-all",
+                      "h-full rounded-full",
                       staminaPercent > 50 ? "bg-green-500" : 
                       staminaPercent > 25 ? "bg-yellow-500" : "bg-red-500"
                     )}
                     style={{ width: `${staminaPercent}%` }}
                   />
                 </div>
-                <span className="text-[7px] text-gray-400">{stamina}/{maxStamina}</span>
+                <span className="text-[6px] text-gray-400">{stamina}/{maxStamina}</span>
               </div>
             )}
             
             {/* WIN/LOSE STREAKS - Compact inline */}
             {(winStreak > 0 || loseStreak > 0) && (
-              <div className="flex items-center justify-center gap-1">
-                {winStreak >= 3 && (
-                  <span className="text-[7px] text-orange-400">🔥{winStreak}</span>
-                )}
-                {loseStreak >= 3 && (
-                  <span className="text-[7px] text-blue-400">🛡️</span>
-                )}
-                {winStreak > 0 && winStreak < 3 && (
-                  <span className="text-[6px] text-green-400">{winStreak}W</span>
-                )}
-                {loseStreak > 0 && loseStreak < 3 && (
-                  <span className="text-[6px] text-red-400">{loseStreak}L</span>
-                )}
+              <div className="flex items-center justify-center gap-0.5 leading-none">
+                {winStreak >= 3 && <span className="text-[6px] text-orange-400">🔥{winStreak}</span>}
+                {loseStreak >= 3 && <span className="text-[6px] text-blue-400">🛡️</span>}
+                {winStreak > 0 && winStreak < 3 && <span className="text-[5px] text-green-400">{winStreak}W</span>}
+                {loseStreak > 0 && loseStreak < 3 && <span className="text-[5px] text-red-400">{loseStreak}L</span>}
               </div>
             )}
             
-            {/* TAP TO FLIP - Border touching text */}
+            {/* TAP TO FLIP - Border line touching text */}
             <button 
               onClick={(e) => {
                 e.preventDefault();
@@ -580,7 +569,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
                 if (e.nativeEvent) e.nativeEvent.stopImmediatePropagation();
                 handleFlip(e);
               }}
-              className="text-center text-[7px] text-gray-500 hover:text-white transition-colors border-t border-gray-700/50 mt-auto"
+              className="text-center text-[6px] text-gray-400 hover:text-white border-t border-gray-600 pt-0.5 -mx-1 px-1"
               data-testid="flip-card-btn"
               style={{ touchAction: 'manipulation' }}
             >
