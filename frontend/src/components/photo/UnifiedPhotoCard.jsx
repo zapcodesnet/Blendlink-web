@@ -407,34 +407,15 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
             </div>
           )}
         </div>
-              userSelect: 'none',
-              WebkitUserSelect: 'none',
-              WebkitTouchCallout: 'none',
-            }}
-          />
-          {/* Seniority Level 60 sparkle indicator */}
-          {seniorityAchieved && (
-            <div className="absolute top-1 right-1 pointer-events-none">
-              <motion.div
-                animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
-                transition={{ duration: 3, repeat: Infinity }}
-              >
-                <Sparkles size={16} className="text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" />
-              </motion.div>
-            </div>
-          )}
-        </div>
         
         {/* Stats Section - 30% of card height - ALL TEXT VISIBLE including "Tap to flip" */}
         {showStats && (
           <div 
-            className="bg-gradient-to-b from-black/90 to-black/70 flex flex-col px-1.5 py-1"
+            className="bg-gradient-to-b from-black/90 to-black/70 flex flex-col px-1.5 py-1 pointer-events-none"
             style={{ 
               height: '30%', 
               maxHeight: '30%', 
               overflow: 'hidden',
-              touchAction: 'pan-y',
-              pointerEvents: 'auto',
             }}
           >
             {/* NAME - Top of details, directly below image - YELLOW PROMINENT */}
