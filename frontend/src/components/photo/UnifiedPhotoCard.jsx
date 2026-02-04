@@ -332,12 +332,13 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   
   const scenery = SCENERY_CONFIG[photo?.scenery_type] || SCENERY_CONFIG.natural;
   
-  // Size configurations - Optimized for 75%/25% split with all text visible
-  // Original sizes maintained (no 5% decrease) to ensure text readability
+  // Size configurations - INCREASED by 3% to fit Name and Tap to flip
+  // Original: small=128x208, medium=160x256, large=208x320
+  // +3%: small=132x214, medium=165x264, large=214x330
   const sizeConfig = {
-    small: { width: 'w-32', height: 'h-52' },   // 128px x 208px
-    medium: { width: 'w-40', height: 'h-64' },  // 160px x 256px
-    large: { width: 'w-52', height: 'h-80' },   // 208px x 320px
+    small: { width: 'w-[132px]', height: 'h-[214px]' },
+    medium: { width: 'w-[165px]', height: 'h-[264px]' },
+    large: { width: 'w-[214px]', height: 'h-[330px]' },
     full: { width: 'w-full', height: 'h-auto' },
   };
   const config = sizeConfig[size] || sizeConfig.medium;
