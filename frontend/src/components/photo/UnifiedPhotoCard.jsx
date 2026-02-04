@@ -355,8 +355,9 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
     onFlip?.(newFlippedState);
   }, [isFlipped, onFlip, onFlipStateChange]);
   
-  // Card content - PURE CSS ANIMATION (no framer-motion to block touch)
-  // Using CSS transform and transition instead of motion.div
+  // Card content - SINGLE-FINGER SCROLL FIX
+  // Key: Use touch-action: pan-y on ALL elements, NOT pointer-events: none
+  // pointer-events: none breaks scroll because browser doesn't receive events
   const cardContent = (
     <div
       className={cn(
@@ -368,6 +369,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         transformStyle: 'preserve-3d',
         transform: isFlipped ? 'rotateY(180deg) scale(1.05)' : 'rotateY(0deg) scale(1)',
         zIndex: isFlipped ? 100 : 1,
+        touchAction: 'pan-y',
       }}
     >
       {/* FRONT: Photo + Stats - 70% image / 30% details */}
@@ -377,39 +379,47 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
           "bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700",
           hasGoldenFrame && !seniorityAchieved && "ring-2 ring-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]"
         )}
-        style={{ backfaceVisibility: 'hidden' }}
+        style={{ backfaceVisibility: 'hidden', touchAction: 'pan-y' }}
       >
-        {/* Photo Image - 70% of card height - NO pointer events */}
+        {/* Photo Image - 70% of card height */}
         <div 
-          className="relative w-full pointer-events-none"
-          style={{ height: '70%', minHeight: '70%' }}
+          className="relative w-full"
+          style={{ height: '70%', minHeight: '70%', touchAction: 'pan-y' }}
         >
           <img
             src={photo?.image_url || photo?.thumbnail_url || '/placeholder-photo.jpg'}
             alt={photo?.name || 'Minted Photo'}
-            className="w-full h-full object-cover select-none pointer-events-none"
+            className="w-full h-full object-cover select-none"
             loading="lazy"
             draggable={false}
+            style={{ touchAction: 'pan-y', pointerEvents: 'none' }}
           />
           {/* Seniority Level 60 sparkle indicator */}
           {seniorityAchieved && (
-            <div className="absolute top-1 right-1 pointer-events-none">
+            <div className="absolute top-1 right-1" style={{ touchAction: 'pan-y' }}>
               <Sparkles size={16} className="text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] animate-pulse" />
             </div>
           )}
         </div>
         
-        {/* Stats Section - 30% of card height - ALL TEXT VISIBLE including "Tap to flip" */}
+        {/* Stats Section - 30% of card height */}
         {showStats && (
           <div 
-            className="bg-gradient-to-b from-black/90 to-black/70 flex flex-col px-1.5 py-1 pointer-events-none"
+            className="bg-gradient-to-b from-black/90 to-black/70 flex flex-col px-1.5 py-1"
             style={{ 
               height: '30%', 
               maxHeight: '30%', 
               overflow: 'hidden',
+              touchAction: 'pan-y',
             }}
           >
-            {/* NAME - Top of details, directly below image - YELLOW PROMINENT */}
+            {/* NAME - Top of details */}
+            <div 
+              className="text-yellow-400 font-bold truncate text-center text-[11px] sm:text-[10px] leading-tight bg-black/50 rounded mb-0.5 py-0.5 min-h-[14px]"
+              style={{ touchAction: 'pan-y' }}
+            >
+              {photo?.name || photo?.title || 'Unnamed Photo'}
+            </div>
             <div className="text-yellow-400 font-bold truncate text-center text-[11px] sm:text-[10px] leading-tight bg-black/50 rounded mb-0.5 py-0.5 min-h-[14px]">
               {photo?.name || photo?.title || 'Unnamed Photo'}
             </div>
