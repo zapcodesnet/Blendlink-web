@@ -895,8 +895,9 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
       onClick={(e) => handleClick(e)}
       style={{ 
         zIndex: isFlipped ? 50 : 'auto',
-        // CRITICAL: Always allow vertical scrolling
+        // CRITICAL: Allow vertical scrolling - touch events pass through to parent
         touchAction: 'pan-y',
+        WebkitOverflowScrolling: 'touch',
       }}
       data-testid={`photo-card-${photo?.mint_id}`}
       data-flipped={isFlipped}
