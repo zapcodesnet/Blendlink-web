@@ -510,22 +510,16 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
                 </div>
               </div>
               
-              {/* XP Progress Bar with percentage */}
+              {/* XP Progress Bar with percentage - Using CSS transitions, NOT framer-motion */}
               <div className="space-y-0.5">
                 <div className="h-2.5 bg-gray-700 rounded-full overflow-hidden relative">
-                  <motion.div
-                    className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 relative"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${Math.min(xpProgress || 0, 100)}%` }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
+                  <div
+                    className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 relative xp-bar-fill"
+                    style={{ width: `${Math.min(xpProgress || 0, 100)}%` }}
                   >
-                    {/* Shimmer effect */}
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                      animate={{ x: ['-100%', '100%'] }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                    />
-                  </motion.div>
+                    {/* Shimmer effect using CSS animation */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent xp-shimmer" />
+                  </div>
                   {/* Percentage text inside bar */}
                   <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-white drop-shadow-md">
                     {Math.round(xpProgress || 0)}%
