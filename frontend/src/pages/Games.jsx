@@ -52,31 +52,31 @@ export default function Games() {
     return () => clearInterval(interval);
   }, []);
 
-  // Casino games that are locked for regular users
-  const casinoGames = [
+  // Casino mini-games (nested inside Casino Games section)
+  const casinoMiniGames = [
     {
       id: "spin_wheel",
       name: "Spin Wheel",
-      description: "Spin to win up to 10x your bet!",
-      cost: 5000,
+      description: "Spin to win up to 5x your bet!",
       icon: CircleDot,
       color: "from-purple-500 to-pink-500",
+      bgColor: "bg-purple-500",
     },
     {
       id: "scratch_card",
       name: "Scratch Card",
       description: "Match 3 symbols to win big!",
-      cost: 10000,
       icon: Sparkles,
       color: "from-emerald-500 to-teal-500",
+      bgColor: "bg-emerald-500",
     },
     {
       id: "memory_match",
       name: "Memory Match",
       description: "Free to play! Earn coins for matching pairs",
-      cost: 0,
       icon: Gamepad2,
       color: "from-blue-500 to-indigo-500",
+      bgColor: "bg-blue-500",
     }
   ];
 
@@ -84,31 +84,23 @@ export default function Games() {
     if (result.new_balance !== undefined) {
       setUser({ ...user, bl_coins: result.new_balance });
     } else {
-      // Refresh balance from API
       try {
         const balance = await api.wallet.getBalance();
         setUser({ ...user, bl_coins: balance.balance });
-      } catch (e) {
-        // Ignore
-      }
+      } catch (e) {}
     }
     setActiveGame(null);
   };
 
-  // Handle casino game click (only for admin)
   const handleCasinoGameClick = (game) => {
     if (!isAdmin) {
       toast.info("Casino Games coming soon! Stay tuned.");
       return;
     }
-    
-    if (game.cost > 0 && (user?.bl_coins || 0) < game.cost) {
-      toast.error(`You need ${game.cost.toLocaleString()} BL Coins to play`);
-      return;
-    }
     setActiveGame(game.id);
   };
 
+  // Render active game
   if (activeGame === "spin_wheel") {
     return <SpinWheel onComplete={handleGameComplete} user={user} />;
   }
@@ -123,17 +115,16 @@ export default function Games() {
     <div className="min-h-screen bg-background">
       {/* Header - BL Coins balance REMOVED */}
       <header className="glass sticky top-0 z-40 border-b border-border/50 safe-top">
-        <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
+        <div className="max-w-2xl mx-auto px-4 h-14 flex items-center">
           <h1 className="text-xl font-bold">Games</h1>
-          {/* Balance display removed from Games page */}
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-6">
+      <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
         {/* Photo Battle Arena CTA - FEATURED */}
         <button
           onClick={() => navigate("/photo-game")}
-          className="w-full bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 rounded-2xl p-6 text-white mb-4 text-left hover:scale-[1.02] transition-transform shadow-lg relative overflow-hidden"
+          className="w-full bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 rounded-2xl p-6 text-white text-left hover:scale-[1.02] transition-transform shadow-lg relative overflow-hidden"
           data-testid="photo-battle-cta"
         >
           <div className="absolute top-2 right-2 px-2 py-1 bg-emerald-500 text-xs font-bold rounded-full animate-pulse">
@@ -163,7 +154,7 @@ export default function Games() {
         </button>
 
         {/* Minted Photos & Marketplace Row */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-2 gap-4">
           <button
             onClick={() => navigate("/minted-photos")}
             className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-4 text-white text-left hover:scale-[1.02] transition-transform shadow-lg"
@@ -189,132 +180,117 @@ export default function Games() {
           </button>
         </div>
 
-        {/* Casino CTA Banner - Admin Only Full Access */}
-        {isAdmin ? (
-          <button
-            onClick={() => navigate("/casino")}
-            className="w-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 rounded-2xl p-6 text-white mb-6 text-left hover:scale-[1.02] transition-transform shadow-lg"
-            data-testid="casino-cta"
-          >
-            <div className="flex items-center justify-between">
+        {/* SINGLE Casino Games Section - Contains ALL mini-games */}
+        <div 
+          className={`rounded-2xl overflow-hidden shadow-lg ${
+            isAdmin 
+              ? 'bg-gradient-to-br from-amber-500 via-orange-500 to-red-500' 
+              : 'bg-gradient-to-br from-gray-600 via-gray-700 to-gray-800'
+          }`}
+          data-testid="casino-games-section"
+        >
+          {/* Casino Header */}
+          <div className="p-6 text-white">
+            <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-white/80 text-sm font-medium">🎰 CASINO</p>
-                <p className="text-2xl font-bold mt-1">Casino Games</p>
-                <p className="text-sm text-white/90 mt-1">Blackjack • Slots • Roulette • Poker & More!</p>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm font-medium opacity-80">🎰 CASINO</span>
+                  {!isAdmin && (
+                    <span className="px-2 py-0.5 bg-amber-500 text-xs font-bold rounded-full">Coming Soon</span>
+                  )}
+                </div>
+                <h2 className="text-2xl font-bold">Casino Games</h2>
+                {!isAdmin && (
+                  <p className="text-sm opacity-80 mt-1">Exciting games launching soon!</p>
+                )}
               </div>
-              <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
-                <Spade className="w-8 h-8" />
-              </div>
-            </div>
-            <div className="mt-4 flex items-center gap-2 text-sm">
-              <span className="px-3 py-1 bg-white/20 rounded-full">Bet 10-10,000 BL</span>
-              <span className="px-3 py-1 bg-white/20 rounded-full">Provably Fair</span>
-            </div>
-          </button>
-        ) : (
-          <div
-            className="w-full bg-gradient-to-r from-gray-600 via-gray-700 to-gray-600 rounded-2xl p-6 text-white mb-6 text-left opacity-70 cursor-not-allowed"
-            data-testid="casino-cta-coming-soon"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-white/80 text-sm font-medium">🎰 CASINO</p>
-                <p className="text-2xl font-bold mt-1">Casino Games</p>
-                <p className="text-lg text-amber-400 mt-2 font-bold">🚧 Coming Soon</p>
-              </div>
-              <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
-                <Spade className="w-8 h-8" />
+              <div className={`w-14 h-14 rounded-full flex items-center justify-center ${isAdmin ? 'bg-white/20' : 'bg-white/10'}`}>
+                {isAdmin ? (
+                  <Spade className="w-7 h-7" />
+                ) : (
+                  <Lock className="w-7 h-7 opacity-60" />
+                )}
               </div>
             </div>
-            <div className="mt-4 flex items-center gap-2 text-sm">
-              <span className="px-3 py-1 bg-white/20 rounded-full">Stay Tuned!</span>
-            </div>
-          </div>
-        )}
 
-        {/* Casino Games Section - Locked/Coming Soon for Regular Users */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-lg flex items-center gap-2">
-              🎰 Casino Games
-              {!isAdmin && (
-                <span className="px-2 py-0.5 bg-amber-500/20 text-amber-500 text-xs rounded-full flex items-center gap-1">
-                  <Lock className="w-3 h-3" /> Coming Soon
-                </span>
+            {/* Tags */}
+            <div className="flex items-center gap-2 text-sm">
+              {isAdmin ? (
+                <>
+                  <span className="px-3 py-1 bg-white/20 rounded-full">Bet 10-10,000 BL</span>
+                  <span className="px-3 py-1 bg-white/20 rounded-full">Provably Fair</span>
+                </>
+              ) : (
+                <span className="px-3 py-1 bg-white/10 rounded-full opacity-70">Stay Tuned!</span>
               )}
-            </h2>
+            </div>
           </div>
 
-          <div className={`space-y-4 ${!isAdmin ? 'relative' : ''}`}>
-            {/* Overlay for non-admin users */}
-            {!isAdmin && (
-              <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] z-10 rounded-2xl flex items-center justify-center">
-                <div className="text-center p-6">
-                  <div className="w-16 h-16 mx-auto rounded-full bg-amber-500/20 flex items-center justify-center mb-3">
-                    <Lock className="w-8 h-8 text-amber-500" />
-                  </div>
-                  <p className="text-lg font-bold text-white">Coming Soon</p>
-                  <p className="text-sm text-muted-foreground mt-1">These games are currently in development</p>
-                </div>
-              </div>
-            )}
-
-            {casinoGames.map((game) => (
-              <div
-                key={game.id}
-                className={`bg-card rounded-2xl border border-border/50 overflow-hidden ${
-                  isAdmin ? 'card-hover cursor-pointer' : 'opacity-60 grayscale'
-                }`}
-                onClick={() => isAdmin && handleCasinoGameClick(game)}
-                data-testid={`casino-game-${game.id}`}
-              >
-                <div className={`h-2 bg-gradient-to-r ${game.color}`} />
-                <div className="p-4">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${game.color} flex items-center justify-center relative`}>
-                      <game.icon className="w-7 h-7 text-white" />
-                      {!isAdmin && (
-                        <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-slate-800 rounded-full flex items-center justify-center border-2 border-slate-700">
-                          <Lock className="w-3 h-3 text-amber-500" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-lg">{game.name}</h3>
-                        {!isAdmin && (
-                          <span className="px-2 py-0.5 bg-muted text-xs rounded-full">Locked</span>
-                        )}
+          {/* Mini-Games Grid - NESTED INSIDE */}
+          <div className={`p-4 ${isAdmin ? 'bg-black/10' : 'bg-black/20'}`}>
+            <div className="grid gap-3">
+              {casinoMiniGames.map((game) => (
+                <div
+                  key={game.id}
+                  onClick={() => handleCasinoGameClick(game)}
+                  className={`flex items-center gap-4 p-4 rounded-xl transition-all ${
+                    isAdmin 
+                      ? 'bg-white/10 hover:bg-white/20 cursor-pointer' 
+                      : 'bg-white/5 cursor-not-allowed'
+                  }`}
+                  data-testid={`casino-game-${game.id}`}
+                >
+                  {/* Game Icon */}
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center relative ${
+                    isAdmin ? game.bgColor : 'bg-gray-600'
+                  }`}>
+                    <game.icon className={`w-6 h-6 ${isAdmin ? 'text-white' : 'text-gray-400'}`} />
+                    {!isAdmin && (
+                      <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gray-800 rounded-full flex items-center justify-center border border-gray-600">
+                        <Lock className="w-3 h-3 text-amber-500" />
                       </div>
-                      <p className="text-sm text-muted-foreground">{game.description}</p>
-                    </div>
-                    <Button
-                      className="rounded-full"
-                      variant={isAdmin ? "default" : "outline"}
-                      disabled={!isAdmin}
-                      data-testid={`play-casino-${game.id}`}
-                    >
-                      {isAdmin ? (
-                        <>
-                          <Play className="w-4 h-4 mr-1" />
-                          Play
-                        </>
-                      ) : (
-                        <>
-                          <Lock className="w-4 h-4 mr-1" />
-                          Locked
-                        </>
-                      )}
-                    </Button>
+                    )}
                   </div>
+
+                  {/* Game Info */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className={`font-semibold ${isAdmin ? 'text-white' : 'text-gray-300'}`}>
+                      {game.name}
+                    </h3>
+                    <p className={`text-sm ${isAdmin ? 'text-white/70' : 'text-gray-500'}`}>
+                      {game.description}
+                    </p>
+                  </div>
+
+                  {/* Action Button */}
+                  {isAdmin ? (
+                    <Button size="sm" className="rounded-full bg-white/20 hover:bg-white/30 text-white">
+                      <Play className="w-4 h-4 mr-1" />
+                      Play
+                    </Button>
+                  ) : (
+                    <span className="px-3 py-1 bg-gray-700/50 text-gray-400 text-xs rounded-full">
+                      Locked
+                    </span>
+                  )}
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
+
+          {/* Footer CTA */}
+          {isAdmin && (
+            <button
+              onClick={() => navigate("/casino")}
+              className="w-full py-3 bg-black/20 text-white text-sm font-medium hover:bg-black/30 transition-colors"
+            >
+              View All Casino Games →
+            </button>
+          )}
         </div>
 
         {/* Raffles Link */}
-        <div className="mt-8">
+        <div>
           <h2 className="font-semibold text-lg mb-4">Contests</h2>
           <button
             onClick={() => navigate("/raffles")}
@@ -334,7 +310,7 @@ export default function Games() {
         </div>
 
         {/* Sync Notice */}
-        <p className="text-center text-xs text-muted-foreground mt-8">
+        <p className="text-center text-xs text-muted-foreground pt-4">
           🔄 Synced with Blendlink mobile app
         </p>
       </main>
