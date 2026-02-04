@@ -1411,17 +1411,40 @@ canvas[data-interactive="true"] {
   pointer-events: auto;
 }
 
-/* Grid and flex containers - scroll through */
+/* Grid and flex containers - allow vertical scroll */
 .grid, .flex, .flex-wrap {
-  touch-action: auto !important;
+  touch-action: pan-y !important;
 }
 
-/* Card components - allow scroll through them */
-[data-testid*="photo-card"],
-[data-testid*="listing"],
-[class*="card"],
-[class*="Card"] {
-  touch-action: auto !important;
+/* ==============================================
+   UNIFIED PHOTO CARD - SINGLE FINGER SCROLL FIX v5
+   ==============================================
+   CRITICAL: Use pan-y to enable immediate single-finger scrolling
+   The browser won't wait to determine if it's a tap vs scroll
+*/
+
+/* Photo card wrapper - MUST use pan-y for single finger scroll */
+[data-testid^="photo-card-"] {
+  touch-action: pan-y !important;
+}
+
+/* All card children - pan-y for scroll passthrough */
+[data-testid^="photo-card-"] * {
+  touch-action: pan-y !important;
+}
+
+/* ONLY buttons should have manipulation (tap response without scroll delay) */
+[data-testid^="photo-card-"] button,
+[data-testid^="photo-card-"] a,
+[data-testid^="photo-card-"] [role="button"] {
+  touch-action: manipulation !important;
+}
+
+/* Images are completely non-interactive */
+[data-testid^="photo-card-"] img {
+  pointer-events: none !important;
+  touch-action: pan-y !important;
+}
 }
 
 /* ONLY interactive controls should block pan (use manipulation) */
