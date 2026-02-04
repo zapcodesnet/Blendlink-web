@@ -438,14 +438,20 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
           )}
         </div>
         
-        {/* Stats Section - 28% of card height - ALL TEXT VISIBLE */}
+        {/* Stats Section - 30% of card height - ALL TEXT VISIBLE including "Tap to flip" */}
         {showStats && (
           <div 
             className="bg-gradient-to-b from-black/90 to-black/70 flex flex-col px-1.5 py-1"
-            style={{ height: '28%', maxHeight: '28%', overflow: 'hidden' }}
+            style={{ 
+              height: '30%', 
+              maxHeight: '30%', 
+              overflow: 'hidden',
+              touchAction: 'pan-y',
+              pointerEvents: 'auto',
+            }}
           >
             {/* NAME - Top of details, directly below image - YELLOW PROMINENT */}
-            <div className="text-yellow-400 font-bold truncate text-center text-[11px] sm:text-[10px] leading-tight bg-black/50 rounded mb-0.5 py-0.5 min-h-[16px]">
+            <div className="text-yellow-400 font-bold truncate text-center text-[11px] sm:text-[10px] leading-tight bg-black/50 rounded mb-0.5 py-0.5 min-h-[14px]">
               {photo?.name || photo?.title || 'Unnamed Photo'}
             </div>
             
@@ -498,15 +504,15 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
               </div>
             )}
             
-            {/* TAP TO FLIP - Border line touching text */}
+            {/* TAP TO FLIP - VISIBLE on mobile with larger text */}
             <button 
               onClick={(e) => {
                 e.stopPropagation();
                 handleFlip(e);
               }}
-              className="text-center text-[7px] text-gray-400 hover:text-white border-t border-gray-600 pt-0.5 mt-auto -mx-1.5 px-1.5"
+              className="text-center text-[9px] text-gray-300 hover:text-white border-t border-gray-500 pt-1 mt-auto -mx-1.5 px-1.5 font-medium"
               data-testid="flip-card-btn"
-              style={{ touchAction: 'manipulation' }}
+              style={{ touchAction: 'manipulation', minHeight: '18px' }}
             >
               Tap to flip →
             </button>
