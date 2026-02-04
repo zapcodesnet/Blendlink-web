@@ -507,7 +507,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
           >
             {/* NAME - Top of details, directly below image - PROMINENT */}
             <div className="text-white font-bold truncate text-center text-[10px] leading-tight bg-gray-800/50 rounded px-1">
-              {photo?.name || 'Unnamed Photo'}
+              {photo?.name || photo?.title || 'Unnamed Photo'}
             </div>
             
             {/* DOLLAR VALUE & STARS - Single row */}
