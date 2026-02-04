@@ -40,61 +40,31 @@ import {
 import { cn } from '../../lib/utils';
 
 // Golden Sparkling Frame Animation Component for Level 60 Seniority
+// SCROLLING FIX: Using pure CSS animations instead of framer-motion
 const GoldenSparklingFrame = ({ children }) => {
   return (
-    <div className="relative">
-      {/* Animated sparkle particles */}
+    <div className="relative golden-frame-container">
+      {/* Animated sparkle particles using CSS animations */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
-        {[...Array(12)].map((_, i) => (
-          <motion.div
+        {[...Array(8)].map((_, i) => (
+          <div
             key={i}
-            className="absolute w-1.5 h-1.5 bg-yellow-300 rounded-full shadow-[0_0_6px_2px_rgba(250,204,21,0.8)]"
-            initial={{
-              x: `${(i % 4) * 33}%`,
-              y: i < 4 ? '-10%' : i < 8 ? '110%' : `${(i - 8) * 50}%`,
-              opacity: 0
-            }}
-            animate={{
-              x: [
-                `${(i % 4) * 33}%`,
-                `${((i + 1) % 4) * 33}%`,
-                `${((i + 2) % 4) * 33}%`,
-              ],
-              y: i < 4 
-                ? ['-10%', '110%']
-                : i < 8 
-                  ? ['110%', '-10%'] 
-                  : [`${(i - 8) * 50}%`, `${100 - (i - 8) * 50}%`],
-              opacity: [0, 1, 1, 0],
-            }}
-            transition={{
-              duration: 3 + (i * 0.3),
-              repeat: Infinity,
-              delay: i * 0.25,
-              ease: "linear"
+            className="golden-sparkle absolute w-1.5 h-1.5 bg-yellow-300 rounded-full"
+            style={{
+              left: `${(i % 4) * 25 + 12}%`,
+              top: i < 4 ? '0%' : '100%',
+              animationDelay: `${i * 0.3}s`,
+              boxShadow: '0 0 6px 2px rgba(250,204,21,0.8)',
             }}
           />
         ))}
       </div>
       
-      {/* Pulsing golden border */}
-      <motion.div
-        className="absolute inset-0 rounded-xl pointer-events-none"
+      {/* Pulsing golden border using CSS animation */}
+      <div
+        className="absolute inset-0 rounded-xl pointer-events-none golden-pulse-border"
         style={{
           background: 'linear-gradient(45deg, rgba(250,204,21,0.3), rgba(234,179,8,0.1), rgba(250,204,21,0.3))',
-          boxShadow: '0 0 20px rgba(250,204,21,0.4), inset 0 0 15px rgba(250,204,21,0.2)',
-        }}
-        animate={{
-          boxShadow: [
-            '0 0 20px rgba(250,204,21,0.4), inset 0 0 15px rgba(250,204,21,0.2)',
-            '0 0 35px rgba(250,204,21,0.6), inset 0 0 25px rgba(250,204,21,0.3)',
-            '0 0 20px rgba(250,204,21,0.4), inset 0 0 15px rgba(250,204,21,0.2)',
-          ]
-        }}
-        transition={{
-          duration: 2,
-          repeat: Infinity,
-          ease: "easeInOut"
         }}
       />
       
