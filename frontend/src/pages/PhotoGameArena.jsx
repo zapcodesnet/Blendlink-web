@@ -375,7 +375,7 @@ const PhotoSelectionScreen = ({ photos, loading, onSelectPhoto, selectedPhotoId,
   };
 
   return (
-    <div className="space-y-6" style={{ touchAction: 'manipulation', WebkitOverflowScrolling: 'touch' }}>
+    <div className="space-y-6" style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}>
       <div className="text-center mb-6">
         <h3 className="text-xl font-bold text-white mb-2">Select Your Battle Photo</h3>
         <p className="text-gray-400">
@@ -390,7 +390,7 @@ const PhotoSelectionScreen = ({ photos, loading, onSelectPhoto, selectedPhotoId,
             <Check className="w-4 h-4" />
             Available for Battle ({availablePhotos.length})
           </h4>
-          <div className="grid gap-3" style={{ touchAction: 'manipulation' }}>
+          <div className="grid gap-3" style={{ touchAction: 'pan-y' }}>
             {availablePhotos.map((photo) => {
               const scenery = SCENERY_CONFIG[photo.scenery_type] || SCENERY_CONFIG.natural;
               const isSelected = selectedPhotoId === photo.mint_id;
