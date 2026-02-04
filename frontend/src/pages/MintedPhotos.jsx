@@ -1356,7 +1356,7 @@ const MintedPhotos = () => {
       className="minted-photos-scroll-container min-h-screen pb-24"
       data-testid="minted-photos-page"
       style={{ 
-        touchAction: 'manipulation',
+        touchAction: 'pan-y',
         WebkitOverflowScrolling: 'touch',
         overflowY: 'auto',
         overscrollBehavior: 'contain',
