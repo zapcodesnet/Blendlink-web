@@ -374,7 +374,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
             </div>
             
             {/* SCENERY & LEVEL - Single row */}
-            <div className="flex items-center justify-between" style={{ touchAction: 'pan-y' }}>
+            <div className="flex items-center justify-between">
               <div className={cn(
                 "flex items-center gap-0.5 px-1 rounded-full",
                 `bg-gradient-to-r ${scenery.bgGradient}`
@@ -387,7 +387,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
             
             {/* STAMINA BAR - Compact */}
             {showStamina && (
-              <div className="flex items-center gap-0.5" style={{ touchAction: 'pan-y' }}>
+              <div className="flex items-center gap-0.5">
                 <span className="text-[7px] text-gray-400">⚡</span>
                 <div className="flex-1 h-1 bg-gray-700 rounded-full overflow-hidden">
                   <div 
@@ -405,13 +405,13 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
             
             {/* WIN/LOSE STREAKS - Only show if significant */}
             {(winStreak >= 3 || loseStreak >= 3) && (
-              <div className="flex items-center justify-center gap-1" style={{ touchAction: 'pan-y' }}>
+              <div className="flex items-center justify-center gap-1">
                 {winStreak >= 3 && <span className="text-[7px] text-orange-400">🔥{winStreak}</span>}
                 {loseStreak >= 3 && <span className="text-[7px] text-blue-400">🛡️</span>}
               </div>
             )}
             
-            {/* TAP TO FLIP - Button with touch-action: manipulation */}
+            {/* TAP TO FLIP - Button */}
             <button 
               onClick={(e) => {
                 e.stopPropagation();
@@ -419,7 +419,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
               }}
               className="text-center text-[9px] text-gray-300 hover:text-white border-t border-gray-500 pt-1 mt-auto -mx-1.5 px-1.5 font-medium"
               data-testid="flip-card-btn"
-              style={{ minHeight: '18px', touchAction: 'manipulation' }}
+              style={{ minHeight: '18px' }}
             >
               Tap to flip →
             </button>
@@ -430,23 +430,17 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
       {/* BACK: Stats view */}
       <div 
         className={cn(
-          "absolute inset-0 rounded-xl overflow-hidden",
+          "absolute inset-0 photo-card-back rounded-xl overflow-hidden",
           "bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700",
           hasGoldenFrame && !seniorityAchieved && "ring-2 ring-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]"
         )}
-        style={{ 
-          backfaceVisibility: 'hidden', 
-          transform: 'rotateY(180deg)',
-          touchAction: 'pan-y',
-        }}
       >
         {/* Small preview image at top */}
-        <div className="relative h-12 w-full" style={{ touchAction: 'pan-y' }}>
+        <div className="relative h-12 w-full">
           <img
             src={photo?.image_url || photo?.thumbnail_url}
             alt={photo?.name}
             className="w-full h-full object-cover opacity-50"
-            style={{ pointerEvents: 'none', touchAction: 'pan-y' }}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-900" />
         </div>
