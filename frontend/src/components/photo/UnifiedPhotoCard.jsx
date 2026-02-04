@@ -816,9 +816,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
                 }
                 handleFlip(e);
               }}
-              onTouchStart={(e) => e.stopPropagation()}
               className="w-full text-center text-[10px] text-gray-500 hover:text-gray-300 transition-colors mt-2 pointer-events-auto"
-              style={{ touchAction: 'manipulation' }}
               data-testid="flip-back-btn"
             >
               ← Tap to flip back
