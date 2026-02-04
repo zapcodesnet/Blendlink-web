@@ -773,7 +773,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   return (
     <div 
       className={cn(
-        "relative perspective-1000",
+        "relative perspective-1000 cursor-pointer",
         config.width,
         disabled && "opacity-50 cursor-not-allowed",
         selected && "ring-2 ring-primary ring-offset-2 ring-offset-background",
@@ -782,6 +782,8 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
       style={{ zIndex: isFlipped ? 50 : 'auto', touchAction: 'manipulation' }}
       data-testid={`photo-card-${photo?.mint_id}`}
       data-flipped={isFlipped}
+      onClick={handleDoubleTap}
+      onDoubleClick={handleDoubleClick}
     >
       {seniorityAchieved ? (
         <GoldenSparklingFrame>
