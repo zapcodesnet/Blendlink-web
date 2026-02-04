@@ -459,12 +459,12 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
           touchAction: 'pan-y',
         }}
       >
-        {/* Photo Image - 75% of card height */}
+        {/* Photo Image - 72% of card height */}
         <div 
           className="relative w-full"
           style={{ 
-            height: '75%', 
-            minHeight: '75%',
+            height: '72%', 
+            minHeight: '72%',
             touchAction: 'pan-y',
           }}
         >
