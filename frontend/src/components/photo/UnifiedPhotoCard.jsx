@@ -261,9 +261,9 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   // Use flipped prop directly instead of internal state
   const isFlipped = flipped;
   
-  // SCROLL FIX: Removed all touch event handlers
+  // SCROLL FIX: Removed all touch event handlers and onClick from card container
   // Card flipping now ONLY works via "Tap to flip" button
-  // This ensures single-finger scrolling is never blocked
+  // pointer-events: none on most elements allows touch events to pass through for scrolling
   
   const scenery = SCENERY_CONFIG[photo?.scenery_type] || SCENERY_CONFIG.natural;
   
