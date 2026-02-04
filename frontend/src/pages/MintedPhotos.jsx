@@ -1461,16 +1461,16 @@ const MintedPhotos = () => {
             </Button>
           </div>
         ) : viewMode === 'card' ? (
-          // UNIFIED CARD VIEW with ROBUST SCROLLING - NO DARK OVERLAY
-          // 1. Container uses native scrolling
-          // 2. touch-action: pan-y ensures touch scroll ALWAYS works
-          // 3. Cards elevate z-index when flipped but DON'T block other interactions
-          // 4. NO BACKDROP OVERLAY - page stays fully interactive
+          // UNIFIED CARD VIEW with ROBUST SCROLLING
+          // touch-action: manipulation allows scroll + pinch, prevents double-tap zoom
+          // -webkit-overflow-scrolling: touch enables iOS momentum scrolling
           <>
-            {/* NO DARK OVERLAY - users can scroll and interact with any card anytime */}
             <div 
               className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-2"
-              style={{ touchAction: 'pan-y' }}
+              style={{ 
+                touchAction: 'manipulation',
+                WebkitOverflowScrolling: 'touch',
+              }}
             >
               {photos.map(photo => (
                 <div 
@@ -1478,17 +1478,15 @@ const MintedPhotos = () => {
                   className={cn(
                     "relative",
                     newlyMintedId === photo.mint_id && "animate-pulse ring-2 ring-yellow-400 rounded-xl",
-                    // NO opacity dimming - all cards remain fully visible and interactive
                   )}
                   style={{ 
                     zIndex: flippedCardId === photo.mint_id ? 50 : 1,
-                    touchAction: 'pan-y',
+                    touchAction: 'manipulation',
                   }}
                 >
                   <UnifiedPhotoCard
                     photo={photo}
                     onClick={() => {
-                      // Allow clicking any card regardless of flip state
                       if (flippedCardId !== photo.mint_id) {
                         setLightboxPhoto(photo);
                       }
