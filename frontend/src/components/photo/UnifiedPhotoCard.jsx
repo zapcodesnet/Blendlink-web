@@ -420,12 +420,9 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
             >
               {photo?.name || photo?.title || 'Unnamed Photo'}
             </div>
-            <div className="text-yellow-400 font-bold truncate text-center text-[11px] sm:text-[10px] leading-tight bg-black/50 rounded mb-0.5 py-0.5 min-h-[14px]">
-              {photo?.name || photo?.title || 'Unnamed Photo'}
-            </div>
             
             {/* DOLLAR VALUE & STARS - Single row */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between" style={{ touchAction: 'pan-y' }}>
               <span className={cn(
                 "font-bold bg-gradient-to-r bg-clip-text text-transparent text-[9px]",
                 scenery.gradient
@@ -436,7 +433,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
             </div>
             
             {/* SCENERY & LEVEL - Single row */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between" style={{ touchAction: 'pan-y' }}>
               <div className={cn(
                 "flex items-center gap-0.5 px-1 rounded-full",
                 `bg-gradient-to-r ${scenery.bgGradient}`
@@ -449,7 +446,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
             
             {/* STAMINA BAR - Compact */}
             {showStamina && (
-              <div className="flex items-center gap-0.5">
+              <div className="flex items-center gap-0.5" style={{ touchAction: 'pan-y' }}>
                 <span className="text-[7px] text-gray-400">⚡</span>
                 <div className="flex-1 h-1 bg-gray-700 rounded-full overflow-hidden">
                   <div 
@@ -467,21 +464,21 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
             
             {/* WIN/LOSE STREAKS - Only show if significant */}
             {(winStreak >= 3 || loseStreak >= 3) && (
-              <div className="flex items-center justify-center gap-1">
+              <div className="flex items-center justify-center gap-1" style={{ touchAction: 'pan-y' }}>
                 {winStreak >= 3 && <span className="text-[7px] text-orange-400">🔥{winStreak}</span>}
                 {loseStreak >= 3 && <span className="text-[7px] text-blue-400">🛡️</span>}
               </div>
             )}
             
-            {/* TAP TO FLIP - VISIBLE on mobile with larger text - HAS pointer-events */}
+            {/* TAP TO FLIP - Button with touch-action: manipulation */}
             <button 
               onClick={(e) => {
                 e.stopPropagation();
                 handleFlip(e);
               }}
-              className="text-center text-[9px] text-gray-300 hover:text-white border-t border-gray-500 pt-1 mt-auto -mx-1.5 px-1.5 font-medium pointer-events-auto"
+              className="text-center text-[9px] text-gray-300 hover:text-white border-t border-gray-500 pt-1 mt-auto -mx-1.5 px-1.5 font-medium"
               data-testid="flip-card-btn"
-              style={{ minHeight: '18px' }}
+              style={{ minHeight: '18px', touchAction: 'manipulation' }}
             >
               Tap to flip →
             </button>
