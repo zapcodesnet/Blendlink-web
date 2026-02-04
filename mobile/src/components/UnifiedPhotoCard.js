@@ -342,6 +342,11 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
           {/* Stats BELOW image only */}
           {showStats && (
             <View style={[styles.statsContainer, { backgroundColor: colors.card }]}>
+              {/* Photo Name - Top of details section */}
+              <Text style={[styles.photoName, { fontSize: config.fontSize }]} numberOfLines={1}>
+                {photo?.name || photo?.title || 'Unnamed Photo'}
+              </Text>
+              
               {/* Dollar Value & Level */}
               <View style={styles.headerRow}>
                 <Text style={[styles.dollarValue, { color: scenery.gradient[0], fontSize: config.fontSize + 2 }]}>
