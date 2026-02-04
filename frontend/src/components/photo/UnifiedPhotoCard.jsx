@@ -23,15 +23,16 @@
  * 6. Streaks (Win/Loss)
  * 7. Small "Tap to flip" button at bottom
  * 
- * SCROLLING FIX (v3 - Robust):
- * - Default touch-action: pan-y on all elements - NEVER prevents scroll by default
- * - Swipe gesture detection happens WITHOUT preventDefault - scroll always works
- * - Only flip is triggered when horizontal swipe threshold is met
- * - No touch event cancellation - let browser handle scroll natively
+ * SCROLLING FIX (v4 - FINAL FIX):
+ * - REMOVED framer-motion entirely from this component
+ * - Using pure CSS transitions for flip animation
+ * - All touch events pass through to browser for native scrolling
+ * - No JavaScript touch event handling that could block scroll
+ * - touch-action: auto (not pan-y) for maximum browser compatibility
  */
 
 import React, { useState, memo, useCallback } from 'react';
-import { motion } from 'framer-motion';
+// REMOVED: framer-motion import - it was blocking touch scroll events
 import { 
   Star, Zap, Shield, Flame, Heart, TrendingUp,
   Award, Calendar, Coins, Camera, Lock, Eye, Sparkles
