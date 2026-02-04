@@ -69,6 +69,9 @@ const adminApiRequest = async (endpoint, options = {}) => {
     throw new Error(`Network error: ${networkError.message || 'Unable to connect to server'}`);
   }
   
+  // Clone response immediately to prevent "body already read" errors
+  const clonedResponse = response.clone();
+  
   // Check if response has a body
   const contentLength = response.headers.get('content-length');
   const contentType = response.headers.get('content-type');
@@ -82,10 +85,10 @@ const adminApiRequest = async (endpoint, options = {}) => {
     return {};
   }
   
-  // Read body safely
+  // Read body safely from cloned response
   let rawText = '';
   try {
-    rawText = await response.text();
+    rawText = await clonedResponse.text();
     console.log(`[AdminAPI] Raw response (first 200 chars):`, rawText?.substring(0, 200));
   } catch (readError) {
     console.error('[AdminAPI] Failed to read response body:', readError);
