@@ -494,9 +494,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
             {/* TAP TO FLIP - Border line touching text */}
             <button 
               onClick={(e) => {
-                e.preventDefault();
                 e.stopPropagation();
-                if (e.nativeEvent) e.nativeEvent.stopImmediatePropagation();
                 handleFlip(e);
               }}
               className="text-center text-[7px] text-gray-400 hover:text-white border-t border-gray-600 pt-0.5 mt-auto -mx-1.5 px-1.5"
