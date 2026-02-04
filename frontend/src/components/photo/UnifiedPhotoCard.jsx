@@ -31,7 +31,7 @@
  * - touch-action: auto (not pan-y) for maximum browser compatibility
  */
 
-import React, { useState, memo, useCallback } from 'react';
+import React, { useState, memo, useCallback, useRef } from 'react';
 // REMOVED: framer-motion import - it was blocking touch scroll events
 import { 
   Star, Zap, Shield, Flame, Heart, TrendingUp,
