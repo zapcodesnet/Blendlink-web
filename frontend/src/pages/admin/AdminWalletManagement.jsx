@@ -124,7 +124,7 @@ const ConfirmationDialog = ({ isOpen, onClose, onConfirm, amount, user, loading,
           <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-4">
             <p className="text-red-400 text-sm flex items-center gap-2">
               <AlertTriangle className="w-4 h-4" />
-              Warning: You are about to REMOVE coins from this user's balance.
+              Warning: You are about to REMOVE coins from this user&apos;s balance.
             </p>
           </div>
         )}
