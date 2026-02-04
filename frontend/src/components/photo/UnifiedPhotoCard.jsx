@@ -726,19 +726,9 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
                 <div className="text-right">
                   {seniorityAchieved ? (
                     <div className="flex items-center gap-1">
-                      <motion.span
-                        className="text-yellow-400 text-xs font-bold"
-                        animate={{ 
-                          textShadow: [
-                            '0 0 4px rgba(250,204,21,0.4)',
-                            '0 0 12px rgba(250,204,21,0.8)',
-                            '0 0 4px rgba(250,204,21,0.4)'
-                          ]
-                        }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      >
+                      <span className="text-yellow-400 text-xs font-bold seniority-glow">
                         ✨ MAX
-                      </motion.span>
+                      </span>
                       <span className="text-green-400 text-[10px]">
                         +{formatDollarValue(seniorityBonusValue)}
                       </span>
