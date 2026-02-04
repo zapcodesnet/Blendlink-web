@@ -1307,50 +1307,54 @@ const CasinoStats = ({ user }) => {
 };
 
 // ============== MAIN CASINO PAGE ==============
+// Admin email for full access
+const ADMIN_EMAIL = "blendlinknet@gmail.com";
+
 export default function Casino() {
   const { user, setUser } = useContext(AuthContext);
   const navigate = useNavigate();
   const [activeGame, setActiveGame] = useState(null);
   const [showStats, setShowStats] = useState(false);
 
+  // Check if user is admin by email
+  const isAdmin = user?.email === ADMIN_EMAIL || user?.role === 'admin' || user?.is_admin === true;
+
   const updateBalance = useCallback((newBalance) => {
     setUser({ ...user, bl_coins: newBalance });
   }, [user, setUser]);
 
-  // Admin-only access check
-  if (user?.role !== 'admin') {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center" data-testid="casino-restricted">
-        <div className="text-center p-8 max-w-md">
-          <div className="w-20 h-20 rounded-full bg-amber-500/20 flex items-center justify-center mx-auto mb-6">
-            <span className="text-4xl">🎰</span>
-          </div>
-          <h1 className="text-2xl font-bold mb-2">Casino Coming Soon</h1>
-          <p className="text-gray-400 mb-6">
-            Our casino games are currently in development. Stay tuned for exciting games like Blackjack, Slots, Roulette, and more!
-          </p>
-          <Button onClick={() => navigate('/games')} className="bg-gradient-to-r from-purple-600 to-pink-600">
-            <ChevronLeft className="w-4 h-4 mr-2" />
-            Back to Games
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
+  // All casino games - always visible
   const games = [
     { id: "daily", name: "Daily Spin", icon: "🎁", color: "from-yellow-500 to-amber-600", desc: "FREE spin every day!" },
     { id: "poker_tournament", name: "PKO Poker", icon: "🃏", color: "from-amber-500 to-red-600", desc: "Live tournament!", isNew: true, link: "/poker" },
     { id: "slots", name: "Slots", icon: "🎰", color: "from-purple-600 to-pink-600", desc: "Spin to win up to 500x!" },
     { id: "blackjack", name: "Blackjack", icon: "🃏", color: "from-green-600 to-emerald-600", desc: "Beat the dealer to 21" },
     { id: "roulette", name: "Roulette", icon: "🎡", color: "from-amber-600 to-orange-600", desc: "Red, black, or lucky number" },
-    { id: "wheel", name: "Wheel", icon: "🎡", color: "from-indigo-600 to-violet-600", desc: "Spin for up to 50x jackpot" },
+    { id: "wheel", name: "Wheel of Fortune", icon: "🎡", color: "from-indigo-600 to-violet-600", desc: "Spin for up to 50x jackpot" },
     { id: "poker", name: "Video Poker", icon: "🃏", color: "from-blue-600 to-cyan-600", desc: "Jacks or better to win" },
     { id: "baccarat", name: "Baccarat", icon: "🎴", color: "from-rose-600 to-pink-600", desc: "Player, banker, or tie" },
     { id: "craps", name: "Craps", icon: "🎲", color: "from-red-600 to-orange-600", desc: "Roll the dice!" },
+    // Mini-games from Games page (relocated here)
+    { id: "spin_wheel", name: "Spin Wheel", icon: "🎡", color: "from-purple-500 to-pink-500", desc: "Spin to win up to 5x your bet!" },
+    { id: "scratch_card", name: "Scratch Card", icon: "✨", color: "from-emerald-500 to-teal-500", desc: "Match 3 symbols to win big!" },
+    { id: "memory_match", name: "Memory Match", icon: "🧠", color: "from-blue-500 to-indigo-500", desc: "Free to play! Earn coins" },
   ];
 
-  if (showStats) {
+  // Handle game click - only works for admin
+  const handleGameClick = (game) => {
+    if (!isAdmin) {
+      toast.info("Casino Games coming soon! Stay tuned.");
+      return;
+    }
+    if (game.link) {
+      navigate(game.link);
+    } else {
+      setActiveGame(game.id);
+    }
+  };
+
+  // Stats view (admin only)
+  if (showStats && isAdmin) {
     return (
       <div className="min-h-screen bg-background">
         <header className="glass sticky top-0 z-40 border-b border-border/50 safe-top">
@@ -1371,7 +1375,8 @@ export default function Casino() {
     );
   }
 
-  if (activeGame) {
+  // Active game view (admin only)
+  if (activeGame && isAdmin) {
     const GameComponent = {
       daily: DailySpin,
       slots: SlotMachine,
@@ -1381,26 +1386,32 @@ export default function Casino() {
       poker: VideoPoker,
       baccarat: Baccarat,
       craps: Craps,
+      // Mini-games
+      spin_wheel: WheelOfFortune,
+      scratch_card: SlotMachine, // Placeholder - uses slots logic
+      memory_match: DailySpin, // Placeholder - uses daily spin logic
     }[activeGame];
 
-    return (
-      <div className="min-h-screen bg-background">
-        <header className="glass sticky top-0 z-40 border-b border-border/50 safe-top">
-          <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
-            <button onClick={() => setActiveGame(null)} className="flex items-center gap-2 hover:text-primary">
-              <ChevronLeft className="w-5 h-5" /> Back
-            </button>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10">
-              <Coins className="w-4 h-4 text-amber-500" />
-              <span className="font-semibold text-amber-600">{Math.floor(user?.bl_coins || 0).toLocaleString()}</span>
+    if (GameComponent) {
+      return (
+        <div className="min-h-screen bg-background">
+          <header className="glass sticky top-0 z-40 border-b border-border/50 safe-top">
+            <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
+              <button onClick={() => setActiveGame(null)} className="flex items-center gap-2 hover:text-primary">
+                <ChevronLeft className="w-5 h-5" /> Back
+              </button>
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10">
+                <Coins className="w-4 h-4 text-amber-500" />
+                <span className="font-semibold text-amber-600">{Math.floor(user?.bl_coins || 0).toLocaleString()}</span>
+              </div>
             </div>
-          </div>
-        </header>
-        <main className="max-w-lg mx-auto px-4 py-6">
-          <GameComponent user={user} onBalanceUpdate={updateBalance} />
-        </main>
-      </div>
-    );
+          </header>
+          <main className="max-w-lg mx-auto px-4 py-6">
+            <GameComponent user={user} onBalanceUpdate={updateBalance} />
+          </main>
+        </div>
+      );
+    }
   }
 
   return (
@@ -1408,58 +1419,93 @@ export default function Casino() {
       {/* Header */}
       <header className="glass sticky top-0 z-40 border-b border-border/50 safe-top">
         <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
+          <button onClick={() => navigate('/games')} className="flex items-center gap-2 hover:text-primary">
+            <ChevronLeft className="w-5 h-5" /> Back
+          </button>
           <h1 className="text-xl font-bold flex items-center gap-2">
             🎰 Casino
+            {!isAdmin && <span className="text-xs bg-amber-500 text-black px-2 py-0.5 rounded-full">Coming Soon</span>}
           </h1>
           <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setShowStats(true)}
-              className="p-2 rounded-full hover:bg-muted transition-colors"
-              data-testid="casino-stats-btn"
-            >
-              <BarChart3 className="w-5 h-5" />
-            </button>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10">
-              <Coins className="w-4 h-4 text-amber-500" />
-              <span className="font-semibold text-amber-600">{Math.floor(user?.bl_coins || 0).toLocaleString()}</span>
-            </div>
+            {isAdmin && (
+              <button 
+                onClick={() => setShowStats(true)}
+                className="p-2 rounded-full hover:bg-muted transition-colors"
+                data-testid="casino-stats-btn"
+              >
+                <BarChart3 className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </div>
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-6">
-        {/* Balance Card */}
-        <div className="bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl p-6 text-white mb-6">
+        {/* Balance Card - Always visible but styled differently */}
+        <div className={`rounded-2xl p-6 text-white mb-6 ${
+          isAdmin 
+            ? 'bg-gradient-to-r from-amber-500 to-orange-600' 
+            : 'bg-gradient-to-r from-gray-600 to-gray-700'
+        }`}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-white/80 text-sm">Your Balance</p>
               <p className="text-3xl font-bold">{Math.floor(user?.bl_coins || 0).toLocaleString()} BL</p>
-              <p className="text-sm text-white/70 mt-1">Min: {MIN_BET} BL • Max: {MAX_BET.toLocaleString()} BL</p>
+              <p className="text-sm text-white/70 mt-1">
+                {isAdmin ? `Min: ${MIN_BET} BL • Max: ${MAX_BET.toLocaleString()} BL` : 'Games unlocking soon!'}
+              </p>
             </div>
-            <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
-              <span className="text-4xl">🎰</span>
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
+              isAdmin ? 'bg-white/20' : 'bg-white/10'
+            }`}>
+              <span className="text-4xl">{isAdmin ? '🎰' : '🔒'}</span>
             </div>
           </div>
         </div>
 
-        {/* Games Grid */}
-        <h2 className="font-semibold text-lg mb-4">Choose Your Game</h2>
+        {/* Status Banner for non-admin */}
+        {!isAdmin && (
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mb-6 text-center">
+            <p className="text-amber-500 font-medium">🚧 Casino Games Coming Soon!</p>
+            <p className="text-sm text-muted-foreground mt-1">All games below are in development. Stay tuned for launch!</p>
+          </div>
+        )}
+
+        {/* Games Grid - Always visible, but locked for non-admin */}
+        <h2 className="font-semibold text-lg mb-4 flex items-center gap-2">
+          Choose Your Game
+          {!isAdmin && <span className="text-xs text-muted-foreground">(Preview)</span>}
+        </h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {games.map((game) => (
             <button
               key={game.id}
-              onClick={() => game.link ? navigate(game.link) : setActiveGame(game.id)}
-              className={`bg-gradient-to-br ${game.color} rounded-2xl p-4 text-white text-left hover:scale-105 transition-transform shadow-lg relative`}
+              onClick={() => handleGameClick(game)}
+              className={`rounded-2xl p-4 text-white text-left transition-all shadow-lg relative ${
+                isAdmin 
+                  ? `bg-gradient-to-br ${game.color} hover:scale-105 cursor-pointer`
+                  : 'bg-gradient-to-br from-gray-700 to-gray-800 opacity-60 cursor-not-allowed grayscale'
+              }`}
+              disabled={!isAdmin}
               data-testid={`game-${game.id}-btn`}
             >
-              {game.isNew && (
+              {/* Lock overlay for non-admin */}
+              {!isAdmin && (
+                <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/50 flex items-center justify-center">
+                  <span className="text-xs">🔒</span>
+                </div>
+              )}
+              {game.isNew && isAdmin && (
                 <span className="absolute top-2 right-2 bg-yellow-400 text-black text-xs font-bold px-2 py-0.5 rounded-full animate-pulse">
                   NEW
                 </span>
               )}
-              <span className="text-4xl mb-2 block">{game.icon}</span>
+              <span className={`text-4xl mb-2 block ${!isAdmin ? 'opacity-50' : ''}`}>{game.icon}</span>
               <h3 className="font-bold text-lg">{game.name}</h3>
-              <p className="text-xs text-white/80 mt-1">{game.desc}</p>
+              <p className={`text-xs mt-1 ${isAdmin ? 'text-white/80' : 'text-gray-400'}`}>{game.desc}</p>
+              {!isAdmin && (
+                <span className="inline-block mt-2 text-xs bg-black/30 px-2 py-0.5 rounded-full">Locked</span>
+              )}
             </button>
           ))}
         </div>
@@ -1487,16 +1533,6 @@ export default function Casino() {
               Track your history and stats anytime
             </li>
           </ul>
-        </div>
-
-        {/* Link to old games */}
-        <div className="mt-6 text-center">
-          <button 
-            onClick={() => navigate("/games")}
-            className="text-sm text-muted-foreground hover:text-primary transition-colors"
-          >
-            Looking for Memory Match? → Go to Mini Games
-          </button>
         </div>
       </main>
     </div>
