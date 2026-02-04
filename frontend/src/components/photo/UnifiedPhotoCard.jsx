@@ -43,7 +43,7 @@ import { cn } from '../../lib/utils';
 // SCROLLING FIX v5: Using pure CSS animations + touch-action: pan-y
 const GoldenSparklingFrame = ({ children }) => {
   return (
-    <div className="relative golden-frame-container" style={{ touchAction: 'pan-y' }}>
+    <div className="relative golden-frame-container" style={{ touchAction: 'manipulation' }}>
       {/* Animated sparkle particles using CSS animations */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
         {[...Array(8)].map((_, i) => (
@@ -323,7 +323,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         transformStyle: 'preserve-3d',
         transform: isFlipped ? 'rotateY(180deg) scale(1.05)' : 'rotateY(0deg) scale(1)',
         zIndex: isFlipped ? 100 : 1,
-        touchAction: 'pan-y', // CRITICAL for single-finger scroll
+        touchAction: 'manipulation', // CRITICAL for single-finger scroll
       }}
     >
       {/* FRONT: Photo + Stats - 70% image / 30% details */}
@@ -333,17 +333,17 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
           "bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700",
           hasGoldenFrame && !seniorityAchieved && "ring-2 ring-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]"
         )}
-        style={{ touchAction: 'pan-y' }}
+        style={{ touchAction: 'manipulation' }}
       >
         {/* Photo Image - 70% of card height */}
-        <div className="relative w-full" style={{ height: '70%', minHeight: '70%', touchAction: 'pan-y' }}>
+        <div className="relative w-full" style={{ height: '70%', minHeight: '70%', touchAction: 'manipulation' }}>
           <img
             src={photo?.image_url || photo?.thumbnail_url || '/placeholder-photo.jpg'}
             alt={photo?.name || 'Minted Photo'}
             className="w-full h-full object-cover select-none"
             loading="lazy"
             draggable={false}
-            style={{ pointerEvents: 'none', touchAction: 'pan-y' }}
+            style={{ pointerEvents: 'none', touchAction: 'manipulation' }}
           />
           {/* Seniority Level 60 sparkle indicator */}
           {seniorityAchieved && (
@@ -357,7 +357,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         {showStats && (
           <div 
             className="bg-gradient-to-b from-black/90 to-black/70 flex flex-col px-1.5 py-1"
-            style={{ height: '30%', maxHeight: '30%', overflow: 'hidden', touchAction: 'pan-y' }}
+            style={{ height: '30%', maxHeight: '30%', overflow: 'hidden', touchAction: 'manipulation' }}
           >
             {/* NAME - Top of details */}
             <div className="text-yellow-400 font-bold truncate text-center text-[11px] sm:text-[10px] leading-tight bg-black/50 rounded mb-0.5 py-0.5 min-h-[14px]">
@@ -365,7 +365,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
             </div>
             
             {/* DOLLAR VALUE & STARS - Single row */}
-            <div className="flex items-center justify-between" style={{ touchAction: 'pan-y' }}>
+            <div className="flex items-center justify-between" style={{ touchAction: 'manipulation' }}>
               <span className={cn(
                 "font-bold bg-gradient-to-r bg-clip-text text-transparent text-[9px]",
                 scenery.gradient
@@ -436,15 +436,15 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
           "bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700",
           hasGoldenFrame && !seniorityAchieved && "ring-2 ring-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]"
         )}
-        style={{ touchAction: 'pan-y' }}
+        style={{ touchAction: 'manipulation' }}
       >
         {/* Small preview image at top */}
-        <div className="relative h-12 w-full" style={{ touchAction: 'pan-y' }}>
+        <div className="relative h-12 w-full" style={{ touchAction: 'manipulation' }}>
           <img
             src={photo?.image_url || photo?.thumbnail_url}
             alt={photo?.name}
             className="w-full h-full object-cover opacity-50"
-            style={{ pointerEvents: 'none', touchAction: 'pan-y' }}
+            style={{ pointerEvents: 'none', touchAction: 'manipulation' }}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-900" />
         </div>
@@ -452,7 +452,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         {/* Stats content - Scrollable */}
         <div 
           className="p-2 space-y-1 text-[10px] overflow-y-auto"
-          style={{ maxHeight: 'calc(100% - 3rem)', touchAction: 'pan-y' }}
+          style={{ maxHeight: 'calc(100% - 3rem)', touchAction: 'manipulation' }}
         >
           {/* ========== BASE VALUE SECTION ========== */}
           <div className="text-center border-b border-gray-700/50 pb-2">
@@ -751,7 +751,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         selected && "ring-2 ring-primary ring-offset-2 ring-offset-background",
         className
       )}
-      style={{ zIndex: isFlipped ? 50 : 'auto', touchAction: 'pan-y' }}
+      style={{ zIndex: isFlipped ? 50 : 'auto', touchAction: 'manipulation' }}
       data-testid={`photo-card-${photo?.mint_id}`}
       data-flipped={isFlipped}
     >
