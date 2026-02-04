@@ -356,8 +356,8 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
     onFlip?.(newFlippedState);
   }, [isFlipped, onFlip, onFlipStateChange]);
   
-  // Card content - SCROLL-FRIENDLY DESIGN
-  // No touch-action overrides - let browser handle scrolling naturally
+  // Card content - SINGLE-FINGER SCROLL FIX
+  // CRITICAL: Disable ALL framer-motion gesture handling to allow touch scrolling
   const cardContent = (
     <motion.div
       ref={cardRef}
@@ -371,24 +371,45 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
         scale: isFlipped ? 1.05 : 1,
       }}
       transition={{ duration: 0.5 }}
+      // CRITICAL: Disable ALL gesture/drag detection to prevent touch capture
+      drag={false}
+      dragListener={false}
+      whileTap={undefined}
+      whileHover={undefined}
+      onPan={undefined}
+      onPanStart={undefined}
+      onPanEnd={undefined}
+      onTap={undefined}
+      onTapStart={undefined}
+      onTapCancel={undefined}
       style={{ 
         transformStyle: 'preserve-3d',
         zIndex: isFlipped ? 100 : 1,
+        // Allow touch events to pass through for scrolling
+        touchAction: 'pan-y',
       }}
     >
-      {/* FRONT: Photo + Stats - 75% image / 25% details */}
+      {/* FRONT: Photo + Stats - 70% image / 30% details for better text fit */}
       <div 
         className={cn(
           "absolute inset-0 backface-hidden rounded-xl overflow-hidden flex flex-col",
           "bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700",
           hasGoldenFrame && !seniorityAchieved && "ring-2 ring-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]"
         )}
-        style={{ backfaceVisibility: 'hidden' }}
+        style={{ 
+          backfaceVisibility: 'hidden',
+          touchAction: 'pan-y',
+        }}
       >
-        {/* Photo Image - 72% of card height */}
+        {/* Photo Image - 70% of card height */}
         <div 
           className="relative w-full"
-          style={{ height: '72%', minHeight: '72%' }}
+          style={{ 
+            height: '70%', 
+            minHeight: '70%',
+            touchAction: 'pan-y',
+            pointerEvents: 'none',
+          }}
         >
           <img
             src={photo?.image_url || photo?.thumbnail_url || '/placeholder-photo.jpg'}
@@ -398,6 +419,7 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
             draggable={false}
             style={{ 
               pointerEvents: 'none',
+              touchAction: 'pan-y',
               userSelect: 'none',
               WebkitUserSelect: 'none',
               WebkitTouchCallout: 'none',
