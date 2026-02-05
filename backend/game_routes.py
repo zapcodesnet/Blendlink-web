@@ -385,10 +385,11 @@ async def join_open_game(
                 detail=f"Photo '{photo.get('name', photo_id)}' has no stamina left"
             )
         
+        # Use lightweight API reference instead of base64 image_url to prevent DocumentTooLarge
         photo_data = {
             "mint_id": photo.get("mint_id"),
             "name": photo.get("name"),
-            "image_url": photo.get("image_url"),
+            "image_url": f"/api/minting/photo/{photo.get('mint_id')}/image",  # API endpoint reference
             "dollar_value": photo.get("dollar_value", 0),
             "scenery_type": photo.get("scenery_type", "natural"),
             "current_stamina": current_stamina,
