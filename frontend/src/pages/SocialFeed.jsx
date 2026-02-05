@@ -1202,16 +1202,24 @@ export default function SocialFeed() {
     }
   }, []);
   
+  // Error state for feed loading
+  const [feedError, setFeedError] = useState(null);
+  
   // Initial load - optimized for faster perceived load time
   useEffect(() => {
     const init = async () => {
       setIsLoading(true);
+      setFeedError(null);
       
       // Load feed first (critical content), then stories (non-critical)
       try {
         await loadFeed();
       } catch (e) {
         console.error('Feed load error:', e);
+        setFeedError({
+          title: 'Failed to load feed',
+          message: e.message || 'Unable to connect to database. Please try again.'
+        });
       }
       
       // Show UI immediately after feed loads
@@ -1221,6 +1229,14 @@ export default function SocialFeed() {
       loadStories().catch(e => console.error('Stories load error:', e));
     };
     init();
+  }, [loadFeed, loadStories]);
+  
+  // Retry handler
+  const handleRetry = useCallback(() => {
+    setIsLoading(true);
+    setFeedError(null);
+    loadFeed().then(() => setIsLoading(false));
+    loadStories();
   }, [loadFeed, loadStories]);
   
   // Load more posts
