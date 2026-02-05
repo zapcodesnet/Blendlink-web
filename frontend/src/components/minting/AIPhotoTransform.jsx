@@ -202,33 +202,37 @@ const AIPhotoTransform = ({
       </div>
       
       {/* Prompt input */}
-      <div className="space-y-2">
-        <div className="relative">
-          <Input
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Describe changes (e.g., 'add red hat and beach background')"
-            className="bg-gray-800 border-gray-700 text-white pr-24"
-            disabled={isGenerating}
-            onKeyPress={(e) => e.key === 'Enter' && !isGenerating && handleGenerate()}
-            data-testid="transform-prompt-input"
-          />
-          <Button
-            onClick={handleGenerate}
-            disabled={isGenerating || !prompt.trim() || generationsRemaining <= 0}
-            className="absolute right-1 top-1 h-8 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-            data-testid="generate-edits-btn"
-          >
-            {isGenerating ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <>
-                <Sparkles className="w-4 h-4 mr-1" />
-                Generate
-              </>
-            )}
-          </Button>
-        </div>
+      <div className="space-y-3">
+        {/* Text input - full width, no button inside */}
+        <Input
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          placeholder="Describe changes (e.g., 'add red hat and beach background')"
+          className="bg-gray-800 border-gray-700 text-white w-full"
+          disabled={isGenerating}
+          onKeyPress={(e) => e.key === 'Enter' && !isGenerating && handleGenerate()}
+          data-testid="transform-prompt-input"
+        />
+        
+        {/* Generate button - below input, full width on mobile */}
+        <Button
+          onClick={handleGenerate}
+          disabled={isGenerating || !prompt.trim() || generationsRemaining <= 0}
+          className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+          data-testid="generate-edits-btn"
+        >
+          {isGenerating ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4 mr-2" />
+              Generate AI Edits ({generationsRemaining} left)
+            </>
+          )}
+        </Button>
         
         {/* Example prompts */}
         <div className="flex flex-wrap gap-1">
