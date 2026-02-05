@@ -64,7 +64,7 @@ class PVPGameRoom:
     player2_wins: int = 0
     
     # Round state
-    round_phase: str = "waiting"  # waiting, selecting, ready, countdown, playing, result
+    round_phase: str = "waiting"  # waiting, selecting, ready, countdown, playing, result, paused
     round_type: str = "auction"  # auction or rps
     
     # Countdown
@@ -73,6 +73,17 @@ class PVPGameRoom:
     
     # Timeout task for auto-ready
     timeout_task: Optional[asyncio.Task] = None
+    
+    # Disconnect handling - IMPROVED
+    disconnect_forfeit_task: Optional[asyncio.Task] = None
+    disconnected_player_id: Optional[str] = None
+    pause_start_time: Optional[datetime] = None
+    
+    # Tapping state (for auction rounds) - persisted for sync
+    player1_taps: int = 0
+    player2_taps: int = 0
+    round_start_time: Optional[datetime] = None
+    round_winner_determined: bool = False  # Prevent duplicate winner determination
     
     # Public visibility for spectators
     allow_spectators: bool = True
