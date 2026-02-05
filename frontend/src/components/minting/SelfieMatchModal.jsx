@@ -119,6 +119,27 @@ export const SelfieMatchModal = ({
     initModels();
   }, []);
   
+  // Fetch server-side attempts count on mount (sync with backend)
+  useEffect(() => {
+    const fetchAuthenticityStatus = async () => {
+      if (!photo?.mint_id || serverAttemptsLoaded) return;
+      try {
+        const response = await api.get(`/minting/photo/${photo.mint_id}/authenticity-status`);
+        const serverAttempts = response.data.selfie_match_attempts || 0;
+        setAttemptsUsed(serverAttempts);
+        setServerAttemptsLoaded(true);
+        console.log('[SelfieMatch] Synced attempts from server:', serverAttempts);
+      } catch (err) {
+        console.warn('[SelfieMatch] Could not fetch authenticity status:', err);
+        // Continue with local state if fetch fails
+        setServerAttemptsLoaded(true);
+      }
+    };
+    if (isOpen) {
+      fetchAuthenticityStatus();
+    }
+  }, [photo?.mint_id, isOpen, serverAttemptsLoaded]);
+  
   // Start real-time face detection when camera is active
   useEffect(() => {
     if (cameraActive && videoRef.current && overlayRef.current) {
