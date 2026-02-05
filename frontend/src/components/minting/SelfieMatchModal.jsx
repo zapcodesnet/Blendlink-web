@@ -550,15 +550,22 @@ export const SelfieMatchModal = ({
                   <div className="flex items-center gap-2">
                     <Camera className="w-4 h-4 text-gray-400" />
                     <span className="text-sm text-gray-300">
-                      Attempts: <span className="text-white font-bold">{attemptsRemaining}/{MAX_ATTEMPTS}</span>
-                      {isFreeAttempt && <span className="text-green-400 text-xs ml-1">(FREE)</span>}
+                      {isFreeAttempt ? (
+                        <>
+                          Free Tries: <span className="text-green-400 font-bold">{FREE_ATTEMPTS - attemptsUsed}/{FREE_ATTEMPTS}</span>
+                        </>
+                      ) : (
+                        <>
+                          Paid Tries: <span className="text-yellow-400 font-bold">{MAX_ATTEMPTS - attemptsUsed}/{PAID_ATTEMPTS}</span>
+                        </>
+                      )}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Coins className="w-4 h-4 text-yellow-400" />
-                    <span className="text-sm text-gray-300">
+                    <span className="text-sm">
                       {isFreeAttempt ? (
-                        <span className="text-green-400 font-bold">FREE ({FREE_ATTEMPTS - attemptsUsed} left)</span>
+                        <span className="text-green-400 font-bold">FREE</span>
                       ) : (
                         <span className="text-yellow-400 font-bold">{COST_PER_ATTEMPT} BL/try</span>
                       )}
