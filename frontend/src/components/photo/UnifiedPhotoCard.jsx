@@ -219,9 +219,6 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   };
   const config = sizeConfig[size] || sizeConfig.medium;
   
-  // Photo stats
-  const dollarValue = photo?.dollar_value || photo?.base_dollar_value || 0;
-  const level = photo?.level || 1;
   // Memoized photo stats - only recalculate when photo changes
   const photoStats = useMemo(() => {
     const dollarValue = photo?.dollar_value || photo?.base_dollar_value || 0;
