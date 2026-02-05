@@ -88,6 +88,7 @@ export const SelfieMatchModal = ({
   const [isMatching, setIsMatching] = useState(false);
   const [matchResult, setMatchResult] = useState(null);
   const [attemptsUsed, setAttemptsUsed] = useState(0);
+  const [serverAttemptsLoaded, setServerAttemptsLoaded] = useState(false);
   
   // Refs
   const videoRef = useRef(null);
