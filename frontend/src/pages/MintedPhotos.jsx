@@ -5,7 +5,7 @@ import {
   Zap, Lock, Globe, FolderPlus, MoreVertical,
   Edit2, Trash2, Share2, Eye, EyeOff, Grid, List,
   ChevronRight, Star, Swords, TrendingUp, X, User, Maximize2,
-  Shield, LayoutGrid, Loader2, AlertCircle, RefreshCw
+  Shield, LayoutGrid, Loader2, AlertCircle, RefreshCw, Wand2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../services/api';
@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { SelfieMatchModal } from '../components/minting/SelfieMatchModal';
 import { LikeButton } from '../components/game/LikeButton';
 import UnifiedPhotoCard from '../components/photo/UnifiedPhotoCard';
+import AIPhotoTransform from '../components/minting/AIPhotoTransform';
 import { cn } from '../lib/utils';
 import { 
   PhotoGridSkeleton, 
