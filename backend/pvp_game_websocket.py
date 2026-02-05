@@ -18,6 +18,9 @@ logger = logging.getLogger(__name__)
 # Constants
 COUNTDOWN_SECONDS = 10
 READY_TIMEOUT_SECONDS = 30  # Auto-ready after 30s
+DISCONNECT_FORFEIT_TIMEOUT = 20  # 20 seconds before forfeit on disconnect
+AUCTION_ROUND_DURATION = 15  # 15 seconds for tapping round
+MAX_TAPS_PER_SECOND = 30  # Anti-cheat limit
 
 
 @dataclass
