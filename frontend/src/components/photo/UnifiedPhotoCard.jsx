@@ -366,9 +366,16 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
             className="bg-gradient-to-b from-black/90 to-black/70 flex flex-col px-1.5 py-1"
             style={{ height: '30%', maxHeight: '30%', overflow: 'hidden', touchAction: 'manipulation' }}
           >
-            {/* NAME - Top of details */}
-            <div className="text-yellow-400 font-bold truncate text-center text-[11px] sm:text-[10px] leading-tight bg-black/50 rounded mb-0.5 py-0.5 min-h-[14px]">
-              {photo?.name || photo?.title || 'Unnamed Photo'}
+            {/* NAME & LIKE BUTTON - Top row of details */}
+            <div className="flex items-center justify-between gap-1 bg-black/50 rounded mb-0.5 py-0.5 px-1 min-h-[16px]">
+              <span className="text-yellow-400 font-bold truncate text-[11px] sm:text-[10px] leading-tight flex-1">
+                {photo?.name || photo?.title || 'Unnamed Photo'}
+              </span>
+              <LikeButtonCompact 
+                photoId={photo?.mint_id || photo?.id}
+                initialLikes={reactions}
+                initialLiked={photo?.user_has_reacted || false}
+              />
             </div>
             
             {/* DOLLAR VALUE & STARS - Single row */}
