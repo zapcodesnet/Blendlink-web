@@ -447,7 +447,7 @@ class PVPGameManager:
                 (room.player2 is None or not room.player2.is_connected)
             )
             if both_disconnected:
-                logger.info(f"Both players disconnected - no winner, game ends as draw")
+                logger.info("Both players disconnected - no winner, game ends as draw")
                 room.round_phase = "result"
                 await self._broadcast_to_room(room_id, {
                     "type": "game_draw",
