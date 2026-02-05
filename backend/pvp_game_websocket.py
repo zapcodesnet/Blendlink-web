@@ -858,12 +858,22 @@ class PVPGameManager:
         await self._start_round(room_id)
     
     async def _start_round(self, room_id: str):
-        """Start the actual round gameplay"""
+        """Start the actual round gameplay - IMPROVED with tap reset and timing"""
         room = self.rooms.get(room_id)
         if not room:
             return
         
         room.round_phase = "playing"
+        room.round_start_time = datetime.now(timezone.utc)
+        room.round_winner_determined = False
+        
+        # Reset tap counts for new round (critical for auction rounds)
+        room.player1_taps = 0
+        room.player2_taps = 0
+        if room.player1:
+            room.player1.tap_count = 0
+        if room.player2:
+            room.player2.tap_count = 0
         
         # Get full photo data for both players
         player1_photo = None
@@ -880,23 +890,49 @@ class PVPGameManager:
                 None
             )
         
-        # Broadcast round start with FULL photo data
+        # Broadcast round start with FULL photo data and round duration
         await self._broadcast_to_room(room_id, {
             "type": "round_start",
             "round": room.current_round,
             "round_type": room.round_type,
+            "round_duration": AUCTION_ROUND_DURATION if room.round_type == "auction" else 0,
             "player1": {
                 "user_id": room.player1.user_id if room.player1 else None,
                 "username": room.player1.username if room.player1 else None,
                 "photo": self._sanitize_photo(player1_photo),
+                "taps": 0,
             },
             "player2": {
                 "user_id": room.player2.user_id if room.player2 else None,
                 "username": room.player2.username if room.player2 else None,
                 "photo": self._sanitize_photo(player2_photo),
+                "taps": 0,
             },
-            "server_timestamp": datetime.now(timezone.utc).isoformat(),
+            "server_timestamp": room.round_start_time.isoformat(),
         })
+        
+        # Persist initial state to DB for polling
+        if self._db and room.session_id:
+            try:
+                await self._db.pvp_sessions.update_one(
+                    {"$or": [
+                        {"session_id": room.session_id},
+                        {"open_game_id": room.game_id},
+                    ]},
+                    {
+                        "$set": {
+                            "status": "tapping",
+                            "current_round": room.current_round,
+                            "player1_taps": 0,
+                            "player2_taps": 0,
+                            "round_start_time": room.round_start_time,
+                            "round_winner_determined": False,
+                            "updated_at": datetime.now(timezone.utc)
+                        }
+                    }
+                )
+            except Exception as e:
+                logger.debug(f"Could not persist round start: {e}")
     
     async def submit_round_result(
         self,
