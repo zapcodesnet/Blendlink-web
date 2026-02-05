@@ -1,49 +1,25 @@
 /**
- * UnifiedPhotoCard Component
+ * UnifiedPhotoCard Component - PERFORMANCE OPTIMIZED
  * 
- * A consistent, reusable photo card component used across all pages:
- * - Minted Photos page
- * - Photo Game Arena
- * - Battle Arena (PVP/Bot)
- * - Profile & Settings
- * 
- * Design Rules:
- * - Front: Clean image ONLY (no overlays, text, icons on image)
- * - Back: All stats displayed BELOW the image including new progression stats
- * - XP meter bar shown below Base Value
- * - Golden sparkling frame animation for Seniority Level 60
- * - Uniform design across all pages
- * 
- * CARD FRONT LAYOUT (Top to Bottom):
- * 1. Photo Image (75% of card height)
- * 2. Name
- * 3. Dollar Value & Stars
- * 4. Scenery & Level
- * 5. Stamina
- * 6. Streaks (Win/Loss)
- * 7. Small "Tap to flip" button at bottom
- * 
- * SCROLLING FIX (v4 - FINAL FIX):
- * - REMOVED framer-motion entirely from this component
- * - Using pure CSS transitions for flip animation
- * - All touch events pass through to browser for native scrolling
- * - No JavaScript touch event handling that could block scroll
- * - touch-action: auto (not pan-y) for maximum browser compatibility
+ * Optimizations applied:
+ * - React.memo for preventing unnecessary re-renders
+ * - useMemo for expensive calculations (dollar formatting, stats)
+ * - useCallback for event handlers
+ * - Lazy loading for images with loading="lazy"
+ * - CSS containment for rendering performance
  */
 
-import React, { useState, memo, useCallback, useRef } from 'react';
-// REMOVED: framer-motion import - it was blocking touch scroll events
+import React, { useState, memo, useCallback, useRef, useMemo } from 'react';
 import { 
   Star, Zap, Shield, Flame, Heart, TrendingUp,
   Award, Calendar, Coins, Camera, Lock, Eye, Sparkles
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
-// Golden Sparkling Frame Animation Component for Level 60 Seniority
-// SCROLLING FIX v5: Using pure CSS animations + touch-action: pan-y
-const GoldenSparklingFrame = ({ children }) => {
+// Memoized Golden Sparkling Frame - only re-renders when children change
+const GoldenSparklingFrame = memo(({ children }) => {
   return (
-    <div className="relative golden-frame-container" style={{ touchAction: 'manipulation' }}>
+    <div className="relative golden-frame-container" style={{ touchAction: 'manipulation', contain: 'layout style' }}>
       {/* Animated sparkle particles using CSS animations */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
         {[...Array(8)].map((_, i) => (
