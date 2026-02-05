@@ -1278,10 +1278,15 @@ const MintedPhotos = () => {
   
   const fetchPhotos = async () => {
     try {
+      setError(null); // Clear previous errors
       const response = await api.get('/minting/photos');
       setPhotos(response.data.photos || []);
     } catch (err) {
       console.error('Failed to fetch photos:', err);
+      setError({
+        title: 'Failed to load photos',
+        message: err.response?.data?.detail || 'Unable to connect to database. Please try again.'
+      });
     } finally {
       setLoading(false);
     }
@@ -1293,8 +1298,17 @@ const MintedPhotos = () => {
       setMintStatus(response.data);
     } catch (err) {
       console.error('Failed to fetch mint status:', err);
+      // Don't show error for mint status - it's secondary
     }
   };
+  
+  // Retry function for error state
+  const handleRetry = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    fetchPhotos();
+    fetchMintStatus();
+  }, []);
   
   // Initial load
   useEffect(() => {
