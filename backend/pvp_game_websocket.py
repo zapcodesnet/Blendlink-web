@@ -305,7 +305,7 @@ class PVPGameManager:
         return True
     
     async def disconnect_player(self, user_id: str):
-        """Handle player disconnect"""
+        """Handle player disconnect - IMPROVED to prevent double-wins"""
         room_id = self.user_rooms.get(user_id)
         if not room_id:
             return
@@ -315,16 +315,19 @@ class PVPGameManager:
             return
         
         async with self._lock:
-            if room.player1 and room.player1.user_id == user_id:
+            is_player1 = room.player1 and room.player1.user_id == user_id
+            is_player2 = room.player2 and room.player2.user_id == user_id
+            
+            if is_player1:
                 room.player1.is_connected = False
-            elif room.player2 and room.player2.user_id == user_id:
+            elif is_player2:
                 room.player2.is_connected = False
             
             self.user_rooms.pop(user_id, None)
         
         logger.info(f"Player {user_id} disconnected from room {room_id}")
         
-        # Notify other player and handle disconnect
+        # Notify other player about disconnect
         try:
             await self._broadcast_to_room(room_id, {
                 "type": "player_disconnected",
@@ -334,10 +337,42 @@ class PVPGameManager:
         except Exception as e:
             logger.error(f"Error broadcasting disconnect: {e}")
         
-        # Start forfeit timer if game is in progress
+        # Check if BOTH players are now disconnected - if so, pause the game (no winner)
+        both_disconnected = (
+            (room.player1 is None or not room.player1.is_connected) and 
+            (room.player2 is None or not room.player2.is_connected)
+        )
+        
+        if both_disconnected:
+            logger.info(f"Both players disconnected from room {room_id} - pausing game")
+            room.round_phase = "paused"
+            # Cancel any existing forfeit task
+            if room.disconnect_forfeit_task:
+                room.disconnect_forfeit_task.cancel()
+                room.disconnect_forfeit_task = None
+            return  # No forfeit when both disconnect
+        
+        # Only one player disconnected - start forfeit timer if game is in progress
         if room.round_phase in ["selecting", "ready", "countdown", "playing"]:
+            # Cancel any existing forfeit task for this room
+            if room.disconnect_forfeit_task:
+                room.disconnect_forfeit_task.cancel()
+            
+            room.disconnected_player_id = user_id
+            room.pause_start_time = datetime.now(timezone.utc)
+            
+            # Notify the connected player about the countdown
+            await self._broadcast_to_room(room_id, {
+                "type": "disconnect_countdown_start",
+                "disconnected_user_id": user_id,
+                "timeout_seconds": DISCONNECT_FORFEIT_TIMEOUT,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+            
             try:
-                asyncio.create_task(self._handle_disconnect_forfeit(room_id, user_id))
+                room.disconnect_forfeit_task = asyncio.create_task(
+                    self._handle_disconnect_forfeit(room_id, user_id)
+                )
             except Exception as e:
                 logger.error(f"Error creating forfeit task: {e}")
     
