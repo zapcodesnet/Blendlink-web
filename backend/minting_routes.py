@@ -315,6 +315,14 @@ async def mint_photo_upload(
         raise HTTPException(status_code=400, detail=error_msg)
     
     logger.info(f"Photo minted successfully: {result.get('photo', {}).get('mint_id')}")
+    
+    # Reset AI transformation session after successful mint
+    try:
+        from ai_photo_transform import on_mint_success
+        await on_mint_success(current_user["user_id"])
+    except Exception as e:
+        logger.warning(f"Failed to reset AI transform session: {e}")
+    
     return result
 
 
