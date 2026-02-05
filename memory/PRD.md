@@ -2,7 +2,48 @@
 
 ## Latest Update: February 5, 2026
 
-### Photo Game Bot DocumentTooLarge Fix (February 5, 2026) - LATEST
+### AI Photo Transformation Feature (February 5, 2026) - LATEST
+
+#### Feature Overview:
+New AI-powered photo transformation feature integrated into the minting flow. Users can optionally transform their uploaded photos using text descriptions before minting.
+
+#### Implementation Details:
+
+**1. 3-Step Minting Flow ✅**
+- Step 1 (Upload): Photo upload, name, description, privacy settings
+- Step 2 (Transform): Optional AI transformation with text prompts
+- Step 3 (Confirm): Review and mint with cost display
+
+**2. AI Transformation Component ✅**
+- Text input for transformation description (e.g., "cartoon style", "add sunset background")
+- Example prompts for inspiration
+- Original photo + generated variations displayed in grid
+- User can select variation or keep original
+- Max 3 generations per mint session (resets after successful mint)
+
+**3. Backend API Endpoints ✅**
+- `GET /api/ai-transform/status` - Get generations used/remaining
+- `POST /api/ai-transform/generate` - Generate AI variations (uses OpenAI GPT Image 1)
+- `POST /api/ai-transform/reset` - Reset counter (called after successful mint)
+
+**Files Created/Modified:**
+- `/app/backend/ai_photo_transform.py` - NEW: AI transformation service
+- `/app/frontend/src/components/minting/AIPhotoTransform.jsx` - NEW: Transform UI component
+- `/app/frontend/src/pages/MintedPhotos.jsx` - MODIFIED: 3-step MintPhotoDialog
+- `/app/backend/server.py` - MODIFIED: Added transform router
+- `/app/backend/minting_routes.py` - MODIFIED: Reset transform session after mint
+
+**Integration:**
+- Uses OpenAI GPT Image 1 via Emergent LLM Key
+- No additional API keys required
+- Generation takes 30-60 seconds per image
+- Supports all existing minting rules (200 BL fee, AI scoring, stats)
+
+**Test Results:** 100% pass rate (12/12 backend tests, all frontend elements verified)
+
+---
+
+### Photo Game Bot DocumentTooLarge Fix (February 5, 2026)
 
 #### Problem:
 The Photo Game bot was failing to start with error `pymongo.errors.DocumentTooLarge: BSON document too large (23.5 MB)`. This was caused by game session documents storing full base64 image data instead of lightweight image URL references.
