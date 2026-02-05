@@ -1323,6 +1323,19 @@ export default function SocialFeed() {
     );
   }
   
+  // Show error state
+  if (feedError) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center" data-testid="social-feed-error">
+        <ErrorState
+          title={feedError.title}
+          message={feedError.message}
+          onRetry={handleRetry}
+        />
+      </div>
+    );
+  }
+  
   return (
     <div className="min-h-screen bg-background" data-testid="social-feed-page">
       <div className="max-w-2xl mx-auto px-4 py-4">
