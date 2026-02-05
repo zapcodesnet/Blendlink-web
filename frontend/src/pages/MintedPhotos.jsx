@@ -1348,13 +1348,17 @@ const MintedPhotos = () => {
     }, 5000);
   };
   
-  const totalValue = photos.reduce((sum, p) => sum + (p.dollar_value || 0), 0);
-  const totalBattles = photos.reduce((sum, p) => sum + (p.battles_won || 0) + (p.battles_lost || 0), 0);
+  // Memoize expensive calculations
+  const { totalValue, totalBattles } = useMemo(() => ({
+    totalValue: photos.reduce((sum, p) => sum + (p.dollar_value || 0), 0),
+    totalBattles: photos.reduce((sum, p) => sum + (p.battles_won || 0) + (p.battles_lost || 0), 0)
+  }), [photos]);
   
   return (
     <div 
       className="minted-photos-scroll-container min-h-screen pb-24"
       data-testid="minted-photos-page"
+      style={{ contain: 'layout style' }}
     >
       {/* Mint Animation Overlay */}
       {MintAnimationComponent}
