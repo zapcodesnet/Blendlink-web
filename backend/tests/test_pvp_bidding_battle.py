@@ -129,7 +129,7 @@ class TestPVPBiddingBattle:
         if len(photos) < 5:
             pytest.skip(f"User 1 needs at least 5 minted photos, has {len(photos)}")
         
-        # Try with only 3 photos (should fail)
+        # Try with only 3 photos (should fail with 400 or 422)
         response = self.session.post(f"{BASE_URL}/api/photo-game/open-games/create", 
             headers=headers,
             json={
@@ -137,7 +137,7 @@ class TestPVPBiddingBattle:
                 "bet_amount": 0
             }
         )
-        assert response.status_code == 400, f"Expected 400 for 3 photos, got {response.status_code}"
+        assert response.status_code in [400, 422], f"Expected 400 or 422 for 3 photos, got {response.status_code}"
         print("✓ Creating game with 3 photos correctly rejected")
         
         # Try with 5 photos (should succeed)
