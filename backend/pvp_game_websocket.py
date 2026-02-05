@@ -202,12 +202,12 @@ class PVPGameManager:
         
         # Find the player
         player = None
-        is_player1 = False
         if room.player1 and room.player1.user_id == user_id:
             player = room.player1
-            is_player1 = True
         elif room.player2 and room.player2.user_id == user_id:
             player = room.player2
+        else:
+            player = None
         
         if not player or not player.websocket:
             return
