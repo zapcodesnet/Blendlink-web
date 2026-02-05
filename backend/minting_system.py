@@ -1152,11 +1152,17 @@ class MintingService:
         projection = {"_id": 0}
         if not include_image:
             projection["image_data"] = 0
+            projection["image_url"] = 0  # Exclude large base64 data URL
         
         photo = await self.db.minted_photos.find_one(
             {"mint_id": mint_id},
             projection
         )
+        
+        # Add lightweight image URL reference
+        if photo and not include_image:
+            photo["image_url"] = f"/api/minting/photo/{mint_id}/image"
+        
         return photo
     
     async def rename_photo(self, mint_id: str, user_id: str, new_name: str) -> Dict[str, Any]:
