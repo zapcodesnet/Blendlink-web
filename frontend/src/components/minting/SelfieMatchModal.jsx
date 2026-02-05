@@ -384,7 +384,7 @@ export const SelfieMatchModal = ({
       setDeclineWarning(false);
       setCapturedImage(null);
       setMatchResult(null);
-      // Note: Attempts are synced in the dedicated effect above
+      setServerAttemptsLoaded(false); // Reset to force re-fetch for this photo
     }
   }, [isOpen, photo?.mint_id]);
   
