@@ -1372,12 +1372,19 @@ Return ONLY valid JSON: {"match_score": <integer 0-100>, "confidence": "<high/me
         )
         chat = chat.with_model("openai", "gpt-4o")
         
-        # Create message with images
+        # Create message with images - format as proper data URLs for multimodal API
+        # Ensure base64 data doesn't have any prefix already
+        photo_b64_clean = photo_image_data.split(',')[-1] if ',' in photo_image_data else photo_image_data
+        selfie_b64_clean = request.selfie_base64.split(',')[-1] if ',' in request.selfie_base64 else request.selfie_base64
+        
+        photo_data_url = f"data:{photo_mime_type};base64,{photo_b64_clean}"
+        selfie_data_url = f"data:{request.mime_type};base64,{selfie_b64_clean}"
+        
         user_message = UserMessage(
             text=comparison_prompt,
             file_contents=[
-                ImageContent(image_base64=f"data:{photo_mime_type};base64,{photo_image_data}"),
-                ImageContent(image_base64=f"data:{request.mime_type};base64,{request.selfie_base64}"),
+                ImageContent(image_base64=photo_data_url),
+                ImageContent(image_base64=selfie_data_url),
             ]
         )
         
