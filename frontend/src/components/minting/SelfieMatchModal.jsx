@@ -472,11 +472,11 @@ export const SelfieMatchModal = ({
                   </div>
                 </div>
                 
-                {/* Cost info */}
-                <div className="flex items-center justify-center gap-2 p-2 bg-yellow-500/10 rounded-lg text-sm">
-                  <Coins className="w-4 h-4 text-yellow-400" />
+                {/* Cost info - IMPROVED: Clarifies free vs paid attempts */}
+                <div className="flex items-center justify-center gap-2 p-2 bg-green-500/10 border border-green-500/20 rounded-lg text-sm">
+                  <Coins className="w-4 h-4 text-green-400" />
                   <span className="text-gray-300">
-                    Cost: <span className="text-yellow-400 font-bold">{COST_PER_ATTEMPT} BL</span> per attempt (max 3 tries)
+                    <span className="text-green-400 font-bold">First 3 attempts FREE</span>, then <span className="text-yellow-400 font-bold">{COST_PER_ATTEMPT} BL</span> each
                   </span>
                 </div>
                 
