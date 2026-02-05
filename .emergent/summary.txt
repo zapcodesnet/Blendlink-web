@@ -1,192 +1,188 @@
 <analysis>**original_problem_statement:**
-The user is reporting several critical issues. The highest priority is a usability blocker on  and  where touch scrolling is unreliable when a user's finger is on a photo card. The user wants to fix this by enabling smooth scrolling, increasing card size by 15%, and adjusting the card layout to a 75/25 split between image and details.
-
-Additionally, there's a P0 issue with production data synchronization for BL Coins and game stats, which the agent was unable to investigate due to a MongoDB IP whitelist block. The user has also provided multiple iterations of feedback to fix bugs in the admin wallet management tool and refactor the Games/Casino pages, which are now believed to be resolved pending final verification.
+The user has reported a series of critical issues:
+1.  **Critical Scrolling Blocker (Recurring P0):** Single-finger touch scrolling is completely unresponsive on  and  pages when touching the photo cards. This makes the app unusable on mobile. Two-finger scrolling was also broken in the last attempt to fix this.
+2.  **Missing Photo Card Features (P0):** The double-click/tap to enlarge functionality for photos was missing, along with the Flip and Delete options in the enlarged view.
+3.  **Feed Page Performance (P0):** The  page was extremely slow (30+ seconds load time) and the integrated EmbedSocial.com widget was broken and not displaying any content.
+4.  **Database Migration (P0):** The user requested to migrate the entire application from the Emergent-managed local MongoDB to their own external MongoDB Atlas cluster for full control.
+5.  **General Performance (P1):** The user reported the application felt laggy and unresponsive in the preview environment, requesting optimizations.
+6.  **Photo Game Bot Failure (P0):** The user reported an error message Failed to start Bot in blendlink.net/photo-game, making the game unplayable.
 
 **PRODUCT REQUIREMENTS:**
-1.  **Fix Card Scrolling and Layout (P0):**
-    *   Make photo cards on  and  fully scrollable via touch and mouse wheel.
-    *   Increase card size by 15%.
-    *   Adjust card front layout to 75% image height and 25% details section height.
-    *   Ensure all text in the details section fits cleanly.
-    *   Test on real devices (iPhone/Android).
-
-2.  **Investigate Production DB Sync (P0, Blocked):**
-    *   Connect to the production MongoDB instance once the agent's IP () is whitelisted.
-    *   Verify the database name is .
-    *   Inspect collections (, ) to diagnose why BL coins and game stats are not syncing.
-    *   Check the  user document and its  balance.
-
-3.  **Refactor Games/Casino Pages (Verification Pending):**
-    *   The main  page should have a teaser card that redirects to a dedicated  page.
-    *   The  page should show all casino games.
-    *   The  page must be in a locked/teaser state for regular users.
-    *   The  page must be fully unlocked and playable only for the admin .
-
-4.  **Admin Wallet Management Tool (Verification Pending):**
-    *   The tool at  must allow user search and both adding (credit) and removing (deduct) BL coins.
-    *   Must be free of body stream already read or clone errors.
+1.  Fix the Photo Game Bot so it starts correctly.
+2.  Permanently fix single-finger and two-finger touch scrolling on all pages with photo cards.
+3.  Restore the double-click to enlarge photo feature, including Flip and Delete options in the modal.
+4.  Drastically improve the  page load time and fix the broken EmbedSocial widget.
+5.  Migrate the application's database to the user-provided MongoDB Atlas instance.
+6.  Implement backend and frontend performance optimizations (indexing, caching, lazy loading).
 
 **User's preferred language**: English
 
 **what currently exists?**
-A full-stack React/FastAPI application. The agent has just completed a multi-step refactor of the Games and Casino pages, making the main Games page a redirect gateway to a dedicated Casino page with admin-only access logic. Prior to that, the agent fixed a series of critical body stream already read and clone errors in the admin wallet management tool and added functionality for deducting coins. An investigation into a production database sync issue is currently blocked.
+A full-stack React/FastAPI application. The agent has successfully migrated the backend from a local MongoDB to the user's external MongoDB Atlas cluster. Significant performance work has been completed, including adding 62 database indexes, implementing frontend memoization (, ), and adding loading skeletons for a better user experience. The double-click to enlarge feature and its associated Flip/Delete options have been restored. However, a new critical bug has emerged where the Photo Game bot fails to start, and the long-standing critical scrolling issue remains unresolved.
 
 **Last working item**:
--   **Last item agent was working**: Investigating how to fix the broken touch-scrolling and layout on the minted photo cards. The agent located the relevant files,  and , to begin the implementation.
--   **Status**: NOT STARTED
+-   **Last item agent was working**: Investigating the Failed to start Bot in blendlink.net/photo-game error. The agent diagnosed the root cause by checking the backend logs.
+-   **Reasoning**: The error is . This is because the bot's battle session document is storing full base64 image data instead of lightweight image URLs, exceeding MongoDB's 16MB document size limit. The agent was about to modify the code (likely in  or a related service) to only store essential photo metadata in the session document.
+-   **Status**: IN PROGRESS
 -   **Agent Testing Done**: N
--   **Which testing method agent to use?**: screenshot tool. The user has specifically requested real-device testing and a video, which the agent cannot provide. The agent must implement the CSS/JS changes, use screenshots to verify the new layout, and then explicitly ask the user to perform the final verification on their real devices.
--   **User Testing Done**: N
+-   **Which testing method agent to use?**: Backend testing agent. The agent should create a test that triggers the creation of a PvP game session and asserts that it no longer fails with a  error and that the created document in the  collection is small.
+-   **User Testing Done**: Y (User reported the bug)
 
 **All Pending/In progress Issue list**:
--   Issue 1: Photo cards are not scrollable via touch on mobile devices (P0)
--   Issue 2: Production database synchronization is broken (P0, BLOCKED)
+-   Issue 1: Photo Game bot fails to start due to  error (P0 - CRITICAL)
+-   Issue 2: Single-finger and two-finger touch scrolling is broken on photo cards (P0 - CRITICAL, RECURRING)
+-   Issue 3: EmbedSocial.com widget on  page is not loading content (P1)
+-   Issue 4: Production database synchronization needs final verification (P1)
 
 **Issues Detail:**
--   **Issue 1: Photo cards are not scrollable via touch on mobile devices**
-    -   **Attempted fixes**: None. The agent has only identified the relevant files to modify.
+-   **Issue 1: Photo Game bot fails to start**
+    -   **Attempted fixes**: None. The issue was just diagnosed.
     -   **Next debug checklist**:
-        1.  Open .
-        2.  Increase the root element's size (width/height) by 15%.
-        3.  Adjust the internal CSS: set the image container to  and the details section to .
-        4.  Apply  to the main card container to ensure it doesn't block vertical scrolling.
-        5.  Check the parent component () to ensure the scroll container has  (or similar).
-        6.  Reduce font sizes in the details section to prevent text overflow.
-        7.  Take screenshots to verify the layout changes.
-    -   **Why fix this issue and what will be achieved with the fix?**: This is a critical usability blocker preventing users from navigating key pages on mobile.
-    -   **Status**: NOT STARTED
-    -   **Is recurring issue?**: Y (Scrolling issues have been a recurring theme).
-    -   **Should Test frontend/backend/both after fix?**: Frontend.
+        1.  Locate the code responsible for creating the PvP battle session document (likely in  or a  module).
+        2.  Identify where the full photo objects (containing base64 data) are being added to the session document.
+        3.  Modify the logic to store only the necessary photo identifiers (, ) and other essential metadata, instead of the entire photo document.
+        4.  Test starting a new game to confirm the error is resolved and the bot starts.
+    -   **Why fix this issue and what will be achieved with the fix?**: The photo game is a core application feature and is currently completely broken.
+    -   **Status**: IN PROGRESS
+    -   **Is recurring issue?**: N
+    -   **Should Test frontend/backend/both after fix?**: Backend.
     -   **Blocked on other issue**: None.
 
--   **Issue 2: Production database synchronization is broken**
-    -   **Attempted fixes**: The agent identified its outbound IP () and provided the user with a template email to send to Emergent support to request whitelisting. The user also confirmed the production  is .
+-   **Issue 2: Touch scrolling is broken on photo cards**
+    -   **Attempted fixes**: Numerous failed attempts including changing  (, , ), removing , adding  to images, and removing  from wrapper divs. The last attempt broke both single and two-finger scrolling.
     -   **Next debug checklist**:
-        1.  Wait for the user to confirm the IP has been whitelisted.
-        2.  Run a script to connect to the production MongoDB using the credentials and DB name provided.
-        3.  If successful, list all collections.
-        4.  Query the  collection for the  document and inspect its  field.
-        5.  Query the  collection for recent entries.
-    -   **Why fix this issue and what will be achieved with the fix?**: To resolve a critical production bug where user balances and game stats are not updating correctly across web and mobile.
-    -   **Status**: BLOCKED
+        1.  Hypothesize that the double-click/tap handler implemented on the card is interfering with single-touch propagation for scrolling.
+        2.  Inspect the  component's outermost container and its event handlers (, , ).
+        3.  Simplify the CSS. Revert to a state where two-finger scrolling worked. The core problem is single-finger touch.
+        4.  Ensure there's a single, unambiguous scroll container (e.g., the  or a main layout div) with  and . Remove any fixed heights () or  properties from nested containers that might be trapping scroll events.
+    -   **Why fix this issue and what will be achieved with the fix?**: The application is unusable on mobile, which is a critical usability failure and a major source of user frustration.
+    -   **Status**: IN PROGRESS
+    -   **Is recurring issue?**: Y
+    -   **Should Test frontend/backend/both after fix?**: Frontend. **Crucially, this must be verified by the user on a real mobile device**, as simulators and automated tests have repeatedly failed to catch this bug.
+    -   **Blocked on other issue**: None.
+
+-   **Issue 3: EmbedSocial.com widget is not loading content**
+    -   **Attempted fixes**: Added a loading state and a fallback UI. The underlying issue was not fixed.
+    -   **Next debug checklist**:
+        1.  Instruct the user to verify their EmbedSocial account settings and confirm the provided  is valid and linked to an active, public feed.
+        2.  Check the browser's console and network tabs on the  page for any errors related to the EmbedSocial script (e.g., CORS, 403 Forbidden, 404 Not Found).
+    -   **Why fix this issue and what will be achieved with the fix?**: A key content section of the  page is broken.
+    -   **Status**: NOT STARTED
     -   **Is recurring issue?**: N
-    -   **Should Test frontend/backend/both after fix?**: Backend (DB connection).
-    -   **Blocked on other issue**: Waiting for user to get the agent's IP whitelisted.
+    -   **Should Test frontend/backend/both after fix?**: Frontend.
+    -   **Blocked on other issue**: Potentially blocked by user action (verifying their EmbedSocial account).
+
+-   **Issue 4: Production database synchronization**
+    -   **Attempted fixes**: The agent successfully connected to the user's new Atlas DB and migrated data.
+    -   **Next debug checklist**: This is likely resolved, but the agent should confirm with the user after deployment that data is behaving as expected in production.
+    -   **Status**: USER VERIFICATION PENDING
+    -   **Is recurring issue?**: N
+    -   **Should Test frontend/backend/both after fix?**: Backend.
+    -   **Blocked on other issue**: Deployment.
 
 **In progress Task List**:
-None.
+None. All current work is classified under bug fixes.
 
 **Upcoming and Future Tasks**
 **Upcoming Tasks:**
--   **P0:** Verify PvP synchronization and post-battle stat updates (Recurring P0 issue).
+-   **P0:** Verify PvP synchronization and post-battle stat updates after fixing the bot.
 -   **P1:** Implement auto-refresh and glowing animation for newly minted photos.
--   **P1:** Add user notifications (in-app or email) when admins grant them BL coins.
+-   **P1:** Add user notifications for BL coin grants.
 
 **Future Tasks:**
 -   **P2:** Implement full Subscription Tiers functionality.
--   **P2:** Add rate limiting to the admin credit tool to prevent abuse.
+-   **P2:** Add rate limiting to the admin credit tool.
 
 **Completed work in this session**
--   **Admin Wallet Management Fix (DONE):** Resolved a series of  API errors (body stream already read, clone error) by implementing a robust  pattern in  and . Added functionality for admins to deduct/remove BL Coins, including a confirmation modal.
--   **Games & Casino Pages Refactor (DONE):**
-    -   On the main Games page (, ), converted the Casino Games section into a single, clickable teaser card that navigates to the  route.
-    -   On the dedicated Casino page (, ), populated all existing casino games and implemented a locked/teaser state for regular users.
-    -   Fixed a bug and ensured all games are visible and fully unlocked only for the admin user .
-    -   Maintained 100% UI/UX sync between the web and mobile files for all changes.
-
-**Earlier issues found/mentioned but not fixed**
--   The production DB sync issue is the primary one, currently blocked.
-
-**Known issue recurrence from previous fork**
--   **Issue recurrence in previous fork**: Scrolling performance on key pages.
--   **Recurrence count**: 5+
--   **Status**: IN PROGRESS (This is the current 
-wtmp begins Tue Feb  3 12:25:25 2026).
+-   **MongoDB Atlas Migration (DONE):** Successfully migrated the entire backend to use the user's external MongoDB Atlas cluster. Updated all backend services and environment variables, and implemented a fallback to local DB for resilience.
+-   **Data Migration (DONE):** Wrote and executed a script to migrate 1,456 documents across 68 collections from the local DB to the new Atlas cluster.
+-   **Database Performance Optimization (DONE):** Created 62 new, targeted indexes in MongoDB Atlas for frequently queried fields across 16 collections. Verified performance improvements with API response time tests and explain plans.
+-   **Restore Photo Features (DONE):** Re-implemented the double-click/tap to enlarge feature on photo cards. Confirmed the Flip and Delete buttons are present and functional in the enlarged photo lightbox.
+-   **Frontend Performance Optimization (DONE):** Optimized  and  using  and  to reduce re-renders.
+-   **UI/UX Improvements (DONE):** Created and implemented a library of loading skeletons (, , etc.) and error/empty states to improve perceived performance and handle API failures gracefully.
+-   **Feed Page Load Time (DONE):** Reduced the  page load time from over 30 seconds to ~3 seconds through frontend optimizations.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Frontend:** React, React Native, Tailwind CSS,  API, .
--   **Backend:** FastAPI (Python), MongoDB.
--   **Authentication:** JWT-based auth context, with hardcoded email checks for admin roles ().
--   **CSS for Scrolling:** , .
+-   **Backend:** FastAPI, MongoDB (Atlas), Pymongo, 
+-   **Frontend:** React, Tailwind CSS, , 
+-   **Database:** MongoDB Atlas, Indexing (IXSCAN), Explain Plans, Document Size Limits
+-   **UI/UX:** CSS (, ), Loading Skeletons, Error Handling States
+-   **DevOps:** Environment variable management for different environments (preview vs. production).
 
 **key DB schema**
--   **users**: 
--   **bl_coin_transactions**: 
+-   No schema changes, but extensive indexing was added to collections like , , , , , and  to optimize query performance.
 
 **changes in tech stack**
-None.
+-   **Primary Database:** Switched from a local/managed MongoDB instance to a user-provided external MongoDB Atlas cluster.
 
 **All files of reference**
--   **/app/frontend/src/components/photo/UnifiedPhotoCard.jsx**: The component to be modified for the scrolling/layout fix.
--   **/app/frontend/src/pages/MintedPhotos.jsx**: A page where the card scrolling is broken.
--   **/app/frontend/src/pages/PhotoGameArena.jsx**: Another page where the card scrolling is broken.
--   **/app/frontend/src/pages/admin/AdminWalletManagement.jsx**: Contains the fixed admin tool.
--   **/app/frontend/src/pages/Games.jsx**: Contains the updated Games page redirect logic.
--   **/app/frontend/src/pages/Casino.jsx**: Contains the locked/unlocked Casino page logic.
--   **/app/mobile/src/screens/GamesScreen.js**: Mobile counterpart for .
--   **/app/mobile/src/screens/CasinoScreen.js**: Mobile counterpart for .
+-   **/app/backend/game_routes.py**: The likely location for the code causing the  error in game sessions.
+-   **/app/frontend/src/components/photo/UnifiedPhotoCard.jsx**: The component at the heart of the scrolling issue and where double-click was restored.
+-   **/app/frontend/src/pages/MintedPhotos.jsx**: The primary page affected by the scrolling issue, now with skeletons and error handling.
+-   **/app/frontend/src/index.css**: Contains numerous (and conflicting) attempts to fix scrolling via . Needs cleanup.
+-   **/app/backend/.env**: Contains the new MongoDB Atlas connection string.
+-   **/app/backend/server.py**: Contains the primary backend logic for connecting to Atlas.
+-   **/app/frontend/src/components/ui/skeleton-loaders.jsx**: New file containing all UI skeletons.
 
 **Areas that need refactoring**:
--   The repeated, iterative fixes on the Games/Casino pages suggest the component logic could be simplified.
--   Admin access control relies on a hardcoded email check () in multiple components. A centralized role-based access control (RBAC) system would be more robust.
+-    is littered with conflicting and layered  rules from many failed attempts. Once the scrolling issue is definitively solved, these rules should be consolidated and simplified.
+-    has also seen significant churn. It could benefit from a cleanup of styles and event handlers after the scrolling fix.
 
 **key api endpoints**
--   
--   
--   
+-    (This is the endpoint causing the  error).
+-    (This endpoint was optimized with indexing).
 
 **Critical Info for New Agent**
--   **Scrolling Fix is P0:** The user is experiencing a critical usability blocker with touch scrolling. The fix requires CSS changes () and potentially adjusting parent scroll containers. The user requires this to be tested on real devices, which you cannot do. You must implement the code fix, verify the layout with a screenshot, and then ask the user for final verification.
--   **Production DB Investigation is BLOCKED:** You cannot proceed with debugging the production data sync issue until the user confirms they have whitelisted the agent's IP: . The production database name is . Do not attempt to connect until the user gives the green light.
--   **Web & Mobile Sync is Mandatory:** The user is adamant that all frontend changes must be mirrored perfectly between the web () and mobile () files.
--   **Admin User:** Special privileges are consistently granted to the user with email . This is used to unlock features like the Casino page.
+-   **Your first priority is to fix the  error in the photo game.** The game is completely broken. The fix involves modifying the backend to store only image URLs/IDs in the session document, not full base64 image data.
+-   **Your second, equally critical priority is to permanently fix the single-finger scrolling issue.** The user is extremely frustrated with this recurring bug. Do not rely on simulators; the fix must be validated on a real mobile device. The problem is complex and likely involves a combination of CSS stacking context,  properties, and JavaScript event handling ( or ).
+-   The application is now fully running on the user's external MongoDB Atlas database. All database operations and performance considerations should be directed there.
+-   The EmbedSocial widget is a known low-priority bug. Suggest the user check their account settings before spending significant time on it.
 
 **documents and test reports created in this job**
--    (updated with recent fixes)
+-    (Updated with completed tasks)
+-    (Outdated, as it passed tests for scrolling which the user later confirmed was still broken on real devices).
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (LATEST):** Reported critical touch-scrolling issues on photo card pages, requesting a fix, a 15% size increase, and a 75/25 layout adjustment. (CURRENT TASK)
-2.  **User:** Requested refactoring of the Games page to make the Casino card a redirect entry point to a dedicated, lockable Casino screen. (COMPLETED)
-3.  **User:** Requested consolidation of Casino games into a single nested section to remove duplicates. (COMPLETED)
-4.  **User:** Requested removal of BL coins balance from the Games page and creation of a locked Casino Games section accessible only by admin. (COMPLETED)
-5.  **User:** Confirmed the IP whitelist request has been sent to support and asked to proceed with debugging the DB. (BLOCKED)
-6.  **User:** Requested a draft email to send to Emergent support for IP whitelisting. (COMPLETED)
-7.  **User:** Confirmed their  is . (INFO GATHERED)
-8.  **User:** Requested agent to connect to production DB and investigate data sync issues. (BLOCKED)
-9.  **User:** Asked how to connect their app to MongoDB Atlas for data synchronization. (COMPLETED)
-10. **User:** Asked for the login credentials for the production MongoDB Atlas dashboard. (COMPLETED)
+1. User requests deployment to production.
+2. User reports the Photo Game bot is failing to start. (CURRENT BLOCKER)
+3. User asks agent to add DB indexes to optimize performance. (Completed)
+4. User reports the app is laggy and requests performance optimizations. (Completed)
+5. User provides new MongoDB Atlas credentials and asks to migrate the entire app. (Completed)
+6. User confirms whitelisting IPs for the *first* Atlas DB, but connection still fails.
+7. User provides the IP list for the *first* Atlas DB.
+8. User confirms the  page optimizations and asks about the DB connection.
+9. User reports missing double-click to enlarge and flip/delete features, and that single-finger scrolling is still broken. (Features restored, scrolling still broken)
+10. User reports single-finger scrolling works only on the nav bar and two-finger scrolling is now broken. (Scrolling still broken)
 
 **Project Health Check:**
 -   **Broken**:
-    -   Touch scrolling on  and  pages.
-    -   Production data synchronization for BL coins and game stats (suspected).
--   **Mocked**:
-    -   Social reaction counters (EmbedSocial widget).
+    -   Photo Game (): Bot fails to start due to  error. (CRITICAL)
+    -   Touch Scrolling on  & : Unusable with a single finger on cards. (CRITICAL, RECURRING)
+    -   EmbedSocial Widget on : Does not load or display content. (MEDIUM)
+-   **Mocked**: None.
 
 **3rd Party Integrations**
--   OpenAI GPT-4o Vision
+-   **MongoDB Atlas (User Provided)**: Primary database for the application.
 -   Stripe
--   EmbedSocial
--   MongoDB Atlas (for production database)
+-   OpenAI GPT-4o Vision
 -   ffmpeg
 -   face-api.js
--   framer-motion
--   Supabase (present but not actively used)
+-   EmbedSocial (Broken)
 
 **Testing status**
--   **Testing agent used after significant changes**: NO
+-   **Testing agent used after significant changes**: YES, but its findings on scrolling were incorrect for real-device usage.
 -   **Troubleshoot agent used after agent stuck in loop**: NO
 -   **Test files created**: None.
--   **Known regressions**: Unreliable scrolling on card-based pages has resurfaced as a major issue.
+-   **Known regressions**: Two-finger scrolling, which was previously working, was broken by one of the recent fix attempts for single-finger scrolling.
 
 **Credentials to test flow:**
 -   **Admin User**:  / 
--   **Special Admin User**:  /  (for feature-specific access)
 -   **Regular User**:  / 
 
 **What agent forgot to execute**
--   The agent was unable to execute the production database investigation due to the IP whitelist block, which is an external dependency. The current task (scrolling fix) was just started.</analysis>
+-   The agent repeatedly failed to implement a permanent solution for the scrolling issue, cycling through ineffective CSS properties without addressing the fundamental event interception problem.
+-   The agent did not perform adequate regression testing, leading to the breakage of the previously working two-finger scroll.
+-   The agent relied on automated tests and screenshots which were insufficient to validate the fix for a real-world touch interaction bug.</analysis>

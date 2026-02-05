@@ -14,7 +14,7 @@ from io import BytesIO
 from PIL import Image
 
 # Get BASE_URL from environment
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://scroll-repair-2.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://blendlink-bugfix.preview.emergentagent.com')
 
 # Test credentials
 TEST_EMAIL = "test@example.com"
