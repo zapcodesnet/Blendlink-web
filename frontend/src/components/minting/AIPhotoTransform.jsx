@@ -175,8 +175,8 @@ const AIPhotoTransform = ({
     }
   };
   
-  // Use example prompt
-  const useExamplePrompt = (example) => {
+  // Set example prompt
+  const setExamplePrompt = (example) => {
     setPrompt(example);
   };
   
