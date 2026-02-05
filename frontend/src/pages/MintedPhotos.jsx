@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useCallback, useContext } from 'react';
+import React, { useState, useEffect, useCallback, useContext, useMemo, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Camera, Sparkles, Upload, Image, Coins, Trophy, 
   Zap, Lock, Globe, FolderPlus, MoreVertical,
   Edit2, Trash2, Share2, Eye, EyeOff, Grid, List,
   ChevronRight, Star, Swords, TrendingUp, X, User, Maximize2,
-  Shield, LayoutGrid
+  Shield, LayoutGrid, Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../services/api';
