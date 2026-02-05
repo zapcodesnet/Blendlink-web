@@ -5,7 +5,7 @@ import {
   Zap, Lock, Globe, FolderPlus, MoreVertical,
   Edit2, Trash2, Share2, Eye, EyeOff, Grid, List,
   ChevronRight, Star, Swords, TrendingUp, X, User, Maximize2,
-  Shield, LayoutGrid, Loader2
+  Shield, LayoutGrid, Loader2, AlertCircle, RefreshCw
 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../services/api';
@@ -21,6 +21,13 @@ import { SelfieMatchModal } from '../components/minting/SelfieMatchModal';
 import { LikeButton } from '../components/game/LikeButton';
 import UnifiedPhotoCard from '../components/photo/UnifiedPhotoCard';
 import { cn } from '../lib/utils';
+import { 
+  PhotoGridSkeleton, 
+  StatsCardSkeleton, 
+  ErrorState, 
+  EmptyState,
+  LoadingSpinner 
+} from '../components/ui/skeleton-loaders';
 
 // Category labels for the back of card
 const RATING_LABELS = {
