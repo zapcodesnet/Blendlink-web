@@ -669,20 +669,20 @@ export const SelfieMatchModal = ({
                     </div>
                   )}
                   
-                  {/* Face detection status */}
+                  {/* Face detection status - IMPROVED UX with helpful messages */}
                   {cameraActive && !loadingModels && (
                     <div className={`absolute top-2 left-2 flex items-center gap-2 px-2 py-1 rounded text-xs ${
                       faceDetected ? 'bg-green-500/80 text-white' : 'bg-yellow-500/80 text-black'
                     }`}>
                       <Scan className="w-3 h-3" />
                       {faceDetected 
-                        ? `Face detected (${faceScore}%)`
-                        : 'No face - position your face in view'
+                        ? `✓ Ready (${faceScore}%)`
+                        : 'Position face in oval'
                       }
                     </div>
                   )}
                   
-                  {/* Face guide overlay */}
+                  {/* Face guide overlay - Always allow capture even without detection */}
                   {cameraActive && (
                     <div className="absolute inset-0 pointer-events-none">
                       <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-60 border-2 border-dashed rounded-full transition-colors ${
@@ -690,8 +690,8 @@ export const SelfieMatchModal = ({
                       }`} />
                       <p className="absolute bottom-4 left-0 right-0 text-center text-xs text-purple-300">
                         {faceDetected 
-                          ? '✓ Face detected - ready to capture!'
-                          : 'Position your face in the oval'
+                          ? '✓ Face detected - tap Capture!'
+                          : 'Center your face • Good lighting helps'
                         }
                       </p>
                     </div>
