@@ -274,11 +274,12 @@ async def create_open_game(
                 detail=f"Photo '{photo.get('name', photo_id)}' has no stamina left (0/{MAX_STAMINA_BATTLES})"
             )
         
-        # Build photo data for preview
+        # Build photo data for preview - EXCLUDE base64 image_url to prevent DocumentTooLarge error
+        # Use API endpoint reference instead of storing massive base64 data
         photo_data = {
             "mint_id": photo.get("mint_id"),
             "name": photo.get("name"),
-            "image_url": photo.get("image_url"),
+            "image_url": f"/api/minting/photo/{photo.get('mint_id')}/image",  # Lightweight API reference
             "dollar_value": photo.get("dollar_value", 0),
             "scenery_type": photo.get("scenery_type", "natural"),
             "current_stamina": current_stamina,
