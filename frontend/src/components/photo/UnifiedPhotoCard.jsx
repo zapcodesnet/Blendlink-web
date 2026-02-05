@@ -222,56 +222,63 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
   // Photo stats
   const dollarValue = photo?.dollar_value || photo?.base_dollar_value || 0;
   const level = photo?.level || 1;
-  const xp = photo?.xp || 0;
-  const stars = photo?.stars || getStarsFromLevel(level);
-  const hasGoldenFrame = photo?.has_golden_frame || level >= 60;
-  const maxStamina = photo?.max_stamina || 24;
-  const rawStamina = photo?.current_stamina ?? photo?.stamina ?? maxStamina;
-  const stamina = Math.min(rawStamina, maxStamina);
-  const staminaPercent = Math.min((stamina / maxStamina) * 100, 100);
-  
-  // Win/Loss streaks
-  const winStreak = photo?.win_streak || 0;
-  const loseStreak = photo?.lose_streak || 0;
-  
-  // Reactions and bonuses
-  const reactions = photo?.total_reactions || 0;
-  const reactionBonus = photo?.reaction_bonus_value || 0;
-  const upgradeValue = photo?.total_upgrade_value || 0;
-  
-  // New stats from back-card
-  const ageBonus = photo?.age_bonus_value || photo?.age_bonus || 0;
-  const xpProgress = photo?.xp_progress?.progress_percent || photo?.xp_progress_percent || 0;
-  const baseDollarValue = photo?.base_dollar_value || dollarValue;
-  
-  // Authenticity
-  const faceScore = photo?.face_detection_score || 0;
-  const selfieScore = photo?.selfie_match_score || 0;
-  const selfieCompleted = photo?.selfie_match_completed || false;
-  const hasFace = photo?.has_face || false;
-  
-  // Level bonus
-  const levelBonus = photo?.level_bonus_percent || Math.floor(level / 5) * 2;
-  
-  // New stats from API
-  const ageDays = photo?.age_days ?? 0;
-  const starBonusValue = photo?.star_bonus_value || 0;
-  const seniorityAchieved = photo?.seniority_achieved || level >= 60;
-  const seniorityBonusValue = photo?.seniority_bonus_value || 0;
-  const levelsToSeniority = photo?.levels_to_seniority || Math.max(0, 60 - level);
-  const blCoinsSpent = photo?.bl_coins_spent || upgradeValue || 0;
-  const reactionsToNextBonus = photo?.reactions_to_next_bonus || (100 - (reactions % 100));
-  
-  // XP Progress data
-  const xpProgressData = photo?.xp_progress || {};
-  const xpToNextLevel = xpProgressData.remaining || photo?.xp_to_next_level || 10;
-  const xpForNextLevel = xpProgressData.xp_for_next_level || photo?.xp_for_next_level || 10;
+  // Memoized photo stats - only recalculate when photo changes
+  const photoStats = useMemo(() => {
+    const dollarValue = photo?.dollar_value || photo?.base_dollar_value || 0;
+    const level = photo?.level || 1;
+    const xp = photo?.xp || 0;
+    const stars = photo?.stars || getStarsFromLevel(level);
+    const hasGoldenFrame = photo?.has_golden_frame || level >= 60;
+    const maxStamina = photo?.max_stamina || 24;
+    const rawStamina = photo?.current_stamina ?? photo?.stamina ?? maxStamina;
+    const stamina = Math.min(rawStamina, maxStamina);
+    const staminaPercent = Math.min((stamina / maxStamina) * 100, 100);
+    const winStreak = photo?.win_streak || 0;
+    const loseStreak = photo?.lose_streak || 0;
+    const reactions = photo?.total_reactions || 0;
+    const reactionBonus = photo?.reaction_bonus_value || 0;
+    const upgradeValue = photo?.total_upgrade_value || 0;
+    const ageBonus = photo?.age_bonus_value || photo?.age_bonus || 0;
+    const xpProgress = photo?.xp_progress?.progress_percent || photo?.xp_progress_percent || 0;
+    const baseDollarValue = photo?.base_dollar_value || dollarValue;
+    const faceScore = photo?.face_detection_score || 0;
+    const selfieScore = photo?.selfie_match_score || 0;
+    const selfieCompleted = photo?.selfie_match_completed || false;
+    const hasFace = photo?.has_face || false;
+    const levelBonus = photo?.level_bonus_percent || Math.floor(level / 5) * 2;
+    const ageDays = photo?.age_days ?? 0;
+    const starBonusValue = photo?.star_bonus_value || 0;
+    const seniorityAchieved = photo?.seniority_achieved || level >= 60;
+    const seniorityBonusValue = photo?.seniority_bonus_value || 0;
+    const levelsToSeniority = photo?.levels_to_seniority || Math.max(0, 60 - level);
+    const blCoinsSpent = photo?.bl_coins_spent || upgradeValue || 0;
+    const reactionsToNextBonus = photo?.reactions_to_next_bonus || (100 - (reactions % 100));
+    const xpProgressData = photo?.xp_progress || {};
+    const xpToNextLevel = xpProgressData.remaining || photo?.xp_to_next_level || 10;
+    const xpForNextLevel = xpProgressData.xp_for_next_level || photo?.xp_for_next_level || 10;
+    
+    return {
+      dollarValue, level, xp, stars, hasGoldenFrame, maxStamina, stamina, staminaPercent,
+      winStreak, loseStreak, reactions, reactionBonus, upgradeValue, ageBonus, xpProgress,
+      baseDollarValue, faceScore, selfieScore, selfieCompleted, hasFace, levelBonus,
+      ageDays, starBonusValue, seniorityAchieved, seniorityBonusValue, levelsToSeniority,
+      blCoinsSpent, reactionsToNextBonus, xpToNextLevel, xpForNextLevel
+    };
+  }, [photo]);
+
+  // Destructure memoized stats
+  const {
+    dollarValue, level, xp, stars, hasGoldenFrame, maxStamina, stamina, staminaPercent,
+    winStreak, loseStreak, reactions, reactionBonus, upgradeValue, ageBonus, xpProgress,
+    baseDollarValue, faceScore, selfieScore, selfieCompleted, hasFace, levelBonus,
+    ageDays, starBonusValue, seniorityAchieved, seniorityBonusValue, levelsToSeniority,
+    blCoinsSpent, reactionsToNextBonus, xpToNextLevel, xpForNextLevel
+  } = photoStats;
   
   // Event handlers - DOUBLE-TAP to open lightbox (allows single-finger scrolling)
   const handleDoubleTap = useCallback((e) => {
     if (disabled) return;
     if (isFlipped) return;
-    // Don't trigger on buttons
     if (e?.target?.closest('[data-testid="flip-card-btn"]') || 
         e?.target?.closest('[data-testid="flip-back-btn"]') ||
         e?.target?.closest('button')) {
@@ -279,16 +286,14 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
     }
     
     const now = Date.now();
-    const DOUBLE_TAP_DELAY = 300; // ms
+    const DOUBLE_TAP_DELAY = 300;
     
     if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
-      // Double tap detected - open lightbox
       e.preventDefault();
       e.stopPropagation();
       onClick?.(photo);
-      lastTapRef.current = 0; // Reset
+      lastTapRef.current = 0;
     } else {
-      // First tap - record time, don't do anything else (allow scroll)
       lastTapRef.current = now;
     }
   }, [disabled, onClick, photo, isFlipped]);
