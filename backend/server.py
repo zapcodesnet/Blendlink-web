@@ -20,10 +20,32 @@ import httpx
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+# MongoDB connection with fallback for preview environments
+def get_mongo_connection():
+    """
+    Attempts to connect to MongoDB Atlas first.
+    Falls back to local MongoDB if Atlas is unreachable (e.g., port 27017 blocked in preview).
+    """
+    mongo_url = os.environ.get('MONGO_URL')
+    mongo_url_local = os.environ.get('MONGO_URL_LOCAL', 'mongodb://localhost:27017')
+    db_name = os.environ.get('DB_NAME', 'blendlink')
+    
+    # Try Atlas connection first
+    try:
+        from pymongo import MongoClient as SyncMongoClient
+        # Quick sync test with short timeout
+        test_client = SyncMongoClient(mongo_url, serverSelectionTimeoutMS=5000)
+        test_client.admin.command('ping')
+        test_client.close()
+        print(f"✅ Connected to MongoDB Atlas: {db_name}")
+        return AsyncIOMotorClient(mongo_url), db_name
+    except Exception as e:
+        print(f"⚠️ Atlas connection failed ({e}), falling back to local MongoDB")
+        print(f"✅ Connected to Local MongoDB: {db_name}")
+        return AsyncIOMotorClient(mongo_url_local), db_name
+
+client, db_name = get_mongo_connection()
+db = client[db_name]
 
 # JWT Config - No fallbacks for security
 JWT_SECRET = os.environ.get('JWT_SECRET')
