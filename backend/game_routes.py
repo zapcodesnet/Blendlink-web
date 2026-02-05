@@ -2163,7 +2163,7 @@ async def get_battle_ready_photos(
             "battles_remaining": battles_remaining,
             "is_available": is_available,
             "time_until_available": time_until_available,
-            "image_url": photo.get("image_url", ""),
+            "image_url": f"/api/minting/photo/{photo.get('mint_id')}/image",  # Lightweight API reference
             "medals": medals,
             "win_streak": win_streak,
             "lose_streak": lose_streak,
