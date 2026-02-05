@@ -559,9 +559,13 @@ class PVPGameManager:
         return True
     
     async def handle_tap(self, room_id: str, user_id: str, tap_count: int = 1) -> bool:
-        """Handle player tap during auction round"""
+        """Handle player tap during auction round - IMPROVED with persistence and sync"""
         room = self.rooms.get(room_id)
         if not room or room.round_phase != "playing" or room.round_type != "auction":
+            return False
+        
+        # Prevent double winner determination
+        if room.round_winner_determined:
             return False
         
         # Find player and opponent
@@ -571,37 +575,81 @@ class PVPGameManager:
         if not is_player1 and not is_player2:
             return False
         
-        # Update tap count (stored on the connection object for now)
+        # Anti-cheat: Limit taps per update (max 30 TPS, so max ~5 per 150ms polling interval)
+        tap_count = min(tap_count, 10)  # Max 10 taps per message
+        
+        # Update tap count (stored on room for persistence)
         if is_player1:
+            room.player1_taps += tap_count
+            total_taps = room.player1_taps
+            
+            # Also update on connection object for backward compatibility
             if not hasattr(room.player1, 'tap_count'):
                 room.player1.tap_count = 0
-            room.player1.tap_count += tap_count
-            total_taps = room.player1.tap_count
+            room.player1.tap_count = room.player1_taps
         else:
+            room.player2_taps += tap_count
+            total_taps = room.player2_taps
+            
             if not hasattr(room.player2, 'tap_count'):
                 room.player2.tap_count = 0
-            room.player2.tap_count += tap_count
-            total_taps = room.player2.tap_count
+            room.player2.tap_count = room.player2_taps
         
-        # Broadcast tap update to opponent
-        await self._broadcast_to_room(room_id, {
+        # Persist to database for polling fallback (async, non-blocking)
+        if self._db:
+            try:
+                asyncio.create_task(self._persist_tap_state(room))
+            except Exception as e:
+                logger.debug(f"Could not persist tap state: {e}")
+        
+        # Broadcast tap update to both players IMMEDIATELY (no exclusion for instant feedback)
+        tap_msg = {
             "type": "tap_update",
             "user_id": user_id,
-            "is_me": False,  # Will be overridden for the sending player
             "total_taps": total_taps,
+            "player1_taps": room.player1_taps,
+            "player2_taps": room.player2_taps,
             "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # Send to opponent only (sender already has optimistic update)
+        await self._broadcast_to_room(room_id, {
+            **tap_msg,
+            "is_me": False,
         }, exclude_user=user_id)
         
         # Send confirmation to the tapping player
         await self._send_to_user(user_id, {
-            "type": "tap_update",
-            "user_id": user_id,
+            **tap_msg,
             "is_me": True,
-            "total_taps": total_taps,
-            "timestamp": datetime.now(timezone.utc).isoformat()
         })
         
         return True
+    
+    async def _persist_tap_state(self, room: PVPGameRoom):
+        """Persist tap state to database for polling fallback"""
+        if not self._db or not room.session_id:
+            return
+        
+        try:
+            await self._db.pvp_sessions.update_one(
+                {"$or": [
+                    {"session_id": room.session_id},
+                    {"open_game_id": room.game_id},
+                ]},
+                {
+                    "$set": {
+                        "player1_taps": room.player1_taps,
+                        "player2_taps": room.player2_taps,
+                        "player1_dollar": 0,  # Calculate on read
+                        "player2_dollar": 0,
+                        "tap_updated_at": datetime.now(timezone.utc)
+                    }
+                },
+                upsert=False
+            )
+        except Exception as e:
+            logger.debug(f"Could not persist tap state: {e}")
     
     async def _transition_to_selecting(self, room_id: str):
         """Transition to photo selection phase"""
