@@ -1330,10 +1330,11 @@ async def selfie_match(
     
     # NOW we can proceed with the actual matching - attempts will only be counted on success
     try:
-        from emergentintegrations.llm.chat import chat, ChatConfig, Message
+        from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
         import os
         import json
         import re
+        import uuid
         
         api_key = os.environ.get("EMERGENT_LLM_KEY")
         if not api_key:
@@ -1362,22 +1363,26 @@ SCORING:
 
 Return ONLY valid JSON: {"match_score": <integer 0-100>, "confidence": "<high/medium/low>", "notes": "<brief reason>"}"""
 
-        config = ChatConfig(
-            model="gpt-4o",
+        # Initialize chat with GPT-4o model
+        session_id = f"selfie_match_{mint_id}_{uuid.uuid4().hex[:8]}"
+        chat = LlmChat(
             api_key=api_key,
-            temperature=0.1,
+            session_id=session_id,
+            system_message="You are an expert facial recognition AI. Always respond with valid JSON only."
+        )
+        chat = chat.with_model("gpt-4o")
+        
+        # Create message with images
+        user_message = UserMessage(
+            text=comparison_prompt,
+            images=[
+                ImageContent(base64_image=photo_image_data, mime_type=photo_mime_type),
+                ImageContent(base64_image=request.selfie_base64, mime_type=request.mime_type),
+            ]
         )
         
-        messages = [
-            Message(role="user", content=[
-                {"type": "text", "text": comparison_prompt},
-                {"type": "image_url", "image_url": {"url": f"data:{photo_mime_type};base64,{photo_image_data}"}},
-                {"type": "image_url", "image_url": {"url": f"data:{request.mime_type};base64,{request.selfie_base64}"}},
-            ])
-        ]
-        
         logger.info(f"[SelfieMatch] Calling GPT-4o Vision API...")
-        response = await chat(config, messages)
+        response_text = chat.send_message(user_message)
         
         response_text = response.content if hasattr(response, 'content') else str(response)
         logger.info(f"[SelfieMatch] GPT-4o response for {mint_id}: {response_text[:300]}")
