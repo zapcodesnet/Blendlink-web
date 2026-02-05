@@ -2,7 +2,55 @@
 
 ## Latest Update: February 5, 2026
 
-### AI Photo Transformation - Bug Fixes (February 5, 2026) - LATEST
+### ❤️ Reaction Button Added to Minted Photo Cards (February 5, 2026) - LATEST
+
+#### Feature Implemented:
+Added missing ❤️ reaction button with counter to ALL minted photo cards across the application.
+
+**Placement:**
+- Position: Same row as photo name, RIGHT side of the name
+- Style: Compact heart icon with counter
+- Colors: Red filled heart when liked, gray outline when not liked
+
+**Counter Behavior:**
+- Shows number next to heart when > 0 reactions
+- Hidden when 0 reactions
+- Updates in real-time on click
+
+**Integration:**
+- Uses existing `LikeButtonCompact` component
+- Connected to `/api/photo-game/engagement/like` API
+- Every 100 reactions = $1M boost to Dollar Value
+
+**Files Modified:**
+- `/app/frontend/src/components/photo/UnifiedPhotoCard.jsx`
+  - Added import for `LikeButtonCompact`
+  - Modified name row to flexbox layout with name + heart button
+
+**Code Changes:**
+```jsx
+{/* NAME & LIKE BUTTON - Top row of details */}
+<div className="flex items-center justify-between gap-1 bg-black/50 rounded mb-0.5 py-0.5 px-1 min-h-[16px]">
+  <span className="text-yellow-400 font-bold truncate text-[11px] flex-1">
+    {photo?.name || 'Unnamed Photo'}
+  </span>
+  <LikeButtonCompact 
+    photoId={photo?.mint_id}
+    initialLikes={reactions}
+    initialLiked={photo?.user_has_reacted}
+  />
+</div>
+```
+
+**Applied Globally:**
+- blendlink.net/minted-photos ✅
+- blendlink.net/photo-game ✅
+- blendlink.net/profile ✅
+- All other pages using UnifiedPhotoCard ✅
+
+---
+
+### AI Photo Transformation - Bug Fixes (February 5, 2026)
 
 #### Issues Fixed:
 
