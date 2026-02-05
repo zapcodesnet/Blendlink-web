@@ -15,6 +15,7 @@ import {
   Award, Calendar, Coins, Camera, Lock, Eye, Sparkles
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { LikeButtonCompact } from '../game/LikeButton';
 
 // Memoized Golden Sparkling Frame - only re-renders when children change
 const GoldenSparklingFrame = memo(function GoldenSparklingFrame({ children }) {
