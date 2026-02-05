@@ -1382,7 +1382,7 @@ Return ONLY valid JSON: {"match_score": <integer 0-100>, "confidence": "<high/me
         )
         
         logger.info(f"[SelfieMatch] Calling GPT-4o Vision API...")
-        response_text = chat.send_message(user_message)
+        response_text = await chat.send_message(user_message)
         
         logger.info(f"[SelfieMatch] GPT-4o response for {mint_id}: {response_text[:300]}")
         
