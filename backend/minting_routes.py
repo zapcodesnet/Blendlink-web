@@ -1376,8 +1376,8 @@ Return ONLY valid JSON: {"match_score": <integer 0-100>, "confidence": "<high/me
         user_message = UserMessage(
             text=comparison_prompt,
             images=[
-                ImageContent(base64_image=photo_image_data, mime_type=photo_mime_type),
-                ImageContent(base64_image=request.selfie_base64, mime_type=request.mime_type),
+                ImageContent(image_base64=f"data:{photo_mime_type};base64,{photo_image_data}"),
+                ImageContent(image_base64=f"data:{request.mime_type};base64,{request.selfie_base64}"),
             ]
         )
         
