@@ -17,7 +17,7 @@ import {
 import { cn } from '../../lib/utils';
 
 // Memoized Golden Sparkling Frame - only re-renders when children change
-const GoldenSparklingFrame = memo(({ children }) => {
+const GoldenSparklingFrame = memo(function GoldenSparklingFrame({ children }) {
   return (
     <div className="relative golden-frame-container" style={{ touchAction: 'manipulation', contain: 'layout style' }}>
       {/* Animated sparkle particles using CSS animations */}
@@ -47,7 +47,7 @@ const GoldenSparklingFrame = memo(({ children }) => {
       {children}
     </div>
   );
-};
+});
 
 // Scenery configuration - matches backend
 export const SCENERY_CONFIG = {
