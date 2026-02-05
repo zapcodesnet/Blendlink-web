@@ -1202,6 +1202,7 @@ const MintedPhotos = () => {
   const { setHideNav } = useContext(NavContext);
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null); // Error state for Atlas queries
   // ALWAYS use Card View - Grid View is hidden from UI (code preserved)
   const [viewMode, setViewMode] = useState('card');
   const [mintDialogOpen, setMintDialogOpen] = useState(false);
