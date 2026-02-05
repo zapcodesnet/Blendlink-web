@@ -2,7 +2,50 @@
 
 ## Latest Update: February 5, 2026
 
-### AI Photo Transformation Feature (February 5, 2026) - LATEST
+### AI Photo Transformation - Bug Fixes (February 5, 2026) - LATEST
+
+#### Issues Fixed:
+
+**1. AI Now EDITS Original Photo (Not Generates New Images) ✅**
+- Changed from `generate_images()` to `litellm.aimage_edit()` 
+- Original photo is passed as `image` parameter to the editing API
+- AI preserves the subject/composition and only applies requested modifications
+- Prompt instructs: "Edit this image... Preserve the main subject, people, objects"
+
+**2. Generate Button No Longer Blocks Text Input ✅**
+- Moved button from inside input (absolute positioning) to below input
+- Button is now full-width on mobile, auto-width on desktop
+- Text input is fully visible and editable without overlap
+- Clear spacing between input, button, and example prompts
+
+#### Code Changes:
+
+**Backend (`ai_photo_transform.py`):**
+```python
+# Uses litellm.aimage_edit() instead of generate_images()
+response = await litellm.aimage_edit(
+    image=image_bytes,  # Original photo passed here
+    prompt=edit_prompt,
+    model="openai/gpt-image-1",
+    api_key=api_key,
+    api_base=proxy_url
+)
+```
+
+**Frontend (`AIPhotoTransform.jsx`):**
+```jsx
+{/* Text input - full width, no button inside */}
+<Input value={prompt} className="w-full" />
+
+{/* Generate button - BELOW input, not overlapping */}
+<Button className="w-full sm:w-auto">
+  Generate AI Edits ({generationsRemaining} left)
+</Button>
+```
+
+---
+
+### AI Photo Transformation Feature (February 5, 2026)
 
 #### Feature Overview:
 New AI-powered photo transformation feature integrated into the minting flow. Users can optionally transform their uploaded photos using text descriptions before minting.
