@@ -30,7 +30,7 @@
 
 import { getToken } from './api';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://blendlink-bugfix.preview.emergentagent.com';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://verify-me-9.preview.emergentagent.com';
 
 class PVPWebSocketService {
   constructor() {

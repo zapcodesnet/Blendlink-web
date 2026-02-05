@@ -11,7 +11,7 @@ import requests
 import os
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://blendlink-bugfix.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://verify-me-9.preview.emergentagent.com')
 
 class TestPVP2PlayerFlow:
     """Test full 2-player PVP flow"""
