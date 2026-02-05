@@ -384,12 +384,7 @@ export const SelfieMatchModal = ({
       setDeclineWarning(false);
       setCapturedImage(null);
       setMatchResult(null);
-      
-      api.get(`/minting/photo/${photo.mint_id}/authenticity-status`)
-        .then(res => {
-          setAttemptsUsed(res.data.selfie_match_attempts || 0);
-        })
-        .catch(() => {});
+      // Note: Attempts are synced in the dedicated effect above
     }
   }, [isOpen, photo?.mint_id]);
   
