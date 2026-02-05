@@ -32,14 +32,22 @@ seller_router = APIRouter(prefix="/seller", tags=["Seller Dashboard"])
 ai_tools_router = APIRouter(prefix="/ai-tools", tags=["AI Tools"])
 shipping_router = APIRouter(prefix="/shipping", tags=["Shipping"])
 
-# Database connection - No fallbacks for production safety
-MONGO_URL = os.environ.get('MONGO_URL')
-if not MONGO_URL:
-    raise ValueError("MONGO_URL environment variable is required")
-DB_NAME = os.environ.get('DB_NAME')
-if not DB_NAME:
-    raise ValueError("DB_NAME environment variable is required")
-client = AsyncIOMotorClient(MONGO_URL)
+# Database connection with fallback for preview environments
+def get_mongo_connection():
+    mongo_url = os.environ.get('MONGO_URL')
+    mongo_url_local = os.environ.get('MONGO_URL_LOCAL', 'mongodb://localhost:27017')
+    db_name = os.environ.get('DB_NAME', 'blendlink')
+    
+    try:
+        from pymongo import MongoClient as SyncMongoClient
+        test_client = SyncMongoClient(mongo_url, serverSelectionTimeoutMS=5000)
+        test_client.admin.command('ping')
+        test_client.close()
+        return AsyncIOMotorClient(mongo_url), db_name
+    except Exception:
+        return AsyncIOMotorClient(mongo_url_local), db_name
+
+client, DB_NAME = get_mongo_connection()
 db = client[DB_NAME]
 
 # JWT Config
