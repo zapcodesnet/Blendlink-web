@@ -1330,11 +1330,10 @@ async def selfie_match(
     
     # NOW we can proceed with the actual matching - attempts will only be counted on success
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
+        import litellm
         import os
         import json
         import re
-        import uuid
         
         api_key = os.environ.get("EMERGENT_LLM_KEY")
         if not api_key:
@@ -1363,33 +1362,39 @@ SCORING:
 
 Return ONLY valid JSON: {"match_score": <integer 0-100>, "confidence": "<high/medium/low>", "notes": "<brief reason>"}"""
 
-        # Initialize chat with GPT-4o model
-        session_id = f"selfie_match_{mint_id}_{uuid.uuid4().hex[:8]}"
-        chat = LlmChat(
-            api_key=api_key,
-            session_id=session_id,
-            system_message="You are an expert facial recognition AI. Always respond with valid JSON only."
-        )
-        chat = chat.with_model("openai", "gpt-4o")
-        
-        # Create message with images - format as proper data URLs for multimodal API
-        # Ensure base64 data doesn't have any prefix already
+        # Prepare base64 images with data URL format
         photo_b64_clean = photo_image_data.split(',')[-1] if ',' in photo_image_data else photo_image_data
         selfie_b64_clean = request.selfie_base64.split(',')[-1] if ',' in request.selfie_base64 else request.selfie_base64
         
         photo_data_url = f"data:{photo_mime_type};base64,{photo_b64_clean}"
         selfie_data_url = f"data:{request.mime_type};base64,{selfie_b64_clean}"
         
-        user_message = UserMessage(
-            text=comparison_prompt,
-            file_contents=[
-                ImageContent(image_base64=photo_data_url),
-                ImageContent(image_base64=selfie_data_url),
-            ]
+        # Get proxy URL for Emergent key
+        from emergentintegrations.llm.openai.image_generation import get_integration_proxy_url
+        proxy_url = get_integration_proxy_url() + "/llm"
+        
+        logger.info(f"[SelfieMatch] Calling GPT-4o Vision API via LiteLLM...")
+        
+        # Use litellm directly for vision API
+        response = await litellm.acompletion(
+            model="openai/gpt-4o",
+            api_key=api_key,
+            api_base=proxy_url if api_key.startswith("sk-emergent-") else None,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": comparison_prompt},
+                        {"type": "image_url", "image_url": {"url": photo_data_url}},
+                        {"type": "image_url", "image_url": {"url": selfie_data_url}},
+                    ]
+                }
+            ],
+            temperature=0.1,
+            max_tokens=500
         )
         
-        logger.info(f"[SelfieMatch] Calling GPT-4o Vision API...")
-        response_text = await chat.send_message(user_message)
+        response_text = response.choices[0].message.content if response and response.choices else ""
         
         logger.info(f"[SelfieMatch] GPT-4o response for {mint_id}: {response_text[:300]}")
         
