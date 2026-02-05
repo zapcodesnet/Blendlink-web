@@ -2,7 +2,42 @@
 
 ## Latest Update: February 5, 2026
 
-### Selfie Verification Bug Fix (February 5, 2026) - LATEST
+### Selfie Verification - Frontend Face Detection Fix (February 5, 2026) - LATEST
+
+#### Issues Fixed:
+
+**1. Client-Side Face Detection Too Strict ✅**
+- **Root Cause:** `face-api.js` detection threshold was 0.5 (too strict for mobile cameras)
+- **Fix:** Lowered `scoreThreshold` from 0.5 to 0.3 for default detection
+- **Additional:** Real-time detection uses 0.2 threshold and runs every 3rd frame for smoother mobile experience
+- **File:** `/app/frontend/src/services/faceDetection.js`
+
+**2. Attempts Counter Display Fixed ✅**
+- **Issue:** Counter showed confusing format and didn't sync with server
+- **Fix:** Now shows `"Attempts: 3/3 (FREE)"` format clearly
+- **Added:** Server sync on modal open via `/api/minting/photo/{mint_id}/authenticity-status`
+- **File:** `/app/frontend/src/components/minting/SelfieMatchModal.jsx`
+
+**3. Cost Info Clarified ✅**
+- **Issue:** Initial confirmation showed "100 BL per attempt" confusing users
+- **Fix:** Now shows "First 3 attempts FREE, then 100 BL each"
+
+**4. Bottom Navigation Hidden During Flow ✅**
+- Already implemented via NavContext - verified working
+
+**Test Results:**
+- Backend: 8/8 tests passed
+- Frontend: All UI elements verified
+- Face detection threshold confirmed lowered
+- Attempts counter format confirmed
+
+**Files Modified:**
+- `/app/frontend/src/services/faceDetection.js` - Lowered detection thresholds
+- `/app/frontend/src/components/minting/SelfieMatchModal.jsx` - Server sync for attempts, improved UX
+
+---
+
+### Previous: Selfie Verification Backend Fix (February 5, 2026)
 
 #### Issues Fixed:
 
