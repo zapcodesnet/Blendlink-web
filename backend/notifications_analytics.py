@@ -18,10 +18,23 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+# Database connection with fallback for preview environments
+def get_mongo_connection():
+    mongo_url = os.environ.get('MONGO_URL')
+    mongo_url_local = os.environ.get('MONGO_URL_LOCAL', 'mongodb://localhost:27017')
+    db_name = os.environ.get('DB_NAME', 'blendlink')
+    
+    try:
+        from pymongo import MongoClient as SyncMongoClient
+        test_client = SyncMongoClient(mongo_url, serverSelectionTimeoutMS=5000)
+        test_client.admin.command('ping')
+        test_client.close()
+        return AsyncIOMotorClient(mongo_url), db_name
+    except Exception:
+        return AsyncIOMotorClient(mongo_url_local), db_name
+
+client, db_name = get_mongo_connection()
+db = client[db_name]
 
 logger = logging.getLogger(__name__)
 
