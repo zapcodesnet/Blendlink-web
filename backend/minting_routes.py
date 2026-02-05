@@ -941,7 +941,9 @@ async def get_photo_full_stats(mint_id: str, current_user: dict = Depends(get_cu
 
 @minting_router.get("/photo/{mint_id}/image")
 async def get_photo_image(mint_id: str):
-    """Get the full image data for a minted photo"""
+    """Get the full image data for a minted photo - returns actual image bytes"""
+    from fastapi.responses import Response
+    
     if not _minting_service:
         raise HTTPException(status_code=500, detail="Minting service not initialized")
     
@@ -956,8 +958,18 @@ async def get_photo_image(mint_id: str):
     if not image_data:
         raise HTTPException(status_code=404, detail="Image data not found")
     
-    # Return base64 data URL
-    return {"image_data": f"data:image/jpeg;base64,{image_data}"}
+    # Decode base64 and return actual image bytes
+    image_bytes = base64.b64decode(image_data)
+    mime_type = photo.get("mime_type", "image/jpeg")
+    
+    return Response(
+        content=image_bytes,
+        media_type=mime_type,
+        headers={
+            "Cache-Control": "public, max-age=86400",  # Cache for 24 hours
+            "Content-Disposition": f"inline; filename={mint_id}.jpg"
+        }
+    )
 
 
 @minting_router.put("/photo/{mint_id}/rename")
