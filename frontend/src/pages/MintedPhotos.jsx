@@ -836,6 +836,11 @@ const MintPhotoDialog = ({ isOpen, onClose, onMint, mintStatus, onMintSuccess })
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mintCost, setMintCost] = useState(200); // Default 200 BL
   
+  // AI Transformation state
+  const [step, setStep] = useState('upload'); // 'upload' | 'transform' | 'confirm'
+  const [transformedImage, setTransformedImage] = useState(null);
+  const [originalBase64, setOriginalBase64] = useState(null);
+  
   // Fetch mint config on dialog open
   useEffect(() => {
     if (isOpen) {
@@ -849,6 +854,15 @@ const MintPhotoDialog = ({ isOpen, onClose, onMint, mintStatus, onMintSuccess })
     }
   }, [isOpen]);
   
+  // Reset state when dialog closes
+  useEffect(() => {
+    if (!isOpen) {
+      setStep('upload');
+      setTransformedImage(null);
+      setOriginalBase64(null);
+    }
+  }, [isOpen]);
+  
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -859,7 +873,54 @@ const MintPhotoDialog = ({ isOpen, onClose, onMint, mintStatus, onMintSuccess })
       setSelectedFile(file);
       // Preserve original image quality - use createObjectURL instead of re-encoding
       setPreview(URL.createObjectURL(file));
+      
+      // Also convert to base64 for AI transformation
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setOriginalBase64(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
+  };
+  
+  // Proceed to transformation step
+  const handleProceedToTransform = () => {
+    if (!selectedFile || !name) {
+      toast.error('Please select an image and enter a name');
+      return;
+    }
+    setStep('transform');
+  };
+  
+  // Handle AI transformation selection
+  const handleTransformSelect = (selectedImageDataUrl) => {
+    setTransformedImage(selectedImageDataUrl);
+    setStep('confirm');
+  };
+  
+  // Skip transformation
+  const handleSkipTransform = () => {
+    setTransformedImage(null);
+    setStep('confirm');
+  };
+  
+  // Go back to upload step
+  const handleBackToUpload = () => {
+    setStep('upload');
+    setTransformedImage(null);
+  };
+  
+  // Convert data URL to File object for upload
+  const dataURLtoFile = (dataurl, filename) => {
+    const arr = dataurl.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
   };
   
   const handleSubmit = async () => {
@@ -871,14 +932,22 @@ const MintPhotoDialog = ({ isOpen, onClose, onMint, mintStatus, onMintSuccess })
     setIsSubmitting(true);
     try {
       const formData = new FormData();
-      formData.append('file', selectedFile);
+      
+      // Use transformed image if available, otherwise original
+      if (transformedImage) {
+        const transformedFile = dataURLtoFile(transformedImage, `transformed_${selectedFile.name}`);
+        formData.append('file', transformedFile);
+      } else {
+        formData.append('file', selectedFile);
+      }
+      
       formData.append('name', name);
       formData.append('description', description);
       formData.append('is_private', isPrivate ? 'true' : 'false');
       formData.append('show_in_feed', isPrivate ? 'false' : 'true');
       
       onMint?.({
-        photoUrl: preview,
+        photoUrl: transformedImage || preview,
         photoName: name,
       });
       
@@ -889,6 +958,7 @@ const MintPhotoDialog = ({ isOpen, onClose, onMint, mintStatus, onMintSuccess })
         file: selectedFile?.name,
         fileSize: selectedFile?.size,
         fileType: selectedFile?.type,
+        isTransformed: !!transformedImage,
       });
       
       const response = await api.post('/minting/photo/upload', formData, {
@@ -907,6 +977,9 @@ const MintPhotoDialog = ({ isOpen, onClose, onMint, mintStatus, onMintSuccess })
         setSelectedFile(null);
         setPreview(null);
         setIsPrivate(false);
+        setStep('upload');
+        setTransformedImage(null);
+        setOriginalBase64(null);
       }
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Minting failed');
@@ -917,119 +990,208 @@ const MintPhotoDialog = ({ isOpen, onClose, onMint, mintStatus, onMintSuccess })
   
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gray-900 border-gray-700 max-w-md">
+      <DialogContent className={`bg-gray-900 border-gray-700 ${step === 'transform' ? 'max-w-2xl' : 'max-w-md'}`}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-white">
             <Sparkles className="w-5 h-5 text-purple-400" />
-            Mint New Photo
+            {step === 'upload' && 'Mint New Photo'}
+            {step === 'transform' && 'Transform Your Photo'}
+            {step === 'confirm' && 'Confirm & Mint'}
           </DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4">
-          {/* Mint status */}
-          {mintStatus && (
-            <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">BL Coins</span>
-                <span className="text-yellow-400 font-bold">{mintStatus.bl_coins?.toLocaleString()}</span>
+        {/* Step indicator */}
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <div className={`w-2 h-2 rounded-full ${step === 'upload' ? 'bg-purple-500' : 'bg-gray-600'}`} />
+          <div className={`w-8 h-0.5 ${step !== 'upload' ? 'bg-purple-500' : 'bg-gray-600'}`} />
+          <div className={`w-2 h-2 rounded-full ${step === 'transform' ? 'bg-purple-500' : step === 'confirm' ? 'bg-gray-600' : 'bg-gray-600'}`} />
+          <div className={`w-8 h-0.5 ${step === 'confirm' ? 'bg-purple-500' : 'bg-gray-600'}`} />
+          <div className={`w-2 h-2 rounded-full ${step === 'confirm' ? 'bg-purple-500' : 'bg-gray-600'}`} />
+        </div>
+        
+        {/* Step 1: Upload & Details */}
+        {step === 'upload' && (
+          <div className="space-y-4">
+            {/* Mint status */}
+            {mintStatus && (
+              <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">BL Coins</span>
+                  <span className="text-yellow-400 font-bold">{mintStatus.bl_coins?.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-sm mt-1">
+                  <span className="text-gray-400">Mints Today</span>
+                  <span className="text-white">{mintStatus.mints_today} / {mintStatus.daily_limit}</span>
+                </div>
+                <div className="flex justify-between text-sm mt-1">
+                  <span className="text-gray-400">Cost</span>
+                  <span className="text-purple-400 font-bold">{mintCost.toLocaleString()} BL</span>
+                </div>
               </div>
-              <div className="flex justify-between text-sm mt-1">
-                <span className="text-gray-400">Mints Today</span>
-                <span className="text-white">{mintStatus.mints_today} / {mintStatus.daily_limit}</span>
+            )}
+            
+            {/* Image upload */}
+            <div>
+              <Label className="text-gray-300">Photo</Label>
+              <div 
+                className="mt-2 border-2 border-dashed border-gray-700 rounded-xl p-4 text-center cursor-pointer hover:border-purple-500 transition-colors"
+                onClick={() => document.getElementById('photo-upload').click()}
+                data-testid="photo-upload-area"
+              >
+                {preview ? (
+                  <img src={preview} alt="Preview" className="max-h-48 mx-auto rounded-lg" />
+                ) : (
+                  <div className="py-8">
+                    <Upload className="w-10 h-10 mx-auto text-gray-500 mb-2" />
+                    <p className="text-gray-400">Click to upload image</p>
+                    <p className="text-xs text-gray-500 mt-1">Max 10MB • JPG, PNG, WebP</p>
+                  </div>
+                )}
               </div>
-              <div className="flex justify-between text-sm mt-1">
-                <span className="text-gray-400">Cost</span>
+              <input
+                id="photo-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="hidden"
+                data-testid="photo-upload-input"
+              />
+            </div>
+            
+            {/* Name */}
+            <div>
+              <Label className="text-gray-300">Name</Label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="My Epic Photo"
+                className="mt-1 bg-gray-800 border-gray-700 text-white"
+                data-testid="photo-name-input"
+              />
+            </div>
+            
+            {/* Description */}
+            <div>
+              <Label className="text-gray-300">Description (optional)</Label>
+              <Input
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="A beautiful sunset..."
+                className="mt-1 bg-gray-800 border-gray-700 text-white"
+                data-testid="photo-description-input"
+              />
+            </div>
+            
+            {/* Privacy */}
+            <div className="flex items-center justify-between">
+              <Label className="text-gray-300">Private (won&apos;t show in feed)</Label>
+              <button
+                onClick={() => setIsPrivate(!isPrivate)}
+                className={`relative w-12 h-6 rounded-full transition-colors ${
+                  isPrivate ? 'bg-purple-600' : 'bg-gray-700'
+                }`}
+                data-testid="privacy-toggle"
+              >
+                <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                  isPrivate ? 'left-7' : 'left-1'
+                }`} />
+              </button>
+            </div>
+            
+            {/* Next button */}
+            <Button
+              onClick={handleProceedToTransform}
+              disabled={!selectedFile || !name || (mintStatus && !mintStatus.can_mint)}
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+              data-testid="proceed-to-transform-btn"
+            >
+              Next: AI Transform (Optional)
+              <Wand2 className="w-4 h-4 ml-2" />
+            </Button>
+            
+            {mintStatus && !mintStatus.can_mint && (
+              <p className="text-sm text-red-400 text-center">{mintStatus.reason}</p>
+            )}
+          </div>
+        )}
+        
+        {/* Step 2: AI Transformation */}
+        {step === 'transform' && originalBase64 && (
+          <AIPhotoTransform
+            originalImage={originalBase64}
+            onSelectPhoto={handleTransformSelect}
+            onSkip={handleSkipTransform}
+            onCancel={handleBackToUpload}
+          />
+        )}
+        
+        {/* Step 3: Confirm & Mint */}
+        {step === 'confirm' && (
+          <div className="space-y-4">
+            {/* Preview of final photo */}
+            <div className="text-center">
+              <img 
+                src={transformedImage || preview} 
+                alt="Final preview" 
+                className="max-h-64 mx-auto rounded-xl border-2 border-purple-500/30"
+              />
+              <p className="text-sm text-gray-400 mt-2">
+                {transformedImage ? '✨ AI Transformed' : '📷 Original Photo'}
+              </p>
+            </div>
+            
+            {/* Photo details summary */}
+            <div className="bg-gray-800 rounded-lg p-4 space-y-2">
+              <div className="flex justify-between">
+                <span className="text-gray-400">Name</span>
+                <span className="text-white font-medium">{name}</span>
+              </div>
+              {description && (
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Description</span>
+                  <span className="text-white text-sm truncate max-w-[200px]">{description}</span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span className="text-gray-400">Visibility</span>
+                <span className="text-white">{isPrivate ? '🔒 Private' : '🌍 Public'}</span>
+              </div>
+              <div className="flex justify-between border-t border-gray-700 pt-2 mt-2">
+                <span className="text-gray-400">Mint Cost</span>
                 <span className="text-purple-400 font-bold">{mintCost.toLocaleString()} BL</span>
               </div>
             </div>
-          )}
-          
-          {/* Image upload */}
-          <div>
-            <Label className="text-gray-300">Photo</Label>
-            <div 
-              className="mt-2 border-2 border-dashed border-gray-700 rounded-xl p-4 text-center cursor-pointer hover:border-purple-500 transition-colors"
-              onClick={() => document.getElementById('photo-upload').click()}
-            >
-              {preview ? (
-                <img src={preview} alt="Preview" className="max-h-48 mx-auto rounded-lg" />
-              ) : (
-                <div className="py-8">
-                  <Upload className="w-10 h-10 mx-auto text-gray-500 mb-2" />
-                  <p className="text-gray-400">Click to upload image</p>
-                  <p className="text-xs text-gray-500 mt-1">Max 10MB • JPG, PNG, WebP</p>
-                </div>
-              )}
+            
+            {/* Action buttons */}
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setStep('transform')}
+                variant="outline"
+                className="flex-1 border-gray-700"
+              >
+                ← Back
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                data-testid="confirm-mint-btn"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                    Minting...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Mint Photo
+                  </>
+                )}
+              </Button>
             </div>
-            <input
-              id="photo-upload"
-              type="file"
-              accept="image/*"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
           </div>
-          
-          {/* Name */}
-          <div>
-            <Label className="text-gray-300">Name</Label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="My Epic Photo"
-              className="mt-1 bg-gray-800 border-gray-700 text-white"
-            />
-          </div>
-          
-          {/* Description */}
-          <div>
-            <Label className="text-gray-300">Description (optional)</Label>
-            <Input
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="A beautiful sunset..."
-              className="mt-1 bg-gray-800 border-gray-700 text-white"
-            />
-          </div>
-          
-          {/* Privacy */}
-          <div className="flex items-center justify-between">
-            <Label className="text-gray-300">Private (won&apos;t show in feed)</Label>
-            <button
-              onClick={() => setIsPrivate(!isPrivate)}
-              className={`relative w-12 h-6 rounded-full transition-colors ${
-                isPrivate ? 'bg-purple-600' : 'bg-gray-700'
-              }`}
-            >
-              <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
-                isPrivate ? 'left-7' : 'left-1'
-              }`} />
-            </button>
-          </div>
-          
-          {/* Submit */}
-          <Button
-            onClick={handleSubmit}
-            disabled={isSubmitting || !selectedFile || !name || (mintStatus && !mintStatus.can_mint)}
-            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-          >
-            {isSubmitting ? (
-              <>
-                <Sparkles className="w-4 h-4 mr-2 animate-spin" />
-                Minting...
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-4 h-4 mr-2" />
-                Mint Photo ({mintCost.toLocaleString()} BL)
-              </>
-            )}
-          </Button>
-          
-          {mintStatus && !mintStatus.can_mint && (
-            <p className="text-sm text-red-400 text-center">{mintStatus.reason}</p>
-          )}
-        </div>
+        )}
       </DialogContent>
     </Dialog>
   );
