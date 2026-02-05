@@ -53,14 +53,18 @@ class FaceDetectionService {
   /**
    * Detect faces in an image
    * @param {HTMLImageElement|HTMLVideoElement|HTMLCanvasElement} input - Image source
+   * @param {Object} customOptions - Optional custom detection options
    * @returns {Object} Detection result with face data
    */
-  async detectFaces(input) {
+  async detectFaces(input, customOptions = {}) {
     await this.initialize();
 
+    // FIXED: Much lower threshold for better detection on mobile
+    // scoreThreshold 0.3 catches more faces (was 0.5 - too strict)
+    // inputSize 224 is faster and works well for selfies
     const options = new faceapi.TinyFaceDetectorOptions({
-      inputSize: 416,
-      scoreThreshold: 0.5,
+      inputSize: customOptions.inputSize || 224,
+      scoreThreshold: customOptions.scoreThreshold || 0.3,
     });
 
     const detections = await faceapi
@@ -247,12 +251,24 @@ class FaceDetectionService {
    */
   startRealTimeDetection(video, overlay, onDetection) {
     let running = true;
+    let frameCount = 0;
 
     const detect = async () => {
       if (!running) return;
 
       try {
-        const result = await this.detectFaces(video);
+        // FIXED: Use very lenient settings for real-time detection
+        // Only process every 3rd frame to reduce CPU load on mobile
+        frameCount++;
+        if (frameCount % 3 !== 0) {
+          if (running) requestAnimationFrame(detect);
+          return;
+        }
+
+        const result = await this.detectFaces(video, {
+          inputSize: 160,       // Smaller = faster for real-time
+          scoreThreshold: 0.2,  // Very lenient for live preview
+        });
         
         // Clear and draw overlay
         const ctx = overlay.getContext('2d');
