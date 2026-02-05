@@ -137,7 +137,7 @@ async def generate_transformations(
     
     try:
         import litellm
-        from emergentintegrations.utils.proxy import get_integration_proxy_url
+        from emergentintegrations.llm.openai.image_generation import get_integration_proxy_url
         
         # Get proxy URL for Emergent key
         proxy_url = get_integration_proxy_url() + "/llm"
