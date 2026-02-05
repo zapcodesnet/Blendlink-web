@@ -1233,7 +1233,6 @@ async def get_minted_photos_feed(skip: int = 0, limit: int = 20):
 # ============== SELFIE MATCH / AUTHENTICITY ROUTES ==============
 class SelfieMatchRequest(BaseModel):
     """Request for selfie face match"""
-    mint_id: str
     selfie_base64: str  # Base64 encoded selfie image
     mime_type: str = "image/jpeg"
 
