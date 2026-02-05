@@ -2217,14 +2217,17 @@ async def create_auction_battle(
         if current_user.get("bl_coins", 0) < request.bet_amount:
             raise HTTPException(status_code=400, detail="Insufficient BL coins for bet")
     
-    # Get player's photo
+    # Get player's photo - exclude large base64 data
     player_photo = await _db.minted_photos.find_one(
         {"mint_id": request.photo_id, "user_id": current_user["user_id"]},
-        {"_id": 0, "image_data": 0}
+        {"_id": 0, "image_data": 0, "image_url": 0}
     )
     
     if not player_photo:
         raise HTTPException(status_code=404, detail="Photo not found or not owned by you")
+    
+    # Add lightweight image URL reference
+    player_photo["image_url"] = f"/api/minting/photo/{player_photo.get('mint_id')}/image"
     
     # Get player stats
     player_stats = await _db.game_stats.find_one(
