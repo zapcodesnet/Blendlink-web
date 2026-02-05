@@ -2,7 +2,51 @@
 
 ## Latest Update: February 5, 2026
 
-### Selfie Verification - Frontend Face Detection Fix (February 5, 2026) - LATEST
+### PVP Auction Bidding Battle - Critical Fixes (February 5, 2026) - LATEST
+
+#### Issues Fixed:
+
+**1. Double-Win Bug on Disconnect ✅ (CRITICAL)**
+- **Root Cause:** When a player disconnected, both players could be declared winners due to race conditions
+- **Fix:** Added `round_winner_determined` flag to prevent duplicate winner determination
+- **Additional:** 
+  - When ONE player disconnects: 20-second countdown starts, broadcasts to connected player
+  - If disconnected player reconnects: countdown cancelled, game resumes
+  - If BOTH players disconnect: game paused, NO winner (draw)
+  - Only if ONE player doesn't reconnect: other player wins after timeout
+- **File:** `/app/backend/pvp_game_websocket.py`
+
+**2. Tap Sync and Lag Issues ✅**
+- **Root Cause:** Taps weren't persisted to DB, causing desync when WebSocket failed
+- **Fix:** 
+  - Added `player1_taps` and `player2_taps` to `PVPGameRoom` dataclass
+  - Implemented `_persist_tap_state()` to save taps to DB for polling fallback
+  - Frontend polls `/api/photo-game/pvp/tap-state/{session_id}` every 100ms
+- **File:** `/app/backend/pvp_game_websocket.py`, `/app/frontend/src/components/game/TappingArena.jsx`
+
+**3. Round Progression Fixed ✅**
+- **Fix:** `_start_round()` now properly resets tap counts and `round_winner_determined` flag
+- **Additional:** Round start persists initial state to DB for polling
+
+**4. Disconnect Handling Improved ✅**
+- **Constants:**
+  - `DISCONNECT_FORFEIT_TIMEOUT = 20` seconds (was 10)
+  - `AUCTION_ROUND_DURATION = 15` seconds
+  - `MAX_TAPS_PER_SECOND = 30` (anti-cheat)
+- **Broadcasts:** `disconnect_countdown_start`, `disconnect_countdown_tick`, `disconnect_countdown_cancelled`
+
+**Test Results:**
+- Backend: 23/23 tests passed
+- Code review: All fixes verified in pvp_game_websocket.py
+- Note: Real two-player WebSocket testing requires manual testing with two devices
+
+**Files Modified:**
+- `/app/backend/pvp_game_websocket.py` - Complete disconnect handling overhaul, tap persistence
+- `/app/backend/game_routes.py` - Idempotent round finish endpoint
+
+---
+
+### Selfie Verification - Frontend Face Detection Fix (February 5, 2026)
 
 #### Issues Fixed:
 
