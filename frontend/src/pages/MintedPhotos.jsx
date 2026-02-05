@@ -1376,6 +1376,60 @@ const MintedPhotos = () => {
     totalBattles: photos.reduce((sum, p) => sum + (p.battles_won || 0) + (p.battles_lost || 0), 0)
   }), [photos]);
   
+  // Show loading skeleton
+  if (loading) {
+    return (
+      <div 
+        className="minted-photos-scroll-container min-h-screen pb-24"
+        data-testid="minted-photos-loading"
+      >
+        {/* Header skeleton */}
+        <div className="bg-gradient-to-r from-purple-900/50 to-pink-900/50 border-b border-gray-700/50">
+          <div className="max-w-6xl mx-auto px-4 py-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-2">
+                <div className="h-8 w-48 bg-gray-700/50 rounded animate-pulse" />
+                <div className="h-4 w-32 bg-gray-700/30 rounded animate-pulse" />
+              </div>
+              <div className="h-10 w-28 bg-purple-600/30 rounded animate-pulse" />
+            </div>
+            
+            {/* Stats skeleton */}
+            <div className="grid grid-cols-4 gap-4 mt-6">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="bg-gray-800/50 rounded-xl p-4 border border-gray-700/50">
+                  <div className="h-4 w-20 bg-gray-700/30 rounded animate-pulse mb-2" />
+                  <div className="h-8 w-16 bg-gray-700/50 rounded animate-pulse" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        
+        {/* Photo grid skeleton */}
+        <div className="max-w-6xl mx-auto px-4 py-4">
+          <PhotoGridSkeleton count={6} size="medium" />
+        </div>
+      </div>
+    );
+  }
+  
+  // Show error state
+  if (error) {
+    return (
+      <div 
+        className="minted-photos-scroll-container min-h-screen pb-24 flex items-center justify-center"
+        data-testid="minted-photos-error"
+      >
+        <ErrorState
+          title={error.title}
+          message={error.message}
+          onRetry={handleRetry}
+        />
+      </div>
+    );
+  }
+  
   return (
     <div 
       className="minted-photos-scroll-container min-h-screen pb-24"
