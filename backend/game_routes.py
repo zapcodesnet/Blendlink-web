@@ -2701,7 +2701,7 @@ async def start_bot_battle(
     for photo_id in request.photo_ids:
         photo = await _db.minted_photos.find_one(
             {"mint_id": photo_id, "user_id": user_id},
-            {"_id": 0}
+            {"_id": 0, "image_data": 0, "image_url": 0}  # Exclude large base64 data
         )
         if not photo:
             raise HTTPException(status_code=404, detail=f"Photo {photo_id} not found or not owned")
@@ -2725,6 +2725,8 @@ async def start_bot_battle(
                 status_code=400, 
                 detail=f"Photo '{photo.get('name', photo_id)}' has insufficient stamina"
             )
+        # Add lightweight image URL reference for frontend display
+        photo["image_url"] = f"/api/minting/photo/{photo.get('mint_id')}/image"
         player_photos.append({**photo, "current_stamina": current_stamina})
     
     # Check user balance for fixed bet
