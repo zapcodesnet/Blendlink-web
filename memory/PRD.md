@@ -1,8 +1,48 @@
 # Blendlink Platform - Product Requirements Document
 
-## Latest Update: February 4, 2026
+## Latest Update: February 5, 2026
 
-### Feed Page Optimization & Double-Click Enlarge Restore (February 4, 2026) - LATEST
+### Photo Game Bot DocumentTooLarge Fix (February 5, 2026) - LATEST
+
+#### Problem:
+The Photo Game bot was failing to start with error `pymongo.errors.DocumentTooLarge: BSON document too large (23.5 MB)`. This was caused by game session documents storing full base64 image data instead of lightweight image URL references.
+
+#### Root Cause:
+- `minted_photos` collection stores images as base64 data URLs in the `image_url` field (e.g., `data:image/jpeg;base64,...`)
+- When creating game sessions (open_games, pvp_sessions, bot_battle_sessions), these base64 URLs were being copied into session documents
+- With 5 photos per player (each ~2-5MB of base64), sessions easily exceeded MongoDB's 16MB document limit
+
+#### Solution Implemented:
+
+**1. Backend Image Endpoint Enhancement ✅**
+- Modified `/api/minting/photo/{mint_id}/image` to return actual image bytes instead of JSON
+- Added proper `Content-Type` header and caching (24h)
+- Frontend can now use this endpoint directly as `<img src="...">` 
+
+**2. Game Session Photo Storage ✅**
+- Open Games: Store lightweight API reference URLs instead of base64
+- PVP Sessions: Inherit lightweight URLs from open games
+- Bot Battle Sessions: Query photos excluding `image_data` and `image_url`, add API reference
+- All photo objects in sessions now use format: `/api/minting/photo/{mint_id}/image`
+
+**3. API Response Optimization ✅**
+- `/api/minting/photos/user/{user_id}` - Returns lightweight URLs
+- `/api/minting/photo/{mint_id}` - Returns lightweight URLs (unless `include_image=True`)
+- `/api/photo-game/battle-photos` - Returns lightweight URLs
+
+**Files Modified:**
+- `/app/backend/game_routes.py` - Fixed open game creation, join, bot battle start
+- `/app/backend/minting_routes.py` - Enhanced image endpoint to return binary
+- `/app/backend/minting_system.py` - Updated get_user_photos and get_photo methods
+
+**Impact:**
+- Game session documents reduced from ~25MB to ~5KB
+- All game modes now work: PVP, Bot battles
+- API responses are significantly smaller and faster
+
+---
+
+### Feed Page Optimization & Double-Click Enlarge Restore (February 4, 2026)
 
 #### Changes Implemented:
 
