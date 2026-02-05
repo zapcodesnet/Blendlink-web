@@ -83,13 +83,13 @@ export const LikeButton = ({
     <motion.button
       onClick={handleLike}
       disabled={isLoading}
-      className={`relative flex items-center gap-1 ${buttonSizeClasses[size]} rounded-full transition-all ${
+      className={`relative flex items-center gap-0.5 ${buttonSizeClasses[size]} transition-all ${
         isLiked 
-          ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' 
-          : 'bg-gray-700/50 text-gray-400 hover:bg-gray-600/50 hover:text-red-400'
+          ? 'text-red-500' 
+          : 'text-gray-400 hover:text-red-400'
       } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+      whileHover={{ scale: 1.1 }}
+      whileTap={{ scale: 0.9 }}
       data-testid={`like-button-${photoId}`}
     >
       {/* Heart burst animation */}
