@@ -235,7 +235,7 @@ const AIPhotoTransform = ({
           {EXAMPLE_PROMPTS.slice(0, 4).map((example, idx) => (
             <button
               key={idx}
-              onClick={() => useExamplePrompt(example)}
+              onClick={() => setExamplePrompt(example)}
               className="text-xs px-2 py-1 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-full transition-colors"
               disabled={isGenerating}
             >
