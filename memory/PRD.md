@@ -2,7 +2,47 @@
 
 ## Latest Update: February 5, 2026
 
-### ❤️ Reaction Button Added to Minted Photo Cards (February 5, 2026) - LATEST
+### Selfie Verification Bug Fix (February 5, 2026) - LATEST
+
+#### Issues Fixed:
+
+**1. Backend API Processing Error ✅**
+- Fixed `SelfieMatchRequest` model to not require duplicate `mint_id` (already in URL path)
+- Updated GPT-4o Vision API call to use `litellm.acompletion()` directly instead of broken `emergentintegrations.llm.chat`
+- Fixed async/await handling for the vision API call
+
+**2. Attempts Display ✅**
+- Changed display from confusing `"6/6 (FREE)"` to clear `"Free Tries: 3/3"`
+- When free attempts exhausted, shows `"Paid Tries: X/3"` with `"100 BL/try"`
+- Counter now shows remaining attempts correctly
+
+**3. Error Handling ✅**
+- Technical errors (API failures, timeouts) do NOT count against user attempts
+- Clear error messages returned to frontend
+- Proper logging for debugging
+
+**Files Modified:**
+- `/app/backend/minting_routes.py` - Fixed API endpoint and GPT-4o vision call
+- `/app/frontend/src/components/minting/SelfieMatchModal.jsx` - Fixed attempts display
+
+**API Verified Working:**
+```
+POST /api/minting/photo/{mint_id}/selfie-match
+Response: {
+  "success": false,
+  "match_score": 0,
+  "effective_score": 0,
+  "remaining_attempts": 5,
+  "is_free_attempt": true,
+  "message": "No match found. Try again with better lighting/angle.",
+  "dollar_value_bonus": 0,
+  "photo_updated": false
+}
+```
+
+---
+
+### ❤️ Reaction Button Added to Minted Photo Cards (February 5, 2026)
 
 #### Feature Implemented:
 Added missing ❤️ reaction button with counter to ALL minted photo cards across the application.
