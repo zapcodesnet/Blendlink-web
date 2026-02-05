@@ -1370,7 +1370,7 @@ Return ONLY valid JSON: {"match_score": <integer 0-100>, "confidence": "<high/me
             session_id=session_id,
             system_message="You are an expert facial recognition AI. Always respond with valid JSON only."
         )
-        chat = chat.with_model("gpt-4o")
+        chat = chat.with_model("openai", "gpt-4o")
         
         # Create message with images
         user_message = UserMessage(
