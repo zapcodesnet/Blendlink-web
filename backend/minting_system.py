@@ -1138,8 +1138,12 @@ class MintingService:
         
         photos = await self.db.minted_photos.find(
             query,
-            {"_id": 0, "image_data": 0}  # Exclude full image data
+            {"_id": 0, "image_data": 0, "image_url": 0}  # Exclude large base64 data
         ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+        
+        # Add lightweight image URL references
+        for photo in photos:
+            photo["image_url"] = f"/api/minting/photo/{photo.get('mint_id')}/image"
         
         return photos
     
