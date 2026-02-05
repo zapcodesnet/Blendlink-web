@@ -2603,6 +2603,11 @@ api_router.include_router(ai_assistant_router)
 from ai_generation import ai_generation_router
 api_router.include_router(ai_generation_router)
 
+# Import and include AI photo transformation router
+from ai_photo_transform import transform_router
+api_router.include_router(transform_router)
+logger.info("AI Photo Transform System loaded")
+
 # Import and include AI collections router
 from ai_collections import ai_collections_router
 api_router.include_router(ai_collections_router)
