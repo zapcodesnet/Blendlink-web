@@ -377,33 +377,113 @@ class PVPGameManager:
                 logger.error(f"Error creating forfeit task: {e}")
     
     async def _handle_disconnect_forfeit(self, room_id: str, disconnected_user_id: str):
-        """Handle forfeit after disconnect timeout"""
-        await asyncio.sleep(10)  # 10 second reconnect window
-        
-        room = self.rooms.get(room_id)
-        if not room:
-            return
-        
-        # Check if player reconnected
-        if room.player1 and room.player1.user_id == disconnected_user_id and room.player1.is_connected:
-            return
-        if room.player2 and room.player2.user_id == disconnected_user_id and room.player2.is_connected:
-            return
-        
-        # Forfeit - other player wins
-        winner_id = None
-        if room.player1 and room.player1.user_id != disconnected_user_id:
-            winner_id = room.player1.user_id
-        elif room.player2 and room.player2.user_id != disconnected_user_id:
-            winner_id = room.player2.user_id
-        
-        if winner_id:
-            await self._broadcast_to_room(room_id, {
-                "type": "game_forfeit",
-                "winner_id": winner_id,
-                "reason": "opponent_disconnected",
-                "timestamp": datetime.now(timezone.utc).isoformat()
-            })
+        """Handle forfeit after disconnect timeout - IMPROVED to prevent double-wins"""
+        try:
+            # Broadcast countdown updates every 5 seconds
+            for remaining in [DISCONNECT_FORFEIT_TIMEOUT, 15, 10, 5]:
+                await asyncio.sleep(5 if remaining == DISCONNECT_FORFEIT_TIMEOUT else 5)
+                
+                room = self.rooms.get(room_id)
+                if not room:
+                    return
+                
+                # Check if player reconnected
+                if room.player1 and room.player1.user_id == disconnected_user_id and room.player1.is_connected:
+                    logger.info(f"Player {disconnected_user_id} reconnected - cancelling forfeit")
+                    room.disconnected_player_id = None
+                    room.pause_start_time = None
+                    await self._broadcast_to_room(room_id, {
+                        "type": "disconnect_countdown_cancelled",
+                        "reconnected_user_id": disconnected_user_id,
+                        "timestamp": datetime.now(timezone.utc).isoformat()
+                    })
+                    return
+                    
+                if room.player2 and room.player2.user_id == disconnected_user_id and room.player2.is_connected:
+                    logger.info(f"Player {disconnected_user_id} reconnected - cancelling forfeit")
+                    room.disconnected_player_id = None
+                    room.pause_start_time = None
+                    await self._broadcast_to_room(room_id, {
+                        "type": "disconnect_countdown_cancelled",
+                        "reconnected_user_id": disconnected_user_id,
+                        "timestamp": datetime.now(timezone.utc).isoformat()
+                    })
+                    return
+                
+                # Check if BOTH players are now disconnected (don't forfeit)
+                both_disconnected = (
+                    (room.player1 is None or not room.player1.is_connected) and 
+                    (room.player2 is None or not room.player2.is_connected)
+                )
+                
+                if both_disconnected:
+                    logger.info(f"Both players disconnected from room {room_id} - game paused, no forfeit")
+                    room.round_phase = "paused"
+                    return
+                
+                # Broadcast remaining time
+                if remaining > 0:
+                    await self._broadcast_to_room(room_id, {
+                        "type": "disconnect_countdown_tick",
+                        "seconds_remaining": remaining,
+                        "disconnected_user_id": disconnected_user_id,
+                        "timestamp": datetime.now(timezone.utc).isoformat()
+                    })
+            
+            # Final check before forfeit
+            room = self.rooms.get(room_id)
+            if not room:
+                return
+            
+            # Double-check player didn't reconnect
+            if room.player1 and room.player1.user_id == disconnected_user_id and room.player1.is_connected:
+                return
+            if room.player2 and room.player2.user_id == disconnected_user_id and room.player2.is_connected:
+                return
+            
+            # Double-check both aren't disconnected
+            both_disconnected = (
+                (room.player1 is None or not room.player1.is_connected) and 
+                (room.player2 is None or not room.player2.is_connected)
+            )
+            if both_disconnected:
+                logger.info(f"Both players disconnected - no winner, game ends as draw")
+                room.round_phase = "result"
+                await self._broadcast_to_room(room_id, {
+                    "type": "game_draw",
+                    "reason": "both_disconnected",
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                })
+                return
+            
+            # Forfeit - award win to connected player
+            winner_id = None
+            if room.player1 and room.player1.user_id != disconnected_user_id and room.player1.is_connected:
+                winner_id = room.player1.user_id
+            elif room.player2 and room.player2.user_id != disconnected_user_id and room.player2.is_connected:
+                winner_id = room.player2.user_id
+            
+            if winner_id:
+                logger.info(f"Player {disconnected_user_id} forfeited - winner: {winner_id}")
+                await self._broadcast_to_room(room_id, {
+                    "type": "game_forfeit",
+                    "winner_id": winner_id,
+                    "forfeit_user_id": disconnected_user_id,
+                    "reason": "opponent_disconnected",
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                })
+                
+                # Set final game state
+                room.round_phase = "result"
+                if room.player1 and room.player1.user_id == winner_id:
+                    room.player1_wins = 3  # Forfeit = full win
+                else:
+                    room.player2_wins = 3
+                    
+        except asyncio.CancelledError:
+            logger.info(f"Forfeit task cancelled for room {room_id}")
+        except Exception as e:
+            logger.error(f"Error in forfeit handler for room {room_id}: {e}")
     
     async def select_photo(self, room_id: str, user_id: str, photo_id: str) -> bool:
         """Player selects a photo for the current round"""
