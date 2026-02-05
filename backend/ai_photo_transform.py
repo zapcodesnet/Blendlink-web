@@ -136,50 +136,72 @@ async def generate_transformations(
     logger.info(f"Prompt: {request.prompt[:100]}...")
     
     try:
-        from emergentintegrations.llm.openai.image_generation import OpenAIImageGeneration
+        import litellm
+        from emergentintegrations.utils.proxy import get_integration_proxy_url
         
-        # Initialize image generator
-        image_gen = OpenAIImageGeneration(api_key=api_key)
+        # Get proxy URL for Emergent key
+        proxy_url = get_integration_proxy_url() + "/llm"
         
-        # Build transformation prompt
-        # For image editing, we describe what we want the final image to look like
-        edit_prompt = f"Transform this image: {request.prompt}. Maintain the overall composition and subject while applying the requested changes. High quality, detailed result."
+        # Build edit prompt - instruct AI to modify the existing image
+        edit_prompt = f"Edit this image: {request.prompt}. Preserve the main subject, people, objects, and overall composition. Only apply the requested modifications while keeping the original photo recognizable."
         
-        # Generate variations
-        # Note: GPT Image 1 generates new images based on prompt, so we include context about the original
+        # Decode image to bytes
+        image_bytes = base64.b64decode(image_base64)
+        
+        # Generate variations by editing the original image
         variations = []
         
-        # Generate images (each call generates one image)
         for i in range(request.num_variations):
             try:
-                # Generate image based on transformation prompt
-                images = await asyncio.wait_for(
-                    image_gen.generate_images(
+                logger.info(f"Generating variation {i+1}/{request.num_variations} using image edit...")
+                
+                # Use litellm's async image edit function
+                response = await asyncio.wait_for(
+                    litellm.aimage_edit(
+                        image=image_bytes,
                         prompt=edit_prompt,
-                        model="gpt-image-1",
-                        number_of_images=1
+                        model="openai/gpt-image-1",
+                        api_key=api_key,
+                        api_base=proxy_url if api_key.startswith("sk-emergent-") else None,
+                        n=1,
+                        quality="medium",
+                        response_format="b64_json"
                     ),
                     timeout=GENERATION_TIMEOUT
                 )
                 
-                if images and len(images) > 0:
-                    # Convert bytes to base64
-                    variation_base64 = base64.b64encode(images[0]).decode('utf-8')
-                    variations.append(variation_base64)
-                    logger.info(f"Generated variation {i+1}/{request.num_variations}")
+                if response and hasattr(response, 'data') and len(response.data) > 0:
+                    img_data = response.data[0]
+                    if hasattr(img_data, 'b64_json') and img_data.b64_json:
+                        variations.append(img_data.b64_json)
+                        logger.info(f"Generated variation {i+1}/{request.num_variations} successfully")
+                    elif hasattr(img_data, 'url') and img_data.url:
+                        # Fetch image from URL if returned as URL
+                        import requests as http_requests
+                        img_response = http_requests.get(img_data.url)
+                        if img_response.ok:
+                            variation_b64 = base64.b64encode(img_response.content).decode('utf-8')
+                            variations.append(variation_b64)
+                            logger.info(f"Generated variation {i+1}/{request.num_variations} from URL")
                 
             except asyncio.TimeoutError:
                 logger.warning(f"Timeout generating variation {i+1}")
                 continue
             except Exception as e:
-                logger.error(f"Error generating variation {i+1}: {e}")
+                logger.error(f"Error generating variation {i+1}: {e}", exc_info=True)
+                # Try fallback with generate_images if edit fails
                 continue
         
+        # Fallback: If image edit doesn't work, try generation with detailed reference prompt
         if not variations:
-            # Try alternative approach with more descriptive prompt
-            logger.warning("No variations generated, trying alternative approach...")
+            logger.warning("Image edit failed, trying alternative approach with detailed prompt...")
             try:
-                alt_prompt = f"Create an image that looks like: A photo with these modifications applied - {request.prompt}. Make it realistic and high quality."
+                from emergentintegrations.llm.openai.image_generation import OpenAIImageGeneration
+                
+                image_gen = OpenAIImageGeneration(api_key=api_key)
+                # More specific prompt that references the original
+                alt_prompt = f"Photo editing result: Apply these changes to a photo - {request.prompt}. The result should look like a real edited photograph, maintaining photographic quality and realism."
+                
                 images = await asyncio.wait_for(
                     image_gen.generate_images(
                         prompt=alt_prompt,
