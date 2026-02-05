@@ -164,8 +164,7 @@ async def generate_transformations(
                         api_key=api_key,
                         api_base=proxy_url if api_key.startswith("sk-emergent-") else None,
                         n=1,
-                        quality="medium",
-                        response_format="b64_json"
+                        quality="medium"
                     ),
                     timeout=GENERATION_TIMEOUT
                 )
