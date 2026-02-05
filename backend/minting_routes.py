@@ -1375,7 +1375,7 @@ Return ONLY valid JSON: {"match_score": <integer 0-100>, "confidence": "<high/me
         # Create message with images
         user_message = UserMessage(
             text=comparison_prompt,
-            images=[
+            file_contents=[
                 ImageContent(image_base64=f"data:{photo_mime_type};base64,{photo_image_data}"),
                 ImageContent(image_base64=f"data:{request.mime_type};base64,{request.selfie_base64}"),
             ]
