@@ -2,7 +2,89 @@
 
 ## Latest Update: February 5, 2026
 
-### PVP Auction Bidding Battle - Critical Fixes (February 5, 2026) - LATEST
+### PVP Round Transition Fix - CRITICAL (February 5, 2026) - LATEST
+
+#### Root Cause Analysis:
+The game was NOT proceeding to Round 2 because:
+1. `submit_round_result` was incrementing wins again (double-counting since frontend already calculated)
+2. Frontend wasn't properly waiting for server's `round_selecting` message
+3. Score calculation in `handleRoundComplete` had potential bugs
+
+#### Fixes Applied:
+
+**1. Backend `submit_round_result` Fixed ✅**
+```python
+# /app/backend/pvp_game_websocket.py (line ~937)
+async def submit_round_result(self, room_id, winner_user_id, player1_score, player2_score, round_data):
+    # Prevent duplicate submissions
+    if room.round_winner_determined:
+        return
+    room.round_winner_determined = True
+    
+    # Use client scores directly (don't increment again)
+    room.player1_wins = player1_score
+    room.player2_wins = player2_score
+    
+    # After 3s delay, transition to next round
+    await asyncio.sleep(3)
+    room.current_round += 1
+    room.round_winner_determined = False  # Reset for next round
+    await self._transition_to_selecting(room_id)
+```
+
+**2. Frontend `handleRoundComplete` Fixed ✅**
+```javascript
+// /app/frontend/src/components/game/PVPBattleArena.jsx (line ~982)
+const handleRoundComplete = useCallback(async (winner) => {
+    const currentUserWon = winner === 'player';
+    
+    // Calculate scores correctly based on isPlayer1
+    if (currentUserWon) {
+        if (isPlayer1) newPlayer1Wins = player1Wins + 1;
+        else newPlayer2Wins = player2Wins + 1;
+    } else {
+        if (isPlayer1) newPlayer2Wins = player2Wins + 1;
+        else newPlayer1Wins = player1Wins + 1;
+    }
+    
+    // Send to WebSocket, then wait for server's round_selecting
+    wsRef.current.send(JSON.stringify({
+        type: 'round_result',
+        winner_user_id: winnerUserId,
+        player1_score: newPlayer1Wins,
+        player2_score: newPlayer2Wins,
+        round_data: { round: currentRound, type: roundType }
+    }));
+}, [...]);
+```
+
+**3. API Fallback Added ✅**
+- New endpoint: `POST /api/photo-game/pvp/submit-round-result`
+- Used when WebSocket is unavailable
+
+**4. Round Result Handler Enhanced ✅**
+- Added console logs for debugging
+- Shows toast notification for round winner
+- Properly waits for server's `round_selecting` message
+
+#### Round Transition Flow:
+```
+TappingArena timer ends → /api/pvp/finish-round (determines winner)
+→ handleRoundComplete (calculates scores, sends WS round_result)
+→ Server submit_round_result (broadcasts round_result)
+→ 3 second delay
+→ Server sends round_selecting
+→ Frontend transitions to 'ready' phase with next round
+```
+
+#### Test Results:
+- Backend: 15/15 tests passed
+- Code review: All critical paths verified
+- Note: Real two-player testing requires manual testing with two devices
+
+---
+
+### Previous: PVP Auction Bidding Battle - Critical Fixes (February 5, 2026)
 
 #### Issues Fixed:
 
