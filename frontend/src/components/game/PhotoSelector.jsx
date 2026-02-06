@@ -218,7 +218,7 @@ export const PhotoSelector = ({
   const [creating, setCreating] = useState(false);
   const [sortBy, setSortBy] = useState('dollar_value'); // dollar_value, stamina, level
   const [betAmount, setBetAmount] = useState(0);
-  // REMOVED: useBotFallback - PVP is strictly player-vs-player only
+  // Note: Bot fallback is for PVB mode only, not used in PVP open games
   
   // Fetch user's minted photos with stamina
   const fetchPhotos = useCallback(async () => {
