@@ -458,7 +458,7 @@ async def initialize_pvp_mongo_optimizations(db: AsyncIOMotorDatabase) -> Dict:
         _change_stream_manager = PVPChangeStreamManager(db)
         # Test if change streams are available
         test_collection = db["pvp_sessions"]
-        async with test_collection.watch([], max_await_time_ms=100) as stream:
+        async with test_collection.watch([], max_await_time_ms=100):
             pass  # Just testing connection
         results["change_streams_available"] = True
         logger.info("Change streams available")
