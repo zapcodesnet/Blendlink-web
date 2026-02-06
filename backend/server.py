@@ -3500,15 +3500,15 @@ async def startup_mongodb_pvp_optimizations():
         logger.info(f"MongoDB PVP Optimizations initialized: {init_results}")
         
         # Log index summary
-        for collection, indexes in results.get("indexes_created", {}).items():
+        for collection, indexes in init_results.get("indexes_created", {}).items():
             logger.info(f"  {collection}: {len(indexes)} indexes")
         
-        if results.get("change_streams_available"):
+        if init_results.get("change_streams_available"):
             logger.info("  ✅ Change streams available for real-time sync")
         else:
             logger.info("  ⚠️ Change streams not available, using polling fallback")
         
-        if results.get("atomic_ops_ready"):
+        if init_results.get("atomic_ops_ready"):
             logger.info("  ✅ Atomic operations ready")
             
     except Exception as e:
