@@ -363,6 +363,23 @@ export const PhotoSelector = ({
           <span className="text-gray-400">Available:</span>
           <span className="text-gray-300 font-bold">{availablePhotos} photos</span>
         </div>
+        
+        {/* AUTO-SELECT BEST BUTTON */}
+        <motion.button
+          onClick={handleAutoSelectBest}
+          disabled={availablePhotos < REQUIRED_PHOTOS}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-all ${
+            availablePhotos >= REQUIRED_PHOTOS
+              ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-black hover:shadow-lg hover:shadow-yellow-500/30'
+              : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+          }`}
+          data-testid="auto-select-best-btn"
+        >
+          <Zap className="w-4 h-4" />
+          Auto-Select Best
+        </motion.button>
       </div>
       
       {/* Sort options */}
