@@ -3496,8 +3496,8 @@ async def startup_mongodb_pvp_optimizations():
     try:
         from mongodb_pvp_optimization import initialize_pvp_mongo_optimizations
         
-        results = await initialize_pvp_mongo_optimizations(db)
-        logger.info(f"MongoDB PVP Optimizations initialized: {results}")
+        init_results = await initialize_pvp_mongo_optimizations(db)
+        logger.info(f"MongoDB PVP Optimizations initialized: {init_results}")
         
         # Log index summary
         for collection, indexes in results.get("indexes_created", {}).items():
