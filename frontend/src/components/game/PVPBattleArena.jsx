@@ -980,12 +980,40 @@ export const PVPBattleArena = ({
   
   // Handle round completion (from TappingArena or RPSBidding)
   const handleRoundComplete = useCallback(async (winner) => {
+    console.log('[PVP] handleRoundComplete called:', { winner, currentRound, roundType, isPlayer1, player1Wins, player2Wins });
+    
+    // Calculate new scores CORRECTLY
+    // winner === 'player' means CURRENT USER won
+    // winner === 'opponent' means OPPONENT won
+    const currentUserWon = winner === 'player';
+    
+    let newPlayer1Wins = player1Wins;
+    let newPlayer2Wins = player2Wins;
+    
+    if (currentUserWon) {
+      // Current user won this round
+      if (isPlayer1) {
+        newPlayer1Wins = player1Wins + 1;
+      } else {
+        newPlayer2Wins = player2Wins + 1;
+      }
+    } else {
+      // Opponent won this round
+      if (isPlayer1) {
+        newPlayer2Wins = player2Wins + 1;
+      } else {
+        newPlayer1Wins = player1Wins + 1;
+      }
+    }
+    
+    console.log('[PVP] New scores:', { newPlayer1Wins, newPlayer2Wins, currentUserWon, isPlayer1 });
+    
     // Record round result for medal tracking
     if (mySelectedPhoto?.mint_id) {
       try {
         const res = await api.post('/photo-game/record-round-result', {
           photo_id: mySelectedPhoto.mint_id,
-          round_won: winner === 'player',
+          round_won: currentUserWon,
         });
         
         if (res.data.medal_earned) {
@@ -1001,45 +1029,66 @@ export const PVPBattleArena = ({
       }
     }
     
-    // Send result to WebSocket for sync
+    // Determine winner user ID
+    const winnerUserId = currentUserWon ? currentUserId : opponentId;
+    
+    // Send result to WebSocket for server processing
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      const winnerUserId = winner === 'player' ? currentUserId : opponentId;
+      console.log('[PVP] Sending round_result to WebSocket:', {
+        winner_user_id: winnerUserId,
+        player1_score: newPlayer1Wins,
+        player2_score: newPlayer2Wins,
+      });
       
       wsRef.current.send(JSON.stringify({
         type: 'round_result',
         winner_user_id: winnerUserId,
-        player1_score: isPlayer1 ? (winner === 'player' ? player1Wins + 1 : player1Wins) : (winner === 'player' ? player1Wins : player1Wins + 1),
-        player2_score: isPlayer1 ? (winner === 'player' ? player2Wins : player2Wins + 1) : (winner === 'player' ? player2Wins + 1 : player2Wins),
+        player1_score: newPlayer1Wins,
+        player2_score: newPlayer2Wins,
         round_data: {
           round: currentRound,
           type: roundType,
           winner,
         },
       }));
+    } else {
+      // WebSocket not connected - use API fallback
+      console.log('[PVP] WebSocket not connected, using API fallback');
+      try {
+        await api.post('/photo-game/pvp/submit-round-result', {
+          session_id: gameId,
+          winner_user_id: winnerUserId,
+          player1_score: newPlayer1Wins,
+          player2_score: newPlayer2Wins,
+          round: currentRound,
+          round_type: roundType,
+        });
+      } catch (err) {
+        console.error('[PVP] API fallback failed:', err);
+      }
     }
     
-    // Update local scores
-    if (winner === 'player') {
-      const newWins = (isPlayer1 ? player1Wins : player2Wins) + 1;
-      if (isPlayer1) {
-        setPlayer1Wins(newWins);
-      } else {
-        setPlayer2Wins(newWins);
-      }
-      
-      // Check for game win
-      if (newWins >= WINS_NEEDED) {
-        setGameWinner('player1');
-        setGamePhase('result');
-        return;
-      }
-    } else {
-      const newWins = (isPlayer1 ? player2Wins : player1Wins) + 1;
-      if (isPlayer1) {
-        setPlayer2Wins(newWins);
-      } else {
-        setPlayer1Wins(newWins);
-      }
+    // Update local scores (optimistic update)
+    setPlayer1Wins(newPlayer1Wins);
+    setPlayer2Wins(newPlayer2Wins);
+    
+    // Check for game end
+    if (newPlayer1Wins >= WINS_NEEDED || newPlayer2Wins >= WINS_NEEDED) {
+      const iWon = (isPlayer1 && newPlayer1Wins >= WINS_NEEDED) || (!isPlayer1 && newPlayer2Wins >= WINS_NEEDED);
+      setGameWinner(iWon ? 'player1' : 'player2');
+      setGamePhase('result');
+      return;
+    }
+    
+    // Add used photo
+    if (mySelectedPhoto?.mint_id) {
+      setUsedPhotoIds(prev => [...prev, mySelectedPhoto.mint_id]);
+    }
+    
+    // Server will send round_selecting message to transition to next round
+    // Don't transition locally - wait for server
+    console.log('[PVP] Waiting for server to transition to next round...');
+  }, [mySelectedPhoto, currentUserId, opponentId, isPlayer1, player1Wins, player2Wins, currentRound, roundType, gameId]);
       
       // Check for game loss
       if (newWins >= WINS_NEEDED) {
