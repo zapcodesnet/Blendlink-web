@@ -306,7 +306,7 @@ export const PhotoSelector = ({
   // Count available photos (stamina >= 1)
   const availablePhotos = photos.filter(p => (p.current_stamina ?? MAX_STAMINA) >= 1).length;
   
-  // Handle Create Game
+  // Handle Create Game - PVP ONLY (no bots allowed)
   const handleCreateGame = async () => {
     if (!canConfirm) return;
     
@@ -315,8 +315,8 @@ export const PhotoSelector = ({
       const res = await api.post('/photo-game/open-games/create', {
         photo_ids: selectedIds,
         bet_amount: betAmount,
-        is_bot_allowed: useBotFallback,
-        bot_difficulty: 'medium',
+        is_bot_allowed: false, // PVP is strictly player-vs-player only
+        bot_difficulty: 'none',
       });
       
       if (res.data.success) {
@@ -329,6 +329,9 @@ export const PhotoSelector = ({
       setCreating(false);
     }
   };
+  
+  // QUICK BET PRESETS - No upper limit
+  const QUICK_BET_PRESETS = [100, 500, 1000, 5000, 20000, 50000];
   
   return (
     <div className="space-y-6" data-testid="photo-selector">
