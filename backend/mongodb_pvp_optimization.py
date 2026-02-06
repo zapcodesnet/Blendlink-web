@@ -86,7 +86,6 @@ async def create_pvp_indexes(db: AsyncIOMotorDatabase) -> Dict[str, Any]:
         for index_spec in indexes:
             try:
                 keys = index_spec.pop("keys")
-                name = index_spec.get("name", None)
                 
                 # Create index (idempotent - won't error if exists)
                 result = await collection.create_index(keys, **index_spec)
