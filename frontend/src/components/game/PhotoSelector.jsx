@@ -523,7 +523,7 @@ export const PhotoSelector = ({
           <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
             <p className="text-blue-300 text-sm">
               <strong>PVP Mode:</strong> This creates an open game for real players only. 
-              Winner takes the entire pot (your bet + opponent's bet).
+              Winner takes the entire pot (your bet + opponent&apos;s bet).
             </p>
           </div>
         </motion.div>
