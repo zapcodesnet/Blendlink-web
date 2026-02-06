@@ -8,7 +8,7 @@ Blendlink Photo Game API Routes v3.0
 - Leaderboards
 """
 
-from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi import APIRouter, HTTPException, Depends, Request, Body
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict
 import logging
