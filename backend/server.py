@@ -3488,6 +3488,44 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+# ============== MONGODB PVP OPTIMIZATION STARTUP ==============
+@app.on_event("startup")
+async def startup_mongodb_pvp_optimizations():
+    """Initialize MongoDB PVP optimizations on startup."""
+    try:
+        from mongodb_pvp_optimization import initialize_pvp_mongo_optimizations
+        
+        results = await initialize_pvp_mongo_optimizations(db)
+        logger.info(f"MongoDB PVP Optimizations initialized: {results}")
+        
+        # Log index summary
+        for collection, indexes in results.get("indexes_created", {}).items():
+            logger.info(f"  {collection}: {len(indexes)} indexes")
+        
+        if results.get("change_streams_available"):
+            logger.info("  ✅ Change streams available for real-time sync")
+        else:
+            logger.info("  ⚠️ Change streams not available, using polling fallback")
+        
+        if results.get("atomic_ops_ready"):
+            logger.info("  ✅ Atomic operations ready")
+            
+    except Exception as e:
+        logger.warning(f"MongoDB PVP optimization startup warning: {e}")
+        # Non-fatal - app will still work with polling
+
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
+    # Cleanup change streams if active
+    try:
+        from mongodb_pvp_optimization import get_change_stream_manager
+        manager = get_change_stream_manager()
+        if manager:
+            await manager.stop_watching()
+            logger.info("Change streams stopped")
+    except Exception as e:
+        logger.warning(f"Change stream cleanup warning: {e}")
+    
     client.close()
