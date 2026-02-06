@@ -342,7 +342,7 @@ class PVPAtomicOps:
             update_doc["$set"]["player1_taps"] = 0
             update_doc["$set"]["player2_taps"] = 0
         
-        result = await self.db.pvp_sessions.find_one_and_update(
+        await self.db.pvp_sessions.find_one_and_update(
             {"$or": [
                 {"session_id": session_id},
                 {"open_game_id": session_id}
