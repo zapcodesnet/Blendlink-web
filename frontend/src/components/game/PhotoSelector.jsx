@@ -464,7 +464,7 @@ export const PhotoSelector = ({
         </div>
       </div>
       
-      {/* Create Game Mode - Bet Input & Options */}
+      {/* Create Game Mode - Bet Input & Options (PVP) */}
       {mode === 'create' && canConfirm && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
@@ -473,13 +473,13 @@ export const PhotoSelector = ({
         >
           <h3 className="text-white font-bold flex items-center gap-2">
             <Coins className="w-5 h-5 text-yellow-400" />
-            Game Settings
+            PVP Game Settings
           </h3>
           
-          {/* Bet Amount */}
+          {/* Bet Amount with Quick Presets */}
           <div>
-            <label className="text-sm text-gray-400 mb-2 block">BL Coin Bet (optional)</label>
-            <div className="flex gap-2">
+            <label className="text-sm text-gray-400 mb-2 block">BL Coin Bet (optional - no limit)</label>
+            <div className="flex flex-col gap-2">
               <Input
                 type="number"
                 min="0"
@@ -489,37 +489,42 @@ export const PhotoSelector = ({
                 className="bg-gray-800 border-gray-700 text-white"
                 data-testid="bet-amount-input"
               />
-              <div className="flex gap-1">
-                {[10, 50, 100].map(amt => (
-                  <button
+              {/* Quick Bet Preset Buttons */}
+              <div className="flex flex-wrap gap-2">
+                {QUICK_BET_PRESETS.map(amt => (
+                  <motion.button
                     key={amt}
                     onClick={() => setBetAmount(amt)}
-                    className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-yellow-400 text-sm font-bold transition-colors"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`px-3 py-2 rounded-lg text-sm font-bold transition-all ${
+                      betAmount === amt
+                        ? 'bg-yellow-500 text-black'
+                        : 'bg-gray-700 hover:bg-gray-600 text-yellow-400'
+                    }`}
+                    data-testid={`quick-bet-${amt}`}
                   >
-                    +{amt}
-                  </button>
+                    {amt >= 1000 ? `${amt/1000}K` : amt}
+                  </motion.button>
                 ))}
+                <motion.button
+                  onClick={() => setBetAmount(0)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-400 text-sm transition-colors"
+                >
+                  Clear
+                </motion.button>
               </div>
             </div>
           </div>
           
-          {/* Bot fallback toggle */}
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-300 font-medium">Play with bot if no opponents</p>
-              <p className="text-gray-500 text-xs">Bot will match your bet amount</p>
-            </div>
-            <button
-              onClick={() => setUseBotFallback(!useBotFallback)}
-              className={`relative w-12 h-6 rounded-full transition-colors ${useBotFallback ? 'bg-purple-500' : 'bg-gray-700'}`}
-              data-testid="bot-fallback-toggle"
-            >
-              <motion.span 
-                className="absolute top-1 w-4 h-4 rounded-full bg-white"
-                animate={{ left: useBotFallback ? 28 : 4 }}
-                transition={{ type: "spring", stiffness: 500, damping: 30 }}
-              />
-            </button>
+          {/* PVP Info Notice */}
+          <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+            <p className="text-blue-300 text-sm">
+              <strong>PVP Mode:</strong> This creates an open game for real players only. 
+              Winner takes the entire pot (your bet + opponent's bet).
+            </p>
           </div>
         </motion.div>
       )}
