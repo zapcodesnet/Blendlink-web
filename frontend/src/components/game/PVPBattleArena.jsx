@@ -430,13 +430,31 @@ export const PVPBattleArena = ({
         }
           
         case 'round_result':
-          // Round ended
+          // Round ended - update wins from server (authoritative)
+          console.log('[PVP WS] Round result received:', data);
           setPlayer1Wins(data.player1_wins);
           setPlayer2Wins(data.player2_wins);
           
           // Add used photos
           if (mySelectedPhoto?.mint_id) {
             setUsedPhotoIds(prev => [...prev, mySelectedPhoto.mint_id]);
+          }
+          
+          // Show result toast
+          const roundWinnerId = data.winner_user_id;
+          if (roundWinnerId === currentUserId) {
+            toast.success(`🎉 You won Round ${data.round}!`);
+          } else {
+            toast.info(`Round ${data.round} - Opponent wins`);
+          }
+          
+          // Check if game is over
+          if (data.player1_wins >= 3 || data.player2_wins >= 3) {
+            // Game will end - wait for game_end message
+            console.log('[PVP WS] Game should end soon...');
+          } else {
+            // Wait for server to send round_selecting (3 seconds delay on server)
+            console.log('[PVP WS] Waiting for next round selection phase...');
           }
           break;
           
