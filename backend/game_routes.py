@@ -1824,20 +1824,22 @@ async def pvp_submit_tap(
 ):
     """
     Submit taps for the current PVP round via API (polling fallback).
-    This endpoint records taps in the database so both players can poll for updates.
+    Uses ATOMIC $inc operation to prevent race conditions.
     """
     if _db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     user_id = current_user.get("user_id")
     
-    # Find the session
+    # Find the session first to determine player
     session = await _db.pvp_sessions.find_one(
         {"$or": [
             {"session_id": data.session_id},
             {"open_game_id": data.session_id},
             {"pvp_room_id": data.session_id}
-        ]}
+        ]},
+        {"_id": 0, "player1_id": 1, "player2_id": 1, "session_id": 1,
+         "player1_current_photo": 1, "player2_current_photo": 1}
     )
     
     if not session:
@@ -1850,34 +1852,61 @@ async def pvp_submit_tap(
     if not is_player1 and not is_player2:
         raise HTTPException(status_code=403, detail="Not a participant in this session")
     
-    # Get current taps
-    current_taps = session.get("player1_taps", 0) if is_player1 else session.get("player2_taps", 0)
-    new_taps = current_taps + data.tap_count
+    player_num = 1 if is_player1 else 2
     
-    # Get photo dollar value for calculating dollar amount
+    # Use atomic operations if available
+    try:
+        from mongodb_pvp_optimization import get_atomic_ops
+        atomic_ops = get_atomic_ops()
+        if atomic_ops:
+            result = await atomic_ops.atomic_submit_tap(
+                session.get("session_id"),
+                player_num,
+                data.tap_count
+            )
+            if result:
+                # Calculate dollar value
+                photo_field = "player1_current_photo" if is_player1 else "player2_current_photo"
+                photo = session.get(photo_field, {})
+                photo_dollar_value = photo.get("dollar_value", 1000000) if photo else 1000000
+                required_taps = 100
+                new_taps = result.get(f"player{player_num}_taps", 0)
+                current_dollar = new_taps * (photo_dollar_value / required_taps)
+                
+                return {
+                    "success": True,
+                    "my_taps": new_taps,
+                    "my_dollar": current_dollar,
+                    "opponent_taps": result.get(f"player{3-player_num}_taps", 0),
+                    "atomic": True
+                }
+    except Exception as e:
+        logger.debug(f"Atomic tap failed, falling back: {e}")
+    
+    # Fallback to non-atomic update (still works, just slightly less safe)
+    tap_field = f"player{player_num}_taps"
+    
+    # Use $inc for atomic increment even in fallback
+    result = await _db.pvp_sessions.find_one_and_update(
+        {"session_id": session.get("session_id")},
+        {
+            "$inc": {tap_field: data.tap_count},
+            "$set": {"updated_at": datetime.now(timezone.utc)}
+        },
+        return_document=True,
+        projection={"_id": 0, "player1_taps": 1, "player2_taps": 1}
+    )
+    
+    if not result:
+        raise HTTPException(status_code=404, detail="Session update failed")
+    
+    # Calculate dollar value
     photo_field = "player1_current_photo" if is_player1 else "player2_current_photo"
     photo = session.get(photo_field, {})
     photo_dollar_value = photo.get("dollar_value", 1000000) if photo else 1000000
-    
-    # Calculate current dollar bid (taps * portion of photo value)
-    # Assuming 100 taps = full value
-    required_taps = 100  # Base required taps
-    dollar_per_tap = photo_dollar_value / required_taps
-    current_dollar = new_taps * dollar_per_tap
-    
-    # Update taps in database
-    tap_field = "player1_taps" if is_player1 else "player2_taps"
-    dollar_field = "player1_dollar" if is_player1 else "player2_dollar"
-    
-    await _db.pvp_sessions.update_one(
-        {"session_id": session.get("session_id")},
-        {
-            "$set": {
-                tap_field: new_taps,
-                dollar_field: current_dollar,
-                "updated_at": datetime.now(timezone.utc)
-            }
-        }
+    required_taps = 100
+    new_taps = result.get(tap_field, 0)
+    current_dollar = new_taps * (photo_dollar_value / required_taps)
     )
     
     # Get updated session for response
