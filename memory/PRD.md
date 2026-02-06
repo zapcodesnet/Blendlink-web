@@ -2,7 +2,47 @@
 
 ## Latest Update: February 5, 2026
 
-### MongoDB PVP Optimization (February 5, 2026) - LATEST
+### PVP Critical Fixes - Player-vs-Player Only Mode (February 5, 2026) - LATEST
+
+#### Changes Implemented:
+
+**1. PVP Mode Strictly Player-vs-Player ✅**
+- PVP Open Games now have `is_bot_allowed: false` by default
+- Removed bot fallback toggle from PVP create flow
+- **Important:** PVB (Player vs Bot) mode remains completely unchanged and separate
+- File: `/app/frontend/src/components/game/PhotoSelector.jsx`
+
+**2. Quick-Bet Preset Buttons ✅**
+- Added 6 preset buttons: 100, 500, 1K, 5K, 20K, 50K BL coins
+- No upper limit on bets
+- File: `/app/frontend/src/components/game/PhotoSelector.jsx`
+
+**3. Auto-Select Best Button ✅**
+- One-click selects top 5 highest Dollar Value photos with stamina >= 1
+- Shows error if not enough photos available
+
+**4. Double-Win Prevention ✅**
+- `round_winner_determined` flag prevents duplicate round submissions
+- Server-side validation in `pvp_game_websocket.py`
+
+**5. Atomic Round Outcomes ✅**
+- `/api/photo-game/pvp/finish-round` endpoint is idempotent
+- Returns cached result if round already finished
+- Prevents race conditions between players
+
+**Test Results:**
+- Backend: 19/19 tests passed
+- Frontend: All UI elements verified
+- PVP and PVB modes correctly separated
+
+**Files Modified:**
+- `/app/frontend/src/components/game/PhotoSelector.jsx` - Quick-bet presets, PVP-only mode
+
+**Note:** Real two-player WebSocket testing requires manual testing with two devices/browsers.
+
+---
+
+### Previous: MongoDB PVP Optimization (February 5, 2026)
 
 #### Implemented Optimizations:
 
