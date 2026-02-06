@@ -1089,22 +1089,6 @@ export const PVPBattleArena = ({
     // Don't transition locally - wait for server
     console.log('[PVP] Waiting for server to transition to next round...');
   }, [mySelectedPhoto, currentUserId, opponentId, isPlayer1, player1Wins, player2Wins, currentRound, roundType, gameId]);
-      
-      // Check for game loss
-      if (newWins >= WINS_NEEDED) {
-        setGameWinner('player2');
-        setGamePhase('result');
-        return;
-      }
-    }
-    
-    // Add used photo
-    if (mySelectedPhoto?.mint_id) {
-      setUsedPhotoIds(prev => [...prev, mySelectedPhoto.mint_id]);
-    }
-    
-    // Move to next round (WebSocket will trigger the transition)
-  }, [mySelectedPhoto, currentUserId, opponentId, isPlayer1, player1Wins, player2Wins, currentRound, roundType]);
   
   // Handle RPS round complete
   const handleRPSRoundComplete = useCallback((winner, newPlayerMoney, newOpponentMoney) => {
