@@ -2,7 +2,60 @@
 
 ## Latest Update: February 5, 2026
 
-### PVP Round Transition Fix - CRITICAL (February 5, 2026) - LATEST
+### MongoDB PVP Optimization (February 5, 2026) - LATEST
+
+#### Implemented Optimizations:
+
+**1. Schema Indexes for Fast Queries ✅**
+```
+pvp_sessions:
+  - idx_session_id (unique) - Primary lookup
+  - idx_open_game_id - Join game lookup  
+  - idx_player1_status, idx_player2_status - Player active games
+  - idx_status_updated - Real-time polling queries
+  - idx_round_status - Round-based queries
+  - idx_ttl_completed - Auto-delete after 7 days
+
+open_games:
+  - idx_game_id (unique) - Primary lookup
+  - idx_status_created - Matchmaking queries
+  - idx_creator_status, idx_opponent_status - Player lookups
+  - idx_ttl_waiting - Auto-delete stale games after 24 hours
+
+pvp_round_results:
+  - idx_session_round (unique) - Round history
+  - idx_winner_history - Player stats
+```
+
+**2. Change Streams for Real-time Sync ✅**
+- MongoDB Atlas M0 Free Tier supports change streams
+- `PVPChangeStreamManager` class watches `pvp_sessions` for tap/status updates
+- Falls back to polling if not available
+
+**3. Atomic Operations for Round Results ✅**
+- `atomic_submit_tap()` - Uses $inc for race-free tap increments
+- `atomic_finish_round()` - Idempotent round completion with $push
+- `atomic_select_photo()` - Thread-safe photo selection
+
+**4. Free Tier Confirmation ✅**
+MongoDB Atlas M0 Free Tier is SUFFICIENT:
+- ✅ Change Streams: Supported (replica set feature)
+- ✅ Indexes: Up to 64 per collection
+- ✅ Single-doc transactions: Full atomicity
+- ⚠️ 512MB storage (enough for thousands of games)
+- ⚠️ 500 connections (enough for ~100 concurrent users)
+
+**Files Created:**
+- `/app/backend/mongodb_pvp_optimization.py` - Full optimization module
+
+**Test Results:**
+- All indexes created successfully
+- Change streams confirmed available
+- Atomic operations ready
+
+---
+
+### Previous: PVP Round Transition Fix - CRITICAL (February 5, 2026)
 
 #### Root Cause Analysis:
 The game was NOT proceeding to Round 2 because:
