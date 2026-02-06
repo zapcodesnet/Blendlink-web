@@ -2060,6 +2060,91 @@ async def pvp_finish_round(
     }
 
 
+@game_router.post("/pvp/submit-round-result")
+async def submit_round_result_api(
+    session_id: str = Body(...),
+    winner_user_id: str = Body(...),
+    player1_score: int = Body(...),
+    player2_score: int = Body(...),
+    round: int = Body(...),
+    round_type: str = Body(...),
+    current_user: dict = Depends(get_current_user_from_request)
+):
+    """
+    API fallback for submitting round result when WebSocket is unavailable.
+    This triggers the same round transition logic as WebSocket.
+    """
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    # Validate session exists
+    session = await _db.pvp_sessions.find_one({
+        "$or": [{"session_id": session_id}, {"open_game_id": session_id}]
+    })
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    user_id = current_user["user_id"]
+    
+    # Validate user is a participant
+    if user_id != session.get("player1_id") and user_id != session.get("player2_id"):
+        raise HTTPException(status_code=403, detail="Not a participant")
+    
+    # Use WebSocket manager if available
+    try:
+        from pvp_game_websocket import pvp_game_manager
+        
+        # Find the room
+        room_id = None
+        for rid, room in pvp_game_manager.rooms.items():
+            if room.game_id == session_id or room.session_id == session_id:
+                room_id = rid
+                break
+        
+        if room_id:
+            await pvp_game_manager.submit_round_result(
+                room_id=room_id,
+                winner_user_id=winner_user_id,
+                player1_score=player1_score,
+                player2_score=player2_score,
+                round_data={
+                    "round": round,
+                    "type": round_type,
+                }
+            )
+            return {"success": True, "method": "websocket_manager"}
+    except Exception as e:
+        logger.warning(f"WebSocket manager fallback failed: {e}")
+    
+    # Direct DB update as last resort
+    game_over = player1_score >= 3 or player2_score >= 3
+    new_round = round + 1 if not game_over else round
+    new_status = "complete" if game_over else "selecting"
+    
+    await _db.pvp_sessions.update_one(
+        {"$or": [{"session_id": session_id}, {"open_game_id": session_id}]},
+        {
+            "$set": {
+                "player1_wins": player1_score,
+                "player2_wins": player2_score,
+                "current_round": new_round,
+                "status": new_status,
+                "winner_id": winner_user_id if game_over else None,
+                "round_result_at": datetime.now(timezone.utc),
+                "updated_at": datetime.now(timezone.utc),
+            }
+        }
+    )
+    
+    return {
+        "success": True,
+        "method": "database",
+        "game_over": game_over,
+        "next_round": new_round,
+    }
+
+
 # ============== BATTLE-READY PHOTOS ==============
 @game_router.get("/battle-photos")
 async def get_battle_ready_photos(
