@@ -177,16 +177,10 @@ class TestPVPCriticalFixes:
         token = self.login_user(USER1_EMAIL, USER1_PASSWORD)
         assert token is not None
         
-        # Test with a dummy session ID - should return 404 (not found) not 500
+        # Test with a dummy session ID - session_id is a query parameter
         response = self.session.post(
-            f"{BASE_URL}/api/photo-game/pvp/finish-round",
-            headers=self.get_auth_headers(token),
-            json={
-                "session_id": "test-session-id",
-                "winner_user_id": "test-user",
-                "player1_taps": 100,
-                "player2_taps": 50
-            }
+            f"{BASE_URL}/api/photo-game/pvp/finish-round?session_id=test-session-id",
+            headers=self.get_auth_headers(token)
         )
         # Should be 404 (not found), not 500
         assert response.status_code in [404, 403], f"Unexpected status: {response.status_code}"
@@ -359,15 +353,10 @@ class TestPVPDoubleWinPrevention:
         
         # The finish-round endpoint should have idempotency check
         # Testing with invalid session to verify endpoint exists and handles errors
+        # session_id is a query parameter
         response1 = self.session.post(
-            f"{BASE_URL}/api/photo-game/pvp/finish-round",
-            headers=self.get_auth_headers(token),
-            json={
-                "session_id": "test-idempotency-session",
-                "winner_user_id": "test-user",
-                "player1_taps": 100,
-                "player2_taps": 50
-            }
+            f"{BASE_URL}/api/photo-game/pvp/finish-round?session_id=test-idempotency-session",
+            headers=self.get_auth_headers(token)
         )
         
         # First call should return 404 (session not found)
@@ -375,14 +364,8 @@ class TestPVPDoubleWinPrevention:
         
         # Second identical call should also return 404 (not 500 or different error)
         response2 = self.session.post(
-            f"{BASE_URL}/api/photo-game/pvp/finish-round",
-            headers=self.get_auth_headers(token),
-            json={
-                "session_id": "test-idempotency-session",
-                "winner_user_id": "test-user",
-                "player1_taps": 100,
-                "player2_taps": 50
-            }
+            f"{BASE_URL}/api/photo-game/pvp/finish-round?session_id=test-idempotency-session",
+            headers=self.get_auth_headers(token)
         )
         
         assert response2.status_code == response1.status_code, "Endpoint should be idempotent"
