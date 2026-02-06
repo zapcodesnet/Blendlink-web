@@ -274,6 +274,22 @@ export const PhotoSelector = ({
     }
   };
   
+  // AUTO-SELECT BEST: Select top 5 highest Dollar Value photos with stamina >= 1
+  const handleAutoSelectBest = () => {
+    const availableWithStamina = photos
+      .filter(p => (p.current_stamina ?? MAX_STAMINA) >= 1)
+      .sort((a, b) => (b.dollar_value || 0) - (a.dollar_value || 0))
+      .slice(0, REQUIRED_PHOTOS);
+    
+    if (availableWithStamina.length < REQUIRED_PHOTOS) {
+      toast.error(`Not enough photos with stamina. Need ${REQUIRED_PHOTOS}, have ${availableWithStamina.length}`);
+      return;
+    }
+    
+    setSelectedIds(availableWithStamina.map(p => p.mint_id));
+    toast.success('✨ Auto-selected your 5 best photos!');
+  };
+  
   // Get selected photos data
   const selectedPhotos = photos.filter(p => selectedIds.includes(p.mint_id));
   const totalDollarValue = selectedPhotos.reduce((sum, p) => sum + (p.dollar_value || 0), 0);
