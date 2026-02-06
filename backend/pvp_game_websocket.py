@@ -942,20 +942,28 @@ class PVPGameManager:
         player2_score: int,
         round_data: Dict
     ):
-        """Submit round result from gameplay component"""
+        """Submit round result from gameplay component - FIXED to use client scores directly"""
         room = self.rooms.get(room_id)
         if not room:
+            logger.warning(f"Room {room_id} not found for round result")
             return
         
+        # Prevent duplicate round result submissions
+        if room.round_winner_determined:
+            logger.info(f"Round result already determined for room {room_id}, ignoring duplicate")
+            return
+        
+        room.round_winner_determined = True
         room.round_phase = "result"
         
-        # Update scores
-        if room.player1 and winner_user_id == room.player1.user_id:
-            room.player1_wins += 1
-        elif room.player2 and winner_user_id == room.player2.user_id:
-            room.player2_wins += 1
+        # Use the client-provided scores (DON'T increment again - client already calculated)
+        # Just validate and sync
+        room.player1_wins = player1_score
+        room.player2_wins = player2_score
         
-        # Broadcast result
+        logger.info(f"[PVP] Round {room.current_round} result: winner={winner_user_id}, p1_wins={player1_score}, p2_wins={player2_score}")
+        
+        # Broadcast result to both players
         await self._broadcast_to_room(room_id, {
             "type": "round_result",
             "round": room.current_round,
@@ -968,11 +976,14 @@ class PVPGameManager:
         
         # Check for game end (first to 3 wins)
         if room.player1_wins >= 3 or room.player2_wins >= 3:
+            logger.info(f"[PVP] Game over! p1={room.player1_wins}, p2={room.player2_wins}")
             await self._end_game(room_id)
         else:
-            # Schedule transition to next round
+            # Schedule transition to next round after brief result display
+            logger.info(f"[PVP] Scheduling transition to round {room.current_round + 1}")
             await asyncio.sleep(3)  # Brief result display
             room.current_round += 1
+            room.round_winner_determined = False  # Reset for next round
             await self._transition_to_selecting(room_id)
     
     async def _end_game(self, room_id: str):
