@@ -1907,20 +1907,13 @@ async def pvp_submit_tap(
     required_taps = 100
     new_taps = result.get(tap_field, 0)
     current_dollar = new_taps * (photo_dollar_value / required_taps)
-    )
-    
-    # Get updated session for response
-    updated_session = await _db.pvp_sessions.find_one(
-        {"session_id": session.get("session_id")},
-        {"_id": 0}
-    )
     
     return {
         "success": True,
         "my_taps": new_taps,
         "my_dollar": current_dollar,
-        "opponent_taps": updated_session.get("player2_taps" if is_player1 else "player1_taps", 0),
-        "opponent_dollar": updated_session.get("player2_dollar" if is_player1 else "player1_dollar", 0),
+        "opponent_taps": result.get(f"player{3-player_num}_taps", 0),
+        "atomic": False
     }
 
 
