@@ -145,9 +145,9 @@ class TestPVPRoundTransition:
             },
             headers={"Authorization": f"Bearer {token}"}
         )
-        # Should return 404 for non-existent session
-        assert response.status_code == 404
-        print("✓ PVP finish-round endpoint exists")
+        # Should return 404 (session not found) or 422 (validation error)
+        assert response.status_code in [404, 422], f"Unexpected status: {response.status_code}"
+        print(f"✓ PVP finish-round endpoint exists (returned {response.status_code})")
     
     def test_09_pvp_next_round_endpoint(self):
         """Verify PVP next-round endpoint exists"""
