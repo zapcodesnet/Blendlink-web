@@ -1,16 +1,18 @@
 /**
- * Premium Light Mode Login Page
+ * ULTRA PREMIUM Login Page
  * 
- * Redesigned to match the new Blendlink 2025-2026 design language:
- * - Light mode with glassmorphism
- * - Electric cyan (#00F0FF) and magenta (#FF00CC) accents
- * - Large rounded corners, premium typography
- * - Smooth animations with Framer Motion
+ * Dramatically upgraded with:
+ * - Strong glassmorphism (heavy blur, transparency)
+ * - Very large rounded corners (32px+)
+ * - Generous whitespace and breathing room
+ * - Vibrant cyan-to-magenta gradient button
+ * - Premium typography and micro-details
+ * - Subtle animated background effects
  */
 
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import api from "../services/api";
 import { Eye, EyeOff, Mail, Lock, User, Check } from "lucide-react";
@@ -54,58 +56,65 @@ export default function Login() {
     api.auth.googleAuth();
   };
 
-  // Animation variants
+  // Ultra-smooth animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.08,
-        delayChildren: 0.1,
+        staggerChildren: 0.07,
+        delayChildren: 0.15,
       },
     },
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 24 },
     visible: {
       opacity: 1,
       y: 0,
       transition: {
         type: "spring",
-        stiffness: 260,
-        damping: 24,
+        stiffness: 220,
+        damping: 22,
       },
     },
   };
 
   return (
-    <div className="bl-premium-bg min-h-screen flex flex-col items-center justify-center px-6 py-12 bl-safe-top bl-safe-bottom relative overflow-hidden">
-      {/* Background subtle glow effects */}
+    <div className="bl-premium-bg min-h-screen flex flex-col items-center justify-center px-6 py-16 bl-safe-top bl-safe-bottom relative">
+      {/* Extra ambient glow orbs */}
       <div 
-        className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full opacity-30 pointer-events-none"
+        className="absolute top-[5%] left-[10%] w-[300px] h-[300px] rounded-full pointer-events-none"
         style={{
-          background: 'radial-gradient(circle, rgba(0, 240, 255, 0.15) 0%, transparent 70%)',
-          filter: 'blur(60px)',
+          background: 'radial-gradient(circle, rgba(0, 240, 255, 0.12) 0%, transparent 70%)',
+          filter: 'blur(80px)',
         }}
       />
       <div 
-        className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full opacity-20 pointer-events-none"
+        className="absolute bottom-[10%] right-[5%] w-[250px] h-[250px] rounded-full pointer-events-none"
         style={{
-          background: 'radial-gradient(circle, rgba(255, 0, 204, 0.12) 0%, transparent 70%)',
-          filter: 'blur(50px)',
+          background: 'radial-gradient(circle, rgba(255, 0, 204, 0.1) 0%, transparent 70%)',
+          filter: 'blur(70px)',
+        }}
+      />
+      <div 
+        className="absolute top-[40%] right-[20%] w-[200px] h-[200px] rounded-full pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle, rgba(139, 92, 246, 0.08) 0%, transparent 70%)',
+          filter: 'blur(60px)',
         }}
       />
 
       <motion.div
-        className="w-full max-w-[400px] relative z-10"
+        className="w-full max-w-[380px] relative z-10"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        {/* Avatar */}
+        {/* Avatar with strong glow */}
         <motion.div 
-          className="flex justify-center mb-8"
+          className="flex justify-center mb-10"
           variants={itemVariants}
         >
           <div className="bl-avatar bl-animate-glow">
@@ -113,11 +122,11 @@ export default function Login() {
           </div>
         </motion.div>
 
-        {/* Headline */}
-        <motion.div className="text-center mb-8" variants={itemVariants}>
+        {/* Headline - Extra large and bold */}
+        <motion.div className="text-center mb-10" variants={itemVariants}>
           <h1 
-            className="bl-heading-xl mb-3"
-            style={{ letterSpacing: '-0.5px' }}
+            className="bl-heading-xl mb-4"
+            style={{ letterSpacing: '-1px' }}
           >
             Welcome back
           </h1>
@@ -126,17 +135,17 @@ export default function Login() {
           </p>
         </motion.div>
 
-        {/* Continue with Google Button - Primary */}
+        {/* Continue with Google Button - Prominent glassmorphic */}
         <motion.div variants={itemVariants}>
           <motion.button
             type="button"
-            className="bl-btn-secondary mb-5 gap-3"
+            className="bl-btn-secondary mb-8 gap-3"
             onClick={handleGoogleLogin}
-            whileHover={{ scale: 1.02 }}
+            whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
             data-testid="google-login-btn-main"
           >
-            <svg viewBox="0 0 24 24" width="22" height="22">
+            <svg viewBox="0 0 24 24" width="24" height="24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -146,19 +155,22 @@ export default function Login() {
           </motion.button>
         </motion.div>
 
-        {/* Divider - Before Form */}
+        {/* Divider */}
         <motion.div className="bl-divider" variants={itemVariants}>
           <span className="bl-divider-text">or</span>
         </motion.div>
 
-        {/* Form */}
+        {/* Form with generous spacing */}
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Email Input */}
           <motion.div className="bl-input-wrapper" variants={itemVariants}>
             <Mail 
               className="bl-input-icon" 
               strokeWidth={2}
-              style={{ color: focusedField === 'email' ? '#00F0FF' : undefined }}
+              style={{ 
+                color: focusedField === 'email' ? '#00F0FF' : undefined,
+                filter: focusedField === 'email' ? 'drop-shadow(0 0 8px rgba(0, 240, 255, 0.6))' : undefined,
+              }}
             />
             <input
               type="email"
@@ -177,13 +189,16 @@ export default function Login() {
             <Lock 
               className="bl-input-icon" 
               strokeWidth={2}
-              style={{ color: focusedField === 'password' ? '#00F0FF' : undefined }}
+              style={{ 
+                color: focusedField === 'password' ? '#00F0FF' : undefined,
+                filter: focusedField === 'password' ? 'drop-shadow(0 0 8px rgba(0, 240, 255, 0.6))' : undefined,
+              }}
             />
             <input
               type={showPassword ? "text" : "password"}
               placeholder="Password"
               className="bl-glass-input"
-              style={{ paddingRight: '52px' }}
+              style={{ paddingRight: '58px' }}
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
               onFocus={() => setFocusedField('password')}
@@ -194,7 +209,10 @@ export default function Login() {
               type="button"
               className="bl-input-toggle"
               onClick={() => setShowPassword(!showPassword)}
-              style={{ color: showPassword ? '#00F0FF' : undefined }}
+              style={{ 
+                color: showPassword ? '#00F0FF' : undefined,
+                filter: showPassword ? 'drop-shadow(0 0 6px rgba(0, 240, 255, 0.5))' : undefined,
+              }}
             >
               {showPassword ? <EyeOff strokeWidth={2} /> : <Eye strokeWidth={2} />}
             </button>
@@ -202,7 +220,7 @@ export default function Login() {
 
           {/* Remember Me & Forgot Password */}
           <motion.div 
-            className="flex items-center justify-between"
+            className="flex items-center justify-between pt-1"
             variants={itemVariants}
           >
             <button
@@ -212,17 +230,10 @@ export default function Login() {
             >
               <div 
                 className={`bl-checkbox ${rememberMe ? 'checked' : ''}`}
-                style={{
-                  background: rememberMe ? '#00F0FF' : 'white',
-                  borderColor: rememberMe ? '#00F0FF' : '#8080A0',
-                }}
               >
                 {rememberMe && <Check size={14} strokeWidth={3} color="white" />}
               </div>
-              <span 
-                className="bl-text-sm"
-                style={{ color: '#606080' }}
-              >
+              <span className="bl-text-sm" style={{ color: '#606080' }}>
                 Remember me
               </span>
             </button>
@@ -230,19 +241,18 @@ export default function Login() {
             <Link 
               to="/forgot-password" 
               className="bl-link bl-text-sm"
-              style={{ fontSize: '14px' }}
             >
               Forgot password?
             </Link>
           </motion.div>
 
-          {/* Sign In Button */}
-          <motion.div variants={itemVariants}>
+          {/* Sign In Button - Most eye-catching element */}
+          <motion.div variants={itemVariants} className="pt-3">
             <motion.button
               type="submit"
               className="bl-btn-primary"
               disabled={loading}
-              whileHover={{ scale: loading ? 1 : 1.02 }}
+              whileHover={{ scale: loading ? 1 : 1.02, y: loading ? 0 : -3 }}
               whileTap={{ scale: loading ? 1 : 0.98 }}
               data-testid="login-submit-btn"
             >
@@ -261,7 +271,7 @@ export default function Login() {
 
         {/* Footer - Sign Up Link */}
         <motion.p 
-          className="text-center mt-10 bl-text-body"
+          className="text-center mt-12 bl-text-body"
           variants={itemVariants}
         >
           Don&apos;t have an account?{" "}
