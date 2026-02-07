@@ -13,7 +13,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://verify-me-9.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://luxury-app-makeover.preview.emergentagent.com')
 
 # Test credentials
 TEST_EMAIL = "test@example.com"
