@@ -1,17 +1,28 @@
+/**
+ * Premium Light Mode Login Page
+ * 
+ * Redesigned to match the new Blendlink 2025-2026 design language:
+ * - Light mode with glassmorphism
+ * - Electric cyan (#00F0FF) and magenta (#FF00CC) accents
+ * - Large rounded corners, premium typography
+ * - Smooth animations with Framer Motion
+ */
+
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import api from "../services/api";
-import { Eye, EyeOff, Mail, Lock, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Check } from "lucide-react";
+import "../styles/premium-design-system.css";
 
 export default function Login() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [form, setForm] = useState({ email: "", password: "" });
+  const [focusedField, setFocusedField] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,10 +37,9 @@ export default function Login() {
       toast.success("Welcome back!");
       navigate("/feed");
     } catch (error) {
-      // Handle network errors specifically
       const errorMsg = error.message || "Login failed";
       if (errorMsg.includes("Failed to fetch") || errorMsg.includes("Network")) {
-        toast.error("Unable to connect to server. Please check your internet connection and try again.");
+        toast.error("Unable to connect to server. Please check your internet connection.");
       } else if (errorMsg.includes("Invalid credentials") || errorMsg.includes("401")) {
         toast.error("Invalid email or password. Please try again.");
       } else {
@@ -44,122 +54,249 @@ export default function Login() {
     api.auth.googleAuth();
   };
 
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.08,
+        delayChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 260,
+        damping: 24,
+      },
+    },
+  };
+
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <header className="p-4">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={() => navigate("/")}
-          data-testid="back-btn"
+    <div className="bl-premium-bg min-h-screen flex flex-col items-center justify-center px-6 py-12 bl-safe-top bl-safe-bottom relative overflow-hidden">
+      {/* Background subtle glow effects */}
+      <div 
+        className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full opacity-30 pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle, rgba(0, 240, 255, 0.15) 0%, transparent 70%)',
+          filter: 'blur(60px)',
+        }}
+      />
+      <div 
+        className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full opacity-20 pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle, rgba(255, 0, 204, 0.12) 0%, transparent 70%)',
+          filter: 'blur(50px)',
+        }}
+      />
+
+      <motion.div
+        className="w-full max-w-[400px] relative z-10"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {/* Avatar */}
+        <motion.div 
+          className="flex justify-center mb-8"
+          variants={itemVariants}
         >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-      </header>
-
-      <div className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-md animate-slide-up">
-          {/* Logo */}
-          <div className="text-center mb-8">
-            <img 
-              src="/blendlink-logo.png" 
-              alt="Blendlink" 
-              className="w-32 h-32 object-contain mx-auto mb-4"
-            />
-            <h1 className="text-2xl font-bold">Welcome Back</h1>
-            <p className="text-muted-foreground mt-1">Sign in to continue</p>
+          <div className="bl-avatar bl-animate-glow">
+            <User strokeWidth={1.5} />
           </div>
+        </motion.div>
 
-          {/* Google Login */}
-          <Button
-            variant="outline"
-            className="w-full mb-6 h-12 text-base"
+        {/* Headline */}
+        <motion.div className="text-center mb-10" variants={itemVariants}>
+          <h1 
+            className="bl-heading-xl mb-3"
+            style={{ letterSpacing: '-0.5px' }}
+          >
+            Welcome back
+          </h1>
+          <p className="bl-text-body">
+            Please sign in to continue
+          </p>
+        </motion.div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Email Input */}
+          <motion.div className="bl-input-wrapper" variants={itemVariants}>
+            <Mail 
+              className="bl-input-icon" 
+              strokeWidth={2}
+              style={{ color: focusedField === 'email' ? '#00F0FF' : undefined }}
+            />
+            <input
+              type="email"
+              placeholder="Email address"
+              className="bl-glass-input"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              onFocus={() => setFocusedField('email')}
+              onBlur={() => setFocusedField(null)}
+              data-testid="email-input"
+            />
+          </motion.div>
+
+          {/* Password Input */}
+          <motion.div className="bl-input-wrapper" variants={itemVariants}>
+            <Lock 
+              className="bl-input-icon" 
+              strokeWidth={2}
+              style={{ color: focusedField === 'password' ? '#00F0FF' : undefined }}
+            />
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              className="bl-glass-input"
+              style={{ paddingRight: '52px' }}
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              onFocus={() => setFocusedField('password')}
+              onBlur={() => setFocusedField(null)}
+              data-testid="password-input"
+            />
+            <button
+              type="button"
+              className="bl-input-toggle"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{ color: showPassword ? '#00F0FF' : undefined }}
+            >
+              {showPassword ? <EyeOff strokeWidth={2} /> : <Eye strokeWidth={2} />}
+            </button>
+          </motion.div>
+
+          {/* Remember Me & Forgot Password */}
+          <motion.div 
+            className="flex items-center justify-between"
+            variants={itemVariants}
+          >
+            <button
+              type="button"
+              className="flex items-center gap-3 group"
+              onClick={() => setRememberMe(!rememberMe)}
+            >
+              <div 
+                className={`bl-checkbox ${rememberMe ? 'checked' : ''}`}
+                style={{
+                  background: rememberMe ? '#00F0FF' : 'white',
+                  borderColor: rememberMe ? '#00F0FF' : '#8080A0',
+                }}
+              >
+                {rememberMe && <Check size={14} strokeWidth={3} color="white" />}
+              </div>
+              <span 
+                className="bl-text-sm"
+                style={{ color: '#606080' }}
+              >
+                Remember me
+              </span>
+            </button>
+
+            <Link 
+              to="/forgot-password" 
+              className="bl-link bl-text-sm"
+              style={{ fontSize: '14px' }}
+            >
+              Forgot password?
+            </Link>
+          </motion.div>
+
+          {/* Sign In Button */}
+          <motion.div variants={itemVariants}>
+            <motion.button
+              type="submit"
+              className="bl-btn-primary"
+              disabled={loading}
+              whileHover={{ scale: loading ? 1 : 1.02 }}
+              whileTap={{ scale: loading ? 1 : 0.98 }}
+              data-testid="login-submit-btn"
+            >
+              {loading ? (
+                <motion.div
+                  className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                />
+              ) : (
+                "Sign In"
+              )}
+            </motion.button>
+          </motion.div>
+        </form>
+
+        {/* Divider */}
+        <motion.div className="bl-divider" variants={itemVariants}>
+          <span className="bl-divider-text">or continue with</span>
+        </motion.div>
+
+        {/* Social Login Buttons */}
+        <motion.div 
+          className="flex justify-center gap-5"
+          variants={itemVariants}
+        >
+          {/* Google */}
+          <motion.button
+            type="button"
+            className="bl-btn-social"
             onClick={handleGoogleLogin}
+            whileHover={{ scale: 1.08, y: -3 }}
+            whileTap={{ scale: 0.95 }}
             data-testid="google-login-btn"
           >
-            <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+            <svg viewBox="0 0 24 24" width="24" height="24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
             </svg>
-            Continue with Google
-          </Button>
+          </motion.button>
 
-          <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-background text-muted-foreground">or</span>
-            </div>
-          </div>
+          {/* Apple */}
+          <motion.button
+            type="button"
+            className="bl-btn-social"
+            whileHover={{ scale: 1.08, y: -3 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="#000000">
+              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+            </svg>
+          </motion.button>
 
-          {/* Email Login Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  className="pl-10 h-12"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  data-testid="email-input"
-                />
-              </div>
-            </div>
+          {/* Twitter/X */}
+          <motion.button
+            type="button"
+            className="bl-btn-social"
+            whileHover={{ scale: 1.08, y: -3 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="#000000">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+          </motion.button>
+        </motion.div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
-                  className="pl-10 pr-10 h-12"
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  data-testid="password-input"
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-
-            <Button 
-              type="submit" 
-              className="w-full h-12 text-base rounded-full"
-              disabled={loading}
-              data-testid="login-submit-btn"
-            >
-              {loading ? "Signing in..." : "Sign In"}
-            </Button>
-          </form>
-
-          <p className="text-center mt-6 text-muted-foreground">
-            Don't have an account?{" "}
-            <Link to="/register" className="text-primary font-medium hover:underline">
-              Sign up
-            </Link>
-          </p>
-
-          {/* Sync info */}
-          <p className="text-center mt-4 text-xs text-muted-foreground">
-            🔄 Your account syncs with the Blendlink mobile app
-          </p>
-        </div>
-      </div>
+        {/* Footer - Sign Up Link */}
+        <motion.p 
+          className="text-center mt-10 bl-text-body"
+          variants={itemVariants}
+        >
+          Don&apos;t have an account?{" "}
+          <Link to="/register" className="bl-link">
+            Sign up
+          </Link>
+        </motion.p>
+      </motion.div>
     </div>
   );
 }
