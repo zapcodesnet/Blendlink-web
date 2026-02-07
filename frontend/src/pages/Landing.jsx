@@ -1,70 +1,23 @@
 /**
- * ULTRA PREMIUM Landing Page
+ * Landing Page - Original Simple Design
  * 
- * Redesigned with the new glassmorphism design language:
- * - Light mode with subtle gradient background
- * - Strong glassmorphism effects
- * - Cyan (#00F0FF) and magenta (#FF00CC) accents
- * - Premium typography and generous spacing
+ * Clean, functional, text-heavy promotional landing page
+ * No premium glassmorphism, gradients, or modern effects
  */
 
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { getToken } from "../services/api";
 import { 
   Users, ShoppingBag, Home, Briefcase, Gamepad2, Gift, 
-  Coins, Share2, ChevronRight, Smartphone, Bell, Zap,
-  ChevronLeft, Eye, Star, Sparkles, ArrowRight, Play
+  Coins, Share2, ChevronRight, Smartphone, Bell, Download,
+  ChevronLeft, MapPin, Globe
 } from "lucide-react";
-import "../styles/premium-design-system.css";
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
-// Premium Feature Card Component
-const FeatureCard = ({ icon: Icon, title, description, gradient, delay = 0 }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 30 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    transition={{ duration: 0.5, delay }}
-    className="bl-glass p-8 flex flex-col items-center text-center group cursor-pointer"
-    style={{ borderRadius: '28px' }}
-  >
-    <div 
-      className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-110"
-      style={{ background: gradient }}
-    >
-      <Icon className="w-8 h-8 text-white" strokeWidth={2} />
-    </div>
-    <h3 className="text-xl font-bold mb-3" style={{ color: '#001F3F' }}>{title}</h3>
-    <p className="text-base" style={{ color: '#606080' }}>{description}</p>
-  </motion.div>
-);
-
-// Premium Stat Card
-const StatCard = ({ value, label, icon: Icon }) => (
-  <motion.div
-    whileHover={{ scale: 1.05, y: -5 }}
-    className="bl-glass px-8 py-6 text-center"
-    style={{ borderRadius: '24px' }}
-  >
-    <div className="flex items-center justify-center gap-2 mb-2">
-      <Icon className="w-6 h-6" style={{ color: '#00F0FF' }} />
-      <span className="text-3xl font-bold" style={{ color: '#001F3F' }}>{value}</span>
-    </div>
-    <span className="text-sm font-medium" style={{ color: '#606080' }}>{label}</span>
-  </motion.div>
-);
-
-// Featured Item Card - Premium Style
-const FeaturedItemCard = ({ item, type, onViewDetails }) => {
-  const typeColors = {
-    product: 'linear-gradient(135deg, #00F0FF 0%, #00B4D8 100%)',
-    rental: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-    service: 'linear-gradient(135deg, #8B5CF6 0%, #FF00CC 100%)'
-  };
-  
+// Simple Listing Card Component
+const ListingCard = ({ item, type }) => {
   const typeLabels = {
     product: 'Product',
     rental: 'Rental',
@@ -72,50 +25,72 @@ const FeaturedItemCard = ({ item, type, onViewDetails }) => {
   };
   
   return (
-    <motion.div 
-      whileHover={{ y: -8, scale: 1.02 }}
-      className="flex-shrink-0 w-72 bl-glass overflow-hidden cursor-pointer group"
-      onClick={() => onViewDetails?.(item, type)}
-      style={{ borderRadius: '24px' }}
-    >
-      <div className="relative h-44 overflow-hidden">
-        <img 
-          src={item.image || `https://ui-avatars.com/api/?name=${item.title?.replace(/\s/g, '+')}&background=random&size=256`}
-          alt={item.title}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-          draggable={false}
-        />
-        <div 
-          className="absolute top-3 left-3 px-3 py-1.5 rounded-full text-xs font-bold text-white"
-          style={{ background: typeColors[type] }}
-        >
+    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+      <div className="relative h-40 bg-gray-100">
+        {item.image ? (
+          <img 
+            src={item.image}
+            alt={item.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gray-50">
+            <ShoppingBag className="w-10 h-10 text-gray-300" />
+          </div>
+        )}
+        <span className="absolute top-2 left-2 px-2 py-1 bg-blue-500 text-white text-xs font-medium rounded">
           {typeLabels[type]}
-        </div>
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-          <p className="text-white font-bold text-xl">${item.price}</p>
-        </div>
+        </span>
       </div>
-      <div className="p-5">
-        <h3 className="font-bold text-lg mb-1 truncate" style={{ color: '#001F3F' }}>{item.title}</h3>
-        <p className="text-sm truncate mb-3" style={{ color: '#606080' }}>{item.description}</p>
-        <div className="flex items-center justify-between">
-          <span className="text-xs" style={{ color: '#9090B0' }}>{item.location || 'Online'}</span>
-          <span 
-            className="text-sm font-semibold flex items-center gap-1"
-            style={{ color: '#00F0FF' }}
-          >
-            View <ArrowRight className="w-4 h-4" />
+      <div className="p-4">
+        <h3 className="font-semibold text-gray-900 truncate">{item.title}</h3>
+        <p className="text-lg font-bold text-blue-600 mt-1">${item.price}</p>
+        <p className="text-sm text-gray-500 truncate mt-1">{item.description}</p>
+        <div className="flex items-center justify-between mt-3">
+          <span className="text-xs text-gray-400 flex items-center gap-1">
+            <MapPin className="w-3 h-3" />
+            {item.location || 'Online'}
           </span>
+          <button className="px-4 py-1.5 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 transition-colors">
+            View
+          </button>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
+
+// Feature Item Component
+const FeatureItem = ({ icon: Icon, title, description }) => (
+  <div className="flex items-start gap-3 py-3">
+    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+      <Icon className="w-5 h-5 text-blue-600" />
+    </div>
+    <div>
+      <h3 className="font-semibold text-gray-900">{title}</h3>
+      <p className="text-sm text-gray-600">{description}</p>
+    </div>
+  </div>
+);
+
+// Install Feature Item
+const InstallFeature = ({ icon: Icon, title, description }) => (
+  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+      <Icon className="w-5 h-5 text-green-600" />
+    </div>
+    <div>
+      <h4 className="font-medium text-gray-900">{title}</h4>
+      <p className="text-xs text-gray-500">{description}</p>
+    </div>
+  </div>
+);
 
 export default function Landing() {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [featuredItems, setFeaturedItems] = useState([]);
+  const [selectedFilter, setSelectedFilter] = useState('all');
   const scrollRef = useRef(null);
 
   useEffect(() => {
@@ -125,13 +100,12 @@ export default function Landing() {
       navigate('/feed');
     }
     
-    // Fetch featured items
     fetchFeaturedItems();
   }, [navigate]);
 
   const fetchFeaturedItems = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/marketplace/listings?limit=6`);
+      const response = await fetch(`${API_BASE_URL}/api/marketplace/listings?limit=9`);
       if (response.ok) {
         const data = await response.json();
         setFeaturedItems((data.listings || []).map(p => ({
@@ -145,400 +119,251 @@ export default function Landing() {
         })));
       }
     } catch (err) {
-      // Use sample data
+      // Use sample data matching original site
       setFeaturedItems([
         { id: 1, title: 'iPhone 15 Pro', description: 'Latest Apple smartphone', price: 999, type: 'product', location: 'New York' },
         { id: 2, title: 'MacBook Pro M3', description: 'Powerful laptop', price: 1999, type: 'product', location: 'Chicago' },
-        { id: 3, title: 'Web Development', description: 'Full stack developer', price: 75, type: 'service', location: 'Remote' },
-        { id: 4, title: 'Beach House', description: '3BR vacation rental', price: 350, type: 'rental', location: 'Miami' },
+        { id: 3, title: 'Gaming Console', description: 'PS5 with games', price: 450, type: 'product', location: 'Seattle' },
+        { id: 4, title: 'Downtown Apartment', description: 'Modern 2BR apartment', price: 2500, type: 'rental', location: 'Los Angeles' },
+        { id: 5, title: 'Beach House', description: '3BR vacation rental', price: 350, type: 'rental', location: 'Miami' },
+        { id: 6, title: 'Studio Apartment', description: 'Cozy studio space', price: 1200, type: 'rental', location: 'Austin' },
+        { id: 7, title: 'Web Development', description: 'Full stack developer', price: 75, type: 'service', location: 'Remote' },
+        { id: 8, title: 'Logo Design', description: 'Professional branding', price: 150, type: 'service', location: 'Remote' },
+        { id: 9, title: 'Photography', description: 'Event photography', price: 200, type: 'service', location: 'Denver' },
       ]);
     }
   };
 
-  const scroll = (direction) => {
-    if (scrollRef.current) {
-      const scrollAmount = direction === 'left' ? -300 : 300;
-      scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-    }
-  };
+  const filteredItems = selectedFilter === 'all' 
+    ? featuredItems 
+    : featuredItems.filter(item => item.type === selectedFilter);
 
   const features = [
-    { icon: ShoppingBag, title: 'Marketplace', description: 'Buy and sell products, rentals, and services in our trusted community marketplace.', gradient: 'linear-gradient(135deg, #00F0FF, #00B4D8)' },
-    { icon: Users, title: 'Social Network', description: 'Connect with friends, share updates, and build meaningful relationships.', gradient: 'linear-gradient(135deg, #8B5CF6, #6366F1)' },
-    { icon: Coins, title: 'BL Coins', description: 'Earn rewards, participate in activities, and unlock exclusive benefits.', gradient: 'linear-gradient(135deg, #F59E0B, #EAB308)' },
-    { icon: Gamepad2, title: 'Photo Battles', description: 'Compete in exciting photo battles and win amazing prizes.', gradient: 'linear-gradient(135deg, #FF00CC, #EC4899)' },
-    { icon: Gift, title: 'Raffles', description: 'Enter exclusive raffles and win incredible rewards daily.', gradient: 'linear-gradient(135deg, #10B981, #059669)' },
-    { icon: Share2, title: 'Referrals', description: 'Invite friends and earn bonus coins for every successful referral.', gradient: 'linear-gradient(135deg, #3B82F6, #2563EB)' },
+    { icon: Users, title: 'Social Network', description: 'Connect with friends, share posts & stories' },
+    { icon: ShoppingBag, title: 'Marketplace', description: 'Buy & sell items with zero fees' },
+    { icon: Home, title: 'Rentals', description: 'Find your perfect home' },
+    { icon: Briefcase, title: 'Services', description: 'Hire professionals or offer your skills' },
+    { icon: Gamepad2, title: 'Games', description: 'Play & win BL Coins' },
+    { icon: Gift, title: 'Raffles', description: 'Enter contests for big prizes' },
+    { icon: Coins, title: 'BL Coins', description: 'Earn rewards for every activity' },
+    { icon: Share2, title: 'Referrals', description: 'Invite friends & earn together' },
   ];
 
   return (
-    <div className="bl-premium-bg min-h-screen">
-      {/* Navigation */}
-      <motion.nav 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="fixed top-0 left-0 right-0 z-50 px-6 py-4"
-      >
-        <div 
-          className="max-w-7xl mx-auto flex items-center justify-between bl-glass px-6 py-3"
-          style={{ borderRadius: '20px' }}
-        >
-          <Link to="/" className="flex items-center gap-3">
-            <div 
-              className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #00F0FF, #FF00CC)' }}
-            >
-              <Sparkles className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-xl font-bold" style={{ color: '#001F3F' }}>Blendlink</span>
-          </Link>
-          
-          <div className="flex items-center gap-4">
-            <Link 
-              to="/login"
-              className="px-5 py-2.5 rounded-xl font-semibold transition-all hover:bg-white/50"
-              style={{ color: '#001F3F' }}
-            >
-              Sign In
-            </Link>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Link 
-                to="/register"
-                className="px-6 py-2.5 rounded-xl font-bold text-white"
-                style={{ 
-                  background: 'linear-gradient(135deg, #00F0FF, #FF00CC)',
-                  boxShadow: '0 4px 20px rgba(0, 240, 255, 0.3)'
-                }}
-              >
-                Get Started
-              </Link>
-            </motion.div>
-          </div>
+    <div className="min-h-screen bg-white">
+      {/* Language Selector */}
+      <div className="bg-gray-50 border-b border-gray-200">
+        <div className="max-w-6xl mx-auto px-4 py-2 flex justify-end">
+          <button className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
+            <Globe className="w-4 h-4" />
+            <span>🇬🇧 English</span>
+          </button>
         </div>
-      </motion.nav>
+      </div>
 
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-6 relative">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col lg:flex-row items-center gap-16">
-            {/* Hero Text */}
-            <motion.div 
-              className="flex-1 text-center lg:text-left"
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
-                style={{ 
-                  background: 'rgba(0, 240, 255, 0.1)',
-                  border: '1px solid rgba(0, 240, 255, 0.3)'
-                }}
-              >
-                <Star className="w-4 h-4" style={{ color: '#00F0FF' }} />
-                <span className="text-sm font-semibold" style={{ color: '#00F0FF' }}>
-                  The #1 Super App
-                </span>
-              </motion.div>
-
-              <h1 
-                className="text-5xl md:text-6xl lg:text-7xl font-extrabold mb-6 leading-tight"
-                style={{ color: '#001F3F', letterSpacing: '-2px' }}
-              >
-                Everything You Need,{' '}
-                <span 
-                  style={{ 
-                    background: 'linear-gradient(135deg, #00F0FF, #FF00CC)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                  }}
-                >
-                  One Platform
-                </span>
-              </h1>
-
-              <p 
-                className="text-xl md:text-2xl mb-10 max-w-2xl"
-                style={{ color: '#606080', lineHeight: 1.6 }}
-              >
-                Marketplace, social networking, rewards, games, and more. 
-                Join millions building their future on Blendlink.
-              </p>
-
-              <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Link 
-                    to="/register"
-                    className="bl-btn-primary px-10 py-5 text-lg"
-                    style={{ borderRadius: '20px', height: 'auto' }}
-                    data-testid="hero-cta-btn"
-                  >
-                    <Zap className="w-5 h-5" />
-                    Start Free Today
-                  </Link>
-                </motion.div>
-                
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex items-center gap-3 px-6 py-4 rounded-xl font-semibold transition-all"
-                  style={{ 
-                    background: 'rgba(255, 255, 255, 0.7)',
-                    color: '#001F3F',
-                    border: '1px solid rgba(0, 240, 255, 0.3)'
-                  }}
-                >
-                  <div 
-                    className="w-10 h-10 rounded-full flex items-center justify-center"
-                    style={{ background: 'linear-gradient(135deg, #00F0FF, #00B4D8)' }}
-                  >
-                    <Play className="w-5 h-5 text-white ml-0.5" />
-                  </div>
-                  Watch Demo
-                </motion.button>
-              </div>
-
-              {/* Stats */}
-              <div className="flex items-center gap-8 mt-12 justify-center lg:justify-start">
-                <div>
-                  <p className="text-3xl font-bold" style={{ color: '#001F3F' }}>2M+</p>
-                  <p className="text-sm" style={{ color: '#606080' }}>Active Users</p>
-                </div>
-                <div className="w-px h-12 bg-gray-200"></div>
-                <div>
-                  <p className="text-3xl font-bold" style={{ color: '#001F3F' }}>$50M+</p>
-                  <p className="text-sm" style={{ color: '#606080' }}>Traded</p>
-                </div>
-                <div className="w-px h-12 bg-gray-200"></div>
-                <div>
-                  <p className="text-3xl font-bold" style={{ color: '#001F3F' }}>4.9★</p>
-                  <p className="text-sm" style={{ color: '#606080' }}>App Rating</p>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Hero Visual */}
-            <motion.div 
-              className="flex-1 relative"
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              <div 
-                className="relative w-full max-w-lg mx-auto"
-                style={{ aspectRatio: '1' }}
-              >
-                {/* Glow effects */}
-                <div 
-                  className="absolute top-0 left-0 w-full h-full rounded-full"
-                  style={{
-                    background: 'radial-gradient(circle, rgba(0, 240, 255, 0.2) 0%, transparent 70%)',
-                    filter: 'blur(60px)',
-                  }}
-                />
-                <div 
-                  className="absolute bottom-0 right-0 w-3/4 h-3/4 rounded-full"
-                  style={{
-                    background: 'radial-gradient(circle, rgba(255, 0, 204, 0.15) 0%, transparent 70%)',
-                    filter: 'blur(50px)',
-                  }}
-                />
-                
-                {/* Mock phone */}
-                <motion.div
-                  animate={{ y: [0, -10, 0] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                  className="relative z-10 bl-glass p-4"
-                  style={{ borderRadius: '40px' }}
-                >
-                  <div 
-                    className="rounded-3xl overflow-hidden"
-                    style={{ 
-                      background: 'linear-gradient(180deg, #F5F9FF 0%, #FFFFFF 100%)',
-                      aspectRatio: '9/16',
-                    }}
-                  >
-                    <div className="p-6 space-y-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-r from-cyan-400 to-pink-400"></div>
-                        <div>
-                          <div className="h-4 w-24 rounded bg-gray-200"></div>
-                          <div className="h-3 w-16 rounded bg-gray-100 mt-2"></div>
-                        </div>
-                      </div>
-                      <div className="h-32 rounded-2xl bg-gradient-to-r from-cyan-100 to-pink-100"></div>
-                      <div className="flex gap-3">
-                        <div className="h-10 flex-1 rounded-xl bg-gray-100"></div>
-                        <div className="h-10 flex-1 rounded-xl bg-gray-100"></div>
-                      </div>
-                      <div className="h-24 rounded-2xl bg-gradient-to-r from-purple-100 to-blue-100"></div>
-                    </div>
-                  </div>
-                </motion.div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-24 px-6">
-        <div className="max-w-7xl mx-auto">
-          <motion.div 
-            className="text-center mb-16"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <h2 
-              className="text-4xl md:text-5xl font-bold mb-4"
-              style={{ color: '#001F3F' }}
-            >
-              Everything in One Place
+      {/* Explore Section */}
+      <section className="py-12 px-4 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+              Explore What's Available
             </h2>
-            <p className="text-xl max-w-2xl mx-auto" style={{ color: '#606080' }}>
-              Discover all the features that make Blendlink the ultimate super app
+            <p className="text-gray-600">
+              Products, rentals, and services from our community
             </p>
-          </motion.div>
+          </div>
 
+          {/* Filter Buttons */}
+          <div className="flex justify-center gap-2 mb-8">
+            {['all', 'product', 'rental', 'service'].map((filter) => (
+              <button
+                key={filter}
+                onClick={() => setSelectedFilter(filter)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  selectedFilter === filter
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+                data-testid={`filter-${filter}`}
+              >
+                {filter === 'all' ? 'All' : filter === 'product' ? 'Products' : filter === 'rental' ? 'Rentals' : 'Services'}
+              </button>
+            ))}
+          </div>
+
+          {/* Listings Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, i) => (
-              <FeatureCard key={feature.title} {...feature} delay={i * 0.1} />
+            {filteredItems.map((item) => (
+              <ListingCard key={`${item.type}-${item.id}`} item={item} type={item.type} />
             ))}
           </div>
         </div>
       </section>
 
-      {/* Featured Listings */}
-      {featuredItems.length > 0 && (
-        <section className="py-20 px-6">
-          <div className="max-w-7xl mx-auto">
-            <motion.div 
-              className="flex items-center justify-between mb-10"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+      {/* Hero Section */}
+      <section className="py-16 px-4 bg-gray-50">
+        <div className="max-w-4xl mx-auto text-center">
+          <p className="text-blue-600 font-medium mb-2">Browse the Marketplace</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Your All-in-One Super App
+          </h1>
+          <p className="text-gray-500 text-sm mb-4"># Social, Shop, Play & Earn Rewards</p>
+          <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
+            Connect with friends, buy & sell items, find rentals, hire services, 
+            play games, and earn BL Coins — all in one app.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link 
+              to="/register"
+              className="px-8 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition-colors"
+              data-testid="start-earning-btn"
             >
+              Start Earning Today
+            </Link>
+            <Link 
+              to="/login"
+              className="px-8 py-3 bg-white text-gray-700 font-semibold rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+              data-testid="login-btn"
+            >
+              I Have an Account
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-16 px-4 bg-white">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+              Everything You Need
+            </h2>
+            <p className="text-gray-600">One app, endless possibilities</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {features.map((feature) => (
+              <FeatureItem key={feature.title} {...feature} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Earnings Section */}
+      <section className="py-16 px-4 bg-gray-50">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+              Earn Real Cash and BL Coins
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Get rewarded for every activity. Sell items and earn real cash. 
+              Engage with the community and earn BL Coins.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h2 
-                  className="text-3xl md:text-4xl font-bold mb-2"
-                  style={{ color: '#001F3F' }}
-                >
-                  Featured Listings
-                </h2>
-                <p style={{ color: '#606080' }}>
-                  Discover what&apos;s trending on our marketplace
+                <h3 className="font-semibold text-gray-900 mb-3">Welcome Bonus</h3>
+                <p className="text-gray-600 text-sm">
+                  Get <span className="font-bold text-blue-600">50,000 BL Coins</span> when you create your account
                 </p>
               </div>
-              <div className="hidden md:flex gap-2">
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => scroll('left')}
-                  className="w-12 h-12 rounded-full flex items-center justify-center bl-glass"
-                >
-                  <ChevronLeft className="w-6 h-6" style={{ color: '#001F3F' }} />
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => scroll('right')}
-                  className="w-12 h-12 rounded-full flex items-center justify-center bl-glass"
-                >
-                  <ChevronRight className="w-6 h-6" style={{ color: '#001F3F' }} />
-                </motion.button>
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-3">Referral Bonuses</h3>
+                <ul className="text-gray-600 text-sm space-y-1">
+                  <li>• Level 1: 3-4% of referred user's earnings</li>
+                  <li>• Level 2: 1-2% of secondary referrals</li>
+                </ul>
               </div>
-            </motion.div>
-
-            <div 
-              ref={scrollRef}
-              className="flex gap-6 overflow-x-auto scrollbar-hide pb-4"
-              style={{ scrollbarWidth: 'none' }}
-            >
-              {featuredItems.map((item, i) => (
-                <FeaturedItemCard 
-                  key={`${item.type}-${item.id}-${i}`}
-                  item={item}
-                  type={item.type}
-                />
-              ))}
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-3">Earn from Activities</h3>
+                <ul className="text-gray-600 text-sm space-y-1">
+                  <li>• Posting content: +100 BL Coins</li>
+                  <li>• Receiving likes: +10 BL Coins each</li>
+                  <li>• Daily login: +50 BL Coins</li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-3">Sales Commission</h3>
+                <p className="text-gray-600 text-sm">
+                  Sell items with <span className="font-bold text-green-600">zero platform fees</span>. 
+                  Keep 100% of your sales.
+                </p>
+              </div>
             </div>
           </div>
-        </section>
-      )}
+        </div>
+      </section>
+
+      {/* Install as App Section */}
+      <section className="py-16 px-4 bg-white">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+              Install as App
+            </h2>
+            <p className="text-gray-600">
+              Add to your home screen for a native-like experience — fast and offline-capable
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <InstallFeature 
+              icon={Bell} 
+              title="Push Notifications" 
+              description="Stay updated in real-time"
+            />
+            <InstallFeature 
+              icon={Download} 
+              title="Instant Loading" 
+              description="Works offline too"
+            />
+            <InstallFeature 
+              icon={Smartphone} 
+              title="Home Screen Icon" 
+              description="Quick access anytime"
+            />
+          </div>
+        </div>
+      </section>
 
       {/* CTA Section */}
-      <section className="py-24 px-6">
-        <div className="max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="bl-glass p-12 md:p-16 text-center"
-            style={{ borderRadius: '36px' }}
+      <section className="py-16 px-4 bg-blue-500">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+            Ready to Join?
+          </h2>
+          <p className="text-blue-100 mb-8">
+            Create your free account and start earning BL Coins today.
+          </p>
+          <Link 
+            to="/register"
+            className="inline-block px-8 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-gray-100 transition-colors"
+            data-testid="create-account-btn"
           >
-            <motion.div
-              animate={{ rotate: [0, 5, -5, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-8"
-              style={{ background: 'linear-gradient(135deg, #00F0FF, #FF00CC)' }}
-            >
-              <Gift className="w-10 h-10 text-white" />
-            </motion.div>
-            
-            <h2 
-              className="text-4xl md:text-5xl font-bold mb-4"
-              style={{ color: '#001F3F' }}
-            >
-              Get 50,000 BL Coins Free
-            </h2>
-            <p 
-              className="text-xl mb-10 max-w-2xl mx-auto"
-              style={{ color: '#606080' }}
-            >
-              Sign up today and receive 50,000 BL Coins to start your journey. 
-              Plus earn more through referrals!
-            </p>
-            
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Link 
-                to="/register"
-                className="bl-btn-primary inline-flex px-12 py-5 text-lg"
-                style={{ borderRadius: '20px', height: 'auto', width: 'auto' }}
-              >
-                Claim Your Bonus Now
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Link>
-            </motion.div>
-          </motion.div>
+            Create Free Account
+          </Link>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-6 border-t" style={{ borderColor: 'rgba(0, 31, 63, 0.1)' }}>
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-3">
-              <div 
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, #00F0FF, #FF00CC)' }}
-              >
-                <Sparkles className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-xl font-bold" style={{ color: '#001F3F' }}>Blendlink</span>
+      <footer className="py-8 px-4 bg-gray-900 text-gray-400">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-bold text-white">Blendlink</span>
             </div>
             
-            <div className="flex items-center gap-8">
-              <Link to="/privacy" className="text-sm hover:underline" style={{ color: '#606080' }}>Privacy</Link>
-              <Link to="/terms" className="text-sm hover:underline" style={{ color: '#606080' }}>Terms</Link>
-              <a href="mailto:support@blendlink.net" className="text-sm hover:underline" style={{ color: '#606080' }}>Contact</a>
+            <div className="flex items-center gap-6 text-sm">
+              <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+              <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
+              <a href="mailto:support@blendlink.net" className="hover:text-white transition-colors">Contact</a>
             </div>
             
-            <p className="text-sm" style={{ color: '#9090B0' }}>
-              © 2026 Blendlink. All rights reserved.
+            <p className="text-sm">
+              © 2024 Blendlink. All rights reserved.
             </p>
           </div>
         </div>
