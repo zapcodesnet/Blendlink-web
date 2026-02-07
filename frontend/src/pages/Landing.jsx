@@ -1,23 +1,25 @@
-/**
- * Landing Page - Original Simple Design
- * 
- * Clean, functional, text-heavy promotional landing page
- * No premium glassmorphism, gradients, or modern effects
- */
-
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { Button } from "../components/ui/button";
+import LanguageSelector from "../components/LanguageSelector";
 import { getToken } from "../services/api";
 import { 
   Users, ShoppingBag, Home, Briefcase, Gamepad2, Gift, 
-  Coins, Share2, ChevronRight, Smartphone, Bell, Download,
-  ChevronLeft, MapPin, Globe
+  Coins, Share2, ChevronRight, Smartphone, Bell, Zap,
+  ChevronLeft, Eye, ShoppingCart
 } from "lucide-react";
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
-// Simple Listing Card Component
-const ListingCard = ({ item, type }) => {
+// Featured Item Card Component
+const FeaturedItemCard = ({ item, type, onViewDetails }) => {
+  const typeColors = {
+    product: 'from-blue-500 to-cyan-500',
+    rental: 'from-green-500 to-emerald-500',
+    service: 'from-purple-500 to-pink-500'
+  };
+  
   const typeLabels = {
     product: 'Product',
     rental: 'Rental',
@@ -25,90 +27,73 @@ const ListingCard = ({ item, type }) => {
   };
   
   return (
-    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-      <div className="relative h-40 bg-gray-100">
-        {item.image ? (
-          <img 
-            src={item.image}
-            alt={item.title}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gray-50">
-            <ShoppingBag className="w-10 h-10 text-gray-300" />
-          </div>
-        )}
-        <span className="absolute top-2 left-2 px-2 py-1 bg-blue-500 text-white text-xs font-medium rounded">
+    <div 
+      className="flex-shrink-0 w-64 md:w-72 bg-card rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
+      onClick={() => onViewDetails(item, type)}
+      data-testid={`featured-${type}-${item.id}`}
+      style={{ touchAction: 'pan-y' }}
+    >
+      <div className="relative h-40 overflow-hidden" style={{ touchAction: 'pan-y' }}>
+        <img 
+          src={item.image || `https://ui-avatars.com/api/?name=${item.title.replace(/\s/g, '+')}&background=random&size=256`}
+          alt={item.title}
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 pointer-events-none"
+          draggable={false}
+        />
+        <div className={`absolute top-2 left-2 px-2 py-1 rounded-full text-xs text-white bg-gradient-to-r ${typeColors[type]} pointer-events-none`}>
           {typeLabels[type]}
-        </span>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 pointer-events-none">
+          <p className="text-white font-bold text-lg">${item.price}</p>
+        </div>
       </div>
-      <div className="p-4">
-        <h3 className="font-semibold text-gray-900 truncate">{item.title}</h3>
-        <p className="text-lg font-bold text-blue-600 mt-1">${item.price}</p>
-        <p className="text-sm text-gray-500 truncate mt-1">{item.description}</p>
+      <div className="p-4" style={{ touchAction: 'pan-y' }}>
+        <h3 className="font-semibold truncate">{item.title}</h3>
+        <p className="text-sm text-muted-foreground truncate">{item.description}</p>
         <div className="flex items-center justify-between mt-3">
-          <span className="text-xs text-gray-400 flex items-center gap-1">
-            <MapPin className="w-3 h-3" />
-            {item.location || 'Online'}
-          </span>
-          <button className="px-4 py-1.5 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 transition-colors">
-            View
-          </button>
+          <span className="text-xs text-muted-foreground">{item.location || 'Online'}</span>
+          <Button size="sm" variant="ghost" className="text-primary">
+            <Eye className="w-4 h-4 mr-1" /> View
+          </Button>
         </div>
       </div>
     </div>
   );
 };
 
-// Feature Item Component
-const FeatureItem = ({ icon: Icon, title, description }) => (
-  <div className="flex items-start gap-3 py-3">
-    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-      <Icon className="w-5 h-5 text-blue-600" />
-    </div>
-    <div>
-      <h3 className="font-semibold text-gray-900">{title}</h3>
-      <p className="text-sm text-gray-600">{description}</p>
-    </div>
-  </div>
-);
-
-// Install Feature Item
-const InstallFeature = ({ icon: Icon, title, description }) => (
-  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-      <Icon className="w-5 h-5 text-green-600" />
-    </div>
-    <div>
-      <h4 className="font-medium text-gray-900">{title}</h4>
-      <p className="text-xs text-gray-500">{description}</p>
-    </div>
-  </div>
-);
-
-export default function Landing() {
-  const navigate = useNavigate();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [featuredItems, setFeaturedItems] = useState([]);
-  const [selectedFilter, setSelectedFilter] = useState('all');
+// Featured Listings Carousel
+const FeaturedListingsCarousel = ({ onViewDetails }) => {
+  const [items, setItems] = useState([]);
+  const [currentCategory, setCurrentCategory] = useState(0);
   const scrollRef = useRef(null);
-
+  const categories = ['all', 'products', 'rentals', 'services'];
+  
+  // Generate sample items if no real data (moved before useEffect)
+  const generateSampleItems = () => {
+    return [
+      { id: 1, title: 'iPhone 15 Pro', description: 'Latest Apple smartphone', price: 999, type: 'product', location: 'New York' },
+      { id: 2, title: 'Downtown Apartment', description: '2BR modern apartment', price: 2500, type: 'rental', location: 'Los Angeles' },
+      { id: 3, title: 'Web Development', description: 'Full stack developer', price: 75, type: 'service', location: 'Remote' },
+      { id: 4, title: 'MacBook Pro M3', description: 'Powerful laptop', price: 1999, type: 'product', location: 'Chicago' },
+      { id: 5, title: 'Beach House', description: '3BR vacation rental', price: 350, type: 'rental', location: 'Miami' },
+      { id: 6, title: 'Logo Design', description: 'Professional branding', price: 150, type: 'service', location: 'Remote' },
+      { id: 7, title: 'Gaming Console', description: 'PS5 with games', price: 450, type: 'product', location: 'Seattle' },
+      { id: 8, title: 'Studio Apartment', description: 'Cozy studio', price: 1200, type: 'rental', location: 'Austin' },
+      { id: 9, title: 'Photography', description: 'Event photographer', price: 200, type: 'service', location: 'Denver' },
+    ];
+  };
+  
   useEffect(() => {
-    const token = getToken();
-    setIsLoggedIn(!!token);
-    if (token) {
-      navigate('/feed');
-    }
-    
-    fetchFeaturedItems();
-  }, [navigate]);
-
-  const fetchFeaturedItems = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/marketplace/listings?limit=9`);
-      if (response.ok) {
-        const data = await response.json();
-        setFeaturedItems((data.listings || []).map(p => ({
+    // Fetch featured listings
+    const fetchFeaturedItems = async () => {
+      try {
+        const [productsRes, rentalsRes, servicesRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/api/marketplace/listings?limit=6`).then(r => r.ok ? r.json() : []),
+          fetch(`${API_BASE_URL}/api/rentals?limit=6`).then(r => r.ok ? r.json() : []),
+          fetch(`${API_BASE_URL}/api/services?limit=6`).then(r => r.ok ? r.json() : [])
+        ]);
+        
+        const products = (productsRes.listings || productsRes || []).map(p => ({
           id: p.listing_id || p.id,
           title: p.title,
           description: p.description,
@@ -116,256 +101,551 @@ export default function Landing() {
           image: p.images?.[0] || p.image,
           location: p.location,
           type: 'product'
-        })));
+        }));
+        
+        const rentals = (rentalsRes.rentals || rentalsRes || []).map(r => ({
+          id: r.rental_id || r.id,
+          title: r.title,
+          description: r.description,
+          price: r.price_per_month || r.price,
+          image: r.images?.[0] || r.image,
+          location: r.location || r.address,
+          type: 'rental'
+        }));
+        
+        const services = (servicesRes.services || servicesRes || []).map(s => ({
+          id: s.service_id || s.id,
+          title: s.title,
+          description: s.description,
+          price: s.price_per_hour || s.hourly_rate || s.price,
+          image: s.images?.[0] || s.image,
+          location: s.location,
+          type: 'service'
+        }));
+        
+        // Interleave items for alternating display
+        const maxLen = Math.max(products.length, rentals.length, services.length);
+        const interleaved = [];
+        for (let i = 0; i < maxLen; i++) {
+          if (products[i]) interleaved.push(products[i]);
+          if (rentals[i]) interleaved.push(rentals[i]);
+          if (services[i]) interleaved.push(services[i]);
+        }
+        
+        setItems(interleaved.length > 0 ? interleaved : generateSampleItems());
+      } catch (err) {
+        console.log('Using sample data:', err);
+        setItems(generateSampleItems());
       }
-    } catch (err) {
-      // Use sample data matching original site
-      setFeaturedItems([
-        { id: 1, title: 'iPhone 15 Pro', description: 'Latest Apple smartphone', price: 999, type: 'product', location: 'New York' },
-        { id: 2, title: 'MacBook Pro M3', description: 'Powerful laptop', price: 1999, type: 'product', location: 'Chicago' },
-        { id: 3, title: 'Gaming Console', description: 'PS5 with games', price: 450, type: 'product', location: 'Seattle' },
-        { id: 4, title: 'Downtown Apartment', description: 'Modern 2BR apartment', price: 2500, type: 'rental', location: 'Los Angeles' },
-        { id: 5, title: 'Beach House', description: '3BR vacation rental', price: 350, type: 'rental', location: 'Miami' },
-        { id: 6, title: 'Studio Apartment', description: 'Cozy studio space', price: 1200, type: 'rental', location: 'Austin' },
-        { id: 7, title: 'Web Development', description: 'Full stack developer', price: 75, type: 'service', location: 'Remote' },
-        { id: 8, title: 'Logo Design', description: 'Professional branding', price: 150, type: 'service', location: 'Remote' },
-        { id: 9, title: 'Photography', description: 'Event photography', price: 200, type: 'service', location: 'Denver' },
-      ]);
+    };
+    
+    fetchFeaturedItems();
+  }, []);
+  
+  const filteredItems = currentCategory === 0 ? items : 
+    items.filter(item => {
+      if (currentCategory === 1) return item.type === 'product';
+      if (currentCategory === 2) return item.type === 'rental';
+      if (currentCategory === 3) return item.type === 'service';
+      return true;
+    });
+  
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const scrollAmount = direction === 'left' ? -300 : 300;
+      scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+  
+  // Auto-rotate categories
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentCategory(prev => (prev + 1) % categories.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+  
+  return (
+    <section className="py-12 px-4 bg-gradient-to-b from-transparent via-muted/30 to-transparent">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold mb-2">Explore What&apos;s Available</h2>
+            <p className="text-muted-foreground">Products, rentals, and services from our community</p>
+          </div>
+          <div className="flex items-center gap-2 mt-4 md:mt-0">
+            {categories.map((cat, i) => (
+              <Button
+                key={cat}
+                variant={currentCategory === i ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setCurrentCategory(i)}
+                className="capitalize"
+                data-testid={`filter-${cat}`}
+              >
+                {cat === 'all' ? 'All' : cat}
+              </Button>
+            ))}
+          </div>
+        </div>
+        
+        <div className="relative">
+          <div 
+            ref={scrollRef}
+            className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 snap-x snap-mandatory"
+            style={{ 
+              scrollbarWidth: 'none', 
+              msOverflowStyle: 'none',
+              WebkitOverflowScrolling: 'touch',
+              touchAction: 'pan-x pan-y'  // Allow both horizontal and vertical scroll
+            }}
+          >
+            {filteredItems.map((item, i) => (
+              <FeaturedItemCard 
+                key={`${item.type}-${item.id}-${i}`} 
+                item={item} 
+                type={item.type}
+                onViewDetails={onViewDetails}
+              />
+            ))}
+          </div>
+          
+          {filteredItems.length > 3 && (
+            <>
+              <button 
+                onClick={() => scroll('left')}
+                className="absolute left-0 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-background transition hidden md:block"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button 
+                onClick={() => scroll('right')}
+                className="absolute right-0 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-background transition hidden md:block"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// Recently Viewed Section
+const RecentlyViewedSection = ({ onViewDetails }) => {
+  const { t } = useTranslation();
+  const [recentItems, setRecentItems] = useState(() => {
+    // Initialize from localStorage
+    try {
+      return JSON.parse(localStorage.getItem('blendlink_recently_viewed') || '[]');
+    } catch {
+      return [];
+    }
+  });
+  const scrollRef = useRef(null);
+
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const scrollAmount = 280;
+      scrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
     }
   };
 
-  const filteredItems = selectedFilter === 'all' 
-    ? featuredItems 
-    : featuredItems.filter(item => item.type === selectedFilter);
+  const clearHistory = () => {
+    localStorage.removeItem('blendlink_recently_viewed');
+    setRecentItems([]);
+  };
 
-  const features = [
-    { icon: Users, title: 'Social Network', description: 'Connect with friends, share posts & stories' },
-    { icon: ShoppingBag, title: 'Marketplace', description: 'Buy & sell items with zero fees' },
-    { icon: Home, title: 'Rentals', description: 'Find your perfect home' },
-    { icon: Briefcase, title: 'Services', description: 'Hire professionals or offer your skills' },
-    { icon: Gamepad2, title: 'Games', description: 'Play & win BL Coins' },
-    { icon: Gift, title: 'Raffles', description: 'Enter contests for big prizes' },
-    { icon: Coins, title: 'BL Coins', description: 'Earn rewards for every activity' },
-    { icon: Share2, title: 'Referrals', description: 'Invite friends & earn together' },
-  ];
+  if (recentItems.length === 0) return null;
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Language Selector */}
-      <div className="bg-gray-50 border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-4 py-2 flex justify-end">
-          <button className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
-            <Globe className="w-4 h-4" />
-            <span>🇬🇧 English</span>
+    <section className="py-6 px-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Eye className="w-5 h-5 text-primary" />
+            <h2 className="text-xl font-bold">{t('landing.recently_viewed') || 'Recently Viewed'}</h2>
+            <span className="text-sm text-muted-foreground">({recentItems.length})</span>
+          </div>
+          <button 
+            onClick={clearHistory}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {t('landing.clear_history') || 'Clear History'}
           </button>
         </div>
+        
+        <div className="relative">
+          <div 
+            ref={scrollRef}
+            className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 snap-x snap-mandatory"
+            style={{ 
+              scrollbarWidth: 'none', 
+              msOverflowStyle: 'none',
+              WebkitOverflowScrolling: 'touch',
+              touchAction: 'pan-x pan-y'  // Allow both horizontal and vertical scroll
+            }}
+          >
+            {recentItems.map((item, i) => (
+              <div
+                key={`recent-${item.listing_id}-${i}`}
+                className="flex-shrink-0 w-48 bg-card rounded-xl overflow-hidden shadow hover:shadow-lg transition-all duration-300 cursor-pointer group snap-start"
+                onClick={() => onViewDetails({ id: item.listing_id }, 'product')}
+                data-testid={`recent-${item.listing_id}`}
+                style={{ touchAction: 'pan-y' }}
+              >
+                <div className="relative h-32 overflow-hidden bg-muted" style={{ touchAction: 'pan-y' }}>
+                  {item.image ? (
+                    <img 
+                      src={item.image} 
+                      alt={item.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 pointer-events-none"
+                      draggable={false}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <ShoppingBag className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                    <p className="text-white font-bold">${item.price?.toLocaleString()}</p>
+                  </div>
+                </div>
+                <div className="p-3">
+                  <h3 className="font-medium text-sm truncate">{item.title}</h3>
+                  <p className="text-xs text-muted-foreground capitalize">{item.category || 'Item'}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {recentItems.length > 4 && (
+            <>
+              <button 
+                onClick={() => scroll('left')}
+                className="absolute left-0 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm rounded-full p-1.5 shadow-lg hover:bg-background transition hidden md:block"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button 
+                onClick={() => scroll('right')}
+                className="absolute right-0 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm rounded-full p-1.5 shadow-lg hover:bg-background transition hidden md:block"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default function Landing() {
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  // Redirect authenticated users to /feed
+  useEffect(() => {
+    const token = getToken();
+    if (token) {
+      navigate('/feed', { replace: true });
+    }
+  }, [navigate]);
+
+  const features = [
+    { icon: Users, title: "Social Network", desc: "Connect with friends, share posts & stories" },
+    { icon: ShoppingBag, title: t('nav.marketplace') || "Marketplace", desc: "Buy & sell items with zero fees" },
+    { icon: Home, title: t('nav.rentals') || "Property Rentals", desc: "Find your perfect home" },
+    { icon: Briefcase, title: t('nav.services') || "Services", desc: "Hire professionals or offer your skills" },
+    { icon: Gamepad2, title: t('nav.games') || "Games", desc: "Play & win BL Coins" },
+    { icon: Gift, title: "Raffles", desc: "Enter contests for big prizes" },
+    { icon: Coins, title: t('wallet.bl_coins') || "BL Coins", desc: "Earn rewards for every activity" },
+    { icon: Share2, title: t('nav.referrals') || "Referrals", desc: "Invite friends & earn together" },
+  ];
+  
+  // Handle viewing item details - works for all users including guests
+  const handleViewDetails = (item, type) => {
+    // Navigate to item detail page based on type - public marketplace for all
+    if (item) {
+      const routes = {
+        product: `/marketplace/${item.id}`,
+        rental: `/rentals/${item.id}`,
+        service: `/services/${item.id}`
+      };
+      navigate(routes[type] || '/marketplace');
+    }
+  };
+
+  return (
+    <div 
+      className="landing-page-scroll-container"
+      data-testid="landing-page"
+    >
+      {/* Header - Mobile Optimized */}
+      <header className="glass sticky top-0 z-50 border-b border-border/50 safe-top">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14 sm:h-16">
+            <div className="flex items-center gap-2">
+              <img 
+                src="/blendlink-logo.png" 
+                alt="Blendlink" 
+                className="h-10 sm:h-14 w-auto object-contain"
+              />
+              <span className="font-bold text-xl sm:text-2xl hidden xs:inline">Blendlink</span>
+            </div>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <LanguageSelector compact className="hidden sm:block" />
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => navigate("/login")}
+                data-testid="login-btn"
+                className="text-sm sm:text-base px-2 sm:px-4"
+              >
+                {t('auth.login') || 'Login'}
+              </Button>
+              <Button 
+                onClick={() => navigate("/register")}
+                size="sm"
+                className="rounded-full text-sm sm:text-base px-3 sm:px-4"
+                data-testid="get-started-btn"
+              >
+                {t('auth.get_started') || 'Get Started'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile Language Selector */}
+      <div className="sm:hidden px-4 py-2 flex justify-center">
+        <LanguageSelector />
       </div>
 
-      {/* Explore Section */}
-      <section className="py-12 px-4 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-              Explore What's Available
-            </h2>
-            <p className="text-gray-600">
-              Products, rentals, and services from our community
-            </p>
-          </div>
+      {/* Featured Listings Carousel - TOP OF PAGE */}
+      <FeaturedListingsCarousel onViewDetails={handleViewDetails} />
 
-          {/* Filter Buttons */}
-          <div className="flex justify-center gap-2 mb-8">
-            {['all', 'product', 'rental', 'service'].map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setSelectedFilter(filter)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  selectedFilter === filter
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-                data-testid={`filter-${filter}`}
+      {/* Recently Viewed Section */}
+      <RecentlyViewedSection onViewDetails={handleViewDetails} />
+
+      {/* Super App Badge + Browse Marketplace Section */}
+      <section className="py-6 sm:py-8 px-4">
+        <div className="max-w-3xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-medium mb-4">
+            <Zap className="w-3 h-3 sm:w-4 sm:h-4" />
+            {t('landing.super_app') || 'Your All-in-One Super App'}
+          </div>
+          
+          {/* Browse Marketplace Link */}
+          <div>
+            <Button 
+              variant="link" 
+              className="text-muted-foreground hover:text-primary text-sm sm:text-base"
+              onClick={() => navigate('/marketplace')}
+              data-testid="browse-marketplace-link"
+            >
+              <ShoppingCart className="w-4 h-4 mr-2" />
+              {t('landing.browse_marketplace') || 'Browse the Marketplace'}
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Hero Section - Mobile Optimized */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-20 relative">
+          <div className="text-center max-w-3xl mx-auto animate-slide-up">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4 sm:mb-6 leading-tight">
+              {t('landing.hero_title') || 'Social, Shop, Play &'}<br />
+              <span className="bl-coin-text">{t('landing.hero_highlight') || 'Earn Rewards'}</span>
+            </h1>
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-2">
+              {t('landing.hero_subtitle') || 'Connect with friends, buy & sell items, find rentals, hire services, play games, and earn BL Coins — all in one app.'}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4 sm:px-0">
+              <Button 
+                size="lg" 
+                className="rounded-full text-base sm:text-lg px-6 sm:px-8 shadow-lg shadow-primary/25 w-full sm:w-auto"
+                onClick={() => navigate("/register")}
+                data-testid="hero-cta-btn"
               >
-                {filter === 'all' ? 'All' : filter === 'product' ? 'Products' : filter === 'rental' ? 'Rentals' : 'Services'}
-              </button>
-            ))}
-          </div>
-
-          {/* Listings Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredItems.map((item) => (
-              <ListingCard key={`${item.type}-${item.id}`} item={item} type={item.type} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Hero Section */}
-      <section className="py-16 px-4 bg-gray-50">
-        <div className="max-w-4xl mx-auto text-center">
-          <p className="text-blue-600 font-medium mb-2">Browse the Marketplace</p>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Your All-in-One Super App
-          </h1>
-          <p className="text-gray-500 text-sm mb-4"># Social, Shop, Play & Earn Rewards</p>
-          <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
-            Connect with friends, buy & sell items, find rentals, hire services, 
-            play games, and earn BL Coins — all in one app.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link 
-              to="/register"
-              className="px-8 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition-colors"
-              data-testid="start-earning-btn"
-            >
-              Start Earning Today
-            </Link>
-            <Link 
-              to="/login"
-              className="px-8 py-3 bg-white text-gray-700 font-semibold rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-              data-testid="login-btn"
-            >
-              I Have an Account
-            </Link>
+                {t('landing.start_earning') || 'Start Earning Today'}
+                <ChevronRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
+              </Button>
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="rounded-full text-base sm:text-lg px-6 sm:px-8 w-full sm:w-auto"
+                onClick={() => navigate("/login")}
+                data-testid="have-account-btn"
+              >
+                I Have an Account
+              </Button>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-16 px-4 bg-white">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-              Everything You Need
-            </h2>
-            <p className="text-gray-600">One app, endless possibilities</p>
+      {/* Features Grid - Mobile Optimized */}
+      <section className="py-12 sm:py-20 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">Everything You Need</h2>
+            <p className="text-muted-foreground text-base sm:text-lg">One app, endless possibilities</p>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {features.map((feature) => (
-              <FeatureItem key={feature.title} {...feature} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Earnings Section */}
-      <section className="py-16 px-4 bg-gray-50">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-              Earn Real Cash and BL Coins
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Get rewarded for every activity. Sell items and earn real cash. 
-              Engage with the community and earn BL Coins.
-            </p>
-          </div>
-
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Welcome Bonus</h3>
-                <p className="text-gray-600 text-sm">
-                  Get <span className="font-bold text-blue-600">50,000 BL Coins</span> when you create your account
-                </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 stagger-children">
+            {features.map((feature, i) => (
+              <div 
+                key={i} 
+                className="glass-card p-4 sm:p-6 rounded-xl sm:rounded-2xl card-hover"
+                data-testid={`feature-${feature.title.toLowerCase().replace(/\s/g, '-')}`}
+              >
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-primary/10 flex items-center justify-center mb-3 sm:mb-4">
+                  <feature.icon className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                </div>
+                <h3 className="font-semibold mb-1 text-sm sm:text-base">{feature.title}</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground">{feature.desc}</p>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* BL Coins Section - Mobile Optimized */}
+      <section className="py-12 sm:py-20 px-4 bg-gradient-to-b from-transparent via-primary/5 to-transparent">
+        <div className="max-w-5xl mx-auto">
+          <div className="glass-card p-5 sm:p-8 md:p-12 rounded-2xl sm:rounded-3xl">
+            <div className="grid md:grid-cols-2 gap-6 sm:gap-8 items-center">
               <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Referral Bonuses</h3>
-                <ul className="text-gray-600 text-sm space-y-1">
-                  <li>• Level 1: 3-4% of referred user's earnings</li>
-                  <li>• Level 2: 1-2% of secondary referrals</li>
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bl-coin-gradient flex items-center justify-center mb-4 sm:mb-6 animate-pulse-glow">
+                  <Coins className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                </div>
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
+                  Earn <span className="text-green-500">Real Cash</span> and <span className="bl-coin-text">BL Coins</span>
+                </h2>
+                <p className="text-muted-foreground mb-4 sm:mb-6 text-sm sm:text-base">
+                  Get rewarded for everything you do. Sell in Marketplace to earn real cash. 
+                  Post content, like, share, comment, create page, invite friends, play games, 
+                  and complete tasks to earn BL Coins you can spend in-app.
+                </p>
+                <ul className="space-y-2 sm:space-y-3">
+                  {[
+                    "50,000 BL Coins welcome bonus",
+                    "50,000 BL Coins when you invite a friend and joined",
+                    "2,000+ BL Coins daily login rewards",
+                    "3% - 4% per Level 1 referral",
+                    "1% - 2% per Level 2 referral"
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-center gap-2 sm:gap-3 text-sm sm:text-base">
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
+                        <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
+                      </div>
+                      <span>{item}</span>
+                    </li>
+                  ))}
                 </ul>
               </div>
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Earn from Activities</h3>
-                <ul className="text-gray-600 text-sm space-y-1">
-                  <li>• Posting content: +100 BL Coins</li>
-                  <li>• Receiving likes: +10 BL Coins each</li>
-                  <li>• Daily login: +50 BL Coins</li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Sales Commission</h3>
-                <p className="text-gray-600 text-sm">
-                  Sell items with <span className="font-bold text-green-600">zero platform fees</span>. 
-                  Keep 100% of your sales.
-                </p>
+              <div className="relative hidden md:block">
+                <div className="aspect-square max-w-sm mx-auto bg-gradient-to-br from-primary/20 to-amber-500/20 rounded-3xl flex items-center justify-center">
+                  <div className="w-28 h-28 sm:w-32 sm:h-32 bl-coin-gradient rounded-full flex items-center justify-center shadow-2xl">
+                    <span className="text-white font-bold text-3xl sm:text-4xl">BL</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Install as App Section */}
-      <section className="py-16 px-4 bg-white">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-              Install as App
-            </h2>
-            <p className="text-gray-600">
-              Add to your home screen for a native-like experience — fast and offline-capable
-            </p>
+      {/* PWA Section - Mobile Optimized */}
+      <section className="py-12 sm:py-20 px-4">
+        <div className="max-w-5xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-green-500/10 text-green-600 text-xs sm:text-sm font-medium mb-4 sm:mb-6">
+            <Smartphone className="w-3 h-3 sm:w-4 sm:h-4" />
+            Install as App
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <InstallFeature 
-              icon={Bell} 
-              title="Push Notifications" 
-              description="Stay updated in real-time"
-            />
-            <InstallFeature 
-              icon={Download} 
-              title="Instant Loading" 
-              description="Works offline too"
-            />
-            <InstallFeature 
-              icon={Smartphone} 
-              title="Home Screen Icon" 
-              description="Quick access anytime"
-            />
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
+            Works Like a Native App
+          </h2>
+          <p className="text-muted-foreground text-base sm:text-lg mb-6 sm:mb-8 max-w-2xl mx-auto px-2">
+            Add Blendlink to your home screen for the best experience. 
+            Fast, offline-capable, and always at your fingertips.
+          </p>
+          <div className="flex flex-wrap justify-center gap-2 sm:gap-4">
+            <div className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-muted text-xs sm:text-sm">
+              <Bell className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>Push Notifications</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-muted text-xs sm:text-sm">
+              <Zap className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>Instant Loading</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-muted text-xs sm:text-sm">
+              <Smartphone className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>Home Screen Icon</span>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-16 px-4 bg-blue-500">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+      {/* CTA Section - Mobile Optimized */}
+      <section className="py-12 sm:py-20 px-4">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
             Ready to Join?
           </h2>
-          <p className="text-blue-100 mb-8">
+          <p className="text-muted-foreground text-base sm:text-lg mb-6 sm:mb-8 px-2">
             Create your free account and start earning BL Coins today.
           </p>
-          <Link 
-            to="/register"
-            className="inline-block px-8 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-gray-100 transition-colors"
-            data-testid="create-account-btn"
+          <Button 
+            size="lg" 
+            className="rounded-full text-base sm:text-lg px-8 sm:px-10 shadow-lg shadow-primary/25 w-full sm:w-auto"
+            onClick={() => navigate("/register")}
+            data-testid="bottom-cta-btn"
           >
             Create Free Account
-          </Link>
+          </Button>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-8 px-4 bg-gray-900 text-gray-400">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <span className="text-xl font-bold text-white">Blendlink</span>
+      <footer className="border-t border-border py-8 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-4">
+            <div className="flex items-center gap-3">
+              <img 
+                src="/blendlink-logo.png" 
+                alt="Blendlink" 
+                className="h-12 w-auto object-contain"
+              />
+              <span className="font-semibold text-lg">Blendlink</span>
             </div>
-            
             <div className="flex items-center gap-6 text-sm">
-              <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
-              <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
-              <a href="mailto:support@blendlink.net" className="hover:text-white transition-colors">Contact</a>
+              <Link 
+                to="/privacypolicy" 
+                className="text-muted-foreground hover:text-primary transition-colors"
+                data-testid="footer-privacy-link"
+              >
+                Privacy Policy
+              </Link>
+              <Link 
+                to="/termsofservice" 
+                className="text-muted-foreground hover:text-primary transition-colors"
+                data-testid="footer-terms-link"
+              >
+                Terms of Service
+              </Link>
             </div>
-            
-            <p className="text-sm">
-              © 2024 Blendlink. All rights reserved.
-            </p>
           </div>
+          <p className="text-sm text-muted-foreground text-center md:text-left">
+            © 2026 Blendlink. All rights reserved.
+          </p>
         </div>
       </footer>
     </div>
