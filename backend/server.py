@@ -2625,6 +2625,15 @@ try:
 except Exception as e:
     logger.warning(f"Failed to load Member Pages System: {e}")
 
+# Import and include member pages extended features (Sections 2-6)
+try:
+    from member_pages_extended import get_extended_pages_routers
+    for router in get_extended_pages_routers():
+        api_router.include_router(router)
+    logger.info("Member Pages Extended Features loaded (Barcode, AI Scan, POS, Referrals, Marketplace Link, Customer Options)")
+except Exception as e:
+    logger.warning(f"Failed to load Member Pages Extended: {e}")
+
 # Import and include Stripe integration router
 try:
     from stripe_integration import stripe_router
