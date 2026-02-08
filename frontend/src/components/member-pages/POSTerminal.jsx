@@ -1,0 +1,438 @@
+/**
+ * Point of Sale (POS) Terminal Component
+ * Section 4: Full POS system with cart, payments, receipts
+ */
+
+import React, { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import {
+  ShoppingCart, CreditCard, Banknote, Smartphone, Plus, Minus,
+  Trash2, Receipt, Loader2, Check, X, User, Phone, Table,
+  Percent, DollarSign, Printer, ChevronRight
+} from "lucide-react";
+
+const API_URL = process.env.REACT_APP_BACKEND_URL;
+
+export default function POSTerminal({ pageId, pageType, pageName, items = [] }) {
+  const [cart, setCart] = useState([]);
+  const [posSettings, setPosSettings] = useState(null);
+  const [orderType, setOrderType] = useState("pickup");
+  const [paymentMethod, setPaymentMethod] = useState("card");
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [tableNumber, setTableNumber] = useState("");
+  const [notes, setNotes] = useState("");
+  const [tipAmount, setTipAmount] = useState(0);
+  const [discountPercent, setDiscountPercent] = useState(0);
+  const [processing, setProcessing] = useState(false);
+  const [receipt, setReceipt] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Load POS settings
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${API_URL}/api/pos/${pageId}/settings`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setPosSettings(data.settings);
+        }
+      } catch (err) {
+        console.error("Failed to load POS settings");
+      }
+    };
+    loadSettings();
+  }, [pageId]);
+
+  // Add item to cart
+  const addToCart = useCallback((item) => {
+    setCart(prev => {
+      const existing = prev.find(i => i.item_id === (item.product_id || item.item_id || item.rental_id || item.service_id));
+      if (existing) {
+        return prev.map(i => 
+          i.item_id === existing.item_id 
+            ? { ...i, quantity: i.quantity + 1 }
+            : i
+        );
+      }
+      return [...prev, {
+        item_id: item.product_id || item.item_id || item.rental_id || item.service_id,
+        name: item.name,
+        price: item.price || item.daily_rate || 0,
+        quantity: 1,
+        options: []
+      }];
+    });
+  }, []);
+
+  // Update quantity
+  const updateQuantity = (itemId, delta) => {
+    setCart(prev => prev.map(item => {
+      if (item.item_id === itemId) {
+        const newQty = Math.max(0, item.quantity + delta);
+        return newQty === 0 ? null : { ...item, quantity: newQty };
+      }
+      return item;
+    }).filter(Boolean));
+  };
+
+  // Remove from cart
+  const removeFromCart = (itemId) => {
+    setCart(prev => prev.filter(i => i.item_id !== itemId));
+  };
+
+  // Calculate totals
+  const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const taxRate = posSettings?.tax_rate || 0;
+  const taxAmount = subtotal * (taxRate / 100);
+  const discountAmount = subtotal * (discountPercent / 100);
+  const total = subtotal + taxAmount - discountAmount + tipAmount;
+
+  // Process transaction
+  const processTransaction = async () => {
+    if (cart.length === 0) {
+      toast.error("Cart is empty");
+      return;
+    }
+
+    setProcessing(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_URL}/api/pos/transaction`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          page_id: pageId,
+          items: cart,
+          order_type: orderType,
+          payment_method: paymentMethod,
+          subtotal,
+          tax: taxAmount,
+          discount: discountAmount,
+          tip: tipAmount,
+          total,
+          customer_name: customerName,
+          customer_phone: customerPhone,
+          table_number: tableNumber,
+          notes
+        })
+      });
+
+      if (!res.ok) throw new Error("Transaction failed");
+      
+      const data = await res.json();
+      setReceipt(data.receipt);
+      toast.success("Transaction completed!");
+      
+      // Clear cart
+      setCart([]);
+      setCustomerName("");
+      setCustomerPhone("");
+      setTableNumber("");
+      setNotes("");
+      setTipAmount(0);
+      setDiscountPercent(0);
+    } catch (err) {
+      toast.error("Transaction failed");
+    }
+    setProcessing(false);
+  };
+
+  // Filter items by search
+  const filteredItems = items.filter(item =>
+    item.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Order types config
+  const orderTypes = [
+    { id: "pickup", label: "Pickup", icon: ShoppingCart },
+    { id: "dine_in", label: "Dine In", icon: Table },
+    { id: "delivery", label: "Delivery", icon: ShoppingCart },
+  ];
+
+  // Payment methods
+  const paymentMethods = [
+    { id: "cash", label: "Cash", icon: Banknote },
+    { id: "card", label: "Card", icon: CreditCard },
+    { id: "digital_wallet", label: "Digital", icon: Smartphone },
+  ];
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Items Section */}
+      <div className="lg:col-span-2 space-y-4">
+        <div className="flex items-center gap-3">
+          <Input
+            placeholder="Search items..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1"
+          />
+        </div>
+
+        {/* Items Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-[500px] overflow-y-auto">
+          {filteredItems.map((item) => {
+            const itemId = item.product_id || item.item_id || item.rental_id || item.service_id;
+            return (
+              <button
+                key={itemId}
+                onClick={() => addToCart(item)}
+                className="bg-card rounded-lg border border-border p-3 text-left hover:border-primary hover:shadow-md transition-all"
+                data-testid={`pos-item-${itemId}`}
+              >
+                <div className="aspect-square bg-muted rounded-md mb-2 flex items-center justify-center">
+                  {item.images?.[0] ? (
+                    <img src={item.images[0]} alt="" className="w-full h-full object-cover rounded-md" />
+                  ) : (
+                    <ShoppingCart className="w-6 h-6 text-muted-foreground" />
+                  )}
+                </div>
+                <p className="font-medium text-sm truncate">{item.name}</p>
+                <p className="text-primary font-bold">${(item.price || item.daily_rate || 0).toFixed(2)}</p>
+              </button>
+            );
+          })}
+          {filteredItems.length === 0 && (
+            <div className="col-span-full text-center py-8 text-muted-foreground">
+              No items found
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Cart & Checkout Section */}
+      <div className="bg-card rounded-xl border border-border p-4 space-y-4 h-fit sticky top-20">
+        <h3 className="font-semibold flex items-center gap-2">
+          <ShoppingCart className="w-5 h-5 text-primary" />
+          Current Order
+        </h3>
+
+        {/* Order Type */}
+        <div className="flex gap-2">
+          {orderTypes.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              onClick={() => setOrderType(id)}
+              className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center gap-1 transition-colors ${
+                orderType === id 
+                  ? "bg-primary text-white" 
+                  : "bg-muted hover:bg-muted/80"
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Cart Items */}
+        <div className="space-y-2 max-h-48 overflow-y-auto">
+          {cart.length === 0 ? (
+            <p className="text-center text-muted-foreground py-4">Cart is empty</p>
+          ) : (
+            cart.map((item) => (
+              <div key={item.item_id} className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm truncate">{item.name}</p>
+                  <p className="text-xs text-muted-foreground">${item.price.toFixed(2)} each</p>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => updateQuantity(item.item_id, -1)}
+                    className="w-6 h-6 rounded bg-background flex items-center justify-center"
+                  >
+                    <Minus className="w-3 h-3" />
+                  </button>
+                  <span className="w-6 text-center font-medium">{item.quantity}</span>
+                  <button
+                    onClick={() => updateQuantity(item.item_id, 1)}
+                    className="w-6 h-6 rounded bg-background flex items-center justify-center"
+                  >
+                    <Plus className="w-3 h-3" />
+                  </button>
+                </div>
+                <button
+                  onClick={() => removeFromCart(item.item_id)}
+                  className="p-1 text-red-500 hover:bg-red-50 rounded"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Customer Info */}
+        {orderType === "dine_in" && (
+          <Input
+            placeholder="Table #"
+            value={tableNumber}
+            onChange={(e) => setTableNumber(e.target.value)}
+            className="text-sm"
+          />
+        )}
+        <div className="grid grid-cols-2 gap-2">
+          <Input
+            placeholder="Customer name"
+            value={customerName}
+            onChange={(e) => setCustomerName(e.target.value)}
+            className="text-sm"
+          />
+          <Input
+            placeholder="Phone"
+            value={customerPhone}
+            onChange={(e) => setCustomerPhone(e.target.value)}
+            className="text-sm"
+          />
+        </div>
+
+        {/* Discount & Tip */}
+        <div className="grid grid-cols-2 gap-2">
+          <div className="relative">
+            <Percent className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              type="number"
+              placeholder="Discount %"
+              value={discountPercent || ""}
+              onChange={(e) => setDiscountPercent(parseFloat(e.target.value) || 0)}
+              className="pl-8 text-sm"
+            />
+          </div>
+          <div className="relative">
+            <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              type="number"
+              placeholder="Tip"
+              value={tipAmount || ""}
+              onChange={(e) => setTipAmount(parseFloat(e.target.value) || 0)}
+              className="pl-8 text-sm"
+            />
+          </div>
+        </div>
+
+        {/* Tip Presets */}
+        {posSettings?.tip_enabled && (
+          <div className="flex gap-2">
+            {(posSettings.tip_presets || [15, 18, 20]).map((pct) => (
+              <button
+                key={pct}
+                onClick={() => setTipAmount(subtotal * (pct / 100))}
+                className="flex-1 py-1 text-xs bg-muted rounded hover:bg-muted/80"
+              >
+                {pct}%
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Totals */}
+        <div className="border-t border-border pt-3 space-y-1">
+          <div className="flex justify-between text-sm">
+            <span>Subtotal</span>
+            <span>${subtotal.toFixed(2)}</span>
+          </div>
+          {taxAmount > 0 && (
+            <div className="flex justify-between text-sm text-muted-foreground">
+              <span>Tax ({taxRate}%)</span>
+              <span>${taxAmount.toFixed(2)}</span>
+            </div>
+          )}
+          {discountAmount > 0 && (
+            <div className="flex justify-between text-sm text-green-600">
+              <span>Discount</span>
+              <span>-${discountAmount.toFixed(2)}</span>
+            </div>
+          )}
+          {tipAmount > 0 && (
+            <div className="flex justify-between text-sm text-muted-foreground">
+              <span>Tip</span>
+              <span>${tipAmount.toFixed(2)}</span>
+            </div>
+          )}
+          <div className="flex justify-between text-lg font-bold pt-2 border-t border-border">
+            <span>Total</span>
+            <span>${total.toFixed(2)}</span>
+          </div>
+        </div>
+
+        {/* Payment Method */}
+        <div className="flex gap-2">
+          {paymentMethods.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              onClick={() => setPaymentMethod(id)}
+              className={`flex-1 py-2 rounded-lg text-sm font-medium flex flex-col items-center gap-1 transition-colors ${
+                paymentMethod === id 
+                  ? "bg-primary text-white" 
+                  : "bg-muted hover:bg-muted/80"
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Process Button */}
+        <Button 
+          className="w-full" 
+          size="lg"
+          onClick={processTransaction}
+          disabled={processing || cart.length === 0}
+          data-testid="process-transaction-btn"
+        >
+          {processing ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              Processing...
+            </>
+          ) : (
+            <>
+              <Check className="w-4 h-4 mr-2" />
+              Complete ${total.toFixed(2)}
+            </>
+          )}
+        </Button>
+      </div>
+
+      {/* Receipt Modal */}
+      {receipt && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-xl p-6 max-w-md w-full">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Receipt className="w-5 h-5 text-green-500" />
+                Transaction Complete
+              </h3>
+              <button onClick={() => setReceipt(null)} className="p-1 hover:bg-muted rounded">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="bg-muted rounded-lg p-4 mb-4 font-mono text-sm whitespace-pre-wrap">
+              {receipt.text}
+            </div>
+            
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => window.print()}>
+                <Printer className="w-4 h-4 mr-2" /> Print
+              </Button>
+              <Button className="flex-1" onClick={() => setReceipt(null)}>
+                Done <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
