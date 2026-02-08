@@ -74,6 +74,10 @@ const Events = lazy(() => import("./pages/Events"));
 const Pages = lazy(() => import("./pages/Pages"));
 const MyTeam = lazy(() => import("./pages/MyTeam"));
 
+// Member Pages System - Business pages with dashboards
+const MemberPagesListing = lazy(() => import("./components/member-pages/MemberPagesListing"));
+const MemberPageDashboard = lazy(() => import("./components/member-pages/MemberPageDashboard"));
+
 // Game components - Heavy, always lazy load
 const MintedPhotos = lazy(() => import("./pages/MintedPhotos"));
 const PhotoGameArena = lazy(() => import("./pages/PhotoGameArena"));
