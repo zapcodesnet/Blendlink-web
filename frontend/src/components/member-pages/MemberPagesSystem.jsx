@@ -642,4 +642,4 @@ export const memberPagesAPI = {
   }
 };
 
-export { PAGE_TYPES, memberPagesAPI, CreateMemberPageModal, MemberPageCard };
+export { PAGE_TYPES, CreateMemberPageModal, MemberPageCard };
