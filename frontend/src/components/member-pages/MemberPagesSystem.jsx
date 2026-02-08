@@ -641,5 +641,3 @@ export const memberPagesAPI = {
     return res.json();
   }
 };
-
-export { PAGE_TYPES, CreateMemberPageModal, MemberPageCard };
