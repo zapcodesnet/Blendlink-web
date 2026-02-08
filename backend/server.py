@@ -2616,6 +2616,15 @@ api_router.include_router(ai_collections_router)
 from page_manager import page_manager_router
 api_router.include_router(page_manager_router)
 
+# Import and include member pages system routers
+try:
+    from member_pages_system import get_member_pages_routers
+    for router in get_member_pages_routers():
+        api_router.include_router(router)
+    logger.info("Member Pages System loaded")
+except Exception as e:
+    logger.warning(f"Failed to load Member Pages System: {e}")
+
 # Import and include Stripe integration router
 try:
     from stripe_integration import stripe_router
