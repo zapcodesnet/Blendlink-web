@@ -19,9 +19,14 @@ import {
   Plus, Edit2, Trash2, Eye, EyeOff, BarChart3, ShoppingCart, Bell,
   Users, Star, TrendingUp, DollarSign, Calendar, Clock, MapPin,
   Image, Tag, Save, Loader2, ExternalLink, Copy, Check, AlertTriangle,
-  Globe, Archive, RefreshCw
+  Globe, Archive, RefreshCw, ScanLine, CreditCard, Truck
 } from "lucide-react";
 import { memberPagesAPI, PAGE_TYPES } from "./MemberPagesSystem";
+import AnalyticsDashboard from "./AnalyticsDashboard";
+import InventoryManager from "./InventoryManager";
+import ScannerTools from "./ScannerTools";
+import POSTerminal from "./POSTerminal";
+import CustomerOptionsManager from "./CustomerOptionsManager";
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
