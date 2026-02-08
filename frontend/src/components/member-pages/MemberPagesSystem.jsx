@@ -24,7 +24,7 @@ import {
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 // Page type configurations
-const PAGE_TYPES = {
+export const PAGE_TYPES = {
   store: {
     id: "store",
     name: "Public Store",
