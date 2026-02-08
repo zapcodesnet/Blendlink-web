@@ -313,6 +313,10 @@ function AppRouter() {
       <Route path="/pages" element={<ProtectedRoute><Pages /></ProtectedRoute>} />
       <Route path="/pages/:id" element={<ProtectedRoute><Pages /></ProtectedRoute>} />
       
+      {/* Member Business Pages System */}
+      <Route path="/member-pages" element={<ProtectedRoute><MemberPagesListing /></ProtectedRoute>} />
+      <Route path="/member-pages/:pageId" element={<ProtectedRoute><MemberPageDashboard /></ProtectedRoute>} />
+      
       {/* Seller Dashboard Routes */}
       <Route path="/seller-dashboard" element={<ProtectedRoute><SellerDashboard /></ProtectedRoute>} />
       
