@@ -670,7 +670,11 @@ export default function MemberPageDashboard() {
   const tabs = [
     { id: "overview", label: "Overview", icon: BarChart3 },
     { id: "items", label: type.id === "restaurant" ? "Menu" : type.id === "services" ? "Services" : type.id === "rental" ? "Rentals" : "Products", icon: type.icon },
+    { id: "pos", label: "POS", icon: CreditCard },
+    { id: "inventory", label: "Inventory", icon: Package },
+    { id: "scanner", label: "Scanner", icon: ScanLine },
     { id: "orders", label: "Orders", icon: ShoppingCart },
+    { id: "delivery", label: "Delivery", icon: Truck },
     { id: "settings", label: "Settings", icon: Settings }
   ];
 
