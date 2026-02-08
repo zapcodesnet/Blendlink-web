@@ -743,16 +743,39 @@ export default function MemberPageDashboard() {
       {/* Content */}
       <main className="max-w-6xl mx-auto px-4 py-6">
         {activeTab === "overview" && (
-          <OverviewTab page={page} analytics={analytics} onRefresh={loadAnalytics} />
+          <AnalyticsDashboard pageId={pageId} pageName={page.name} />
         )}
         {activeTab === "items" && (
           <ItemsTab page={page} pageType={page.page_type} />
+        )}
+        {activeTab === "pos" && (
+          <POSTerminal 
+            pageId={pageId} 
+            pageType={page.page_type} 
+            pageName={page.name}
+            items={page.dashboard?.items || []}
+          />
+        )}
+        {activeTab === "inventory" && (
+          <InventoryManager pageId={pageId} pageType={page.page_type} />
+        )}
+        {activeTab === "scanner" && (
+          <ScannerTools 
+            pageId={pageId} 
+            pageType={page.page_type}
+            onItemFound={(item, type) => {
+              toast.success(`Found: ${item.name}`);
+            }}
+          />
         )}
         {activeTab === "orders" && (
           <div className="text-center py-12 text-muted-foreground">
             <ShoppingCart className="w-12 h-12 mx-auto mb-3 opacity-50" />
             <p>No orders yet</p>
           </div>
+        )}
+        {activeTab === "delivery" && (
+          <CustomerOptionsManager pageId={pageId} pageType={page.page_type} />
         )}
         {activeTab === "settings" && (
           <SettingsTab page={page} onUpdate={handleUpdatePage} />
