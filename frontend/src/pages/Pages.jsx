@@ -60,12 +60,20 @@ const pagesAPI = {
       return [];
     }
     
-    // Read body exactly once
+    // PRODUCTION FIX: Read body as text first
+    let responseText;
+    try {
+      responseText = await response.text();
+    } catch (readError) {
+      console.error("Read error:", readError);
+      return [];
+    }
+    
     let data;
     try {
-      data = await response.json();
+      data = responseText ? JSON.parse(responseText) : {};
     } catch (parseError) {
-      console.error("JSON parse error:", parseError);
+      console.error("JSON parse error:", parseError, "Response:", responseText?.substring(0, 200));
       return [];
     }
     
@@ -90,12 +98,20 @@ const pagesAPI = {
       return { owned: [], following: [] };
     }
     
-    // Read body exactly once
+    // PRODUCTION FIX: Read body as text first
+    let responseText;
+    try {
+      responseText = await response.text();
+    } catch (readError) {
+      console.error("Read error:", readError);
+      return { owned: [], following: [] };
+    }
+    
     let data;
     try {
-      data = await response.json();
+      data = responseText ? JSON.parse(responseText) : {};
     } catch (parseError) {
-      console.error("JSON parse error:", parseError);
+      console.error("JSON parse error:", parseError, "Response:", responseText?.substring(0, 200));
       return { owned: [], following: [] };
     }
     
@@ -110,7 +126,7 @@ const pagesAPI = {
     };
   },
   
-  // Create a new member page - SINGLE JSON READ
+  // Create a new member page - PRODUCTION FIX: Text-first pattern
   createPage: async (data) => {
     const token = localStorage.getItem("token");
     const pageData = {
@@ -136,12 +152,20 @@ const pagesAPI = {
       throw new Error("Network error - please check your connection");
     }
     
-    // Read body exactly once
+    // PRODUCTION FIX: Read body as text first
+    let responseText;
+    try {
+      responseText = await response.text();
+    } catch (readError) {
+      console.error("Read error:", readError);
+      throw new Error("Failed to read server response");
+    }
+    
     let result;
     try {
-      result = await response.json();
+      result = responseText ? JSON.parse(responseText) : {};
     } catch (parseError) {
-      console.error("JSON parse error on create:", parseError);
+      console.error("JSON parse error on create:", parseError, "Response:", responseText?.substring(0, 200));
       throw new Error("Server returned invalid response");
     }
     
