@@ -594,13 +594,165 @@ async def check_slug(slug: str):
 
 @member_pages_router.get("/my-pages")
 async def get_my_member_pages(current_user: dict = Depends(get_current_user)):
-    """Get all pages owned by current user"""
+    """Get all pages owned by current user and pages they follow"""
     user_id = current_user["user_id"]
-    pages = await db.member_pages.find(
+    
+    # Get owned pages
+    owned_pages = await db.member_pages.find(
         {"owner_id": user_id},
         {"_id": 0}
     ).sort("created_at", -1).to_list(100)
+    
+    # Get followed/subscribed pages
+    subscriptions = await db.member_page_subscriptions.find(
+        {"user_id": user_id},
+        {"_id": 0}
+    ).to_list(100)
+    
+    followed_page_ids = [s["page_id"] for s in subscriptions]
+    followed_pages = []
+    if followed_page_ids:
+        followed_pages = await db.member_pages.find(
+            {"page_id": {"$in": followed_page_ids}},
+            {"_id": 0}
+        ).to_list(100)
+    
+    return {
+        "pages": owned_pages,
+        "following": followed_pages
+    }
+
+@member_pages_router.get("/discover")
+async def discover_member_pages(
+    skip: int = 0,
+    limit: int = 50,
+    category: str = None,
+    page_type: str = None,
+    search: str = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Discover public member pages"""
+    user_id = current_user["user_id"]
+    
+    # Build query for published pages
+    query = {"is_published": True}
+    
+    if category:
+        query["category"] = category
+    if page_type and page_type in PAGE_TYPES:
+        query["page_type"] = page_type
+    if search:
+        query["$or"] = [
+            {"name": {"$regex": search, "$options": "i"}},
+            {"description": {"$regex": search, "$options": "i"}},
+            {"slug": {"$regex": search, "$options": "i"}}
+        ]
+    
+    # Get pages
+    pages = await db.member_pages.find(
+        query,
+        {"_id": 0}
+    ).sort("total_views", -1).skip(skip).limit(limit).to_list(limit)
+    
+    # Also include draft pages from current user (they can see their own)
+    user_drafts = await db.member_pages.find(
+        {"owner_id": user_id, "is_published": False},
+        {"_id": 0}
+    ).to_list(20)
+    
+    # Merge, avoiding duplicates
+    page_ids = {p["page_id"] for p in pages}
+    for draft in user_drafts:
+        if draft["page_id"] not in page_ids:
+            pages.append(draft)
+    
+    # Get user's subscriptions to mark followed pages
+    subs = await db.member_page_subscriptions.find(
+        {"user_id": user_id},
+        {"page_id": 1, "_id": 0}
+    ).to_list(100)
+    subscribed_ids = {s["page_id"] for s in subs}
+    
+    # Mark pages with subscription status and ownership
+    for page in pages:
+        page["is_subscribed"] = page["page_id"] in subscribed_ids
+        page["is_owner"] = page["owner_id"] == user_id
+    
     return {"pages": pages}
+
+@member_pages_router.post("/{page_id}/subscribe")
+async def subscribe_to_member_page(page_id: str, current_user: dict = Depends(get_current_user)):
+    """Subscribe/follow a member page"""
+    user_id = current_user["user_id"]
+    
+    page = await db.member_pages.find_one({"page_id": page_id}, {"_id": 0})
+    if not page:
+        raise HTTPException(status_code=404, detail="Page not found")
+    
+    # Can't subscribe to own page
+    if page["owner_id"] == user_id:
+        raise HTTPException(status_code=400, detail="Cannot subscribe to your own page")
+    
+    # Check if already subscribed
+    existing = await db.member_page_subscriptions.find_one({
+        "page_id": page_id,
+        "user_id": user_id
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="Already subscribed to this page")
+    
+    # Create subscription
+    await db.member_page_subscriptions.insert_one({
+        "subscription_id": f"sub_{uuid.uuid4().hex[:12]}",
+        "page_id": page_id,
+        "user_id": user_id,
+        "subscribed_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Update subscriber count
+    await db.member_pages.update_one(
+        {"page_id": page_id},
+        {"$inc": {"subscriber_count": 1}}
+    )
+    
+    # Award BL coins to subscriber
+    await db.users.update_one(
+        {"user_id": user_id},
+        {"$inc": {"bl_coins": 10}}
+    )
+    
+    # Award BL coins to page owner
+    await db.users.update_one(
+        {"user_id": page["owner_id"]},
+        {"$inc": {"bl_coins": 10}}
+    )
+    
+    return {
+        "message": f"Subscribed to {page['name']}!",
+        "bl_coins_earned": 10
+    }
+
+@member_pages_router.post("/{page_id}/unsubscribe")
+async def unsubscribe_from_member_page(page_id: str, current_user: dict = Depends(get_current_user)):
+    """Unsubscribe/unfollow from a member page"""
+    user_id = current_user["user_id"]
+    
+    # Remove subscription
+    result = await db.member_page_subscriptions.delete_one({
+        "page_id": page_id,
+        "user_id": user_id
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Not subscribed to this page")
+    
+    # Update subscriber count
+    await db.member_pages.update_one(
+        {"page_id": page_id},
+        {"$inc": {"subscriber_count": -1}}
+    )
+    
+    return {"message": "Unsubscribed successfully"}
 
 @member_pages_router.post("/")
 async def create_member_page(
