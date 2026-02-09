@@ -64,23 +64,14 @@ export default function DailySalesReport({ pageId, pageType }) {
   const [generating, setGenerating] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
-  // Load report for selected date
+  // Load report for selected date - PRODUCTION FIX: uses safeFetch
   const loadReport = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(
-        `${API_URL}/api/page-analytics/${pageId}/daily-report?date=${selectedDate}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const data = await safeFetch(
+        `${API_URL}/api/page-analytics/${pageId}/daily-report?date=${selectedDate}`
       );
-
-      if (res.ok) {
-        const data = await res.json();
-        setReport(data);
-      } else {
-        // Generate report on the fly if not cached
-        await generateReport();
-      }
+      setReport(data);
     } catch (err) {
       console.error("Failed to load report:", err);
       // Try generating
@@ -89,21 +80,13 @@ export default function DailySalesReport({ pageId, pageType }) {
     setLoading(false);
   };
 
-  // Generate daily report
+  // Generate daily report - PRODUCTION FIX: uses safeFetch
   const generateReport = async () => {
     setGenerating(true);
     try {
-      const token = localStorage.getItem("token");
-      
-      // Fetch transactions for the date
-      const res = await fetch(
-        `${API_URL}/api/pos/${pageId}/transactions?date=${selectedDate}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const data = await safeFetch(
+        `${API_URL}/api/pos/${pageId}/transactions?date=${selectedDate}`
       );
-
-      if (!res.ok) throw new Error("Failed to fetch transactions");
-
-      const data = await res.json();
       const transactions = data.transactions || [];
 
       // Process transactions into report
