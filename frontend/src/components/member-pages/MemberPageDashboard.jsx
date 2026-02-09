@@ -711,6 +711,8 @@ export default function MemberPageDashboard() {
     { id: "inventory", label: "Inventory", icon: Package },
     { id: "scanner", label: "Scanner", icon: ScanLine },
     { id: "orders", label: "Orders", icon: ShoppingCart },
+    { id: "reports", label: "Reports", icon: FileText },
+    { id: "marketplace", label: "Marketplace", icon: Store },
     { id: "delivery", label: "Delivery", icon: Truck },
     { id: "settings", label: "Settings", icon: Settings }
   ];
