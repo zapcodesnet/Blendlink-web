@@ -8,6 +8,7 @@ import { AuthContext } from "../../App";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { toast } from "sonner";
+import { memberPagesApi } from "../../services/memberPagesApi";
 import {
   Store, Utensils, Briefcase, Home, MapPin, Phone, Globe, Clock,
   Heart, Share2, Star, ShoppingCart, ChevronLeft, ExternalLink,
