@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
+import { safeFetch } from "../../services/memberPagesApi";
 import {
   FileText, Calendar, DollarSign, TrendingUp, Clock, Package,
   Download, RefreshCw, Loader2, ChevronLeft, ChevronRight,
