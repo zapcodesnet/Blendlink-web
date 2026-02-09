@@ -572,6 +572,311 @@ class PageSyncManager:
 
 page_sync_manager = PageSyncManager()
 
+# ============== MONGODB CHANGE STREAMS FOR REAL-TIME SYNC ==============
+
+class MongoDBChangeStreamManager:
+    """
+    MongoDB Change Streams for true database-level real-time sync.
+    Watches collections and broadcasts changes to connected WebSocket clients.
+    """
+    
+    def __init__(self):
+        self.running = False
+        self.tasks: List[asyncio.Task] = []
+        self.collections_to_watch = [
+            ("member_pages", self._handle_page_change),
+            ("page_products", self._handle_product_change),
+            ("page_menu_items", self._handle_menu_change),
+            ("page_services", self._handle_service_change),
+            ("page_rentals", self._handle_rental_change),
+            ("page_orders", self._handle_order_change),
+            ("page_inventory", self._handle_inventory_change),
+            ("member_page_subscriptions", self._handle_subscription_change),
+        ]
+    
+    async def start(self):
+        """Start watching all collections for changes"""
+        if self.running:
+            logger.warning("Change stream manager already running")
+            return
+        
+        self.running = True
+        logger.info("🔄 Starting MongoDB Change Streams for real-time sync...")
+        
+        for collection_name, handler in self.collections_to_watch:
+            task = asyncio.create_task(
+                self._watch_collection(collection_name, handler)
+            )
+            self.tasks.append(task)
+            logger.info(f"   ✅ Watching collection: {collection_name}")
+        
+        logger.info("🎉 MongoDB Change Streams active - Real-time sync enabled!")
+    
+    async def stop(self):
+        """Stop all change stream watchers"""
+        self.running = False
+        for task in self.tasks:
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+        self.tasks = []
+        logger.info("MongoDB Change Streams stopped")
+    
+    async def _watch_collection(self, collection_name: str, handler):
+        """Watch a single collection for changes"""
+        collection = db[collection_name]
+        
+        while self.running:
+            try:
+                # Use change stream with full document lookup
+                pipeline = [
+                    {"$match": {
+                        "operationType": {"$in": ["insert", "update", "replace", "delete"]}
+                    }}
+                ]
+                
+                async with collection.watch(
+                    pipeline,
+                    full_document="updateLookup",
+                    full_document_before_change="whenAvailable"
+                ) as stream:
+                    logger.info(f"Change stream connected for {collection_name}")
+                    
+                    async for change in stream:
+                        if not self.running:
+                            break
+                        
+                        try:
+                            await handler(change)
+                        except Exception as e:
+                            logger.error(f"Error handling change in {collection_name}: {e}")
+                            
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.error(f"Change stream error for {collection_name}: {e}")
+                if self.running:
+                    # Wait before reconnecting
+                    await asyncio.sleep(5)
+    
+    async def _handle_page_change(self, change: dict):
+        """Handle changes to member_pages collection"""
+        op_type = change.get("operationType")
+        doc = change.get("fullDocument") or {}
+        page_id = doc.get("page_id") or change.get("documentKey", {}).get("page_id")
+        
+        if not page_id:
+            return
+        
+        message = {
+            "type": "page_change",
+            "operation": op_type,
+            "page_id": page_id,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+        if op_type == "insert":
+            message["type"] = "page_created"
+            message["page"] = {k: v for k, v in doc.items() if k != "_id"}
+        elif op_type in ("update", "replace"):
+            message["type"] = "page_updated"
+            message["changes"] = change.get("updateDescription", {}).get("updatedFields", {})
+            message["page"] = {k: v for k, v in doc.items() if k != "_id"} if doc else None
+        elif op_type == "delete":
+            message["type"] = "page_deleted"
+        
+        # Broadcast to all users viewing this page
+        await page_sync_manager.broadcast_to_page(page_id, message)
+        
+        # Also broadcast to page owner for dashboard updates
+        if doc.get("owner_id"):
+            await page_sync_manager.broadcast_to_user(doc["owner_id"], message)
+        
+        logger.debug(f"Page change broadcast: {op_type} for {page_id}")
+    
+    async def _handle_product_change(self, change: dict):
+        """Handle changes to page_products collection"""
+        op_type = change.get("operationType")
+        doc = change.get("fullDocument") or {}
+        page_id = doc.get("page_id") or change.get("documentKey", {}).get("page_id")
+        product_id = doc.get("product_id")
+        
+        if not page_id:
+            return
+        
+        message = {
+            "type": f"product_{op_type}d",
+            "operation": op_type,
+            "page_id": page_id,
+            "product_id": product_id,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+        if doc:
+            message["product"] = {k: v for k, v in doc.items() if k != "_id"}
+        
+        await page_sync_manager.broadcast_to_page(page_id, message)
+        logger.debug(f"Product change broadcast: {op_type} for {product_id}")
+    
+    async def _handle_menu_change(self, change: dict):
+        """Handle changes to page_menu_items collection"""
+        op_type = change.get("operationType")
+        doc = change.get("fullDocument") or {}
+        page_id = doc.get("page_id")
+        item_id = doc.get("item_id")
+        
+        if not page_id:
+            return
+        
+        message = {
+            "type": f"menu_item_{op_type}d",
+            "operation": op_type,
+            "page_id": page_id,
+            "item_id": item_id,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+        if doc:
+            message["item"] = {k: v for k, v in doc.items() if k != "_id"}
+        
+        await page_sync_manager.broadcast_to_page(page_id, message)
+        logger.debug(f"Menu item change broadcast: {op_type} for {item_id}")
+    
+    async def _handle_service_change(self, change: dict):
+        """Handle changes to page_services collection"""
+        op_type = change.get("operationType")
+        doc = change.get("fullDocument") or {}
+        page_id = doc.get("page_id")
+        service_id = doc.get("service_id")
+        
+        if not page_id:
+            return
+        
+        message = {
+            "type": f"service_{op_type}d",
+            "operation": op_type,
+            "page_id": page_id,
+            "service_id": service_id,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+        if doc:
+            message["service"] = {k: v for k, v in doc.items() if k != "_id"}
+        
+        await page_sync_manager.broadcast_to_page(page_id, message)
+        logger.debug(f"Service change broadcast: {op_type} for {service_id}")
+    
+    async def _handle_rental_change(self, change: dict):
+        """Handle changes to page_rentals collection"""
+        op_type = change.get("operationType")
+        doc = change.get("fullDocument") or {}
+        page_id = doc.get("page_id")
+        rental_id = doc.get("rental_id")
+        
+        if not page_id:
+            return
+        
+        message = {
+            "type": f"rental_{op_type}d",
+            "operation": op_type,
+            "page_id": page_id,
+            "rental_id": rental_id,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+        if doc:
+            message["rental"] = {k: v for k, v in doc.items() if k != "_id"}
+        
+        await page_sync_manager.broadcast_to_page(page_id, message)
+        logger.debug(f"Rental change broadcast: {op_type} for {rental_id}")
+    
+    async def _handle_order_change(self, change: dict):
+        """Handle changes to page_orders collection"""
+        op_type = change.get("operationType")
+        doc = change.get("fullDocument") or {}
+        page_id = doc.get("page_id")
+        order_id = doc.get("order_id")
+        
+        if not page_id:
+            return
+        
+        message = {
+            "type": f"order_{op_type}d",
+            "operation": op_type,
+            "page_id": page_id,
+            "order_id": order_id,
+            "order_status": doc.get("status"),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+        if doc:
+            # Include safe order data (exclude sensitive info)
+            message["order"] = {
+                "order_id": doc.get("order_id"),
+                "status": doc.get("status"),
+                "total": doc.get("total"),
+                "order_type": doc.get("order_type"),
+                "items_count": len(doc.get("items", [])),
+                "created_at": doc.get("created_at")
+            }
+        
+        await page_sync_manager.broadcast_to_page(page_id, message)
+        logger.debug(f"Order change broadcast: {op_type} for {order_id}")
+    
+    async def _handle_inventory_change(self, change: dict):
+        """Handle changes to page_inventory collection"""
+        op_type = change.get("operationType")
+        doc = change.get("fullDocument") or {}
+        page_id = doc.get("page_id")
+        item_id = doc.get("item_id")
+        
+        if not page_id:
+            return
+        
+        message = {
+            "type": "inventory_updated",
+            "operation": op_type,
+            "page_id": page_id,
+            "item_id": item_id,
+            "quantity": doc.get("quantity"),
+            "low_stock_alert": doc.get("quantity", 0) <= doc.get("low_stock_threshold", 10),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await page_sync_manager.broadcast_to_page(page_id, message)
+        logger.debug(f"Inventory change broadcast: {op_type} for {item_id}")
+    
+    async def _handle_subscription_change(self, change: dict):
+        """Handle changes to member_page_subscriptions collection"""
+        op_type = change.get("operationType")
+        doc = change.get("fullDocument") or {}
+        page_id = doc.get("page_id")
+        user_id = doc.get("user_id")
+        
+        if not page_id:
+            return
+        
+        message = {
+            "type": f"subscriber_{op_type}d",
+            "operation": op_type,
+            "page_id": page_id,
+            "user_id": user_id,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # Update subscriber count
+        if op_type in ("insert", "delete"):
+            count = await db.member_page_subscriptions.count_documents({"page_id": page_id})
+            message["subscriber_count"] = count
+        
+        await page_sync_manager.broadcast_to_page(page_id, message)
+        logger.debug(f"Subscription change broadcast: {op_type} for page {page_id}")
+
+# Global change stream manager instance
+change_stream_manager = MongoDBChangeStreamManager()
+
 # ============== MEMBER PAGES ENDPOINTS ==============
 
 @member_pages_router.get("/types")
