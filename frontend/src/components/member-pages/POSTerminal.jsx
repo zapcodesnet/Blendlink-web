@@ -225,19 +225,15 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
     setQuickSaleProcessing(true);
     
     try {
-      const token = localStorage.getItem("token");
       const price = quickSaleItem.price || quickSaleItem.daily_rate || 0;
       const subtotal = price * quickSaleQuantity;
       const taxRate = posSettings?.tax_rate || 0;
       const taxAmount = subtotal * (taxRate / 100);
       const total = subtotal + taxAmount;
 
-      const res = await fetch(`${API_URL}/api/pos/transaction`, {
+      // PRODUCTION FIX: uses safeFetch
+      const data = await safeFetch(`${API_URL}/api/pos/transaction`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
         body: JSON.stringify({
           page_id: pageId,
           items: [{
@@ -257,10 +253,6 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
           notes: "Quick Sale"
         })
       });
-
-      if (!res.ok) throw new Error("Transaction failed");
-      
-      const data = await res.json();
       
       // Show mini receipt toast
       toast.success(
