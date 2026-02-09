@@ -591,17 +591,11 @@ export default function MemberPageDashboard() {
     setLoading(false);
   };
 
-  // Load products/items for POS
+  // Load products/items for POS - PRODUCTION FIX: uses safeFetch
   const loadProducts = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/api/page-products/${pageId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setProducts(data.products || []);
-      }
+      const data = await safeFetch(`${API_URL}/api/page-products/${pageId}`);
+      setProducts(data.products || []);
     } catch (err) {
       console.error("Failed to load products:", err);
     }
