@@ -118,6 +118,197 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
   const [processing, setProcessing] = useState(false);
   const [receipt, setReceipt] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Quick Sale Mode state
+  const [quickSaleMode, setQuickSaleMode] = useState(false);
+  const [quickSaleBarcode, setQuickSaleBarcode] = useState("");
+  const [quickSaleItem, setQuickSaleItem] = useState(null);
+  const [quickSaleQuantity, setQuickSaleQuantity] = useState(1);
+  const [quickSaleProcessing, setQuickSaleProcessing] = useState(false);
+  const [quickSaleTotal, setQuickSaleTotal] = useState(0);
+  const barcodeInputRef = useRef(null);
+
+  // Focus barcode input when entering Quick Sale mode
+  useEffect(() => {
+    if (quickSaleMode && barcodeInputRef.current) {
+      barcodeInputRef.current.focus();
+    }
+  }, [quickSaleMode]);
+
+  // Auto-calculate Quick Sale total
+  useEffect(() => {
+    if (quickSaleItem) {
+      const price = quickSaleItem.price || quickSaleItem.daily_rate || 0;
+      const taxRate = posSettings?.tax_rate || 0;
+      const subtotal = price * quickSaleQuantity;
+      const tax = subtotal * (taxRate / 100);
+      setQuickSaleTotal(subtotal + tax);
+    }
+  }, [quickSaleItem, quickSaleQuantity, posSettings]);
+
+  // Quick Sale barcode lookup
+  const lookupBarcode = async (barcode) => {
+    if (!barcode.trim()) return;
+    
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_URL}/api/barcode/search`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ barcode, page_id: pageId })
+      });
+
+      if (!res.ok) {
+        toast.error("Barcode not found");
+        setQuickSaleItem(null);
+        return;
+      }
+
+      const data = await res.json();
+      if (data.found && data.item) {
+        setQuickSaleItem(data.item);
+        setQuickSaleQuantity(1);
+        // Play success beep sound
+        playBeep(true);
+        toast.success(`Found: ${data.item.name}`);
+      } else {
+        toast.error("Item not found for this barcode");
+        playBeep(false);
+        setQuickSaleItem(null);
+      }
+    } catch (err) {
+      toast.error("Barcode lookup failed");
+      setQuickSaleItem(null);
+    }
+  };
+
+  // Play beep sound for scanner feedback
+  const playBeep = (success) => {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = success ? 1000 : 300;
+      oscillator.type = 'sine';
+      gainNode.gain.value = 0.3;
+      
+      oscillator.start();
+      setTimeout(() => oscillator.stop(), success ? 100 : 300);
+    } catch (e) {
+      // Audio not available
+    }
+  };
+
+  // Handle barcode input (for scanner or manual entry)
+  const handleBarcodeInput = (e) => {
+    const value = e.target.value;
+    setQuickSaleBarcode(value);
+    
+    // Auto-lookup when barcode reaches standard length (typically 8-14 digits)
+    if (value.length >= 8 && /^\d+$/.test(value)) {
+      lookupBarcode(value);
+    }
+  };
+
+  // Handle barcode key press (Enter key triggers lookup)
+  const handleBarcodeKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      lookupBarcode(quickSaleBarcode);
+    }
+  };
+
+  // Quick Sale - One-tap cash payment
+  const processQuickSale = async () => {
+    if (!quickSaleItem) {
+      toast.error("Scan an item first");
+      return;
+    }
+
+    setQuickSaleProcessing(true);
+    
+    try {
+      const token = localStorage.getItem("token");
+      const price = quickSaleItem.price || quickSaleItem.daily_rate || 0;
+      const subtotal = price * quickSaleQuantity;
+      const taxRate = posSettings?.tax_rate || 0;
+      const taxAmount = subtotal * (taxRate / 100);
+      const total = subtotal + taxAmount;
+
+      const res = await fetch(`${API_URL}/api/pos/transaction`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          page_id: pageId,
+          items: [{
+            item_id: quickSaleItem.product_id || quickSaleItem.item_id || quickSaleItem.rental_id || quickSaleItem.service_id,
+            name: quickSaleItem.name,
+            price: price,
+            quantity: quickSaleQuantity
+          }],
+          order_type: "pickup",
+          payment_method: "cash",
+          subtotal,
+          tax: taxAmount,
+          discount: 0,
+          tip: 0,
+          total,
+          customer_name: "",
+          notes: "Quick Sale"
+        })
+      });
+
+      if (!res.ok) throw new Error("Transaction failed");
+      
+      const data = await res.json();
+      
+      // Show mini receipt toast
+      toast.success(
+        <div className="text-sm">
+          <p className="font-bold">Sale Complete!</p>
+          <p>{quickSaleQuantity}x {quickSaleItem.name}</p>
+          <p className="text-green-600 font-bold">${total.toFixed(2)} CASH</p>
+        </div>,
+        { duration: 3000 }
+      );
+      
+      playBeep(true);
+      
+      // Reset for next scan
+      setQuickSaleBarcode("");
+      setQuickSaleItem(null);
+      setQuickSaleQuantity(1);
+      
+      // Focus back on barcode input
+      if (barcodeInputRef.current) {
+        barcodeInputRef.current.focus();
+      }
+      
+    } catch (err) {
+      toast.error("Quick sale failed");
+      playBeep(false);
+    }
+    
+    setQuickSaleProcessing(false);
+  };
+
+  // Exit Quick Sale mode
+  const exitQuickSale = () => {
+    setQuickSaleMode(false);
+    setQuickSaleBarcode("");
+    setQuickSaleItem(null);
+    setQuickSaleQuantity(1);
+  };
 
   // Load POS settings
   useEffect(() => {
