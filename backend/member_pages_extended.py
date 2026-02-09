@@ -50,7 +50,33 @@ pos_router = APIRouter(prefix="/pos", tags=["Point of Sale"])
 marketplace_link_router = APIRouter(prefix="/marketplace-link", tags=["Marketplace Link"])
 customer_options_router = APIRouter(prefix="/customer-options", tags=["Customer Options"])
 
-from server import get_current_user
+# Auth helpers - avoiding circular import
+import jwt
+async def get_current_user(
+    authorization: str = Header(None)
+):
+    """Validate JWT token and return user"""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    token = authorization.replace("Bearer ", "")
+    jwt_secret = os.environ.get("JWT_SECRET", "blendlink-secret-key")
+    
+    try:
+        payload = jwt.decode(token, jwt_secret, algorithms=["HS256"])
+        user_id = payload.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
+        user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+        
+        return user
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 # Optional user auth helper
 from fastapi import Request
