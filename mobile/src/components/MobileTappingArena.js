@@ -657,9 +657,31 @@ export default function MobileTappingArena({
         </View>
       </View>
 
-      {/* Countdown Overlay */}
+      {/* Countdown Overlay - TRANSPARENT with pulsing "GET READY!" per user spec */}
       {gamePhase === 'countdown' && (
         <View style={styles.countdownOverlay}>
+          {/* "GET READY!" text with pulsing animation */}
+          <Animated.Text 
+            style={[
+              styles.getReadyText,
+              { 
+                opacity: pulseAnim.interpolate({
+                  inputRange: [0.95, 1, 1.05],
+                  outputRange: [0.6, 1, 0.6]
+                }),
+                transform: [{ 
+                  scale: pulseAnim.interpolate({
+                    inputRange: [0.95, 1, 1.05],
+                    outputRange: [1, 1.05, 1]
+                  }) 
+                }] 
+              }
+            ]}
+          >
+            🎯 GET READY! 🎯
+          </Animated.Text>
+          
+          {/* Countdown number */}
           <Animated.Text 
             style={[
               styles.countdownNumber,
@@ -668,7 +690,8 @@ export default function MobileTappingArena({
           >
             {countdown}
           </Animated.Text>
-          <Text style={styles.countdownLabel}>Get Ready!</Text>
+          
+          <Text style={styles.countdownLabel}>Tapping begins soon...</Text>
         </View>
       )}
 
