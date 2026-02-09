@@ -793,7 +793,7 @@ export default function MemberPageDashboard() {
             pageId={pageId} 
             pageType={page.page_type} 
             pageName={page.name}
-            items={page.dashboard?.items || []}
+            items={products}
           />
         )}
         {activeTab === "inventory" && (
