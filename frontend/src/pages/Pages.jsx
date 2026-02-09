@@ -149,7 +149,10 @@ const PageCard = ({ page, onFollow, onUnfollow, onView, isFollowing, isOwner }) 
   };
   
   return (
-    <div className="member-page-card group relative overflow-hidden rounded-3xl border border-white/20 bg-white/70 backdrop-blur-xl shadow-lg hover:shadow-2xl hover:border-cyan-400/40 transition-all duration-300">
+    <div 
+      className="member-page-card group relative overflow-hidden rounded-3xl border border-white/20 bg-white/70 backdrop-blur-xl shadow-lg hover:shadow-2xl hover:border-cyan-400/40 transition-all duration-300"
+      style={{ touchAction: 'manipulation' }}
+    >
       {/* Cover Image */}
       <div className={`h-28 bg-gradient-to-br ${getTypeGradient()} relative overflow-hidden`}>
         {page.cover_image && (
