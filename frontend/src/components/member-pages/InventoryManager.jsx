@@ -7,6 +7,7 @@ import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { safeFetch } from "../../services/memberPagesApi";
 import {
   Package, AlertTriangle, Search, Filter, Download, Upload,
   RefreshCw, Loader2, Plus, Minus, Edit2, Check, X
@@ -22,16 +23,12 @@ export default function InventoryManager({ pageId, pageType }) {
   const [editingItem, setEditingItem] = useState(null);
   const [editQuantity, setEditQuantity] = useState(0);
 
+  // PRODUCTION FIX: uses safeFetch
   const loadInventory = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
       const url = `${API_URL}/api/page-inventory/${pageId}${showLowStockOnly ? '?low_stock_only=true' : ''}`;
-      const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error("Failed to load inventory");
-      const data = await res.json();
+      const data = await safeFetch(url);
       setInventory(data.inventory || []);
     } catch (err) {
       toast.error("Failed to load inventory");
@@ -43,14 +40,12 @@ export default function InventoryManager({ pageId, pageType }) {
     loadInventory();
   }, [pageId, showLowStockOnly]);
 
+  // PRODUCTION FIX: uses safeFetch
   const updateQuantity = async (itemId, newQuantity) => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/api/page-inventory/${pageId}/${itemId}?quantity=${newQuantity}`, {
-        method: "PUT",
-        headers: { Authorization: `Bearer ${token}` }
+      await safeFetch(`${API_URL}/api/page-inventory/${pageId}/${itemId}?quantity=${newQuantity}`, {
+        method: "PUT"
       });
-      if (!res.ok) throw new Error("Failed to update");
       toast.success("Inventory updated");
       setEditingItem(null);
       loadInventory();
@@ -59,6 +54,7 @@ export default function InventoryManager({ pageId, pageType }) {
     }
   };
 
+  // PRODUCTION FIX: uses safeFetch
   const handleBulkImport = async (file) => {
     try {
       const text = await file.text();
@@ -68,11 +64,9 @@ export default function InventoryManager({ pageId, pageType }) {
         return { item_id: item_id.trim(), quantity: parseInt(quantity), low_stock_threshold: parseInt(low_stock_threshold) || 5 };
       });
 
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/api/page-inventory/${pageId}/bulk-import`, {
+      await safeFetch(`${API_URL}/api/page-inventory/${pageId}/bulk-import`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+        body: JSON.stringify({ items })
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify(items)
