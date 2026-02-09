@@ -249,9 +249,9 @@ const PhotoSelectionCard = ({
           </span>
         </div>
         
-        {/* Stamina bar */}
+        {/* Stamina bar - UPDATED: "Battles left: X/24" per user spec */}
         <div className="flex items-center gap-1">
-          <span className="text-[9px] text-gray-400">⚡</span>
+          <span className="text-[9px] text-gray-400">⚔️</span>
           <div className="flex-1 h-1.5 bg-gray-700 rounded-full overflow-hidden">
             <div 
               className={`h-full transition-all ${
@@ -260,8 +260,17 @@ const PhotoSelectionCard = ({
               style={{ width: `${staminaPercent}%` }}
             />
           </div>
-          <span className="text-[9px] text-gray-400">{currentStamina}/{maxStamina}</span>
+          <span className={`text-[9px] ${currentStamina <= 0 ? 'text-red-400 font-bold' : 'text-gray-400'}`}>
+            Battles left: {currentStamina}/{maxStamina}
+          </span>
         </div>
+        
+        {/* Zero stamina warning */}
+        {currentStamina <= 0 && (
+          <div className="text-[9px] text-red-400 bg-red-500/10 rounded px-1 py-0.5 text-center">
+            ⚠️ No battles left! Regenerates 1/hour
+          </div>
+        )}
         
         {/* Level & Stars */}
         <div className="flex items-center justify-between text-[10px]">
