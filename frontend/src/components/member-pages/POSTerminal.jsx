@@ -953,6 +953,8 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
           Complete ${total.toFixed(2)}
         </Button>
       </div>
+        </>
+      )}
 
       {/* Receipt Modal */}
       {receipt && (
