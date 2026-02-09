@@ -2143,6 +2143,20 @@ async def page_websocket(websocket: WebSocket, page_id: str):
 
 # ============== EXPORT ROUTERS ==============
 
+async def start_change_streams():
+    """Start MongoDB Change Streams for real-time sync - call this on app startup"""
+    try:
+        await change_stream_manager.start()
+    except Exception as e:
+        logger.error(f"Failed to start change streams: {e}")
+
+async def stop_change_streams():
+    """Stop MongoDB Change Streams - call this on app shutdown"""
+    try:
+        await change_stream_manager.stop()
+    except Exception as e:
+        logger.error(f"Failed to stop change streams: {e}")
+
 def get_member_pages_routers():
     """Get all member pages routers"""
     return [
