@@ -44,98 +44,163 @@ const PAGE_CATEGORIES = [
   { id: "other", name: "Other", icon: FileText },
 ];
 
-// API functions for member pages (using correct /api/member-pages endpoints)
+// API functions for member pages - BULLETPROOF VERSION
+// Each function reads response body exactly ONCE
 const pagesAPI = {
   // Get all public/discoverable pages
   getPages: async () => {
+    const token = localStorage.getItem("token");
+    let response;
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/api/member-pages/discover`, {
+      response = await fetch(`${API_URL}/api/member-pages/discover`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = await res.json();
-      if (!res.ok) {
-        console.warn("Discover endpoint error:", data.detail || "Unknown error");
-        return [];
-      }
-      return data.pages || data || [];
-    } catch (err) {
-      console.error("Discover fetch error:", err);
+    } catch (networkError) {
+      console.error("Network error fetching pages:", networkError);
       return [];
     }
+    
+    // Read body exactly once
+    let data;
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      console.error("JSON parse error:", parseError);
+      return [];
+    }
+    
+    if (!response.ok) {
+      console.warn("Discover error:", data?.detail || response.status);
+      return [];
+    }
+    
+    return data.pages || data || [];
   },
   
   // Get user's owned pages and followed pages
   getMyPages: async () => {
+    const token = localStorage.getItem("token");
+    let response;
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/api/member-pages/my-pages`, {
+      response = await fetch(`${API_URL}/api/member-pages/my-pages`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = await res.json();
-      if (!res.ok) {
-        console.error("My pages error:", data.detail || "Unknown error");
-        return { owned: [], following: [] };
-      }
-      return {
-        owned: data.pages || [],
-        following: data.following || []
-      };
-    } catch (err) {
-      console.error("My pages fetch error:", err);
+    } catch (networkError) {
+      console.error("Network error fetching my pages:", networkError);
       return { owned: [], following: [] };
     }
+    
+    // Read body exactly once
+    let data;
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      console.error("JSON parse error:", parseError);
+      return { owned: [], following: [] };
+    }
+    
+    if (!response.ok) {
+      console.error("My pages error:", data?.detail || response.status);
+      return { owned: [], following: [] };
+    }
+    
+    return {
+      owned: data.pages || [],
+      following: data.following || []
+    };
   },
   
-  // Create a new member page - FIXED: No clone needed, simple pattern
+  // Create a new member page - SINGLE JSON READ
   createPage: async (data) => {
     const token = localStorage.getItem("token");
     const pageData = {
       page_type: data.page_type || "general",
       name: data.name,
-      slug: data.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
+      slug: data.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "-" + Date.now(),
       description: data.description || "",
       category: data.category || "business",
     };
     
-    const res = await fetch(`${API_URL}/api/member-pages/`, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}` 
-      },
-      body: JSON.stringify(pageData),
-    });
+    let response;
+    try {
+      response = await fetch(`${API_URL}/api/member-pages/`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify(pageData),
+      });
+    } catch (networkError) {
+      console.error("Network error creating page:", networkError);
+      throw new Error("Network error - please check your connection");
+    }
     
-    // Simple pattern: parse JSON once, then check status
-    const result = await res.json();
-    if (!res.ok) {
-      throw new Error(result.detail || "Failed to create page");
+    // Read body exactly once
+    let result;
+    try {
+      result = await response.json();
+    } catch (parseError) {
+      console.error("JSON parse error on create:", parseError);
+      throw new Error("Server returned invalid response");
+    }
+    
+    if (!response.ok) {
+      throw new Error(result?.detail || `Failed to create page (${response.status})`);
+    }
+    
+    return result;
+  },
+  
+  // Subscribe/follow a page - SINGLE JSON READ
+  followPage: async (pageId) => {
+    const token = localStorage.getItem("token");
+    let response;
+    try {
+      response = await fetch(`${API_URL}/api/member-pages/${pageId}/subscribe`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch (networkError) {
+      throw new Error("Network error - please try again");
+    }
+    
+    let result;
+    try {
+      result = await response.json();
+    } catch (parseError) {
+      throw new Error("Server returned invalid response");
+    }
+    
+    if (!response.ok) {
+      throw new Error(result?.detail || "Failed to follow page");
     }
     return result;
   },
   
-  // Subscribe/follow a page
-  followPage: async (pageId) => {
-    const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/member-pages/${pageId}/subscribe`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const result = await res.json();
-    if (!res.ok) throw new Error(result.detail || "Failed to follow page");
-    return result;
-  },
-  
-  // Unsubscribe/unfollow a page
+  // Unsubscribe/unfollow a page - SINGLE JSON READ
   unfollowPage: async (pageId) => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/member-pages/${pageId}/unsubscribe`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const result = await res.json();
-    if (!res.ok) throw new Error(result.detail || "Failed to unfollow page");
+    let response;
+    try {
+      response = await fetch(`${API_URL}/api/member-pages/${pageId}/unsubscribe`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch (networkError) {
+      throw new Error("Network error - please try again");
+    }
+    
+    let result;
+    try {
+      result = await response.json();
+    } catch (parseError) {
+      throw new Error("Server returned invalid response");
+    }
+    
+    if (!response.ok) {
+      throw new Error(result?.detail || "Failed to unfollow page");
+    }
     return result;
   },
 };
