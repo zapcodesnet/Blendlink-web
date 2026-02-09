@@ -261,7 +261,7 @@ const PageCard = ({ page, onFollow, onUnfollow, onView, isFollowing, isOwner }) 
   );
 };
 
-// Create Page Modal - Premium Glassmorphism Design
+// Create Page Modal - Premium Glassmorphism Design (Mobile-First)
 const CreatePageModal = ({ onClose, onCreate }) => {
   const [formData, setFormData] = useState({
     name: "",
@@ -302,22 +302,32 @@ const CreatePageModal = ({ onClose, onCreate }) => {
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+    <div 
+      className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 overflow-y-auto overscroll-contain"
+      style={{ touchAction: 'pan-y' }}
+      onClick={onClose}
+    >
+      {/* Scrollable container - uses items-start instead of items-center to prevent top cutoff */}
       <div 
-        className="bg-white/90 backdrop-blur-xl rounded-3xl p-8 w-full max-w-lg border border-white/50 shadow-2xl my-8"
-        onClick={(e) => e.stopPropagation()}
+        className="min-h-full flex items-start justify-center p-4 py-8"
+        style={{ touchAction: 'pan-y' }}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center shadow-lg shadow-cyan-500/25">
-              <Plus className="w-6 h-6 text-white" />
+        <div 
+          className="bg-white/95 backdrop-blur-xl rounded-3xl p-6 sm:p-8 w-full max-w-lg border border-white/50 shadow-2xl"
+          style={{ touchAction: 'pan-y' }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center shadow-lg shadow-cyan-500/25">
+                <Plus className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900">Create Page</h2>
+                <p className="text-xs sm:text-sm text-gray-500">Set up your business presence</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-xl font-bold text-gray-900">Create Page</h2>
-              <p className="text-sm text-gray-500">Set up your business presence</p>
-            </div>
-          </div>
           <button 
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
