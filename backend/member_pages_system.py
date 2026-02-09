@@ -1053,9 +1053,6 @@ async def check_slug(slug: str):
             ]
         }
     }
-        "is_available": is_available,
-        "suggestions": suggestions
-    }
 
 @member_pages_router.get("/my-pages")
 async def get_my_member_pages(current_user: dict = Depends(get_current_user)):
