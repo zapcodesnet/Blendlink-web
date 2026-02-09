@@ -30,8 +30,8 @@ class TestAuth:
         })
         assert response.status_code == 200, f"Login failed: {response.text}"
         data = response.json()
-        assert "access_token" in data, "No access_token in response"
-        return data["access_token"]
+        assert "token" in data, "No token in response"
+        return data["token"]
     
     def test_login_success(self):
         """Test login with valid credentials"""
@@ -41,7 +41,7 @@ class TestAuth:
         })
         assert response.status_code == 200
         data = response.json()
-        assert "access_token" in data
+        assert "token" in data
 
 
 class TestDailySalesReport:
@@ -55,7 +55,7 @@ class TestDailySalesReport:
             "password": TEST_PASSWORD
         })
         if response.status_code == 200:
-            return response.json().get("access_token")
+            return response.json().get("token")
         pytest.skip("Authentication failed")
     
     def test_daily_report_today(self, auth_token):
@@ -128,7 +128,7 @@ class TestMarketplaceIntegration:
             "password": TEST_PASSWORD
         })
         if response.status_code == 200:
-            return response.json().get("access_token")
+            return response.json().get("token")
         pytest.skip("Authentication failed")
     
     def test_get_linked_listings(self, auth_token):
@@ -184,7 +184,7 @@ class TestCustomerOptions:
             "password": TEST_PASSWORD
         })
         if response.status_code == 200:
-            return response.json().get("access_token")
+            return response.json().get("token")
         pytest.skip("Authentication failed")
     
     def test_get_customer_options_with_auth(self, auth_token):
@@ -309,7 +309,7 @@ class TestPOSTransactions:
             "password": TEST_PASSWORD
         })
         if response.status_code == 200:
-            return response.json().get("access_token")
+            return response.json().get("token")
         pytest.skip("Authentication failed")
     
     def test_get_pos_transactions(self, auth_token):
