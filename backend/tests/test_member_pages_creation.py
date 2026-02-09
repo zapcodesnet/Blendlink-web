@@ -374,11 +374,18 @@ class TestResponseBodyIntegrity:
                 pytest.fail("Response contains HTML error page instead of JSON")
             pytest.fail(f"Invalid JSON response: {e}")
         
-        # Verify no error indicators in response
+        # Verify no error indicators in response - check for specific error patterns
+        # Don't just check for word "clone" as it could be in page data
         text = response.text.lower()
-        assert "clone" not in text, "Response contains 'clone' error"
-        assert "body stream already read" not in text, "Response contains body stream error"
-        assert "body is already used" not in text, "Response contains body used error"
+        error_patterns = [
+            "failed to execute 'clone' on 'response'",
+            "body stream already read",
+            "body is already used",
+            "failed to execute 'json' on 'response'",
+            "server returned invalid response"
+        ]
+        for pattern in error_patterns:
+            assert pattern not in text, f"Response contains error: {pattern}"
         
         print("✓ Response is clean JSON without clone/body errors")
 
