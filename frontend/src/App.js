@@ -318,6 +318,9 @@ function AppRouter() {
       <Route path="/member-pages" element={<ProtectedRoute><MemberPagesListing /></ProtectedRoute>} />
       <Route path="/member-pages/:pageId" element={<ProtectedRoute><MemberPageDashboard /></ProtectedRoute>} />
       
+      {/* Public Page View (custom slug - must be after all other routes to catch remaining slugs) */}
+      <Route path="/p/:slug" element={<PublicPageView />} />
+      
       {/* Seller Dashboard Routes */}
       <Route path="/seller-dashboard" element={<ProtectedRoute><SellerDashboard /></ProtectedRoute>} />
       
