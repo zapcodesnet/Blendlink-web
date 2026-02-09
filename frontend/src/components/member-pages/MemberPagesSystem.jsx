@@ -457,7 +457,7 @@ export const MemberPageCard = ({ page, onManage, onView }) => {
   );
 };
 
-// API functions for member pages - BULLETPROOF: Single JSON read per request
+// API functions for member pages - PRODUCTION SAFE: Text-first parsing pattern
 export const memberPagesAPI = {
   getMyPages: async () => {
     const token = localStorage.getItem("token");
@@ -468,18 +468,29 @@ export const memberPagesAPI = {
       });
     } catch (err) {
       console.error("getMyPages network error:", err);
-      throw new Error("Network error");
+      throw new Error("Network error - please check your connection");
+    }
+    
+    // PRODUCTION FIX: Use text-first pattern to avoid body-already-read errors
+    let responseText;
+    try {
+      responseText = await response.text();
+    } catch (err) {
+      console.error("getMyPages read error:", err);
+      throw new Error("Failed to read server response");
     }
     
     let data;
     try {
-      data = await response.json();
+      data = responseText ? JSON.parse(responseText) : {};
     } catch (err) {
-      console.error("getMyPages parse error:", err);
-      throw new Error("Invalid response");
+      console.error("getMyPages parse error:", err, "Response:", responseText?.substring(0, 200));
+      throw new Error("Server returned invalid response");
     }
     
-    if (!response.ok) throw new Error(data?.detail || "Failed to load pages");
+    if (!response.ok) {
+      throw new Error(data?.detail || `Failed to load pages (${response.status})`);
+    }
     return data;
   },
 
@@ -497,18 +508,29 @@ export const memberPagesAPI = {
       });
     } catch (err) {
       console.error("createPage network error:", err);
-      throw new Error("Network error");
+      throw new Error("Network error - please check your connection");
+    }
+    
+    // PRODUCTION FIX: Use text-first pattern to avoid body-already-read errors
+    let responseText;
+    try {
+      responseText = await response.text();
+    } catch (err) {
+      console.error("createPage read error:", err);
+      throw new Error("Failed to read server response");
     }
     
     let result;
     try {
-      result = await response.json();
+      result = responseText ? JSON.parse(responseText) : {};
     } catch (err) {
-      console.error("createPage parse error:", err);
-      throw new Error("Invalid response");
+      console.error("createPage parse error:", err, "Response:", responseText?.substring(0, 200));
+      throw new Error("Server returned invalid response");
     }
     
-    if (!response.ok) throw new Error(result?.detail || "Failed to create page");
+    if (!response.ok) {
+      throw new Error(result?.detail || `Failed to create page (${response.status})`);
+    }
     return result;
   },
 
