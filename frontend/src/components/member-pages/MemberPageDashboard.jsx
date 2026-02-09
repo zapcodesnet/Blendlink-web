@@ -19,7 +19,7 @@ import {
   Plus, Edit2, Trash2, Eye, EyeOff, BarChart3, ShoppingCart, Bell,
   Users, Star, TrendingUp, DollarSign, Calendar, Clock, MapPin,
   Image, Tag, Save, Loader2, ExternalLink, Copy, Check, AlertTriangle,
-  Globe, Archive, RefreshCw, ScanLine, CreditCard, Truck
+  Globe, Archive, RefreshCw, ScanLine, CreditCard, Truck, Store, FileText
 } from "lucide-react";
 import { memberPagesAPI, PAGE_TYPES } from "./MemberPagesSystem";
 import AnalyticsDashboard from "./AnalyticsDashboard";
@@ -28,6 +28,8 @@ import ScannerTools from "./ScannerTools";
 import POSTerminal from "./POSTerminal";
 import CustomerOptionsManager from "./CustomerOptionsManager";
 import OrdersManager from "./OrdersManager";
+import MarketplaceIntegration from "./MarketplaceIntegration";
+import DailySalesReport from "./DailySalesReport";
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
