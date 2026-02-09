@@ -2321,7 +2321,7 @@ async def get_daily_report(
             order_time = datetime.fromisoformat(order["created_at"].replace("Z", "+00:00"))
             hour = order_time.hour
             hourly_sales[hour] += order.get("total", 0)
-        except:
+        except (ValueError, KeyError, TypeError):
             pass
     
     # Peak hours (top 3)
