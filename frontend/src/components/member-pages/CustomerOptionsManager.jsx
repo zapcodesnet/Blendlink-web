@@ -253,31 +253,69 @@ export default function CustomerOptionsManager({ pageId, pageType }) {
             <Plus className="w-4 h-4 mr-1" /> Add Location
           </Button>
         </div>
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                    isEnabled ? "bg-primary/20" : "bg-muted"
-                  }`}>
-                    <Icon className={`w-5 h-5 ${isEnabled ? "text-primary" : "text-muted-foreground"}`} />
+
+        {/* Locations List */}
+        {locations.length === 0 ? (
+          <div className="text-center py-8">
+            <MapPin className="w-10 h-10 mx-auto text-gray-300 mb-3" />
+            <p className="text-gray-500">No locations added yet</p>
+            <p className="text-sm text-gray-400">Add your business locations</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {locations.map((loc) => (
+              <div key={loc.location_id} className="bg-white rounded-xl p-4 border border-gray-100">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-cyan-100 flex items-center justify-center flex-shrink-0">
+                    <MapPin className="w-5 h-5 text-cyan-600" />
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">{config.label}</span>
-                      {isEnabled && <Check className="w-4 h-4 text-primary" />}
+                      <h4 className="font-medium text-gray-800">{loc.name || "Location"}</h4>
+                      {loc.is_primary && (
+                        <span className="px-2 py-0.5 bg-cyan-100 text-cyan-600 text-xs rounded-full">Primary</span>
+                      )}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">{config.description}</p>
+                    <p className="text-sm text-gray-500 mt-1">{loc.address}</p>
+                    {loc.city && (
+                      <p className="text-sm text-gray-500">{loc.city}, {loc.state} {loc.postal_code}</p>
+                    )}
+                    {loc.phone && (
+                      <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
+                        <Phone className="w-3 h-3" /> {loc.phone}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <a
+                      href={`https://maps.google.com/?q=${encodeURIComponent(`${loc.address}, ${loc.city}, ${loc.state}`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <Globe className="w-4 h-4 text-gray-500" />
+                    </a>
+                    <button
+                      onClick={() => deleteLocation(loc.location_id)}
+                      className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4 text-red-500" />
+                    </button>
                   </div>
                 </div>
-              </button>
-            );
-          })}
-        </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Delivery Settings */}
       {options?.order_types?.includes("delivery") && (
-        <div className="bg-card rounded-xl border border-border p-4">
-          <h3 className="font-semibold mb-4 flex items-center gap-2">
-            <Truck className="w-5 h-5 text-primary" />
+        <div className="bg-white/70 backdrop-blur-lg rounded-2xl border border-white/50 p-5">
+          <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <Truck className="w-5 h-5 text-cyan-600" />
             Delivery Settings
+          </h3>
           </h3>
           
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
