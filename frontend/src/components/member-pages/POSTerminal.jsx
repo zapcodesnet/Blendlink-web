@@ -15,6 +15,94 @@ import {
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
+// Receipt Modal Component
+const ReceiptModal = ({ receipt, onClose }) => {
+  const handlePrint = () => {
+    window.print();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+        <div className="text-center mb-4">
+          <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
+            <Check className="w-6 h-6 text-green-600" />
+          </div>
+          <h3 className="text-lg font-bold text-gray-900">Transaction Complete!</h3>
+          <p className="text-sm text-gray-500">Order #{receipt.order_id}</p>
+        </div>
+
+        <div className="bg-gray-50 rounded-xl p-4 mb-4 font-mono text-sm">
+          <div className="text-center border-b border-dashed border-gray-300 pb-3 mb-3">
+            <p className="font-bold">{receipt.page_name || 'BlendLink Store'}</p>
+            <p className="text-xs text-gray-500">{new Date(receipt.timestamp).toLocaleString()}</p>
+          </div>
+
+          {receipt.items?.map((item, i) => (
+            <div key={i} className="flex justify-between py-1">
+              <span>{item.quantity}x {item.name}</span>
+              <span>${(item.price * item.quantity).toFixed(2)}</span>
+            </div>
+          ))}
+
+          <div className="border-t border-dashed border-gray-300 mt-3 pt-3 space-y-1">
+            <div className="flex justify-between">
+              <span>Subtotal</span>
+              <span>${receipt.subtotal?.toFixed(2)}</span>
+            </div>
+            {receipt.discount > 0 && (
+              <div className="flex justify-between text-green-600">
+                <span>Discount</span>
+                <span>-${receipt.discount?.toFixed(2)}</span>
+              </div>
+            )}
+            {receipt.tax > 0 && (
+              <div className="flex justify-between">
+                <span>Tax</span>
+                <span>${receipt.tax?.toFixed(2)}</span>
+              </div>
+            )}
+            {receipt.tip > 0 && (
+              <div className="flex justify-between">
+                <span>Tip</span>
+                <span>${receipt.tip?.toFixed(2)}</span>
+              </div>
+            )}
+            <div className="flex justify-between font-bold text-lg pt-2 border-t border-gray-300">
+              <span>Total</span>
+              <span>${receipt.total?.toFixed(2)}</span>
+            </div>
+          </div>
+
+          <div className="text-center mt-4 pt-3 border-t border-dashed border-gray-300">
+            <p className="text-xs text-gray-500">Payment: {receipt.payment_method}</p>
+            <p className="text-xs text-gray-500">Order Type: {receipt.order_type}</p>
+            {receipt.customer_name && (
+              <p className="text-xs text-gray-500">Customer: {receipt.customer_name}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          <Button
+            onClick={handlePrint}
+            variant="outline"
+            className="flex-1 h-11 rounded-xl"
+          >
+            <Printer className="w-4 h-4 mr-2" /> Print
+          </Button>
+          <Button
+            onClick={onClose}
+            className="flex-1 h-11 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500"
+          >
+            Done
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function POSTerminal({ pageId, pageType, pageName, items = [] }) {
   const [cart, setCart] = useState([]);
   const [posSettings, setPosSettings] = useState(null);
