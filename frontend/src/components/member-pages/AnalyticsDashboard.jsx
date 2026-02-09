@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Button } from "../ui/button";
 import {
   TrendingUp, TrendingDown, Eye, ShoppingCart, DollarSign, Users,
-  Calendar, Download, RefreshCw, Loader2, BarChart3, PieChart
+  Calendar, Download, RefreshCw, Loader2, BarChart3, PieChart, Copy
 } from "lucide-react";
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
