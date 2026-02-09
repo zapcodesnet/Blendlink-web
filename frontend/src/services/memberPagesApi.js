@@ -5,9 +5,12 @@
  * Uses production-safe "text-first" pattern to prevent body-already-read errors.
  * 
  * Usage:
- *   import { memberPagesApi } from '../services/memberPagesApi';
+ *   import { memberPagesApi, safeFetch } from '../services/memberPagesApi';
  *   const pages = await memberPagesApi.getMyPages();
  *   const newPage = await memberPagesApi.createPage({ name: 'My Store', page_type: 'store' });
+ *   
+ *   // For custom fetch calls in components:
+ *   const data = await safeFetch('/api/some-endpoint', { method: 'POST', body: JSON.stringify(data) });
  */
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -16,6 +19,69 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 // Production-safe fetch wrapper with text-first JSON parsing
 
 const getToken = () => localStorage.getItem('token');
+
+/**
+ * PRODUCTION-SAFE FETCH HELPER
+ * Use this for any custom fetch calls in components.
+ * Reads response body as text first, then parses to JSON.
+ * This prevents "body already used" errors in production proxies.
+ * 
+ * @param {string} url - Full URL to fetch (use API_URL + endpoint)
+ * @param {Object} options - Fetch options (method, body, headers)
+ * @returns {Promise<Object>} Parsed JSON response
+ */
+export const safeFetch = async (url, options = {}) => {
+  const token = getToken();
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  
+  if (token && !options.skipAuth) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  // 1. Make the fetch request
+  let response;
+  try {
+    response = await fetch(url, {
+      ...options,
+      headers,
+    });
+  } catch (networkError) {
+    console.error(`[safeFetch] Network error:`, networkError);
+    throw new Error('Network error - please check your connection');
+  }
+
+  // 2. Read body as TEXT first (production-safe)
+  let responseText;
+  try {
+    responseText = await response.text();
+  } catch (readError) {
+    console.error(`[safeFetch] Read error:`, readError);
+    throw new Error('Failed to read server response');
+  }
+
+  // 3. Parse text as JSON
+  let data;
+  try {
+    data = responseText ? JSON.parse(responseText) : {};
+  } catch (parseError) {
+    // Some endpoints may return empty or non-JSON
+    data = { _rawText: responseText, success: response.ok };
+  }
+
+  // 4. Handle HTTP errors
+  if (!response.ok) {
+    const errorMessage = data?.detail?.message || data?.detail || data?.message || `Request failed (${response.status})`;
+    const error = new Error(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
+    error.status = response.status;
+    error.data = data;
+    throw error;
+  }
+
+  return data;
+};
 
 /**
  * Makes an API request with production-safe response handling.
@@ -27,27 +93,8 @@ const getToken = () => localStorage.getItem('token');
  * @returns {Promise<Object>} Parsed JSON response
  */
 const apiRequest = async (endpoint, options = {}) => {
-  const token = getToken();
-  const headers = {
-    'Content-Type': 'application/json',
-    ...options.headers,
-  };
-  
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  // 1. Make the fetch request
-  let response;
-  try {
-    response = await fetch(`${API_URL}/api${endpoint}`, {
-      ...options,
-      headers,
-    });
-  } catch (networkError) {
-    console.error(`[MemberPagesAPI] Network error on ${endpoint}:`, networkError);
-    throw new Error('Network error - please check your connection');
-  }
+  return safeFetch(`${API_URL}/api${endpoint}`, options);
+};
 
   // 2. Read body as TEXT first (production-safe)
   let responseText;
