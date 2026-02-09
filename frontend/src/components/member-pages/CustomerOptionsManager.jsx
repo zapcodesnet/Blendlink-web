@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
+import { safeFetch } from "../../services/memberPagesApi";
 import {
   MapPin, Plus, Trash2, Edit2, Save, Loader2, Check, X,
   Car, UtensilsCrossed, ShoppingBag, Truck, Package, Clock,
@@ -53,25 +54,20 @@ export default function CustomerOptionsManager({ pageId, pageType }) {
     loadData();
   }, [pageId]);
 
+  // PRODUCTION FIX: uses safeFetch
   const loadData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/api/customer-options/${pageId}/options`, {
-        headers: { Authorization: `Bearer ${token}` }
+      const data = await safeFetch(`${API_URL}/api/customer-options/${pageId}/options`);
+      setOptions({
+        order_types: data.order_types || [],
+        delivery_settings: data.delivery_settings || {},
+        pickup_settings: data.pickup_settings || {},
+        shipping_settings: data.shipping_settings || {}
       });
-      if (res.ok) {
-        const data = await res.json();
-        setOptions({
-          order_types: data.order_types || [],
-          delivery_settings: data.delivery_settings || {},
-          pickup_settings: data.pickup_settings || {},
-          shipping_settings: data.shipping_settings || {}
-        });
-        setLocations(data.locations || []);
-      }
+      setLocations(data.locations || []);
     } catch (err) {
-      toast.error("Failed to load options");
+      console.error("Failed to load options:", err.message);
     }
     setLoading(false);
   };
