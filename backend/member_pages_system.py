@@ -2091,6 +2091,59 @@ async def export_analytics(
     
     return analytics
 
+
+# ============== ORDER STATUS UPDATE ==============
+
+class OrderStatusUpdate(BaseModel):
+    status: str
+
+@member_pages_router.put("/orders/{order_id}/status")
+async def update_order_status(
+    order_id: str,
+    request: OrderStatusUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update order status"""
+    user_id = current_user["user_id"]
+    
+    # Find the order
+    order = await db.page_orders.find_one({"order_id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Verify page ownership
+    page = await db.member_pages.find_one({"page_id": order["page_id"]})
+    if not page or page["owner_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    valid_statuses = ["pending", "confirmed", "preparing", "ready", "out_for_delivery", "completed", "cancelled"]
+    if request.status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
+    
+    # Update order status
+    update_data = {
+        "status": request.status,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    if request.status == "completed":
+        update_data["completed_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.page_orders.update_one(
+        {"order_id": order_id},
+        {"$set": update_data}
+    )
+    
+    # Broadcast status change via WebSocket
+    await ws_manager.broadcast_to_page(order["page_id"], {
+        "type": "order_status_changed",
+        "order_id": order_id,
+        "new_status": request.status
+    })
+    
+    return {"message": f"Order status updated to {request.status}", "status": request.status}
+
+
 # ============== WEBSOCKET ENDPOINT ==============
 
 @member_pages_router.websocket("/ws/{page_id}")
