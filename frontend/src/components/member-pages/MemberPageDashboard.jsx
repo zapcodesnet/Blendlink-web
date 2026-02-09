@@ -637,6 +637,7 @@ export default function MemberPageDashboard() {
         } else if (data.type === "product_created" || data.type === "menu_item_created") {
           // Refresh items list
           loadPage();
+          loadProducts();
         } else if (data.type === "inventory_updated") {
           toast.info(`Inventory updated for ${data.item_id}`);
         }
