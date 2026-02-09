@@ -457,95 +457,179 @@ export const MemberPageCard = ({ page, onManage, onView }) => {
   );
 };
 
-// API functions for member pages
+// API functions for member pages - BULLETPROOF: Single JSON read per request
 export const memberPagesAPI = {
   getMyPages: async () => {
+    const token = localStorage.getItem("token");
+    let response;
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/api/member-pages/my-pages`, {
+      response = await fetch(`${API_URL}/api/member-pages/my-pages`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || "Failed to load pages");
-      return data;
     } catch (err) {
-      console.error("getMyPages error:", err);
-      throw err;
+      console.error("getMyPages network error:", err);
+      throw new Error("Network error");
     }
+    
+    let data;
+    try {
+      data = await response.json();
+    } catch (err) {
+      console.error("getMyPages parse error:", err);
+      throw new Error("Invalid response");
+    }
+    
+    if (!response.ok) throw new Error(data?.detail || "Failed to load pages");
+    return data;
   },
 
-  createPage: async (data) => {
+  createPage: async (pageData) => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/member-pages/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify(data)
-    });
-    
-    // Always parse JSON first, then check status
-    const result = await res.json();
-    if (!res.ok) {
-      throw new Error(result.detail || "Failed to create page");
+    let response;
+    try {
+      response = await fetch(`${API_URL}/api/member-pages/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(pageData)
+      });
+    } catch (err) {
+      console.error("createPage network error:", err);
+      throw new Error("Network error");
     }
+    
+    let result;
+    try {
+      result = await response.json();
+    } catch (err) {
+      console.error("createPage parse error:", err);
+      throw new Error("Invalid response");
+    }
+    
+    if (!response.ok) throw new Error(result?.detail || "Failed to create page");
     return result;
   },
 
   getPage: async (pageId) => {
+    const token = localStorage.getItem("token");
+    let response;
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/api/member-pages/${pageId}`, {
+      response = await fetch(`${API_URL}/api/member-pages/${pageId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || "Failed to load page");
-      return data;
     } catch (err) {
-      console.error("getPage error:", err);
-      throw err;
+      console.error("getPage network error:", err);
+      throw new Error("Network error");
     }
+    
+    let data;
+    try {
+      data = await response.json();
+    } catch (err) {
+      console.error("getPage parse error:", err);
+      throw new Error("Invalid response");
+    }
+    
+    if (!response.ok) throw new Error(data?.detail || "Failed to load page");
+    return data;
   },
 
-  updatePage: async (pageId, data) => {
+  updatePage: async (pageId, pageData) => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/member-pages/${pageId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify(data)
-    });
-    if (!res.ok) throw new Error("Failed to update page");
-    return res.json();
+    let response;
+    try {
+      response = await fetch(`${API_URL}/api/member-pages/${pageId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(pageData)
+      });
+    } catch (err) {
+      console.error("updatePage network error:", err);
+      throw new Error("Network error");
+    }
+    
+    let result;
+    try {
+      result = await response.json();
+    } catch (err) {
+      console.error("updatePage parse error:", err);
+      throw new Error("Invalid response");
+    }
+    
+    if (!response.ok) throw new Error(result?.detail || "Failed to update page");
+    return result;
   },
 
   deletePage: async (pageId) => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/member-pages/${pageId}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    if (!res.ok) throw new Error("Failed to delete page");
-    return res.json();
+    let response;
+    try {
+      response = await fetch(`${API_URL}/api/member-pages/${pageId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (err) {
+      console.error("deletePage network error:", err);
+      throw new Error("Network error");
+    }
+    
+    let result;
+    try {
+      result = await response.json();
+    } catch (err) {
+      // DELETE might return empty body
+      result = { success: true };
+    }
+    
+    if (!response.ok) throw new Error(result?.detail || "Failed to delete page");
+    return result;
   },
 
   getPublicPage: async (slug) => {
-    const res = await fetch(`${API_URL}/api/member-pages/public/${slug}`);
-    if (!res.ok) throw new Error("Page not found");
-    return res.json();
+    let response;
+    try {
+      response = await fetch(`${API_URL}/api/member-pages/public/${slug}`);
+    } catch (err) {
+      throw new Error("Network error");
+    }
+    
+    let data;
+    try {
+      data = await response.json();
+    } catch (err) {
+      throw new Error("Invalid response");
+    }
+    
+    if (!response.ok) throw new Error("Page not found");
+    return data;
   },
 
-  // Products
+  // Products - BULLETPROOF
   getProducts: async (pageId) => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/page-products/${pageId}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    if (!res.ok) throw new Error("Failed to load products");
-    return res.json();
+    let response;
+    try {
+      response = await fetch(`${API_URL}/api/page-products/${pageId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (err) {
+      throw new Error("Network error");
+    }
+    
+    let data;
+    try {
+      data = await response.json();
+    } catch (err) {
+      throw new Error("Invalid response");
+    }
+    
+    if (!response.ok) throw new Error("Failed to load products");
+    return data;
   },
 
   createProduct: async (pageId, data) => {
