@@ -7,6 +7,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { safeFetch } from "../../services/memberPagesApi";
 import {
   ShoppingCart, CreditCard, Banknote, Smartphone, Plus, Minus,
   Trash2, Receipt, Loader2, Check, X, User, Phone, Table,
