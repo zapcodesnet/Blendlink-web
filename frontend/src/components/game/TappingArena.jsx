@@ -1084,38 +1084,77 @@ export const TappingArena = ({
         />
       </div>
       
-      {/* Countdown overlay */}
+      {/* Countdown overlay - TRANSPARENT with pulsing "Get Ready!" per user spec */}
       <AnimatePresence>
         {gamePhase === 'countdown' && (
           <motion.div 
-            className="absolute inset-0 flex items-center justify-center z-30 bg-black/30"
+            className="absolute inset-0 flex items-center justify-center z-30"
+            style={{ backgroundColor: 'transparent' }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
+            {/* Semi-transparent backdrop that doesn't block view of photos */}
+            <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px]" />
+            
             <motion.div
-              className="flex flex-col items-center"
+              className="flex flex-col items-center relative z-10"
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0 }}
             >
+              {/* "GET READY!" text with pulsing animation - TRANSPARENT BACKGROUND */}
+              <motion.p
+                className="text-4xl sm:text-5xl font-bold mb-6 text-white drop-shadow-[0_0_20px_rgba(168,85,247,0.8)]"
+                animate={{ 
+                  opacity: [0.6, 1, 0.6],
+                  scale: [1, 1.05, 1],
+                  textShadow: [
+                    '0 0 20px rgba(168, 85, 247, 0.5)',
+                    '0 0 40px rgba(168, 85, 247, 0.9), 0 0 60px rgba(139, 92, 246, 0.5)',
+                    '0 0 20px rgba(168, 85, 247, 0.5)'
+                  ]
+                }}
+                transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}
+              >
+                🎯 GET READY! 🎯
+              </motion.p>
+              
+              {/* Countdown number */}
               <motion.span 
-                className="text-8xl font-bold text-white drop-shadow-lg"
+                className="text-9xl font-bold text-white drop-shadow-[0_0_30px_rgba(234,179,8,0.8)]"
                 key={countdown}
-                initial={{ scale: 0.5, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 1.5, opacity: 0 }}
+                initial={{ scale: 0.5, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 1.5, opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
+                style={{
+                  textShadow: '0 0 40px rgba(234, 179, 8, 0.8), 0 0 80px rgba(234, 179, 8, 0.4)'
+                }}
               >
                 {countdown}
               </motion.span>
-              <motion.p
-                className="text-2xl text-purple-300 mt-4 font-bold"
-                animate={{ opacity: [0.5, 1, 0.5] }}
+              
+              {/* Pulsing ring animation around countdown */}
+              <motion.div
+                className="absolute w-48 h-48 rounded-full border-4 border-purple-500/50"
+                animate={{
+                  scale: [1, 1.3, 1],
+                  opacity: [0.8, 0, 0.8],
+                  borderColor: ['rgba(168, 85, 247, 0.5)', 'rgba(234, 179, 8, 0.5)', 'rgba(168, 85, 247, 0.5)']
+                }}
                 transition={{ duration: 1, repeat: Infinity }}
-              >
-                Get Ready!
-              </motion.p>
+              />
+              
+              {/* Second ring with offset timing */}
+              <motion.div
+                className="absolute w-56 h-56 rounded-full border-2 border-yellow-400/30"
+                animate={{
+                  scale: [1, 1.4, 1],
+                  opacity: [0.5, 0, 0.5],
+                }}
+                transition={{ duration: 1, repeat: Infinity, delay: 0.3 }}
+              />
             </motion.div>
           </motion.div>
         )}
