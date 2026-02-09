@@ -459,30 +459,125 @@ async def verify_page_owner(page_id: str, user_id: str):
         raise HTTPException(status_code=403, detail="Not authorized to modify this page")
     return page
 
-async def check_slug_availability(slug: str, exclude_page_id: str = None):
-    """Check if a slug is available"""
-    query = {"slug": slug.lower()}
+# ============== SLUG VALIDATION SYSTEM ==============
+
+# Reserved slugs that cannot be used for member pages
+RESERVED_SLUGS = {
+    # System routes
+    'admin', 'api', 'login', 'register', 'logout', 'signup', 'signin',
+    'auth', 'oauth', 'callback', 'verify', 'reset', 'password',
+    # App routes
+    'home', 'dashboard', 'profile', 'settings', 'account', 'wallet',
+    'marketplace', 'market', 'shop', 'store', 'explore', 'discover',
+    'pages', 'page', 'create', 'edit', 'delete', 'new',
+    # Features
+    'notifications', 'messages', 'chat', 'inbox', 'help', 'support',
+    'about', 'contact', 'terms', 'privacy', 'legal', 'faq',
+    'blog', 'news', 'updates', 'changelog',
+    # Special
+    'public', 'private', 'test', 'demo', 'example', 'sample',
+    'null', 'undefined', 'true', 'false', 'none',
+    # Brand
+    'blendlink', 'blend-link', 'bl', 'official', 'verified'
+}
+
+# Minimum and maximum slug lengths
+SLUG_MIN_LENGTH = 3
+SLUG_MAX_LENGTH = 50
+
+def validate_slug_format(slug: str) -> tuple[bool, str]:
+    """
+    Validate slug format and return (is_valid, error_message)
+    Rules:
+    - Lowercase letters, numbers, and hyphens only
+    - Must start with a letter
+    - Must not end with a hyphen
+    - No consecutive hyphens
+    - Length between 3-50 characters
+    - Not in reserved list
+    """
+    import re
+    
+    slug = slug.lower().strip()
+    
+    # Length check
+    if len(slug) < SLUG_MIN_LENGTH:
+        return False, f"Slug must be at least {SLUG_MIN_LENGTH} characters"
+    
+    if len(slug) > SLUG_MAX_LENGTH:
+        return False, f"Slug must be at most {SLUG_MAX_LENGTH} characters"
+    
+    # Character check
+    if not re.match(r'^[a-z0-9-]+$', slug):
+        return False, "Slug can only contain lowercase letters, numbers, and hyphens"
+    
+    # Must start with a letter
+    if not slug[0].isalpha():
+        return False, "Slug must start with a letter"
+    
+    # Must not end with a hyphen
+    if slug.endswith('-'):
+        return False, "Slug cannot end with a hyphen"
+    
+    # No consecutive hyphens
+    if '--' in slug:
+        return False, "Slug cannot contain consecutive hyphens"
+    
+    # Reserved slug check
+    if slug in RESERVED_SLUGS:
+        return False, f"'{slug}' is a reserved name and cannot be used"
+    
+    return True, ""
+
+async def check_slug_availability(slug: str, exclude_page_id: str = None) -> tuple[bool, str]:
+    """
+    Check if a slug is available across member_pages
+    Returns (is_available, reason_if_not)
+    """
+    slug = slug.lower().strip()
+    
+    # First validate format
+    is_valid, error_msg = validate_slug_format(slug)
+    if not is_valid:
+        return False, error_msg
+    
+    # Check member_pages collection
+    query = {"slug": slug}
     if exclude_page_id:
         query["page_id"] = {"$ne": exclude_page_id}
     existing = await db.member_pages.find_one(query)
-    return existing is None
+    
+    if existing:
+        return False, "This slug is already taken by another page"
+    
+    return True, ""
 
 async def generate_slug_suggestions(base_slug: str) -> List[str]:
     """Generate alternative slug suggestions"""
+    import random
+    
+    # Clean the base slug
+    base_slug = base_slug.lower().strip()
+    if not base_slug[0].isalpha():
+        base_slug = 'page-' + base_slug
+    
     suggestions = []
+    
+    # Try numbered suffixes first
     for i in range(1, 6):
         suggestion = f"{base_slug}-{i}"
-        if await check_slug_availability(suggestion):
+        is_available, _ = await check_slug_availability(suggestion)
+        if is_available:
             suggestions.append(suggestion)
         if len(suggestions) >= 3:
             break
     
     # Add random suffix suggestions
-    import random
     while len(suggestions) < 5:
         suffix = ''.join(random.choices('0123456789', k=4))
         suggestion = f"{base_slug}-{suffix}"
-        if await check_slug_availability(suggestion):
+        is_available, _ = await check_slug_availability(suggestion)
+        if is_available:
             suggestions.append(suggestion)
     
     return suggestions[:5]
