@@ -328,26 +328,27 @@ const CreatePageModal = ({ onClose, onCreate }) => {
                 <p className="text-xs sm:text-sm text-gray-500">Set up your business presence</p>
               </div>
             </div>
-          <button 
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
-          >
-            <ChevronLeft className="w-5 h-5 text-gray-400 rotate-180" />
-          </button>
-        </div>
-        
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Page Name */}
-          <div>
-            <label className="text-sm font-semibold text-gray-700 mb-2 block">Page Name *</label>
-            <Input
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="My Awesome Business"
-              className="h-12 rounded-2xl border-gray-200 bg-white/80 focus:border-cyan-400 focus:ring-cyan-400/20"
-              data-testid="page-name-input"
-            />
+            <button 
+              type="button"
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+            >
+              <ChevronLeft className="w-5 h-5 text-gray-400 rotate-180" />
+            </button>
           </div>
+        
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Page Name */}
+            <div>
+              <label className="text-sm font-semibold text-gray-700 mb-2 block">Page Name *</label>
+              <Input
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="My Awesome Business"
+                className="h-11 rounded-2xl border-gray-200 bg-white/80 focus:border-cyan-400 focus:ring-cyan-400/20"
+                data-testid="page-name-input"
+              />
+            </div>
 
           {/* Page Type */}
           <div>
