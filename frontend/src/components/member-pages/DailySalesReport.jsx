@@ -9,8 +9,9 @@ import { Button } from "../ui/button";
 import {
   FileText, Calendar, DollarSign, TrendingUp, Clock, Package,
   Download, RefreshCw, Loader2, ChevronLeft, ChevronRight,
-  BarChart3, ShoppingCart, Users, Star, Printer, Mail, Share2
+  BarChart3, ShoppingCart, Users, Star, Printer, Mail, Share2, Settings
 } from "lucide-react";
+import EmailReportSettings from "./EmailReportSettings";
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
