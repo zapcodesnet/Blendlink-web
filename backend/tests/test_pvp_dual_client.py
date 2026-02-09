@@ -27,7 +27,7 @@ import os
 import time
 from datetime import datetime
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://verify-me-9.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pages-debug-stable.preview.emergentagent.com')
 
 # Test users - ensure these exist in the database
 USER1 = {"email": "test@blendlink.com", "password": "admin"}

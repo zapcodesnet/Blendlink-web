@@ -11,7 +11,7 @@ import requests
 import os
 from datetime import datetime, timezone
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://luxury-app-makeover.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pages-debug-stable.preview.emergentagent.com')
 
 # Expected rewards as per user specification
 EXPECTED_REWARDS = [1000, 5000, 15000, 35000, 80000, 200000]
