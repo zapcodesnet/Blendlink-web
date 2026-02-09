@@ -369,12 +369,20 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
                 <Text style={[styles.sceneryLabel, { fontSize: config.fontSize - 2 }]}>{scenery.label}</Text>
               </LinearGradient>
               
-              {/* Stamina Bar */}
+              {/* Stamina Bar - UPDATED: "Battles left: X/24" per user spec */}
               {showStamina && (
                 <View style={styles.staminaContainer}>
                   <View style={styles.staminaHeader}>
-                    <Text style={[styles.staminaLabel, { fontSize: config.fontSize - 4 }]}>⚡ Stamina</Text>
-                    <Text style={[styles.staminaValue, { fontSize: config.fontSize - 4 }]}>{stamina}/{maxStamina}</Text>
+                    <Text style={[styles.staminaLabel, { fontSize: config.fontSize - 4 }]}>⚔️ Battles</Text>
+                    <Text style={[
+                      styles.staminaValue, 
+                      { 
+                        fontSize: config.fontSize - 4,
+                        color: stamina <= 0 ? '#EF4444' : '#fff'
+                      }
+                    ]}>
+                      Battles left: {stamina}/{maxStamina}
+                    </Text>
                   </View>
                   <View style={styles.staminaBarBg}>
                     <View 
@@ -384,6 +392,12 @@ const UnifiedPhotoCard = memo(function UnifiedPhotoCard({
                       ]}
                     />
                   </View>
+                  {/* Zero stamina warning */}
+                  {stamina <= 0 && (
+                    <Text style={styles.noStaminaWarning}>
+                      ⚠️ No battles left! Regenerates 1/hour
+                    </Text>
+                  )}
                 </View>
               )}
               
