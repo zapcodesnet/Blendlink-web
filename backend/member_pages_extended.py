@@ -1014,6 +1014,7 @@ class MarketplaceLinkRequest(BaseModel):
     page_id: str
     listing_id: str
     link: bool = True  # True to link, False to unlink
+    unlink: bool = False  # Alternative: True to unlink (backwards compatibility)
 
 @marketplace_link_router.post("/link")
 async def link_marketplace_listing(
@@ -1022,6 +1023,9 @@ async def link_marketplace_listing(
 ):
     """Link a marketplace listing to a member page"""
     user_id = current_user["user_id"]
+    
+    # Handle both 'link: false' and 'unlink: true' for unlinking
+    should_link = request.link and not request.unlink
     
     # Verify page ownership
     page = await db.member_pages.find_one({"page_id": request.page_id})
@@ -1033,7 +1037,7 @@ async def link_marketplace_listing(
     if not listing or listing.get("seller_id") != user_id:
         raise HTTPException(status_code=403, detail="Not authorized for this listing")
     
-    if request.link:
+    if should_link:
         # Link the listing to the page
         await db.marketplace_listings.update_one(
             {"listing_id": request.listing_id},
