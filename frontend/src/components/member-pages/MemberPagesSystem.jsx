@@ -66,7 +66,7 @@ export const PAGE_TYPES = {
   }
 };
 
-// Slug validation and checking
+// Slug validation and checking - uses centralized API service
 const useSlugChecker = () => {
   const [isChecking, setIsChecking] = useState(false);
   const [slugStatus, setSlugStatus] = useState(null); // { available, suggestions }
@@ -84,11 +84,7 @@ const useSlugChecker = () => {
     timeoutRef.current = setTimeout(async () => {
       setIsChecking(true);
       try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(`${API_URL}/api/member-pages/check-slug/${slug}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const data = await res.json();
+        const data = await memberPagesApi.checkSlug(slug);
         setSlugStatus({
           available: data.is_available,
           suggestions: data.suggestions || []
