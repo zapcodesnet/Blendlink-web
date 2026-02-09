@@ -629,21 +629,31 @@ export const RPSBidding = ({
     return (strategies[botDifficulty] || strategies.medium)();
   }, [botDifficulty, opponentMoney]);
   
-  // Handle submit - defined early
-  const handleSubmit = useCallback((timeout = false) => {
+  // Handle submit - UPDATED: Accept timeout auto-choice and auto-bid
+  const handleSubmit = useCallback((timeout = false, autoChoice = null, autoBid = null) => {
     if (gamePhase !== 'choosing') return;
     
     const botMove = isBot ? generateBotChoice() : { choice: 'rock', bid: MIN_BID };
     setOpponentChoice(botMove.choice);
     setOpponentBid(botMove.bid);
     
-    const finalPlayerChoice = timeout ? null : playerChoice;
+    // Use auto-selected values if provided (timeout case), otherwise use player's selections
+    const finalPlayerChoice = autoChoice || (timeout ? null : playerChoice);
+    const finalPlayerBid = autoBid || playerBid;
     
     if (!finalPlayerChoice) {
       setGamePhase('revealing');
       setShowReveal(true);
       setRoundResult('player2');
       return;
+    }
+    
+    // Update the displayed choice and bid if auto-selected
+    if (autoChoice) {
+      setPlayerChoice(autoChoice);
+    }
+    if (autoBid) {
+      setPlayerBid(autoBid);
     }
     
     const rpsResult = determineWinner(finalPlayerChoice, botMove.choice);
