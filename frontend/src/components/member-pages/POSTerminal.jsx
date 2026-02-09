@@ -3,14 +3,15 @@
  * Section 4: Full POS system with cart, payments, receipts
  */
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import {
   ShoppingCart, CreditCard, Banknote, Smartphone, Plus, Minus,
   Trash2, Receipt, Loader2, Check, X, User, Phone, Table,
-  Percent, DollarSign, Printer, ChevronRight
+  Percent, DollarSign, Printer, ChevronRight, Zap, ScanBarcode,
+  ArrowLeft, Volume2
 } from "lucide-react";
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
