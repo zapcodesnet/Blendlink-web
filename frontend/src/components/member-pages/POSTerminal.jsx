@@ -368,7 +368,7 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
     }
   }, []);
 
-  // Poll payment status for card payments
+  // Poll payment status for card payments - PRODUCTION FIX: uses safeFetch
   const pollPaymentStatus = async (sessionId, attempts = 0) => {
     const maxAttempts = 10;
     const pollInterval = 2000;
@@ -379,14 +379,7 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
     }
 
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/api/pos/checkout/status/${sessionId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      if (!res.ok) throw new Error("Failed to check status");
-      
-      const data = await res.json();
+      const data = await safeFetch(`${API_URL}/api/pos/checkout/status/${sessionId}`);
       
       if (data.payment_status === "paid") {
         toast.success("Payment successful! Order completed.");
