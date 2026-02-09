@@ -131,68 +131,128 @@ const pagesAPI = {
   },
 };
 
-// Page Card Component
+// Page Card Component - Modern Glassmorphism Design
 const PageCard = ({ page, onFollow, onUnfollow, onView, isFollowing, isOwner }) => {
   const CategoryIcon = PAGE_CATEGORIES.find(c => c.id === page.category)?.icon || FileText;
+  const followerCount = page.subscriber_count || page.followers_count || 0;
+  const pageSlug = page.slug || page.page_id;
+  
+  // Get page type color
+  const getTypeGradient = () => {
+    switch(page.page_type) {
+      case 'store': return 'from-blue-500 to-indigo-600';
+      case 'restaurant': return 'from-orange-500 to-red-500';
+      case 'services': return 'from-purple-500 to-pink-500';
+      case 'rental': return 'from-green-500 to-teal-500';
+      default: return 'from-cyan-500 to-blue-500';
+    }
+  };
   
   return (
-    <div className="bg-card rounded-xl border border-border/50 overflow-hidden hover:border-primary/30 transition-all">
+    <div className="member-page-card group relative overflow-hidden rounded-3xl border border-white/20 bg-white/70 backdrop-blur-xl shadow-lg hover:shadow-2xl hover:border-cyan-400/40 transition-all duration-300">
       {/* Cover Image */}
-      <div className="h-24 bg-gradient-to-br from-emerald-500 to-teal-600 relative">
+      <div className={`h-28 bg-gradient-to-br ${getTypeGradient()} relative overflow-hidden`}>
         {page.cover_image && (
           <img src={page.cover_image} alt="" className="w-full h-full object-cover" />
         )}
-        {page.verified && (
-          <div className="absolute top-2 right-2 bg-blue-500 text-white p-1 rounded-full">
-            <Star className="w-3 h-3" />
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+        
+        {/* Status badges */}
+        <div className="absolute top-3 right-3 flex gap-2">
+          {page.is_verified && (
+            <span className="px-2 py-1 bg-blue-500 text-white text-xs font-medium rounded-full flex items-center gap-1 shadow-lg">
+              <Star className="w-3 h-3 fill-current" /> Verified
+            </span>
+          )}
+          {page.is_published === false && (
+            <span className="px-2 py-1 bg-gray-700/80 text-white text-xs font-medium rounded-full shadow-lg">
+              Draft
+            </span>
+          )}
+        </div>
+        
+        {/* Page type badge */}
+        {page.page_type && (
+          <div className="absolute top-3 left-3">
+            <span className="px-2 py-1 bg-white/90 text-gray-800 text-xs font-medium rounded-full capitalize shadow-lg">
+              {page.page_type}
+            </span>
           </div>
         )}
       </div>
       
       {/* Content */}
-      <div className="p-4">
-        <div className="flex items-start gap-3">
-          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white -mt-10 border-2 border-background overflow-hidden">
-            {page.avatar ? (
-              <img src={page.avatar} alt="" className="w-full h-full object-cover" />
+      <div className="p-5">
+        <div className="flex items-start gap-4">
+          {/* Avatar */}
+          <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${getTypeGradient()} flex items-center justify-center text-white -mt-12 border-4 border-white shadow-xl overflow-hidden`}>
+            {page.logo_image || page.avatar ? (
+              <img src={page.logo_image || page.avatar} alt="" className="w-full h-full object-cover" />
             ) : (
-              <CategoryIcon className="w-7 h-7" />
+              <CategoryIcon className="w-8 h-8" />
             )}
           </div>
+          
+          {/* Info */}
           <div className="flex-1 min-w-0 pt-1">
-            <div className="flex items-center gap-1">
-              <h3 className="font-semibold truncate">{page.name}</h3>
-              {page.verified && <Star className="w-4 h-4 text-blue-500 fill-blue-500" />}
-            </div>
-            <p className="text-xs text-muted-foreground flex items-center gap-2">
-              <span className="capitalize">{page.category || "Page"}</span>
-              <span>•</span>
-              <span>{page.followers_count || 0} followers</span>
+            <h3 className="font-bold text-gray-900 truncate text-lg">{page.name}</h3>
+            <p className="text-sm text-gray-500 flex items-center gap-2 mt-0.5">
+              <span className="capitalize">{page.category || "Business"}</span>
+              <span className="text-gray-300">•</span>
+              <span className="text-cyan-600 font-medium">{followerCount} followers</span>
             </p>
           </div>
         </div>
         
+        {/* Description */}
         {page.description && (
-          <p className="text-sm text-muted-foreground mt-3 line-clamp-2">{page.description}</p>
+          <p className="text-sm text-gray-600 mt-4 line-clamp-2">{page.description}</p>
         )}
         
-        <div className="flex gap-2 mt-4">
+        {/* Slug preview */}
+        {pageSlug && (
+          <div className="mt-3 text-xs text-gray-400 flex items-center gap-1">
+            <Globe className="w-3 h-3" />
+            <span className="truncate">blendlink.net/{pageSlug}</span>
+          </div>
+        )}
+        
+        {/* Actions */}
+        <div className="flex gap-3 mt-5">
           {isOwner ? (
-            <Button size="sm" variant="outline" className="flex-1" onClick={() => onView(page)}>
-              <Settings className="w-4 h-4 mr-1" /> Manage
+            <Button 
+              size="sm" 
+              className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white border-0 rounded-xl shadow-lg shadow-cyan-500/25 h-10"
+              onClick={() => onView(page)}
+            >
+              <Settings className="w-4 h-4 mr-2" /> Manage
             </Button>
           ) : isFollowing ? (
             <>
-              <Button size="sm" className="flex-1" onClick={() => onView(page)}>
-                View Page
+              <Button 
+                size="sm" 
+                className="flex-1 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded-xl h-10"
+                onClick={() => onView(page)}
+              >
+                <ExternalLink className="w-4 h-4 mr-2" /> View
               </Button>
-              <Button size="sm" variant="outline" onClick={() => onUnfollow(page.page_id)}>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="rounded-xl h-10 border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                onClick={() => onUnfollow(page.page_id)}
+              >
                 <BellOff className="w-4 h-4" />
               </Button>
             </>
           ) : (
-            <Button size="sm" className="flex-1 bg-emerald-600 hover:bg-emerald-700" onClick={() => onFollow(page.page_id)}>
-              <Heart className="w-4 h-4 mr-1" /> Follow
+            <Button 
+              size="sm" 
+              className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white border-0 rounded-xl shadow-lg shadow-emerald-500/25 h-10"
+              onClick={() => onFollow(page.page_id)}
+            >
+              <Heart className="w-4 h-4 mr-2" /> Follow
             </Button>
           )}
         </div>
