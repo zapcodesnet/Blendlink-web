@@ -7,6 +7,7 @@ import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { safeFetch } from "../../services/memberPagesApi";
 import {
   Mail, Clock, Bell, BellOff, Send, Check, Loader2,
   Settings, Calendar, AlertCircle, Info
@@ -36,25 +37,18 @@ export default function EmailReportSettings({ pageId }) {
   const [saving, setSaving] = useState(false);
   const [sendingTest, setSendingTest] = useState(false);
 
-  // Load settings
+  // Load settings - PRODUCTION FIX: uses safeFetch
   const loadSettings = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/api/page-analytics/${pageId}/email-settings`, {
-        headers: { Authorization: `Bearer ${token}` }
+      const data = await safeFetch(`${API_URL}/api/page-analytics/${pageId}/email-settings`);
+      setSettings(data.settings || {
+        email_enabled: false,
+        email: "",
+        send_hour: 23,
+        send_empty_reports: false,
+        timezone: "UTC"
       });
-
-      if (res.ok) {
-        const data = await res.json();
-        setSettings(data.settings || {
-          email_enabled: false,
-          email: "",
-          send_hour: 23,
-          send_empty_reports: false,
-          timezone: "UTC"
-        });
-        setOwnerEmail(data.owner_email || "");
-      }
+      setOwnerEmail(data.owner_email || "");
     } catch (err) {
       console.error("Failed to load email settings:", err);
     }
@@ -65,25 +59,14 @@ export default function EmailReportSettings({ pageId }) {
     loadSettings();
   }, [pageId]);
 
-  // Save settings
+  // Save settings - PRODUCTION FIX: uses safeFetch
   const saveSettings = async () => {
     setSaving(true);
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/api/page-analytics/${pageId}/email-settings`, {
+      await safeFetch(`${API_URL}/api/page-analytics/${pageId}/email-settings`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
         body: JSON.stringify(settings)
       });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || "Failed to save settings");
-      }
-
       toast.success("Email report settings saved!");
     } catch (err) {
       toast.error(err.message);
@@ -91,22 +74,13 @@ export default function EmailReportSettings({ pageId }) {
     setSaving(false);
   };
 
-  // Send test email
+  // Send test email - PRODUCTION FIX: uses safeFetch
   const sendTestReport = async () => {
     setSendingTest(true);
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/api/page-analytics/${pageId}/send-test-report`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` }
+      await safeFetch(`${API_URL}/api/page-analytics/${pageId}/send-test-report`, {
+        method: "POST"
       });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || "Failed to send test email");
-      }
-
-      const data = await res.json();
       toast.success(`Test report sent to ${settings.email || ownerEmail}!`);
     } catch (err) {
       toast.error(err.message);
