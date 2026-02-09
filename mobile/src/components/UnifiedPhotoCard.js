@@ -768,6 +768,15 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 2,
   },
+  noStaminaWarning: {
+    color: '#EF4444',
+    fontSize: 10,
+    textAlign: 'center',
+    marginTop: 4,
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    padding: 4,
+    borderRadius: 4,
+  },
   flipButton: {
     marginTop: 4,
     alignItems: 'center',
