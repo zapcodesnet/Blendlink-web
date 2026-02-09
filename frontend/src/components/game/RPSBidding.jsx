@@ -1099,24 +1099,60 @@ export const RPSBidding = ({
         </div>
       </div>
       
-      {/* Countdown phase */}
+      {/* Countdown phase - TRANSPARENT with pulsing "GET READY!" per user spec */}
       {gamePhase === 'countdown' && (
-        <div className="text-center py-8">
+        <div className="text-center py-8 relative">
+          {/* Semi-transparent backdrop */}
+          <div className="absolute inset-0 bg-black/5 rounded-xl" />
+          
+          {/* "GET READY!" text with pulsing animation */}
+          <motion.p
+            className="text-3xl sm:text-4xl font-bold mb-6 text-white relative z-10 drop-shadow-[0_0_20px_rgba(168,85,247,0.8)]"
+            animate={{ 
+              opacity: [0.6, 1, 0.6],
+              scale: [1, 1.05, 1],
+              textShadow: [
+                '0 0 20px rgba(168, 85, 247, 0.5)',
+                '0 0 40px rgba(168, 85, 247, 0.9), 0 0 60px rgba(139, 92, 246, 0.5)',
+                '0 0 20px rgba(168, 85, 247, 0.5)'
+              ]
+            }}
+            transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}
+          >
+            🎯 GET READY! 🎯
+          </motion.p>
+          
+          {/* Countdown number */}
           <motion.div
-            className="text-7xl font-bold text-white mb-4"
+            className="text-8xl font-bold text-white mb-4 relative z-10 drop-shadow-[0_0_30px_rgba(234,179,8,0.8)]"
             key={countdown}
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 1.5, opacity: 0 }}
+            initial={{ scale: 0.5, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 1.5, opacity: 0, y: -20 }}
+            style={{
+              textShadow: '0 0 40px rgba(234, 179, 8, 0.8), 0 0 80px rgba(234, 179, 8, 0.4)'
+            }}
           >
             {countdown}
           </motion.div>
+          
+          {/* Pulsing ring animation */}
+          <motion.div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full border-4 border-purple-500/50 pointer-events-none"
+            animate={{
+              scale: [1, 1.3, 1],
+              opacity: [0.8, 0, 0.8],
+              borderColor: ['rgba(168, 85, 247, 0.5)', 'rgba(234, 179, 8, 0.5)', 'rgba(168, 85, 247, 0.5)']
+            }}
+            transition={{ duration: 1, repeat: Infinity }}
+          />
+          
           <motion.p
-            className="text-xl text-purple-300"
+            className="text-lg text-purple-300 mt-4 relative z-10"
             animate={{ opacity: [0.5, 1, 0.5] }}
             transition={{ duration: 1, repeat: Infinity }}
           >
-            Get Ready to Choose!
+            Choose Rock, Paper, or Scissors!
           </motion.p>
         </div>
       )}
