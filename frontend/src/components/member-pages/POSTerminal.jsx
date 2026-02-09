@@ -424,13 +424,8 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
     // For card payments, create Stripe checkout session
     if (paymentMethod === "card") {
       try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(`${API_URL}/api/pos/checkout/create`, {
+        const data = await safeFetch(`${API_URL}/api/pos/checkout/create`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
-          },
           body: JSON.stringify({
             page_id: pageId,
             items: cart,
@@ -447,13 +442,6 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
             origin_url: window.location.origin
           })
         });
-
-        if (!res.ok) {
-          const errData = await res.json();
-          throw new Error(errData.detail || "Failed to create checkout");
-        }
-        
-        const data = await res.json();
         
         // Redirect to Stripe Checkout
         if (data.checkout_url) {
@@ -467,15 +455,10 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
       }
     }
     
-    // For cash/digital wallet payments, process directly
+    // For cash/digital wallet payments, process directly - PRODUCTION FIX: uses safeFetch
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/api/pos/transaction`, {
+      const data = await safeFetch(`${API_URL}/api/pos/transaction`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
         body: JSON.stringify({
           page_id: pageId,
           items: cart,
@@ -493,9 +476,6 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
         })
       });
 
-      if (!res.ok) throw new Error("Transaction failed");
-      
-      const data = await res.json();
       setReceipt(data.receipt);
       toast.success("Transaction completed!");
       
@@ -508,7 +488,7 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
       setTipAmount(0);
       setDiscountPercent(0);
     } catch (err) {
-      toast.error("Transaction failed");
+      toast.error(err.message || "Transaction failed");
     }
     setProcessing(false);
   };
