@@ -707,110 +707,291 @@ export const memberPagesAPI = {
     return data;
   },
 
-  createProduct: async (pageId, data) => {
+  // PRODUCTION FIX: All remaining API functions now use text-first pattern
+  createProduct: async (pageId, productData) => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/page-products/${pageId}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify(data)
-    });
-    if (!res.ok) throw new Error("Failed to create product");
-    return res.json();
+    let response;
+    try {
+      response = await fetch(`${API_URL}/api/page-products/${pageId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(productData)
+      });
+    } catch (err) {
+      throw new Error("Network error - please check your connection");
+    }
+    
+    let responseText;
+    try {
+      responseText = await response.text();
+    } catch (err) {
+      throw new Error("Failed to read server response");
+    }
+    
+    let result;
+    try {
+      result = responseText ? JSON.parse(responseText) : {};
+    } catch (err) {
+      throw new Error("Server returned invalid response");
+    }
+    
+    if (!response.ok) throw new Error(result?.detail || "Failed to create product");
+    return result;
   },
 
-  // Menu Items
+  // Menu Items - PRODUCTION FIX
   getMenuItems: async (pageId) => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/page-menu/${pageId}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    if (!res.ok) throw new Error("Failed to load menu");
-    return res.json();
+    let response;
+    try {
+      response = await fetch(`${API_URL}/api/page-menu/${pageId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (err) {
+      throw new Error("Network error");
+    }
+    
+    let responseText;
+    try {
+      responseText = await response.text();
+    } catch (err) {
+      throw new Error("Failed to read server response");
+    }
+    
+    let data;
+    try {
+      data = responseText ? JSON.parse(responseText) : {};
+    } catch (err) {
+      throw new Error("Invalid response");
+    }
+    
+    if (!response.ok) throw new Error("Failed to load menu");
+    return data;
   },
 
-  createMenuItem: async (pageId, data) => {
+  createMenuItem: async (pageId, menuData) => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/page-menu/${pageId}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify(data)
-    });
-    if (!res.ok) throw new Error("Failed to create menu item");
-    return res.json();
+    let response;
+    try {
+      response = await fetch(`${API_URL}/api/page-menu/${pageId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(menuData)
+      });
+    } catch (err) {
+      throw new Error("Network error - please check your connection");
+    }
+    
+    let responseText;
+    try {
+      responseText = await response.text();
+    } catch (err) {
+      throw new Error("Failed to read server response");
+    }
+    
+    let result;
+    try {
+      result = responseText ? JSON.parse(responseText) : {};
+    } catch (err) {
+      throw new Error("Server returned invalid response");
+    }
+    
+    if (!response.ok) throw new Error(result?.detail || "Failed to create menu item");
+    return result;
   },
 
-  // Services
+  // Services - PRODUCTION FIX
   getServices: async (pageId) => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/page-services/${pageId}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    if (!res.ok) throw new Error("Failed to load services");
-    return res.json();
+    let response;
+    try {
+      response = await fetch(`${API_URL}/api/page-services/${pageId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (err) {
+      throw new Error("Network error");
+    }
+    
+    let responseText;
+    try {
+      responseText = await response.text();
+    } catch (err) {
+      throw new Error("Failed to read server response");
+    }
+    
+    let data;
+    try {
+      data = responseText ? JSON.parse(responseText) : {};
+    } catch (err) {
+      throw new Error("Invalid response");
+    }
+    
+    if (!response.ok) throw new Error("Failed to load services");
+    return data;
   },
 
-  createService: async (pageId, data) => {
+  createService: async (pageId, serviceData) => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/page-services/${pageId}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify(data)
-    });
-    if (!res.ok) throw new Error("Failed to create service");
-    return res.json();
+    let response;
+    try {
+      response = await fetch(`${API_URL}/api/page-services/${pageId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(serviceData)
+      });
+    } catch (err) {
+      throw new Error("Network error - please check your connection");
+    }
+    
+    let responseText;
+    try {
+      responseText = await response.text();
+    } catch (err) {
+      throw new Error("Failed to read server response");
+    }
+    
+    let result;
+    try {
+      result = responseText ? JSON.parse(responseText) : {};
+    } catch (err) {
+      throw new Error("Server returned invalid response");
+    }
+    
+    if (!response.ok) throw new Error(result?.detail || "Failed to create service");
+    return result;
   },
 
-  // Rentals
+  // Rentals - PRODUCTION FIX
   getRentals: async (pageId) => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/page-rentals/${pageId}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    if (!res.ok) throw new Error("Failed to load rentals");
-    return res.json();
+    let response;
+    try {
+      response = await fetch(`${API_URL}/api/page-rentals/${pageId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (err) {
+      throw new Error("Network error");
+    }
+    
+    let responseText;
+    try {
+      responseText = await response.text();
+    } catch (err) {
+      throw new Error("Failed to read server response");
+    }
+    
+    let data;
+    try {
+      data = responseText ? JSON.parse(responseText) : {};
+    } catch (err) {
+      throw new Error("Invalid response");
+    }
+    
+    if (!response.ok) throw new Error("Failed to load rentals");
+    return data;
   },
 
-  createRental: async (pageId, data) => {
+  createRental: async (pageId, rentalData) => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/page-rentals/${pageId}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify(data)
-    });
-    if (!res.ok) throw new Error("Failed to create rental");
-    return res.json();
+    let response;
+    try {
+      response = await fetch(`${API_URL}/api/page-rentals/${pageId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(rentalData)
+      });
+    } catch (err) {
+      throw new Error("Network error - please check your connection");
+    }
+    
+    let responseText;
+    try {
+      responseText = await response.text();
+    } catch (err) {
+      throw new Error("Failed to read server response");
+    }
+    
+    let result;
+    try {
+      result = responseText ? JSON.parse(responseText) : {};
+    } catch (err) {
+      throw new Error("Server returned invalid response");
+    }
+    
+    if (!response.ok) throw new Error(result?.detail || "Failed to create rental");
+    return result;
   },
 
-  // Analytics
+  // Analytics - PRODUCTION FIX
   getAnalytics: async (pageId, period = "7d") => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/page-analytics/${pageId}?period=${period}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    if (!res.ok) throw new Error("Failed to load analytics");
-    return res.json();
+    let response;
+    try {
+      response = await fetch(`${API_URL}/api/page-analytics/${pageId}?period=${period}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (err) {
+      throw new Error("Network error");
+    }
+    
+    let responseText;
+    try {
+      responseText = await response.text();
+    } catch (err) {
+      throw new Error("Failed to read server response");
+    }
+    
+    let data;
+    try {
+      data = responseText ? JSON.parse(responseText) : {};
+    } catch (err) {
+      throw new Error("Invalid response");
+    }
+    
+    if (!response.ok) throw new Error("Failed to load analytics");
+    return data;
   },
 
-  // Inventory
+  // Inventory - PRODUCTION FIX
   getInventory: async (pageId, lowStockOnly = false) => {
     const token = localStorage.getItem("token");
     const url = `${API_URL}/api/page-inventory/${pageId}${lowStockOnly ? '?low_stock_only=true' : ''}`;
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    if (!res.ok) throw new Error("Failed to load inventory");
-    return res.json();
+    let response;
+    try {
+      response = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (err) {
+      throw new Error("Network error");
+    }
+    
+    let responseText;
+    try {
+      responseText = await response.text();
+    } catch (err) {
+      throw new Error("Failed to read server response");
+    }
+    
+    let data;
+    try {
+      data = responseText ? JSON.parse(responseText) : {};
+    } catch (err) {
+      throw new Error("Invalid response");
+    }
+    
+    if (!response.ok) throw new Error("Failed to load inventory");
+    return data;
   }
 };
