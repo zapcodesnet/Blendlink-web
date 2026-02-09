@@ -176,7 +176,7 @@ const pagesAPI = {
     return result;
   },
   
-  // Subscribe/follow a page - SINGLE JSON READ
+  // Subscribe/follow a page - PRODUCTION FIX: Text-first pattern
   followPage: async (pageId) => {
     const token = localStorage.getItem("token");
     let response;
@@ -189,10 +189,20 @@ const pagesAPI = {
       throw new Error("Network error - please try again");
     }
     
+    // PRODUCTION FIX: Read body as text first
+    let responseText;
+    try {
+      responseText = await response.text();
+    } catch (readError) {
+      console.error("followPage read error:", readError);
+      throw new Error("Failed to read server response");
+    }
+    
     let result;
     try {
-      result = await response.json();
+      result = responseText ? JSON.parse(responseText) : {};
     } catch (parseError) {
+      console.error("followPage parse error:", parseError, "Response:", responseText?.substring(0, 200));
       throw new Error("Server returned invalid response");
     }
     
@@ -202,7 +212,7 @@ const pagesAPI = {
     return result;
   },
   
-  // Unsubscribe/unfollow a page - SINGLE JSON READ
+  // Unsubscribe/unfollow a page - PRODUCTION FIX: Text-first pattern
   unfollowPage: async (pageId) => {
     const token = localStorage.getItem("token");
     let response;
@@ -215,10 +225,20 @@ const pagesAPI = {
       throw new Error("Network error - please try again");
     }
     
+    // PRODUCTION FIX: Read body as text first
+    let responseText;
+    try {
+      responseText = await response.text();
+    } catch (readError) {
+      console.error("unfollowPage read error:", readError);
+      throw new Error("Failed to read server response");
+    }
+    
     let result;
     try {
-      result = await response.json();
+      result = responseText ? JSON.parse(responseText) : {};
     } catch (parseError) {
+      console.error("unfollowPage parse error:", parseError, "Response:", responseText?.substring(0, 200));
       throw new Error("Server returned invalid response");
     }
     

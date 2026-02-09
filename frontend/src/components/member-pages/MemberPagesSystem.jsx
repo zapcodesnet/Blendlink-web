@@ -653,10 +653,20 @@ export const memberPagesAPI = {
       throw new Error("Network error - please check your connection");
     }
     
+    // PRODUCTION FIX: Text-first pattern
+    let responseText;
+    try {
+      responseText = await response.text();
+    } catch (err) {
+      console.error("getPublicPage read error:", err);
+      throw new Error("Failed to read server response");
+    }
+    
     let data;
     try {
-      data = await response.json();
+      data = responseText ? JSON.parse(responseText) : {};
     } catch (err) {
+      console.error("getPublicPage parse error:", err, "Response:", responseText?.substring(0, 200));
       throw new Error("Invalid response");
     }
     
@@ -664,7 +674,7 @@ export const memberPagesAPI = {
     return data;
   },
 
-  // Products - BULLETPROOF
+  // Products - PRODUCTION FIX: Text-first pattern
   getProducts: async (pageId) => {
     const token = localStorage.getItem("token");
     let response;
@@ -676,10 +686,20 @@ export const memberPagesAPI = {
       throw new Error("Network error");
     }
     
+    // PRODUCTION FIX: Text-first pattern
+    let responseText;
+    try {
+      responseText = await response.text();
+    } catch (err) {
+      console.error("getProducts read error:", err);
+      throw new Error("Failed to read server response");
+    }
+    
     let data;
     try {
-      data = await response.json();
+      data = responseText ? JSON.parse(responseText) : {};
     } catch (err) {
+      console.error("getProducts parse error:", err, "Response:", responseText?.substring(0, 200));
       throw new Error("Invalid response");
     }
     
