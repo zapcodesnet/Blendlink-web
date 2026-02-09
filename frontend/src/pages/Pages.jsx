@@ -512,11 +512,13 @@ export default function Pages() {
   };
 
   const handleViewPage = (page) => {
-    // Navigate to page dashboard for owners, public view for others
+    // Navigate to member page dashboard for owners, public view for others
     if (page.is_owner || myPages.some(p => p.page_id === page.page_id)) {
-      navigate(`/pages/${page.page_id}/dashboard`);
+      // Use correct route: /member-pages/:pageId (not /pages/:id/dashboard)
+      navigate(`/member-pages/${page.page_id}`);
     } else {
-      navigate(`/pages/${page.page_id}`);
+      // Public view for non-owners
+      navigate(`/member-pages/${page.page_id}`);
     }
   };
 
