@@ -96,78 +96,20 @@ const apiRequest = async (endpoint, options = {}) => {
   return safeFetch(`${API_URL}/api${endpoint}`, options);
 };
 
-  // 2. Read body as TEXT first (production-safe)
-  let responseText;
-  try {
-    responseText = await response.text();
-  } catch (readError) {
-    console.error(`[MemberPagesAPI] Read error on ${endpoint}:`, readError);
-    throw new Error('Failed to read server response');
-  }
-
-  // 3. Parse text as JSON
-  let data;
-  try {
-    data = responseText ? JSON.parse(responseText) : {};
-  } catch (parseError) {
-    console.error(`[MemberPagesAPI] Parse error on ${endpoint}:`, parseError);
-    console.error('Response text:', responseText?.substring(0, 300));
-    throw new Error('Server returned invalid response');
-  }
-
-  // 4. Handle HTTP errors
-  if (!response.ok) {
-    const errorMessage = data?.detail?.message || data?.detail || data?.message || `Request failed (${response.status})`;
-    throw new Error(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
-  }
-
-  return data;
-};
-
 /**
  * Makes a request that may return empty body (DELETE, etc.)
  */
 const apiRequestAllowEmpty = async (endpoint, options = {}) => {
-  const token = getToken();
-  const headers = {
-    ...options.headers,
-  };
-  
-  if (options.body) {
-    headers['Content-Type'] = 'application/json';
-  }
-  
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  let response;
   try {
-    response = await fetch(`${API_URL}/api${endpoint}`, {
-      ...options,
-      headers,
-    });
-  } catch (networkError) {
-    throw new Error('Network error - please check your connection');
+    return await safeFetch(`${API_URL}/api${endpoint}`, options);
+  } catch (error) {
+    // For DELETE requests, empty response is OK
+    if (error.status === 200 || error.status === 204) {
+      return { success: true };
+    }
+    throw error;
   }
-
-  let responseText;
-  try {
-    responseText = await response.text();
-  } catch (readError) {
-    responseText = '';
-  }
-
-  let data;
-  try {
-    data = responseText ? JSON.parse(responseText) : { success: response.ok };
-  } catch (parseError) {
-    data = { success: response.ok };
-  }
-
-  if (!response.ok) {
-    throw new Error(data?.detail || `Request failed (${response.status})`);
-  }
+};
 
   return data;
 };
