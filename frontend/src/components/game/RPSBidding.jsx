@@ -814,7 +814,7 @@ export const RPSBidding = ({
         <p className="text-gray-400 text-sm">Round {roundNumber} • First to 3 wins!</p>
       </div>
       
-      {/* Power Advantage Indicator - NEW */}
+      {/* Power Advantage Indicator - Shows $2M bonus for higher effective Dollar Value */}
       {powerAdvantage && powerAdvantage.advantage !== 'none' && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -835,7 +835,7 @@ export const RPSBidding = ({
             <span className={`px-3 py-1 rounded-full text-sm font-bold ${
               hasPlayerAdvantage ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
             }`}>
-              +$1M
+              +$2M
             </span>
           </div>
           {playerEffectiveValue && opponentEffectiveValue && (
@@ -851,7 +851,7 @@ export const RPSBidding = ({
           )}
           {hasPlayerAdvantage && (
             <p className="text-green-300/80 text-xs mt-2 text-center">
-              Higher photo value = +$1M extra bidding money (Start with $6M!)
+              Higher photo value = +$2M extra bidding money (Start with $7M! Can bid $6M or $7M)
             </p>
           )}
         </motion.div>
