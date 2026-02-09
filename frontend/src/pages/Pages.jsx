@@ -74,11 +74,11 @@ const pagesAPI = {
       },
       body: JSON.stringify(data),
     });
+    const result = await res.json();
     if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || "Failed to create page");
+      throw new Error(result.detail || "Failed to create page");
     }
-    return res.json();
+    return result;
   },
   
   followPage: async (pageId) => {
@@ -459,19 +459,18 @@ export default function Pages() {
           </div>
         )}
 
-        {/* Create Page CTA */}
-        <div className="mt-8 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-2xl p-6 border border-emerald-500/20">
-          <h3 className="font-semibold mb-2 flex items-center gap-2">
-            <FileText className="w-5 h-5 text-emerald-500" /> Create Your Page
-          </h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Build your brand, promote your business, or share your passion with the world. 
-            Earn 40 BL Coins for creating a page, plus 10 BL Coins for each new follower!
-          </p>
-          <Button onClick={() => setShowCreateModal(true)} className="bg-emerald-600 hover:bg-emerald-700">
-            <Plus className="w-4 h-4 mr-1" /> Create Page
-          </Button>
-        </div>
+        {/* Info Section - No duplicate button */}
+        {myPages.length > 0 && (
+          <div className="mt-8 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-2xl p-6 border border-emerald-500/20">
+            <h3 className="font-semibold mb-2 flex items-center gap-2">
+              <FileText className="w-5 h-5 text-emerald-500" /> Grow Your Pages
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Build your brand, promote your business, or share your passion with the world. 
+              Earn 40 BL Coins for creating a page, plus 10 BL Coins for each new follower!
+            </p>
+          </div>
+        )}
       </main>
 
       {/* Create Page Modal */}
