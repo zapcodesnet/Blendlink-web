@@ -316,7 +316,6 @@ export default function CustomerOptionsManager({ pageId, pageType }) {
             <Truck className="w-5 h-5 text-cyan-600" />
             Delivery Settings
           </h3>
-          </h3>
           
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
