@@ -182,18 +182,29 @@ export default function MarketplaceIntegration({ pageId, pageType, pageName }) {
   const [sortBy, setSortBy] = useState("recent"); // recent, price, sales
   const [filterCategory, setFilterCategory] = useState("all");
 
+  // Check if user is authenticated
+  const isAuthenticated = () => !!localStorage.getItem('token');
+
   // Load linked listings
   const loadLinkedListings = async () => {
+    if (!isAuthenticated()) {
+      console.log("Waiting for authentication...");
+      return;
+    }
     try {
       const data = await safeFetch(`${API_URL}/api/marketplace-link/${pageId}/listings`);
       setLinkedListings(data.listings || []);
     } catch (err) {
-      console.error("Failed to load linked listings:", err);
+      // Only log error if it's not a 401 (expected when not authenticated)
+      if (!err.message?.includes('401') && !err.message?.includes('Unauthorized')) {
+        console.error("Failed to load linked listings:", err);
+      }
     }
   };
 
   // Load available listings to link
   const loadAvailableListings = async () => {
+    if (!isAuthenticated()) return;
     try {
       const data = await safeFetch(`${API_URL}/api/marketplace-link/available`);
       // Filter out already linked listings
@@ -201,13 +212,17 @@ export default function MarketplaceIntegration({ pageId, pageType, pageName }) {
       const available = (data.listings || []).filter(l => !linkedIds.has(l.listing_id));
       setAvailableListings(available);
     } catch (err) {
-      console.error("Failed to load available listings:", err);
+      if (!err.message?.includes('401') && !err.message?.includes('Unauthorized')) {
+        console.error("Failed to load available listings:", err);
+      }
     }
   };
 
   useEffect(() => {
     const loadAll = async () => {
       setLoading(true);
+      // Small delay to ensure auth context is ready
+      await new Promise(resolve => setTimeout(resolve, 100));
       await loadLinkedListings();
       setLoading(false);
     };
