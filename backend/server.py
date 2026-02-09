@@ -3536,17 +3536,36 @@ async def startup_mongodb_pvp_optimizations():
         logger.warning(f"MongoDB PVP optimization startup warning: {e}")
         # Non-fatal - app will still work with polling
 
+@app.on_event("startup")
+async def startup_member_pages_change_streams():
+    """Initialize MongoDB Change Streams for Member Pages real-time sync."""
+    try:
+        from member_pages_system import start_change_streams
+        await start_change_streams()
+        logger.info("✅ Member Pages Change Streams initialized for real-time sync")
+    except Exception as e:
+        logger.warning(f"Member Pages change streams startup warning: {e}")
+        # Non-fatal - WebSocket manual broadcasts will still work
+
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
-    # Cleanup change streams if active
+    # Cleanup member pages change streams
+    try:
+        from member_pages_system import stop_change_streams
+        await stop_change_streams()
+        logger.info("Member Pages change streams stopped")
+    except Exception as e:
+        logger.warning(f"Member Pages change stream cleanup warning: {e}")
+    
+    # Cleanup PVP change streams if active
     try:
         from mongodb_pvp_optimization import get_change_stream_manager
         manager = get_change_stream_manager()
         if manager:
             await manager.stop_watching()
-            logger.info("Change streams stopped")
+            logger.info("PVP Change streams stopped")
     except Exception as e:
-        logger.warning(f"Change stream cleanup warning: {e}")
+        logger.warning(f"PVP change stream cleanup warning: {e}")
     
     client.close()
