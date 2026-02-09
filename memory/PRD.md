@@ -1,6 +1,62 @@
 # Blendlink Platform - Product Requirements Document
 
-## Latest Update: February 9, 2026 (Session 2 - COMPREHENSIVE FIX COMPLETE)
+## Latest Update: February 9, 2026 (Session 2 - PVP Game Update)
+
+---
+
+## ✅ Photo-Battle PVP Game Update (Latest)
+
+### Changes Implemented
+
+#### 1. RPS (Rock-Paper-Scissors) Round Updates
+| Feature | Before | After |
+|---------|--------|-------|
+| Starting Money (with advantage) | $5M | **$7M** |
+| Advantage Bonus | $1M | **$2M** |
+| Fast-bid buttons | $1M-$5M | **$1M-$7M** (with advantage) |
+| Choice timeout | 5 seconds | **10 seconds** |
+| Timeout behavior | Auto-loss | **Random choice + $1M bid** |
+
+#### 2. Countdown Display (Both RPS & Tapping)
+- **Transparent background** (photos visible behind)
+- **"🎯 GET READY! 🎯"** pulsing text animation
+- Large countdown number with glow effect
+- Pulsing ring animations around countdown
+
+#### 3. Stamina Display
+- Format: **"Battles left: X/24"** (was "X/24")
+- Icon changed: ⚔️ (was ⚡)
+- Zero stamina warning: "⚠️ No battles left! Regenerates 1/hour"
+- Photos grayed out when stamina ≤ 0
+
+#### 4. Streak Indicators
+| Condition | Icon | Display |
+|-----------|------|---------|
+| Win streak 3-10 | 🔥 | Streak number + multiplier tooltip |
+| Lose streak ≥3 | 🛡 | "Immunity Active" |
+
+### Files Modified
+
+**Frontend (Web):**
+- `frontend/src/components/game/RPSBidding.jsx` - Updated constants, timeout behavior, countdown UI
+- `frontend/src/components/game/TappingArena.jsx` - Transparent GET READY countdown
+- `frontend/src/components/game/BattleArena.jsx` - Stamina display format
+
+**Mobile (React Native):**
+- `mobile/src/components/MobileTappingArena.js` - Transparent countdown
+- `mobile/src/components/UnifiedPhotoCard.js` - Stamina format + warning
+- `mobile/src/components/StreakIndicator.js` - 🛡 immunity icon + tooltip
+
+### Preserved Systems (Unchanged)
+- ✅ Dollar Value (Core Power) AI scoring across 11 categories
+- ✅ Background Scenery strength/weakness matrix
+- ✅ Win/lose streak multipliers & immunity mechanics
+- ✅ Full XP progression system
+- ✅ Stamina deduction values (Win: -1, Lose: -2)
+- ✅ Hourly stamina regeneration
+- ✅ Monthly +$1M age-based growth
+- ✅ Social reactions bonus
+- ✅ BL coins permanent upgrades
 
 ---
 
