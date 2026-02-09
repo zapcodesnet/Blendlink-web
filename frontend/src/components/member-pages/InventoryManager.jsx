@@ -67,11 +67,7 @@ export default function InventoryManager({ pageId, pageType }) {
       await safeFetch(`${API_URL}/api/page-inventory/${pageId}/bulk-import`, {
         method: "POST",
         body: JSON.stringify({ items })
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(items)
       });
-      if (!res.ok) throw new Error("Failed to import");
       toast.success("Inventory imported");
       loadInventory();
     } catch (err) {
