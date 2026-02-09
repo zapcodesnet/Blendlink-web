@@ -111,9 +111,6 @@ const apiRequestAllowEmpty = async (endpoint, options = {}) => {
   }
 };
 
-  return data;
-};
-
 // ============== MEMBER PAGES API ==============
 
 export const memberPagesApi = {
