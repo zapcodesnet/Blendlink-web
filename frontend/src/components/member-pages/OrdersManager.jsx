@@ -224,7 +224,7 @@ export default function OrdersManager({ pageId, pageType }) {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [summary, setSummary] = useState(null);
 
-  // Load orders
+  // Load orders - PRODUCTION FIX: Text-first pattern
   const loadOrders = async () => {
     setLoading(true);
     try {
@@ -233,9 +233,23 @@ export default function OrdersManager({ pageId, pageType }) {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      if (!res.ok) throw new Error("Failed to load orders");
+      // PRODUCTION FIX: Read body as text first
+      let responseText;
+      try {
+        responseText = await res.text();
+      } catch (readError) {
+        throw new Error("Failed to read server response");
+      }
 
-      const data = await res.json();
+      let data;
+      try {
+        data = responseText ? JSON.parse(responseText) : {};
+      } catch (parseError) {
+        throw new Error("Server returned invalid response");
+      }
+
+      if (!res.ok) throw new Error(data?.detail || "Failed to load orders");
+
       setOrders(data.transactions || []);
       setSummary(data.summary || null);
     } catch (err) {
@@ -248,7 +262,7 @@ export default function OrdersManager({ pageId, pageType }) {
     loadOrders();
   }, [pageId]);
 
-  // Update order status
+  // Update order status - PRODUCTION FIX: Text-first pattern
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
       const token = localStorage.getItem("token");
@@ -261,7 +275,23 @@ export default function OrdersManager({ pageId, pageType }) {
         body: JSON.stringify({ status: newStatus })
       });
 
-      if (!res.ok) throw new Error("Failed to update status");
+      // PRODUCTION FIX: Read body as text first
+      let responseText;
+      try {
+        responseText = await res.text();
+      } catch (readError) {
+        throw new Error("Failed to read server response");
+      }
+
+      let data;
+      try {
+        data = responseText ? JSON.parse(responseText) : {};
+      } catch (parseError) {
+        // Status update might return empty - that's OK
+        data = { success: res.ok };
+      }
+
+      if (!res.ok) throw new Error(data?.detail || "Failed to update status");
 
       toast.success(`Order ${newStatus.replace(/_/g, " ")}`);
       loadOrders();
