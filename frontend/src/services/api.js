@@ -90,16 +90,23 @@ const apiRequest = async (endpoint, options = {}) => {
       throw new Error('Unauthorized');
     }
 
-    // Clone response to safely read it
-    const responseClone = response.clone();
-    let data;
-    
+    // PRODUCTION FIX: Read body as text first, then parse JSON
+    // This prevents clone/body-already-read errors in production proxies
+    let responseText;
     try {
-      data = await response.json();
+      responseText = await response.text();
+    } catch (readError) {
+      console.error('Failed to read response body:', readError);
+      throw new Error('Server connection error');
+    }
+    
+    // Try to parse as JSON
+    let data;
+    try {
+      data = responseText ? JSON.parse(responseText) : {};
     } catch (parseError) {
-      // If JSON parsing fails, try to get text
-      const text = await responseClone.text();
-      throw new Error(text || 'Invalid server response');
+      console.error('JSON parse error. Response text:', responseText?.substring(0, 200));
+      throw new Error('Invalid server response');
     }
     
     if (!response.ok) {
