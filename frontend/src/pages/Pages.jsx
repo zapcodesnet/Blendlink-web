@@ -540,7 +540,7 @@ export default function Pages() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F0F5FF] via-white to-[#F0F8FF]" data-testid="pages-page">
+    <div className="min-h-screen bg-gradient-to-br from-[#F0F5FF] via-white to-[#F0F8FF] pb-24" data-testid="pages-page" style={{ touchAction: 'pan-y' }}>
       {/* Premium Glassmorphism Header */}
       <header className="sticky top-0 z-40 backdrop-blur-xl bg-white/70 border-b border-white/50 shadow-sm safe-top">
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center gap-4">
@@ -563,7 +563,7 @@ export default function Pages() {
           
           <Button 
             size="sm" 
-            className="ml-auto bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white border-0 rounded-2xl px-5 h-10 shadow-lg shadow-cyan-500/25 font-medium"
+            className="ml-auto bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white border-0 rounded-2xl px-5 h-10 shadow-lg shadow-cyan-500/25 font-medium z-50"
             onClick={() => setShowCreateModal(true)} 
             data-testid="create-page-btn" 
             title="Create a new business page"
@@ -573,7 +573,7 @@ export default function Pages() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 py-6">
+      <main className="max-w-5xl mx-auto px-4 py-6" style={{ touchAction: 'pan-y' }}>
         {/* Premium Search Bar */}
         <div className="mb-6">
           <div className="relative">
@@ -587,11 +587,14 @@ export default function Pages() {
           </div>
         </div>
 
-        {/* Premium Category Filter */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
+        {/* Premium Category Filter - Horizontal scrollable */}
+        <div 
+          className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4"
+          style={{ touchAction: 'pan-x', WebkitOverflowScrolling: 'touch' }}
+        >
           <button
             onClick={() => setSelectedCategory(null)}
-            className={`px-4 py-2 rounded-2xl text-sm font-medium whitespace-nowrap transition-all ${
+            className={`px-4 py-2 rounded-2xl text-sm font-medium whitespace-nowrap transition-all flex-shrink-0 ${
               !selectedCategory 
                 ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25" 
                 : "bg-white/70 backdrop-blur-lg text-gray-600 hover:bg-white border border-white/50"
