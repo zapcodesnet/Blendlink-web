@@ -876,25 +876,34 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
   },
-  // Countdown
+  // Countdown - TRANSPARENT per user spec
   countdownOverlay: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: 'rgba(0, 0, 0, 0.1)', // TRANSPARENT per user spec
     zIndex: 30,
+  },
+  getReadyText: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#fff',
+    textShadowColor: 'rgba(168, 85, 247, 0.8)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 20,
+    marginBottom: 20,
   },
   countdownNumber: {
     fontSize: 120,
     fontWeight: 'bold',
-    color: '#FFD700',
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: 0, height: 4 },
-    textShadowRadius: 10,
+    color: '#fff',
+    textShadowColor: 'rgba(234, 179, 8, 0.8)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 40,
   },
   countdownLabel: {
-    fontSize: 24,
-    color: '#fff',
+    fontSize: 18,
+    color: 'rgba(168, 85, 247, 0.9)',
     marginTop: 10,
   },
   // Result
