@@ -2197,6 +2197,89 @@ async def get_daily_report(
     }
 
 
+# ============== EMAIL REPORT SETTINGS ==============
+
+class EmailReportSettings(BaseModel):
+    email_enabled: bool = False
+    email: Optional[str] = None  # Override email (defaults to owner's email)
+    send_hour: int = 23  # Hour to send report (0-23, default 11 PM)
+    send_empty_reports: bool = False  # Send reports even with no sales
+    timezone: str = "UTC"
+
+@page_analytics_router.get("/{page_id}/email-settings")
+async def get_email_report_settings(
+    page_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get email report settings for a page"""
+    user_id = current_user["user_id"]
+    
+    page = await db.member_pages.find_one({"page_id": page_id})
+    if not page or page["owner_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    return {
+        "settings": page.get("report_settings", {
+            "email_enabled": False,
+            "email": None,
+            "send_hour": 23,
+            "send_empty_reports": False,
+            "timezone": "UTC"
+        }),
+        "owner_email": current_user.get("email")
+    }
+
+@page_analytics_router.put("/{page_id}/email-settings")
+async def update_email_report_settings(
+    page_id: str,
+    settings: EmailReportSettings,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update email report settings for a page"""
+    user_id = current_user["user_id"]
+    
+    page = await db.member_pages.find_one({"page_id": page_id})
+    if not page or page["owner_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Validate send_hour
+    if settings.send_hour < 0 or settings.send_hour > 23:
+        raise HTTPException(status_code=400, detail="send_hour must be between 0 and 23")
+    
+    await db.member_pages.update_one(
+        {"page_id": page_id},
+        {"$set": {"report_settings": settings.dict()}}
+    )
+    
+    return {"message": "Email report settings updated", "settings": settings.dict()}
+
+@page_analytics_router.post("/{page_id}/send-test-report")
+async def send_test_report(
+    page_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Send a test daily report email immediately"""
+    from report_scheduler import trigger_report_now
+    
+    user_id = current_user["user_id"]
+    
+    page = await db.member_pages.find_one({"page_id": page_id})
+    if not page or page["owner_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Get recipient email
+    recipient_email = page.get("report_settings", {}).get("email") or current_user.get("email")
+    if not recipient_email:
+        raise HTTPException(status_code=400, detail="No email address configured")
+    
+    result = await trigger_report_now(page_id, recipient_email)
+    
+    if result.get("status") == "error":
+        raise HTTPException(status_code=500, detail=result.get("message"))
+    
+    return result
+
+
 # ============== ORDER STATUS UPDATE ==============
 
 class OrderStatusUpdate(BaseModel):
