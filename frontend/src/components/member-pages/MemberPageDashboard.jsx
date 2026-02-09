@@ -27,6 +27,7 @@ import InventoryManager from "./InventoryManager";
 import ScannerTools from "./ScannerTools";
 import POSTerminal from "./POSTerminal";
 import CustomerOptionsManager from "./CustomerOptionsManager";
+import OrdersManager from "./OrdersManager";
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
