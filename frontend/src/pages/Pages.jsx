@@ -606,7 +606,7 @@ export default function Pages() {
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id === selectedCategory ? null : cat.id)}
-              className={`px-4 py-2 rounded-2xl text-sm font-medium whitespace-nowrap flex items-center gap-2 transition-all ${
+              className={`px-4 py-2 rounded-2xl text-sm font-medium whitespace-nowrap flex items-center gap-2 transition-all flex-shrink-0 ${
                 selectedCategory === cat.id 
                   ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25" 
                   : "bg-white/70 backdrop-blur-lg text-gray-600 hover:bg-white border border-white/50"
@@ -627,16 +627,17 @@ export default function Pages() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
+              className={`flex-1 py-3 px-2 sm:px-4 rounded-xl font-medium transition-all flex items-center justify-center gap-1 sm:gap-2 text-sm sm:text-base ${
                 activeTab === tab.id 
                   ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/20" 
                   : "text-gray-600 hover:bg-white/80"
               }`}
             >
               <tab.icon className="w-4 h-4" />
-              <span>{tab.label}</span>
+              <span className="hidden sm:inline">{tab.label}</span>
+              <span className="sm:hidden">{tab.id === 'my-pages' ? 'Mine' : tab.id === 'following' ? 'Following' : 'Discover'}</span>
               {tab.count !== undefined && (
-                <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                <span className={`px-1.5 sm:px-2 py-0.5 rounded-full text-xs font-bold ${
                   activeTab === tab.id ? "bg-white/20 text-white" : "bg-cyan-100 text-cyan-600"
                 }`}>
                   {tab.count}
@@ -646,7 +647,8 @@ export default function Pages() {
           ))}
         </div>
 
-        {/* Pages Grid */}
+        {/* Pages Grid - with proper touch scrolling */}
+        <div style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}>
         {loading ? (
           <div className="flex flex-col items-center justify-center py-16">
             <div className="w-12 h-12 rounded-full border-4 border-cyan-200 border-t-cyan-500 animate-spin"></div>
