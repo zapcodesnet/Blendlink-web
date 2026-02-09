@@ -4,7 +4,7 @@ const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 // Get token from localStorage
 const getToken = () => localStorage.getItem('blendlink_token');
 
-// API request helper
+// PRODUCTION-SAFE API request helper with text-first pattern
 const apiRequest = async (endpoint, options = {}) => {
   const token = getToken();
   const headers = {
@@ -16,17 +16,36 @@ const apiRequest = async (endpoint, options = {}) => {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Request failed' }));
-    throw new Error(error.detail || error.message || 'Request failed');
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers,
+    });
+  } catch (networkError) {
+    throw new Error('Network error - please check your connection');
   }
 
-  return response.json();
+  // PRODUCTION FIX: Read body as text first, then parse JSON
+  let responseText;
+  try {
+    responseText = await response.text();
+  } catch (readError) {
+    throw new Error('Failed to read server response');
+  }
+
+  let data;
+  try {
+    data = responseText ? JSON.parse(responseText) : {};
+  } catch (parseError) {
+    throw new Error('Server returned invalid response');
+  }
+
+  if (!response.ok) {
+    throw new Error(data.detail || data.message || 'Request failed');
+  }
+
+  return data;
 };
 
 // ============== WATERMARK API ==============
