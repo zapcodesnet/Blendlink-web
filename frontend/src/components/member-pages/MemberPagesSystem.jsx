@@ -478,11 +478,11 @@ export const memberPagesAPI = {
       },
       body: JSON.stringify(data)
     });
+    const result = await res.json();
     if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || "Failed to create page");
+      throw new Error(result.detail || "Failed to create page");
     }
-    return res.json();
+    return result;
   },
 
   getPage: async (pageId) => {

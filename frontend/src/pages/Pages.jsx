@@ -364,8 +364,8 @@ export default function Pages() {
           <h1 className="text-xl font-bold flex items-center gap-2">
             <FileText className="w-5 h-5 text-primary" /> Pages
           </h1>
-          <Button size="sm" className="ml-auto" onClick={() => setShowCreateModal(true)} data-testid="create-page-btn">
-            <Plus className="w-4 h-4 mr-1" /> Create
+          <Button size="sm" className="ml-auto" onClick={() => setShowCreateModal(true)} data-testid="create-page-btn" title="Create a new business page">
+            <Plus className="w-4 h-4 mr-1" /> Create New Page
           </Button>
         </div>
       </header>
