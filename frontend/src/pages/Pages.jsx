@@ -48,41 +48,48 @@ const PAGE_CATEGORIES = [
 const pagesAPI = {
   // Get all public/discoverable pages
   getPages: async () => {
-    const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/member-pages/discover`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!res.ok) {
-      // Fallback to empty array if endpoint doesn't exist yet
-      console.warn("Discover endpoint not available");
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_URL}/api/member-pages/discover`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        console.warn("Discover endpoint error:", data.detail || "Unknown error");
+        return [];
+      }
+      return data.pages || data || [];
+    } catch (err) {
+      console.error("Discover fetch error:", err);
       return [];
     }
-    const data = await res.json();
-    return data.pages || data || [];
   },
   
   // Get user's owned pages and followed pages
   getMyPages: async () => {
-    const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/member-pages/my-pages`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!res.ok) {
-      console.error("Failed to load my pages");
-      return { pages: [], following: [] };
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_URL}/api/member-pages/my-pages`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        console.error("My pages error:", data.detail || "Unknown error");
+        return { owned: [], following: [] };
+      }
+      return {
+        owned: data.pages || [],
+        following: data.following || []
+      };
+    } catch (err) {
+      console.error("My pages fetch error:", err);
+      return { owned: [], following: [] };
     }
-    const data = await res.json();
-    // Handle both response formats
-    return {
-      owned: data.pages || [],
-      following: data.following || []
-    };
   },
   
   // Create a new member page
   createPage: async (data) => {
     const token = localStorage.getItem("token");
-    // Transform data to match member-pages API format
     const pageData = {
       page_type: data.page_type || "general",
       name: data.name,
@@ -99,11 +106,22 @@ const pagesAPI = {
       },
       body: JSON.stringify(pageData),
     });
-    const result = await res.json();
-    if (!res.ok) {
-      throw new Error(result.detail || "Failed to create page");
+    
+    // Clone response for potential error logging
+    const resClone = res.clone();
+    
+    try {
+      const result = await res.json();
+      if (!res.ok) {
+        throw new Error(result.detail || "Failed to create page");
+      }
+      return result;
+    } catch (parseError) {
+      // If JSON parsing fails, try to get text from clone
+      const text = await resClone.text();
+      console.error("Create page response:", text);
+      throw new Error("Failed to create page - invalid response");
     }
-    return result;
   },
   
   // Subscribe/follow a page
