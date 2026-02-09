@@ -695,10 +695,11 @@ export default function Pages() {
             ))}
           </div>
         )}
+        </div>
 
         {/* Info Banner - Only show for users with pages */}
         {myPages.length > 0 && activeTab === "my-pages" && (
-          <div className="mt-10 p-6 rounded-3xl bg-gradient-to-r from-cyan-50 to-blue-50 border border-cyan-100/50">
+          <div className="mt-10 p-6 rounded-3xl bg-gradient-to-r from-cyan-50 to-blue-50 border border-cyan-100/50 mb-8">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center shadow-lg shadow-cyan-500/25">
                 <Coins className="w-6 h-6 text-white" />
