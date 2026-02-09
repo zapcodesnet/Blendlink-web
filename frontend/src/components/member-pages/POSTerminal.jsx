@@ -147,28 +147,16 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
     }
   }, [quickSaleItem, quickSaleQuantity, posSettings]);
 
-  // Quick Sale barcode lookup
+  // Quick Sale barcode lookup - PRODUCTION FIX: uses safeFetch
   const lookupBarcode = async (barcode) => {
     if (!barcode.trim()) return;
     
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/api/barcode/search`, {
+      const data = await safeFetch(`${API_URL}/api/barcode/search`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
         body: JSON.stringify({ barcode, page_id: pageId })
       });
 
-      if (!res.ok) {
-        toast.error("Barcode not found");
-        setQuickSaleItem(null);
-        return;
-      }
-
-      const data = await res.json();
       if (data.found && data.item) {
         setQuickSaleItem(data.item);
         setQuickSaleQuantity(1);
@@ -181,7 +169,8 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
         setQuickSaleItem(null);
       }
     } catch (err) {
-      toast.error("Barcode lookup failed");
+      toast.error("Barcode not found");
+      playBeep(false);
       setQuickSaleItem(null);
     }
   };
