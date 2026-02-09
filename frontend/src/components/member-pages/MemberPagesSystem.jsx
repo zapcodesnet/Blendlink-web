@@ -460,12 +460,18 @@ export const MemberPageCard = ({ page, onManage, onView }) => {
 // API functions for member pages
 export const memberPagesAPI = {
   getMyPages: async () => {
-    const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/member-pages/my-pages`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    if (!res.ok) throw new Error("Failed to load pages");
-    return res.json();
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_URL}/api/member-pages/my-pages`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Failed to load pages");
+      return data;
+    } catch (err) {
+      console.error("getMyPages error:", err);
+      throw err;
+    }
   },
 
   createPage: async (data) => {
@@ -478,6 +484,8 @@ export const memberPagesAPI = {
       },
       body: JSON.stringify(data)
     });
+    
+    // Always parse JSON first, then check status
     const result = await res.json();
     if (!res.ok) {
       throw new Error(result.detail || "Failed to create page");
@@ -486,12 +494,18 @@ export const memberPagesAPI = {
   },
 
   getPage: async (pageId) => {
-    const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/member-pages/${pageId}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    if (!res.ok) throw new Error("Failed to load page");
-    return res.json();
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_URL}/api/member-pages/${pageId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Failed to load page");
+      return data;
+    } catch (err) {
+      console.error("getPage error:", err);
+      throw err;
+    }
   },
 
   updatePage: async (pageId, data) => {
