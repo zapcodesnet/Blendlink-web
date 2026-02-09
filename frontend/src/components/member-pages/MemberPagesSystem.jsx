@@ -293,17 +293,25 @@ export const CreateMemberPageModal = ({ onClose, onCreate }) => {
                   onChange={handleSlugChange}
                   placeholder="my-store"
                   className="pl-28"
+                  maxLength={50}
                   data-testid="page-slug-input"
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
                   {isChecking && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
-                  {!isChecking && slugStatus?.available && <Check className="w-4 h-4 text-green-500" />}
-                  {!isChecking && slugStatus && !slugStatus.available && <AlertCircle className="w-4 h-4 text-red-500" />}
+                  {!isChecking && slugStatus?.available && slugStatus?.valid && <Check className="w-4 h-4 text-green-500" />}
+                  {!isChecking && slugStatus && (!slugStatus.available || !slugStatus.valid) && <AlertCircle className="w-4 h-4 text-red-500" />}
                 </div>
               </div>
-              {slugStatus && !slugStatus.available && slugStatus.suggestions.length > 0 && (
+              
+              {/* Slug validation error */}
+              {slugStatus && slugStatus.error && (
+                <p className="text-xs text-red-500 mt-1">{slugStatus.error}</p>
+              )}
+              
+              {/* Slug suggestions */}
+              {slugStatus && !slugStatus.available && slugStatus.suggestions?.length > 0 && (
                 <div className="mt-2">
-                  <p className="text-xs text-red-500 mb-1">This URL is taken. Try:</p>
+                  <p className="text-xs text-muted-foreground mb-1">Try one of these available slugs:</p>
                   <div className="flex flex-wrap gap-1">
                     {slugStatus.suggestions.map((s, i) => (
                       <button
@@ -320,6 +328,11 @@ export const CreateMemberPageModal = ({ onClose, onCreate }) => {
                     ))}
                   </div>
                 </div>
+              )}
+              
+              {/* Slug format help */}
+              {formData.slug && formData.slug.length < 3 && (
+                <p className="text-xs text-muted-foreground mt-1">Slug must be at least 3 characters</p>
               )}
             </div>
 
