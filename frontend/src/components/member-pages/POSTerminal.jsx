@@ -564,6 +564,158 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
 
   return (
     <div className="space-y-6" style={{ touchAction: 'pan-y' }}>
+      {/* Quick Sale Mode Toggle */}
+      {!quickSaleMode ? (
+        <button
+          onClick={() => setQuickSaleMode(true)}
+          className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-2xl p-4 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transition-all"
+          data-testid="quick-sale-toggle"
+        >
+          <Zap className="w-6 h-6" />
+          <span className="text-lg font-bold">Quick Sale Mode</span>
+          <span className="text-sm opacity-90">Scan & Pay Instantly</span>
+        </button>
+      ) : (
+        /* Quick Sale Mode UI */
+        <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border-2 border-amber-200 p-6 space-y-4" data-testid="quick-sale-panel">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+                <Zap className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Quick Sale Mode</h3>
+                <p className="text-sm text-gray-500">Scan barcode → One-tap cash payment</p>
+              </div>
+            </div>
+            <button
+              onClick={exitQuickSale}
+              className="p-2 hover:bg-amber-100 rounded-xl transition-colors"
+            >
+              <X className="w-5 h-5 text-gray-500" />
+            </button>
+          </div>
+
+          {/* Barcode Scanner Input */}
+          <div className="relative">
+            <ScanBarcode className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-amber-500" />
+            <Input
+              ref={barcodeInputRef}
+              type="text"
+              placeholder="Scan or enter barcode..."
+              value={quickSaleBarcode}
+              onChange={handleBarcodeInput}
+              onKeyPress={handleBarcodeKeyPress}
+              className="pl-12 h-14 text-lg font-mono rounded-xl border-amber-200 bg-white focus:border-amber-400 focus:ring-amber-400"
+              autoFocus
+              data-testid="quick-sale-barcode-input"
+            />
+            {quickSaleBarcode && (
+              <button
+                onClick={() => {
+                  setQuickSaleBarcode("");
+                  setQuickSaleItem(null);
+                  barcodeInputRef.current?.focus();
+                }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded"
+              >
+                <X className="w-4 h-4 text-gray-400" />
+              </button>
+            )}
+          </div>
+
+          {/* Scanned Item Display */}
+          {quickSaleItem ? (
+            <div className="bg-white rounded-xl border border-amber-200 p-4 space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center overflow-hidden">
+                  {quickSaleItem.images?.[0] ? (
+                    <img src={quickSaleItem.images[0]} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <ShoppingCart className="w-8 h-8 text-gray-400" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p className="font-bold text-lg text-gray-900">{quickSaleItem.name}</p>
+                  <p className="text-2xl font-bold text-amber-600">
+                    ${(quickSaleItem.price || quickSaleItem.daily_rate || 0).toFixed(2)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Quantity Selector */}
+              <div className="flex items-center justify-center gap-4">
+                <button
+                  onClick={() => setQuickSaleQuantity(Math.max(1, quickSaleQuantity - 1))}
+                  className="w-12 h-12 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                >
+                  <Minus className="w-5 h-5" />
+                </button>
+                <span className="text-3xl font-bold w-16 text-center">{quickSaleQuantity}</span>
+                <button
+                  onClick={() => setQuickSaleQuantity(quickSaleQuantity + 1)}
+                  className="w-12 h-12 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                >
+                  <Plus className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Total & Pay Button */}
+              <div className="pt-4 border-t border-gray-100">
+                <div className="text-center mb-4">
+                  <p className="text-sm text-gray-500">Total (incl. tax)</p>
+                  <p className="text-4xl font-bold text-gray-900">${quickSaleTotal.toFixed(2)}</p>
+                </div>
+                
+                <button
+                  onClick={processQuickSale}
+                  disabled={quickSaleProcessing}
+                  className="w-full h-16 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:opacity-50 text-white rounded-xl flex items-center justify-center gap-3 text-xl font-bold shadow-lg hover:shadow-xl transition-all"
+                  data-testid="quick-sale-pay-btn"
+                >
+                  {quickSaleProcessing ? (
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  ) : (
+                    <>
+                      <Banknote className="w-6 h-6" />
+                      Cash Payment
+                      <ChevronRight className="w-5 h-5" />
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <ScanBarcode className="w-16 h-16 mx-auto mb-3 text-amber-300" />
+              <p className="font-medium">Ready to scan</p>
+              <p className="text-sm">Point your barcode scanner at a product</p>
+            </div>
+          )}
+
+          {/* Quick Sale Instructions */}
+          <div className="flex items-center justify-center gap-6 text-sm text-gray-500">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 font-bold text-xs">1</div>
+              <span>Scan item</span>
+            </div>
+            <ChevronRight className="w-4 h-4" />
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 font-bold text-xs">2</div>
+              <span>Set qty</span>
+            </div>
+            <ChevronRight className="w-4 h-4" />
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold text-xs">3</div>
+              <span>Tap to pay</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Regular POS UI (hidden in Quick Sale mode) */}
+      {!quickSaleMode && (
+        <>
       {/* Items Search Section */}
       <div className="bg-white/70 backdrop-blur-lg rounded-2xl border border-white/50 p-4">
         <div className="flex items-center gap-3">
