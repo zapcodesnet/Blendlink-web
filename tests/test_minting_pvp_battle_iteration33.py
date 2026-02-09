@@ -16,7 +16,7 @@ import os
 import time
 import base64
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pages-debug-stable.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pages-changestream.preview.emergentagent.com').rstrip('/')
 
 # Test credentials
 TEST_USER_EMAIL = "test@example.com"

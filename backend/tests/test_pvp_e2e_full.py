@@ -22,7 +22,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-API_URL = os.environ.get('API_URL', 'https://pages-debug-stable.preview.emergentagent.com')
+API_URL = os.environ.get('API_URL', 'https://pages-changestream.preview.emergentagent.com')
 WS_URL = API_URL.replace('https://', 'wss://').replace('http://', 'ws://')
 
 USER1_EMAIL = 'test@blendlink.com'

@@ -17,7 +17,7 @@ from io import BytesIO
 from PIL import Image
 
 # Get BASE_URL from environment
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pages-debug-stable.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pages-changestream.preview.emergentagent.com')
 
 # Test credentials
 TEST_EMAIL = "test@example.com"

@@ -22,7 +22,7 @@ import base64
 # Get BASE_URL from environment
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 if not BASE_URL:
-    BASE_URL = "https://pages-debug-stable.preview.emergentagent.com"
+    BASE_URL = "https://pages-changestream.preview.emergentagent.com"
 
 # Test credentials
 TEST_EMAIL = "test@example.com"
