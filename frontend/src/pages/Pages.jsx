@@ -87,7 +87,7 @@ const pagesAPI = {
     }
   },
   
-  // Create a new member page
+  // Create a new member page - FIXED: No clone needed, simple pattern
   createPage: async (data) => {
     const token = localStorage.getItem("token");
     const pageData = {
@@ -107,21 +107,12 @@ const pagesAPI = {
       body: JSON.stringify(pageData),
     });
     
-    // Clone response for potential error logging
-    const resClone = res.clone();
-    
-    try {
-      const result = await res.json();
-      if (!res.ok) {
-        throw new Error(result.detail || "Failed to create page");
-      }
-      return result;
-    } catch (parseError) {
-      // If JSON parsing fails, try to get text from clone
-      const text = await resClone.text();
-      console.error("Create page response:", text);
-      throw new Error("Failed to create page - invalid response");
+    // Simple pattern: parse JSON once, then check status
+    const result = await res.json();
+    if (!res.ok) {
+      throw new Error(result.detail || "Failed to create page");
     }
+    return result;
   },
   
   // Subscribe/follow a page
