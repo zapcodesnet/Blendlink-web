@@ -981,13 +981,78 @@ async def get_page_types():
 
 @member_pages_router.get("/check-slug/{slug}")
 async def check_slug(slug: str):
-    """Check if a slug is available"""
-    is_available = await check_slug_availability(slug.lower())
+    """
+    Check if a slug is available and validate format.
+    Returns detailed validation info including:
+    - is_available: whether the slug can be used
+    - is_valid: whether the format is correct
+    - error: any validation error message
+    - suggestions: alternative slug suggestions if not available
+    - validation_rules: current validation rules for frontend reference
+    """
+    slug_lower = slug.lower().strip()
+    
+    # Validate format first
+    is_valid, format_error = validate_slug_format(slug_lower)
+    
+    if not is_valid:
+        # Generate suggestions based on sanitized slug
+        import re
+        sanitized = re.sub(r'[^a-z0-9-]', '-', slug_lower)
+        sanitized = re.sub(r'-+', '-', sanitized).strip('-')
+        if sanitized and len(sanitized) >= SLUG_MIN_LENGTH:
+            suggestions = await generate_slug_suggestions(sanitized)
+        else:
+            suggestions = []
+        
+        return {
+            "slug": slug_lower,
+            "is_available": False,
+            "is_valid": False,
+            "error": format_error,
+            "suggestions": suggestions,
+            "validation_rules": {
+                "min_length": SLUG_MIN_LENGTH,
+                "max_length": SLUG_MAX_LENGTH,
+                "pattern": "^[a-z][a-z0-9-]*[a-z0-9]$",
+                "rules": [
+                    "Must be 3-50 characters",
+                    "Only lowercase letters, numbers, and hyphens",
+                    "Must start with a letter",
+                    "Cannot end with a hyphen",
+                    "No consecutive hyphens",
+                    "Cannot be a reserved name"
+                ]
+            }
+        }
+    
+    # Check availability
+    is_available, availability_error = await check_slug_availability(slug_lower)
+    
     suggestions = []
     if not is_available:
-        suggestions = await generate_slug_suggestions(slug.lower())
+        suggestions = await generate_slug_suggestions(slug_lower)
+    
     return {
-        "slug": slug.lower(),
+        "slug": slug_lower,
+        "is_available": is_available,
+        "is_valid": True,
+        "error": availability_error if not is_available else None,
+        "suggestions": suggestions,
+        "validation_rules": {
+            "min_length": SLUG_MIN_LENGTH,
+            "max_length": SLUG_MAX_LENGTH,
+            "pattern": "^[a-z][a-z0-9-]*[a-z0-9]$",
+            "rules": [
+                "Must be 3-50 characters",
+                "Only lowercase letters, numbers, and hyphens",
+                "Must start with a letter",
+                "Cannot end with a hyphen",
+                "No consecutive hyphens",
+                "Cannot be a reserved name"
+            ]
+        }
+    }
         "is_available": is_available,
         "suggestions": suggestions
     }
