@@ -69,7 +69,7 @@ export const PAGE_TYPES = {
 // Slug validation and checking - uses centralized API service
 const useSlugChecker = () => {
   const [isChecking, setIsChecking] = useState(false);
-  const [slugStatus, setSlugStatus] = useState(null); // { available, suggestions }
+  const [slugStatus, setSlugStatus] = useState(null); // { available, valid, error, suggestions, rules }
   const timeoutRef = useRef(null);
 
   const checkSlug = useCallback(async (slug) => {
@@ -87,10 +87,14 @@ const useSlugChecker = () => {
         const data = await memberPagesApi.checkSlug(slug);
         setSlugStatus({
           available: data.is_available,
-          suggestions: data.suggestions || []
+          valid: data.is_valid,
+          error: data.error,
+          suggestions: data.suggestions || [],
+          rules: data.validation_rules?.rules || []
         });
       } catch (err) {
         console.error("Failed to check slug:", err);
+        setSlugStatus({ available: false, valid: false, error: err.message, suggestions: [] });
       }
       setIsChecking(false);
     }, 500);
@@ -118,14 +122,20 @@ export const CreateMemberPageModal = ({ onClose, onCreate }) => {
       const autoSlug = formData.name
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, "");
-      setFormData(prev => ({ ...prev, slug: autoSlug }));
-      checkSlug(autoSlug);
+        .replace(/^-+|-+$/g, "")  // Remove leading/trailing hyphens
+        .replace(/-+/g, "-");     // Replace multiple hyphens with single
+      
+      // Ensure slug starts with a letter
+      const finalSlug = /^[a-z]/.test(autoSlug) ? autoSlug : `page-${autoSlug}`;
+      setFormData(prev => ({ ...prev, slug: finalSlug }));
+      checkSlug(finalSlug);
     }
   }, [formData.name]);
 
   const handleSlugChange = (e) => {
-    const slug = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "");
+    let slug = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "");
+    // Prevent consecutive hyphens
+    slug = slug.replace(/-+/g, "-");
     setFormData(prev => ({ ...prev, slug }));
     checkSlug(slug);
   };
