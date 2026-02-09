@@ -350,102 +350,103 @@ const CreatePageModal = ({ onClose, onCreate }) => {
               />
             </div>
 
-          {/* Page Type */}
-          <div>
-            <label className="text-sm font-semibold text-gray-700 mb-2 block">Page Type</label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {PAGE_TYPES.map((type) => (
-                <button
-                  key={type.id}
-                  type="button"
-                  onClick={() => setFormData({ ...formData, page_type: type.id })}
-                  className={`p-3 rounded-2xl border-2 text-left transition-all ${
-                    formData.page_type === type.id 
-                      ? "border-cyan-400 bg-cyan-50" 
-                      : "border-gray-100 bg-white hover:border-gray-200"
-                  }`}
-                >
-                  <span className="text-sm font-medium text-gray-800 block">{type.name}</span>
-                  <span className="text-xs text-gray-500">{type.description}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-          
-          {/* Category */}
-          <div>
-            <label className="text-sm font-semibold text-gray-700 mb-2 block">Category</label>
-            <div className="grid grid-cols-3 gap-2">
-              {PAGE_CATEGORIES.map((cat) => (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => setFormData({ ...formData, category: cat.id })}
-                  className={`p-3 rounded-2xl border-2 flex flex-col items-center gap-1.5 text-xs transition-all ${
-                    formData.category === cat.id 
-                      ? "border-cyan-400 bg-cyan-50 text-cyan-700" 
-                      : "border-gray-100 bg-white text-gray-600 hover:border-gray-200"
-                  }`}
-                >
-                  <cat.icon className="w-5 h-5" />
-                  <span className="font-medium">{cat.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-          
-          {/* Description */}
-          <div>
-            <label className="text-sm font-semibold text-gray-700 mb-2 block">Description</label>
-            <Textarea
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Tell people what your page is about..."
-              rows={3}
-              className="rounded-2xl border-gray-200 bg-white/80 focus:border-cyan-400 focus:ring-cyan-400/20 resize-none"
-            />
-          </div>
-          
-          {/* BL Coins Reward */}
-          <div className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-2xl p-4 flex items-center gap-3 border border-cyan-100/50">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-400 flex items-center justify-center shadow-lg shadow-yellow-400/25">
-              <Coins className="w-5 h-5 text-white" />
-            </div>
+            {/* Page Type */}
             <div>
-              <p className="text-sm font-semibold text-gray-800">Earn 40 BL Coins!</p>
-              <p className="text-xs text-gray-500">Create your page and start earning rewards</p>
+              <label className="text-sm font-semibold text-gray-700 mb-2 block">Page Type</label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {PAGE_TYPES.map((type) => (
+                  <button
+                    key={type.id}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, page_type: type.id })}
+                    className={`p-2.5 rounded-2xl border-2 text-left transition-all ${
+                      formData.page_type === type.id 
+                        ? "border-cyan-400 bg-cyan-50" 
+                        : "border-gray-100 bg-white hover:border-gray-200"
+                    }`}
+                  >
+                    <span className="text-sm font-medium text-gray-800 block">{type.name}</span>
+                    <span className="text-xs text-gray-500 line-clamp-1">{type.description}</span>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
           
-          {/* Actions */}
-          <div className="flex gap-3 pt-2">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={onClose} 
-              className="flex-1 h-12 rounded-2xl border-gray-200 text-gray-600 hover:bg-gray-50"
-            >
-              Cancel
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={loading} 
-              className="flex-1 h-12 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white border-0 shadow-lg shadow-cyan-500/25 font-semibold"
-              data-testid="create-page-submit"
-            >
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Creating...
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <Plus className="w-4 h-4" /> Create Page
-                </span>
-              )}
-            </Button>
-          </div>
-        </form>
+            {/* Category */}
+            <div>
+              <label className="text-sm font-semibold text-gray-700 mb-2 block">Category</label>
+              <div className="grid grid-cols-3 gap-2">
+                {PAGE_CATEGORIES.map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, category: cat.id })}
+                    className={`p-2.5 rounded-2xl border-2 flex flex-col items-center gap-1 text-xs transition-all ${
+                      formData.category === cat.id 
+                        ? "border-cyan-400 bg-cyan-50 text-cyan-700" 
+                        : "border-gray-100 bg-white text-gray-600 hover:border-gray-200"
+                    }`}
+                  >
+                    <cat.icon className="w-4 h-4" />
+                    <span className="font-medium">{cat.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          
+            {/* Description */}
+            <div>
+              <label className="text-sm font-semibold text-gray-700 mb-2 block">Description</label>
+              <Textarea
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Tell people what your page is about..."
+                rows={2}
+                className="rounded-2xl border-gray-200 bg-white/80 focus:border-cyan-400 focus:ring-cyan-400/20 resize-none"
+              />
+            </div>
+          
+            {/* BL Coins Reward */}
+            <div className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-2xl p-3 flex items-center gap-3 border border-cyan-100/50">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-400 flex items-center justify-center shadow-lg shadow-yellow-400/25 flex-shrink-0">
+                <Coins className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-800">Earn 40 BL Coins!</p>
+                <p className="text-xs text-gray-500">Create your page and start earning</p>
+              </div>
+            </div>
+          
+            {/* Actions */}
+            <div className="flex gap-3 pt-1">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={onClose} 
+                className="flex-1 h-11 rounded-2xl border-gray-200 text-gray-600 hover:bg-gray-50"
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={loading} 
+                className="flex-1 h-11 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white border-0 shadow-lg shadow-cyan-500/25 font-semibold"
+                data-testid="create-page-submit"
+              >
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Creating...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <Plus className="w-4 h-4" /> Create Page
+                  </span>
+                )}
+              </Button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
