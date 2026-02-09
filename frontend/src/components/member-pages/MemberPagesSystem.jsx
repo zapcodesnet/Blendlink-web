@@ -14,14 +14,13 @@ import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
+import { memberPagesApi } from "../../services/memberPagesApi";
 import {
   Store, UtensilsCrossed, Briefcase, Home, FileText, Plus, X, Check,
   AlertCircle, Loader2, MapPin, Clock, DollarSign, Package, Calendar,
   BarChart3, Bell, Settings, Globe, ChevronRight, ExternalLink, Eye,
   Sparkles, Image, Tag, Users, Star, TrendingUp, ShoppingCart
 } from "lucide-react";
-
-const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 // Page type configurations
 export const PAGE_TYPES = {
