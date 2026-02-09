@@ -2,7 +2,50 @@
 
 ## Latest Update: February 9, 2026
 
-### Sections 3-6 - Referral, POS, Public Pages, Maps (February 9, 2026) - LATEST
+### Section 0 - JSON Body Stream Error Fix (February 9, 2026) - LATEST
+
+#### Critical Bug Fixed:
+
+**"Failed to execute 'json' on 'Response': body stream already read" Error ✅ CRITICAL FIX**
+
+**Root Cause Analysis:**
+The error occurred when `res.ok` was checked AFTER calling `.json()` in some cases, but BEFORE in others. This caused inconsistent behavior where:
+1. If `!res.ok`, the error path might try to access the already-consumed response body
+2. Promise.all error handlers might attempt to re-read responses
+
+**Solution Applied:**
+1. Always call `.json()` first, storing result in variable, THEN check `res.ok`
+2. Added `response.clone()` in createPage for robust error logging
+3. Wrapped all API calls in try/catch with proper error handling
+4. Consistent error handling pattern: parse → check status → throw/return
+
+**Files Fixed:**
+- `/app/frontend/src/pages/Pages.jsx` - All pagesAPI functions rewritten with safe JSON handling
+- `/app/frontend/src/components/member-pages/MemberPagesSystem.jsx` - memberPagesAPI functions fixed
+
+**Pattern Applied:**
+```javascript
+// CORRECT - Safe pattern
+const data = await res.json();
+if (!res.ok) throw new Error(data.detail || "Error");
+return data;
+
+// WRONG - Causes body stream error
+if (!res.ok) throw new Error("Error"); // Doesn't consume body
+return res.json(); // May fail if body was consumed elsewhere
+```
+
+**Test Results:**
+- ✅ Page creation works without JSON errors
+- ✅ Success toast shows "+40 BL Coins"
+- ✅ New pages appear immediately in My Pages
+- ✅ Page count updates correctly (6 pages showing)
+- ✅ Scrolling works on mobile
+- ✅ No console errors
+
+---
+
+### Sections 3-6 - Referral, POS, Public Pages, Maps (February 9, 2026)
 
 #### Section 3: Referral System ✅
 - Enhanced referral performance display with detailed stats
