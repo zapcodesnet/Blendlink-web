@@ -303,18 +303,18 @@ const CreatePageModal = ({ onClose, onCreate }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 overflow-y-auto overscroll-contain"
+      className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] overflow-y-auto overscroll-contain"
       style={{ touchAction: 'pan-y' }}
       onClick={onClose}
     >
-      {/* Scrollable container - uses items-start instead of items-center to prevent top cutoff */}
+      {/* Scrollable container - positioned at top with extra bottom padding for nav bar */}
       <div 
-        className="min-h-full flex items-start justify-center p-4 pt-6 pb-32 safe-bottom"
+        className="min-h-full flex items-start justify-center px-4 pt-4 pb-40"
         style={{ touchAction: 'pan-y' }}
       >
         <div 
-          className="bg-white/95 backdrop-blur-xl rounded-3xl p-6 sm:p-8 w-full max-w-lg border border-white/50 shadow-2xl mb-8"
-          style={{ touchAction: 'pan-y' }}
+          className="bg-white/95 backdrop-blur-xl rounded-3xl p-5 sm:p-6 w-full max-w-lg border border-white/50 shadow-2xl my-2"
+          style={{ touchAction: 'auto' }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
