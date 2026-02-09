@@ -579,7 +579,7 @@ export default function MemberPageDashboard() {
       setPage(data);
     } catch (err) {
       toast.error("Failed to load page");
-      navigate("/member-pages");
+      navigate("/pages");
     }
     setLoading(false);
   };
@@ -654,8 +654,11 @@ export default function MemberPageDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-gradient-to-br from-[#F0F5FF] via-white to-[#F0F8FF] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-full border-4 border-cyan-200 border-t-cyan-500 animate-spin mx-auto"></div>
+          <p className="mt-4 text-gray-500">Loading dashboard...</p>
+        </div>
       </div>
     );
   }
@@ -666,6 +669,17 @@ export default function MemberPageDashboard() {
 
   const type = PAGE_TYPES[page.page_type] || PAGE_TYPES.general;
   const TypeIcon = type.icon;
+
+  // Get gradient for page type
+  const getTypeGradient = () => {
+    switch(page.page_type) {
+      case 'store': return 'from-blue-500 to-indigo-600';
+      case 'restaurant': return 'from-orange-500 to-red-500';
+      case 'services': return 'from-purple-500 to-pink-500';
+      case 'rental': return 'from-green-500 to-teal-500';
+      default: return 'from-cyan-500 to-blue-500';
+    }
+  };
 
   const tabs = [
     { id: "overview", label: "Overview", icon: BarChart3 },
@@ -679,34 +693,38 @@ export default function MemberPageDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-background" data-testid="page-dashboard">
-      {/* Header */}
-      <header className="glass sticky top-0 z-40 border-b border-border/50 safe-top">
-        <div className="max-w-6xl mx-auto px-4 h-14 flex items-center gap-4">
-          <button onClick={() => navigate("/member-pages")} className="p-2 hover:bg-muted rounded-full">
-            <ChevronLeft className="w-5 h-5" />
+    <div className="min-h-screen bg-gradient-to-br from-[#F0F5FF] via-white to-[#F0F8FF] pb-20" data-testid="page-dashboard" style={{ touchAction: 'pan-y' }}>
+      {/* Premium Glassmorphism Header */}
+      <header className="sticky top-0 z-40 backdrop-blur-xl bg-white/70 border-b border-white/50 shadow-sm safe-top">
+        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center gap-3">
+          <button 
+            onClick={() => navigate("/pages")} 
+            className="p-2.5 hover:bg-white/80 rounded-2xl transition-all"
+          >
+            <ChevronLeft className="w-5 h-5 text-gray-600" />
           </button>
           
-          <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${type.color} flex items-center justify-center`}>
-            <TypeIcon className="w-4 h-4 text-white" />
+          <div className={`w-10 h-10 rounded-2xl bg-gradient-to-br ${getTypeGradient()} flex items-center justify-center shadow-lg`}>
+            <TypeIcon className="w-5 h-5 text-white" />
           </div>
           
           <div className="flex-1 min-w-0">
-            <h1 className="font-semibold truncate">{page.name}</h1>
-            <p className="text-xs text-muted-foreground">/{page.slug}</p>
+            <h1 className="font-bold text-gray-900 truncate">{page.name}</h1>
+            <p className="text-xs text-gray-500">/{page.slug}</p>
           </div>
 
           <div className="flex items-center gap-2">
             {page.is_published ? (
-              <span className="px-2 py-1 bg-green-500/10 text-green-500 text-xs rounded-full flex items-center gap-1">
+              <span className="px-3 py-1 bg-green-100 text-green-600 text-xs font-medium rounded-full flex items-center gap-1">
                 <Globe className="w-3 h-3" /> Live
               </span>
             ) : (
-              <span className="px-2 py-1 bg-gray-500/10 text-gray-500 text-xs rounded-full">Draft</span>
+              <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">Draft</span>
             )}
             <Button 
               size="sm" 
               variant="outline"
+              className="rounded-xl border-gray-200 hover:bg-white"
               onClick={() => window.open(`${window.location.origin}/${page.slug}`, '_blank')}
             >
               <ExternalLink className="w-4 h-4 mr-1" /> View
@@ -715,24 +733,27 @@ export default function MemberPageDashboard() {
         </div>
       </header>
 
-      {/* Tabs */}
-      <div className="border-b border-border bg-card">
+      {/* Premium Tabs - Horizontal scrollable */}
+      <div className="bg-white/50 backdrop-blur-lg border-b border-white/50">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="flex gap-1 overflow-x-auto">
+          <div 
+            className="flex gap-1 overflow-x-auto scrollbar-hide -mx-4 px-4"
+            style={{ touchAction: 'pan-x', WebkitOverflowScrolling: 'touch' }}
+          >
             {tabs.map((tab) => {
               const TabIcon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                  className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap flex-shrink-0 ${
                     activeTab === tab.id
-                      ? "border-primary text-primary"
-                      : "border-transparent text-muted-foreground hover:text-foreground"
+                      ? "border-cyan-500 text-cyan-600 bg-cyan-50/50"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                   }`}
                 >
                   <TabIcon className="w-4 h-4" />
-                  {tab.label}
+                  <span className="hidden sm:inline">{tab.label}</span>
                 </button>
               );
             })}
@@ -741,7 +762,7 @@ export default function MemberPageDashboard() {
       </div>
 
       {/* Content */}
-      <main className="max-w-6xl mx-auto px-4 py-6">
+      <main className="max-w-6xl mx-auto px-4 py-6" style={{ touchAction: 'pan-y' }}>
         {activeTab === "overview" && (
           <AnalyticsDashboard pageId={pageId} pageName={page.name} />
         )}
@@ -769,9 +790,12 @@ export default function MemberPageDashboard() {
           />
         )}
         {activeTab === "orders" && (
-          <div className="text-center py-12 text-muted-foreground">
-            <ShoppingCart className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p>No orders yet</p>
+          <div className="text-center py-16">
+            <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center mx-auto mb-4">
+              <ShoppingCart className="w-10 h-10 text-gray-400" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">No Orders Yet</h3>
+            <p className="text-gray-500">Orders will appear here once customers start ordering</p>
           </div>
         )}
         {activeTab === "delivery" && (
