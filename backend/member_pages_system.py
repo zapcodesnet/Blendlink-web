@@ -1228,22 +1228,30 @@ async def create_member_page(
     if request.page_type not in PAGE_TYPES:
         raise HTTPException(status_code=400, detail=f"Invalid page type. Must be one of: {list(PAGE_TYPES.keys())}")
     
-    # Check slug availability
+    # Check slug availability using enhanced validation
     slug = request.slug.lower().strip()
     if not slug:
         raise HTTPException(status_code=400, detail="Slug is required")
     
-    # Validate slug format
-    import re
-    if not re.match(r'^[a-z0-9-]+$', slug):
-        raise HTTPException(status_code=400, detail="Slug can only contain lowercase letters, numbers, and hyphens")
-    
-    if not await check_slug_availability(slug):
+    # Use the comprehensive slug validation
+    is_valid, format_error = validate_slug_format(slug)
+    if not is_valid:
         suggestions = await generate_slug_suggestions(slug)
         raise HTTPException(
             status_code=400, 
             detail={
-                "message": f"Slug '{slug}' is already taken",
+                "message": format_error,
+                "suggestions": suggestions
+            }
+        )
+    
+    is_available, availability_error = await check_slug_availability(slug)
+    if not is_available:
+        suggestions = await generate_slug_suggestions(slug)
+        raise HTTPException(
+            status_code=400, 
+            detail={
+                "message": availability_error,
                 "suggestions": suggestions
             }
         )
