@@ -568,13 +568,13 @@ export const RPSBidding = ({
   const playerModifiers = playerValueCalc.modifiers;
   const opponentModifiers = opponentValueCalc.modifiers;
   
-  // Determine if player has the $1M advantage (higher effective value)
+  // Determine if player has the advantage (higher effective value = $2M bonus)
   const hasPlayerAdvantage = powerAdvantage?.advantage === 'player' || playerEffectiveValue > opponentEffectiveValue;
   const hasOpponentAdvantage = powerAdvantage?.advantage === 'opponent' || opponentEffectiveValue > playerEffectiveValue;
   
-  // Use $6M bid options if player has advantage
+  // Use $6M and $7M bid options if player has advantage
   const currentBidOptions = hasPlayerAdvantage ? BID_OPTIONS_WITH_ADVANTAGE : BID_OPTIONS;
-  const currentMaxBid = hasPlayerAdvantage ? 6_000_000 : MAX_BID;
+  const currentMaxBid = hasPlayerAdvantage ? 7_000_000 : MAX_BID;  // UPDATED: $7M max with advantage
   
   // Game state
   const [gamePhase, setGamePhase] = useState('countdown'); // countdown, choosing, revealing, finished
