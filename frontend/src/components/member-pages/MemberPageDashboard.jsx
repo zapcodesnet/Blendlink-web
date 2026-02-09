@@ -811,13 +811,7 @@ export default function MemberPageDashboard() {
           />
         )}
         {activeTab === "orders" && (
-          <div className="text-center py-16">
-            <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center mx-auto mb-4">
-              <ShoppingCart className="w-10 h-10 text-gray-400" />
-            </div>
-            <h3 className="text-xl font-bold text-gray-800 mb-2">No Orders Yet</h3>
-            <p className="text-gray-500">Orders will appear here once customers start ordering</p>
-          </div>
+          <OrdersManager pageId={pageId} pageType={page.page_type} />
         )}
         {activeTab === "delivery" && (
           <CustomerOptionsManager pageId={pageId} pageType={page.page_type} />
