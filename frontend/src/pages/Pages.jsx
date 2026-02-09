@@ -309,11 +309,11 @@ const CreatePageModal = ({ onClose, onCreate }) => {
     >
       {/* Scrollable container - uses items-start instead of items-center to prevent top cutoff */}
       <div 
-        className="min-h-full flex items-start justify-center p-4 pt-6 pb-24"
+        className="min-h-full flex items-start justify-center p-4 pt-6 pb-32 safe-bottom"
         style={{ touchAction: 'pan-y' }}
       >
         <div 
-          className="bg-white/95 backdrop-blur-xl rounded-3xl p-6 sm:p-8 w-full max-w-lg border border-white/50 shadow-2xl"
+          className="bg-white/95 backdrop-blur-xl rounded-3xl p-6 sm:p-8 w-full max-w-lg border border-white/50 shadow-2xl mb-8"
           style={{ touchAction: 'pan-y' }}
           onClick={(e) => e.stopPropagation()}
         >
