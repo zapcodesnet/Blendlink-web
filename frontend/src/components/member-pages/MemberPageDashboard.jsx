@@ -568,6 +568,7 @@ export default function MemberPageDashboard() {
   const navigate = useNavigate();
   const [page, setPage] = useState(null);
   const [analytics, setAnalytics] = useState(null);
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   const wsRef = useRef(null);
@@ -577,11 +578,29 @@ export default function MemberPageDashboard() {
     try {
       const data = await memberPagesAPI.getPage(pageId);
       setPage(data);
+      // Also load products for POS
+      loadProducts();
     } catch (err) {
       toast.error("Failed to load page");
       navigate("/pages");
     }
     setLoading(false);
+  };
+
+  // Load products/items for POS
+  const loadProducts = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_URL}/api/page-products/${pageId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setProducts(data.products || []);
+      }
+    } catch (err) {
+      console.error("Failed to load products:", err);
+    }
   };
 
   // Load analytics
