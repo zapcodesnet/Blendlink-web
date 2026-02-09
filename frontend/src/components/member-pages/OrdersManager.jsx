@@ -252,7 +252,7 @@ export default function OrdersManager({ pageId, pageType }) {
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/api/page-orders/${pageId}/${orderId}/status`, {
+      const res = await fetch(`${API_URL}/api/member-pages/orders/${orderId}/status`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
