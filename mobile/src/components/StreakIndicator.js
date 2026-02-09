@@ -236,12 +236,64 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.9)',
     fontWeight: '600',
   },
+  immunityText: {
+    color: '#93C5FD',
+    fontWeight: '600',
+  },
   dotsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   dot: {
     // Styles applied dynamically
+  },
+  // Tooltip styles
+  tooltipOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  tooltipContent: {
+    padding: 20,
+    borderRadius: 16,
+    maxWidth: '80%',
+    alignItems: 'center',
+  },
+  tooltipTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 10,
+  },
+  tooltipText: {
+    fontSize: 16,
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  tooltipSubtext: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  multiplierTable: {
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  tableRow: {
+    fontSize: 12,
+    color: '#D1D5DB',
+    textAlign: 'center',
+    marginVertical: 2,
+  },
+  tapToClose: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 10,
   },
 });
 
