@@ -487,6 +487,11 @@ ${Object.entries(report.order_types).map(([type, count]) =>
           </div>
         </div>
       </div>
+
+      {/* Email Report Settings */}
+      <div className="print:hidden">
+        <EmailReportSettings pageId={pageId} />
+      </div>
     </div>
   );
 }
