@@ -44,35 +44,60 @@ const PAGE_CATEGORIES = [
   { id: "other", name: "Other", icon: FileText },
 ];
 
-// API functions for pages
+// API functions for member pages (using correct /api/member-pages endpoints)
 const pagesAPI = {
+  // Get all public/discoverable pages
   getPages: async () => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/pages/`, {
+    const res = await fetch(`${API_URL}/api/member-pages/discover`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!res.ok) throw new Error("Failed to load pages");
-    return res.json();
+    if (!res.ok) {
+      // Fallback to empty array if endpoint doesn't exist yet
+      console.warn("Discover endpoint not available");
+      return [];
+    }
+    const data = await res.json();
+    return data.pages || data || [];
   },
   
+  // Get user's owned pages and followed pages
   getMyPages: async () => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/pages/my-pages/`, {
+    const res = await fetch(`${API_URL}/api/member-pages/my-pages`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!res.ok) throw new Error("Failed to load my pages");
-    return res.json();
+    if (!res.ok) {
+      console.error("Failed to load my pages");
+      return { pages: [], following: [] };
+    }
+    const data = await res.json();
+    // Handle both response formats
+    return {
+      owned: data.pages || [],
+      following: data.following || []
+    };
   },
   
+  // Create a new member page
   createPage: async (data) => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/pages/`, {
+    // Transform data to match member-pages API format
+    const pageData = {
+      page_type: data.page_type || "general",
+      name: data.name,
+      slug: data.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
+      description: data.description || "",
+      category: data.category || "business",
+    };
+    
+    const res = await fetch(`${API_URL}/api/member-pages/`, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}` 
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(pageData),
     });
     const result = await res.json();
     if (!res.ok) {
@@ -81,24 +106,28 @@ const pagesAPI = {
     return result;
   },
   
+  // Subscribe/follow a page
   followPage: async (pageId) => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/pages/${pageId}/follow`, {
+    const res = await fetch(`${API_URL}/api/member-pages/${pageId}/subscribe`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!res.ok) throw new Error("Failed to follow page");
-    return res.json();
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.detail || "Failed to follow page");
+    return result;
   },
   
+  // Unsubscribe/unfollow a page
   unfollowPage: async (pageId) => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/pages/${pageId}/unfollow`, {
+    const res = await fetch(`${API_URL}/api/member-pages/${pageId}/unsubscribe`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!res.ok) throw new Error("Failed to unfollow page");
-    return res.json();
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.detail || "Failed to unfollow page");
+    return result;
   },
 };
 
