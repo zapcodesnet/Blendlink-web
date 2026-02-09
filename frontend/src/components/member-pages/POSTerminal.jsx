@@ -293,19 +293,14 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
   };
 
   // Load POS settings
+  // Load POS settings - PRODUCTION FIX: uses safeFetch
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(`${API_URL}/api/pos/${pageId}/settings`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setPosSettings(data.settings);
-        }
+        const data = await safeFetch(`${API_URL}/api/pos/${pageId}/settings`);
+        setPosSettings(data.settings);
       } catch (err) {
-        console.error("Failed to load POS settings");
+        console.error("Failed to load POS settings:", err.message);
       }
     };
     loadSettings();
