@@ -24,13 +24,14 @@ import { StreakIndicator } from './StreakIndicator';
 
 // Constants from user spec
 const STARTING_MONEY = 5_000_000;
+const STARTING_MONEY_WITH_ADVANTAGE = 7_000_000;  // NEW: $7M when player has advantage
 const MIN_BID = 1_000_000;
 const MAX_BID = 5_000_000;
-const ADVANTAGE_BONUS = 1_000_000; // $1M bonus for higher Dollar Value
+const ADVANTAGE_BONUS = 2_000_000; // NEW: $2M bonus for higher effective Dollar Value (not $1M)
 const BID_OPTIONS = [1_000_000, 2_000_000, 3_000_000, 4_000_000, 5_000_000];
-const BID_OPTIONS_WITH_ADVANTAGE = [1_000_000, 2_000_000, 3_000_000, 4_000_000, 5_000_000, 6_000_000]; // $6M when player has advantage
+const BID_OPTIONS_WITH_ADVANTAGE = [1_000_000, 2_000_000, 3_000_000, 4_000_000, 5_000_000, 6_000_000, 7_000_000]; // NEW: $6M and $7M when player has advantage
 const COUNTDOWN_SECONDS = 10;
-const CHOICE_TIMEOUT_SECONDS = 5;
+const CHOICE_TIMEOUT_SECONDS = 10;  // UPDATED: 10 seconds for RPS choice phase (was 5)
 
 // RPS choices with REAL OBJECT IMAGES (not hand signs as per spec)
 const RPS_CHOICES = [
