@@ -7,6 +7,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { safeFetch } from "../../services/memberPagesApi";
 import {
   ScanLine, Camera, Upload, Search, Loader2, Package, Check,
   ShoppingCart, X, Sparkles, QrCode
@@ -24,7 +25,7 @@ export default function ScannerTools({ pageId, pageType, onItemFound }) {
   const canvasRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // Barcode search
+  // Barcode search - PRODUCTION FIX: uses safeFetch
   const searchByBarcode = async (barcode) => {
     if (!barcode.trim()) return;
     
@@ -32,17 +33,10 @@ export default function ScannerTools({ pageId, pageType, onItemFound }) {
     setResult(null);
     
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/api/barcode/search`, {
+      const data = await safeFetch(`${API_URL}/api/barcode/search`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
         body: JSON.stringify({ barcode: barcode.trim(), page_id: pageId })
       });
-      
-      const data = await res.json();
       setResult(data);
       
       if (data.found && onItemFound) {
@@ -54,33 +48,25 @@ export default function ScannerTools({ pageId, pageType, onItemFound }) {
     setScanning(false);
   };
 
-  // AI Scan with image
+  // AI Scan with image - PRODUCTION FIX: uses safeFetch
   const scanWithAI = async (imageBase64) => {
     setScanning(true);
     setResult(null);
     
     try {
-      const token = localStorage.getItem("token");
-      
       // Remove data URL prefix if present
       const base64Data = imageBase64.includes(',') 
         ? imageBase64.split(',')[1] 
         : imageBase64;
       
-      const res = await fetch(`${API_URL}/api/ai-scan/scan`, {
+      const data = await safeFetch(`${API_URL}/api/ai-scan/scan`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
         body: JSON.stringify({
           image_base64: base64Data,
           page_id: pageId,
           scan_type: "identify"
         })
       });
-      
-      const data = await res.json();
       setResult(data);
       
       if (data.success && data.matched && data.item && onItemFound) {
