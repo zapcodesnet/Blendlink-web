@@ -2092,6 +2092,111 @@ async def export_analytics(
     return analytics
 
 
+@page_analytics_router.get("/{page_id}/daily-report")
+async def get_daily_report(
+    page_id: str,
+    date: str = None,  # YYYY-MM-DD format
+    current_user: dict = Depends(get_current_user)
+):
+    """Get daily sales report for a specific date"""
+    user_id = current_user["user_id"]
+    
+    # Verify page ownership
+    page = await db.member_pages.find_one({"page_id": page_id})
+    if not page or page["owner_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Parse date
+    if date:
+        try:
+            report_date = datetime.strptime(date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+    else:
+        report_date = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    # Date range for the day
+    start_of_day = report_date.replace(hour=0, minute=0, second=0, microsecond=0)
+    end_of_day = start_of_day + timedelta(days=1)
+    
+    # Fetch orders for the date
+    orders = await db.page_orders.find({
+        "page_id": page_id,
+        "created_at": {
+            "$gte": start_of_day.isoformat(),
+            "$lt": end_of_day.isoformat()
+        }
+    }).to_list(1000)
+    
+    # Summary metrics
+    total_sales = sum(o.get("total", 0) for o in orders)
+    total_orders = len(orders)
+    average_order = total_sales / total_orders if total_orders > 0 else 0
+    total_items_sold = sum(
+        sum(item.get("quantity", 1) for item in o.get("items", []))
+        for o in orders
+    )
+    
+    # Top products
+    product_sales = {}
+    for order in orders:
+        for item in order.get("items", []):
+            name = item.get("name", "Unknown")
+            if name not in product_sales:
+                product_sales[name] = {"name": name, "quantity": 0, "revenue": 0}
+            product_sales[name]["quantity"] += item.get("quantity", 1)
+            product_sales[name]["revenue"] += item.get("price", 0) * item.get("quantity", 1)
+    
+    top_products = sorted(product_sales.values(), key=lambda x: x["revenue"], reverse=True)[:5]
+    
+    # Hourly sales distribution
+    hourly_sales = [0] * 24
+    for order in orders:
+        try:
+            order_time = datetime.fromisoformat(order["created_at"].replace("Z", "+00:00"))
+            hour = order_time.hour
+            hourly_sales[hour] += order.get("total", 0)
+        except:
+            pass
+    
+    # Peak hours (top 3)
+    peak_hours = [
+        {"hour": h, "sales": s}
+        for h, s in enumerate(hourly_sales)
+        if s > 0
+    ]
+    peak_hours.sort(key=lambda x: x["sales"], reverse=True)
+    peak_hours = peak_hours[:3]
+    
+    # Payment methods breakdown
+    payment_methods = {}
+    for order in orders:
+        method = order.get("payment_method", "unknown")
+        payment_methods[method] = payment_methods.get(method, 0) + order.get("total", 0)
+    
+    # Order types breakdown
+    order_types = {}
+    for order in orders:
+        otype = order.get("order_type", "pickup")
+        order_types[otype] = order_types.get(otype, 0) + 1
+    
+    return {
+        "date": date or start_of_day.strftime("%Y-%m-%d"),
+        "page_name": page.get("name"),
+        "summary": {
+            "total_sales": total_sales,
+            "total_orders": total_orders,
+            "average_order": average_order,
+            "total_items_sold": total_items_sold
+        },
+        "top_products": top_products,
+        "hourly_sales": hourly_sales,
+        "peak_hours": peak_hours,
+        "payment_methods": payment_methods,
+        "order_types": order_types
+    }
+
+
 # ============== ORDER STATUS UPDATE ==============
 
 class OrderStatusUpdate(BaseModel):
