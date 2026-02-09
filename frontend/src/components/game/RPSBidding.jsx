@@ -705,7 +705,7 @@ export const RPSBidding = ({
     }
   }, [gamePhase, playerBankrupt, soundEnabled, onRoundComplete]);
   
-  // Choice timer
+  // Choice timer - UPDATED: Auto-select random choice + $1M bid on timeout per user spec
   useEffect(() => {
     if (gamePhase === 'choosing') {
       const timer = setInterval(() => {
@@ -713,11 +713,21 @@ export const RPSBidding = ({
           if (prev <= 1) {
             clearInterval(timer);
             
-            // Timeout - auto-loss if no choice made (use ref to avoid stale closure)
+            // UPDATED per user spec: On timeout, auto-select RANDOM choice + $1M minimum bid
             if (!playerChoice) {
-              toast.error('Time out! You lose this round.');
-              handleSubmitRef.current?.(true);
+              // Auto-select random RPS choice
+              const randomChoice = RPS_CHOICES[Math.floor(Math.random() * 3)].id;
+              setPlayerChoice(randomChoice);
+              setPlayerBid(MIN_BID);  // Always $1M on timeout
+              
+              toast.error(`⏰ Time out! Auto-selected ${randomChoice.toUpperCase()} with $1M bid.`);
+              
+              // Small delay to allow state update, then submit
+              setTimeout(() => {
+                handleSubmitRef.current?.(true, randomChoice, MIN_BID);
+              }, 100);
             } else {
+              // Player made a choice but didn't submit - auto-submit
               handleSubmitRef.current?.(false);
             }
             return 0;
