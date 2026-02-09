@@ -261,12 +261,13 @@ const PageCard = ({ page, onFollow, onUnfollow, onView, isFollowing, isOwner }) 
   );
 };
 
-// Create Page Modal
+// Create Page Modal - Premium Glassmorphism Design
 const CreatePageModal = ({ onClose, onCreate }) => {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     category: "business",
+    page_type: "general",
     website: "",
   });
   const [loading, setLoading] = useState(false);
@@ -281,81 +282,156 @@ const CreatePageModal = ({ onClose, onCreate }) => {
     setLoading(true);
     try {
       await onCreate(formData);
-      toast.success("Page created! +40 BL Coins");
+      toast.success("Page created! +40 BL Coins", {
+        description: "Your new business page is ready to customize!"
+      });
       onClose();
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.message || "Failed to create page");
     }
     setLoading(false);
   };
 
+  // Page types for the new system
+  const PAGE_TYPES = [
+    { id: "general", name: "General", description: "Basic page for any purpose" },
+    { id: "store", name: "Store", description: "E-commerce with products" },
+    { id: "restaurant", name: "Restaurant", description: "Menu & food ordering" },
+    { id: "services", name: "Services", description: "Booking & appointments" },
+    { id: "rental", name: "Rentals", description: "Equipment & property" },
+  ];
+
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-card rounded-2xl p-6 w-full max-w-md border border-border my-8">
-        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-          <FileText className="w-5 h-5 text-primary" /> Create Page
-        </h2>
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div 
+        className="bg-white/90 backdrop-blur-xl rounded-3xl p-8 w-full max-w-lg border border-white/50 shadow-2xl my-8"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center shadow-lg shadow-cyan-500/25">
+              <Plus className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">Create Page</h2>
+              <p className="text-sm text-gray-500">Set up your business presence</p>
+            </div>
+          </div>
+          <button 
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+          >
+            <ChevronLeft className="w-5 h-5 text-gray-400 rotate-180" />
+          </button>
+        </div>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Page Name */}
           <div>
-            <label className="text-sm font-medium mb-1 block">Page Name *</label>
+            <label className="text-sm font-semibold text-gray-700 mb-2 block">Page Name *</label>
             <Input
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="Your page name"
+              placeholder="My Awesome Business"
+              className="h-12 rounded-2xl border-gray-200 bg-white/80 focus:border-cyan-400 focus:ring-cyan-400/20"
               data-testid="page-name-input"
             />
           </div>
-          
+
+          {/* Page Type */}
           <div>
-            <label className="text-sm font-medium mb-1 block">Category</label>
+            <label className="text-sm font-semibold text-gray-700 mb-2 block">Page Type</label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {PAGE_TYPES.map((type) => (
+                <button
+                  key={type.id}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, page_type: type.id })}
+                  className={`p-3 rounded-2xl border-2 text-left transition-all ${
+                    formData.page_type === type.id 
+                      ? "border-cyan-400 bg-cyan-50" 
+                      : "border-gray-100 bg-white hover:border-gray-200"
+                  }`}
+                >
+                  <span className="text-sm font-medium text-gray-800 block">{type.name}</span>
+                  <span className="text-xs text-gray-500">{type.description}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          {/* Category */}
+          <div>
+            <label className="text-sm font-semibold text-gray-700 mb-2 block">Category</label>
             <div className="grid grid-cols-3 gap-2">
               {PAGE_CATEGORIES.map((cat) => (
                 <button
                   key={cat.id}
                   type="button"
                   onClick={() => setFormData({ ...formData, category: cat.id })}
-                  className={`p-2 rounded-lg border flex flex-col items-center gap-1 text-xs ${
-                    formData.category === cat.id ? "border-primary bg-primary/10" : "border-border"
+                  className={`p-3 rounded-2xl border-2 flex flex-col items-center gap-1.5 text-xs transition-all ${
+                    formData.category === cat.id 
+                      ? "border-cyan-400 bg-cyan-50 text-cyan-700" 
+                      : "border-gray-100 bg-white text-gray-600 hover:border-gray-200"
                   }`}
                 >
-                  <cat.icon className="w-4 h-4" />
-                  {cat.name}
+                  <cat.icon className="w-5 h-5" />
+                  <span className="font-medium">{cat.name}</span>
                 </button>
               ))}
             </div>
           </div>
           
+          {/* Description */}
           <div>
-            <label className="text-sm font-medium mb-1 block">Description</label>
+            <label className="text-sm font-semibold text-gray-700 mb-2 block">Description</label>
             <Textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="What is your page about?"
+              placeholder="Tell people what your page is about..."
               rows={3}
+              className="rounded-2xl border-gray-200 bg-white/80 focus:border-cyan-400 focus:ring-cyan-400/20 resize-none"
             />
           </div>
           
-          <div>
-            <label className="text-sm font-medium mb-1 block">Website (optional)</label>
-            <Input
-              value={formData.website}
-              onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-              placeholder="https://example.com"
-            />
+          {/* BL Coins Reward */}
+          <div className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-2xl p-4 flex items-center gap-3 border border-cyan-100/50">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-400 flex items-center justify-center shadow-lg shadow-yellow-400/25">
+              <Coins className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-800">Earn 40 BL Coins!</p>
+              <p className="text-xs text-gray-500">Create your page and start earning rewards</p>
+            </div>
           </div>
           
-          <div className="bg-primary/10 rounded-lg p-3 flex items-center gap-2">
-            <Coins className="w-5 h-5 text-primary" />
-            <span className="text-sm">Creating a page earns you <strong>40 BL Coins!</strong></span>
-          </div>
-          
-          <div className="flex gap-2">
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+          {/* Actions */}
+          <div className="flex gap-3 pt-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onClose} 
+              className="flex-1 h-12 rounded-2xl border-gray-200 text-gray-600 hover:bg-gray-50"
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="flex-1" data-testid="create-page-submit">
-              {loading ? "Creating..." : "Create Page"}
+            <Button 
+              type="submit" 
+              disabled={loading} 
+              className="flex-1 h-12 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white border-0 shadow-lg shadow-cyan-500/25 font-semibold"
+              data-testid="create-page-submit"
+            >
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Creating...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <Plus className="w-4 h-4" /> Create Page
+                </span>
+              )}
             </Button>
           </div>
         </form>
