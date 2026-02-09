@@ -2135,7 +2135,7 @@ async def update_order_status(
     )
     
     # Broadcast status change via WebSocket
-    await ws_manager.broadcast_to_page(order["page_id"], {
+    await page_sync_manager.broadcast_to_page(order["page_id"], {
         "type": "order_status_changed",
         "order_id": order_id,
         "new_status": request.status
