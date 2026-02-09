@@ -2,7 +2,64 @@
 
 ## Latest Update: February 9, 2026
 
-### Member Pages Critical Bug Fixes (February 9, 2026) - LATEST
+### Member Pages Section 0 - Critical Bug Fixes + Premium Theme (February 9, 2026) - LATEST
+
+#### Critical Bugs Fixed:
+
+**1. "My Pages" Count Always Showing 0 ✅ FIXED**
+- **Root Cause:** Frontend was calling wrong API endpoint `/api/pages/my-pages/` instead of `/api/member-pages/my-pages`
+- **Solution:** Updated `pagesAPI` in `Pages.jsx` to use correct member-pages endpoints
+- **Result:** My Pages tab now correctly shows page count (e.g., "My Pages (3)")
+
+**2. Created Pages Not Visible ✅ FIXED**
+- **Root Cause:** Two separate page systems existed - old (`/api/pages/`) and new (`/api/member-pages/`)
+- **Solution:** Unified frontend to use member-pages system exclusively
+- **Result:** All created pages now appear immediately in My Pages and Discover tabs
+
+**3. JSON Stream "body already read" Error ✅ FIXED**
+- Already fixed in previous session by reading response body once before checking status
+
+**4. Outdated Discover Tab Design ✅ FIXED**
+- Applied new premium glassmorphism theme to entire member pages section
+
+#### Premium Glassmorphism Theme Applied (ONLY to /pages):
+
+**Design System:**
+- Light mode with soft gradient background (#F0F5FF → #FFFFFF)
+- Glassmorphism cards: backdrop-blur-xl, bg-white/70, rounded-3xl
+- Accent colors: Electric cyan #00F0FF, soft magenta #FF00CC
+- Large corners: 24-32px radius on all elements
+- Typography: Clean, high-contrast with gray-900 headings
+
+**Components Redesigned:**
+1. **Header** - Glassmorphism with backdrop-blur, gradient logo
+2. **Search Bar** - Premium rounded input with icon
+3. **Category Pills** - Gradient active state, clean inactive
+4. **Tab Bar** - Frosted glass container with gradient selected state
+5. **Page Cards** - Gradient covers by page type, frosted content area
+6. **Create Modal** - Premium form with page type & category selection
+7. **BL Coins Banner** - Gradient reward display
+
+**Backend Endpoints Added:**
+- `GET /api/member-pages/discover` - Discover public pages
+- `POST /api/member-pages/{page_id}/subscribe` - Follow a page
+- `POST /api/member-pages/{page_id}/unsubscribe` - Unfollow a page
+- Enhanced `GET /api/member-pages/my-pages` - Returns owned + following pages
+
+**Files Modified:**
+- `/app/frontend/src/pages/Pages.jsx` - Complete redesign with premium theme
+- `/app/backend/member_pages_system.py` - Added discover, subscribe, unsubscribe endpoints
+
+**Test Results:**
+- ✅ My Pages count updates correctly after creation
+- ✅ Pages appear immediately in dashboard
+- ✅ No JSON stream errors
+- ✅ Premium design applied only to member pages area
+- ✅ API endpoints working correctly
+
+---
+
+### Member Pages Critical Bug Fixes (February 9, 2026)
 
 #### Issues Fixed:
 
