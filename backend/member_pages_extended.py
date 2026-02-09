@@ -759,6 +759,208 @@ async def get_table_status(
     return {"tables": table_status}
 
 
+# ============== POS STRIPE CHECKOUT ==============
+
+class POSCheckoutRequest(BaseModel):
+    page_id: str
+    items: List[Dict[str, Any]]
+    order_type: str
+    subtotal: float
+    tax: float
+    discount: float = 0.0
+    tip: float = 0.0
+    total: float
+    customer_name: Optional[str] = None
+    customer_phone: Optional[str] = None
+    table_number: Optional[str] = None
+    notes: str = ""
+    origin_url: str  # Frontend origin URL for success/cancel redirects
+
+@pos_router.post("/checkout/create")
+async def create_pos_checkout_session(
+    request: POSCheckoutRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a Stripe checkout session for POS card payments"""
+    from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionRequest
+    
+    user_id = current_user["user_id"]
+    
+    page = await db.member_pages.find_one({"page_id": request.page_id})
+    if not page or page["owner_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Create a pending order first
+    order_id = f"pos_{uuid.uuid4().hex[:12]}"
+    order = {
+        "order_id": order_id,
+        "page_id": request.page_id,
+        "customer_id": None,
+        "customer_name": request.customer_name,
+        "customer_phone": request.customer_phone,
+        "order_type": request.order_type,
+        "status": "pending_payment",
+        "items": request.items,
+        "subtotal": request.subtotal,
+        "tax": request.tax,
+        "discount": request.discount,
+        "tip": request.tip,
+        "total": request.total,
+        "payment_method": "card",
+        "payment_status": "pending",
+        "table_number": request.table_number,
+        "notes": request.notes,
+        "is_pos_transaction": True,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.page_orders.insert_one(order.copy())
+    order.pop("_id", None)
+    
+    # Create Stripe checkout session
+    api_key = os.environ.get("STRIPE_API_KEY", "sk_test_emergent")
+    
+    # Build URLs from provided origin
+    success_url = f"{request.origin_url}/member-pages/{request.page_id}?payment=success&session_id={{CHECKOUT_SESSION_ID}}&order_id={order_id}"
+    cancel_url = f"{request.origin_url}/member-pages/{request.page_id}?payment=cancelled&order_id={order_id}"
+    
+    webhook_url = f"{request.origin_url}/api/webhook/stripe"
+    stripe_checkout = StripeCheckout(api_key=api_key, webhook_url=webhook_url)
+    
+    # Build item description
+    item_desc = ", ".join([f"{i.get('quantity', 1)}x {i.get('name')}" for i in request.items[:3]])
+    if len(request.items) > 3:
+        item_desc += f" and {len(request.items) - 3} more"
+    
+    checkout_request = CheckoutSessionRequest(
+        amount=float(request.total),  # Keep as float for Stripe
+        currency="usd",
+        success_url=success_url,
+        cancel_url=cancel_url,
+        metadata={
+            "order_id": order_id,
+            "page_id": request.page_id,
+            "page_name": page["name"],
+            "order_type": request.order_type,
+            "source": "pos_terminal"
+        }
+    )
+    
+    try:
+        session = await stripe_checkout.create_checkout_session(checkout_request)
+        
+        # Store session ID with the order
+        await db.page_orders.update_one(
+            {"order_id": order_id},
+            {"$set": {"stripe_session_id": session.session_id}}
+        )
+        
+        # Also create entry in payment_transactions for tracking
+        await db.payment_transactions.insert_one({
+            "transaction_id": f"ptx_{uuid.uuid4().hex[:12]}",
+            "stripe_session_id": session.session_id,
+            "order_id": order_id,
+            "page_id": request.page_id,
+            "user_id": user_id,
+            "amount": request.total,
+            "currency": "usd",
+            "payment_status": "pending",
+            "source": "pos_terminal",
+            "metadata": checkout_request.metadata,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        return {
+            "success": True,
+            "checkout_url": session.url,
+            "session_id": session.session_id,
+            "order_id": order_id
+        }
+        
+    except Exception as e:
+        logger.error(f"Stripe checkout error: {e}")
+        # Mark order as failed
+        await db.page_orders.update_one(
+            {"order_id": order_id},
+            {"$set": {"status": "payment_failed", "payment_status": "failed"}}
+        )
+        raise HTTPException(status_code=500, detail=f"Payment processing error: {str(e)}")
+
+@pos_router.get("/checkout/status/{session_id}")
+async def get_pos_checkout_status(
+    session_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Check the status of a POS checkout session"""
+    from emergentintegrations.payments.stripe.checkout import StripeCheckout
+    
+    api_key = os.environ.get("STRIPE_API_KEY", "sk_test_emergent")
+    stripe_checkout = StripeCheckout(api_key=api_key, webhook_url="")
+    
+    try:
+        status = await stripe_checkout.get_checkout_status(session_id)
+        
+        # If paid, update the order
+        if status.payment_status == "paid":
+            order = await db.page_orders.find_one(
+                {"stripe_session_id": session_id},
+                {"_id": 0}
+            )
+            
+            if order and order.get("payment_status") != "paid":
+                # Update order to completed
+                await db.page_orders.update_one(
+                    {"stripe_session_id": session_id},
+                    {
+                        "$set": {
+                            "status": "completed",
+                            "payment_status": "paid",
+                            "completed_at": datetime.now(timezone.utc).isoformat()
+                        }
+                    }
+                )
+                
+                # Update payment transaction
+                await db.payment_transactions.update_one(
+                    {"stripe_session_id": session_id},
+                    {"$set": {"payment_status": "paid", "updated_at": datetime.now(timezone.utc).isoformat()}}
+                )
+                
+                # Update inventory and page stats
+                page = await db.member_pages.find_one({"page_id": order["page_id"]})
+                if page:
+                    for item in order.get("items", []):
+                        item_id = item.get("item_id")
+                        quantity = item.get("quantity", 1)
+                        
+                        await db.page_inventory.update_one(
+                            {"page_id": order["page_id"], "item_id": item_id},
+                            {"$inc": {"quantity": -quantity}}
+                        )
+                        
+                        if page["page_type"] == "store":
+                            await db.page_products.update_one(
+                                {"product_id": item_id},
+                                {"$inc": {"total_sold": quantity}}
+                            )
+                    
+                    await db.member_pages.update_one(
+                        {"page_id": order["page_id"]},
+                        {"$inc": {"total_orders": 1, "total_revenue": order["total"]}}
+                    )
+        
+        return {
+            "status": status.status,
+            "payment_status": status.payment_status,
+            "amount_total": status.amount_total,
+            "currency": status.currency
+        }
+        
+    except Exception as e:
+        logger.error(f"Checkout status error: {e}")
+        raise HTTPException(status_code=500, detail=f"Error checking payment status: {str(e)}")
+
+
 # ============== SECTION 5: MARKETPLACE INTEGRATION ==============
 
 class MarketplaceLinkRequest(BaseModel):
