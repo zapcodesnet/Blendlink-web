@@ -285,6 +285,24 @@ export default function CustomerOptionsManager({ pageId, pageType }) {
                         <Phone className="w-3 h-3" /> {loc.phone}
                       </p>
                     )}
+                    
+                    {/* Google Maps Embed */}
+                    {(loc.latitude && loc.longitude) || loc.address ? (
+                      <div className="mt-3 rounded-xl overflow-hidden border border-gray-200">
+                        <iframe
+                          width="100%"
+                          height="150"
+                          style={{ border: 0 }}
+                          loading="lazy"
+                          allowFullScreen
+                          referrerPolicy="no-referrer-when-downgrade"
+                          src={loc.latitude && loc.longitude 
+                            ? `https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${loc.latitude},${loc.longitude}&zoom=15`
+                            : `https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodeURIComponent(`${loc.address}, ${loc.city}, ${loc.state}`)}`
+                          }
+                        />
+                      </div>
+                    ) : null}
                   </div>
                   <div className="flex gap-2">
                     <a
