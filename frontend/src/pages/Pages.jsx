@@ -389,13 +389,15 @@ export default function Pages() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [discoverPages, userPages] = await Promise.all([
-        pagesAPI.getPages().catch((e) => { console.error("Discover error:", e); return []; }),
-        pagesAPI.getMyPages().catch((e) => { console.error("MyPages error:", e); return { owned: [], following: [] }; }),
+      const [discoverData, myPagesData] = await Promise.all([
+        memberPagesApi.getDiscoverPages().catch((e) => { console.error("Discover error:", e); return { pages: [] }; }),
+        memberPagesApi.getMyPages().catch((e) => { console.error("MyPages error:", e); return { pages: [], following: [] }; }),
       ]);
+      // Handle both array and object responses
+      const discoverPages = discoverData?.pages || discoverData || [];
       setPages(Array.isArray(discoverPages) ? discoverPages : []);
-      setMyPages(userPages.owned || []);
-      setFollowedPages(userPages.following || []);
+      setMyPages(myPagesData?.pages || []);
+      setFollowedPages(myPagesData?.following || []);
     } catch (error) {
       console.error("Failed to load pages:", error);
     }
@@ -403,7 +405,15 @@ export default function Pages() {
   };
 
   const handleCreatePage = async (data) => {
-    const result = await pagesAPI.createPage(data);
+    // Build page data with auto-generated slug
+    const pageData = {
+      page_type: data.page_type || "general",
+      name: data.name,
+      slug: data.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "-" + Date.now(),
+      description: data.description || "",
+      category: data.category || "business",
+    };
+    const result = await memberPagesApi.createPage(pageData);
     // Reload data after successful creation
     await loadData();
     return result;
@@ -411,7 +421,7 @@ export default function Pages() {
 
   const handleFollowPage = async (pageId) => {
     try {
-      await pagesAPI.followPage(pageId);
+      await memberPagesApi.followPage(pageId);
       toast.success("Following page! +10 BL Coins");
       loadData();
     } catch (error) {
@@ -421,7 +431,7 @@ export default function Pages() {
 
   const handleUnfollowPage = async (pageId) => {
     try {
-      await pagesAPI.unfollowPage(pageId);
+      await memberPagesApi.unfollowPage(pageId);
       toast.success("Unfollowed page");
       loadData();
     } catch (error) {
