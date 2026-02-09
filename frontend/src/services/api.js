@@ -774,7 +774,22 @@ export default {
           throw new Error('Unauthorized');
         }
         
-        const result = await response.json();
+        // PRODUCTION FIX: Use text-first pattern for FormData responses too
+        let responseText;
+        try {
+          responseText = await response.text();
+        } catch (readError) {
+          console.error('[FormData POST] Failed to read response:', readError);
+          throw new Error('Failed to read server response');
+        }
+        
+        let result;
+        try {
+          result = responseText ? JSON.parse(responseText) : {};
+        } catch (parseError) {
+          console.error('[FormData POST] JSON parse error:', parseError);
+          throw new Error('Server returned invalid response');
+        }
         
         if (!response.ok) {
           const errorMessage = result.detail?.message || result.detail || result.message || 'Request failed';
