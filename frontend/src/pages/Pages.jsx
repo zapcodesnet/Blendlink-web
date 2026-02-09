@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
+import { memberPagesApi } from "../services/memberPagesApi";
 import {
   FileText,
   Plus,
@@ -28,8 +29,6 @@ import {
   GraduationCap,
   Camera,
 } from "lucide-react";
-
-const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 // Page categories
 const PAGE_CATEGORIES = [
