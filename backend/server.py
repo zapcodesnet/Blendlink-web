@@ -28,7 +28,10 @@ def get_mongo_connection():
     """
     mongo_url = os.environ.get('MONGO_URL')
     mongo_url_local = os.environ.get('MONGO_URL_LOCAL', 'mongodb://localhost:27017')
-    db_name = os.environ.get('DB_NAME', 'blendlink')
+    db_name = os.environ.get('DB_NAME')
+    
+    if not db_name:
+        raise ValueError('DB_NAME environment variable is required')
     
     # Try Atlas connection first
     try:
