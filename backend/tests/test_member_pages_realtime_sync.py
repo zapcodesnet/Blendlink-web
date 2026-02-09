@@ -493,8 +493,5 @@ class TestPageDeletion(TestMemberPagesAuth):
         print(f"✓ Deleted page removed from my-pages list")
 
 
-# Run order configuration
-pytest_plugins = ['pytest_order']
-
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "--tb=short"])
