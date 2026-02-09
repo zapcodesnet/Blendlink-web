@@ -375,7 +375,13 @@ export const CreateMemberPageModal = ({ onClose, onCreate }) => {
               </Button>
               <Button 
                 type="submit" 
-                disabled={loading || !formData.name || !formData.slug || (slugStatus && !slugStatus.available)} 
+                disabled={
+                  loading || 
+                  !formData.name || 
+                  !formData.slug || 
+                  formData.slug.length < 3 ||
+                  (slugStatus && (!slugStatus.available || !slugStatus.valid))
+                } 
                 className="flex-1"
                 data-testid="create-page-submit"
               >
