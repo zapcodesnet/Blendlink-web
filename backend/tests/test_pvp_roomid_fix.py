@@ -17,7 +17,7 @@ import time
 import json
 import threading
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pages-changestream.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://page-creation-fix.preview.emergentagent.com')
 
 # Test credentials
 USER1 = {"email": "test@blendlink.com", "password": "admin"}
