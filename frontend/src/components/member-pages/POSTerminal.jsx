@@ -181,6 +181,75 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
   const discountAmount = subtotal * (discountPercent / 100);
   const total = subtotal + taxAmount - discountAmount + tipAmount;
 
+  // Check URL for payment status on mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('payment');
+    const sessionId = urlParams.get('session_id');
+    const orderId = urlParams.get('order_id');
+    
+    if (paymentStatus === 'success' && sessionId) {
+      // Poll for payment confirmation
+      pollPaymentStatus(sessionId);
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (paymentStatus === 'cancelled') {
+      toast.error("Payment was cancelled");
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
+  // Poll payment status for card payments
+  const pollPaymentStatus = async (sessionId, attempts = 0) => {
+    const maxAttempts = 10;
+    const pollInterval = 2000;
+
+    if (attempts >= maxAttempts) {
+      toast.error("Payment verification timed out. Please check your orders.");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_URL}/api/pos/checkout/status/${sessionId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!res.ok) throw new Error("Failed to check status");
+      
+      const data = await res.json();
+      
+      if (data.payment_status === "paid") {
+        toast.success("Payment successful! Order completed.");
+        setReceipt({
+          order_id: "Payment confirmed",
+          timestamp: new Date().toISOString(),
+          items: cart,
+          subtotal,
+          tax: taxAmount,
+          discount: discountAmount,
+          tip: tipAmount,
+          total,
+          payment_method: "Card (Stripe)",
+          order_type: orderType,
+          customer_name: customerName,
+          page_name: pageName
+        });
+        setCart([]);
+        return;
+      } else if (data.status === "expired") {
+        toast.error("Payment session expired");
+        return;
+      }
+
+      // Continue polling
+      setTimeout(() => pollPaymentStatus(sessionId, attempts + 1), pollInterval);
+    } catch (err) {
+      console.error("Payment status check error:", err);
+      setTimeout(() => pollPaymentStatus(sessionId, attempts + 1), pollInterval);
+    }
+  };
+
   // Process transaction
   const processTransaction = async () => {
     if (cart.length === 0) {
@@ -189,6 +258,54 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
     }
 
     setProcessing(true);
+    
+    // For card payments, create Stripe checkout session
+    if (paymentMethod === "card") {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${API_URL}/api/pos/checkout/create`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            page_id: pageId,
+            items: cart,
+            order_type: orderType,
+            subtotal,
+            tax: taxAmount,
+            discount: discountAmount,
+            tip: tipAmount,
+            total,
+            customer_name: customerName,
+            customer_phone: customerPhone,
+            table_number: tableNumber,
+            notes,
+            origin_url: window.location.origin
+          })
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.detail || "Failed to create checkout");
+        }
+        
+        const data = await res.json();
+        
+        // Redirect to Stripe Checkout
+        if (data.checkout_url) {
+          window.location.href = data.checkout_url;
+          return;
+        }
+      } catch (err) {
+        toast.error(err.message || "Card payment failed");
+        setProcessing(false);
+        return;
+      }
+    }
+    
+    // For cash/digital wallet payments, process directly
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_URL}/api/pos/transaction`, {
