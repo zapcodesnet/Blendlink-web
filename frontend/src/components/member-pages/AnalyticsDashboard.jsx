@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
+import { safeFetch } from "../../services/memberPagesApi";
 import {
   TrendingUp, TrendingDown, Eye, ShoppingCart, DollarSign, Users,
   Calendar, Download, RefreshCw, Loader2, BarChart3, PieChart, Copy
@@ -19,15 +20,11 @@ export default function AnalyticsDashboard({ pageId, pageName }) {
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
 
+  // PRODUCTION FIX: uses safeFetch
   const loadAnalytics = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/api/page-analytics/${pageId}?period=${period}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error("Failed to load analytics");
-      const data = await res.json();
+      const data = await safeFetch(`${API_URL}/api/page-analytics/${pageId}?period=${period}`);
       setAnalytics(data);
     } catch (err) {
       toast.error("Failed to load analytics");
@@ -39,14 +36,11 @@ export default function AnalyticsDashboard({ pageId, pageName }) {
     loadAnalytics();
   }, [pageId, period]);
 
+  // PRODUCTION FIX: uses safeFetch
   const handleExport = async (format) => {
     setExporting(true);
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/api/page-analytics/${pageId}/export?format=${format}&period=${period}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await res.json();
+      const data = await safeFetch(`${API_URL}/api/page-analytics/${pageId}/export?format=${format}&period=${period}`);
       
       if (format === "csv" && data.csv_data) {
         const blob = new Blob([data.csv_data], { type: "text/csv" });
