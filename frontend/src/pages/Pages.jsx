@@ -309,7 +309,7 @@ const CreatePageModal = ({ onClose, onCreate }) => {
     >
       {/* Scrollable container - uses items-start instead of items-center to prevent top cutoff */}
       <div 
-        className="min-h-full flex items-start justify-center p-4 py-8"
+        className="min-h-full flex items-start justify-center p-4 pt-6 pb-24"
         style={{ touchAction: 'pan-y' }}
       >
         <div 
