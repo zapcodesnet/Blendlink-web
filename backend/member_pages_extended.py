@@ -52,6 +52,27 @@ customer_options_router = APIRouter(prefix="/customer-options", tags=["Customer 
 
 from server import get_current_user
 
+# Optional user auth helper
+from fastapi import Request
+async def get_optional_user(request: Request):
+    """Get current user if authenticated, else return None"""
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return None
+    
+    try:
+        token = auth_header.replace("Bearer ", "")
+        import jwt
+        jwt_secret = os.environ.get("JWT_SECRET", "blendlink-secret-key")
+        payload = jwt.decode(token, jwt_secret, algorithms=["HS256"])
+        user_id = payload.get("user_id")
+        if not user_id:
+            return None
+        user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+        return user
+    except:
+        return None
+
 # ============== SECTION 2: BARCODE SCANNING ==============
 
 class BarcodeSearchRequest(BaseModel):
