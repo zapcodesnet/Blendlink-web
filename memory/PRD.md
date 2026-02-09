@@ -1,8 +1,54 @@
 # Blendlink Platform - Product Requirements Document
 
-## Latest Update: February 7, 2026
+## Latest Update: February 9, 2026
 
-### Premium Light Mode Redesign (February 7, 2026) - LATEST
+### Member Pages Critical Bug Fixes (February 9, 2026) - LATEST
+
+#### Issues Fixed:
+
+**1. "body stream already read" JSON Error ✅ CRITICAL FIX**
+- **Root Cause:** The `createPage` function in `Pages.jsx` was reading the response body twice:
+  ```javascript
+  // BEFORE (bug):
+  if (!res.ok) {
+    const err = await res.json();  // First read
+    throw new Error(err.detail);
+  }
+  return res.json();  // Second read - ERROR!
+  ```
+- **Fix:** Read body once, then check status:
+  ```javascript
+  // AFTER (fixed):
+  const result = await res.json();  // Single read
+  if (!res.ok) {
+    throw new Error(result.detail);
+  }
+  return result;
+  ```
+- **Files Fixed:** 
+  - `/app/frontend/src/pages/Pages.jsx` (pagesAPI.createPage)
+  - `/app/frontend/src/components/member-pages/MemberPagesSystem.jsx` (memberPagesAPI.createPage)
+
+**2. Duplicate "Create Page" Buttons ✅ UI FIX**
+- **Root Cause:** Three separate buttons triggered page creation modal:
+  - Header button (line 367)
+  - Empty state button (line 442)
+  - Bottom CTA section button (line 471)
+- **Fix:** 
+  - Consolidated to single "Create New Page" button in header
+  - Removed redundant button from bottom CTA section
+  - Bottom section now shows informational content only (for users who already have pages)
+  - Added tooltip to header button for clarity
+
+**Test Results:**
+- ✅ Page creation works without JSON errors
+- ✅ Single "Create New Page" button in header
+- ✅ Success toast shows "+40 BL Coins"
+- ✅ New page appears in list immediately
+
+---
+
+### Premium Light Mode Redesign (February 7, 2026)
 
 #### Design System Implemented:
 
