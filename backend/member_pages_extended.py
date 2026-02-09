@@ -1079,12 +1079,24 @@ class CustomerOptionsUpdate(BaseModel):
     shipping_settings: Dict[str, Any] = {}
 
 @customer_options_router.get("/{page_id}/options")
-async def get_customer_options(page_id: str):
-    """Get customer-facing options for a page (public)"""
+async def get_customer_options(
+    page_id: str,
+    current_user: dict = Depends(get_optional_user)
+):
+    """Get customer-facing options for a page (public or owner)"""
+    # First try to find published page (public view)
     page = await db.member_pages.find_one(
         {"page_id": page_id, "is_published": True},
         {"_id": 0}
     )
+    
+    # If not found and user is authenticated, check if they're the owner
+    if not page and current_user:
+        page = await db.member_pages.find_one(
+            {"page_id": page_id, "owner_id": current_user["user_id"]},
+            {"_id": 0}
+        )
+    
     if not page:
         raise HTTPException(status_code=404, detail="Page not found")
     
