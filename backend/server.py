@@ -3548,8 +3548,27 @@ async def startup_member_pages_change_streams():
         # Non-fatal - WebSocket manual broadcasts will still work
 
 
+@app.on_event("startup")
+async def startup_report_scheduler():
+    """Start the daily report email scheduler"""
+    try:
+        from report_scheduler import start_scheduler
+        start_scheduler()
+        logger.info("✅ Daily Report Email Scheduler started")
+    except Exception as e:
+        logger.warning(f"Daily Report Scheduler startup warning: {e}")
+
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
+    # Stop report scheduler
+    try:
+        from report_scheduler import stop_scheduler
+        stop_scheduler()
+        logger.info("Daily Report Email Scheduler stopped")
+    except Exception as e:
+        logger.warning(f"Report scheduler cleanup warning: {e}")
+    
     # Cleanup member pages change streams
     try:
         from member_pages_system import stop_change_streams
