@@ -184,25 +184,26 @@ export default function CustomerOptionsManager({ pageId, pageType }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      <div className="flex flex-col items-center justify-center py-16">
+        <div className="w-12 h-12 rounded-full border-4 border-cyan-200 border-t-cyan-500 animate-spin"></div>
+        <p className="mt-4 text-gray-500">Loading options...</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" style={{ touchAction: 'pan-y' }}>
       {/* Order Types Section */}
-      <div className="bg-card rounded-xl border border-border p-4">
-        <h3 className="font-semibold mb-4 flex items-center gap-2">
-          <ShoppingBag className="w-5 h-5 text-primary" />
+      <div className="bg-white/70 backdrop-blur-lg rounded-2xl border border-white/50 p-5">
+        <h3 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
+          <ShoppingBag className="w-5 h-5 text-cyan-600" />
           Order Types
         </h3>
-        <p className="text-sm text-muted-foreground mb-4">
+        <p className="text-sm text-gray-500 mb-4">
           Select which ordering options to offer your customers
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="space-y-3">
           {Object.entries(ORDER_TYPE_CONFIG).map(([type, config]) => {
             const Icon = config.icon;
             const isEnabled = options?.order_types?.includes(type);
@@ -211,13 +212,47 @@ export default function CustomerOptionsManager({ pageId, pageType }) {
               <button
                 key={type}
                 onClick={() => toggleOrderType(type)}
-                className={`p-4 rounded-xl border-2 text-left transition-all ${
+                className={`w-full p-4 rounded-xl border-2 text-left transition-all flex items-center gap-4 ${
                   isEnabled 
-                    ? "border-primary bg-primary/5" 
-                    : "border-border hover:border-primary/50"
+                    ? "border-cyan-400 bg-cyan-50/50" 
+                    : "border-gray-100 bg-white hover:border-gray-200"
                 }`}
               >
-                <div className="flex items-start gap-3">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                  isEnabled ? "bg-cyan-100" : "bg-gray-100"
+                }`}>
+                  <Icon className={`w-6 h-6 ${isEnabled ? "text-cyan-600" : "text-gray-400"}`} />
+                </div>
+                <div className="flex-1">
+                  <p className={`font-semibold ${isEnabled ? "text-gray-900" : "text-gray-600"}`}>{config.label}</p>
+                  <p className="text-sm text-gray-500">{config.description}</p>
+                </div>
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                  isEnabled ? "border-cyan-500 bg-cyan-500" : "border-gray-300"
+                }`}>
+                  {isEnabled && <Check className="w-4 h-4 text-white" />}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Locations Section */}
+      <div className="bg-white/70 backdrop-blur-lg rounded-2xl border border-white/50 p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-bold text-gray-900 flex items-center gap-2">
+            <MapPin className="w-5 h-5 text-cyan-600" />
+            Locations ({locations.length})
+          </h3>
+          <Button
+            size="sm"
+            onClick={() => setShowAddLocation(true)}
+            className="rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white"
+          >
+            <Plus className="w-4 h-4 mr-1" /> Add Location
+          </Button>
+        </div>
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                     isEnabled ? "bg-primary/20" : "bg-muted"
                   }`}>
