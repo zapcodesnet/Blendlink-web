@@ -817,6 +817,12 @@ export default function MemberPageDashboard() {
         {activeTab === "orders" && (
           <OrdersManager pageId={pageId} pageType={page.page_type} />
         )}
+        {activeTab === "reports" && (
+          <DailySalesReport pageId={pageId} pageType={page.page_type} />
+        )}
+        {activeTab === "marketplace" && (
+          <MarketplaceIntegration pageId={pageId} pageType={page.page_type} pageName={page.name} />
+        )}
         {activeTab === "delivery" && (
           <CustomerOptionsManager pageId={pageId} pageType={page.page_type} />
         )}
