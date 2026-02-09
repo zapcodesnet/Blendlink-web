@@ -7,6 +7,7 @@ import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { safeFetch } from "../../services/memberPagesApi";
 import {
   Store, Link2, Unlink, Search, Package, Tag, DollarSign,
   ExternalLink, Loader2, Plus, Check, RefreshCw, ShoppingBag,
@@ -23,33 +24,21 @@ export default function MarketplaceIntegration({ pageId, pageType, pageName }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showAvailable, setShowAvailable] = useState(false);
 
-  // Load linked listings
+  // Load linked listings - PRODUCTION FIX: uses safeFetch
   const loadLinkedListings = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/api/marketplace-link/${pageId}/listings`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setLinkedListings(data.listings || []);
-      }
+      const data = await safeFetch(`${API_URL}/api/marketplace-link/${pageId}/listings`);
+      setLinkedListings(data.listings || []);
     } catch (err) {
       console.error("Failed to load linked listings:", err);
     }
   };
 
-  // Load available listings to link
+  // Load available listings to link - PRODUCTION FIX: uses safeFetch
   const loadAvailableListings = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/api/marketplace-link/available`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setAvailableListings(data.listings || []);
-      }
+      const data = await safeFetch(`${API_URL}/api/marketplace-link/available`);
+      setAvailableListings(data.listings || []);
     } catch (err) {
       console.error("Failed to load available listings:", err);
     }
@@ -64,58 +53,41 @@ export default function MarketplaceIntegration({ pageId, pageType, pageName }) {
     loadAll();
   }, [pageId]);
 
-  // Link a listing to this page
+  // Link a listing to this page - PRODUCTION FIX: uses safeFetch
   const linkListing = async (listingId) => {
     setLinking(listingId);
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/api/marketplace-link/link`, {
+      await safeFetch(`${API_URL}/api/marketplace-link/link`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
         body: JSON.stringify({
           page_id: pageId,
           listing_id: listingId
         })
       });
 
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || "Failed to link listing");
-      }
-
       toast.success("Listing linked to page!");
       await Promise.all([loadLinkedListings(), loadAvailableListings()]);
       setShowAvailable(false);
     } catch (err) {
-      toast.error(err.message);
+      toast.error(err.message || "Failed to link listing");
     }
     setLinking(null);
   };
 
-  // Unlink a listing from this page
+  // Unlink a listing from this page - PRODUCTION FIX: uses safeFetch
   const unlinkListing = async (listingId) => {
     if (!confirm("Remove this listing from your page?")) return;
     
     setLinking(listingId);
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/api/marketplace-link/link`, {
+      await safeFetch(`${API_URL}/api/marketplace-link/link`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
         body: JSON.stringify({
           page_id: pageId,
           listing_id: listingId,
           unlink: true
         })
       });
-
-      if (!res.ok) throw new Error("Failed to unlink listing");
 
       toast.success("Listing removed from page");
       await Promise.all([loadLinkedListings(), loadAvailableListings()]);
