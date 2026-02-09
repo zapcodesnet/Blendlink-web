@@ -52,21 +52,17 @@ export default function PublicPageView() {
 
   const loadPage = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/member-pages/public/${slug}`);
-      if (!res.ok) {
-        if (res.status === 404) {
-          toast.error("Page not found");
-          navigate("/pages");
-          return;
-        }
-        throw new Error("Failed to load page");
-      }
-      const data = await res.json();
+      const data = await memberPagesApi.getPublicPage(slug);
       setPage(data.page);
       setItems(data.items || []);
       setIsFollowing(data.is_following || false);
     } catch (err) {
       console.error("Failed to load public page:", err);
+      if (err.message?.includes("not found") || err.message?.includes("404")) {
+        toast.error("Page not found");
+        navigate("/pages");
+        return;
+      }
       toast.error("Failed to load page");
     }
     setLoading(false);
@@ -92,12 +88,7 @@ export default function PublicPageView() {
     }
 
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/api/member-pages/${page.page_id}/subscribe`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error("Failed to follow");
+      await memberPagesApi.followPage(page.page_id);
       setIsFollowing(true);
       toast.success("Following! +10 BL Coins");
     } catch (err) {
@@ -107,12 +98,7 @@ export default function PublicPageView() {
 
   const handleUnfollow = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/api/member-pages/${page.page_id}/unsubscribe`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error("Failed to unfollow");
+      await memberPagesApi.unfollowPage(page.page_id);
       setIsFollowing(false);
       toast.success("Unfollowed");
     } catch (err) {
