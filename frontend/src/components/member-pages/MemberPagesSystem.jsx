@@ -543,18 +543,29 @@ export const memberPagesAPI = {
       });
     } catch (err) {
       console.error("getPage network error:", err);
-      throw new Error("Network error");
+      throw new Error("Network error - please check your connection");
+    }
+    
+    // PRODUCTION FIX: Text-first pattern
+    let responseText;
+    try {
+      responseText = await response.text();
+    } catch (err) {
+      console.error("getPage read error:", err);
+      throw new Error("Failed to read server response");
     }
     
     let data;
     try {
-      data = await response.json();
+      data = responseText ? JSON.parse(responseText) : {};
     } catch (err) {
-      console.error("getPage parse error:", err);
-      throw new Error("Invalid response");
+      console.error("getPage parse error:", err, "Response:", responseText?.substring(0, 200));
+      throw new Error("Server returned invalid response");
     }
     
-    if (!response.ok) throw new Error(data?.detail || "Failed to load page");
+    if (!response.ok) {
+      throw new Error(data?.detail || `Failed to load page (${response.status})`);
+    }
     return data;
   },
 
@@ -572,18 +583,29 @@ export const memberPagesAPI = {
       });
     } catch (err) {
       console.error("updatePage network error:", err);
-      throw new Error("Network error");
+      throw new Error("Network error - please check your connection");
+    }
+    
+    // PRODUCTION FIX: Text-first pattern
+    let responseText;
+    try {
+      responseText = await response.text();
+    } catch (err) {
+      console.error("updatePage read error:", err);
+      throw new Error("Failed to read server response");
     }
     
     let result;
     try {
-      result = await response.json();
+      result = responseText ? JSON.parse(responseText) : {};
     } catch (err) {
-      console.error("updatePage parse error:", err);
-      throw new Error("Invalid response");
+      console.error("updatePage parse error:", err, "Response:", responseText?.substring(0, 200));
+      throw new Error("Server returned invalid response");
     }
     
-    if (!response.ok) throw new Error(result?.detail || "Failed to update page");
+    if (!response.ok) {
+      throw new Error(result?.detail || `Failed to update page (${response.status})`);
+    }
     return result;
   },
 
@@ -597,18 +619,29 @@ export const memberPagesAPI = {
       });
     } catch (err) {
       console.error("deletePage network error:", err);
-      throw new Error("Network error");
+      throw new Error("Network error - please check your connection");
+    }
+    
+    // PRODUCTION FIX: Text-first pattern (DELETE may return empty)
+    let responseText;
+    try {
+      responseText = await response.text();
+    } catch (err) {
+      // DELETE might have no body - that's OK
+      responseText = "";
     }
     
     let result;
     try {
-      result = await response.json();
+      result = responseText ? JSON.parse(responseText) : { success: true };
     } catch (err) {
-      // DELETE might return empty body
-      result = { success: true };
+      // DELETE might return non-JSON - that's OK if response was successful
+      result = { success: response.ok };
     }
     
-    if (!response.ok) throw new Error(result?.detail || "Failed to delete page");
+    if (!response.ok) {
+      throw new Error(result?.detail || `Failed to delete page (${response.status})`);
+    }
     return result;
   },
 
@@ -617,7 +650,7 @@ export const memberPagesAPI = {
     try {
       response = await fetch(`${API_URL}/api/member-pages/public/${slug}`);
     } catch (err) {
-      throw new Error("Network error");
+      throw new Error("Network error - please check your connection");
     }
     
     let data;
