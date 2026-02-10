@@ -1206,19 +1206,27 @@ async def discover_member_pages(
     """Discover public member pages"""
     user_id = current_user["user_id"]
     
-    # Build query for published pages
-    query = {"is_published": True}
+    # Build query for published pages (also include where is_published is not explicitly False)
+    query = {
+        "$or": [
+            {"is_published": True},
+            {"is_published": {"$exists": False}},
+            {"is_published": None}
+        ]
+    }
     
     if category:
         query["category"] = category
     if page_type and page_type in PAGE_TYPES:
         query["page_type"] = page_type
     if search:
-        query["$or"] = [
-            {"name": {"$regex": search, "$options": "i"}},
-            {"description": {"$regex": search, "$options": "i"}},
-            {"slug": {"$regex": search, "$options": "i"}}
-        ]
+        query["$and"] = query.get("$and", []) + [{
+            "$or": [
+                {"name": {"$regex": search, "$options": "i"}},
+                {"description": {"$regex": search, "$options": "i"}},
+                {"slug": {"$regex": search, "$options": "i"}}
+            ]
+        }]
     
     # Get pages
     pages = await db.member_pages.find(
