@@ -6,7 +6,7 @@ Handles synchronized PVP gameplay with per-round ready mechanism.
 import asyncio
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Dict, Optional, List
 from dataclasses import dataclass, field
 import uuid
@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 # Constants
 COUNTDOWN_SECONDS = 10
 READY_TIMEOUT_SECONDS = 30  # Auto-ready after 30s
+RPS_CHOICE_TIMEOUT = 10  # 10 seconds to make RPS choice
 DISCONNECT_FORFEIT_TIMEOUT = 20  # 20 seconds before forfeit on disconnect
 AUCTION_ROUND_DURATION = 15  # 15 seconds for tapping round
 MAX_TAPS_PER_SECOND = 30  # Anti-cheat limit
