@@ -1778,16 +1778,30 @@ async def add_page_location(
 @member_pages_router.get("/public/{slug}")
 async def get_public_page(slug: str):
     """Get a public page by slug (no auth required) - Customer-facing view"""
+    # Case-insensitive slug lookup - accept pages that are published OR where is_published is not explicitly False
     page = await db.member_pages.find_one(
-        {"slug": slug.lower(), "is_published": True},
+        {
+            "slug": {"$regex": f"^{slug}$", "$options": "i"},
+            "$or": [
+                {"is_published": True},
+                {"is_published": {"$ne": False}}  # Accept None or True
+            ]
+        },
         {"_id": 0}
     )
+    
     if not page:
-        raise HTTPException(status_code=404, detail="Page not found")
+        # Try exact match as fallback
+        page = await db.member_pages.find_one(
+            {"slug": slug.lower()},
+            {"_id": 0}
+        )
+        if not page:
+            raise HTTPException(status_code=404, detail="Page not found")
     
     # Increment view count
     await db.member_pages.update_one(
-        {"slug": slug.lower()},
+        {"page_id": page["page_id"]},
         {"$inc": {"total_views": 1}}
     )
     
