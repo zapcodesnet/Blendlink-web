@@ -304,7 +304,7 @@ class TestGuestOrderPaymentFlow:
         
         print(f"Guest order creation response: {order_response.status_code}")
         
-        if order_response.status_code != 201:
+        if order_response.status_code not in [200, 201]:
             print(f"Order creation failed: {order_response.text}")
             pytest.skip("Could not create guest order for testing")
         
@@ -366,7 +366,7 @@ class TestGuestOrderPaymentFlow:
             headers={"Content-Type": "application/json"}
         )
         
-        if order_response.status_code != 201:
+        if order_response.status_code not in [200, 201]:
             pytest.skip("Could not create test order")
         
         order_id = order_response.json().get("order_id")
@@ -428,7 +428,7 @@ class TestPlatformFeeCalculation:
             headers={"Content-Type": "application/json"}
         )
         
-        if order_response.status_code != 201:
+        if order_response.status_code not in [200, 201]:
             pytest.skip("Could not create test order")
         
         order_id = order_response.json().get("order_id")
