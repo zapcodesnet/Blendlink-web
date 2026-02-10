@@ -18,7 +18,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 // ============== CORE REQUEST HELPER ==============
 // Production-safe fetch wrapper with text-first JSON parsing
 
-const getToken = () => localStorage.getItem('token');
+const getToken = () => localStorage.getItem('blendlink_token');
 
 /**
  * PRODUCTION-SAFE FETCH HELPER
