@@ -183,7 +183,7 @@ export default function MarketplaceIntegration({ pageId, pageType, pageName }) {
   const [filterCategory, setFilterCategory] = useState("all");
 
   // Check if user is authenticated
-  const isAuthenticated = () => !!localStorage.getItem('token');
+  const isAuthenticated = () => !!localStorage.getItem('blendlink_token');
 
   // Load linked listings
   const loadLinkedListings = async () => {

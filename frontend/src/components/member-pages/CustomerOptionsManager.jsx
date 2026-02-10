@@ -86,7 +86,7 @@ export default function CustomerOptionsManager({ pageId, pageType }) {
   const saveOptions = async () => {
     setSaving(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("blendlink_token");
       const res = await fetch(`${API_URL}/api/customer-options/${pageId}/options`, {
         method: "PUT",
         headers: {
@@ -118,7 +118,7 @@ export default function CustomerOptionsManager({ pageId, pageType }) {
 
     setSaving(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("blendlink_token");
       const res = await fetch(`${API_URL}/api/customer-options/${pageId}/locations`, {
         method: "POST",
         headers: {
@@ -151,7 +151,7 @@ export default function CustomerOptionsManager({ pageId, pageType }) {
     if (!confirm("Delete this location?")) return;
     
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("blendlink_token");
       const res = await fetch(`${API_URL}/api/customer-options/${pageId}/locations/${locationId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` }

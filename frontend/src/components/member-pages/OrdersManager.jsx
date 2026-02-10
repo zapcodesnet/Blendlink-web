@@ -228,7 +228,7 @@ export default function OrdersManager({ pageId, pageType }) {
   const loadOrders = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("blendlink_token");
       const res = await fetch(`${API_URL}/api/pos/${pageId}/transactions?limit=100`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -265,7 +265,7 @@ export default function OrdersManager({ pageId, pageType }) {
   // Update order status - PRODUCTION FIX: Text-first pattern
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("blendlink_token");
       const res = await fetch(`${API_URL}/api/member-pages/orders/${orderId}/status`, {
         method: "PUT",
         headers: {

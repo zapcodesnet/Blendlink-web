@@ -613,7 +613,7 @@ export default function MemberPageDashboard() {
 
   // WebSocket connection for real-time sync
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("blendlink_token");
     if (!token || !pageId) return;
 
     const wsUrl = `${API_URL.replace('http', 'ws')}/api/member-pages/ws/${pageId}?token=${token}`;
