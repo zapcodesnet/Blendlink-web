@@ -34,7 +34,7 @@ export function usePVPWebSocket(roomId, options = {}) {
   // Game state from server
   const [gameState, setGameState] = useState({
     currentRound: 1,
-    roundType: 'auction',
+    roundType: 'rps',  // FIXED: Start with RPS (round 1), sequence: rps, auction, rps, auction, rps
     roundPhase: 'waiting',
     player1Wins: 0,
     player2Wins: 0,
