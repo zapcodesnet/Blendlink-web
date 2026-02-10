@@ -327,6 +327,34 @@ export const memberPagesApi = {
     method: 'PUT',
     body: JSON.stringify(options),
   }),
+
+  // -------- Team Members / Authorized Users --------
+  
+  getTeamMembers: (pageId) => apiRequest(`/member-pages/${pageId}/team`),
+
+  addTeamMember: (pageId, email) => apiRequest(`/member-pages/${pageId}/team`, {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  }),
+
+  removeTeamMember: (pageId, userId) => apiRequestAllowEmpty(`/member-pages/${pageId}/team/${userId}`, {
+    method: 'DELETE',
+  }),
+
+  checkAuthorization: (pageId) => apiRequest(`/member-pages/${pageId}/authorization`),
+
+  // -------- Platform Fees --------
+  
+  getPageFees: (pageId) => apiRequest(`/member-pages/${pageId}/fees`),
+
+  // -------- Currency --------
+  
+  getSupportedCurrencies: () => apiRequest(`/member-pages/currencies/supported`),
+
+  updatePageCurrency: (pageId, currency) => apiRequest(`/member-pages/${pageId}/currency`, {
+    method: 'PUT',
+    body: JSON.stringify({ currency }),
+  }),
 };
 
 // Export individual functions for destructuring imports
