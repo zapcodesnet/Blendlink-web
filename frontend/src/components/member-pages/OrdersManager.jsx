@@ -622,6 +622,18 @@ export default function OrdersManager({ pageId, pageType }) {
                   </div>
                   <div className="flex items-center gap-3">
                     <p className="text-lg font-bold text-gray-900">${order.total?.toFixed(2)}</p>
+                    {/* Refund Button - only show if not already refunded */}
+                    {!["refunded", "cancelled", "payment_failed"].includes(order.status) && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setRefundOrder(order)}
+                        className="rounded-xl text-orange-600 border-orange-300 hover:bg-orange-50"
+                      >
+                        <RotateCcw className="w-4 h-4 mr-1" />
+                        Refund
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       variant="outline"
@@ -645,6 +657,18 @@ export default function OrdersManager({ pageId, pageType }) {
           order={selectedOrder}
           onClose={() => setSelectedOrder(null)}
           onUpdateStatus={updateOrderStatus}
+        />
+      )}
+
+      {/* Refund Modal */}
+      {refundOrder && (
+        <RefundModal
+          order={refundOrder}
+          onClose={() => setRefundOrder(null)}
+          onSuccess={() => {
+            setRefundOrder(null);
+            loadOrders();
+          }}
         />
       )}
     </div>
