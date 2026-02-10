@@ -576,7 +576,7 @@ export default function MarketplaceIntegration({ pageId, pageType, pageName }) {
                   {!searchQuery && filterCategory === "all" && (
                     <Button
                       variant="outline"
-                      onClick={() => window.open("/marketplace/create", "_blank")}
+                      onClick={() => window.open("/seller-dashboard", "_blank")}
                       className="mt-4 rounded-xl"
                     >
                       <Plus className="w-4 h-4 mr-1.5" />
