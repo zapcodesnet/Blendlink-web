@@ -68,7 +68,7 @@ class PVPGameRoom:
     
     # Round state
     round_phase: str = "waiting"  # waiting, selecting, ready, countdown, playing, result, paused
-    round_type: str = "auction"  # auction or rps
+    round_type: str = "rps"  # FIXED: Start with RPS, then alternate (rps, auction, rps, auction, rps)
     
     # Countdown
     countdown_task: Optional[asyncio.Task] = None
