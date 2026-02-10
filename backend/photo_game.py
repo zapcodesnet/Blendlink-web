@@ -45,9 +45,10 @@ LIGHT_TYPES = {
 
 # Million Dollar RPS Constants
 STARTING_BANKROLL = 5_000_000  # $5M starting bankroll (per spec)
-ADVANTAGE_BONUS = 1_000_000  # $1M bonus for higher Dollar Value photo in RPS
+STARTING_BANKROLL_WITH_ADVANTAGE = 7_000_000  # $7M when player has advantage
+ADVANTAGE_BONUS = 2_000_000  # $2M bonus for higher Dollar Value photo in RPS (UPDATED per user spec)
 MIN_BID = 1_000_000  # $1M minimum bid
-MAX_BID = 6_000_000  # $6M maximum bid (updated with advantage)
+MAX_BID = 7_000_000  # $7M maximum bid (UPDATED: with advantage can bid $6M or $7M)
 BID_INCREMENT = 1_000_000  # $1M increments
 
 # Win streak multipliers (🔥 Fire bonus - visible during battles)
