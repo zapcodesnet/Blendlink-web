@@ -247,8 +247,27 @@ export default function PublicPageView() {
     );
   }
 
-  if (!page) {
-    return null;
+  // Page not found - redirect to home or show 404
+  if (notFound || !page) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#F0F5FF] via-white to-[#F0F8FF] flex items-center justify-center">
+        <div className="text-center max-w-md px-4">
+          <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+            <Store className="w-10 h-10 text-gray-400" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Page Not Found</h1>
+          <p className="text-gray-500 mb-6">
+            The page you're looking for doesn't exist or may have been removed.
+          </p>
+          <Button
+            onClick={() => navigate("/")}
+            className="rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white"
+          >
+            Go to Home
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   const type = PAGE_TYPES[page.page_type] || PAGE_TYPES.general;
@@ -262,6 +281,19 @@ export default function PublicPageView() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F0F5FF] via-white to-[#F0F8FF] pb-24" style={{ touchAction: 'pan-y' }}>
+      {/* Checkout Modal */}
+      {showCheckout && (
+        <PageCheckout
+          pageId={page.page_id}
+          pageName={page.name}
+          cart={cart}
+          currencySymbol={currencySymbol}
+          onUpdateCart={setCart}
+          onClose={() => setShowCheckout(false)}
+          pageLocations={page.locations || []}
+        />
+      )}
+
       {/* Header */}
       <header className="sticky top-0 z-40 backdrop-blur-xl bg-white/70 border-b border-white/50 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 h-14 flex items-center gap-3">
