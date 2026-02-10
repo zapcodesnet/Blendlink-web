@@ -670,7 +670,7 @@ async def create_pos_transaction(
     user_id = current_user["user_id"]
     
     # Use verify_page_access to allow both owner and team members
-    page, is_owner = await verify_page_access(transaction.page_id, user_id)
+    page, is_owner = await verify_page_access_local(transaction.page_id, user_id)
     
     # Create order
     order_id = f"pos_{uuid.uuid4().hex[:12]}"
