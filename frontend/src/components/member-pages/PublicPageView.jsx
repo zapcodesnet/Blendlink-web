@@ -78,7 +78,8 @@ export default function PublicPageView() {
   const { slug } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
+  const authContext = useContext(AuthContext);
+  const user = authContext?.user || null;
   
   const [page, setPage] = useState(null);
   const [items, setItems] = useState([]);
