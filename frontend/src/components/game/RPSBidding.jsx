@@ -710,6 +710,41 @@ export const RPSBidding = ({
     handleSubmitRef.current = handleSubmit;
   }, [handleSubmit]);
   
+  // PVP MODE: Handle server-authoritative RPS result
+  useEffect(() => {
+    if (!serverRPSResult || isBot) return;
+    
+    console.log('[RPS PVP] Received server result:', serverRPSResult);
+    
+    // Extract choices from server result (SERVER IS AUTHORITATIVE - FIXES DESYNC)
+    const myChoice = isPlayer1 ? serverRPSResult.player1_choice : serverRPSResult.player2_choice;
+    const theirChoice = isPlayer1 ? serverRPSResult.player2_choice : serverRPSResult.player1_choice;
+    const myBid = isPlayer1 ? serverRPSResult.player1_bid : serverRPSResult.player2_bid;
+    const theirBid = isPlayer1 ? serverRPSResult.player2_bid : serverRPSResult.player1_bid;
+    
+    // Update displayed choices from server (PREVENTS DESYNC)
+    setPlayerChoice(myChoice);
+    setOpponentChoice(theirChoice);
+    setPlayerBid(myBid);
+    setOpponentBid(theirBid);
+    
+    // Determine result relative to this player
+    let result;
+    if (serverRPSResult.winner === 'player1') {
+      result = isPlayer1 ? 'player1' : 'player2';
+    } else if (serverRPSResult.winner === 'player2') {
+      result = isPlayer1 ? 'player2' : 'player1';
+    } else {
+      result = 'tie';
+    }
+    
+    setRoundResult(result);
+    setGamePhase('revealing');
+    setShowReveal(true);
+    
+    if (soundEnabled) auctionSounds.bidPlaced();
+  }, [serverRPSResult, isBot, isPlayer1, soundEnabled]);
+  
   // Countdown timer
   useEffect(() => {
     if (gamePhase === 'countdown') {
