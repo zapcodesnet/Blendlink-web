@@ -67,8 +67,16 @@ class PVPGameRoom:
     player2_wins: int = 0
     
     # Round state
-    round_phase: str = "waiting"  # waiting, selecting, ready, countdown, playing, result, paused
+    round_phase: str = "waiting"  # waiting, selecting, ready, countdown, choosing, revealing, result, paused
     round_type: str = "rps"  # FIXED: Start with RPS, then alternate (rps, auction, rps, auction, rps)
+    
+    # RPS state - ADDED for server-authoritative RPS handling
+    player1_rps_choice: Optional[str] = None  # 'rock', 'paper', or 'scissors'
+    player2_rps_choice: Optional[str] = None
+    player1_rps_bid: int = 0
+    player2_rps_bid: int = 0
+    rps_choice_deadline: Optional[datetime] = None  # 10 second deadline
+    rps_timeout_task: Optional[asyncio.Task] = None
     
     # Countdown
     countdown_task: Optional[asyncio.Task] = None
