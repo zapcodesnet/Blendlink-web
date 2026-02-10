@@ -50,33 +50,34 @@ class TestPublicPageSlugLookup:
     
     def test_public_page_exact_slug(self, api_client):
         """Test public page loads with exact slug"""
-        response = api_client.get(f"{BASE_URL}/api/pages/public/{TEST_PAGE_SLUG}")
+        response = api_client.get(f"{BASE_URL}/api/member-pages/public/{TEST_PAGE_SLUG}")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
         data = response.json()
-        assert "page_id" in data or "slug" in data, "Response should contain page data"
+        assert "page" in data, "Response should contain 'page' object"
+        assert "page_id" in data["page"] or "slug" in data["page"], "Page data should have identifiers"
         print(f"✓ Public page loaded successfully with exact slug: {TEST_PAGE_SLUG}")
     
     def test_public_page_uppercase_slug(self, api_client):
         """Test public page loads with uppercase slug (case-insensitive)"""
         uppercase_slug = TEST_PAGE_SLUG.upper()
-        response = api_client.get(f"{BASE_URL}/api/pages/public/{uppercase_slug}")
+        response = api_client.get(f"{BASE_URL}/api/member-pages/public/{uppercase_slug}")
         assert response.status_code == 200, f"Expected 200 for uppercase slug, got {response.status_code}: {response.text}"
         
         data = response.json()
-        assert "page_id" in data or "slug" in data, "Response should contain page data"
+        assert "page" in data, "Response should contain page data"
         print(f"✓ Case-insensitive slug lookup works: {uppercase_slug}")
     
     def test_public_page_mixed_case_slug(self, api_client):
         """Test public page loads with mixed case slug"""
         mixed_slug = "MyShop-1770708410"
-        response = api_client.get(f"{BASE_URL}/api/pages/public/{mixed_slug}")
+        response = api_client.get(f"{BASE_URL}/api/member-pages/public/{mixed_slug}")
         assert response.status_code == 200, f"Expected 200 for mixed case slug, got {response.status_code}: {response.text}"
         print(f"✓ Mixed case slug lookup works: {mixed_slug}")
     
     def test_nonexistent_page_returns_404(self, api_client):
         """Test that non-existent slug returns 404"""
-        response = api_client.get(f"{BASE_URL}/api/pages/public/nonexistent-page-xyz123")
+        response = api_client.get(f"{BASE_URL}/api/member-pages/public/nonexistent-page-xyz123")
         assert response.status_code == 404, f"Expected 404 for non-existent page, got {response.status_code}"
         print("✓ Non-existent page correctly returns 404")
 
