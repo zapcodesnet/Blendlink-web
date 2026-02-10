@@ -717,11 +717,12 @@ export default function PublicPageView() {
                   <Button
                     className="w-full h-12 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold"
                     onClick={() => {
-                      toast.success("Checkout coming soon!");
+                      setShowCart(false);
+                      setShowCheckout(true);
                     }}
                     data-testid="checkout-button"
                   >
-                    Checkout {currencySymbol}{cartTotal.toFixed(2)}
+                    <Zap className="w-5 h-5 mr-2" /> Checkout {currencySymbol}{cartTotal.toFixed(2)}
                   </Button>
                 </div>
               </>
