@@ -984,14 +984,23 @@ class PVPGameManager:
         })
         
         # Check for game end (first to 3 wins)
+        # Per user spec:
+        # - Round 3 (RPS) can be final if score reaches 3-0
+        # - Round 4 (Auction) only if score is 2-1 after round 3
+        # - Round 5 (RPS) only as tie-breaker if score is 2-2 after round 4
         if room.player1_wins >= 3 or room.player2_wins >= 3:
-            logger.info(f"[PVP] Game over! p1={room.player1_wins}, p2={room.player2_wins}")
+            logger.info(f"[PVP] Game over! Winner determined. Final score: p1={room.player1_wins}, p2={room.player2_wins}")
+            await self._end_game(room_id)
+        elif room.current_round >= 5:
+            # Maximum rounds reached - shouldn't happen if logic is correct
+            logger.warning(f"[PVP] Max rounds reached without winner! Score: p1={room.player1_wins}, p2={room.player2_wins}")
             await self._end_game(room_id)
         else:
             # Schedule transition to next round after brief result display
-            logger.info(f"[PVP] Scheduling transition to round {room.current_round + 1}")
+            next_round = room.current_round + 1
+            logger.info(f"[PVP] Scheduling transition to round {next_round} (score: {room.player1_wins}-{room.player2_wins})")
             await asyncio.sleep(3)  # Brief result display
-            room.current_round += 1
+            room.current_round = next_round
             room.round_winner_determined = False  # Reset for next round
             await self._transition_to_selecting(room_id)
     
