@@ -31,6 +31,9 @@ import CustomerOptionsManager from "./CustomerOptionsManager";
 import OrdersManager from "./OrdersManager";
 import MarketplaceIntegration from "./MarketplaceIntegration";
 import DailySalesReport from "./DailySalesReport";
+import TeamMembersManager from "./TeamMembersManager";
+import PlatformFeesManager from "./PlatformFeesManager";
+import CurrencySelector from "./CurrencySelector";
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
