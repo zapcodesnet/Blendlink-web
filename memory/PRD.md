@@ -1,10 +1,58 @@
 # Blendlink Platform - Product Requirements Document
 
-## Latest Update: February 10, 2026 (Session - Public Pages & Checkout)
+## Latest Update: February 10, 2026 (Session - Production Bug Fixes)
 
 ---
 
-## ✅ NEW FEATURES: Custom Slug Public Pages & Guest Checkout (Iteration 134)
+## ✅ URGENT PRODUCTION BUG FIXES (Iteration 135)
+
+### Fixes Applied
+
+#### 1. Public Pages 404 Error - FIXED
+- **Problem:** Public pages at `blendlink.net/[slug]` showed "Page Not Found"
+- **Root Cause:** Query required `is_published: True` but many pages had `null`
+- **Fix:** Updated query to accept pages where `is_published` is not explicitly `False`
+- **Added:** Case-insensitive slug lookup with regex
+
+#### 2. Product Image Upload - IMPLEMENTED
+- **Added:** Image upload field in "Add Product" form
+- **Features:**
+  - Click-to-upload area with preview
+  - File type validation (JPEG, PNG, GIF, WebP)
+  - Size limit (5MB max)
+  - Secure upload to `/api/upload/image` endpoint
+- **Files:** `MemberPageDashboard.jsx` (AddItemModal), `server.py` (endpoint)
+
+#### 3. POS Manual Payments & Refunds - IMPLEMENTED
+- **Manual Cash Input:**
+  - Numeric input field for cash received
+  - Quick amount buttons ($10, $20, $50, $100, Exact)
+  - Change calculation display
+- **Manual Card Entry:**
+  - Card number, expiry, CVV, cardholder name fields
+  - Formatted input masks
+- **8% Platform Fee:**
+  - Fee displayed on every transaction
+  - Shows "Added to monthly billing" for cash
+  - Shows "Auto-deducted from payout" for card
+- **Refund Functionality:**
+  - Full or partial refund options
+  - Reason required
+  - **Auto-reverses 8% fee on refund**
+  - Logs all refunds with timestamps
+
+#### 4. Create Listing Button - RELINKED
+- **Changed:** Button now opens `/seller-dashboard` instead of `/marketplace/create`
+- **File:** `MarketplaceIntegration.jsx`
+
+### Test Results: ✅ 100% Pass Rate
+- Test Report: `/app/test_reports/iteration_135.json`
+- Backend: 11/11 tests passed
+- Frontend: All UI features verified
+
+---
+
+## Previous: Custom Slug Public Pages & Guest Checkout (Iteration 134)
 
 ### Implemented Features
 
