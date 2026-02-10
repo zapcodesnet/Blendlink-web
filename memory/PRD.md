@@ -1,10 +1,63 @@
 # Blendlink Platform - Product Requirements Document
 
-## Latest Update: February 10, 2026 (Session - Production 401 Fix)
+## Latest Update: February 10, 2026 (Session - Page Management Features)
 
 ---
 
-## ✅ CRITICAL FIX: Production 401 Error on Page Creation (Iteration 132)
+## ✅ NEW FEATURES: Page Management, Authorization, Fees & Currency (Iteration 133)
+
+### Implemented Features
+
+#### 1. Team Members / Authorized Users Management
+- Page owners can add/remove team members by email
+- Team members can manage the page (POS, inventory, orders) but cannot delete the page or manage team
+- New endpoints: `GET/POST/DELETE /api/member-pages/{page_id}/team`
+- Authorization check endpoint: `GET /api/member-pages/{page_id}/authorization`
+
+#### 2. Platform Fees (8% Transaction Fee)
+- 8% fee applied to ALL POS transactions (including cash sales)
+- **Cash payments:** Fee accumulated monthly for billing
+- **Card payments:** Fee auto-deducted from payout
+- Fee tracking with history: `GET /api/member-pages/{page_id}/fees`
+- New collection: `platform_fee_logs` for detailed tracking
+
+#### 3. Multi-Currency Support
+- 26 currencies supported (USD, EUR, PHP, GBP, JPY, etc.)
+- Currency selector in page settings
+- Endpoints: `GET /api/member-pages/currencies/supported`, `PUT /api/member-pages/{page_id}/currency`
+
+#### 4. Enhanced Public Page View
+- Customer-facing view (no management UI)
+- Owner's referral code displayed with clickable signup link
+- Google Maps embed for locations (no API key required)
+- Contact info display (phone, email, website)
+- Star ratings and reviews section
+- "Manage" button only visible to owner/authorized users
+
+#### 5. Contact Information
+- Phone, email, website fields added to page model
+- Displayed on public page with click-to-call/email functionality
+
+### New Files Created
+- `frontend/src/components/member-pages/TeamMembersManager.jsx`
+- `frontend/src/components/member-pages/PlatformFeesManager.jsx`
+- `frontend/src/components/member-pages/CurrencySelector.jsx`
+
+### Files Modified
+- `backend/member_pages_system.py` - MemberPage model, team endpoints, fees endpoints, currency endpoints
+- `backend/member_pages_extended.py` - POS transaction with 8% fee
+- `frontend/src/components/member-pages/PublicPageView.jsx` - Enhanced customer view
+- `frontend/src/components/member-pages/MemberPageDashboard.jsx` - Team & Fees tabs
+- `frontend/src/services/memberPagesApi.js` - New API methods
+
+### Test Results: ✅ 100% Pass Rate
+- Test Report: `/app/test_reports/iteration_133.json`
+- All 15 backend tests passed
+- All frontend features verified
+
+---
+
+## Previous: Production 401 Fix (Iteration 132)
 
 ### Problem
 Page creation at blendlink.net/pages failed with "Request failed (401)" error. The feature worked correctly in the preview environment but broke in production.
@@ -28,13 +81,6 @@ Page creation at blendlink.net/pages failed with "Request failed (401)" error. T
 - **Backend API Test:** ✅ Page creation successful via curl
 - **E2E Test:** ✅ Full flow (register → login → create page) works
 - **Test Report:** `/app/test_reports/iteration_132.json`
-
-### Deployment Instructions for Production (blendlink.net)
-To apply this fix to the live production site:
-1. Ensure the updated code from this environment is deployed to production
-2. The key change is in `memberPagesApi.js` line 21: `localStorage.getItem('blendlink_token')`
-3. Clear browser cache after deployment to ensure new code is loaded
-4. Test: Login → Navigate to /pages → Click Create Page → Verify no 401 error
 
 ---
 
