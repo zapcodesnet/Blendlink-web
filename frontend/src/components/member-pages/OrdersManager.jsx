@@ -390,6 +390,7 @@ export default function OrdersManager({ pageId, pageType }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [refundOrder, setRefundOrder] = useState(null);
   const [summary, setSummary] = useState(null);
 
   // Load orders - PRODUCTION FIX: Text-first pattern
