@@ -1081,6 +1081,129 @@ async def get_pos_checkout_status(
         raise HTTPException(status_code=500, detail=f"Error checking payment status: {str(e)}")
 
 
+# ============== REFUND ENDPOINT ==============
+
+class RefundRequest(BaseModel):
+    order_id: str
+    amount: Optional[float] = None  # None = full refund
+    reason: str = "Customer request"
+
+@pos_router.post("/refund")
+async def process_refund(
+    request: RefundRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Process a refund for a POS transaction or guest order"""
+    user_id = current_user["user_id"]
+    
+    # Find the order
+    order = await db.page_orders.find_one({"order_id": request.order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Verify user has access to this order's page
+    page, is_owner = await verify_page_access_local(order["page_id"], user_id)
+    
+    # Check if order can be refunded
+    if order.get("status") == "refunded":
+        raise HTTPException(status_code=400, detail="Order already refunded")
+    
+    if order.get("payment_status") not in ["paid", "cod"]:
+        raise HTTPException(status_code=400, detail="Order payment not completed, cannot refund")
+    
+    # Calculate refund amount
+    original_total = order.get("total", 0)
+    refund_amount = request.amount if request.amount else original_total
+    
+    if refund_amount > original_total:
+        raise HTTPException(status_code=400, detail="Refund amount exceeds order total")
+    
+    # Calculate and reverse the 8% platform fee
+    original_fee = order.get("platform_fee", original_total * PLATFORM_FEE_RATE)
+    fee_refund = (refund_amount / original_total) * original_fee if original_total > 0 else 0
+    
+    # Create refund record
+    refund_id = f"rfnd_{uuid.uuid4().hex[:12]}"
+    refund_record = {
+        "refund_id": refund_id,
+        "order_id": request.order_id,
+        "page_id": order["page_id"],
+        "original_total": original_total,
+        "refund_amount": refund_amount,
+        "fee_refunded": fee_refund,
+        "payment_method": order.get("payment_method", "cash"),
+        "reason": request.reason,
+        "processed_by": user_id,
+        "status": "completed",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.refunds.insert_one(refund_record.copy())
+    refund_record.pop("_id", None)
+    
+    # Update order status
+    is_full_refund = refund_amount >= original_total
+    await db.page_orders.update_one(
+        {"order_id": request.order_id},
+        {"$set": {
+            "status": "refunded" if is_full_refund else "partially_refunded",
+            "refund_amount": refund_amount,
+            "refund_id": refund_id,
+            "refunded_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Reverse platform fee (credit back to page owner)
+    if order.get("payment_method") == "cash":
+        # Reduce owed fees
+        await db.member_pages.update_one(
+            {"page_id": order["page_id"]},
+            {"$inc": {"platform_fees_owed": -fee_refund}}
+        )
+    
+    # Log the fee reversal
+    await db.platform_fee_logs.insert_one({
+        "log_id": f"fee_rfnd_{uuid.uuid4().hex[:12]}",
+        "page_id": order["page_id"],
+        "transaction_total": refund_amount,
+        "fee_amount": -fee_refund,  # Negative = credit
+        "fee_rate": PLATFORM_FEE_RATE,
+        "payment_method": order.get("payment_method", "cash"),
+        "status": "refunded",
+        "refund_id": refund_id,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Update page revenue
+    await db.member_pages.update_one(
+        {"page_id": order["page_id"]},
+        {"$inc": {"total_revenue": -refund_amount}}
+    )
+    
+    return {
+        "success": True,
+        "refund": refund_record,
+        "message": f"Refund of ${refund_amount:.2f} processed successfully",
+        "fee_credited": fee_refund
+    }
+
+@pos_router.get("/{page_id}/refunds")
+async def get_page_refunds(
+    page_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get refund history for a page"""
+    user_id = current_user["user_id"]
+    await verify_page_access_local(page_id, user_id)
+    
+    refunds = await db.refunds.find(
+        {"page_id": page_id},
+        {"_id": 0}
+    ).sort("created_at", -1).limit(50).to_list(50)
+    
+    return {"refunds": refunds}
+
+
 # ============== SECTION 5: MARKETPLACE INTEGRATION ==============
 
 class MarketplaceLinkRequest(BaseModel):
