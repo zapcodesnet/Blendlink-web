@@ -111,6 +111,7 @@ class MemberPage(BaseModel):
     theme_color: str = "#10B981"
     settings: Dict[str, Any] = {}
     locations: List[Dict[str, Any]] = []
+    authorized_users: List[str] = []  # User IDs who can manage this page (team members)
     is_published: bool = False
     is_verified: bool = False
     subscriber_count: int = 0
@@ -121,6 +122,17 @@ class MemberPage(BaseModel):
     rating_count: int = 0
     referral_code: str = Field(default_factory=lambda: uuid.uuid4().hex[:8].upper())
     marketplace_linked: bool = False
+    # Currency settings
+    currency: str = "USD"
+    currency_symbol: str = "$"
+    # POS fee tracking
+    platform_fees_owed: float = 0.0  # Accumulated 8% fees from cash sales
+    platform_fees_paid: float = 0.0  # Total fees paid
+    last_fee_billing_date: Optional[str] = None
+    # Contact info for public display
+    phone: str = ""
+    email: str = ""
+    website: str = ""
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
