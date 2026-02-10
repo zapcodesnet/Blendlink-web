@@ -889,10 +889,104 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
           })}
         </div>
 
+        {/* Manual Cash Input */}
+        {paymentMethod === "cash" && (
+          <div className="mb-4 p-4 bg-green-50 rounded-xl border border-green-200">
+            <label className="text-sm font-medium text-green-800 mb-2 block">Cash Received</label>
+            <div className="relative">
+              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-600" />
+              <Input
+                type="number"
+                step="0.01"
+                placeholder="Enter amount received"
+                value={cashReceived || ""}
+                onChange={(e) => setCashReceived(parseFloat(e.target.value) || 0)}
+                className="h-12 pl-10 rounded-xl border-green-300 bg-white text-lg font-bold"
+              />
+            </div>
+            {cashReceived > 0 && cashReceived >= total && (
+              <div className="mt-2 p-2 bg-green-100 rounded-lg text-green-800 font-bold text-center">
+                Change: ${(cashReceived - total).toFixed(2)}
+              </div>
+            )}
+            {/* Quick cash buttons */}
+            <div className="flex gap-2 mt-3">
+              {[10, 20, 50, 100].map(amt => (
+                <button
+                  key={amt}
+                  onClick={() => setCashReceived(amt)}
+                  className="flex-1 py-2 rounded-lg bg-green-200 text-green-800 font-medium hover:bg-green-300 transition-colors"
+                >
+                  ${amt}
+                </button>
+              ))}
+              <button
+                onClick={() => setCashReceived(Math.ceil(total))}
+                className="flex-1 py-2 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 transition-colors"
+              >
+                Exact
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Manual Card Input */}
+        {paymentMethod === "card" && (
+          <div className="mb-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
+            <label className="text-sm font-medium text-blue-800 mb-2 block">Card Details (Manual Entry)</label>
+            <div className="space-y-3">
+              <Input
+                type="text"
+                placeholder="Card Number"
+                maxLength={19}
+                className="h-11 rounded-xl border-blue-300 bg-white font-mono"
+                onChange={(e) => {
+                  // Format card number with spaces
+                  const v = e.target.value.replace(/\s/g, '').replace(/(\d{4})/g, '$1 ').trim();
+                  e.target.value = v;
+                }}
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <Input
+                  type="text"
+                  placeholder="MM/YY"
+                  maxLength={5}
+                  className="h-11 rounded-xl border-blue-300 bg-white"
+                />
+                <Input
+                  type="text"
+                  placeholder="CVV"
+                  maxLength={4}
+                  className="h-11 rounded-xl border-blue-300 bg-white"
+                />
+              </div>
+              <Input
+                type="text"
+                placeholder="Cardholder Name"
+                className="h-11 rounded-xl border-blue-300 bg-white"
+              />
+            </div>
+            <p className="text-xs text-blue-600 mt-2 flex items-center gap-1">
+              <CreditCard className="w-3 h-3" /> Secure manual card entry
+            </p>
+          </div>
+        )}
+
+        {/* Platform Fee Notice */}
+        <div className="mb-4 p-3 bg-amber-50 rounded-xl border border-amber-200 text-sm">
+          <div className="flex justify-between text-amber-800">
+            <span>Platform Fee (8%)</span>
+            <span className="font-bold">${(total * 0.08).toFixed(2)}</span>
+          </div>
+          <p className="text-xs text-amber-600 mt-1">
+            {paymentMethod === "cash" ? "Added to monthly billing" : "Auto-deducted from payout"}
+          </p>
+        </div>
+
         {/* Complete Transaction Button */}
         <Button
           onClick={processTransaction}
-          disabled={processing || cart.length === 0}
+          disabled={processing || cart.length === 0 || (paymentMethod === "cash" && cashReceived < total)}
           className="w-full h-12 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold text-lg shadow-lg shadow-green-500/25 disabled:opacity-50"
         >
           {processing ? (
