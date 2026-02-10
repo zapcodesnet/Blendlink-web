@@ -574,6 +574,7 @@ const SettingsTab = ({ page, onUpdate }) => {
 export default function MemberPageDashboard() {
   const { pageId } = useParams();
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
   const [page, setPage] = useState(null);
   const [analytics, setAnalytics] = useState(null);
   const [products, setProducts] = useState([]);
