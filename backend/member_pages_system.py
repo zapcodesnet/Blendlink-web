@@ -8,7 +8,7 @@ BlendLink Member Pages System - Enhanced Business Page Types
 - Per-page dashboards with analytics
 """
 
-from fastapi import APIRouter, HTTPException, Depends, WebSocket, WebSocketDisconnect, BackgroundTasks
+from fastapi import APIRouter, HTTPException, Depends, WebSocket, WebSocketDisconnect, BackgroundTasks, Request, Header
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone, timedelta
@@ -18,6 +18,8 @@ import uuid
 import logging
 import json
 import asyncio
+import jwt
+from jwt.exceptions import InvalidTokenError as JWTError
 from dotenv import load_dotenv
 
 load_dotenv()
