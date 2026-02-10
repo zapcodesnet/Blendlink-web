@@ -1,17 +1,20 @@
 /**
  * Orders Manager Component
- * Displays order history with filtering, status updates, and detailed views
+ * Displays order history with filtering, status updates, refunds, and detailed views
  */
 
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
 import {
   ShoppingBag, Clock, CheckCircle, XCircle, Truck, Package,
   Search, Filter, ChevronDown, ChevronRight, Calendar, DollarSign,
-  User, Phone, MapPin, RefreshCw, Eye, Loader2, Receipt
+  User, Phone, MapPin, RefreshCw, Eye, Loader2, Receipt, RotateCcw,
+  AlertTriangle
 } from "lucide-react";
+import { safeFetch } from "../../services/memberPagesApi";
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -26,7 +29,9 @@ const StatusBadge = ({ status }) => {
     out_for_delivery: { color: "bg-indigo-100 text-indigo-700", icon: Truck, label: "Out for Delivery" },
     completed: { color: "bg-green-100 text-green-700", icon: CheckCircle, label: "Completed" },
     cancelled: { color: "bg-red-100 text-red-700", icon: XCircle, label: "Cancelled" },
-    payment_failed: { color: "bg-red-100 text-red-700", icon: XCircle, label: "Payment Failed" }
+    payment_failed: { color: "bg-red-100 text-red-700", icon: XCircle, label: "Payment Failed" },
+    refunded: { color: "bg-orange-100 text-orange-700", icon: RotateCcw, label: "Refunded" },
+    partially_refunded: { color: "bg-amber-100 text-amber-700", icon: RotateCcw, label: "Partial Refund" }
   };
 
   const config = statusConfig[status] || statusConfig.pending;
@@ -54,6 +59,169 @@ const OrderTypeBadge = ({ type }) => {
     <span className={`px-2 py-0.5 rounded text-xs font-medium ${config.color}`}>
       {config.label}
     </span>
+  );
+};
+
+// Refund Modal Component
+const RefundModal = ({ order, onClose, onSuccess }) => {
+  const [refundAmount, setRefundAmount] = useState(order.total);
+  const [refundReason, setRefundReason] = useState("");
+  const [isFullRefund, setIsFullRefund] = useState(true);
+  const [processing, setProcessing] = useState(false);
+
+  const platformFee = (refundAmount / order.total) * (order.platform_fee || order.total * 0.08);
+
+  const handleRefund = async () => {
+    if (!refundReason.trim()) {
+      toast.error("Please provide a reason for the refund");
+      return;
+    }
+
+    setProcessing(true);
+    try {
+      const token = localStorage.getItem("blendlink_token");
+      const data = await safeFetch(`${API_URL}/api/pos/refund`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          order_id: order.order_id,
+          amount: isFullRefund ? null : refundAmount,
+          reason: refundReason
+        })
+      });
+
+      toast.success(data.message || "Refund processed successfully");
+      onSuccess();
+    } catch (err) {
+      toast.error(err.message || "Failed to process refund");
+    }
+    setProcessing(false);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center">
+            <RotateCcw className="w-6 h-6 text-orange-600" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-gray-900">Process Refund</h3>
+            <p className="text-sm text-gray-500">Order #{order.order_id.slice(-8)}</p>
+          </div>
+        </div>
+
+        {/* Refund Type Selection */}
+        <div className="flex gap-3 mb-4">
+          <button
+            onClick={() => { setIsFullRefund(true); setRefundAmount(order.total); }}
+            className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${
+              isFullRefund 
+                ? 'bg-orange-500 text-white' 
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            Full Refund
+          </button>
+          <button
+            onClick={() => setIsFullRefund(false)}
+            className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${
+              !isFullRefund 
+                ? 'bg-orange-500 text-white' 
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            Partial Refund
+          </button>
+        </div>
+
+        {/* Refund Amount */}
+        {!isFullRefund && (
+          <div className="mb-4">
+            <label className="text-sm font-medium text-gray-700 mb-1 block">Refund Amount</label>
+            <div className="relative">
+              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Input
+                type="number"
+                step="0.01"
+                max={order.total}
+                value={refundAmount}
+                onChange={(e) => setRefundAmount(Math.min(parseFloat(e.target.value) || 0, order.total))}
+                className="pl-10 h-11 rounded-xl"
+              />
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Max: ${order.total.toFixed(2)}</p>
+          </div>
+        )}
+
+        {/* Refund Reason */}
+        <div className="mb-4">
+          <label className="text-sm font-medium text-gray-700 mb-1 block">Reason for Refund *</label>
+          <Textarea
+            value={refundReason}
+            onChange={(e) => setRefundReason(e.target.value)}
+            placeholder="Enter reason for refund..."
+            rows={3}
+            className="rounded-xl"
+          />
+        </div>
+
+        {/* Refund Summary */}
+        <div className="bg-orange-50 rounded-xl p-4 mb-4 space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-600">Refund Amount</span>
+            <span className="font-bold text-orange-700">${refundAmount.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-600">Platform Fee Credit (8%)</span>
+            <span className="font-medium text-green-600">+${platformFee.toFixed(2)}</span>
+          </div>
+          <div className="pt-2 border-t border-orange-200 flex justify-between">
+            <span className="text-gray-700 font-medium">Payment Method</span>
+            <span className="font-bold text-gray-900 capitalize">{order.payment_method}</span>
+          </div>
+        </div>
+
+        {/* Warning for cash refunds */}
+        {order.payment_method === "cash" && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4 flex items-start gap-2">
+            <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-amber-800">
+              Cash refund must be given to customer manually. This will be logged for accounting purposes.
+            </p>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex gap-3">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            className="flex-1 h-11 rounded-xl"
+            disabled={processing}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleRefund}
+            disabled={processing || !refundReason.trim()}
+            className="flex-1 h-11 rounded-xl bg-orange-500 hover:bg-orange-600 text-white"
+          >
+            {processing ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <>
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Process Refund
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 };
 
