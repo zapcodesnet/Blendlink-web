@@ -193,6 +193,11 @@ export const PVPBattleArena = ({
   const [myReady, setMyReady] = useState(false);
   const [opponentReady, setOpponentReady] = useState(false);
   
+  // RPS state (SERVER-AUTHORITATIVE for PVP mode)
+  const [serverRPSResult, setServerRPSResult] = useState(null);  // Server's authoritative RPS result
+  const [opponentHasSubmittedRPS, setOpponentHasSubmittedRPS] = useState(false);
+  const [rpsChoosingTimeout, setRPSChoosingTimeout] = useState(10);
+  
   // RPS money
   const [playerRPSMoney, setPlayerRPSMoney] = useState(STARTING_RPS_MONEY);
   const [opponentRPSMoney, setOpponentRPSMoney] = useState(STARTING_RPS_MONEY);
