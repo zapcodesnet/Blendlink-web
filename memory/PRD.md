@@ -1,6 +1,44 @@
 # Blendlink Platform - Product Requirements Document
 
-## Latest Update: February 9, 2026 (Session 2 - PVP Game Server-Authoritative RPS)
+## Latest Update: February 10, 2026 (Session - Production 401 Fix)
+
+---
+
+## ✅ CRITICAL FIX: Production 401 Error on Page Creation (Iteration 132)
+
+### Problem
+Page creation at blendlink.net/pages failed with "Request failed (401)" error. The feature worked correctly in the preview environment but broke in production.
+
+### Root Cause
+**localStorage Token Key Mismatch:**
+- The authentication system stores tokens under `localStorage.getItem('blendlink_token')` (defined in `api.js`)
+- The `memberPagesApi.js` and several member-pages components were incorrectly using `localStorage.getItem('token')`
+- This mismatch caused the `Authorization` header to be empty/undefined, resulting in 401 Unauthorized errors
+
+### Files Fixed (7 total)
+| File | Line(s) | Fix |
+|------|---------|-----|
+| `frontend/src/services/memberPagesApi.js` | 21 | Changed `'token'` → `'blendlink_token'` |
+| `frontend/src/components/member-pages/OrdersManager.jsx` | 231, 268 | Changed `'token'` → `'blendlink_token'` |
+| `frontend/src/components/member-pages/MarketplaceIntegration.jsx` | 186 | Changed `'token'` → `'blendlink_token'` |
+| `frontend/src/components/member-pages/CustomerOptionsManager.jsx` | 89, 121, 154 | Changed `'token'` → `'blendlink_token'` (3 places) |
+| `frontend/src/components/member-pages/MemberPageDashboard.jsx` | 616 | Changed `'token'` → `'blendlink_token'` |
+
+### Verification Results
+- **Backend API Test:** ✅ Page creation successful via curl
+- **E2E Test:** ✅ Full flow (register → login → create page) works
+- **Test Report:** `/app/test_reports/iteration_132.json`
+
+### Deployment Instructions for Production (blendlink.net)
+To apply this fix to the live production site:
+1. Ensure the updated code from this environment is deployed to production
+2. The key change is in `memberPagesApi.js` line 21: `localStorage.getItem('blendlink_token')`
+3. Clear browser cache after deployment to ensure new code is loaded
+4. Test: Login → Navigate to /pages → Click Create Page → Verify no 401 error
+
+---
+
+## Previous Update: February 9, 2026 (Session 2 - PVP Game Server-Authoritative RPS)
 
 ---
 
