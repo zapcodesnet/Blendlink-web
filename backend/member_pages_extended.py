@@ -937,8 +937,10 @@ async def create_pos_checkout_session(
     await db.page_orders.insert_one(order.copy())
     order.pop("_id", None)
     
-    # Create Stripe checkout session
-    api_key = os.environ.get("STRIPE_API_KEY", "sk_test_emergent")
+    # Create Stripe checkout session - use LIVE key from environment
+    api_key = os.environ.get("STRIPE_API_KEY") or os.environ.get("STRIPE_SECRET_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="Stripe not configured")
     
     # Build URLs from provided origin
     success_url = f"{request.origin_url}/member-pages/{request.page_id}?payment=success&session_id={{CHECKOUT_SESSION_ID}}&order_id={order_id}"
