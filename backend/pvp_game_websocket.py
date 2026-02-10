@@ -661,9 +661,16 @@ class PVPGameManager:
         
         room.round_phase = "selecting"
         
-        # Determine round type
-        round_types = ["auction", "rps", "auction", "rps", "auction"]
-        room.round_type = round_types[room.current_round - 1] if room.current_round <= 5 else "auction"
+        # FIXED: Correct round sequence per user spec:
+        # Round 1: RPS Bidding
+        # Round 2: Photo Auction (Tapping)
+        # Round 3: RPS Bidding (can be final if score reaches 3-0)
+        # Round 4: Photo Auction (only if score is 2-1)
+        # Round 5: RPS Bidding (tie-breaker only if score is 2-2)
+        round_types = ["rps", "auction", "rps", "auction", "rps"]
+        room.round_type = round_types[room.current_round - 1] if room.current_round <= 5 else "rps"
+        
+        logger.info(f"Room {room_id} starting round {room.current_round} (type: {room.round_type}), score: {room.player1_wins}-{room.player2_wins}")
         
         # Reset player states for new round
         if room.player1:
