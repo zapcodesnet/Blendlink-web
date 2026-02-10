@@ -119,6 +119,7 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
   const [processing, setProcessing] = useState(false);
   const [receipt, setReceipt] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [cashReceived, setCashReceived] = useState(0);
   
   // Quick Sale Mode state
   const [quickSaleMode, setQuickSaleMode] = useState(false);
