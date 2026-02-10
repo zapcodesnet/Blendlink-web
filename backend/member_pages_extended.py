@@ -1466,6 +1466,167 @@ async def calculate_delivery(
     }
 
 
+# ============== GUEST ORDERS ROUTER ==============
+# Allows non-registered users to place orders on public pages
+
+guest_orders_router = APIRouter(prefix="/page-orders", tags=["Guest Orders"])
+
+class GuestOrderItem(BaseModel):
+    item_id: str
+    name: str
+    price: float
+    quantity: int
+
+class GuestOrderRequest(BaseModel):
+    page_id: str
+    customer_name: str
+    customer_phone: str
+    customer_email: Optional[str] = None
+    delivery_address: Optional[str] = None
+    delivery_city: Optional[str] = None
+    pickup_location_id: Optional[str] = None
+    order_type: str = "delivery"  # delivery or pickup
+    payment_method: str = "card"  # card or cash
+    items: List[GuestOrderItem]
+    subtotal: float
+    delivery_fee: float = 0
+    tax: float = 0
+    total: float
+    notes: Optional[str] = None
+    is_guest_order: bool = True
+
+@guest_orders_router.post("/guest")
+async def create_guest_order(order: GuestOrderRequest):
+    """
+    Create an order from a public page - NO authentication required.
+    Allows customers to checkout without registering.
+    """
+    # Verify page exists and is published
+    page = await db.member_pages.find_one({"page_id": order.page_id, "is_published": True})
+    if not page:
+        raise HTTPException(status_code=404, detail="Page not found or not available")
+    
+    # Generate order ID
+    order_id = f"go_{uuid.uuid4().hex[:12]}"
+    
+    # Calculate 8% platform fee
+    platform_fee = order.total * PLATFORM_FEE_RATE
+    
+    # Create order document
+    order_doc = {
+        "order_id": order_id,
+        "page_id": order.page_id,
+        "page_name": page.get("name", ""),
+        "owner_id": page["owner_id"],
+        "customer_id": None,  # Guest order
+        "customer_name": order.customer_name,
+        "customer_phone": order.customer_phone,
+        "customer_email": order.customer_email,
+        "delivery_address": order.delivery_address,
+        "delivery_city": order.delivery_city,
+        "pickup_location_id": order.pickup_location_id,
+        "order_type": order.order_type,
+        "payment_method": order.payment_method,
+        "items": [item.dict() for item in order.items],
+        "subtotal": order.subtotal,
+        "delivery_fee": order.delivery_fee,
+        "tax": order.tax,
+        "total": order.total,
+        "platform_fee": platform_fee,
+        "platform_fee_rate": PLATFORM_FEE_RATE,
+        "notes": order.notes,
+        "is_guest_order": True,
+        "is_pos_transaction": False,
+        "status": "pending",  # pending -> confirmed -> preparing -> ready/out_for_delivery -> completed
+        "payment_status": "pending" if order.payment_method == "card" else "cod",  # cod = cash on delivery
+        "currency": page.get("currency", "USD"),
+        "currency_symbol": page.get("currency_symbol", "$"),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.page_orders.insert_one(order_doc.copy())
+    order_doc.pop("_id", None)
+    
+    # Apply platform fee (for cash orders, accumulate; for card, will be deducted from payment)
+    await apply_platform_fee(order.page_id, order.total, order.payment_method)
+    
+    # Update page totals
+    await db.member_pages.update_one(
+        {"page_id": order.page_id},
+        {"$inc": {"total_orders": 1, "total_revenue": order.total}}
+    )
+    
+    # If card payment, create payment session (placeholder for Stripe/PayPal integration)
+    payment_url = None
+    if order.payment_method == "card":
+        # TODO: Integrate with Stripe/PayPal for actual payment processing
+        # For now, mark as payment_pending and return success
+        payment_url = None  # Would be Stripe checkout URL
+    
+    # Send notification to page owner (via WebSocket if connected)
+    # This is handled by the existing WebSocket system
+    
+    return {
+        "success": True,
+        "order_id": order_id,
+        "message": "Order placed successfully!" if order.payment_method == "cash" else "Order created, proceed to payment",
+        "order": order_doc,
+        "payment_url": payment_url,
+        "platform_fee": {
+            "amount": platform_fee,
+            "rate": f"{PLATFORM_FEE_RATE * 100}%"
+        }
+    }
+
+@guest_orders_router.get("/track/{order_id}")
+async def track_guest_order(order_id: str, phone: str):
+    """
+    Track a guest order by order ID and phone number.
+    No authentication required - phone number verifies ownership.
+    """
+    order = await db.page_orders.find_one(
+        {"order_id": order_id, "customer_phone": phone},
+        {"_id": 0}
+    )
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found. Please check order ID and phone number.")
+    
+    # Get page info
+    page = await db.member_pages.find_one(
+        {"page_id": order["page_id"]},
+        {"_id": 0, "name": 1, "phone": 1, "logo_image": 1}
+    )
+    
+    return {
+        "order": order,
+        "page": page,
+        "status_timeline": get_order_timeline(order)
+    }
+
+def get_order_timeline(order):
+    """Generate status timeline for order tracking"""
+    statuses = [
+        {"status": "pending", "label": "Order Placed", "completed": True},
+        {"status": "confirmed", "label": "Confirmed", "completed": order.get("status") in ["confirmed", "preparing", "ready", "out_for_delivery", "completed"]},
+        {"status": "preparing", "label": "Preparing", "completed": order.get("status") in ["preparing", "ready", "out_for_delivery", "completed"]},
+    ]
+    
+    if order.get("order_type") == "delivery":
+        statuses.extend([
+            {"status": "out_for_delivery", "label": "Out for Delivery", "completed": order.get("status") in ["out_for_delivery", "completed"]},
+            {"status": "completed", "label": "Delivered", "completed": order.get("status") == "completed"},
+        ])
+    else:
+        statuses.extend([
+            {"status": "ready", "label": "Ready for Pickup", "completed": order.get("status") in ["ready", "completed"]},
+            {"status": "completed", "label": "Picked Up", "completed": order.get("status") == "completed"},
+        ])
+    
+    return statuses
+
+
 # ============== EXPORT ROUTERS ==============
 
 def get_extended_pages_routers():
@@ -1476,5 +1637,6 @@ def get_extended_pages_routers():
         page_referral_router,
         pos_router,
         marketplace_link_router,
-        customer_options_router
+        customer_options_router,
+        guest_orders_router
     ]
