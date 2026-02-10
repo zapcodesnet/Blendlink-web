@@ -603,6 +603,27 @@
   color: var(--bl-gray-light);
 }
 
+/* Blendlink Logo in Avatar */
+.bl-avatar-logo {
+  width: 70%;
+  height: 70%;
+  object-fit: contain;
+  object-position: center;
+  z-index: 1;
+  position: relative;
+  /* Ensure logo is crisp */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* Responsive logo sizing */
+@media (max-width: 480px) {
+  .bl-avatar-logo {
+    width: 65%;
+    height: 65%;
+  }
+}
+
 /* ============================================ */
 /* Animations - Premium                        */
 /* ============================================ */
