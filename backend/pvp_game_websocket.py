@@ -938,7 +938,7 @@ class PVPGameManager:
                     ]},
                     {
                         "$set": {
-                            "status": "tapping",
+                            "status": "tapping" if room.round_type == "auction" else "rps_choosing",
                             "current_round": room.current_round,
                             "player1_taps": 0,
                             "player2_taps": 0,
@@ -950,6 +950,230 @@ class PVPGameManager:
                 )
             except Exception as e:
                 logger.debug(f"Could not persist round start: {e}")
+        
+        # For RPS rounds, start the 10-second choice phase
+        if room.round_type == "rps":
+            room.round_phase = "choosing"
+            room.player1_rps_choice = None
+            room.player2_rps_choice = None
+            room.player1_rps_bid = 0
+            room.player2_rps_bid = 0
+            room.rps_choice_deadline = datetime.now(timezone.utc) + timedelta(seconds=10)
+            
+            # Broadcast RPS choosing phase
+            await self._broadcast_to_room(room_id, {
+                "type": "rps_choosing_start",
+                "round": room.current_round,
+                "deadline": room.rps_choice_deadline.isoformat(),
+                "timeout_seconds": 10,
+            })
+            
+            # Start timeout task for auto-submit
+            if room.rps_timeout_task:
+                room.rps_timeout_task.cancel()
+            room.rps_timeout_task = asyncio.create_task(self._rps_choice_timeout(room_id))
+    
+    async def submit_rps_choice(self, room_id: str, user_id: str, choice: str, bid: int):
+        """
+        Handle RPS choice submission from a player.
+        SERVER-AUTHORITATIVE: Both players submit their choices to the server.
+        Server determines winner and broadcasts result to both clients.
+        """
+        room = self.rooms.get(room_id)
+        if not room:
+            logger.warning(f"[RPS] Room {room_id} not found")
+            return
+        
+        if room.round_type != "rps" or room.round_phase not in ("choosing", "playing"):
+            logger.warning(f"[RPS] Invalid phase for RPS choice: {room.round_phase}")
+            return
+        
+        # Validate choice
+        valid_choices = ['rock', 'paper', 'scissors']
+        if choice not in valid_choices:
+            logger.warning(f"[RPS] Invalid choice: {choice}")
+            return
+        
+        # Validate bid (minimum $1M)
+        bid = max(1_000_000, min(bid, 7_000_000))  # Clamp between 1M and 7M
+        
+        # Store the choice for the correct player
+        if room.player1 and room.player1.user_id == user_id:
+            room.player1_rps_choice = choice
+            room.player1_rps_bid = bid
+            logger.info(f"[RPS] Player 1 ({user_id}) chose {choice}, bid ${bid:,}")
+        elif room.player2 and room.player2.user_id == user_id:
+            room.player2_rps_choice = choice
+            room.player2_rps_bid = bid
+            logger.info(f"[RPS] Player 2 ({user_id}) chose {choice}, bid ${bid:,}")
+        else:
+            logger.warning(f"[RPS] Unknown user {user_id}")
+            return
+        
+        # Notify both players that a choice was submitted (without revealing what it is)
+        await self._broadcast_to_room(room_id, {
+            "type": "rps_choice_submitted",
+            "user_id": user_id,
+            "player1_submitted": room.player1_rps_choice is not None,
+            "player2_submitted": room.player2_rps_choice is not None,
+        })
+        
+        # Check if both players have submitted
+        if room.player1_rps_choice and room.player2_rps_choice:
+            # Cancel timeout task
+            if room.rps_timeout_task:
+                room.rps_timeout_task.cancel()
+                room.rps_timeout_task = None
+            
+            # Process the RPS result
+            await self._process_rps_result(room_id)
+    
+    async def _rps_choice_timeout(self, room_id: str):
+        """Handle timeout for RPS choice - auto-select random choice + $1M bid"""
+        import random
+        
+        await asyncio.sleep(10)  # 10 second timeout
+        
+        room = self.rooms.get(room_id)
+        if not room or room.round_phase not in ("choosing", "playing") or room.round_type != "rps":
+            return
+        
+        # Auto-select for players who haven't chosen
+        choices = ['rock', 'paper', 'scissors']
+        
+        if room.player1 and not room.player1_rps_choice:
+            room.player1_rps_choice = random.choice(choices)
+            room.player1_rps_bid = 1_000_000  # Minimum bid
+            logger.info(f"[RPS] Auto-selecting for Player 1: {room.player1_rps_choice}")
+            await self._broadcast_to_room(room_id, {
+                "type": "rps_auto_choice",
+                "user_id": room.player1.user_id,
+            })
+        
+        if room.player2 and not room.player2_rps_choice:
+            room.player2_rps_choice = random.choice(choices)
+            room.player2_rps_bid = 1_000_000  # Minimum bid
+            logger.info(f"[RPS] Auto-selecting for Player 2: {room.player2_rps_choice}")
+            await self._broadcast_to_room(room_id, {
+                "type": "rps_auto_choice",
+                "user_id": room.player2.user_id,
+            })
+        
+        # Process the result
+        if room.player1_rps_choice and room.player2_rps_choice:
+            await self._process_rps_result(room_id)
+    
+    async def _process_rps_result(self, room_id: str):
+        """
+        Process RPS round result - SERVER AUTHORITATIVE
+        Determines winner, broadcasts result to both clients, and advances round.
+        """
+        room = self.rooms.get(room_id)
+        if not room or room.round_winner_determined:
+            return
+        
+        room.round_winner_determined = True
+        room.round_phase = "revealing"
+        
+        p1_choice = room.player1_rps_choice
+        p2_choice = room.player2_rps_choice
+        p1_bid = room.player1_rps_bid
+        p2_bid = room.player2_rps_bid
+        
+        logger.info(f"[RPS] Processing result: P1={p1_choice}/${p1_bid:,} vs P2={p2_choice}/${p2_bid:,}")
+        
+        # Determine winner using classic RPS rules
+        # rock beats scissors, scissors beats paper, paper beats rock
+        def rps_winner(c1, c2):
+            if c1 == c2:
+                return 'tie'
+            wins = {
+                ('rock', 'scissors'): 'player1',
+                ('scissors', 'paper'): 'player1',
+                ('paper', 'rock'): 'player1',
+                ('scissors', 'rock'): 'player2',
+                ('paper', 'scissors'): 'player2',
+                ('rock', 'paper'): 'player2',
+            }
+            return wins.get((c1, c2), 'tie')
+        
+        rps_result = rps_winner(p1_choice, p2_choice)
+        
+        # If tie in RPS, higher bid wins
+        if rps_result == 'tie':
+            if p1_bid > p2_bid:
+                winner = 'player1'
+                logger.info(f"[RPS] Tie in choices, P1 wins with higher bid (${p1_bid:,} > ${p2_bid:,})")
+            elif p2_bid > p1_bid:
+                winner = 'player2'
+                logger.info(f"[RPS] Tie in choices, P2 wins with higher bid (${p2_bid:,} > ${p1_bid:,})")
+            else:
+                winner = 'tie'
+                logger.info(f"[RPS] True tie (same choice and bid)")
+        else:
+            winner = rps_result
+            logger.info(f"[RPS] {winner} wins by RPS logic")
+        
+        # Update scores
+        if winner == 'player1':
+            room.player1_wins += 1
+            winner_user_id = room.player1.user_id if room.player1 else None
+        elif winner == 'player2':
+            room.player2_wins += 1
+            winner_user_id = room.player2.user_id if room.player2 else None
+        else:
+            winner_user_id = None
+        
+        logger.info(f"[RPS] Round {room.current_round} result: {winner}, Score: {room.player1_wins}-{room.player2_wins}")
+        
+        # Broadcast the result with BOTH choices revealed (FIXES DESYNC)
+        await self._broadcast_to_room(room_id, {
+            "type": "rps_result",
+            "round": room.current_round,
+            "player1_choice": p1_choice,
+            "player2_choice": p2_choice,
+            "player1_bid": p1_bid,
+            "player2_bid": p2_bid,
+            "winner": winner,
+            "winner_user_id": winner_user_id,
+            "player1_wins": room.player1_wins,
+            "player2_wins": room.player2_wins,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        })
+        
+        # Also send standard round_result for compatibility
+        await self._broadcast_to_room(room_id, {
+            "type": "round_result",
+            "round": room.current_round,
+            "winner_user_id": winner_user_id,
+            "player1_wins": room.player1_wins,
+            "player2_wins": room.player2_wins,
+            "round_data": {
+                "type": "rps",
+                "player1_choice": p1_choice,
+                "player2_choice": p2_choice,
+                "player1_bid": p1_bid,
+                "player2_bid": p2_bid,
+            },
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+        
+        # Check for game end (first to 3 wins)
+        if room.player1_wins >= 3 or room.player2_wins >= 3:
+            logger.info(f"[RPS] Game over! Final score: {room.player1_wins}-{room.player2_wins}")
+            await asyncio.sleep(2)  # Brief delay to show result
+            await self._end_game(room_id)
+        elif room.current_round >= 5:
+            logger.warning(f"[RPS] Max rounds reached! Final score: {room.player1_wins}-{room.player2_wins}")
+            await asyncio.sleep(2)
+            await self._end_game(room_id)
+        else:
+            # Advance to next round after brief result display
+            logger.info(f"[RPS] Advancing to round {room.current_round + 1}")
+            await asyncio.sleep(3)  # Show result for 3 seconds
+            room.current_round += 1
+            room.round_winner_determined = False
+            await self._transition_to_selecting(room_id)
     
     async def submit_round_result(
         self,
