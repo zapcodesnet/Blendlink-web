@@ -555,6 +555,11 @@ export const RPSBidding = ({
   playerStats = {},
   opponentStats = {},
   powerAdvantage = null, // { advantage: 'player'|'opponent'|'none', bonus_amount, player_effective_value, opponent_effective_value }
+  // NEW: WebSocket support for PVP mode
+  wsRef = null,  // WebSocket reference for sending choices
+  onRPSSubmit = null,  // Callback when player submits RPS choice (for PVP)
+  serverRPSResult = null,  // Server-authoritative result from WebSocket
+  isPlayer1 = true,  // Whether this player is player 1
 }) => {
   // Calculate effective values with ALL modifiers
   const playerValueCalc = calculateEffectiveValue(playerPhoto, opponentPhoto, playerStats);
