@@ -611,15 +611,18 @@ async def create_pos_transaction(
     transaction: POSTransaction,
     current_user: dict = Depends(get_current_user)
 ):
-    """Create a new POS transaction"""
+    """Create a new POS transaction with 8% platform fee"""
     user_id = current_user["user_id"]
     
-    page = await db.member_pages.find_one({"page_id": transaction.page_id})
-    if not page or page["owner_id"] != user_id:
-        raise HTTPException(status_code=403, detail="Not authorized")
+    # Use verify_page_access to allow both owner and team members
+    page, is_owner = await verify_page_access(transaction.page_id, user_id)
     
     # Create order
     order_id = f"pos_{uuid.uuid4().hex[:12]}"
+    
+    # Calculate 8% platform fee
+    platform_fee = transaction.total * PLATFORM_FEE_RATE
+    
     order = {
         "order_id": order_id,
         "page_id": transaction.page_id,
@@ -639,12 +642,19 @@ async def create_pos_transaction(
         "table_number": transaction.table_number,
         "notes": transaction.notes,
         "is_pos_transaction": True,
+        "platform_fee": platform_fee,  # Track fee on each order
+        "platform_fee_rate": PLATFORM_FEE_RATE,
+        "currency": page.get("currency", "USD"),
+        "currency_symbol": page.get("currency_symbol", "$"),
         "created_at": datetime.now(timezone.utc).isoformat(),
         "completed_at": datetime.now(timezone.utc).isoformat()
     }
     
     await db.page_orders.insert_one(order.copy())
     order.pop("_id", None)
+    
+    # Apply platform fee (accumulates for cash, logged for card)
+    await apply_platform_fee(transaction.page_id, transaction.total, transaction.payment_method)
     
     # Update inventory for each item
     for item in transaction.items:
@@ -680,13 +690,18 @@ async def create_pos_transaction(
         }
     )
     
-    # Generate receipt
+    # Generate receipt with fee info
     receipt = generate_receipt(order, page)
     
     return {
         "success": True,
         "order": order,
-        "receipt": receipt
+        "receipt": receipt,
+        "platform_fee": {
+            "amount": platform_fee,
+            "rate": f"{PLATFORM_FEE_RATE * 100}%",
+            "status": "pending" if transaction.payment_method == "cash" else "auto_deducted"
+        }
     }
 
 def generate_receipt(order: dict, page: dict) -> dict:
