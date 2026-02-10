@@ -92,6 +92,8 @@ export default function PublicPageView() {
   const [searchQuery, setSearchQuery] = useState("");
   const [ownerReferralCode, setOwnerReferralCode] = useState(null);
   const [canManage, setCanManage] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [notFound, setNotFound] = useState(false);
 
   // Track referral if present
   const refCode = searchParams.get('ref');
