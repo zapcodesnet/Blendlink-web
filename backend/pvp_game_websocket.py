@@ -1110,7 +1110,7 @@ class PVPGameManager:
                 logger.info(f"[RPS] Tie in choices, P2 wins with higher bid (${p2_bid:,} > ${p1_bid:,})")
             else:
                 winner = 'tie'
-                logger.info(f"[RPS] True tie (same choice and bid)")
+                logger.info("[RPS] True tie (same choice and bid)")
         else:
             winner = rps_result
             logger.info(f"[RPS] {winner} wins by RPS logic")
