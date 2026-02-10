@@ -1486,6 +1486,236 @@ async def delete_member_page(page_id: str, current_user: dict = Depends(get_curr
     
     return {"message": "Page deleted successfully"}
 
+# ============== TEAM MEMBERS / AUTHORIZED USERS ENDPOINTS ==============
+
+class AddTeamMemberRequest(BaseModel):
+    email: str  # Email of user to add as team member
+
+class TeamMemberResponse(BaseModel):
+    user_id: str
+    email: str
+    name: str
+    added_at: str
+
+@member_pages_router.get("/{page_id}/team")
+async def get_team_members(page_id: str, current_user: dict = Depends(get_current_user)):
+    """Get all team members (authorized users) for a page"""
+    user_id = current_user["user_id"]
+    page, is_owner = await verify_page_access(page_id, user_id)
+    
+    # Only owners can view team members
+    if not is_owner:
+        raise HTTPException(status_code=403, detail="Only page owners can manage team members")
+    
+    authorized_user_ids = page.get("authorized_users", [])
+    team_members = []
+    
+    for uid in authorized_user_ids:
+        user = await db.users.find_one({"user_id": uid}, {"_id": 0, "user_id": 1, "email": 1, "name": 1})
+        if user:
+            team_members.append({
+                "user_id": user["user_id"],
+                "email": user.get("email", ""),
+                "name": user.get("name", "Unknown")
+            })
+    
+    return {"team_members": team_members, "is_owner": is_owner}
+
+@member_pages_router.post("/{page_id}/team")
+async def add_team_member(
+    page_id: str,
+    request: AddTeamMemberRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Add a team member (authorized user) to manage the page"""
+    user_id = current_user["user_id"]
+    page = await verify_page_owner(page_id, user_id)  # Only owners can add team members
+    
+    # Find user by email
+    target_user = await db.users.find_one({"email": request.email.lower()}, {"_id": 0, "user_id": 1, "name": 1, "email": 1})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found with this email")
+    
+    target_user_id = target_user["user_id"]
+    
+    # Can't add yourself
+    if target_user_id == user_id:
+        raise HTTPException(status_code=400, detail="You are already the owner of this page")
+    
+    # Check if already added
+    if target_user_id in page.get("authorized_users", []):
+        raise HTTPException(status_code=400, detail="User is already a team member")
+    
+    # Add to authorized users
+    await db.member_pages.update_one(
+        {"page_id": page_id},
+        {
+            "$push": {"authorized_users": target_user_id},
+            "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}
+        }
+    )
+    
+    # Broadcast update
+    await page_sync_manager.broadcast_to_page(page_id, {
+        "type": "team_member_added",
+        "page_id": page_id,
+        "user_id": target_user_id
+    })
+    
+    return {
+        "message": f"Added {target_user.get('name', 'User')} as team member",
+        "team_member": {
+            "user_id": target_user_id,
+            "email": target_user.get("email", ""),
+            "name": target_user.get("name", "Unknown")
+        }
+    }
+
+@member_pages_router.delete("/{page_id}/team/{target_user_id}")
+async def remove_team_member(
+    page_id: str,
+    target_user_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Remove a team member from the page"""
+    user_id = current_user["user_id"]
+    page = await verify_page_owner(page_id, user_id)  # Only owners can remove team members
+    
+    if target_user_id not in page.get("authorized_users", []):
+        raise HTTPException(status_code=404, detail="User is not a team member")
+    
+    # Remove from authorized users
+    await db.member_pages.update_one(
+        {"page_id": page_id},
+        {
+            "$pull": {"authorized_users": target_user_id},
+            "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}
+        }
+    )
+    
+    # Broadcast update
+    await page_sync_manager.broadcast_to_page(page_id, {
+        "type": "team_member_removed",
+        "page_id": page_id,
+        "user_id": target_user_id
+    })
+    
+    return {"message": "Team member removed"}
+
+@member_pages_router.get("/{page_id}/authorization")
+async def check_authorization(page_id: str, current_user: dict = Depends(get_current_user)):
+    """Check current user's authorization level for a page"""
+    user_id = current_user["user_id"]
+    auth_info = await check_page_authorization(page_id, user_id)
+    return auth_info
+
+# ============== PLATFORM FEES ENDPOINTS ==============
+
+@member_pages_router.get("/{page_id}/fees")
+async def get_page_fees(page_id: str, current_user: dict = Depends(get_current_user)):
+    """Get platform fees owed and history for a page"""
+    user_id = current_user["user_id"]
+    page = await verify_page_owner(page_id, user_id)
+    
+    # Get fee history
+    fee_logs = await db.platform_fee_logs.find(
+        {"page_id": page_id},
+        {"_id": 0}
+    ).sort("created_at", -1).limit(50).to_list(50)
+    
+    # Calculate totals
+    total_owed = page.get("platform_fees_owed", 0)
+    total_paid = page.get("platform_fees_paid", 0)
+    
+    return {
+        "fees_owed": total_owed,
+        "fees_paid": total_paid,
+        "fee_rate": PLATFORM_FEE_RATE,
+        "fee_rate_percentage": f"{PLATFORM_FEE_RATE * 100}%",
+        "currency": page.get("currency", "USD"),
+        "currency_symbol": page.get("currency_symbol", "$"),
+        "last_billing_date": page.get("last_fee_billing_date"),
+        "fee_history": fee_logs
+    }
+
+# ============== CURRENCY SETTINGS ENDPOINT ==============
+
+SUPPORTED_CURRENCIES = {
+    "USD": {"symbol": "$", "name": "US Dollar"},
+    "EUR": {"symbol": "€", "name": "Euro"},
+    "GBP": {"symbol": "£", "name": "British Pound"},
+    "CAD": {"symbol": "CA$", "name": "Canadian Dollar"},
+    "AUD": {"symbol": "A$", "name": "Australian Dollar"},
+    "PHP": {"symbol": "₱", "name": "Philippine Peso"},
+    "JPY": {"symbol": "¥", "name": "Japanese Yen"},
+    "CNY": {"symbol": "¥", "name": "Chinese Yuan"},
+    "INR": {"symbol": "₹", "name": "Indian Rupee"},
+    "KRW": {"symbol": "₩", "name": "South Korean Won"},
+    "MXN": {"symbol": "MX$", "name": "Mexican Peso"},
+    "BRL": {"symbol": "R$", "name": "Brazilian Real"},
+    "SGD": {"symbol": "S$", "name": "Singapore Dollar"},
+    "HKD": {"symbol": "HK$", "name": "Hong Kong Dollar"},
+    "NZD": {"symbol": "NZ$", "name": "New Zealand Dollar"},
+    "SEK": {"symbol": "kr", "name": "Swedish Krona"},
+    "NOK": {"symbol": "kr", "name": "Norwegian Krone"},
+    "DKK": {"symbol": "kr", "name": "Danish Krone"},
+    "CHF": {"symbol": "CHF", "name": "Swiss Franc"},
+    "ZAR": {"symbol": "R", "name": "South African Rand"},
+    "THB": {"symbol": "฿", "name": "Thai Baht"},
+    "MYR": {"symbol": "RM", "name": "Malaysian Ringgit"},
+    "IDR": {"symbol": "Rp", "name": "Indonesian Rupiah"},
+    "VND": {"symbol": "₫", "name": "Vietnamese Dong"},
+    "AED": {"symbol": "د.إ", "name": "UAE Dirham"},
+    "SAR": {"symbol": "﷼", "name": "Saudi Riyal"},
+}
+
+@member_pages_router.get("/currencies/supported")
+async def get_supported_currencies():
+    """Get list of supported currencies"""
+    return {"currencies": SUPPORTED_CURRENCIES}
+
+class UpdateCurrencyRequest(BaseModel):
+    currency: str
+
+@member_pages_router.put("/{page_id}/currency")
+async def update_page_currency(
+    page_id: str,
+    request: UpdateCurrencyRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update the currency for a page"""
+    user_id = current_user["user_id"]
+    await verify_page_owner(page_id, user_id)
+    
+    currency_code = request.currency.upper()
+    if currency_code not in SUPPORTED_CURRENCIES:
+        raise HTTPException(status_code=400, detail=f"Unsupported currency: {currency_code}")
+    
+    currency_info = SUPPORTED_CURRENCIES[currency_code]
+    
+    await db.member_pages.update_one(
+        {"page_id": page_id},
+        {"$set": {
+            "currency": currency_code,
+            "currency_symbol": currency_info["symbol"],
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Broadcast update
+    await page_sync_manager.broadcast_to_page(page_id, {
+        "type": "currency_updated",
+        "page_id": page_id,
+        "currency": currency_code,
+        "currency_symbol": currency_info["symbol"]
+    })
+    
+    return {
+        "message": f"Currency updated to {currency_info['name']}",
+        "currency": currency_code,
+        "currency_symbol": currency_info["symbol"]
+    }
+
 @member_pages_router.post("/{page_id}/locations")
 async def add_page_location(
     page_id: str,
