@@ -333,6 +333,11 @@ function AppRouter() {
       {/* Admin System - Full Admin Panel (Protected) */}
       <Route path="/admin/*" element={<AdminLayout />} />
       
+      {/* Public Member Pages - Custom Slug Route (e.g., /minimart, /my-store)
+          MUST be LAST before catch-all to avoid conflicts with other routes
+          This allows shareable links like blendlink.net/minimart */}
+      <Route path="/:slug" element={<PublicPageView />} />
+      
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
     </Suspense>
