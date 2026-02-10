@@ -460,7 +460,10 @@ class CreateRentalBookingRequest(BaseModel):
 
 # ============== HELPER FUNCTIONS ==============
 
-from server import get_current_user
+# Lazy import to avoid circular dependency
+def get_current_user_dependency():
+    from server import get_current_user
+    return get_current_user
 
 # Platform fee rate (8% on all transactions)
 PLATFORM_FEE_RATE = 0.08  # 8%
