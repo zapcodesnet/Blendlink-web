@@ -496,8 +496,18 @@ async def register(data: UserCreate, response: Response):
 
 @auth_router.post("/login")
 async def login(data: UserLogin, response: Response):
-    user = await db.users.find_one({"email": data.email}, {"_id": 0})
-    if not user or not verify_password(data.password, user.get("password_hash", "")):
+    # Find user by email (case-insensitive)
+    user = await db.users.find_one({"email": data.email.lower()}, {"_id": 0})
+    
+    # Log for debugging (remove in production if needed)
+    if not user:
+        logger.warning(f"Login attempt failed: User not found for email {data.email}")
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # Verify password
+    password_valid = verify_password(data.password, user.get("password_hash", ""))
+    if not password_valid:
+        logger.warning(f"Login attempt failed: Invalid password for user {user.get('user_id')}")
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     token = create_token(user["user_id"])
@@ -511,8 +521,52 @@ async def login(data: UserLogin, response: Response):
         max_age=JWT_EXPIRY_HOURS * 3600
     )
     
+    # Update last activity
+    await db.users.update_one(
+        {"user_id": user["user_id"]},
+        {"$set": {"last_activity": datetime.now(timezone.utc).isoformat()}}
+    )
+    
     user.pop("password_hash", None)
+    logger.info(f"Login successful for user {user.get('user_id')}")
     return {"token": token, "user": user}
+
+@auth_router.get("/verify-test-user")
+async def verify_test_user():
+    """Diagnostic endpoint to verify test user exists and is correctly configured"""
+    import bcrypt
+    
+    test_email = "tester@blendlink.net"
+    test_password = "BlendLink2024!"
+    
+    user = await db.users.find_one({"email": test_email})
+    
+    if not user:
+        return {
+            "status": "error",
+            "message": "Test user not found",
+            "exists": False
+        }
+    
+    password_hash = user.get("password_hash", "")
+    hash_valid = bool(password_hash and password_hash.startswith("$2"))
+    
+    try:
+        password_correct = bcrypt.checkpw(test_password.encode(), password_hash.encode()) if hash_valid else False
+    except:
+        password_correct = False
+    
+    return {
+        "status": "ok" if password_correct else "error",
+        "exists": True,
+        "user_id": user.get("user_id"),
+        "email": user.get("email"),
+        "hash_format_valid": hash_valid,
+        "password_verified": password_correct,
+        "bl_coins": user.get("bl_coins", 0),
+        "is_premium": user.get("is_premium", False),
+        "is_verified": user.get("is_verified", False)
+    }
 
 class GoogleAuthData(BaseModel):
     email: str
