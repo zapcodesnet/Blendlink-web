@@ -1752,7 +1752,7 @@ async def add_page_location(
 
 @member_pages_router.get("/public/{slug}")
 async def get_public_page(slug: str):
-    """Get a public page by slug (no auth required)"""
+    """Get a public page by slug (no auth required) - Customer-facing view"""
     page = await db.member_pages.find_one(
         {"slug": slug.lower(), "is_published": True},
         {"_id": 0}
@@ -1765,6 +1765,16 @@ async def get_public_page(slug: str):
         {"slug": slug.lower()},
         {"$inc": {"total_views": 1}}
     )
+    
+    # Get the PAGE OWNER's referral code (from their user account, not the page)
+    # This is CRITICAL: referral credits go to the main Blendlink account owner
+    owner_id = page["owner_id"]
+    owner = await db.users.find_one({"user_id": owner_id}, {"_id": 0, "referral_code": 1, "name": 1})
+    owner_referral_code = owner.get("referral_code") if owner else None
+    
+    # If owner doesn't have a referral code, use the page's referral code as fallback
+    if not owner_referral_code:
+        owner_referral_code = page.get("referral_code")
     
     # Get items based on page type
     items = []
@@ -1789,16 +1799,60 @@ async def get_public_page(slug: str):
             {"_id": 0}
         ).to_list(100)
     
-    # Get reviews
-    reviews = await db.page_reviews.find(
+    # Get reviews with reviewer info
+    reviews_raw = await db.page_reviews.find(
         {"page_id": page["page_id"]},
         {"_id": 0}
     ).sort("created_at", -1).limit(20).to_list(20)
     
+    # Enhance reviews with user names
+    reviews = []
+    for review in reviews_raw:
+        reviewer = await db.users.find_one(
+            {"user_id": review.get("customer_id")}, 
+            {"_id": 0, "name": 1}
+        )
+        review["reviewer_name"] = reviewer.get("name", "Anonymous") if reviewer else "Anonymous"
+        reviews.append(review)
+    
+    # Calculate aggregate rating
+    total_ratings = len(reviews)
+    avg_rating = sum(r.get("rating", 0) for r in reviews) / total_ratings if total_ratings > 0 else 0
+    
+    # Build public page response (no sensitive owner info)
+    public_page = {
+        "page_id": page["page_id"],
+        "name": page["name"],
+        "slug": page["slug"],
+        "description": page.get("description", ""),
+        "page_type": page["page_type"],
+        "category": page.get("category", ""),
+        "cover_image": page.get("cover_image", ""),
+        "logo_image": page.get("logo_image", ""),
+        "theme_color": page.get("theme_color", "#10B981"),
+        "locations": page.get("locations", []),
+        "phone": page.get("phone", ""),
+        "email": page.get("email", ""),
+        "website": page.get("website", ""),
+        "subscriber_count": page.get("subscriber_count", 0),
+        "total_views": page.get("total_views", 0),
+        "rating_average": round(avg_rating, 1),
+        "rating_count": total_ratings,
+        "currency": page.get("currency", "USD"),
+        "currency_symbol": page.get("currency_symbol", "$"),
+        "settings": {
+            "enable_reviews": page.get("settings", {}).get("enable_reviews", True),
+            "enable_ratings": page.get("settings", {}).get("enable_ratings", True),
+            "show_referral_link": page.get("settings", {}).get("show_referral_link", True),
+        }
+    }
+    
     return {
-        "page": page,
+        "page": public_page,
         "items": items,
-        "reviews": reviews
+        "reviews": reviews,
+        "owner_referral_code": owner_referral_code,  # For referral link on public page
+        "is_public_view": True  # Flag for frontend to know this is customer view
     }
 
 # ============== PRODUCTS ENDPOINTS (Store Pages) ==============
