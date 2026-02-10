@@ -1301,6 +1301,14 @@ export const PVPBattleArena = ({
               soundEnabled={true}
               playerPhoto={mySelectedPhoto}
               opponentPhoto={opponentSelectedPhoto}
+              // NEW: PVP mode props for server-authoritative RPS
+              wsRef={wsRef}
+              serverRPSResult={serverRPSResult}
+              isPlayer1={isPlayer1}
+              onRPSSubmit={(data) => {
+                console.log('[PVP] RPS submitted:', data);
+                setServerRPSResult(null);  // Reset for next round
+              }}
             />
           </motion.div>
         )}
