@@ -132,7 +132,7 @@ class RPSAuctionMoveRequest(BaseModel):
 # ============== ROUTES ==============
 @game_router.get("/config")
 async def get_game_config():
-    """Get game configuration"""
+    """Get game configuration - UPDATED with $7M starting with advantage"""
     return {
         "max_stamina": MAX_STAMINA_BATTLES,
         "stamina_regen_per_hour": STAMINA_REGEN_PER_HOUR,
@@ -147,11 +147,14 @@ async def get_game_config():
         "strength_multiplier": 1.25,
         "max_taps_per_second": MAX_TAPS_PER_SECOND,
         "rps_auction": {
-            "starting_bankroll": STARTING_BANKROLL,
-            "advantage_bonus": ADVANTAGE_BONUS,
-            "min_bid": MIN_BID,
-            "max_bid": MAX_BID,
+            "starting_bankroll": STARTING_BANKROLL,  # $5M base
+            "starting_bankroll_with_advantage": 7_000_000,  # $7M with advantage
+            "advantage_bonus": ADVANTAGE_BONUS,  # $2M
+            "min_bid": MIN_BID,  # $1M
+            "max_bid": MAX_BID,  # $7M max with advantage
+            "max_bid_no_advantage": 5_000_000,  # $5M max without advantage
             "bid_increment": BID_INCREMENT,
+            "choice_timeout_seconds": 10,  # NEW: 10 second timeout for RPS choice
         }
     }
 
