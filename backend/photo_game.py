@@ -687,26 +687,28 @@ def calculate_rps_power_advantage(
     player_effective = player_value_calc["effective_value"]
     opponent_effective = opponent_value_calc["effective_value"]
     
-    # Determine advantage
+    # Determine advantage - UPDATED: $7M starting with advantage ($2M bonus)
     if player_effective > opponent_effective:
         return {
-            "player_bankroll": STARTING_BANKROLL + ADVANTAGE_BONUS,  # $6M
+            "player_bankroll": STARTING_BANKROLL_WITH_ADVANTAGE,  # $7M (UPDATED)
             "opponent_bankroll": STARTING_BANKROLL,  # $5M
             "advantage": "player",
             "advantage_reason": f"Higher photo value: ${player_effective:,} vs ${opponent_effective:,}",
             "player_effective_value": player_effective,
             "opponent_effective_value": opponent_effective,
-            "bonus_amount": ADVANTAGE_BONUS,
+            "bonus_amount": ADVANTAGE_BONUS,  # $2M
+            "max_bid": MAX_BID,  # $7M max
         }
     elif opponent_effective > player_effective:
         return {
             "player_bankroll": STARTING_BANKROLL,  # $5M
-            "opponent_bankroll": STARTING_BANKROLL + ADVANTAGE_BONUS,  # $6M
+            "opponent_bankroll": STARTING_BANKROLL_WITH_ADVANTAGE,  # $7M (UPDATED)
             "advantage": "opponent",
             "advantage_reason": f"Opponent has higher photo value: ${opponent_effective:,} vs ${player_effective:,}",
             "player_effective_value": player_effective,
             "opponent_effective_value": opponent_effective,
-            "bonus_amount": ADVANTAGE_BONUS,
+            "bonus_amount": ADVANTAGE_BONUS,  # $2M
+            "max_bid": MAX_BID,  # $7M max
         }
     else:
         return {
@@ -717,6 +719,7 @@ def calculate_rps_power_advantage(
             "player_effective_value": player_effective,
             "opponent_effective_value": opponent_effective,
             "bonus_amount": 0,
+            "max_bid": 5_000_000,  # $5M max without advantage
         }
 
 
