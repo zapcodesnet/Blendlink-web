@@ -331,6 +331,72 @@ const AddItemModal = ({ pageId, pageType, onClose, onSuccess }) => {
     images: []
   });
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState(null);
+  const fileInputRef = React.useRef(null);
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be less than 5MB");
+      return;
+    }
+
+    // Show preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result);
+    };
+    reader.readAsDataURL(file);
+
+    // Upload to server
+    setUploading(true);
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
+      
+      const token = localStorage.getItem('blendlink_token');
+      const API_URL = process.env.REACT_APP_BACKEND_URL;
+      
+      const response = await fetch(`${API_URL}/api/upload/image`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formDataUpload
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+
+      const data = await response.json();
+      setFormData(prev => ({ ...prev, images: [data.url, ...prev.images] }));
+      toast.success("Image uploaded!");
+    } catch (err) {
+      console.error("Upload error:", err);
+      toast.error("Failed to upload image");
+      setImagePreview(null);
+    }
+    setUploading(false);
+  };
+
+  const removeImage = () => {
+    setImagePreview(null);
+    setFormData(prev => ({ ...prev, images: prev.images.slice(1) }));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -378,10 +444,54 @@ const AddItemModal = ({ pageId, pageType, onClose, onSuccess }) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-card rounded-xl p-6 w-full max-w-md border border-border">
+      <div className="bg-card rounded-xl p-6 w-full max-w-md border border-border max-h-[90vh] overflow-y-auto">
         <h2 className="text-lg font-bold mb-4">{labels.title}</h2>
         
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Image Upload Section */}
+          <div>
+            <label className="text-sm font-medium mb-2 block">Product Image</label>
+            <div className="relative">
+              {imagePreview || formData.images[0] ? (
+                <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-gray-100 border border-gray-200">
+                  <img 
+                    src={imagePreview || formData.images[0]} 
+                    alt="Preview" 
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  {uploading && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <Loader2 className="w-8 h-8 animate-spin text-white" />
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full aspect-video rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 cursor-pointer flex flex-col items-center justify-center gap-2 transition-colors"
+                >
+                  <Camera className="w-10 h-10 text-gray-400" />
+                  <span className="text-sm text-gray-500">Click to upload image</span>
+                  <span className="text-xs text-gray-400">PNG, JPG up to 5MB</span>
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+            </div>
+          </div>
+
           <div>
             <label className="text-sm font-medium mb-1 block">Name *</label>
             <Input
