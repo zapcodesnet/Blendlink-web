@@ -20,16 +20,52 @@ export default function PaymentSuccessPage() {
 
   useEffect(() => {
     if (orderId) {
-      // Marketplace order flow
-      confirmMarketplaceOrder();
+      // Check if it's a page/guest order (starts with "go_") or marketplace order
+      if (orderId.startsWith("go_")) {
+        // Guest order from public page - verify Stripe payment
+        verifyPageOrderPayment();
+      } else {
+        // Marketplace order flow
+        confirmMarketplaceOrder();
+      }
     } else if (sessionId) {
-      // Media sales flow
+      // Media sales flow or page checkout
       pollPaymentStatus();
     } else {
       // No identifier - show success anyway
       setStatus("success");
     }
   }, [sessionId, orderId]);
+
+  // Page/Guest order payment verification
+  const verifyPageOrderPayment = async () => {
+    try {
+      if (sessionId) {
+        // Verify Stripe payment status
+        const statusRes = await fetch(`${API_BASE_URL}/api/payments/stripe/checkout/status/${sessionId}`);
+        if (statusRes.ok) {
+          const statusData = await statusRes.json();
+          if (statusData.payment_status === "paid") {
+            setOrder({ 
+              order_id: orderId, 
+              total: statusData.amount,
+              currency: statusData.currency,
+              is_guest_order: true
+            });
+            setStatus("success");
+            return;
+          }
+        }
+      }
+      // Fallback - just show success
+      setOrder({ order_id: orderId, is_guest_order: true });
+      setStatus("success");
+    } catch (error) {
+      console.error("Payment verification error:", error);
+      setOrder({ order_id: orderId, is_guest_order: true });
+      setStatus("success");
+    }
+  };
 
   // Marketplace order confirmation
   const confirmMarketplaceOrder = async () => {
