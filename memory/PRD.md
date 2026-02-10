@@ -1,10 +1,57 @@
 # Blendlink Platform - Product Requirements Document
 
-## Latest Update: February 10, 2026 (Session - Page Management Features)
+## Latest Update: February 10, 2026 (Session - Public Pages & Checkout)
 
 ---
 
-## ✅ NEW FEATURES: Page Management, Authorization, Fees & Currency (Iteration 133)
+## ✅ NEW FEATURES: Custom Slug Public Pages & Guest Checkout (Iteration 134)
+
+### Implemented Features
+
+#### 1. Custom Slug Public Pages
+- Pages accessible via root URL: `blendlink.net/[slug]` (e.g., `/minimart`)
+- Also accessible via `/p/[slug]` for backward compatibility
+- Fully public - no login required for customers
+- 404 handling with "Page Not Found" screen and home redirect
+
+#### 2. Public Page Customer View
+- **Products Display**: Pictures, names, descriptions, ratings, reviews
+- **Contact Info**: Phone (click-to-call), Email, Website links
+- **Google Maps**: Embedded location maps (no API key required)
+- **Referral Code**: Owner's code displayed with Copy and Sign Up buttons
+- **Add to Cart**: Add button + Buy Now (lightning bolt) for quick checkout
+- **Manage Button**: ONLY visible to owner/authorized users
+
+#### 3. Guest Checkout System
+- **3-Step Checkout Flow**:
+  1. Review Cart (items, quantities, delivery/pickup selection)
+  2. Customer Details (name, phone, email, address - no registration)
+  3. Payment Method (Card or Cash on Delivery)
+- **Order Types**: Delivery or Pickup with location selection
+- **No Registration Required**: Customers checkout as guests
+
+#### 4. Guest Orders Backend
+- **New Endpoint**: `POST /api/page-orders/guest` - creates order without auth
+- **Order Tracking**: `GET /api/page-orders/track/{order_id}?phone=` - verify with phone
+- **8% Platform Fee**: Applied to all orders (accumulated for cash, tracked for card)
+- **Status Timeline**: Pending → Confirmed → Preparing → Ready/Out for Delivery → Completed
+
+### New Files Created
+- `frontend/src/components/member-pages/PageCheckout.jsx` - Guest checkout component
+
+### Files Modified
+- `frontend/src/App.js` - Added `/:slug` route for public pages
+- `frontend/src/components/member-pages/PublicPageView.jsx` - 404 handling, checkout integration
+- `backend/member_pages_extended.py` - Added `guest_orders_router`
+
+### Test Results: ✅ 100% Pass Rate
+- Test Report: `/app/test_reports/iteration_134.json`
+- All public page features verified
+- Guest checkout flow fully tested
+
+---
+
+## Previous: Page Management Features (Iteration 133)
 
 ### Implemented Features
 
