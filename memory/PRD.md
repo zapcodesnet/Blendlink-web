@@ -1,14 +1,36 @@
 # Blendlink Platform - Product Requirements Document
 
-## Latest Update: February 9, 2026 (Session 2 - PVP Game Update)
+## Latest Update: February 9, 2026 (Session 2 - PVP Game Fix + Update)
 
 ---
 
-## ✅ Photo-Battle PVP Game Update (Latest)
+## ✅ Photo-Battle PVP Game Fix & Update (Iteration 129)
 
-### Changes Implemented
+### Issue Investigated: "Failed to join game" Error
+- Added enhanced error logging to WebSocket join handler (server.py lines 3084-3124)
+- Added debug logging to `connect_player` function (pvp_game_websocket.py)
+- Room auto-creation logic verified working for late joiners
+- **Error not reproducible during testing** - logging will help diagnose future occurrences
 
-#### 1. RPS (Rock-Paper-Scissors) Round Updates
+### Backend Config Updates
+| Config | Before | After |
+|--------|--------|-------|
+| `advantage_bonus` | $1M | **$2M** |
+| `max_bid` | $6M | **$7M** |
+| `starting_bankroll_with_advantage` | N/A | **$7M** |
+| `choice_timeout_seconds` | 5 | **10** |
+
+### Files Modified (Backend)
+- `backend/photo_game.py` - Updated ADVANTAGE_BONUS, MAX_BID, added STARTING_BANKROLL_WITH_ADVANTAGE
+- `backend/game_routes.py` - Updated /config endpoint response
+- `backend/server.py` - Added error logging to WebSocket join handler
+- `backend/pvp_game_websocket.py` - Added debug logging to connect_player
+
+---
+
+## ✅ Photo-Battle PVP Game Frontend Updates
+
+### 1. RPS (Rock-Paper-Scissors) Round Updates
 | Feature | Before | After |
 |---------|--------|-------|
 | Starting Money (with advantage) | $5M | **$7M** |
@@ -17,13 +39,13 @@
 | Choice timeout | 5 seconds | **10 seconds** |
 | Timeout behavior | Auto-loss | **Random choice + $1M bid** |
 
-#### 2. Countdown Display (Both RPS & Tapping)
+### 2. Countdown Display (Both RPS & Tapping)
 - **Transparent background** (photos visible behind)
 - **"🎯 GET READY! 🎯"** pulsing text animation
 - Large countdown number with glow effect
 - Pulsing ring animations around countdown
 
-#### 3. Stamina Display
+### 3. Stamina Display
 - Format: **"Battles left: X/24"** (was "X/24")
 - Icon changed: ⚔️ (was ⚡)
 - Zero stamina warning: "⚠️ No battles left! Regenerates 1/hour"
