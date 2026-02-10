@@ -826,6 +826,12 @@ export default function MemberPageDashboard() {
         {activeTab === "delivery" && (
           <CustomerOptionsManager pageId={pageId} pageType={page.page_type} />
         )}
+        {activeTab === "team" && (
+          <TeamMembersManager pageId={pageId} isOwner={page.owner_id === user?.user_id} />
+        )}
+        {activeTab === "fees" && (
+          <PlatformFeesManager pageId={pageId} currencySymbol={page.currency_symbol || "$"} />
+        )}
         {activeTab === "settings" && (
           <SettingsTab page={page} onUpdate={handleUpdatePage} />
         )}
