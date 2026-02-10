@@ -1,6 +1,27 @@
 # Blendlink Platform - Product Requirements Document
 
-## Latest Update: February 9, 2026 (Session 2 - PVP Game Fix + Update)
+## Latest Update: February 9, 2026 (Session 2 - PVP Game Round Sequence Fix)
+
+---
+
+## ✅ CRITICAL FIX: Round Sequence (Iteration 130)
+
+### Problem
+The round sequence was **BACKWARDS**. Code had: `['auction', 'rps', 'auction', 'rps', 'auction']`
+
+### Correct Sequence (NOW FIXED)
+| Round | Type | Notes |
+|-------|------|-------|
+| 1 | **RPS** | Rock-Paper-Scissors Bidding |
+| 2 | **Auction** | Photo Auction (Tapping) |
+| 3 | **RPS** | Can be final if score reaches 3-0 |
+| 4 | **Auction** | Only played if score is 2-1 |
+| 5 | **RPS** | Tie-breaker only if score is 2-2 |
+
+### Files Fixed
+- `backend/pvp_game_websocket.py` - Line 670: `round_types = ['rps', 'auction', 'rps', 'auction', 'rps']`
+- `frontend/src/components/game/PVPBattleArena.jsx` - Line 38: `ROUND_TYPES = ['rps', 'auction', 'rps', 'auction', 'rps']`
+- `mobile/src/hooks/usePVPWebSocket.js` - Line 37: `roundType: 'rps'`
 
 ---
 
