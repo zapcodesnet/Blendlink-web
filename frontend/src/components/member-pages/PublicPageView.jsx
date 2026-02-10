@@ -11,11 +11,12 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { toast } from "sonner";
 import { memberPagesApi, safeFetch } from "../../services/memberPagesApi";
+import PageCheckout from "./PageCheckout";
 import {
   Store, Utensils, Briefcase, Home, MapPin, Phone, Globe, Clock,
   Heart, Share2, Star, ShoppingCart, ChevronLeft, ExternalLink,
   Package, Search, Plus, Minus, Truck, Navigation, Copy, Mail,
-  Settings, Users, MessageSquare, StarHalf, ChevronRight
+  Settings, Users, MessageSquare, StarHalf, ChevronRight, Zap
 } from "lucide-react";
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
