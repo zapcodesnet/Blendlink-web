@@ -2519,7 +2519,61 @@ async def upload_file(
         "content_type": content_type,
         "size": len(content),
         "data_url": data_url,
-        "file_url": f"/api/upload/files/{filename}"
+        "file_url": f"/api/upload/files/{filename}",
+        "url": f"/api/upload/files/{filename}"  # Alias for convenience
+    }
+
+@upload_router.post("/image")
+async def upload_image(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Upload a single image - simplified endpoint for product images"""
+    # Validate image type
+    allowed_types = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+    content_type = file.content_type or ""
+    
+    if content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail=f"Unsupported image type: {content_type}. Use JPEG, PNG, GIF or WebP.")
+    
+    # Read file content
+    content = await file.read()
+    
+    # Check file size (max 5MB for images)
+    if len(content) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Image too large. Maximum size is 5MB.")
+    
+    # Generate unique filename
+    ext = Path(file.filename or "image").suffix or ".jpg"
+    unique_id = uuid.uuid4().hex[:12]
+    filename = f"product_{unique_id}{ext}"
+    file_path = UPLOAD_DIR / filename
+    
+    # Save file
+    with open(file_path, "wb") as f:
+        f.write(content)
+    
+    # Store in database
+    upload_record = {
+        "upload_id": f"img_{unique_id}",
+        "user_id": current_user["user_id"],
+        "filename": filename,
+        "original_filename": file.filename,
+        "content_type": content_type,
+        "media_type": "image",
+        "size": len(content),
+        "file_path": str(file_path),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.uploads.insert_one(upload_record)
+    
+    # Return the URL that can be used to access the image
+    return {
+        "success": True,
+        "upload_id": upload_record["upload_id"],
+        "filename": filename,
+        "url": f"/api/upload/files/{filename}",
+        "size": len(content)
     }
 
 @upload_router.post("/files")
