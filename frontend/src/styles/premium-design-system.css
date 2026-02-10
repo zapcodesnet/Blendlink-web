@@ -603,24 +603,35 @@
   color: var(--bl-gray-light);
 }
 
-/* Blendlink Logo in Avatar */
+/* Blendlink Logo in Avatar - Enhanced Quality */
 .bl-avatar-logo {
-  width: 70%;
-  height: 70%;
+  width: 85%;
+  height: 85%;
+  max-width: calc(100% - 16px);
+  max-height: calc(100% - 16px);
   object-fit: contain;
   object-position: center;
   z-index: 1;
   position: relative;
-  /* Ensure logo is crisp */
+  /* Enhanced image quality */
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  /* Smooth scaling */
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  /* Prevent pixelation */
+  -ms-interpolation-mode: bicubic;
 }
 
 /* Responsive logo sizing */
 @media (max-width: 480px) {
   .bl-avatar-logo {
-    width: 65%;
-    height: 65%;
+    width: 82%;
+    height: 82%;
+    max-width: calc(100% - 12px);
+    max-height: calc(100% - 12px);
   }
 }
 
