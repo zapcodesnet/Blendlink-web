@@ -5,6 +5,7 @@ export { default as PublicPageView } from './PublicPageView';
 export { default as TeamMembersManager } from './TeamMembersManager';
 export { default as PlatformFeesManager } from './PlatformFeesManager';
 export { default as CurrencySelector } from './CurrencySelector';
+export { default as PageCheckout } from './PageCheckout';
 export { 
   CreateMemberPageModal, 
   MemberPageCard, 
