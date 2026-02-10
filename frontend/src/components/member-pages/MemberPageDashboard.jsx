@@ -712,6 +712,8 @@ export default function MemberPageDashboard() {
     { id: "reports", label: "Reports", icon: FileText },
     { id: "marketplace", label: "Marketplace", icon: Store },
     { id: "delivery", label: "Delivery", icon: Truck },
+    { id: "team", label: "Team", icon: Users },
+    { id: "fees", label: "Fees", icon: DollarSign },
     { id: "settings", label: "Settings", icon: Settings }
   ];
 
