@@ -208,13 +208,16 @@ class TestPlatformFeeDisplay:
     def test_guest_order_includes_platform_fee(self, api_client):
         """Test that guest orders include 8% platform fee"""
         # Get a public page first
-        page_response = api_client.get(f"{BASE_URL}/api/pages/public/{TEST_PAGE_SLUG}")
+        page_response = api_client.get(f"{BASE_URL}/api/member-pages/public/{TEST_PAGE_SLUG}")
         
         if page_response.status_code != 200:
             pytest.skip("Test page not available")
         
-        page = page_response.json()
-        page_id = page.get("page_id")
+        page_data = page_response.json()
+        page_id = page_data.get("page", {}).get("page_id")
+        
+        if not page_id:
+            pytest.skip("Page ID not found in response")
         
         # Create a test order
         order_data = {
