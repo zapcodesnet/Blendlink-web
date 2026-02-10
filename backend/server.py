@@ -2745,6 +2745,14 @@ try:
 except Exception as e:
     logger.warning(f"Failed to load Member Pages Extended: {e}")
 
+# Import and include Page Stripe Payments router
+try:
+    from stripe_payments import get_stripe_router
+    api_router.include_router(get_stripe_router())
+    logger.info("Page Stripe Payments loaded")
+except Exception as e:
+    logger.warning(f"Failed to load Page Stripe Payments: {e}")
+
 # Import and include Stripe integration router
 try:
     from stripe_integration import stripe_router
