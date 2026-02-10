@@ -120,11 +120,12 @@ export default function PublicPageView() {
       setReviews(data.reviews || []);
       setOwnerReferralCode(data.owner_referral_code);
       setIsFollowing(data.is_following || false);
+      setNotFound(false);
     } catch (err) {
       console.error("Failed to load public page:", err);
       if (err.message?.includes("not found") || err.message?.includes("404")) {
-        toast.error("Page not found");
-        navigate("/pages");
+        setNotFound(true);
+        setLoading(false);
         return;
       }
       toast.error("Failed to load page");
