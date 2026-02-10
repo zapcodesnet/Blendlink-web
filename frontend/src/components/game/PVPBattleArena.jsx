@@ -29,7 +29,13 @@ const PHOTO_SELECTION_TIME = 10;  // 10 seconds for photo selection
 const RPS_SELECTION_TIME = 5;     // 5 seconds for RPS move selection
 
 // Round types
-const ROUND_TYPES = ['auction', 'rps', 'auction', 'rps', 'auction'];
+// FIXED: Correct round sequence per user spec:
+// Round 1: RPS Bidding
+// Round 2: Photo Auction (Tapping)
+// Round 3: RPS Bidding (can be final if score reaches 3-0)
+// Round 4: Photo Auction (only if score is 2-1)
+// Round 5: RPS Bidding (tie-breaker only if score is 2-2)
+const ROUND_TYPES = ['rps', 'auction', 'rps', 'auction', 'rps'];
 
 // Format dollar value
 const formatDollarValue = (value) => {
