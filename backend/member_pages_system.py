@@ -462,10 +462,30 @@ class CreateRentalBookingRequest(BaseModel):
 
 # ============== HELPER FUNCTIONS ==============
 
-# Lazy import to avoid circular dependency
-def get_current_user_dependency():
-    from server import get_current_user
-    return get_current_user
+# JWT configuration
+JWT_SECRET = os.environ.get("JWT_SECRET", "bl-secret-key-2024-super-secure")
+JWT_ALGORITHM = "HS256"
+
+async def get_current_user(request: Request) -> dict:
+    """Local copy of get_current_user to avoid circular import"""
+    token = request.cookies.get("session_token")
+    if not token:
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header[7:]
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        user_id = payload.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+        return user
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 # Platform fee rate (8% on all transactions)
 PLATFORM_FEE_RATE = 0.08  # 8%
