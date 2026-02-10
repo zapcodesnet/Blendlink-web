@@ -634,22 +634,21 @@ export const RPSBidding = ({
     return (strategies[botDifficulty] || strategies.medium)();
   }, [botDifficulty, opponentMoney]);
   
-  // Handle submit - UPDATED: Accept timeout auto-choice and auto-bid
+  // Handle submit - UPDATED: Accept timeout auto-choice and auto-bid, support PVP mode
   const handleSubmit = useCallback((timeout = false, autoChoice = null, autoBid = null) => {
     if (gamePhase !== 'choosing') return;
-    
-    const botMove = isBot ? generateBotChoice() : { choice: 'rock', bid: MIN_BID };
-    setOpponentChoice(botMove.choice);
-    setOpponentBid(botMove.bid);
     
     // Use auto-selected values if provided (timeout case), otherwise use player's selections
     const finalPlayerChoice = autoChoice || (timeout ? null : playerChoice);
     const finalPlayerBid = autoBid || playerBid;
     
     if (!finalPlayerChoice) {
-      setGamePhase('revealing');
-      setShowReveal(true);
-      setRoundResult('player2');
+      // No choice - auto-loss (for bot mode only)
+      if (isBot) {
+        setGamePhase('revealing');
+        setShowReveal(true);
+        setRoundResult('player2');
+      }
       return;
     }
     
@@ -661,6 +660,28 @@ export const RPSBidding = ({
       setPlayerBid(autoBid);
     }
     
+    // PVP MODE: Send choice to server and wait for result
+    if (!isBot && wsRef?.current && wsRef.current.readyState === WebSocket.OPEN) {
+      console.log('[RPS PVP] Submitting choice to server:', finalPlayerChoice, finalPlayerBid);
+      wsRef.current.send(JSON.stringify({
+        type: 'rps_choice',
+        choice: finalPlayerChoice,
+        bid: finalPlayerBid,
+      }));
+      
+      // Callback for parent component tracking
+      onRPSSubmit?.({ choice: finalPlayerChoice, bid: finalPlayerBid });
+      
+      // Stay in choosing phase, but mark as submitted - wait for server result
+      setGamePhase('waiting_result');
+      return;
+    }
+    
+    // BOT MODE: Generate opponent choice locally
+    const botMove = isBot ? generateBotChoice() : { choice: 'rock', bid: MIN_BID };
+    setOpponentChoice(botMove.choice);
+    setOpponentBid(botMove.bid);
+    
     const rpsResult = determineWinner(finalPlayerChoice, botMove.choice);
     
     if (rpsResult === 'player1') {
@@ -669,9 +690,9 @@ export const RPSBidding = ({
       setRoundResult('player2');
     } else {
       // Tie - higher bid wins
-      if (playerBid > botMove.bid) {
+      if (finalPlayerBid > botMove.bid) {
         setRoundResult('player1');
-      } else if (botMove.bid > playerBid) {
+      } else if (botMove.bid > finalPlayerBid) {
         setRoundResult('player2');
       } else {
         setRoundResult('tie');
@@ -682,7 +703,7 @@ export const RPSBidding = ({
     setShowReveal(true);
     
     if (soundEnabled) auctionSounds.bidPlaced();
-  }, [gamePhase, playerChoice, playerBid, isBot, generateBotChoice, soundEnabled]);
+  }, [gamePhase, playerChoice, playerBid, isBot, generateBotChoice, soundEnabled, wsRef, onRPSSubmit]);
   
   // Keep ref updated
   useEffect(() => {
