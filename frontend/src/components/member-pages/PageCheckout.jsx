@@ -126,9 +126,24 @@ export default function PageCheckout({
         body: JSON.stringify(orderData)
       });
 
-      if (paymentMethod === "card" && response.payment_url) {
-        // Redirect to payment gateway
-        window.location.href = response.payment_url;
+      if (paymentMethod === "card") {
+        // Create Stripe checkout session
+        const origin = window.location.origin;
+        const checkoutResponse = await safeFetch(`${API_URL}/api/payments/stripe/checkout/session`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            order_id: response.order_id,
+            origin_url: origin
+          })
+        });
+
+        if (checkoutResponse.url) {
+          // Redirect to Stripe Checkout
+          window.location.href = checkoutResponse.url;
+        } else {
+          throw new Error("Failed to create payment session");
+        }
       } else {
         // Cash on delivery - order placed
         toast.success("Order placed successfully!");
