@@ -177,7 +177,7 @@ export const PVPBattleArena = ({
   // Game state
   const [gamePhase, setGamePhase] = useState('ready'); // ready, playing, result
   const [currentRound, setCurrentRound] = useState(1);
-  const [roundType, setRoundType] = useState('auction');
+  const [roundType, setRoundType] = useState('rps');  // FIXED: Start with RPS (round 1)
   
   // Scores
   const [player1Wins, setPlayer1Wins] = useState(0);
