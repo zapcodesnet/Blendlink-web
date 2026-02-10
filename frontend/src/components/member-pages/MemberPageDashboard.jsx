@@ -540,6 +540,54 @@ const SettingsTab = ({ page, onUpdate }) => {
         </div>
       </div>
 
+      {/* Currency Settings */}
+      <div className="bg-card rounded-xl border border-border p-4">
+        <h3 className="font-semibold mb-2">Currency</h3>
+        <p className="text-sm text-muted-foreground mb-4">Select the currency used in your page's POS and checkout</p>
+        <CurrencySelector 
+          pageId={page.page_id}
+          currentCurrency={page.currency || "USD"}
+          currentSymbol={page.currency_symbol || "$"}
+          onUpdate={(code, symbol) => {
+            // Update local state
+            setPageData(prev => ({ ...prev, currency: code, currency_symbol: symbol }));
+          }}
+        />
+      </div>
+
+      {/* Contact Information */}
+      <div className="bg-card rounded-xl border border-border p-4">
+        <h3 className="font-semibold mb-4">Contact Information</h3>
+        <p className="text-sm text-muted-foreground mb-4">This info will be displayed on your public page</p>
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-1 block">Phone Number</label>
+            <Input
+              placeholder="+1 (555) 123-4567"
+              value={pageData.phone || ""}
+              onChange={(e) => setPageData({ ...pageData, phone: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1 block">Email</label>
+            <Input
+              type="email"
+              placeholder="contact@yourstore.com"
+              value={pageData.email || ""}
+              onChange={(e) => setPageData({ ...pageData, email: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1 block">Website</label>
+            <Input
+              placeholder="https://yourwebsite.com"
+              value={pageData.website || ""}
+              onChange={(e) => setPageData({ ...pageData, website: e.target.value })}
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Referral Settings */}
       <div className="bg-card rounded-xl border border-border p-4">
         <h3 className="font-semibold mb-4">Referral Settings</h3>
