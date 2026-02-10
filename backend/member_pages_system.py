@@ -462,6 +462,9 @@ class CreateRentalBookingRequest(BaseModel):
 
 from server import get_current_user
 
+# Platform fee rate (8% on all transactions)
+PLATFORM_FEE_RATE = 0.08  # 8%
+
 async def verify_page_owner(page_id: str, user_id: str):
     """Verify user is the page owner"""
     page = await db.member_pages.find_one({"page_id": page_id})
@@ -470,6 +473,76 @@ async def verify_page_owner(page_id: str, user_id: str):
     if page["owner_id"] != user_id:
         raise HTTPException(status_code=403, detail="Not authorized to modify this page")
     return page
+
+async def verify_page_access(page_id: str, user_id: str):
+    """Verify user is owner OR an authorized team member"""
+    page = await db.member_pages.find_one({"page_id": page_id})
+    if not page:
+        raise HTTPException(status_code=404, detail="Page not found")
+    
+    is_owner = page["owner_id"] == user_id
+    is_authorized = user_id in page.get("authorized_users", [])
+    
+    if not is_owner and not is_authorized:
+        raise HTTPException(status_code=403, detail="Not authorized to access this page")
+    
+    return page, is_owner
+
+async def check_page_authorization(page_id: str, user_id: str) -> dict:
+    """Check user's authorization level for a page (non-throwing)"""
+    page = await db.member_pages.find_one({"page_id": page_id})
+    if not page:
+        return {"can_manage": False, "is_owner": False, "is_authorized": False}
+    
+    is_owner = page["owner_id"] == user_id
+    is_authorized = user_id in page.get("authorized_users", [])
+    
+    return {
+        "can_manage": is_owner or is_authorized,
+        "is_owner": is_owner,
+        "is_authorized": is_authorized
+    }
+
+async def apply_platform_fee(page_id: str, transaction_total: float, payment_method: str):
+    """
+    Apply 8% platform fee to a transaction.
+    For card payments: fee is deducted automatically from payout
+    For cash payments: fee is accumulated and billed monthly
+    """
+    fee_amount = transaction_total * PLATFORM_FEE_RATE
+    
+    if payment_method == "cash":
+        # Accumulate fee for monthly billing
+        await db.member_pages.update_one(
+            {"page_id": page_id},
+            {"$inc": {"platform_fees_owed": fee_amount}}
+        )
+        
+        # Log the fee
+        await db.platform_fee_logs.insert_one({
+            "log_id": f"fee_{uuid.uuid4().hex[:12]}",
+            "page_id": page_id,
+            "transaction_total": transaction_total,
+            "fee_amount": fee_amount,
+            "fee_rate": PLATFORM_FEE_RATE,
+            "payment_method": payment_method,
+            "status": "pending",  # pending = owed, paid = settled
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+    else:
+        # For card payments, fee is auto-deducted (log as paid)
+        await db.platform_fee_logs.insert_one({
+            "log_id": f"fee_{uuid.uuid4().hex[:12]}",
+            "page_id": page_id,
+            "transaction_total": transaction_total,
+            "fee_amount": fee_amount,
+            "fee_rate": PLATFORM_FEE_RATE,
+            "payment_method": payment_method,
+            "status": "auto_deducted",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+    
+    return fee_amount
 
 # ============== SLUG VALIDATION SYSTEM ==============
 
