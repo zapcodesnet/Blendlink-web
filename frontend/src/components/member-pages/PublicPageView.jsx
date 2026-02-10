@@ -547,6 +547,19 @@ export default function PublicPageView() {
                       >
                         <Plus className="w-4 h-4 mr-1" /> Add
                       </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          // Add to cart and open checkout
+                          addToCart(item);
+                          setTimeout(() => setShowCheckout(true), 100);
+                        }}
+                        variant="outline"
+                        className="h-9 px-3 rounded-xl border-green-300 text-green-600 hover:bg-green-50 text-sm"
+                        data-testid={`buy-now-${itemId}`}
+                      >
+                        <Zap className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
                 </div>
