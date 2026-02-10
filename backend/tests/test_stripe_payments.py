@@ -197,7 +197,7 @@ class TestStripeRefund:
         # Should return 422 for validation error
         assert response.status_code == 422, f"Expected 422 for missing order_id, got {response.status_code}"
 
-    def test_refund_unpaid_order(self, api_session):
+    def test_refund_unpaid_order(self):
         """Test refund for order that isn't paid yet"""
         # Create a test guest order that isn't paid
         test_page_id = "mpage_ecfa1e28feee"  # From iteration_135 test data
@@ -221,7 +221,7 @@ class TestStripeRefund:
             headers={"Content-Type": "application/json"}
         )
         
-        if order_response.status_code == 201:
+        if order_response.status_code in [200, 201]:
             order_id = order_response.json().get("order_id")
             print(f"Created test order: {order_id}")
             
