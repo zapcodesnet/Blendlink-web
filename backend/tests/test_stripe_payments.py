@@ -343,7 +343,7 @@ class TestGuestOrderPaymentFlow:
         print(f"SUCCESS: Guest order {order_id} -> Stripe session {checkout_data.get('session_id')}")
         print(f"Checkout URL: {checkout_url[:100]}...")
 
-    def test_verify_payment_transaction_record(self, api_session):
+    def test_verify_payment_transaction_record(self):
         """Verify that payment transactions are being recorded in the database"""
         # Create a guest order
         test_page_id = "mpage_ecfa1e28feee"
