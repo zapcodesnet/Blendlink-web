@@ -3142,6 +3142,14 @@ try:
                     photo_id = data.get("photo_id")
                     await pvp_game_manager.select_photo(room_id, user_id, photo_id)
                     
+                elif msg_type == "rps_choice":
+                    # FIXED: Server-authoritative RPS choice submission
+                    # Player submits their Rock-Paper-Scissors choice and bid
+                    choice = data.get("choice")  # 'rock', 'paper', or 'scissors'
+                    bid = data.get("bid", 1_000_000)  # Default to minimum bid
+                    logger.info(f"[RPS] Player {user_id} submitted choice={choice}, bid={bid}")
+                    await pvp_game_manager.submit_rps_choice(room_id, user_id, choice, bid)
+                    
                 elif msg_type == "ready":
                     # Player marks ready
                     await pvp_game_manager.mark_ready(room_id, user_id)
