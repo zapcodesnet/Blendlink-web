@@ -14,7 +14,7 @@ import requests
 import os
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://page-creation-fix.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://auth-sync-prod.preview.emergentagent.com')
 
 # Test credentials
 USER1_EMAIL = "test@blendlink.com"

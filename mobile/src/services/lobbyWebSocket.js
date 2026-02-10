@@ -22,7 +22,7 @@
 
 import { getToken } from './api';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://page-creation-fix.preview.emergentagent.com';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://auth-sync-prod.preview.emergentagent.com';
 
 class LobbyWebSocketService {
   constructor() {

@@ -6,7 +6,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://page-creation-fix.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://auth-sync-prod.preview.emergentagent.com')
 
 class TestSlugValidationAPI:
     """Test slug validation endpoint /api/member-pages/check-slug/{slug}"""

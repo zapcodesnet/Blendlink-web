@@ -14,7 +14,7 @@ import os
 import base64
 from io import BytesIO
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://page-creation-fix.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://auth-sync-prod.preview.emergentagent.com')
 
 # Test credentials
 TEST_EMAIL = "test@test.com"
