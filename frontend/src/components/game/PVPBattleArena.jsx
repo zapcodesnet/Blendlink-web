@@ -482,6 +482,49 @@ export const PVPBattleArena = ({
             toast.warning('Auto-readied due to timeout');
           }
           break;
+        
+        // RPS-specific messages (SERVER-AUTHORITATIVE - FIXES DESYNC)
+        case 'rps_choosing_start':
+          // Server signals RPS choice phase has begun
+          console.log('[RPS] Choosing phase started, timeout:', data.timeout_seconds);
+          setRoundType('rps');
+          setGamePhase('playing');
+          setRPSChoosingTimeout(data.timeout_seconds || 10);
+          break;
+        
+        case 'rps_choice_submitted':
+          // A player submitted their RPS choice (without revealing what)
+          console.log('[RPS] Choice submitted by:', data.user_id);
+          if (data.user_id !== currentUserId) {
+            toast.info('Opponent has made their choice');
+          }
+          setOpponentHasSubmittedRPS(data.player1_submitted && data.player2_submitted 
+            ? true 
+            : (getIsPlayer1() ? data.player2_submitted : data.player1_submitted));
+          break;
+        
+        case 'rps_auto_choice':
+          // Server auto-selected for a player due to timeout
+          if (data.user_id === currentUserId) {
+            toast.warning('⏰ Time ran out - random choice auto-selected!');
+          }
+          break;
+        
+        case 'rps_result':
+          // SERVER-AUTHORITATIVE RPS result - FIXES REVEAL DESYNC
+          console.log('[RPS] Server result:', data);
+          setServerRPSResult(data);  // Pass to RPSBidding component
+          // Also update round result in parent state
+          if (data.winner_user_id === currentUserId) {
+            toast.success(`🎉 You won RPS Round ${data.round}!`);
+          } else if (data.winner_user_id) {
+            toast.info(`Round ${data.round} - Opponent wins`);
+          } else {
+            toast.info(`Round ${data.round} - Tie!`);
+          }
+          setPlayer1Wins(data.player1_wins);
+          setPlayer2Wins(data.player2_wins);
+          break;
           
         case 'pong':
           // Connection is alive - update last pong time (ref is defined below)
