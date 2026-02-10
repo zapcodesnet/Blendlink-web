@@ -137,9 +137,11 @@ class PVPGameManager:
         
         If the player is already in the room (reconnecting), update their connection.
         """
+        logger.info(f"connect_player called: room={room_id}, user={user_id}, is_creator={is_creator}, is_reconnect={is_reconnect}, photos_count={len(photos) if photos else 0}")
+        
         room = self.rooms.get(room_id)
         if not room:
-            logger.error(f"Room {room_id} not found")
+            logger.error(f"Room {room_id} not found in self.rooms (available rooms: {list(self.rooms.keys())[:5]})")
             return False
         
         async with self._lock:
