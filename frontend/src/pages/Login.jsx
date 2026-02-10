@@ -112,13 +112,23 @@ export default function Login() {
         initial="hidden"
         animate="visible"
       >
-        {/* Avatar with strong glow */}
+        {/* Avatar with Blendlink Logo */}
         <motion.div 
           className="flex justify-center mb-10"
           variants={itemVariants}
         >
           <div className="bl-avatar bl-animate-glow">
-            <User strokeWidth={1.5} />
+            <img 
+              src="https://customer-assets.emergentagent.com/job_857ca676-869a-4a5c-aa17-a86be06ad92a/artifacts/fb7jx2y8_Blendlink%20logo%20transparent%20background%20PNG.png"
+              alt="Blendlink Logo"
+              className="bl-avatar-logo"
+              style={{
+                width: '70%',
+                height: '70%',
+                objectFit: 'contain',
+                objectPosition: 'center',
+              }}
+            />
           </div>
         </motion.div>
 
