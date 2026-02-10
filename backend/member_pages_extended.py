@@ -42,6 +42,9 @@ db = client[db_name]
 
 logger = logging.getLogger(__name__)
 
+# Import platform fee helper from member_pages_system
+from member_pages_system import apply_platform_fee, PLATFORM_FEE_RATE, verify_page_access
+
 # ============== ROUTERS ==============
 barcode_router = APIRouter(prefix="/barcode", tags=["Barcode Scanning"])
 ai_scan_router = APIRouter(prefix="/ai-scan", tags=["AI Item Scan"])
