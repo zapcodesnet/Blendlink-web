@@ -3091,27 +3091,36 @@ try:
                     
                     # Auto-create room if it doesn't exist (for late joiners)
                     if room_id not in pvp_game_manager.rooms:
-                        logger.info(f"Room {room_id} not found, creating on-demand")
-                        # Create the room dynamically
-                        pvp_game_manager.rooms[room_id] = PVPGameRoom(
-                            room_id=room_id,
-                            game_id=game_id or room_id,
-                        )
+                        logger.info(f"Room {room_id} not found, creating on-demand for game_id={game_id}")
+                        try:
+                            pvp_game_manager.rooms[room_id] = PVPGameRoom(
+                                room_id=room_id,
+                                game_id=game_id or room_id,
+                            )
+                            logger.info(f"Successfully created on-demand room {room_id}")
+                        except Exception as room_create_err:
+                            logger.error(f"Failed to create on-demand room {room_id}: {room_create_err}")
                     
-                    success = await pvp_game_manager.connect_player(
-                        room_id=room_id,
-                        user_id=user_id,
-                        username=username,
-                        websocket=websocket,
-                        photos=photos,
-                        is_creator=is_creator,
-                        is_reconnect=is_reconnect
-                    )
+                    try:
+                        success = await pvp_game_manager.connect_player(
+                            room_id=room_id,
+                            user_id=user_id,
+                            username=username,
+                            websocket=websocket,
+                            photos=photos,
+                            is_creator=is_creator,
+                            is_reconnect=is_reconnect
+                        )
+                        logger.info(f"connect_player result for {user_id} in room {room_id}: {success}")
+                    except Exception as connect_err:
+                        logger.error(f"Exception in connect_player for {user_id} in room {room_id}: {connect_err}")
+                        success = False
                     
                     await websocket.send_json({
                         "type": "join_result",
                         "success": success,
                         "room_id": room_id,
+                        "error": None if success else "Failed to join game room"
                     })
                 
                 elif msg_type == "reconnect":
