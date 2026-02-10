@@ -442,7 +442,10 @@ const SettingsTab = ({ page, onUpdate }) => {
   const [pageData, setPageData] = useState({
     name: page.name,
     description: page.description,
-    is_published: page.is_published
+    is_published: page.is_published,
+    phone: page.phone || "",
+    email: page.email || "",
+    website: page.website || ""
   });
   const [saving, setSaving] = useState(false);
 
