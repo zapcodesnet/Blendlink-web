@@ -21,7 +21,8 @@ import {
   Plus, Edit2, Trash2, Eye, EyeOff, BarChart3, ShoppingCart, Bell,
   Users, Star, TrendingUp, DollarSign, Calendar, Clock, MapPin,
   Image, Tag, Save, Loader2, ExternalLink, Copy, Check, AlertTriangle,
-  Globe, Archive, RefreshCw, ScanLine, CreditCard, Truck, Store, FileText
+  Globe, Archive, RefreshCw, ScanLine, CreditCard, Truck, Store, FileText,
+  Camera, X
 } from "lucide-react";
 import { memberPagesAPI, PAGE_TYPES } from "./MemberPagesSystem";
 import AnalyticsDashboard from "./AnalyticsDashboard";
