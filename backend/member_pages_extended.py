@@ -1016,7 +1016,9 @@ async def get_pos_checkout_status(
     """Check the status of a POS checkout session"""
     from emergentintegrations.payments.stripe.checkout import StripeCheckout
     
-    api_key = os.environ.get("STRIPE_API_KEY", "sk_test_emergent")
+    api_key = os.environ.get("STRIPE_API_KEY") or os.environ.get("STRIPE_SECRET_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="Stripe not configured")
     stripe_checkout = StripeCheckout(api_key=api_key, webhook_url="")
     
     try:
