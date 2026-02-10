@@ -1,6 +1,45 @@
 # Blendlink Platform - Product Requirements Document
 
-## Latest Update: February 9, 2026 (Session 2 - PVP Game Round Sequence Fix)
+## Latest Update: February 9, 2026 (Session 2 - PVP Game Server-Authoritative RPS)
+
+---
+
+## ✅ CRITICAL FIX: Server-Authoritative RPS (Iteration 131)
+
+### Problems Fixed
+1. **No winner declared** for Round 1 RPS - round outcome was not processed
+2. **Reveal desync** - players saw different opponent choices during reveal
+3. **Game stuck in Round 1** - never advanced to Round 2
+4. **No automatic progression** - rounds didn't advance after winner declared
+
+### Solution: Server-Authoritative RPS Handling
+Players now submit their RPS choices to the server, and the server:
+1. Collects both players' choices (with 10-second timeout)
+2. Determines the winner server-side
+3. Broadcasts **BOTH** players' choices to **BOTH** clients (FIXES DESYNC)
+4. Automatically advances to the next round
+
+### New Backend Methods
+```python
+# backend/pvp_game_websocket.py
+async def submit_rps_choice(room_id, user_id, choice, bid)  # Handles player submissions
+async def _rps_choice_timeout(room_id)  # Auto-selects random choice + $1M bid on timeout
+async def _process_rps_result(room_id)  # Determines winner, broadcasts result
+```
+
+### New WebSocket Messages
+| Message | Direction | Purpose |
+|---------|-----------|---------|
+| `rps_choice` | Client → Server | Submit player's RPS choice and bid |
+| `rps_choosing_start` | Server → Client | Signal start of 10-second choice phase |
+| `rps_choice_submitted` | Server → Client | Notify when a player has submitted |
+| `rps_result` | Server → Client | **AUTHORITATIVE** - Contains BOTH players' choices |
+
+### Files Modified
+- `backend/pvp_game_websocket.py` - Added RPS state fields and handler methods
+- `backend/server.py` - Added `rps_choice` WebSocket message handler
+- `frontend/src/components/game/RPSBidding.jsx` - Added PVP mode with wsRef, serverRPSResult
+- `frontend/src/components/game/PVPBattleArena.jsx` - Added RPS message handlers
 
 ---
 
