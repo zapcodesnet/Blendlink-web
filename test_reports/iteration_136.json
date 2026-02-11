@@ -86,10 +86,10 @@
     "stripe_actual_refund_api": "The POST /api/payments/stripe/refund endpoint creates local refund records but does NOT call Stripe's actual refund API - this is intentional for test mode as noted in code"
   },
   "test_urls_used": [
-    "https://auth-sync-prod.preview.emergentagent.com/api/payments/stripe/checkout/session",
-    "https://auth-sync-prod.preview.emergentagent.com/api/payments/stripe/checkout/status/{session_id}",
-    "https://auth-sync-prod.preview.emergentagent.com/api/payments/stripe/refund",
-    "https://auth-sync-prod.preview.emergentagent.com/api/page-orders/guest"
+    "https://pages-enhance.preview.emergentagent.com/api/payments/stripe/checkout/session",
+    "https://pages-enhance.preview.emergentagent.com/api/payments/stripe/checkout/status/{session_id}",
+    "https://pages-enhance.preview.emergentagent.com/api/payments/stripe/refund",
+    "https://pages-enhance.preview.emergentagent.com/api/page-orders/guest"
   ],
   "example_test_data": {
     "test_order_id": "go_4ecd334a6638",

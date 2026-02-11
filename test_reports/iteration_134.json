@@ -75,9 +75,9 @@
     "stripe_payment": "Card payment option visible but payment_url returns null (Stripe integration placeholder)"
   },
   "test_urls_used": [
-    "https://auth-sync-prod.preview.emergentagent.com/testcheckout1770708670",
-    "https://auth-sync-prod.preview.emergentagent.com/p/testcheckout1770708670",
-    "https://auth-sync-prod.preview.emergentagent.com/myshop-1770708410",
-    "https://auth-sync-prod.preview.emergentagent.com/nonexistent-page-12345"
+    "https://pages-enhance.preview.emergentagent.com/testcheckout1770708670",
+    "https://pages-enhance.preview.emergentagent.com/p/testcheckout1770708670",
+    "https://pages-enhance.preview.emergentagent.com/myshop-1770708410",
+    "https://pages-enhance.preview.emergentagent.com/nonexistent-page-12345"
   ]
 }
