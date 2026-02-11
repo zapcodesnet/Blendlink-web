@@ -618,9 +618,49 @@ const SettingsTab = ({ page, onUpdate }) => {
     is_published: page.is_published,
     phone: page.phone || "",
     email: page.email || "",
-    website: page.website || ""
+    website: page.website || "",
+    logo_image: page.logo_image || ""
   });
   const [saving, setSaving] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const logoInputRef = useRef(null);
+
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be less than 5MB");
+      return;
+    }
+
+    setUploadingLogo(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      
+      const token = localStorage.getItem("blendlink_token");
+      const response = await fetch(`${API_URL}/api/upload/image`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      });
+      
+      if (!response.ok) throw new Error("Upload failed");
+      const data = await response.json();
+      const imageUrl = data.url.startsWith('http') ? data.url : `${API_URL}${data.url}`;
+      setPageData(prev => ({ ...prev, logo_image: imageUrl }));
+      toast.success("Logo uploaded!");
+    } catch (err) {
+      toast.error("Failed to upload logo");
+    }
+    setUploadingLogo(false);
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -637,7 +677,59 @@ const SettingsTab = ({ page, onUpdate }) => {
   };
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6 max-w-2xl pb-24">
+      {/* Logo Upload Section */}
+      <div className="bg-card rounded-xl border border-border p-4">
+        <h3 className="font-semibold mb-4">Page Logo / Business Icon</h3>
+        <div className="flex items-center gap-4">
+          <div 
+            onClick={() => logoInputRef.current?.click()}
+            className="w-20 h-20 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity overflow-hidden border-4 border-white shadow-lg"
+          >
+            {pageData.logo_image ? (
+              <img src={pageData.logo_image} alt="Logo" className="w-full h-full object-cover" />
+            ) : uploadingLogo ? (
+              <Loader2 className="w-8 h-8 text-white animate-spin" />
+            ) : (
+              <Camera className="w-8 h-8 text-white" />
+            )}
+          </div>
+          <div className="flex-1">
+            <p className="text-sm text-muted-foreground mb-2">
+              Upload a logo or business icon. It will be displayed on your public page.
+            </p>
+            <div className="flex gap-2">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => logoInputRef.current?.click()}
+                disabled={uploadingLogo}
+              >
+                {uploadingLogo ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Camera className="w-4 h-4 mr-1" />}
+                {pageData.logo_image ? 'Change Logo' : 'Upload Logo'}
+              </Button>
+              {pageData.logo_image && (
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="text-red-500 hover:text-red-600"
+                  onClick={() => setPageData(prev => ({ ...prev, logo_image: '' }))}
+                >
+                  <X className="w-4 h-4 mr-1" /> Remove
+                </Button>
+              )}
+            </div>
+            <input
+              ref={logoInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleLogoUpload}
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Basic Info */}
       <div className="bg-card rounded-xl border border-border p-4">
         <h3 className="font-semibold mb-4">Basic Information</h3>
