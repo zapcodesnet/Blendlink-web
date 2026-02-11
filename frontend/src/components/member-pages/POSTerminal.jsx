@@ -207,6 +207,83 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
     }
   };
 
+  // Manual Entry - Add custom item to cart
+  const addManualItemToCart = () => {
+    if (!manualItem.name || !manualItem.price) {
+      toast.error("Name and price are required");
+      return;
+    }
+    
+    const price = parseFloat(manualItem.price);
+    if (isNaN(price) || price <= 0) {
+      toast.error("Enter a valid price");
+      return;
+    }
+    
+    const customItem = {
+      item_id: `custom_${Date.now()}`,
+      name: manualItem.name,
+      description: manualItem.description || "",
+      price: price,
+      quantity: 1,
+      is_custom: true // Flag to identify manual entries
+    };
+    
+    setCart([...cart, customItem]);
+    setManualItem({ name: "", description: "", price: "" });
+    setShowManualEntry(false);
+    toast.success(`Added: ${customItem.name}`);
+  };
+
+  // Customer Autofill - Search previous customers
+  const searchCustomers = async (query) => {
+    if (!query || query.length < 2) {
+      setCustomerSuggestions([]);
+      setShowCustomerSuggestions(false);
+      return;
+    }
+    
+    setLoadingCustomers(true);
+    try {
+      const token = localStorage.getItem("blendlink_token");
+      const response = await fetch(`${API_URL}/api/pos/${pageId}/customers/search?q=${encodeURIComponent(query)}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setCustomerSuggestions(data.customers || []);
+        setShowCustomerSuggestions(data.customers?.length > 0);
+      }
+    } catch (err) {
+      console.error("Customer search error:", err);
+    }
+    setLoadingCustomers(false);
+  };
+
+  // Select customer from suggestions
+  const selectCustomer = (customer) => {
+    setCustomerName(customer.name || "");
+    setCustomerPhone(customer.phone || "");
+    setCustomerEmail(customer.email || "");
+    setShowCustomerSuggestions(false);
+    toast.success(`Customer selected: ${customer.name || customer.email || customer.phone}`);
+  };
+
+  // Debounced customer search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (customerName.length >= 2) {
+        searchCustomers(customerName);
+      } else if (customerEmail.length >= 2) {
+        searchCustomers(customerEmail);
+      } else if (customerPhone.length >= 2) {
+        searchCustomers(customerPhone);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [customerName, customerEmail, customerPhone]);
+
   // Handle barcode input (for scanner or manual entry)
   const handleBarcodeInput = (e) => {
     const value = e.target.value;
