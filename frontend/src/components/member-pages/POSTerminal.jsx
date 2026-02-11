@@ -763,7 +763,106 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
             onChange={(e) => setSearchQuery(e.target.value)}
             className="flex-1 h-11 rounded-xl border-gray-200 bg-white/80"
           />
+          {/* Manual Entry Button */}
+          <Button
+            onClick={() => setShowManualEntry(true)}
+            variant="outline"
+            className="h-11 px-4 rounded-xl border-orange-300 text-orange-600 hover:bg-orange-50"
+            data-testid="manual-entry-btn"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Custom Item
+          </Button>
         </div>
+
+        {/* Manual Entry Modal */}
+        {showManualEntry && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowManualEntry(false)}>
+            <div className="bg-white rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-lg flex items-center gap-2">
+                  <Plus className="w-5 h-5 text-orange-500" />
+                  Add Custom Item
+                </h3>
+                <button onClick={() => setShowManualEntry(false)} className="p-2 hover:bg-gray-100 rounded-lg">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <p className="text-sm text-gray-500 mb-4">
+                Add a product or service that's not in your regular list. 8% platform fee will be applied automatically.
+              </p>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Item Name *</label>
+                  <Input
+                    placeholder="e.g., Special Order, Custom Service"
+                    value={manualItem.name}
+                    onChange={(e) => setManualItem({ ...manualItem, name: e.target.value })}
+                    className="h-12 rounded-xl"
+                    data-testid="manual-item-name"
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Description (optional)</label>
+                  <Textarea
+                    placeholder="Brief description..."
+                    value={manualItem.description}
+                    onChange={(e) => setManualItem({ ...manualItem, description: e.target.value })}
+                    rows={2}
+                    className="rounded-xl"
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Price *</label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      value={manualItem.price}
+                      onChange={(e) => setManualItem({ ...manualItem, price: e.target.value })}
+                      className="h-12 pl-10 rounded-xl text-lg font-bold"
+                      data-testid="manual-item-price"
+                    />
+                  </div>
+                </div>
+                
+                {manualItem.price && (
+                  <div className="bg-orange-50 rounded-xl p-3 text-sm">
+                    <div className="flex justify-between text-gray-600">
+                      <span>Item Price:</span>
+                      <span>${parseFloat(manualItem.price || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-gray-600">
+                      <span>Platform Fee (8%):</span>
+                      <span>${(parseFloat(manualItem.price || 0) * 0.08).toFixed(2)}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex gap-3 mt-6">
+                <Button variant="outline" onClick={() => setShowManualEntry(false)} className="flex-1 h-12 rounded-xl">
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={addManualItemToCart} 
+                  className="flex-1 h-12 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
+                  data-testid="add-manual-item-btn"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add to Cart
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Items Grid - Horizontal scrollable on mobile */}
         {filteredItems.length > 0 ? (
