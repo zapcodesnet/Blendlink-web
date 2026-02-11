@@ -52,8 +52,14 @@ const PageCard = ({ page, onFollow, onUnfollow, onView, onManage, isFollowing, i
   const followerCount = page.subscriber_count || page.followers_count || 0;
   const pageSlug = page.slug || page.page_id;
   
-  // Get page type color
+  // Get card customization settings (if any)
+  const cardSettings = page.card_settings || {};
+  const customBgColor = cardSettings.background_color;
+  const customBgImage = cardSettings.background_image;
+  
+  // Get page type color (fallback if no custom color)
   const getTypeGradient = () => {
+    if (customBgColor) return ''; // Will use custom color via style
     switch(page.page_type) {
       case 'store': return 'from-blue-500 to-indigo-600';
       case 'restaurant': return 'from-orange-500 to-red-500';
@@ -63,15 +69,29 @@ const PageCard = ({ page, onFollow, onUnfollow, onView, onManage, isFollowing, i
     }
   };
   
+  // Custom background style
+  const getCardHeaderStyle = () => {
+    if (customBgImage) {
+      return { backgroundImage: `url(${customBgImage})`, backgroundSize: 'cover', backgroundPosition: 'center' };
+    }
+    if (customBgColor) {
+      return { background: customBgColor };
+    }
+    return {};
+  };
+  
   return (
     <div 
       className="member-page-card group relative overflow-hidden rounded-3xl border border-white/20 bg-white/70 backdrop-blur-xl shadow-lg hover:shadow-2xl hover:border-cyan-400/40 transition-all duration-300"
       style={{ touchAction: 'manipulation' }}
       data-testid={`page-card-${page.page_id}`}
     >
-      {/* Cover Image */}
-      <div className={`h-28 bg-gradient-to-br ${getTypeGradient()} relative overflow-hidden`}>
-        {page.cover_image && (
+      {/* Cover Image / Custom Header */}
+      <div 
+        className={`h-28 ${!customBgColor && !customBgImage ? `bg-gradient-to-br ${getTypeGradient()}` : ''} relative overflow-hidden`}
+        style={getCardHeaderStyle()}
+      >
+        {page.cover_image && !customBgImage && (
           <img src={page.cover_image} alt="" className="w-full h-full object-cover" />
         )}
         {/* Gradient overlay */}
@@ -105,7 +125,10 @@ const PageCard = ({ page, onFollow, onUnfollow, onView, onManage, isFollowing, i
       <div className="p-5">
         <div className="flex items-start gap-4">
           {/* Avatar */}
-          <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${getTypeGradient()} flex items-center justify-center text-white -mt-12 border-4 border-white shadow-xl overflow-hidden`}>
+          <div 
+            className={`w-16 h-16 rounded-2xl ${!customBgColor && !customBgImage ? `bg-gradient-to-br ${getTypeGradient()}` : ''} flex items-center justify-center text-white -mt-12 border-4 border-white shadow-xl overflow-hidden`}
+            style={customBgColor ? { background: customBgColor } : {}}
+          >
             {page.logo_image || page.avatar ? (
               <img src={page.logo_image || page.avatar} alt="" className="w-full h-full object-cover" />
             ) : (
