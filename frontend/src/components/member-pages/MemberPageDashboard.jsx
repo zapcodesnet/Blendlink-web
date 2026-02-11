@@ -374,7 +374,10 @@ const AddItemModal = ({ pageId, pageType, onClose, onSuccess, editItem = null })
     description: editItem?.description || "",
     price: editItem?.price?.toString() || editItem?.daily_rate?.toString() || "",
     category: editItem?.category || "",
-    images: editItem?.images || []
+    images: editItem?.images || [],
+    is_subscription: editItem?.is_subscription || false,
+    subscription_frequency: editItem?.subscription_frequency || "monthly",
+    trial_period_days: editItem?.trial_period_days || 0
   });
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
