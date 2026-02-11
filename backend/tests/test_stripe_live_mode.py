@@ -6,14 +6,29 @@ Tests that Stripe is correctly configured in LIVE mode (not test mode)
 import pytest
 import requests
 import os
-from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv('/app/backend/.env')
-load_dotenv('/app/frontend/.env')
+# Read .env files directly to verify actual configuration (not overridden test env)
+def read_env_file(path):
+    """Read .env file and return dict of key-value pairs"""
+    env_dict = {}
+    try:
+        with open(path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, _, value = line.partition('=')
+                    # Remove quotes if present
+                    value = value.strip('"\'')
+                    env_dict[key.strip()] = value
+    except FileNotFoundError:
+        pass
+    return env_dict
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
-FRONTEND_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
+BACKEND_ENV = read_env_file('/app/backend/.env')
+FRONTEND_ENV = read_env_file('/app/frontend/.env')
+
+BASE_URL = FRONTEND_ENV.get('REACT_APP_BACKEND_URL', '').rstrip('/')
+FRONTEND_URL = FRONTEND_ENV.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
 TEST_EMAIL = "tester@blendlink.net"
