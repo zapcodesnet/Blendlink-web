@@ -917,105 +917,14 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
           </Button>
         </div>
 
-        {/* Manual Entry Modal */}
-        {showManualEntry && (
-          <div 
-            className="fixed inset-0 bg-black/60 flex items-center justify-center p-4"
-            style={{ zIndex: 9999 }}
-            onClick={() => setShowManualEntry(false)}
-          >
-            <div 
-              className="bg-white rounded-2xl w-full max-w-md shadow-2xl flex flex-col"
-              style={{ maxHeight: 'calc(100vh - 80px)', minHeight: '400px' }}
-              onClick={e => e.stopPropagation()}
-            >
-              {/* Header - Fixed at top */}
-              <div className="flex items-center justify-between p-4 border-b border-gray-100 flex-shrink-0 bg-white rounded-t-2xl">
-                <h3 className="font-bold text-lg flex items-center gap-2">
-                  <Plus className="w-5 h-5 text-orange-500" />
-                  Add Custom Item
-                </h3>
-                <button onClick={() => setShowManualEntry(false)} className="p-2 hover:bg-gray-100 rounded-lg">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              
-              {/* Scrollable Content */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ minHeight: '200px' }}>
-                <p className="text-sm text-gray-500">
-                  Add a product or service that's not in your regular list. 8% platform fee will be applied automatically.
-                </p>
-                
-                <div>
-                  <label className="text-sm font-medium mb-1 block">Item Name *</label>
-                  <Input
-                    placeholder="e.g., Special Order, Custom Service"
-                    value={manualItem.name}
-                    onChange={(e) => setManualItem({ ...manualItem, name: e.target.value })}
-                    className="h-12 rounded-xl"
-                    data-testid="manual-item-name"
-                  />
-                </div>
-                
-                <div>
-                  <label className="text-sm font-medium mb-1 block">Description (optional)</label>
-                  <Textarea
-                    placeholder="Brief description..."
-                    value={manualItem.description}
-                    onChange={(e) => setManualItem({ ...manualItem, description: e.target.value })}
-                    rows={2}
-                    className="rounded-xl"
-                  />
-                </div>
-                
-                <div>
-                  <label className="text-sm font-medium mb-1 block">Price *</label>
-                  <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      placeholder="0.00"
-                      value={manualItem.price}
-                      onChange={(e) => setManualItem({ ...manualItem, price: e.target.value })}
-                      className="h-12 pl-10 rounded-xl text-lg font-bold"
-                      data-testid="manual-item-price"
-                    />
-                  </div>
-                </div>
-                
-                {manualItem.price && (
-                  <div className="bg-orange-50 rounded-xl p-3 text-sm">
-                    <div className="flex justify-between text-gray-600">
-                      <span>Item Price:</span>
-                      <span>${parseFloat(manualItem.price || 0).toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-gray-600">
-                      <span>Platform Fee (8%):</span>
-                      <span>${(parseFloat(manualItem.price || 0) * 0.08).toFixed(2)}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              {/* Footer Buttons - Fixed at bottom, ALWAYS VISIBLE */}
-              <div className="flex gap-3 p-4 border-t border-gray-100 bg-white rounded-b-2xl flex-shrink-0">
-                <Button variant="outline" onClick={() => setShowManualEntry(false)} className="flex-1 h-12 rounded-xl">
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={addManualItemToCart} 
-                  className="flex-1 h-12 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
-                  data-testid="add-manual-item-btn"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add to Cart
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Manual Entry Modal - Rendered via Portal */}
+        <ManualEntryModal
+          show={showManualEntry}
+          onClose={() => setShowManualEntry(false)}
+          onAdd={addManualItemToCart}
+          manualItem={manualItem}
+          setManualItem={setManualItem}
+        />
 
         {/* Items Grid - Horizontal scrollable on mobile */}
         {filteredItems.length > 0 ? (
