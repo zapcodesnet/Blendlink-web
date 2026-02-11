@@ -22,6 +22,12 @@ import jwt
 from jwt.exceptions import InvalidTokenError as JWTError
 from dotenv import load_dotenv
 
+# Import notification system for returning customer alerts
+try:
+    from websocket_notifications import notify_returning_customer
+except ImportError:
+    notify_returning_customer = None
+
 load_dotenv()
 
 # Database connection
