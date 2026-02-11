@@ -195,6 +195,8 @@ export const BottomNav = () => {
                                     ? 'bg-gradient-to-br from-blue-600 to-blue-700' 
                                     : menuItem.id === 'games'
                                     ? 'bg-gradient-to-br from-red-500 to-pink-600'
+                                    : menuItem.id === 'pages'
+                                    ? 'bg-gradient-to-br from-cyan-500 to-blue-600'
                                     : 'bg-gradient-to-br from-purple-600 to-pink-600'
                                 }`}>
                                   <menuItem.icon className="w-5 h-5 text-white" />
