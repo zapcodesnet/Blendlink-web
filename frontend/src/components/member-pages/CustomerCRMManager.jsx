@@ -103,14 +103,46 @@ const SendOfferModal = ({ customer, pageId, onClose, onSuccess }) => {
   const [sending, setSending] = useState(false);
   
   const handleSend = async () => {
+    if (!customer.email) {
+      toast.error("Customer email is required");
+      return;
+    }
+    
     setSending(true);
     try {
-      // For now, we'll just show a success message
-      // In production, this would integrate with email/SMS/push notification service
-      toast.success(`Offer sent to ${customer.name || customer.email || 'customer'}!`);
-      onSuccess();
+      const token = localStorage.getItem("blendlink_token");
+      const response = await fetch(`${API_URL}/api/page-analytics/${pageId}/send-customer-email`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          customer_email: customer.email,
+          customer_name: customer.name,
+          email_type: "offer",
+          subject: `Special Offer: ${formData.discount_type === "percentage" ? formData.discount_value + "% OFF" : formData.discount_type === "fixed" ? "$" + formData.discount_value + " OFF" : "FREE ITEM"} Just For You!`,
+          message: formData.message,
+          discount_type: formData.discount_type,
+          discount_value: formData.discount_value,
+          expiry_days: formData.expiry_days
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        if (data.simulated) {
+          toast.success(`Offer would be sent to ${customer.email} (email service not configured)`);
+        } else {
+          toast.success(`Offer sent to ${customer.name || customer.email}!`);
+        }
+        onSuccess();
+      } else {
+        throw new Error(data.detail || "Failed to send");
+      }
     } catch (err) {
-      toast.error("Failed to send offer");
+      toast.error(err.message || "Failed to send offer");
     }
     setSending(false);
   };
