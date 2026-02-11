@@ -672,6 +672,218 @@ const AddItemModal = ({ pageId, pageType, onClose, onSuccess, editItem = null })
 };
 
 // Settings Tab
+// Discover Card Customization Component
+const DiscoverCardCustomization = ({ pageId, initialSettings = {} }) => {
+  const [cardSettings, setCardSettings] = useState({
+    background_color: initialSettings?.background_color || "",
+    background_image: initialSettings?.background_image || ""
+  });
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [previewMode, setPreviewMode] = useState(false);
+  const bgImageInputRef = useRef(null);
+
+  // Predefined color palette
+  const colorPalette = [
+    { name: "Ocean", color: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" },
+    { name: "Sunset", color: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" },
+    { name: "Forest", color: "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)" },
+    { name: "Night", color: "linear-gradient(135deg, #232526 0%, #414345 100%)" },
+    { name: "Fire", color: "linear-gradient(135deg, #f12711 0%, #f5af19 100%)" },
+    { name: "Sky", color: "linear-gradient(135deg, #00c6fb 0%, #005bea 100%)" },
+    { name: "Rose", color: "linear-gradient(135deg, #ee9ca7 0%, #ffdde1 100%)" },
+    { name: "Mint", color: "linear-gradient(135deg, #00b09b 0%, #96c93d 100%)" },
+  ];
+
+  const handleBgImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be less than 5MB");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      
+      const token = localStorage.getItem("blendlink_token");
+      const response = await fetch(`${API_URL}/api/upload/image`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      });
+      
+      if (!response.ok) throw new Error("Upload failed");
+      const data = await response.json();
+      const imageUrl = data.url.startsWith('http') ? data.url : `${API_URL}${data.url}`;
+      setCardSettings(prev => ({ ...prev, background_image: imageUrl, background_color: "" }));
+      toast.success("Background image uploaded!");
+    } catch (err) {
+      toast.error("Failed to upload image");
+    }
+    setUploading(false);
+  };
+
+  const saveCardSettings = async () => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem("blendlink_token");
+      const response = await fetch(`${API_URL}/api/member-pages/${pageId}/card-settings`, {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(cardSettings)
+      });
+      
+      if (response.ok) {
+        toast.success("Card appearance saved!");
+      } else {
+        throw new Error("Failed to save");
+      }
+    } catch (err) {
+      toast.error("Failed to save card settings");
+    }
+    setSaving(false);
+  };
+
+  const resetToDefault = () => {
+    setCardSettings({ background_color: "", background_image: "" });
+  };
+
+  return (
+    <div className="bg-card rounded-xl border border-border p-4">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h3 className="font-semibold">Discover Card Appearance</h3>
+          <p className="text-sm text-muted-foreground">Customize how your page looks in the Discover section</p>
+        </div>
+        <button
+          onClick={() => setPreviewMode(!previewMode)}
+          className="text-sm text-cyan-600 hover:underline"
+        >
+          {previewMode ? "Hide Preview" : "Show Preview"}
+        </button>
+      </div>
+
+      {/* Preview */}
+      {previewMode && (
+        <div className="mb-4 p-4 bg-gray-100 rounded-xl">
+          <p className="text-xs text-gray-500 mb-2 text-center">Preview</p>
+          <div className="w-full max-w-xs mx-auto rounded-2xl border border-gray-200 overflow-hidden bg-white shadow-lg">
+            <div 
+              className="h-20 relative"
+              style={
+                cardSettings.background_image 
+                  ? { backgroundImage: `url(${cardSettings.background_image})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                  : cardSettings.background_color 
+                  ? { background: cardSettings.background_color }
+                  : { background: 'linear-gradient(135deg, #06b6d4, #3b82f6)' }
+              }
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+            </div>
+            <div className="p-3 -mt-6">
+              <div 
+                className="w-12 h-12 rounded-xl flex items-center justify-center text-white border-4 border-white shadow"
+                style={
+                  cardSettings.background_color 
+                    ? { background: cardSettings.background_color }
+                    : { background: 'linear-gradient(135deg, #06b6d4, #3b82f6)' }
+                }
+              >
+                <Store className="w-5 h-5" />
+              </div>
+              <p className="font-semibold mt-2 text-sm">Your Page Name</p>
+              <p className="text-xs text-gray-500">Category</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Color Palette */}
+      <div className="mb-4">
+        <label className="text-sm font-medium mb-2 block">Background Color</label>
+        <div className="grid grid-cols-4 gap-2">
+          {colorPalette.map((item) => (
+            <button
+              key={item.name}
+              onClick={() => setCardSettings({ ...cardSettings, background_color: item.color, background_image: "" })}
+              className={`h-12 rounded-lg overflow-hidden border-2 transition-all ${
+                cardSettings.background_color === item.color ? 'border-cyan-500 ring-2 ring-cyan-200' : 'border-transparent'
+              }`}
+              style={{ background: item.color }}
+              title={item.name}
+              data-testid={`color-${item.name.toLowerCase()}`}
+            />
+          ))}
+        </div>
+        <Input
+          type="text"
+          placeholder="Or enter custom color (e.g., #ff6b6b or linear-gradient(...))"
+          value={cardSettings.background_color}
+          onChange={(e) => setCardSettings({ ...cardSettings, background_color: e.target.value, background_image: "" })}
+          className="mt-2"
+        />
+      </div>
+
+      {/* Background Image */}
+      <div className="mb-4">
+        <label className="text-sm font-medium mb-2 block">Or Upload Background Image</label>
+        <div className="flex items-center gap-3">
+          {cardSettings.background_image ? (
+            <div className="relative w-24 h-16 rounded-lg overflow-hidden border border-gray-200">
+              <img src={cardSettings.background_image} alt="Background" className="w-full h-full object-cover" />
+              <button
+                onClick={() => setCardSettings({ ...cardSettings, background_image: "" })}
+                className="absolute top-1 right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center"
+              >
+                <X className="w-3 h-3 text-white" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => bgImageInputRef.current?.click()}
+              disabled={uploading}
+              className="h-16 px-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-cyan-400 transition-colors flex items-center gap-2 text-gray-500"
+            >
+              {uploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Image className="w-5 h-5" />}
+              {uploading ? "Uploading..." : "Upload Image"}
+            </button>
+          )}
+          <input
+            ref={bgImageInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleBgImageUpload}
+          />
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex gap-2">
+        <Button variant="outline" onClick={resetToDefault} className="flex-1">
+          Reset to Default
+        </Button>
+        <Button onClick={saveCardSettings} disabled={saving} className="flex-1">
+          {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+          Save Appearance
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 // POS Fast Cash Buttons Settings Component
 const POSFastCashSettings = ({ pageId, currencySymbol = "$" }) => {
   const [buttons, setButtons] = useState([1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 5000, 10000]);
