@@ -1,150 +1,148 @@
 # Blendlink Platform - Product Requirements Document
 
-## Latest Update: February 11, 2026 - Full Feature Implementation Complete
+## Latest Update: February 11, 2026 - Urgent Features Complete
 
 ---
 
-## ✅ ALL FEATURES IMPLEMENTED (Iterations 137-140)
+## ✅ URGENT FEATURES IMPLEMENTED (Iteration 141)
 
-### Summary
-All requested mobile-friendly fixes and feature updates have been implemented and tested with 100% pass rate across 4 testing iterations.
+### 1. Manual Product/Service Entry in POS
+**Location**: Member Pages > POS Terminal
+
+**Features**:
+- "Custom Item" button (orange) next to search bar
+- Modal with Name (required), Description (optional), Price (required) fields
+- Real-time 8% platform fee preview
+- Custom items added to cart with `is_custom: true` flag
+- Full payment processing (cash/card/digital) supported
+- Mobile-friendly with large inputs
+
+**UI Elements**:
+- `[data-testid='manual-entry-btn']` - Custom Item button
+- `[data-testid='manual-item-name']` - Name input
+- `[data-testid='manual-item-price']` - Price input
+- `[data-testid='add-manual-item-btn']` - Add to Cart button
+
+### 2. Customer Email & Autofill in POS
+**Location**: Member Pages > POS Terminal > Customer Info section
+
+**Features**:
+- Customer Name, Phone, Email fields with icons
+- Smart autofill search (triggers at 2+ characters)
+- Suggestions dropdown shows previous customers:
+  - Name, email, phone
+  - Order count, total spent
+  - Last purchase date
+- Click to auto-populate all fields
+
+**UI Elements**:
+- `[data-testid='customer-name-input']` - Name with autofill
+- `[data-testid='customer-phone-input']` - Phone
+- `[data-testid='customer-email-input']` - Email (optional)
+- `[data-testid^='customer-suggestion-']` - Suggestion items
+
+**Backend Endpoint**:
+- `GET /api/member-pages/{page_id}/pos-customers/search?q={query}`
+- Returns: customers array with name, email, phone, order_count, total_spent, last_purchase
+
+### 3. Discover Card Customization
+**Location**: Member Pages > Settings Tab > "Discover Card Appearance"
+
+**Features**:
+- 8 predefined gradient colors (Ocean, Sunset, Forest, Night, Fire, Sky, Rose, Mint)
+- Custom color input (hex or linear-gradient)
+- Background image upload with preview
+- Toggle preview to see changes
+- Reset to default option
+- Real-time WebSocket sync to mobile app
+
+**UI Elements**:
+- `[data-testid='color-{name}']` - Predefined color buttons
+- Preview toggle button
+- Image upload button
+- Save Appearance / Reset to Default buttons
+
+**Backend Endpoint**:
+- `PUT /api/member-pages/{page_id}/card-settings`
+- Fields: `background_color`, `background_image`
+- WebSocket Event: `card_settings_updated`
 
 ---
 
-## Implementation Details
+## Test Results: Iteration 141
+| Component | Tests | Status |
+|-----------|-------|--------|
+| Backend API | 14/14 | ✅ PASS |
+| Frontend UI | All 3 features | ✅ PASS |
+| WebSocket Sync | Verified | ✅ PASS |
+
+**Test Customers Created**: 2 customers via POS for autofill testing
+
+---
+
+## Previous Implementations (Iterations 137-140)
 
 ### Iteration 137: Priority Bug Fixes
-| Feature | Status | Implementation |
-|---------|--------|----------------|
-| Bottom nav overlap fix | ✅ COMPLETE | Added pb-24/pb-28 padding to containers |
-| Product image upload fix | ✅ COMPLETE | Fixed URL construction with API_URL prefix |
-| Product editing | ✅ COMPLETE | Edit button, pre-filled modal, update API |
+- ✅ Bottom nav overlap fix
+- ✅ Product image upload fix
+- ✅ Product editing
 
-### Iteration 138: POS Enhancements & Navigation
-| Feature | Status | Implementation |
-|---------|--------|----------------|
-| Fast Cash Buttons | ✅ COMPLETE | $1-$10K buttons, customizable |
-| Change Due Calculator | ✅ COMPLETE | Shows change due / still owed |
-| Digital Wallet Input | ✅ COMPLETE | Amount + wallet type selector |
-| View/Manage Buttons | ✅ COMPLETE | Discover section, role-based visibility |
-| Pages in More Menu | ✅ COMPLETE | FileText icon, cyan gradient |
+### Iteration 138: POS Enhancements
+- ✅ Fast Cash Buttons ($1-$10K)
+- ✅ Change Due Calculator
+- ✅ Digital Wallet Input
+- ✅ View/Manage Buttons
+- ✅ Pages in More Menu
 
 ### Iteration 139: Subscriptions & CRM
-| Feature | Status | Implementation |
-|---------|--------|----------------|
-| Subscription Toggle | ✅ COMPLETE | Weekly/monthly/yearly, trial period |
-| Customer CRM Manager | ✅ COMPLETE | Stats, search, filter, actions |
-| Logo Upload | ✅ COMPLETE | Settings tab, preview, remove |
+- ✅ Subscription Toggle
+- ✅ Customer CRM Manager
+- ✅ Logo Upload
 
 ### Iteration 140: Full Feature Set
-| Feature | Status | Implementation |
-|---------|--------|----------------|
-| Language Selector | ✅ COMPLETE | 6 languages on public pages |
-| WebSocket Real-Time Sync | ✅ COMPLETE | MongoDB Change Streams |
-| Stripe Subscriptions API | ✅ COMPLETE | Full product/checkout/cancel flow |
-| Customer Email Integration | ✅ COMPLETE | Resend API for offers/reviews |
-| Customizable Fast Cash | ✅ COMPLETE | Backend storage, Settings UI |
-| Enhanced Barcode Scanner | ✅ COMPLETE | AI scan + barcode existing |
+- ✅ Language Selector
+- ✅ WebSocket Real-Time Sync
+- ✅ Stripe Subscriptions API
+- ✅ Customer Email Integration
+- ✅ Customizable Fast Cash Buttons
 
 ---
 
-## API Endpoints Created
+## API Endpoints Summary
 
-### POS Settings
+### POS
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/member-pages/{page_id}/pos-settings` | GET | Get POS settings including fast cash buttons |
+| `/api/member-pages/{page_id}/pos-settings` | GET | Get POS settings |
 | `/api/member-pages/{page_id}/pos-settings` | PUT | Update POS settings |
+| `/api/member-pages/{page_id}/pos-customers/search` | GET | Search customers for autofill |
+| `/api/member-pages/{page_id}/card-settings` | PUT | Update Discover card appearance |
 
 ### Stripe Subscriptions
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/payments/stripe/subscriptions/create-product` | POST | Create Stripe subscription product |
-| `/api/payments/stripe/subscriptions/checkout` | POST | Create subscription checkout session |
-| `/api/payments/stripe/subscriptions/status/{session_id}` | GET | Check subscription status |
+| `/api/payments/stripe/subscriptions/create-product` | POST | Create subscription product |
+| `/api/payments/stripe/subscriptions/checkout` | POST | Create checkout session |
+| `/api/payments/stripe/subscriptions/status/{session_id}` | GET | Check status |
 | `/api/payments/stripe/subscriptions/cancel` | POST | Cancel subscription |
-| `/api/payments/stripe/subscriptions/page/{page_id}` | GET | Get page subscriptions (MRR/ARR) |
 
 ### Customer CRM
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/page-analytics/{page_id}/customers` | GET | Get customer data and stats |
-| `/api/page-analytics/{page_id}/send-customer-email` | POST | Send offer or review request email |
+| `/api/page-analytics/{page_id}/customers` | GET | Get customer data |
+| `/api/page-analytics/{page_id}/send-customer-email` | POST | Send promotional email |
 
 ---
 
-## Frontend Components Updated/Created
+## Real-Time Sync Events (WebSocket)
 
-### New Components
-- `CustomerCRMManager.jsx` - Full CRM with stats, search, filter, email actions
-- `POSFastCashSettings` - In-dashboard component for customizing fast cash buttons
-
-### Updated Components
-- `PublicPageView.jsx` - Added LanguageSelector
-- `POSTerminal.jsx` - Dynamic fast cash buttons from posSettings
-- `MemberPageDashboard.jsx` - Subscription toggle, logo upload, customers tab, POS settings
-- `Pages.jsx` - View/Manage buttons with role-based visibility
-- `BottomNav.jsx` - Pages link in More menu
-
----
-
-## Test Results Summary
-
-| Iteration | Backend Tests | Frontend Tests | Pass Rate |
-|-----------|---------------|----------------|-----------|
-| 137 | 11/11 | 100% | ✅ 100% |
-| 138 | N/A | 10/10 | ✅ 100% |
-| 139 | 6/6 | 9/9 | ✅ 100% |
-| 140 | 14/14 | 11/11 | ✅ 100% |
-
-**Total: 41 backend tests, 40 frontend verifications - All Passed**
-
----
-
-## Core Architecture
-
-### Frontend (React.js)
-```
-/frontend/src/components/member-pages/
-├── MemberPageDashboard.jsx     # Main dashboard with all tabs
-├── POSTerminal.jsx             # Point of Sale terminal
-├── PublicPageView.jsx          # Public customer-facing view
-├── CustomerCRMManager.jsx      # Customer relationship management
-├── ScannerTools.jsx            # Barcode/AI scanner
-└── ...other components
-```
-
-### Backend (FastAPI)
-```
-/backend/
-├── server.py                   # Main FastAPI app
-├── member_pages_system.py      # Pages, products, orders, CRM, POS
-├── stripe_payments.py          # Stripe payments & subscriptions
-└── ...other systems
-```
-
-### Database (MongoDB)
-- `member_pages` - Page documents
-- `page_products` - Product listings
-- `page_orders` - Order records
-- `subscription_products` - Stripe subscription configs
-- `customer_subscriptions` - Customer subscription records
-- `customer_email_logs` - Email delivery logs
-
----
-
-## Real-Time Sync (WebSocket)
-
-### Connection
-- Endpoint: `wss://blendlink.net/api/member-pages/ws/{page_id}`
-- Backend: MongoDB Change Streams monitoring 8 collections
-
-### Broadcast Events
-- `pos_settings_updated` - When fast cash buttons changed
-- `order_status_changed` - When order status updates
-- `inventory_updated` - When stock changes
-- `product_updated` - When product edited
-- `page_updated` - When page settings changed
+| Event | Trigger | Data |
+|-------|---------|------|
+| `pos_settings_updated` | POS settings saved | settings object |
+| `card_settings_updated` | Card appearance saved | background_color, background_image |
+| `order_status_changed` | Order updated | order details |
+| `inventory_updated` | Stock changed | product, quantity |
+| `product_updated` | Product edited | product details |
 
 ---
 
@@ -155,51 +153,16 @@ All requested mobile-friendly fixes and feature updates have been implemented an
 
 ---
 
-## Critical Constraints (STRICTLY FOLLOWED)
+## Critical Constraints (MUST FOLLOW)
 
-1. ✅ All changes confined to `/pages`, `/member-pages/[slug]`, POS, Discover, bottom nav
-2. ✅ No global changes to homepage, /feed, profiles, social feed, chat, notifications
-3. ✅ Public pages remain fully public without login requirement
-4. ✅ All changes mobile-responsive (tested on 375x812 viewport)
-5. ✅ WebSocket real-time sync active for all data changes
-6. ✅ 8% platform fee applied to all transactions (cash and digital)
-
----
-
-## Feature Details
-
-### Language Selector on Public Pages
-- Location: Header, next to share button
-- Languages: English, Español, Français, Nederlands, العربية, Deutsch
-- Compact mode for mobile
-
-### Customizable Fast Cash Buttons
-- Settings: Dashboard > Settings Tab > POS Fast Cash Buttons
-- Features: Add/remove amounts, presets (Basic/Full), max 20 buttons
-- Storage: Backend `pos_settings` field in page document
-- Display: POS Terminal uses currency symbol from page settings
-
-### Stripe Subscriptions
-- Product Creation: Integrates with existing page products
-- Checkout: Redirects to Stripe checkout, handles trial periods
-- Fee: 8% platform fee on all recurring charges
-- Tracking: MRR/ARR calculations for page owners
-
-### Customer CRM with Email
-- Stats: Total customers, repeat customers, revenue, avg order
-- Filters: All, Repeat, Recent (30d)
-- Actions: Send Offer (discount emails), Request Review
-- Email Service: Resend API (configured in .env)
-
----
-
-## Known Limitations
-
-1. **Email Testing Mode**: Resend in testing mode only sends to verified emails
-2. **Stripe Testing**: Live key configured, test with caution
-3. **Analytics Banner**: Minor "Failed to load analytics" on some pages (non-critical)
+1. ✅ All changes confined to `/pages`, `/member-pages/[slug]`, POS, Discover
+2. ✅ No global changes to homepage, /feed, profiles
+3. ✅ Public pages remain fully public
+4. ✅ Mobile-responsive (tested 375x812)
+5. ✅ Real-time WebSocket sync
+6. ✅ 8% platform fee on all transactions
 
 ---
 
 *Implementation Complete: February 11, 2026*
-*All features tested and verified working*
+*All features tested and verified working (Iterations 137-141)*
