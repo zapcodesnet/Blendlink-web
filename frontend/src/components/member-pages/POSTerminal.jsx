@@ -813,9 +813,13 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
 
         {/* Manual Entry Modal */}
         {showManualEntry && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowManualEntry(false)}>
-            <div className="bg-white rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
-              <div className="flex items-center justify-between mb-4">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4" onClick={() => setShowManualEntry(false)}>
+            <div 
+              className="bg-white rounded-2xl w-full max-w-md max-h-[85vh] flex flex-col shadow-2xl" 
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Header - Fixed at top */}
+              <div className="flex items-center justify-between p-4 border-b border-gray-100 flex-shrink-0">
                 <h3 className="font-bold text-lg flex items-center gap-2">
                   <Plus className="w-5 h-5 text-orange-500" />
                   Add Custom Item
@@ -825,11 +829,12 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
                 </button>
               </div>
               
-              <p className="text-sm text-gray-500 mb-4">
-                Add a product or service that's not in your regular list. 8% platform fee will be applied automatically.
-              </p>
-              
-              <div className="space-y-4">
+              {/* Scrollable Content */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                <p className="text-sm text-gray-500">
+                  Add a product or service that's not in your regular list. 8% platform fee will be applied automatically.
+                </p>
+                
                 <div>
                   <label className="text-sm font-medium mb-1 block">Item Name *</label>
                   <Input
@@ -883,7 +888,8 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
                 )}
               </div>
               
-              <div className="flex gap-3 mt-6">
+              {/* Footer Buttons - Fixed at bottom */}
+              <div className="flex gap-3 p-4 border-t border-gray-100 bg-white rounded-b-2xl flex-shrink-0">
                 <Button variant="outline" onClick={() => setShowManualEntry(false)} className="flex-1 h-12 rounded-xl">
                   Cancel
                 </Button>
