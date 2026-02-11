@@ -47,7 +47,7 @@ const PAGE_CATEGORIES = [
 // All API methods use production-safe text-first pattern automatically
 
 // Page Card Component - Modern Glassmorphism Design
-const PageCard = ({ page, onFollow, onUnfollow, onView, isFollowing, isOwner }) => {
+const PageCard = ({ page, onFollow, onUnfollow, onView, onManage, isFollowing, isOwner, canManage }) => {
   const CategoryIcon = PAGE_CATEGORIES.find(c => c.id === page.category)?.icon || FileText;
   const followerCount = page.subscriber_count || page.followers_count || 0;
   const pageSlug = page.slug || page.page_id;
@@ -67,6 +67,7 @@ const PageCard = ({ page, onFollow, onUnfollow, onView, isFollowing, isOwner }) 
     <div 
       className="member-page-card group relative overflow-hidden rounded-3xl border border-white/20 bg-white/70 backdrop-blur-xl shadow-lg hover:shadow-2xl hover:border-cyan-400/40 transition-all duration-300"
       style={{ touchAction: 'manipulation' }}
+      data-testid={`page-card-${page.page_id}`}
     >
       {/* Cover Image */}
       <div className={`h-28 bg-gradient-to-br ${getTypeGradient()} relative overflow-hidden`}>
