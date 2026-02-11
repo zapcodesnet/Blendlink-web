@@ -3017,7 +3017,7 @@ async def get_page_customers(
                         last_visit = f"{days_ago}d ago"
                     else:
                         last_visit = f"{days_ago // 30}mo ago"
-                except:
+                except (ValueError, TypeError, AttributeError):
                     pass
             
             customers.append({
