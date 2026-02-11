@@ -887,6 +887,7 @@ const DiscoverCardCustomization = ({ pageId, initialSettings = {} }) => {
 // POS Fast Cash Buttons Settings Component
 const POSFastCashSettings = ({ pageId, currencySymbol = "$" }) => {
   const [buttons, setButtons] = useState([1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 5000, 10000]);
+  const [enableReturningCustomerNotifications, setEnableReturningCustomerNotifications] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [newAmount, setNewAmount] = useState("");
@@ -904,6 +905,7 @@ const POSFastCashSettings = ({ pageId, currencySymbol = "$" }) => {
       if (response.ok) {
         const data = await response.json();
         setButtons(data.fast_cash_buttons || [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 5000, 10000]);
+        setEnableReturningCustomerNotifications(data.enable_returning_customer_notifications !== false);
       }
     } catch (err) {
       console.error("Failed to load POS settings:", err);
@@ -921,10 +923,13 @@ const POSFastCashSettings = ({ pageId, currencySymbol = "$" }) => {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ fast_cash_buttons: buttons })
+        body: JSON.stringify({ 
+          fast_cash_buttons: buttons,
+          enable_returning_customer_notifications: enableReturningCustomerNotifications
+        })
       });
       if (response.ok) {
-        toast.success("Fast cash buttons saved!");
+        toast.success("POS settings saved!");
       } else {
         throw new Error("Failed to save");
       }
@@ -962,22 +967,49 @@ const POSFastCashSettings = ({ pageId, currencySymbol = "$" }) => {
 
   return (
     <div className="space-y-4">
-      {/* Current Buttons */}
-      <div className="flex flex-wrap gap-2">
-        {buttons.map(amt => (
-          <div 
-            key={amt}
-            className="flex items-center gap-1 px-3 py-1.5 bg-green-100 text-green-800 rounded-lg text-sm font-medium"
-          >
-            {currencySymbol}{amt >= 1000 ? `${amt/1000}K` : amt}
-            <button
-              onClick={() => removeButton(amt)}
-              className="ml-1 text-green-600 hover:text-red-500"
-            >
-              <X className="w-3 h-3" />
-            </button>
+      {/* Returning Customer Notifications */}
+      <div className="flex items-center justify-between p-3 bg-cyan-50 rounded-xl border border-cyan-100">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-cyan-500 flex items-center justify-center">
+            <Bell className="w-5 h-5 text-white" />
           </div>
-        ))}
+          <div>
+            <p className="font-medium text-cyan-900">Returning Customer Alerts</p>
+            <p className="text-xs text-cyan-700">Get notified when a recognized customer returns</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setEnableReturningCustomerNotifications(!enableReturningCustomerNotifications)}
+          className={`w-12 h-6 rounded-full transition-colors ${
+            enableReturningCustomerNotifications ? "bg-cyan-500" : "bg-gray-300"
+          }`}
+          data-testid="returning-customer-notifications-toggle"
+        >
+          <div className={`w-5 h-5 bg-white rounded-full shadow transform transition-transform ${
+            enableReturningCustomerNotifications ? "translate-x-6" : "translate-x-0.5"
+          }`} />
+        </button>
+      </div>
+
+      {/* Current Buttons */}
+      <div>
+        <label className="text-sm font-medium mb-2 block">Fast Cash Buttons</label>
+        <div className="flex flex-wrap gap-2">
+          {buttons.map(amt => (
+            <div 
+              key={amt}
+              className="flex items-center gap-1 px-3 py-1.5 bg-green-100 text-green-800 rounded-lg text-sm font-medium"
+            >
+              {currencySymbol}{amt >= 1000 ? `${amt/1000}K` : amt}
+              <button
+                onClick={() => removeButton(amt)}
+                className="ml-1 text-green-600 hover:text-red-500"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Add New Button */}
@@ -1015,7 +1047,7 @@ const POSFastCashSettings = ({ pageId, currencySymbol = "$" }) => {
       {/* Save Button */}
       <Button onClick={saveSettings} disabled={saving} className="w-full">
         {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-        Save Fast Cash Buttons
+        Save POS Settings
       </Button>
     </div>
   );
