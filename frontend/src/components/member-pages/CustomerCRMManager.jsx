@@ -255,7 +255,7 @@ export default function CustomerCRMManager({ pageId }) {
     setLoading(true);
     try {
       const token = localStorage.getItem("blendlink_token");
-      const response = await fetch(`${API_URL}/api/pages/${pageId}/customers`, {
+      const response = await fetch(`${API_URL}/api/page-analytics/${pageId}/customers`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
