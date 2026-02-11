@@ -919,62 +919,44 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
                 }
               </div>
             )}
-            {/* Enhanced Fast Cash Buttons - Two rows */}
+            {/* Enhanced Fast Cash Buttons - Using customizable settings */}
             <div className="mt-3 space-y-2">
-              <div className="grid grid-cols-4 gap-2">
-                {[1, 2, 5, 10].map(amt => (
-                  <button
-                    key={amt}
-                    onClick={() => setCashReceived(amt)}
-                    className={`py-2.5 rounded-lg font-medium transition-colors ${
-                      cashReceived === amt 
-                        ? 'bg-green-600 text-white' 
-                        : 'bg-green-200 text-green-800 hover:bg-green-300'
-                    }`}
-                    data-testid={`fast-cash-${amt}`}
-                  >
-                    ${amt}
-                  </button>
-                ))}
-              </div>
-              <div className="grid grid-cols-4 gap-2">
-                {[20, 50, 100, 200].map(amt => (
-                  <button
-                    key={amt}
-                    onClick={() => setCashReceived(amt)}
-                    className={`py-2.5 rounded-lg font-medium transition-colors ${
-                      cashReceived === amt 
-                        ? 'bg-green-600 text-white' 
-                        : 'bg-green-200 text-green-800 hover:bg-green-300'
-                    }`}
-                    data-testid={`fast-cash-${amt}`}
-                  >
-                    ${amt}
-                  </button>
-                ))}
-              </div>
-              <div className="grid grid-cols-4 gap-2">
-                {[500, 1000, 5000, 10000].map(amt => (
-                  <button
-                    key={amt}
-                    onClick={() => setCashReceived(amt)}
-                    className={`py-2.5 rounded-lg font-medium text-sm transition-colors ${
-                      cashReceived === amt 
-                        ? 'bg-green-600 text-white' 
-                        : 'bg-green-200 text-green-800 hover:bg-green-300'
-                    }`}
-                    data-testid={`fast-cash-${amt}`}
-                  >
-                    ${amt >= 1000 ? `${amt/1000}K` : amt}
-                  </button>
-                ))}
-              </div>
+              {(() => {
+                // Get buttons from settings or use defaults
+                const fastCashButtons = posSettings?.fast_cash_buttons || [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 5000, 10000];
+                const currencySymbol = posSettings?.currency_symbol || "$";
+                
+                // Split buttons into rows of 4
+                const rows = [];
+                for (let i = 0; i < fastCashButtons.length; i += 4) {
+                  rows.push(fastCashButtons.slice(i, i + 4));
+                }
+                
+                return rows.map((row, rowIdx) => (
+                  <div key={rowIdx} className="grid grid-cols-4 gap-2">
+                    {row.map(amt => (
+                      <button
+                        key={amt}
+                        onClick={() => setCashReceived(amt)}
+                        className={`py-2.5 rounded-lg font-medium transition-colors ${
+                          cashReceived === amt 
+                            ? 'bg-green-600 text-white' 
+                            : 'bg-green-200 text-green-800 hover:bg-green-300'
+                        }`}
+                        data-testid={`fast-cash-${amt}`}
+                      >
+                        {currencySymbol}{amt >= 1000 ? `${amt/1000}K` : amt}
+                      </button>
+                    ))}
+                  </div>
+                ));
+              })()}
               <button
                 onClick={() => setCashReceived(Math.ceil(total))}
                 className="w-full py-3 rounded-lg bg-green-600 text-white font-bold hover:bg-green-700 transition-colors"
                 data-testid="fast-cash-exact"
               >
-                Exact Amount: ${total.toFixed(2)}
+                Exact Amount: {posSettings?.currency_symbol || "$"}{total.toFixed(2)}
               </button>
             </div>
           </div>
