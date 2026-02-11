@@ -19,7 +19,7 @@ import os
 import json
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pages-enhance.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://stripe-fix-29.preview.emergentagent.com').rstrip('/')
 
 # Test credentials
 USER1_EMAIL = "test@blendlink.com"
