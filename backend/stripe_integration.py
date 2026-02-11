@@ -284,7 +284,7 @@ async def create_withdrawal(
     """
     Create a withdrawal request.
     Requires KYC verification.
-    1% fee to platform.
+    2% fee to platform (updated from 1%).
     """
     # Check KYC status
     user = await db.users.find_one({"user_id": current_user["user_id"]})
@@ -302,8 +302,9 @@ async def create_withdrawal(
     if data.amount_usd < 10:
         raise HTTPException(status_code=400, detail="Minimum withdrawal is $10")
     
-    # Calculate fee (1%)
-    fee = round(data.amount_usd * 0.01, 2)
+    # Calculate fee (2% - updated as per business requirement)
+    WITHDRAWAL_FEE_RATE = 0.02  # 2%
+    fee = round(data.amount_usd * WITHDRAWAL_FEE_RATE, 2)
     net_amount = round(data.amount_usd - fee, 2)
     
     # Create withdrawal request
