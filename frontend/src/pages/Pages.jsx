@@ -137,42 +137,52 @@ const PageCard = ({ page, onFollow, onUnfollow, onView, onManage, isFollowing, i
           </div>
         )}
         
-        {/* Actions */}
+        {/* Actions - Always show View button, Manage only for authorized users */}
         <div className="flex gap-3 mt-5">
-          {isOwner ? (
+          {/* View button - visible to everyone */}
+          <Button 
+            size="sm" 
+            className="flex-1 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded-xl h-10"
+            onClick={() => onView(page)}
+            data-testid={`page-view-${page.page_id}`}
+          >
+            <ExternalLink className="w-4 h-4 mr-2" /> View
+          </Button>
+          
+          {/* Manage button - only for owners/authorized users */}
+          {(isOwner || canManage) && (
             <Button 
               size="sm" 
               className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white border-0 rounded-xl shadow-lg shadow-cyan-500/25 h-10"
-              onClick={() => onView(page)}
+              onClick={() => onManage(page)}
+              data-testid={`page-manage-${page.page_id}`}
             >
               <Settings className="w-4 h-4 mr-2" /> Manage
             </Button>
-          ) : isFollowing ? (
-            <>
-              <Button 
-                size="sm" 
-                className="flex-1 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded-xl h-10"
-                onClick={() => onView(page)}
-              >
-                <ExternalLink className="w-4 h-4 mr-2" /> View
-              </Button>
+          )}
+          
+          {/* Follow/Unfollow button for non-owners */}
+          {!isOwner && !canManage && (
+            isFollowing ? (
               <Button 
                 size="sm" 
                 variant="outline" 
                 className="rounded-xl h-10 border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
                 onClick={() => onUnfollow(page.page_id)}
+                data-testid={`page-unfollow-${page.page_id}`}
               >
                 <BellOff className="w-4 h-4" />
               </Button>
-            </>
-          ) : (
-            <Button 
-              size="sm" 
-              className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white border-0 rounded-xl shadow-lg shadow-emerald-500/25 h-10"
-              onClick={() => onFollow(page.page_id)}
-            >
-              <Heart className="w-4 h-4 mr-2" /> Follow
-            </Button>
+            ) : (
+              <Button 
+                size="sm" 
+                className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white border-0 rounded-xl shadow-lg shadow-emerald-500/25 h-10 px-4"
+                onClick={() => onFollow(page.page_id)}
+                data-testid={`page-follow-${page.page_id}`}
+              >
+                <Heart className="w-4 h-4" />
+              </Button>
+            )
           )}
         </div>
       </div>
