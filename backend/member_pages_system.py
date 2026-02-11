@@ -3040,6 +3040,156 @@ async def page_websocket(websocket: WebSocket, page_id: str):
 
 # ============== CUSTOMERS / CRM ENDPOINTS ==============
 
+import resend
+
+class SendCustomerEmailRequest(BaseModel):
+    """Request to send email to a customer"""
+    customer_email: str
+    customer_name: Optional[str] = None
+    email_type: str  # "offer" or "review_request"
+    subject: str
+    message: str
+    discount_type: Optional[str] = None  # percentage, fixed, free_item
+    discount_value: Optional[float] = None
+    expiry_days: Optional[int] = 7
+
+
+@page_analytics_router.post("/{page_id}/send-customer-email")
+async def send_customer_email(
+    page_id: str,
+    request: SendCustomerEmailRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Send promotional email or review request to a customer"""
+    user_id = current_user["user_id"]
+    
+    # Verify page ownership
+    page = await db.member_pages.find_one({"page_id": page_id})
+    if not page or page["owner_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Get Resend API key
+    resend_api_key = os.environ.get("RESEND_API_KEY")
+    if not resend_api_key or resend_api_key == "":
+        # Return success but note email was simulated
+        return {
+            "success": True,
+            "simulated": True,
+            "message": "Email simulated (Resend not configured)"
+        }
+    
+    resend.api_key = resend_api_key
+    sender_email = os.environ.get("SENDER_EMAIL", "onboarding@resend.dev")
+    
+    # Build email HTML based on type
+    page_name = page.get("name", "Our Store")
+    page_slug = page.get("slug", page_id)
+    public_url = f"https://blendlink.net/{page_slug}"
+    
+    if request.email_type == "offer":
+        # Build offer email
+        discount_text = ""
+        if request.discount_type == "percentage":
+            discount_text = f"{request.discount_value}% OFF"
+        elif request.discount_type == "fixed":
+            discount_text = f"${request.discount_value} OFF"
+        elif request.discount_type == "free_item":
+            discount_text = "FREE ITEM"
+        
+        html_content = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #06b6d4, #3b82f6); padding: 30px; border-radius: 16px; text-align: center; color: white;">
+                <h1 style="margin: 0; font-size: 28px;">Special Offer Just For You!</h1>
+                <div style="font-size: 48px; font-weight: bold; margin: 20px 0; background: rgba(255,255,255,0.2); border-radius: 12px; padding: 15px;">
+                    {discount_text}
+                </div>
+            </div>
+            
+            <div style="padding: 30px; background: #f9fafb; border-radius: 16px; margin-top: 20px;">
+                <p style="font-size: 16px; color: #374151; margin-bottom: 20px;">
+                    Hi {request.customer_name or 'Valued Customer'},
+                </p>
+                <p style="font-size: 16px; color: #374151; margin-bottom: 20px;">
+                    {request.message}
+                </p>
+                <p style="font-size: 14px; color: #6b7280; margin-top: 20px;">
+                    Valid for {request.expiry_days} days. Visit us at:
+                </p>
+                <a href="{public_url}" style="display: inline-block; background: #06b6d4; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 10px;">
+                    Visit {page_name}
+                </a>
+            </div>
+            
+            <p style="text-align: center; color: #9ca3af; font-size: 12px; margin-top: 30px;">
+                You're receiving this because you're a valued customer of {page_name}
+            </p>
+        </div>
+        """
+    else:
+        # Review request email
+        html_content = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #f59e0b, #ef4444); padding: 30px; border-radius: 16px; text-align: center; color: white;">
+                <h1 style="margin: 0; font-size: 28px;">We'd Love Your Feedback!</h1>
+                <p style="margin-top: 10px; font-size: 18px;">⭐⭐⭐⭐⭐</p>
+            </div>
+            
+            <div style="padding: 30px; background: #f9fafb; border-radius: 16px; margin-top: 20px;">
+                <p style="font-size: 16px; color: #374151; margin-bottom: 20px;">
+                    Hi {request.customer_name or 'Valued Customer'},
+                </p>
+                <p style="font-size: 16px; color: #374151; margin-bottom: 20px;">
+                    {request.message}
+                </p>
+                <p style="font-size: 14px; color: #6b7280; margin-top: 20px;">
+                    Your review helps us improve and helps other customers find us!
+                </p>
+                <a href="{public_url}?action=review" style="display: inline-block; background: #f59e0b; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 10px;">
+                    Leave a Review
+                </a>
+            </div>
+            
+            <p style="text-align: center; color: #9ca3af; font-size: 12px; margin-top: 30px;">
+                Thank you for being a valued customer of {page_name}
+            </p>
+        </div>
+        """
+    
+    try:
+        # Send email using Resend
+        params = {
+            "from": sender_email,
+            "to": [request.customer_email],
+            "subject": request.subject,
+            "html": html_content
+        }
+        
+        email_result = await asyncio.to_thread(resend.Emails.send, params)
+        
+        # Log the email
+        await db.customer_email_logs.insert_one({
+            "log_id": f"email_{uuid.uuid4().hex[:12]}",
+            "page_id": page_id,
+            "customer_email": request.customer_email,
+            "customer_name": request.customer_name,
+            "email_type": request.email_type,
+            "subject": request.subject,
+            "resend_email_id": email_result.get("id"),
+            "status": "sent",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        return {
+            "success": True,
+            "email_id": email_result.get("id"),
+            "message": f"Email sent to {request.customer_email}"
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to send customer email: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
+
+
 @page_analytics_router.get("/{page_id}/customers")
 async def get_page_customers(
     page_id: str,
