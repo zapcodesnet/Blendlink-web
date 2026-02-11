@@ -2986,6 +2986,22 @@ async def search_pos_customers(
                 "last_purchase": last_purchase
             })
     
+    # Send notification for first matched returning customer (if notifications enabled)
+    if customers and notify_returning_customer:
+        pos_settings = page.get("pos_settings", {})
+        if pos_settings.get("enable_returning_customer_notifications", True):
+            first_customer = customers[0]
+            if first_customer.get("order_count", 0) >= 1:
+                # Send notification in background
+                asyncio.create_task(
+                    notify_returning_customer(
+                        db,
+                        page["owner_id"],
+                        first_customer,
+                        {"page_id": page_id, "name": page.get("name", "Your Page")}
+                    )
+                )
+    
     return {"customers": customers}
 
 
