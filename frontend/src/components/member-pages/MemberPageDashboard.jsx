@@ -36,6 +36,7 @@ import DailySalesReport from "./DailySalesReport";
 import TeamMembersManager from "./TeamMembersManager";
 import PlatformFeesManager from "./PlatformFeesManager";
 import CurrencySelector from "./CurrencySelector";
+import CustomerCRMManager from "./CustomerCRMManager";
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
