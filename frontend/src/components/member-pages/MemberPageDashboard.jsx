@@ -214,6 +214,29 @@ const ItemsTab = ({ page, pageType }) => {
   const config = getItemConfig();
   const Icon = config.icon;
 
+  const handleDeleteItem = async (item) => {
+    const itemId = item.product_id || item.item_id || item.service_id || item.rental_id;
+    if (!confirm(`Are you sure you want to delete "${item.name}"?`)) return;
+    
+    setDeletingItemId(itemId);
+    try {
+      if (pageType === "store") {
+        await memberPagesAPI.deleteProduct(page.page_id, itemId);
+      } else if (pageType === "restaurant") {
+        await memberPagesAPI.deleteMenuItem(page.page_id, itemId);
+      } else if (pageType === "services") {
+        await memberPagesAPI.deleteService(page.page_id, itemId);
+      } else if (pageType === "rental") {
+        await memberPagesAPI.deleteRental(page.page_id, itemId);
+      }
+      toast.success("Item deleted successfully");
+      loadItems();
+    } catch (err) {
+      toast.error(err.message || "Failed to delete item");
+    }
+    setDeletingItemId(null);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
