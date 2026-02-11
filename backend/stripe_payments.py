@@ -49,15 +49,31 @@ logger = logging.getLogger(__name__)
 # Platform fee rate - UPDATED to 10% as per business requirement
 PLATFORM_FEE_RATE = 0.10  # 10%
 
-# Log Stripe configuration status on module load
+# FORCE-VERIFY Stripe configuration status on module load
 stripe_api_key = os.environ.get("STRIPE_API_KEY", "")
 stripe_pub_key = os.environ.get("STRIPE_PUBLISHABLE_KEY", "")
+
+# CRITICAL: Verify LIVE mode - halt if not configured correctly
 if stripe_api_key:
-    key_prefix = stripe_api_key[:7] if len(stripe_api_key) > 7 else "******"
-    key_type = "LIVE" if stripe_api_key.startswith("sk_live") else "TEST"
-    logger.info(f"Stripe configured: {key_type} mode (key: {key_prefix}...)")
+    key_prefix = stripe_api_key[:10] if len(stripe_api_key) > 10 else "******"
+    if stripe_api_key.startswith("sk_live"):
+        logger.info(f"✅ STRIPE LIVE MODE VERIFIED - Key: {key_prefix}...")
+        print(f"✅ STRIPE LIVE MODE VERIFIED - Key: {key_prefix}...")
+    elif stripe_api_key.startswith("sk_test"):
+        logger.error(f"❌ STRIPE TEST MODE DETECTED - PRODUCTION SHOULD USE LIVE KEYS!")
+        print(f"❌ STRIPE TEST MODE DETECTED - Key: {key_prefix}...")
+    else:
+        logger.warning(f"⚠️ Unknown Stripe key format: {key_prefix}...")
 else:
-    logger.warning("Stripe API key not configured!")
+    logger.error("❌ STRIPE API KEY NOT CONFIGURED - PAYMENTS WILL FAIL!")
+    print("❌ STRIPE API KEY NOT CONFIGURED!")
+
+if stripe_pub_key:
+    pub_key_prefix = stripe_pub_key[:10] if len(stripe_pub_key) > 10 else "******"
+    if stripe_pub_key.startswith("pk_live"):
+        logger.info(f"✅ STRIPE PUBLISHABLE KEY LIVE MODE - Key: {pub_key_prefix}...")
+    elif stripe_pub_key.startswith("pk_test"):
+        logger.warning(f"⚠️ STRIPE PUBLISHABLE KEY IN TEST MODE!")
 
 # Router
 stripe_router = APIRouter(prefix="/payments/stripe", tags=["Stripe Payments"])
