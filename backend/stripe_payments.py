@@ -310,7 +310,7 @@ async def get_checkout_status(session_id: str, http_request: Request):
 async def process_stripe_refund(request: RefundPaymentRequest, http_request: Request):
     """
     Process a refund for a Stripe payment.
-    Automatically reverses the 8% platform fee.
+    Automatically reverses the 10% platform fee proportionally.
     """
     # Find the order
     order = await db.page_orders.find_one({"order_id": request.order_id})
