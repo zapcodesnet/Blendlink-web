@@ -246,14 +246,14 @@ const ItemsTab = ({ page, pageType }) => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-24">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="font-semibold flex items-center gap-2">
           <Icon className="w-5 h-5 text-primary" />
           {config.label} ({items.length})
         </h3>
-        <Button size="sm" onClick={() => setShowAddModal(true)}>
+        <Button size="sm" onClick={() => { setEditingItem(null); setShowAddModal(true); }} data-testid="add-item-btn">
           <Plus className="w-4 h-4 mr-1" /> Add {config.label.slice(0, -1)}
         </Button>
       </div>
@@ -263,82 +263,101 @@ const ItemsTab = ({ page, pageType }) => {
         <div className="text-center py-12 bg-muted/30 rounded-xl border border-dashed border-border">
           <Icon className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
           <p className="text-muted-foreground mb-4">No {config.label.toLowerCase()} yet</p>
-          <Button onClick={() => setShowAddModal(true)}>
+          <Button onClick={() => { setEditingItem(null); setShowAddModal(true); }}>
             <Plus className="w-4 h-4 mr-1" /> Add Your First {config.label.slice(0, -1)}
           </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {items.map((item) => (
-            <div 
-              key={item[config.idField]} 
-              className="bg-card rounded-xl border border-border overflow-hidden hover:shadow-md transition-shadow"
-            >
-              {/* Image */}
-              <div className="h-32 bg-muted relative">
-                {item.images?.[0] ? (
-                  <img src={item.images[0]} alt={item.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Icon className="w-8 h-8 text-muted-foreground" />
-                  </div>
-                )}
-                {item.is_featured && (
-                  <span className="absolute top-2 left-2 px-2 py-0.5 bg-yellow-500 text-white text-xs rounded-full">
-                    Featured
-                  </span>
-                )}
-                {!item.is_active && !item.is_available && (
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                    <span className="px-3 py-1 bg-red-500 text-white text-sm rounded-full">Inactive</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Details */}
-              <div className="p-4">
-                <h4 className="font-semibold truncate">{item.name}</h4>
-                <p className="text-sm text-muted-foreground truncate">{item.description}</p>
-                
-                <div className="flex items-center justify-between mt-3">
-                  <p className="text-lg font-bold text-primary">
-                    ${item.price?.toFixed(2) || item.daily_rate?.toFixed(2) || "0.00"}
-                    {item.daily_rate && <span className="text-xs text-muted-foreground">/day</span>}
-                  </p>
-                  {item.stock_quantity !== undefined && (
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${
-                      item.stock_quantity <= (item.low_stock_threshold || 5)
-                        ? "bg-red-100 text-red-700"
-                        : "bg-green-100 text-green-700"
-                    }`}>
-                      {item.stock_quantity} in stock
+          {items.map((item) => {
+            const itemId = item[config.idField];
+            return (
+              <div 
+                key={itemId} 
+                className="bg-card rounded-xl border border-border overflow-hidden hover:shadow-md transition-shadow"
+                data-testid={`item-card-${itemId}`}
+              >
+                {/* Image */}
+                <div className="h-32 bg-muted relative">
+                  {item.images?.[0] ? (
+                    <img src={item.images[0]} alt={item.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Icon className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                  )}
+                  {item.is_featured && (
+                    <span className="absolute top-2 left-2 px-2 py-0.5 bg-yellow-500 text-white text-xs rounded-full">
+                      Featured
                     </span>
+                  )}
+                  {!item.is_active && !item.is_available && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <span className="px-3 py-1 bg-red-500 text-white text-sm rounded-full">Inactive</span>
+                    </div>
                   )}
                 </div>
 
-                {/* Actions */}
-                <div className="flex gap-2 mt-3">
-                  <Button size="sm" variant="outline" className="flex-1">
-                    <Edit2 className="w-3 h-3 mr-1" /> Edit
-                  </Button>
-                  <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600 hover:bg-red-50">
-                    <Trash2 className="w-3 h-3" />
-                  </Button>
+                {/* Details */}
+                <div className="p-4">
+                  <h4 className="font-semibold truncate">{item.name}</h4>
+                  <p className="text-sm text-muted-foreground truncate">{item.description}</p>
+                  
+                  <div className="flex items-center justify-between mt-3">
+                    <p className="text-lg font-bold text-primary">
+                      ${item.price?.toFixed(2) || item.daily_rate?.toFixed(2) || "0.00"}
+                      {item.daily_rate && <span className="text-xs text-muted-foreground">/day</span>}
+                    </p>
+                    {item.stock_quantity !== undefined && (
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${
+                        item.stock_quantity <= (item.low_stock_threshold || 5)
+                          ? "bg-red-100 text-red-700"
+                          : "bg-green-100 text-green-700"
+                      }`}>
+                        {item.stock_quantity} in stock
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2 mt-3">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => { setEditingItem(item); setShowAddModal(true); }}
+                      data-testid={`edit-item-${itemId}`}
+                    >
+                      <Edit2 className="w-3 h-3 mr-1" /> Edit
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                      onClick={() => handleDeleteItem(item)}
+                      disabled={deletingItemId === itemId}
+                      data-testid={`delete-item-${itemId}`}
+                    >
+                      {deletingItemId === itemId ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      {/* Add Item Modal - Simplified for now */}
+      {/* Add/Edit Item Modal */}
       {showAddModal && (
         <AddItemModal 
           pageId={page.page_id} 
           pageType={pageType} 
-          onClose={() => setShowAddModal(false)}
+          editItem={editingItem}
+          onClose={() => { setShowAddModal(false); setEditingItem(null); }}
           onSuccess={() => {
             setShowAddModal(false);
+            setEditingItem(null);
             loadItems();
           }}
         />
