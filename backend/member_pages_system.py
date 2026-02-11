@@ -3022,6 +3022,41 @@ async def update_pos_settings(
     return {"success": True, "settings": settings}
 
 
+@member_pages_router.put("/{page_id}/card-settings")
+async def update_card_settings(
+    page_id: str,
+    settings: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update Discover card customization settings for a page"""
+    user_id = current_user["user_id"]
+    
+    page = await db.member_pages.find_one({"page_id": page_id})
+    if not page or page["owner_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Validate settings
+    allowed_fields = ["background_color", "background_image"]
+    card_settings = {k: v for k, v in settings.items() if k in allowed_fields}
+    
+    # Update the page's card settings
+    await db.member_pages.update_one(
+        {"page_id": page_id},
+        {"$set": {
+            "card_settings": card_settings,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Broadcast to connected clients via WebSocket for real-time sync
+    await page_sync_manager.broadcast_to_page(
+        page_id,
+        {"type": "card_settings_updated", "settings": card_settings}
+    )
+    
+    return {"success": True, "settings": card_settings}
+
+
 @member_pages_router.put("/orders/{order_id}/status")
 async def update_order_status(
     order_id: str,
