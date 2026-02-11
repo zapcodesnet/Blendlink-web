@@ -526,6 +526,7 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
             total,
             customer_name: customerName,
             customer_phone: customerPhone,
+            customer_email: customerEmail,
             table_number: tableNumber,
             notes,
             origin_url: window.location.origin
