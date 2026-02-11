@@ -138,9 +138,9 @@ export default function PageCheckout({
           })
         });
 
-        if (checkoutResponse.url) {
-          // Redirect to Stripe Checkout
-          window.location.href = checkoutResponse.url;
+        if (checkoutResponse.url || checkoutResponse.checkout_url) {
+          // Redirect to Stripe Checkout (live mode)
+          window.location.href = checkoutResponse.url || checkoutResponse.checkout_url;
         } else {
           throw new Error("Failed to create payment session");
         }
