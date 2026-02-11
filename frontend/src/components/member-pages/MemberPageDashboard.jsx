@@ -426,7 +426,9 @@ const AddItemModal = ({ pageId, pageType, onClose, onSuccess, editItem = null })
       }
 
       const data = await response.json();
-      setFormData(prev => ({ ...prev, images: [data.url, ...prev.images] }));
+      // Ensure we use the full URL for the image
+      const imageUrl = data.url.startsWith('http') ? data.url : `${API_URL}${data.url}`;
+      setFormData(prev => ({ ...prev, images: [imageUrl, ...prev.images] }));
       toast.success("Image uploaded!");
     } catch (err) {
       console.error("Upload error:", err);
