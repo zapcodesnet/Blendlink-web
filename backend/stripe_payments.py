@@ -707,7 +707,7 @@ async def cancel_subscription(request: CancelSubscriptionRequest):
     
     try:
         # Cancel in Stripe
-        subscription = stripe.Subscription.delete(request.subscription_id)
+        stripe.Subscription.delete(request.subscription_id)
         
         # Update our record
         await db.customer_subscriptions.update_one(
