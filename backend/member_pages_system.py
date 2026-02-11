@@ -2902,6 +2902,87 @@ async def get_pos_settings(
     }
 
 
+@member_pages_router.get("/{page_id}/pos-customers/search")
+async def search_pos_customers(
+    page_id: str,
+    q: str = "",
+    current_user: dict = Depends(get_current_user)
+):
+    """Search previous customers for POS autofill"""
+    user_id = current_user["user_id"]
+    
+    # Verify page ownership
+    page = await db.member_pages.find_one({"page_id": page_id})
+    if not page or page["owner_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    if not q or len(q) < 2:
+        return {"customers": []}
+    
+    # Search in page_orders for matching customers
+    search_regex = {"$regex": q, "$options": "i"}
+    
+    pipeline = [
+        {"$match": {
+            "page_id": page_id,
+            "$or": [
+                {"customer_name": search_regex},
+                {"customer_email": search_regex},
+                {"customer_phone": search_regex},
+                {"customer_info.name": search_regex},
+                {"customer_info.email": search_regex},
+                {"customer_info.phone": search_regex}
+            ]
+        }},
+        {"$group": {
+            "_id": {
+                "name": {"$ifNull": ["$customer_name", {"$ifNull": ["$customer_info.name", ""]}]},
+                "email": {"$ifNull": ["$customer_email", {"$ifNull": ["$customer_info.email", ""]}]},
+                "phone": {"$ifNull": ["$customer_phone", {"$ifNull": ["$customer_info.phone", ""]}]}
+            },
+            "order_count": {"$sum": 1},
+            "total_spent": {"$sum": "$total"},
+            "last_order": {"$max": "$created_at"}
+        }},
+        {"$sort": {"last_order": -1}},
+        {"$limit": 10}
+    ]
+    
+    results = await db.page_orders.aggregate(pipeline).to_list(10)
+    
+    customers = []
+    for r in results:
+        identifier = r["_id"]
+        if identifier.get("name") or identifier.get("email") or identifier.get("phone"):
+            # Calculate time since last purchase
+            last_purchase = "Unknown"
+            if r.get("last_order"):
+                try:
+                    last_date = datetime.fromisoformat(r["last_order"].replace("Z", "+00:00"))
+                    days_ago = (datetime.now(timezone.utc) - last_date).days
+                    if days_ago == 0:
+                        last_purchase = "Today"
+                    elif days_ago == 1:
+                        last_purchase = "Yesterday"
+                    elif days_ago < 30:
+                        last_purchase = f"{days_ago} days ago"
+                    else:
+                        last_purchase = f"{days_ago // 30} months ago"
+                except (ValueError, TypeError, AttributeError):
+                    pass
+            
+            customers.append({
+                "name": identifier.get("name") or "",
+                "email": identifier.get("email") or "",
+                "phone": identifier.get("phone") or "",
+                "order_count": r["order_count"],
+                "total_spent": r.get("total_spent", 0),
+                "last_purchase": last_purchase
+            })
+    
+    return {"customers": customers}
+
+
 @member_pages_router.put("/{page_id}/pos-settings")
 async def update_pos_settings(
     page_id: str,
