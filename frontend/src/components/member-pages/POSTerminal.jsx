@@ -12,8 +12,9 @@ import {
   ShoppingCart, CreditCard, Banknote, Smartphone, Plus, Minus,
   Trash2, Receipt, Loader2, Check, X, User, Phone, Table,
   Percent, DollarSign, Printer, ChevronRight, Zap, ScanBarcode,
-  ArrowLeft, Volume2
+  ArrowLeft, Volume2, Mail
 } from "lucide-react";
+import { Textarea } from "../ui/textarea";
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
