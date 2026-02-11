@@ -18,6 +18,7 @@ import {
   Package, Search, Plus, Minus, Truck, Navigation, Copy, Mail,
   Settings, Users, MessageSquare, StarHalf, ChevronRight, Zap
 } from "lucide-react";
+import LanguageSelector from "../LanguageSelector";
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
