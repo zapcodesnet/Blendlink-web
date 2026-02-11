@@ -19,16 +19,24 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-# Stripe API keys
+# Stripe API keys - FORCE-LOAD from environment
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
 STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY", "")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
 
-# Initialize Stripe
+# FORCE-VERIFY Stripe is in LIVE mode
 if STRIPE_SECRET_KEY:
     stripe.api_key = STRIPE_SECRET_KEY
+    key_prefix = STRIPE_SECRET_KEY[:12] if len(STRIPE_SECRET_KEY) > 12 else "******"
+    if STRIPE_SECRET_KEY.startswith("sk_live"):
+        logger.info(f"✅ STRIPE INTEGRATION: LIVE MODE VERIFIED - {key_prefix}...")
+        print(f"✅ STRIPE INTEGRATION: LIVE MODE VERIFIED - {key_prefix}...")
+    elif STRIPE_SECRET_KEY.startswith("sk_test"):
+        logger.error(f"❌ STRIPE INTEGRATION: TEST MODE DETECTED - SHOULD BE LIVE!")
+        print(f"❌ STRIPE INTEGRATION: TEST MODE DETECTED!")
 else:
-    logger.warning("STRIPE_SECRET_KEY not configured")
+    logger.error("❌ STRIPE_SECRET_KEY not configured - Payments will fail!")
+    print("❌ STRIPE_SECRET_KEY not configured!")
 
 # Get MongoDB from server
 from server import db, get_current_user
