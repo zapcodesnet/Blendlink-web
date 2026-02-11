@@ -597,6 +597,64 @@ const AddItemModal = ({ pageId, pageType, onClose, onSuccess, editItem = null })
             />
           </div>
 
+          {/* Subscription Option */}
+          <div className="bg-purple-50 rounded-xl p-4 border border-purple-100">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h4 className="font-medium text-purple-900">Recurring / Subscription</h4>
+                <p className="text-xs text-purple-600">Enable for recurring billing</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, is_subscription: !formData.is_subscription })}
+                className={`w-12 h-6 rounded-full transition-colors ${
+                  formData.is_subscription ? "bg-purple-500" : "bg-gray-300"
+                }`}
+                data-testid="subscription-toggle"
+              >
+                <div className={`w-5 h-5 bg-white rounded-full shadow transform transition-transform ${
+                  formData.is_subscription ? "translate-x-6" : "translate-x-0.5"
+                }`} />
+              </button>
+            </div>
+            
+            {formData.is_subscription && (
+              <div className="space-y-3 pt-2 border-t border-purple-200">
+                {/* Frequency */}
+                <div>
+                  <label className="text-sm font-medium text-purple-800 mb-1 block">Billing Frequency</label>
+                  <select
+                    value={formData.subscription_frequency}
+                    onChange={(e) => setFormData({ ...formData, subscription_frequency: e.target.value })}
+                    className="w-full h-10 rounded-lg border border-purple-300 bg-white px-3 text-sm"
+                    data-testid="subscription-frequency"
+                  >
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
+                  </select>
+                </div>
+                
+                {/* Trial Period */}
+                <div>
+                  <label className="text-sm font-medium text-purple-800 mb-1 block">Trial Period (days)</label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={formData.trial_period_days}
+                    onChange={(e) => setFormData({ ...formData, trial_period_days: parseInt(e.target.value) || 0 })}
+                    placeholder="0 for no trial"
+                    className="border-purple-300"
+                    data-testid="trial-period-input"
+                  />
+                  <p className="text-xs text-purple-600 mt-1">
+                    Set to 0 for no trial period. 8% platform fee applies to each charge.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="flex gap-2 pt-2">
             <Button type="button" variant="outline" onClick={onClose} className="flex-1">
               Cancel
