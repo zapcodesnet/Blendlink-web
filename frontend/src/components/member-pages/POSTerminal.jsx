@@ -262,13 +262,45 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
     setLoadingCustomers(false);
   };
 
-  // Select customer from suggestions
+  // Select customer from suggestions - shows returning customer notification
   const selectCustomer = (customer) => {
     setCustomerName(customer.name || "");
     setCustomerPhone(customer.phone || "");
     setCustomerEmail(customer.email || "");
     setShowCustomerSuggestions(false);
-    toast.success(`Customer selected: ${customer.name || customer.email || customer.phone}`);
+    
+    // Show enhanced returning customer notification
+    const orderCount = customer.order_count || 0;
+    const totalSpent = customer.total_spent || 0;
+    const customerDisplayName = customer.name || customer.email || customer.phone || "Customer";
+    
+    if (orderCount > 5) {
+      toast.success(
+        <div className="flex items-start gap-2">
+          <span className="text-2xl">🌟</span>
+          <div>
+            <p className="font-bold">VIP Customer!</p>
+            <p className="text-sm">{customerDisplayName}</p>
+            <p className="text-xs text-gray-600">{orderCount} orders · ${totalSpent.toFixed(2)} total</p>
+          </div>
+        </div>,
+        { duration: 5000 }
+      );
+    } else if (orderCount > 1) {
+      toast.success(
+        <div className="flex items-start gap-2">
+          <span className="text-2xl">👋</span>
+          <div>
+            <p className="font-bold">Welcome back!</p>
+            <p className="text-sm">{customerDisplayName}</p>
+            <p className="text-xs text-gray-600">Last visit: {customer.last_purchase}</p>
+          </div>
+        </div>,
+        { duration: 4000 }
+      );
+    } else {
+      toast.success(`Customer selected: ${customerDisplayName}`);
+    }
   };
 
   // Debounced customer search
