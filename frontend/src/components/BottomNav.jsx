@@ -74,7 +74,7 @@ export const BottomNav = () => {
     { path: "/profile", icon: User, label: t('nav.profile') || "Profile" },
   ];
 
-  // "More" menu items (order: Games, Minted Photos, Facebook Group)
+  // "More" menu items (order: Games, Minted Photos, Facebook Group, Pages)
   const moreMenuItems = [
     { 
       id: "games",
@@ -107,6 +107,17 @@ export const BottomNav = () => {
       action: () => {
         setShowMoreMenu(false);
         setShowFacebookOverlay(true);
+      }
+    },
+    { 
+      id: "pages",
+      path: "/pages", 
+      icon: FileText, 
+      label: "Pages",
+      description: "Create & manage pages",
+      action: () => {
+        navigate('/pages');
+        setShowMoreMenu(false);
       }
     },
   ];
