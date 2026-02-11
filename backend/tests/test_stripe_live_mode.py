@@ -39,19 +39,19 @@ class TestStripeConfiguration:
     
     def test_backend_env_has_live_secret_key(self):
         """Backend .env should have sk_live_ secret key"""
-        stripe_api_key = os.environ.get('STRIPE_API_KEY', '')
+        stripe_api_key = BACKEND_ENV.get('STRIPE_API_KEY', '')
         assert stripe_api_key.startswith('sk_live_'), f"STRIPE_API_KEY should start with 'sk_live_' but got: {stripe_api_key[:10]}..."
         print(f"✅ Backend STRIPE_API_KEY is LIVE mode: {stripe_api_key[:15]}...")
     
     def test_frontend_env_has_live_publishable_key(self):
         """Frontend .env should have pk_live_ publishable key"""
-        stripe_pub_key = os.environ.get('REACT_APP_STRIPE_PUBLISHABLE_KEY', '')
+        stripe_pub_key = FRONTEND_ENV.get('REACT_APP_STRIPE_PUBLISHABLE_KEY', '')
         assert stripe_pub_key.startswith('pk_live_'), f"REACT_APP_STRIPE_PUBLISHABLE_KEY should start with 'pk_live_' but got: {stripe_pub_key[:10]}..."
         print(f"✅ Frontend REACT_APP_STRIPE_PUBLISHABLE_KEY is LIVE mode: {stripe_pub_key[:15]}...")
     
     def test_backend_stripe_secret_key_also_live(self):
         """Backend .env STRIPE_SECRET_KEY should also be live"""
-        stripe_secret = os.environ.get('STRIPE_SECRET_KEY', '')
+        stripe_secret = BACKEND_ENV.get('STRIPE_SECRET_KEY', '')
         if stripe_secret:
             assert stripe_secret.startswith('sk_live_'), f"STRIPE_SECRET_KEY should start with 'sk_live_' but got: {stripe_secret[:10]}..."
             print(f"✅ Backend STRIPE_SECRET_KEY is LIVE mode: {stripe_secret[:15]}...")
@@ -60,7 +60,7 @@ class TestStripeConfiguration:
     
     def test_backend_stripe_publishable_key_live(self):
         """Backend .env STRIPE_PUBLISHABLE_KEY should be live"""
-        stripe_pub = os.environ.get('STRIPE_PUBLISHABLE_KEY', '')
+        stripe_pub = BACKEND_ENV.get('STRIPE_PUBLISHABLE_KEY', '')
         if stripe_pub:
             assert stripe_pub.startswith('pk_live_'), f"STRIPE_PUBLISHABLE_KEY should start with 'pk_live_' but got: {stripe_pub[:10]}..."
             print(f"✅ Backend STRIPE_PUBLISHABLE_KEY is LIVE mode: {stripe_pub[:15]}...")
