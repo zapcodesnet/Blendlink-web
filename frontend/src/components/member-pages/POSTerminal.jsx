@@ -902,39 +902,102 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
                 placeholder="Enter amount received"
                 value={cashReceived || ""}
                 onChange={(e) => setCashReceived(parseFloat(e.target.value) || 0)}
-                className="h-12 pl-10 rounded-xl border-green-300 bg-white text-lg font-bold"
+                className="h-14 pl-10 rounded-xl border-green-300 bg-white text-xl font-bold"
+                data-testid="cash-received-input"
               />
             </div>
-            {cashReceived > 0 && cashReceived >= total && (
-              <div className="mt-2 p-2 bg-green-100 rounded-lg text-green-800 font-bold text-center">
-                Change: ${(cashReceived - total).toFixed(2)}
+            {/* Change Due Calculator */}
+            {cashReceived > 0 && (
+              <div className={`mt-3 p-3 rounded-xl font-bold text-center text-lg ${
+                cashReceived >= total 
+                  ? 'bg-green-100 text-green-800' 
+                  : 'bg-red-100 text-red-800'
+              }`}>
+                {cashReceived >= total 
+                  ? `Change Due: $${(cashReceived - total).toFixed(2)}`
+                  : `Still Owed: $${(total - cashReceived).toFixed(2)}`
+                }
               </div>
             )}
-            {/* Quick cash buttons */}
-            <div className="flex gap-2 mt-3">
-              {[10, 20, 50, 100].map(amt => (
-                <button
-                  key={amt}
-                  onClick={() => setCashReceived(amt)}
-                  className="flex-1 py-2 rounded-lg bg-green-200 text-green-800 font-medium hover:bg-green-300 transition-colors"
-                >
-                  ${amt}
-                </button>
-              ))}
+            {/* Enhanced Fast Cash Buttons - Two rows */}
+            <div className="mt-3 space-y-2">
+              <div className="grid grid-cols-4 gap-2">
+                {[1, 2, 5, 10].map(amt => (
+                  <button
+                    key={amt}
+                    onClick={() => setCashReceived(amt)}
+                    className={`py-2.5 rounded-lg font-medium transition-colors ${
+                      cashReceived === amt 
+                        ? 'bg-green-600 text-white' 
+                        : 'bg-green-200 text-green-800 hover:bg-green-300'
+                    }`}
+                    data-testid={`fast-cash-${amt}`}
+                  >
+                    ${amt}
+                  </button>
+                ))}
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {[20, 50, 100, 200].map(amt => (
+                  <button
+                    key={amt}
+                    onClick={() => setCashReceived(amt)}
+                    className={`py-2.5 rounded-lg font-medium transition-colors ${
+                      cashReceived === amt 
+                        ? 'bg-green-600 text-white' 
+                        : 'bg-green-200 text-green-800 hover:bg-green-300'
+                    }`}
+                    data-testid={`fast-cash-${amt}`}
+                  >
+                    ${amt}
+                  </button>
+                ))}
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {[500, 1000, 5000, 10000].map(amt => (
+                  <button
+                    key={amt}
+                    onClick={() => setCashReceived(amt)}
+                    className={`py-2.5 rounded-lg font-medium text-sm transition-colors ${
+                      cashReceived === amt 
+                        ? 'bg-green-600 text-white' 
+                        : 'bg-green-200 text-green-800 hover:bg-green-300'
+                    }`}
+                    data-testid={`fast-cash-${amt}`}
+                  >
+                    ${amt >= 1000 ? `${amt/1000}K` : amt}
+                  </button>
+                ))}
+              </div>
               <button
                 onClick={() => setCashReceived(Math.ceil(total))}
-                className="flex-1 py-2 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 transition-colors"
+                className="w-full py-3 rounded-lg bg-green-600 text-white font-bold hover:bg-green-700 transition-colors"
+                data-testid="fast-cash-exact"
               >
-                Exact
+                Exact Amount: ${total.toFixed(2)}
               </button>
             </div>
           </div>
         )}
 
-        {/* Manual Card Input */}
+        {/* Manual Card Input with Amount */}
         {paymentMethod === "card" && (
           <div className="mb-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
-            <label className="text-sm font-medium text-blue-800 mb-2 block">Card Details (Manual Entry)</label>
+            <label className="text-sm font-medium text-blue-800 mb-2 block">Card Payment Amount</label>
+            {/* Card Amount Input */}
+            <div className="relative mb-3">
+              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-600" />
+              <Input
+                type="number"
+                step="0.01"
+                placeholder={`Payment amount (Total: $${total.toFixed(2)})`}
+                defaultValue={total.toFixed(2)}
+                className="h-14 pl-10 rounded-xl border-blue-300 bg-white text-xl font-bold"
+                data-testid="card-amount-input"
+              />
+            </div>
+            {/* Card Details */}
+            <label className="text-sm font-medium text-blue-800 mb-2 block">Card Details (Optional Manual Entry)</label>
             <div className="space-y-3">
               <Input
                 type="text"
@@ -968,7 +1031,48 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
               />
             </div>
             <p className="text-xs text-blue-600 mt-2 flex items-center gap-1">
-              <CreditCard className="w-3 h-3" /> Secure manual card entry
+              <CreditCard className="w-3 h-3" /> Will redirect to Stripe for secure payment
+            </p>
+          </div>
+        )}
+
+        {/* Digital Wallet Manual Input */}
+        {paymentMethod === "digital_wallet" && (
+          <div className="mb-4 p-4 bg-purple-50 rounded-xl border border-purple-200">
+            <label className="text-sm font-medium text-purple-800 mb-2 block">Digital Wallet Payment Amount</label>
+            <div className="relative mb-3">
+              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-600" />
+              <Input
+                type="number"
+                step="0.01"
+                placeholder={`Payment amount (Total: $${total.toFixed(2)})`}
+                defaultValue={total.toFixed(2)}
+                className="h-14 pl-10 rounded-xl border-purple-300 bg-white text-xl font-bold"
+                data-testid="digital-wallet-amount-input"
+              />
+            </div>
+            <div className="space-y-3">
+              <Input
+                type="text"
+                placeholder="Transaction Reference / ID"
+                className="h-11 rounded-xl border-purple-300 bg-white"
+              />
+              <select className="w-full h-11 rounded-xl border border-purple-300 bg-white px-3">
+                <option value="">Select Wallet Type</option>
+                <option value="apple_pay">Apple Pay</option>
+                <option value="google_pay">Google Pay</option>
+                <option value="samsung_pay">Samsung Pay</option>
+                <option value="venmo">Venmo</option>
+                <option value="paypal">PayPal</option>
+                <option value="cashapp">Cash App</option>
+                <option value="zelle">Zelle</option>
+                <option value="gcash">GCash</option>
+                <option value="paymaya">PayMaya</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <p className="text-xs text-purple-600 mt-2 flex items-center gap-1">
+              <Smartphone className="w-3 h-3" /> Enter transaction details after customer pays via their wallet app
             </p>
           </div>
         )}
