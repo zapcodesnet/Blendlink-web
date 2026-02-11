@@ -1,121 +1,85 @@
 # Blendlink Platform - Product Requirements Document
 
-## Latest Update: February 11, 2026 - Urgent Features Complete
+## Latest Update: February 11, 2026 - Returning Customer Notifications Added
 
 ---
 
-## ✅ URGENT FEATURES IMPLEMENTED (Iteration 141)
+## ✅ RETURNING CUSTOMER NOTIFICATIONS (Iteration 142)
 
-### 1. Manual Product/Service Entry in POS
-**Location**: Member Pages > POS Terminal
+### Feature Overview
+Page owners receive notifications when a recognized customer returns, enabling personalized service.
 
-**Features**:
-- "Custom Item" button (orange) next to search bar
-- Modal with Name (required), Description (optional), Price (required) fields
-- Real-time 8% platform fee preview
-- Custom items added to cart with `is_custom: true` flag
-- Full payment processing (cash/card/digital) supported
-- Mobile-friendly with large inputs
+### Implementation Details
 
-**UI Elements**:
-- `[data-testid='manual-entry-btn']` - Custom Item button
-- `[data-testid='manual-item-name']` - Name input
-- `[data-testid='manual-item-price']` - Price input
-- `[data-testid='add-manual-item-btn']` - Add to Cart button
+#### Notification Types (Toast Display)
+| Customer Type | Condition | Emoji | Message |
+|--------------|-----------|-------|---------|
+| VIP Customer | 5+ orders | 🌟 | "VIP Customer!" + name + total spent |
+| Returning | 2+ orders | 👋 | "Welcome back!" + name + last visit |
+| Regular | 1 order | - | "Customer selected: {name}" |
 
-### 2. Customer Email & Autofill in POS
-**Location**: Member Pages > POS Terminal > Customer Info section
+#### Settings Toggle
+- **Location**: Settings > POS Fast Cash Buttons section
+- **Label**: "Returning Customer Alerts"
+- **Description**: "Get notified when a recognized customer returns"
+- **Test ID**: `returning-customer-notifications-toggle`
+- **Default**: Enabled (true)
 
-**Features**:
-- Customer Name, Phone, Email fields with icons
-- Smart autofill search (triggers at 2+ characters)
-- Suggestions dropdown shows previous customers:
-  - Name, email, phone
-  - Order count, total spent
-  - Last purchase date
-- Click to auto-populate all fields
+#### Backend Integration
+- **GET /api/member-pages/{page_id}/pos-settings** - Returns `enable_returning_customer_notifications`
+- **PUT /api/member-pages/{page_id}/pos-settings** - Saves notification preference
+- **Customer Search** - Triggers `notify_returning_customer()` when enabled
 
-**UI Elements**:
-- `[data-testid='customer-name-input']` - Name with autofill
-- `[data-testid='customer-phone-input']` - Phone
-- `[data-testid='customer-email-input']` - Email (optional)
-- `[data-testid^='customer-suggestion-']` - Suggestion items
+#### WebSocket Notification
+- **Type**: `RETURNING_CUSTOMER`
+- **Data**: customer_name, email, phone, order_count, total_spent, last_purchase, page_id, page_name
+- **Delivery**: WebSocket + Push notification (for offline users)
 
-**Backend Endpoint**:
-- `GET /api/member-pages/{page_id}/pos-customers/search?q={query}`
-- Returns: customers array with name, email, phone, order_count, total_spent, last_purchase
-
-### 3. Discover Card Customization
-**Location**: Member Pages > Settings Tab > "Discover Card Appearance"
-
-**Features**:
-- 8 predefined gradient colors (Ocean, Sunset, Forest, Night, Fire, Sky, Rose, Mint)
-- Custom color input (hex or linear-gradient)
-- Background image upload with preview
-- Toggle preview to see changes
-- Reset to default option
-- Real-time WebSocket sync to mobile app
-
-**UI Elements**:
-- `[data-testid='color-{name}']` - Predefined color buttons
-- Preview toggle button
-- Image upload button
-- Save Appearance / Reset to Default buttons
-
-**Backend Endpoint**:
-- `PUT /api/member-pages/{page_id}/card-settings`
-- Fields: `background_color`, `background_image`
-- WebSocket Event: `card_settings_updated`
+### Test Results: 100% Pass (9/9 backend, all frontend features)
 
 ---
 
-## Test Results: Iteration 141
-| Component | Tests | Status |
-|-----------|-------|--------|
-| Backend API | 14/14 | ✅ PASS |
-| Frontend UI | All 3 features | ✅ PASS |
-| WebSocket Sync | Verified | ✅ PASS |
+## Previous Implementations Summary
 
-**Test Customers Created**: 2 customers via POS for autofill testing
+### Iteration 141: Urgent Features
+- ✅ Manual Product Entry in POS
+- ✅ Customer Email & Autofill
+- ✅ Discover Card Customization
 
----
+### Iteration 140: Full Feature Set
+- ✅ Language Selector (6 languages)
+- ✅ WebSocket Real-Time Sync
+- ✅ Stripe Subscriptions API
+- ✅ Customer Email Integration (Resend)
+- ✅ Customizable Fast Cash Buttons
 
-## Previous Implementations (Iterations 137-140)
+### Iteration 139: Subscriptions & CRM
+- ✅ Subscription Toggle (weekly/monthly/yearly)
+- ✅ Customer CRM Manager
+- ✅ Logo Upload
+
+### Iteration 138: POS Enhancements
+- ✅ Fast Cash Buttons ($1-$10K)
+- ✅ Change Due Calculator
+- ✅ Digital Wallet Input
+- ✅ View/Manage Buttons in Discover
+- ✅ Pages in More Menu
 
 ### Iteration 137: Priority Bug Fixes
 - ✅ Bottom nav overlap fix
 - ✅ Product image upload fix
 - ✅ Product editing
 
-### Iteration 138: POS Enhancements
-- ✅ Fast Cash Buttons ($1-$10K)
-- ✅ Change Due Calculator
-- ✅ Digital Wallet Input
-- ✅ View/Manage Buttons
-- ✅ Pages in More Menu
-
-### Iteration 139: Subscriptions & CRM
-- ✅ Subscription Toggle
-- ✅ Customer CRM Manager
-- ✅ Logo Upload
-
-### Iteration 140: Full Feature Set
-- ✅ Language Selector
-- ✅ WebSocket Real-Time Sync
-- ✅ Stripe Subscriptions API
-- ✅ Customer Email Integration
-- ✅ Customizable Fast Cash Buttons
-
 ---
 
-## API Endpoints Summary
+## Complete API Endpoints
 
-### POS
+### POS & Notifications
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/member-pages/{page_id}/pos-settings` | GET | Get POS settings |
+| `/api/member-pages/{page_id}/pos-settings` | GET | Get POS settings incl. notification prefs |
 | `/api/member-pages/{page_id}/pos-settings` | PUT | Update POS settings |
-| `/api/member-pages/{page_id}/pos-customers/search` | GET | Search customers for autofill |
+| `/api/member-pages/{page_id}/pos-customers/search` | GET | Search customers (triggers notification) |
 | `/api/member-pages/{page_id}/card-settings` | PUT | Update Discover card appearance |
 
 ### Stripe Subscriptions
@@ -134,15 +98,14 @@
 
 ---
 
-## Real-Time Sync Events (WebSocket)
+## WebSocket Events
 
-| Event | Trigger | Data |
-|-------|---------|------|
-| `pos_settings_updated` | POS settings saved | settings object |
-| `card_settings_updated` | Card appearance saved | background_color, background_image |
-| `order_status_changed` | Order updated | order details |
-| `inventory_updated` | Stock changed | product, quantity |
-| `product_updated` | Product edited | product details |
+| Event | Trigger | Description |
+|-------|---------|-------------|
+| `RETURNING_CUSTOMER` | Customer recognized in POS | Alert page owner |
+| `pos_settings_updated` | POS settings saved | Sync to mobile |
+| `card_settings_updated` | Card appearance saved | Sync to mobile |
+| `order_status_changed` | Order updated | Notify relevant parties |
 
 ---
 
@@ -153,16 +116,20 @@
 
 ---
 
-## Critical Constraints (MUST FOLLOW)
+## All Testing Iterations
 
-1. ✅ All changes confined to `/pages`, `/member-pages/[slug]`, POS, Discover
-2. ✅ No global changes to homepage, /feed, profiles
-3. ✅ Public pages remain fully public
-4. ✅ Mobile-responsive (tested 375x812)
-5. ✅ Real-time WebSocket sync
-6. ✅ 8% platform fee on all transactions
+| Iteration | Focus | Backend | Frontend | Status |
+|-----------|-------|---------|----------|--------|
+| 137 | Priority Fixes | 11/11 | 100% | ✅ |
+| 138 | POS Enhancements | N/A | 10/10 | ✅ |
+| 139 | Subscriptions | 6/6 | 9/9 | ✅ |
+| 140 | Full Features | 14/14 | 11/11 | ✅ |
+| 141 | Urgent Features | 14/14 | All | ✅ |
+| 142 | Notifications | 9/9 | All | ✅ |
+
+**Total: 54+ backend tests, 50+ frontend verifications - All Passed**
 
 ---
 
 *Implementation Complete: February 11, 2026*
-*All features tested and verified working (Iterations 137-141)*
+*All features tested and verified working*
