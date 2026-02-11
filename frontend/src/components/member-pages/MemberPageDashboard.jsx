@@ -449,11 +449,11 @@ const AddItemModal = ({ pageId, pageType, onClose, onSuccess, editItem = null })
 
   const getLabels = () => {
     switch (pageType) {
-      case "store": return { title: "Add Product", priceLabel: "Price" };
-      case "restaurant": return { title: "Add Menu Item", priceLabel: "Price" };
-      case "services": return { title: "Add Service", priceLabel: "Price" };
-      case "rental": return { title: "Add Rental Item", priceLabel: "Daily Rate" };
-      default: return { title: "Add Item", priceLabel: "Price" };
+      case "store": return { title: isEditMode ? "Edit Product" : "Add Product", priceLabel: "Price" };
+      case "restaurant": return { title: isEditMode ? "Edit Menu Item" : "Add Menu Item", priceLabel: "Price" };
+      case "services": return { title: isEditMode ? "Edit Service" : "Add Service", priceLabel: "Price" };
+      case "rental": return { title: isEditMode ? "Edit Rental Item" : "Add Rental Item", priceLabel: "Daily Rate" };
+      default: return { title: isEditMode ? "Edit Item" : "Add Item", priceLabel: "Price" };
     }
   };
 
