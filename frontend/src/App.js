@@ -268,7 +268,9 @@ function AppRouter() {
       <Route path="/offers" element={<ProtectedRoute><Offers /></ProtectedRoute>} />
       <Route path="/contract/:contractId" element={<Contract />} />
       <Route path="/payment/success" element={<PaymentSuccess />} />
+      <Route path="/payment-success" element={<PaymentSuccess />} />
       <Route path="/payment/cancel" element={<PaymentCancel />} />
+      <Route path="/payment-cancelled" element={<PaymentCancel />} />
       
       {/* Earnings/Referral Routes */}
       <Route path="/earnings" element={<ProtectedRoute><EarningsDashboard /></ProtectedRoute>} />
