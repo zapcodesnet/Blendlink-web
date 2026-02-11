@@ -951,6 +951,9 @@ const SettingsTab = ({ page, onUpdate }) => {
         </div>
       </div>
 
+      {/* Discover Card Customization */}
+      <DiscoverCardCustomization pageId={page.page_id} initialSettings={page.card_settings} />
+
       {/* Publish Status */}
       <div className="bg-card rounded-xl border border-border p-4">
         <div className="flex items-center justify-between">
