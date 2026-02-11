@@ -121,6 +121,16 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
   const [searchQuery, setSearchQuery] = useState("");
   const [cashReceived, setCashReceived] = useState(0);
   
+  // Manual Entry Mode state
+  const [showManualEntry, setShowManualEntry] = useState(false);
+  const [manualItem, setManualItem] = useState({ name: "", description: "", price: "" });
+  
+  // Customer Email & Autofill state
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [customerSuggestions, setCustomerSuggestions] = useState([]);
+  const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
+  const [loadingCustomers, setLoadingCustomers] = useState(false);
+  
   // Quick Sale Mode state
   const [quickSaleMode, setQuickSaleMode] = useState(false);
   const [quickSaleBarcode, setQuickSaleBarcode] = useState("");
