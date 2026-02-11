@@ -385,13 +385,13 @@ async def notify_returning_customer(db, page_owner_id: str, customer_data: dict,
     
     # Build notification message
     if order_count > 5:
-        title = f"🌟 VIP Customer Returning!"
+        title = "🌟 VIP Customer Returning!"
         message = f"{customer_name} is back! They've made {order_count} purchases (${total_spent:.2f} total)"
     elif order_count > 1:
-        title = f"👋 Returning Customer!"
+        title = "👋 Returning Customer!"
         message = f"{customer_name} is back at {page_name}! Last visit: {last_purchase}"
     else:
-        title = f"🎉 Customer Recognized!"
+        title = "🎉 Customer Recognized!"
         message = f"{customer_name} - Previous customer at {page_name}"
     
     notification = WebSocketNotification(
