@@ -672,6 +672,143 @@ const AddItemModal = ({ pageId, pageType, onClose, onSuccess, editItem = null })
 };
 
 // Settings Tab
+// POS Fast Cash Buttons Settings Component
+const POSFastCashSettings = ({ pageId, currencySymbol = "$" }) => {
+  const [buttons, setButtons] = useState([1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 5000, 10000]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [newAmount, setNewAmount] = useState("");
+
+  useEffect(() => {
+    loadSettings();
+  }, [pageId]);
+
+  const loadSettings = async () => {
+    try {
+      const token = localStorage.getItem("blendlink_token");
+      const response = await fetch(`${API_URL}/api/member-pages/${pageId}/pos-settings`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setButtons(data.fast_cash_buttons || [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 5000, 10000]);
+      }
+    } catch (err) {
+      console.error("Failed to load POS settings:", err);
+    }
+    setLoading(false);
+  };
+
+  const saveSettings = async () => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem("blendlink_token");
+      const response = await fetch(`${API_URL}/api/member-pages/${pageId}/pos-settings`, {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ fast_cash_buttons: buttons })
+      });
+      if (response.ok) {
+        toast.success("Fast cash buttons saved!");
+      } else {
+        throw new Error("Failed to save");
+      }
+    } catch (err) {
+      toast.error("Failed to save settings");
+    }
+    setSaving(false);
+  };
+
+  const addButton = () => {
+    const amount = parseFloat(newAmount);
+    if (!amount || amount <= 0 || buttons.includes(amount)) {
+      toast.error("Enter a valid, unique amount");
+      return;
+    }
+    if (buttons.length >= 20) {
+      toast.error("Maximum 20 buttons allowed");
+      return;
+    }
+    setButtons([...buttons, amount].sort((a, b) => a - b));
+    setNewAmount("");
+  };
+
+  const removeButton = (amount) => {
+    setButtons(buttons.filter(b => b !== amount));
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Current Buttons */}
+      <div className="flex flex-wrap gap-2">
+        {buttons.map(amt => (
+          <div 
+            key={amt}
+            className="flex items-center gap-1 px-3 py-1.5 bg-green-100 text-green-800 rounded-lg text-sm font-medium"
+          >
+            {currencySymbol}{amt >= 1000 ? `${amt/1000}K` : amt}
+            <button
+              onClick={() => removeButton(amt)}
+              className="ml-1 text-green-600 hover:text-red-500"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Add New Button */}
+      <div className="flex gap-2">
+        <Input
+          type="number"
+          placeholder="Add amount (e.g., 250)"
+          value={newAmount}
+          onChange={(e) => setNewAmount(e.target.value)}
+          className="flex-1"
+        />
+        <Button onClick={addButton} size="sm" variant="outline">
+          <Plus className="w-4 h-4 mr-1" /> Add
+        </Button>
+      </div>
+
+      {/* Presets */}
+      <div className="flex flex-wrap gap-2">
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => setButtons([1, 5, 10, 20, 50, 100])}
+        >
+          Reset to Basic
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => setButtons([1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 5000, 10000])}
+        >
+          Reset to Full
+        </Button>
+      </div>
+
+      {/* Save Button */}
+      <Button onClick={saveSettings} disabled={saving} className="w-full">
+        {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+        Save Fast Cash Buttons
+      </Button>
+    </div>
+  );
+};
+
 const SettingsTab = ({ page, onUpdate }) => {
   const [settings, setSettings] = useState(page.settings || {});
   const [pageData, setPageData] = useState({
