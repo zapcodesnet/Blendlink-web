@@ -276,7 +276,25 @@ async def get_checkout_status(session_id: str, http_request: Request):
                     "created_at": datetime.now(timezone.utc).isoformat()
                 })
             
-            logger.info(f"Payment completed for order {order_id}")
+            logger.info(f"✅ LIVE Payment completed for order {order_id}")
+            
+            # Send WebSocket notification for real-time sync with mobile app
+            try:
+                from websocket_notifications import manager as ws_manager
+                # Notify page owner about successful payment
+                if page_id:
+                    await ws_manager.broadcast_to_page(page_id, {
+                        "type": "PAYMENT_RECEIVED",
+                        "order_id": order_id,
+                        "amount": transaction.get("amount", 0),
+                        "customer_name": transaction.get("customer_name", ""),
+                        "payment_method": "card",
+                        "platform_fee": transaction.get("platform_fee", 0),
+                        "timestamp": datetime.now(timezone.utc).isoformat()
+                    })
+                    logger.info(f"WebSocket notification sent for order {order_id}")
+            except Exception as ws_error:
+                logger.warning(f"WebSocket notification failed (non-critical): {ws_error}")
     
     return {
         "status": status.status,
