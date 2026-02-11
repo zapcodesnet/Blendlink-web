@@ -46,8 +46,8 @@ db = client[db_name]
 
 logger = logging.getLogger(__name__)
 
-# Platform fee rate
-PLATFORM_FEE_RATE = 0.08  # 8%
+# Platform fee rate - UPDATED to 10% as per business requirement
+PLATFORM_FEE_RATE = 0.10  # 10%
 
 # Log Stripe configuration status on module load
 stripe_api_key = os.environ.get("STRIPE_API_KEY", "")
