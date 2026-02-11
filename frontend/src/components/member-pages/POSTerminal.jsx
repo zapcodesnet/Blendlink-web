@@ -514,7 +514,7 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
   ];
 
   return (
-    <div className="space-y-6" style={{ touchAction: 'pan-y' }}>
+    <div className="space-y-6 pb-28" style={{ touchAction: 'pan-y' }}>
       {/* Quick Sale Mode Toggle */}
       {!quickSaleMode ? (
         <button
