@@ -13,8 +13,8 @@ import {
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
-// Load Stripe
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || 'pk_test_51SkM67RyuUJLCAOO8G4RFhwbRR1w5cpt8NWlyV6jc5cvxOEkujPX57f6jSV2dsLwwiFYAvGqG6PhRQsHT1KDlwCq00FBFT1zsX');
+// Load Stripe with live key from environment
+const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
 // Deposit Payment Form Component
 const DepositPaymentForm = ({ clientSecret, onSuccess, onCancel }) => {
