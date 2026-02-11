@@ -414,20 +414,35 @@ const AddItemModal = ({ pageId, pageType, onClose, onSuccess, editItem = null })
         price: parseFloat(formData.price)
       };
 
-      if (pageType === "store") {
-        await memberPagesAPI.createProduct(pageId, data);
-      } else if (pageType === "restaurant") {
-        await memberPagesAPI.createMenuItem(pageId, data);
-      } else if (pageType === "services") {
-        await memberPagesAPI.createService(pageId, { ...data, duration_minutes: 60 });
-      } else if (pageType === "rental") {
-        await memberPagesAPI.createRental(pageId, { ...data, daily_rate: data.price });
+      if (isEditMode) {
+        // Update existing item
+        const itemId = editItem.product_id || editItem.item_id || editItem.service_id || editItem.rental_id;
+        if (pageType === "store") {
+          await memberPagesAPI.updateProduct(pageId, itemId, data);
+        } else if (pageType === "restaurant") {
+          await memberPagesAPI.updateMenuItem(pageId, itemId, data);
+        } else if (pageType === "services") {
+          await memberPagesAPI.updateService(pageId, itemId, { ...data, duration_minutes: editItem.duration_minutes || 60 });
+        } else if (pageType === "rental") {
+          await memberPagesAPI.updateRental(pageId, itemId, { ...data, daily_rate: data.price });
+        }
+        toast.success("Item updated successfully!");
+      } else {
+        // Create new item
+        if (pageType === "store") {
+          await memberPagesAPI.createProduct(pageId, data);
+        } else if (pageType === "restaurant") {
+          await memberPagesAPI.createMenuItem(pageId, data);
+        } else if (pageType === "services") {
+          await memberPagesAPI.createService(pageId, { ...data, duration_minutes: 60 });
+        } else if (pageType === "rental") {
+          await memberPagesAPI.createRental(pageId, { ...data, daily_rate: data.price });
+        }
+        toast.success("Item added successfully!");
       }
-
-      toast.success("Item added successfully!");
       onSuccess();
     } catch (err) {
-      toast.error(err.message || "Failed to add item");
+      toast.error(err.message || `Failed to ${isEditMode ? 'update' : 'add'} item`);
     }
     setLoading(false);
   };
