@@ -1207,6 +1207,9 @@ export default function MemberPageDashboard() {
         {activeTab === "delivery" && (
           <CustomerOptionsManager pageId={pageId} pageType={page.page_type} />
         )}
+        {activeTab === "customers" && (
+          <CustomerCRMManager pageId={pageId} />
+        )}
         {activeTab === "team" && (
           <TeamMembersManager pageId={pageId} isOwner={page.owner_id === user?.user_id} />
         )}
