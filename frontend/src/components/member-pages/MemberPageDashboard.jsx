@@ -22,7 +22,7 @@ import {
   Users, Star, TrendingUp, DollarSign, Calendar, Clock, MapPin,
   Image, Tag, Save, Loader2, ExternalLink, Copy, Check, AlertTriangle,
   Globe, Archive, RefreshCw, ScanLine, CreditCard, Truck, Store, FileText,
-  Camera, X
+  Camera, X, Heart
 } from "lucide-react";
 import { memberPagesAPI, PAGE_TYPES } from "./MemberPagesSystem";
 import AnalyticsDashboard from "./AnalyticsDashboard";
