@@ -361,6 +361,7 @@ async def notify_with_push(db, user_id: str, notification: WebSocketNotification
         NotificationType.MATCH_FOUND.value,
         NotificationType.OFFER_RECEIVED.value,
         NotificationType.SALE_COMPLETED.value,
+        NotificationType.RETURNING_CUSTOMER.value,
     ]:
         await send_push_notification(
             db,
@@ -369,3 +370,45 @@ async def notify_with_push(db, user_id: str, notification: WebSocketNotification
             notification.message,
             notification.data
         )
+
+
+async def notify_returning_customer(db, page_owner_id: str, customer_data: dict, page_data: dict):
+    """
+    Send notification to page owner when a returning customer is detected.
+    Includes customer name, order history, and total spent.
+    """
+    customer_name = customer_data.get("name") or customer_data.get("email") or "A customer"
+    order_count = customer_data.get("order_count", 0)
+    total_spent = customer_data.get("total_spent", 0)
+    last_purchase = customer_data.get("last_purchase", "Unknown")
+    page_name = page_data.get("name", "your page")
+    
+    # Build notification message
+    if order_count > 5:
+        title = f"🌟 VIP Customer Returning!"
+        message = f"{customer_name} is back! They've made {order_count} purchases (${total_spent:.2f} total)"
+    elif order_count > 1:
+        title = f"👋 Returning Customer!"
+        message = f"{customer_name} is back at {page_name}! Last visit: {last_purchase}"
+    else:
+        title = f"🎉 Customer Recognized!"
+        message = f"{customer_name} - Previous customer at {page_name}"
+    
+    notification = WebSocketNotification(
+        type=NotificationType.RETURNING_CUSTOMER.value,
+        title=title,
+        message=message,
+        data={
+            "customer_name": customer_name,
+            "customer_email": customer_data.get("email"),
+            "customer_phone": customer_data.get("phone"),
+            "order_count": order_count,
+            "total_spent": total_spent,
+            "last_purchase": last_purchase,
+            "page_id": page_data.get("page_id"),
+            "page_name": page_name,
+        }
+    )
+    
+    # Send via WebSocket and push
+    await notify_with_push(db, page_owner_id, notification)
