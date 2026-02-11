@@ -2866,6 +2866,81 @@ async def send_test_report(
 class OrderStatusUpdate(BaseModel):
     status: str
 
+
+class FastCashButtonSettings(BaseModel):
+    """Settings for customizable fast cash buttons"""
+    buttons: List[float] = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 5000, 10000]
+    currency: str = "USD"
+
+
+@member_pages_router.get("/{page_id}/pos-settings")
+async def get_pos_settings(
+    page_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get POS settings including fast cash buttons for a page"""
+    user_id = current_user["user_id"]
+    
+    page = await db.member_pages.find_one({"page_id": page_id})
+    if not page or page["owner_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Default fast cash buttons
+    default_buttons = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 5000, 10000]
+    
+    pos_settings = page.get("pos_settings", {})
+    
+    return {
+        "fast_cash_buttons": pos_settings.get("fast_cash_buttons", default_buttons),
+        "currency": page.get("currency", "USD"),
+        "currency_symbol": page.get("currency_symbol", "$"),
+        "tip_presets": pos_settings.get("tip_presets", [10, 15, 20, 25]),
+        "enable_tips": pos_settings.get("enable_tips", True),
+        "enable_discounts": pos_settings.get("enable_discounts", True),
+        "default_tax_rate": pos_settings.get("default_tax_rate", 0),
+        "receipt_footer": pos_settings.get("receipt_footer", "Thank you for your business!")
+    }
+
+
+@member_pages_router.put("/{page_id}/pos-settings")
+async def update_pos_settings(
+    page_id: str,
+    settings: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update POS settings including fast cash buttons for a page"""
+    user_id = current_user["user_id"]
+    
+    page = await db.member_pages.find_one({"page_id": page_id})
+    if not page or page["owner_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Validate fast cash buttons if provided
+    if "fast_cash_buttons" in settings:
+        buttons = settings["fast_cash_buttons"]
+        if not isinstance(buttons, list) or len(buttons) > 20:
+            raise HTTPException(status_code=400, detail="Fast cash buttons must be a list with max 20 values")
+        # Ensure all values are positive numbers
+        settings["fast_cash_buttons"] = [float(b) for b in buttons if float(b) > 0]
+    
+    # Update the page's POS settings
+    await db.member_pages.update_one(
+        {"page_id": page_id},
+        {"$set": {
+            "pos_settings": settings,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Broadcast to connected clients via WebSocket
+    await page_sync_manager.broadcast_to_page(
+        page_id,
+        {"type": "pos_settings_updated", "settings": settings}
+    )
+    
+    return {"success": True, "settings": settings}
+
+
 @member_pages_router.put("/orders/{order_id}/status")
 async def update_order_status(
     order_id: str,
