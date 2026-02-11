@@ -553,8 +553,8 @@ const AddItemModal = ({ pageId, pageType, onClose, onSuccess, editItem = null })
               Cancel
             </Button>
             <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
-              Add
+              {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : isEditMode ? <Save className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+              {isEditMode ? 'Save Changes' : 'Add'}
             </Button>
           </div>
         </form>
