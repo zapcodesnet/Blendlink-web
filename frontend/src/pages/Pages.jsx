@@ -628,8 +628,10 @@ export default function Pages() {
                 onFollow={handleFollowPage}
                 onUnfollow={handleUnfollowPage}
                 onView={handleViewPage}
+                onManage={handleManagePage}
                 isFollowing={followedPageIds.includes(page.page_id) || page.is_subscribed}
                 isOwner={ownedPageIds.includes(page.page_id) || page.is_owner}
+                canManage={ownedPageIds.includes(page.page_id) || page.is_owner}
               />
             ))}
           </div>
