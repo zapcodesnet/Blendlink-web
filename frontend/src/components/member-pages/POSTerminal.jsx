@@ -247,7 +247,7 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
     setLoadingCustomers(true);
     try {
       const token = localStorage.getItem("blendlink_token");
-      const response = await fetch(`${API_URL}/api/pos/${pageId}/customers/search?q=${encodeURIComponent(query)}`, {
+      const response = await fetch(`${API_URL}/api/member-pages/${pageId}/pos-customers/search?q=${encodeURIComponent(query)}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
