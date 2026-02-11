@@ -40,6 +40,11 @@ class NotificationType(str, Enum):
     DOWNLINE_BONUS = "downline_bonus"
     REACTION_REWARD = "reaction_reward"
     
+    # Page/POS events
+    RETURNING_CUSTOMER = "returning_customer"
+    NEW_ORDER = "new_order"
+    ORDER_STATUS_CHANGED = "order_status_changed"
+    
     # General
     NOTIFICATION = "notification"
     SYSTEM = "system"
