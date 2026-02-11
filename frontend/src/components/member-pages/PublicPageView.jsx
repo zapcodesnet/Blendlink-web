@@ -330,6 +330,9 @@ export default function PublicPageView() {
             <Share2 className="w-5 h-5 text-gray-600" />
           </button>
 
+          {/* Language Selector */}
+          <LanguageSelector compact={true} className="h-9" />
+
           {cart.length > 0 && (
             <button
               onClick={() => setShowCart(true)}
