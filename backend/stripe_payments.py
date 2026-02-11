@@ -49,6 +49,16 @@ logger = logging.getLogger(__name__)
 # Platform fee rate
 PLATFORM_FEE_RATE = 0.08  # 8%
 
+# Log Stripe configuration status on module load
+stripe_api_key = os.environ.get("STRIPE_API_KEY", "")
+stripe_pub_key = os.environ.get("STRIPE_PUBLISHABLE_KEY", "")
+if stripe_api_key:
+    key_prefix = stripe_api_key[:7] if len(stripe_api_key) > 7 else "******"
+    key_type = "LIVE" if stripe_api_key.startswith("sk_live") else "TEST"
+    logger.info(f"Stripe configured: {key_type} mode (key: {key_prefix}...)")
+else:
+    logger.warning("Stripe API key not configured!")
+
 # Router
 stripe_router = APIRouter(prefix="/payments/stripe", tags=["Stripe Payments"])
 
