@@ -1,6 +1,39 @@
 # Blendlink Platform - Product Requirements Document
 
-## Latest Update: February 11, 2026 - Returning Customer Notifications Added
+## Latest Update: February 11, 2026 - Stripe Live Mode Verified + 2% Withdrawal Fee
+
+---
+
+## 🔴 STRIPE LIVE MODE STATUS (February 11, 2026)
+
+### Verification Results
+| Component | Status | Key |
+|-----------|--------|-----|
+| Backend STRIPE_API_KEY | ✅ LIVE | `sk_live_51SkM5v...` |
+| Backend STRIPE_SECRET_KEY | ✅ LIVE | `sk_live_51SkM5v...` |
+| Frontend STRIPE_PUBLISHABLE_KEY | ✅ LIVE | `pk_live_51SkM5v...` |
+| Backend Logs | ✅ "Stripe configured: LIVE mode" | Confirmed |
+| `/api/payments/config` | ✅ Returns LIVE key | Verified |
+
+### Key Findings
+1. **Backend is correctly configured** - Logs confirm `LIVE mode (key: sk_live...)`
+2. **Frontend has correct key** - `pk_live_51SkM5v...` in `.env`
+3. **No hardcoded test keys found** in codebase
+4. **emergentintegrations library** - Only proxies if key contains `sk_test_emergent` (not the case)
+5. **"Sandbox4" source** - If still appearing, it's from Stripe Dashboard settings, not our code
+
+### Platform Fees
+| Fee Type | Rate | Status |
+|----------|------|--------|
+| Transaction Fee | 10% | ✅ Implemented |
+| Withdrawal Fee | 2% | ✅ Updated (was 1%) |
+
+### Recommended User Actions
+If "Sandbox4" still appears:
+1. Check Stripe Dashboard → Settings → Account details
+2. Verify account is activated for live payments
+3. Ensure products/prices are created in live mode (not test mode)
+4. Verify domain is registered in Stripe for Checkout
 
 ---
 
