@@ -322,18 +322,19 @@ const ItemsTab = ({ page, pageType }) => {
   );
 };
 
-// Add Item Modal Component
-const AddItemModal = ({ pageId, pageType, onClose, onSuccess }) => {
+// Add/Edit Item Modal Component - supports both create and edit modes
+const AddItemModal = ({ pageId, pageType, onClose, onSuccess, editItem = null }) => {
+  const isEditMode = !!editItem;
   const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    price: "",
-    category: "",
-    images: []
+    name: editItem?.name || "",
+    description: editItem?.description || "",
+    price: editItem?.price?.toString() || editItem?.daily_rate?.toString() || "",
+    category: editItem?.category || "",
+    images: editItem?.images || []
   });
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [imagePreview, setImagePreview] = useState(null);
+  const [imagePreview, setImagePreview] = useState(editItem?.images?.[0] || null);
   const fileInputRef = React.useRef(null);
 
   const handleImageUpload = async (e) => {
