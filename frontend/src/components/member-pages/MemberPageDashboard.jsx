@@ -885,6 +885,16 @@ const SettingsTab = ({ page, onUpdate }) => {
         />
       </div>
 
+      {/* POS Fast Cash Buttons Settings */}
+      <div className="bg-card rounded-xl border border-border p-4">
+        <h3 className="font-semibold mb-2">POS Fast Cash Buttons</h3>
+        <p className="text-sm text-muted-foreground mb-4">Customize the quick cash buttons in your POS terminal</p>
+        <POSFastCashSettings 
+          pageId={page.page_id}
+          currencySymbol={page.currency_symbol || "$"}
+        />
+      </div>
+
       {/* Contact Information */}
       <div className="bg-card rounded-xl border border-border p-4">
         <h3 className="font-semibold mb-4">Contact Information</h3>
