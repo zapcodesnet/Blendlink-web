@@ -2904,7 +2904,8 @@ async def get_pos_settings(
         "enable_tips": pos_settings.get("enable_tips", True),
         "enable_discounts": pos_settings.get("enable_discounts", True),
         "default_tax_rate": pos_settings.get("default_tax_rate", 0),
-        "receipt_footer": pos_settings.get("receipt_footer", "Thank you for your business!")
+        "receipt_footer": pos_settings.get("receipt_footer", "Thank you for your business!"),
+        "enable_returning_customer_notifications": pos_settings.get("enable_returning_customer_notifications", True)
     }
 
 
