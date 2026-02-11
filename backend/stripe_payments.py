@@ -412,6 +412,357 @@ async def handle_stripe_webhook(request: Request):
         return {"status": "error", "message": str(e)}
 
 
+# ============== STRIPE SUBSCRIPTIONS ==============
+
+import stripe
+
+class CreateSubscriptionProductRequest(BaseModel):
+    """Request to create a subscription product"""
+    page_id: str
+    product_id: str  # Page product ID
+    name: str
+    description: Optional[str] = None
+    frequency: str = "monthly"  # weekly, monthly, yearly
+    price: float
+    trial_days: int = 0
+    currency: str = "usd"
+
+
+class CreateSubscriptionRequest(BaseModel):
+    """Request to create a customer subscription"""
+    page_id: str
+    product_id: str
+    customer_email: str
+    customer_name: Optional[str] = None
+    payment_method_id: Optional[str] = None  # For card payments
+    origin_url: str
+
+
+class CancelSubscriptionRequest(BaseModel):
+    """Request to cancel a subscription"""
+    subscription_id: str
+
+
+@stripe_router.post("/subscriptions/create-product")
+async def create_subscription_product(request: CreateSubscriptionProductRequest):
+    """
+    Create a Stripe Product and Price for a recurring subscription.
+    This must be called by page owners when they mark a product as subscription-based.
+    """
+    api_key = os.environ.get('STRIPE_API_KEY')
+    if not api_key:
+        raise HTTPException(status_code=500, detail="Stripe not configured")
+    
+    stripe.api_key = api_key
+    
+    try:
+        # Map frequency to Stripe interval
+        interval_map = {
+            "weekly": {"interval": "week", "interval_count": 1},
+            "monthly": {"interval": "month", "interval_count": 1},
+            "yearly": {"interval": "year", "interval_count": 1}
+        }
+        
+        if request.frequency not in interval_map:
+            raise HTTPException(status_code=400, detail="Invalid frequency. Use: weekly, monthly, yearly")
+        
+        interval_config = interval_map[request.frequency]
+        
+        # Create Stripe Product
+        stripe_product = stripe.Product.create(
+            name=request.name,
+            description=request.description or f"Subscription to {request.name}",
+            metadata={
+                "page_id": request.page_id,
+                "product_id": request.product_id,
+                "type": "page_subscription"
+            }
+        )
+        
+        # Create Stripe Price with recurring interval
+        # Amount in cents, with 8% platform fee built in
+        amount_cents = int(request.price * 100)
+        
+        stripe_price = stripe.Price.create(
+            product=stripe_product.id,
+            unit_amount=amount_cents,
+            currency=request.currency.lower(),
+            recurring=interval_config,
+            metadata={
+                "page_id": request.page_id,
+                "product_id": request.product_id,
+                "platform_fee_rate": str(PLATFORM_FEE_RATE)
+            }
+        )
+        
+        # Save to database
+        subscription_product = {
+            "subscription_product_id": f"subprod_{uuid.uuid4().hex[:12]}",
+            "page_id": request.page_id,
+            "product_id": request.product_id,
+            "stripe_product_id": stripe_product.id,
+            "stripe_price_id": stripe_price.id,
+            "name": request.name,
+            "description": request.description,
+            "price": request.price,
+            "currency": request.currency,
+            "frequency": request.frequency,
+            "trial_days": request.trial_days,
+            "platform_fee_rate": PLATFORM_FEE_RATE,
+            "is_active": True,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.subscription_products.insert_one(subscription_product)
+        
+        # Update the page product to link to stripe
+        await db.page_products.update_one(
+            {"product_id": request.product_id},
+            {"$set": {
+                "stripe_product_id": stripe_product.id,
+                "stripe_price_id": stripe_price.id,
+                "is_subscription": True,
+                "subscription_frequency": request.frequency,
+                "trial_period_days": request.trial_days,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        logger.info(f"Created subscription product: {stripe_product.id} with price: {stripe_price.id}")
+        
+        return {
+            "success": True,
+            "stripe_product_id": stripe_product.id,
+            "stripe_price_id": stripe_price.id,
+            "subscription_product_id": subscription_product["subscription_product_id"]
+        }
+        
+    except stripe.error.StripeError as e:
+        logger.error(f"Stripe error creating subscription product: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@stripe_router.post("/subscriptions/checkout")
+async def create_subscription_checkout(request: CreateSubscriptionRequest, http_request: Request):
+    """
+    Create a Stripe Checkout Session for subscription.
+    Customer will be redirected to Stripe to complete payment.
+    """
+    api_key = os.environ.get('STRIPE_API_KEY')
+    if not api_key:
+        raise HTTPException(status_code=500, detail="Stripe not configured")
+    
+    stripe.api_key = api_key
+    
+    try:
+        # Get subscription product details
+        sub_product = await db.subscription_products.find_one({
+            "product_id": request.product_id,
+            "is_active": True
+        })
+        
+        if not sub_product:
+            raise HTTPException(status_code=404, detail="Subscription product not found")
+        
+        # Create or retrieve Stripe customer
+        customers = stripe.Customer.list(email=request.customer_email, limit=1)
+        if customers.data:
+            customer = customers.data[0]
+        else:
+            customer = stripe.Customer.create(
+                email=request.customer_email,
+                name=request.customer_name,
+                metadata={
+                    "source": "blendlink_page",
+                    "page_id": request.page_id
+                }
+            )
+        
+        # Build checkout session
+        origin_url = request.origin_url.rstrip("/")
+        success_url = f"{origin_url}/subscription-success?session_id={{CHECKOUT_SESSION_ID}}"
+        cancel_url = f"{origin_url}/subscription-cancelled"
+        
+        checkout_params = {
+            "mode": "subscription",
+            "customer": customer.id,
+            "line_items": [{
+                "price": sub_product["stripe_price_id"],
+                "quantity": 1
+            }],
+            "success_url": success_url,
+            "cancel_url": cancel_url,
+            "metadata": {
+                "page_id": request.page_id,
+                "product_id": request.product_id,
+                "customer_email": request.customer_email,
+                "platform_fee_rate": str(PLATFORM_FEE_RATE)
+            }
+        }
+        
+        # Add trial period if configured
+        if sub_product.get("trial_days", 0) > 0:
+            checkout_params["subscription_data"] = {
+                "trial_period_days": sub_product["trial_days"]
+            }
+        
+        session = stripe.checkout.Session.create(**checkout_params)
+        
+        # Record subscription attempt
+        subscription_record = {
+            "subscription_record_id": f"subrec_{uuid.uuid4().hex[:12]}",
+            "stripe_session_id": session.id,
+            "stripe_customer_id": customer.id,
+            "page_id": request.page_id,
+            "product_id": request.product_id,
+            "customer_email": request.customer_email,
+            "customer_name": request.customer_name,
+            "price": sub_product["price"],
+            "currency": sub_product["currency"],
+            "frequency": sub_product["frequency"],
+            "trial_days": sub_product.get("trial_days", 0),
+            "platform_fee": sub_product["price"] * PLATFORM_FEE_RATE,
+            "status": "pending",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.customer_subscriptions.insert_one(subscription_record)
+        
+        return {
+            "checkout_url": session.url,
+            "session_id": session.id,
+            "customer_id": customer.id
+        }
+        
+    except stripe.error.StripeError as e:
+        logger.error(f"Stripe error creating subscription checkout: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@stripe_router.get("/subscriptions/status/{session_id}")
+async def get_subscription_status(session_id: str):
+    """
+    Check the status of a subscription checkout session.
+    Called after customer returns from Stripe.
+    """
+    api_key = os.environ.get('STRIPE_API_KEY')
+    if not api_key:
+        raise HTTPException(status_code=500, detail="Stripe not configured")
+    
+    stripe.api_key = api_key
+    
+    try:
+        session = stripe.checkout.Session.retrieve(session_id)
+        
+        # Update our records
+        update_data = {
+            "status": session.status,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        if session.subscription:
+            subscription = stripe.Subscription.retrieve(session.subscription)
+            update_data["stripe_subscription_id"] = subscription.id
+            update_data["subscription_status"] = subscription.status
+            update_data["current_period_start"] = subscription.current_period_start
+            update_data["current_period_end"] = subscription.current_period_end
+            
+            if subscription.status == "active" or subscription.status == "trialing":
+                update_data["activated_at"] = datetime.now(timezone.utc).isoformat()
+        
+        await db.customer_subscriptions.update_one(
+            {"stripe_session_id": session_id},
+            {"$set": update_data}
+        )
+        
+        # Get our record
+        record = await db.customer_subscriptions.find_one(
+            {"stripe_session_id": session_id},
+            {"_id": 0}
+        )
+        
+        return {
+            "session_status": session.status,
+            "subscription_id": session.subscription,
+            "subscription_status": subscription.status if session.subscription else None,
+            "customer_email": session.customer_details.email if session.customer_details else None,
+            "record": record
+        }
+        
+    except stripe.error.StripeError as e:
+        logger.error(f"Stripe error checking subscription: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@stripe_router.post("/subscriptions/cancel")
+async def cancel_subscription(request: CancelSubscriptionRequest):
+    """
+    Cancel a customer's subscription.
+    """
+    api_key = os.environ.get('STRIPE_API_KEY')
+    if not api_key:
+        raise HTTPException(status_code=500, detail="Stripe not configured")
+    
+    stripe.api_key = api_key
+    
+    try:
+        # Cancel in Stripe
+        subscription = stripe.Subscription.delete(request.subscription_id)
+        
+        # Update our record
+        await db.customer_subscriptions.update_one(
+            {"stripe_subscription_id": request.subscription_id},
+            {"$set": {
+                "subscription_status": "canceled",
+                "canceled_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        return {
+            "success": True,
+            "subscription_id": request.subscription_id,
+            "status": "canceled"
+        }
+        
+    except stripe.error.StripeError as e:
+        logger.error(f"Stripe error canceling subscription: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@stripe_router.get("/subscriptions/page/{page_id}")
+async def get_page_subscriptions(page_id: str):
+    """
+    Get all active subscriptions for a page (for page owners).
+    """
+    subscriptions = await db.customer_subscriptions.find(
+        {
+            "page_id": page_id,
+            "subscription_status": {"$in": ["active", "trialing"]}
+        },
+        {"_id": 0}
+    ).to_list(500)
+    
+    # Calculate summary stats
+    total_mrr = sum(s.get("price", 0) for s in subscriptions if s.get("frequency") == "monthly")
+    total_arr = sum(
+        s.get("price", 0) * 12 if s.get("frequency") == "monthly" else 
+        s.get("price", 0) * 52 if s.get("frequency") == "weekly" else 
+        s.get("price", 0) 
+        for s in subscriptions
+    )
+    
+    return {
+        "subscriptions": subscriptions,
+        "stats": {
+            "total_active": len(subscriptions),
+            "mrr": total_mrr,
+            "arr": total_arr,
+            "platform_fees_pending": total_mrr * PLATFORM_FEE_RATE
+        }
+    }
+
+
 # ============== EXPORT ==============
 
 def get_stripe_router():
