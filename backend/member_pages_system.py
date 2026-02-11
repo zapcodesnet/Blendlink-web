@@ -2963,6 +2963,93 @@ async def page_websocket(websocket: WebSocket, page_id: str):
         logger.error(f"WebSocket error: {e}")
         await websocket.close(code=4001, reason="Authentication failed")
 
+# ============== CUSTOMERS / CRM ENDPOINTS ==============
+
+@page_analytics_router.get("/{page_id}/customers")
+async def get_page_customers(
+    page_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get customer data and analytics for a page - CRM feature"""
+    user_id = current_user["user_id"]
+    
+    # Verify page ownership
+    page = await db.member_pages.find_one({"page_id": page_id})
+    if not page or page["owner_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Aggregate customer data from orders
+    pipeline = [
+        {"$match": {"page_id": page_id, "status": {"$in": ["completed", "paid"]}}},
+        {"$group": {
+            "_id": {
+                "email": {"$ifNull": ["$customer_info.email", "$customer_email"]},
+                "phone": {"$ifNull": ["$customer_info.phone", "$customer_phone"]},
+                "name": {"$ifNull": ["$customer_info.name", "$customer_name"]}
+            },
+            "order_count": {"$sum": 1},
+            "total_spent": {"$sum": "$total"},
+            "first_order": {"$min": "$created_at"},
+            "last_order": {"$max": "$created_at"},
+            "avg_order": {"$avg": "$total"}
+        }},
+        {"$sort": {"total_spent": -1}}
+    ]
+    
+    customer_data = await db.page_orders.aggregate(pipeline).to_list(500)
+    
+    # Format customer records
+    customers = []
+    for c in customer_data:
+        identifier = c["_id"]
+        if identifier.get("email") or identifier.get("phone") or identifier.get("name"):
+            last_order_date = c.get("last_order")
+            last_visit = "Never"
+            if last_order_date:
+                try:
+                    parsed_date = datetime.fromisoformat(last_order_date.replace("Z", "+00:00"))
+                    days_ago = (datetime.now(timezone.utc) - parsed_date).days
+                    if days_ago == 0:
+                        last_visit = "Today"
+                    elif days_ago == 1:
+                        last_visit = "Yesterday"
+                    elif days_ago < 30:
+                        last_visit = f"{days_ago}d ago"
+                    else:
+                        last_visit = f"{days_ago // 30}mo ago"
+                except:
+                    pass
+            
+            customers.append({
+                "id": identifier.get("email") or identifier.get("phone") or identifier.get("name"),
+                "email": identifier.get("email"),
+                "phone": identifier.get("phone"),
+                "name": identifier.get("name"),
+                "order_count": c["order_count"],
+                "total_spent": c["total_spent"] or 0,
+                "avg_order": c.get("avg_order") or 0,
+                "first_order_date": c.get("first_order"),
+                "last_order_date": c.get("last_order"),
+                "last_visit": last_visit
+            })
+    
+    # Calculate stats
+    total_customers = len(customers)
+    repeat_customers = len([c for c in customers if c["order_count"] > 1])
+    total_revenue = sum(c["total_spent"] for c in customers)
+    avg_order_value = total_revenue / sum(c["order_count"] for c in customers) if customers else 0
+    
+    return {
+        "customers": customers,
+        "stats": {
+            "total_customers": total_customers,
+            "repeat_customers": repeat_customers,
+            "total_revenue": total_revenue,
+            "avg_order_value": avg_order_value
+        }
+    }
+
+
 # ============== EXPORT ROUTERS ==============
 
 async def start_change_streams():
