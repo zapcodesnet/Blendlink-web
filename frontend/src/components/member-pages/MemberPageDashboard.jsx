@@ -166,6 +166,8 @@ const ItemsTab = ({ page, pageType }) => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+  const [deletingItemId, setDeletingItemId] = useState(null);
 
   const loadItems = async () => {
     setLoading(true);
