@@ -1011,7 +1011,7 @@ export default function MemberPageDashboard() {
       </div>
 
       {/* Content */}
-      <main className="max-w-6xl mx-auto px-4 py-6" style={{ touchAction: 'pan-y' }}>
+      <main className="max-w-6xl mx-auto px-4 py-6 pb-28" style={{ touchAction: 'pan-y' }}>
         {activeTab === "overview" && (
           <AnalyticsDashboard pageId={pageId} pageName={page.name} />
         )}
