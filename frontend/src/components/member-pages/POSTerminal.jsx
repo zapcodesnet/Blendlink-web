@@ -561,6 +561,7 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
           total,
           customer_name: customerName,
           customer_phone: customerPhone,
+          customer_email: customerEmail,
           table_number: tableNumber,
           notes
         })
@@ -573,6 +574,7 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
       setCart([]);
       setCustomerName("");
       setCustomerPhone("");
+      setCustomerEmail("");
       setTableNumber("");
       setNotes("");
       setTipAmount(0);
