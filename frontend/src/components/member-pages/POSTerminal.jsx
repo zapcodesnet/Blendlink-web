@@ -972,20 +972,89 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
           )}
         </div>
 
-        {/* Customer Info */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <Input
-            placeholder="Customer name"
-            value={customerName}
-            onChange={(e) => setCustomerName(e.target.value)}
-            className="h-10 rounded-xl border-gray-200 bg-white"
-          />
-          <Input
-            placeholder="Phone"
-            value={customerPhone}
-            onChange={(e) => setCustomerPhone(e.target.value)}
-            className="h-10 rounded-xl border-gray-200 bg-white"
-          />
+        {/* Customer Info with Autofill */}
+        <div className="relative mb-4">
+          <div className="grid grid-cols-1 gap-3">
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                placeholder="Customer name (start typing to search)"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                onFocus={() => customerSuggestions.length > 0 && setShowCustomerSuggestions(true)}
+                className="h-10 pl-10 rounded-xl border-gray-200 bg-white"
+                data-testid="customer-name-input"
+              />
+              {loadingCustomers && (
+                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 animate-spin" />
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  placeholder="Phone"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  className="h-10 pl-10 rounded-xl border-gray-200 bg-white"
+                  data-testid="customer-phone-input"
+                />
+              </div>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  type="email"
+                  placeholder="Email (optional)"
+                  value={customerEmail}
+                  onChange={(e) => setCustomerEmail(e.target.value)}
+                  className="h-10 pl-10 rounded-xl border-gray-200 bg-white"
+                  data-testid="customer-email-input"
+                />
+              </div>
+            </div>
+          </div>
+          
+          {/* Customer Suggestions Dropdown */}
+          {showCustomerSuggestions && customerSuggestions.length > 0 && (
+            <div className="absolute z-50 w-full mt-1 bg-white rounded-xl border border-gray-200 shadow-xl overflow-hidden">
+              <div className="p-2 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
+                <span className="text-xs text-gray-500 font-medium">Previous Customers</span>
+                <button 
+                  onClick={() => setShowCustomerSuggestions(false)}
+                  className="p-1 hover:bg-gray-200 rounded"
+                >
+                  <X className="w-3 h-3 text-gray-400" />
+                </button>
+              </div>
+              <div className="max-h-48 overflow-y-auto">
+                {customerSuggestions.map((customer, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => selectCustomer(customer)}
+                    className="w-full text-left px-4 py-3 hover:bg-cyan-50 border-b border-gray-50 last:border-b-0 transition-colors"
+                    data-testid={`customer-suggestion-${idx}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center text-white font-bold">
+                        {(customer.name || customer.email || "?")[0].toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900 truncate">{customer.name || "Guest"}</p>
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          {customer.email && <span className="truncate">{customer.email}</span>}
+                          {customer.phone && <span>{customer.phone}</span>}
+                        </div>
+                        {customer.last_purchase && (
+                          <p className="text-xs text-cyan-600 mt-0.5">Last purchase: {customer.last_purchase}</p>
+                        )}
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-gray-300" />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Discount and Tip */}
