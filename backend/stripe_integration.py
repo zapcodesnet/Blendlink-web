@@ -315,6 +315,7 @@ async def create_withdrawal(
         "user_id": current_user["user_id"],
         "amount_usd": data.amount_usd,
         "fee_usd": fee,
+        "fee_rate": WITHDRAWAL_FEE_RATE,
         "net_amount_usd": net_amount,
         "status": "pending",
         "created_at": datetime.now(timezone.utc).isoformat(),
