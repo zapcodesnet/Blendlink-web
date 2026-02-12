@@ -1,6 +1,40 @@
 # Blendlink Platform - Product Requirements Document
 
-## Latest Update: February 12, 2026 - STRIPE LIVE MODE FULLY OPERATIONAL
+## Latest Update: February 12, 2026 - PRE-PUBLISH CHECKLIST IN PROGRESS
+
+---
+
+## 🟡 PRE-PUBLISH CHECKLIST STATUS (February 12, 2026)
+
+### Completed Items
+
+| Item | Status | Notes |
+|------|--------|-------|
+| SEO - robots.txt | ✅ Done | Created `/frontend/public/robots.txt` |
+| SEO - sitemap.xml | ✅ Done | Created `/frontend/public/sitemap.xml` |
+| SEO - Open Graph Tags | ✅ Done | Added OG & Twitter meta tags to index.html |
+| SEO - Meta Description | ✅ Already Present | "Blendlink - The All-in-One Super App" |
+| Favicon | ✅ Present | `/frontend/public/favicon.ico` |
+| Backend .env Cleanup | ✅ Done | Removed duplicate RESEND_API_KEY entries |
+| Security - No Exposed Secrets | ✅ Verified | No sensitive data in frontend code |
+| Cart Functionality | ✅ Working | Add to cart + checkout flow verified |
+| Rentals API | ✅ Working | `/api/rentals/properties` returns data |
+
+### Pending Items (Require User Action)
+
+| Item | Status | Action Required |
+|------|--------|-----------------|
+| Google OAuth Config | 🟡 Pending | User's Google credentials need to be configured in Emergent Auth service |
+| Custom Domain | 🟡 Pending | DNS configuration for blendlink.net |
+| Shippo Live Keys | 🟡 Pending | Replace test keys with live shipping API keys |
+| FRONTEND_URL Update | 🟡 Pending | Update to https://blendlink.net when domain is ready |
+
+### Notes on Google OAuth
+The application uses Emergent's managed Google Auth service (`auth.emergentagent.com`). The user's Google OAuth credentials:
+- Client ID: `307242386043-5fa8jnhokko451drihlpiia2pb1km2et.apps.googleusercontent.com`
+- Client Secret: `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`
+
+These need to be configured in the Emergent platform settings, not directly in the application code.
 
 ---
 
