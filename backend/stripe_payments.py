@@ -128,9 +128,14 @@ async def create_checkout_session(request: CreateCheckoutRequest, http_request: 
     cancel_url = f"{origin}/payment-cancelled?order_id={request.order_id}"
     
     # Initialize Stripe checkout
-    api_key = os.environ.get("STRIPE_API_KEY")
+    # CRITICAL: Use STRIPE_SECRET_KEY (not STRIPE_API_KEY which may have system override)
+    api_key = os.environ.get("STRIPE_SECRET_KEY") or os.environ.get("STRIPE_API_KEY")
     if not api_key:
         raise HTTPException(status_code=500, detail="Stripe not configured")
+    
+    # Verify we're using LIVE key
+    if not api_key.startswith("sk_live"):
+        logger.error(f"⚠️ Stripe key is NOT in LIVE mode! Key prefix: {api_key[:10]}")
     
     host_url = str(http_request.base_url).rstrip("/")
     webhook_url = f"{host_url}/api/webhook/stripe"
