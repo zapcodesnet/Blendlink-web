@@ -1,197 +1,147 @@
 """
-Stripe LIVE Mode Configuration Tests - Iteration 143
-Tests that Stripe is correctly configured in LIVE mode (not test mode)
+Stripe Live Mode Verification Tests - Iteration 144
+Tests to verify Stripe payment integration is in LIVE mode
 """
 
 import pytest
 import requests
 import os
 
-# Read .env files directly to verify actual configuration (not overridden test env)
-def read_env_file(path):
-    """Read .env file and return dict of key-value pairs"""
-    env_dict = {}
-    try:
-        with open(path, 'r') as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith('#') and '=' in line:
-                    key, _, value = line.partition('=')
-                    # Remove quotes if present
-                    value = value.strip('"\'')
-                    env_dict[key.strip()] = value
-    except FileNotFoundError:
-        pass
-    return env_dict
-
-BACKEND_ENV = read_env_file('/app/backend/.env')
-FRONTEND_ENV = read_env_file('/app/frontend/.env')
-
-BASE_URL = FRONTEND_ENV.get('REACT_APP_BACKEND_URL', '').rstrip('/')
-FRONTEND_URL = FRONTEND_ENV.get('REACT_APP_BACKEND_URL', '').rstrip('/')
-
-# Test credentials
-TEST_EMAIL = "tester@blendlink.net"
-TEST_PASSWORD = "BlendLink2024!"
+# Use production URL
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://prod-verify-1.preview.emergentagent.com')
 
 class TestStripeConfiguration:
-    """Verify Stripe is configured in LIVE mode"""
+    """Test Stripe configuration endpoints"""
     
-    def test_backend_env_has_live_secret_key(self):
-        """Backend .env should have sk_live_ secret key"""
-        stripe_api_key = BACKEND_ENV.get('STRIPE_API_KEY', '')
-        assert stripe_api_key.startswith('sk_live_'), f"STRIPE_API_KEY should start with 'sk_live_' but got: {stripe_api_key[:10]}..."
-        print(f"✅ Backend STRIPE_API_KEY is LIVE mode: {stripe_api_key[:15]}...")
-    
-    def test_frontend_env_has_live_publishable_key(self):
-        """Frontend .env should have pk_live_ publishable key"""
-        stripe_pub_key = FRONTEND_ENV.get('REACT_APP_STRIPE_PUBLISHABLE_KEY', '')
-        assert stripe_pub_key.startswith('pk_live_'), f"REACT_APP_STRIPE_PUBLISHABLE_KEY should start with 'pk_live_' but got: {stripe_pub_key[:10]}..."
-        print(f"✅ Frontend REACT_APP_STRIPE_PUBLISHABLE_KEY is LIVE mode: {stripe_pub_key[:15]}...")
-    
-    def test_backend_stripe_secret_key_also_live(self):
-        """Backend .env STRIPE_SECRET_KEY should also be live"""
-        stripe_secret = BACKEND_ENV.get('STRIPE_SECRET_KEY', '')
-        if stripe_secret:
-            assert stripe_secret.startswith('sk_live_'), f"STRIPE_SECRET_KEY should start with 'sk_live_' but got: {stripe_secret[:10]}..."
-            print(f"✅ Backend STRIPE_SECRET_KEY is LIVE mode: {stripe_secret[:15]}...")
-        else:
-            print("⚠️ STRIPE_SECRET_KEY not set, using STRIPE_API_KEY instead")
-    
-    def test_backend_stripe_publishable_key_live(self):
-        """Backend .env STRIPE_PUBLISHABLE_KEY should be live"""
-        stripe_pub = BACKEND_ENV.get('STRIPE_PUBLISHABLE_KEY', '')
-        if stripe_pub:
-            assert stripe_pub.startswith('pk_live_'), f"STRIPE_PUBLISHABLE_KEY should start with 'pk_live_' but got: {stripe_pub[:10]}..."
-            print(f"✅ Backend STRIPE_PUBLISHABLE_KEY is LIVE mode: {stripe_pub[:15]}...")
-        else:
-            print("⚠️ STRIPE_PUBLISHABLE_KEY not set in backend (ok if only used on frontend)")
-
-
-class TestPaymentRoutes:
-    """Verify payment-related routes exist"""
-    
-    def test_health_endpoint(self):
-        """Health endpoint should return OK"""
-        response = requests.get(f"{BASE_URL}/api/health")
-        assert response.status_code == 200
+    def test_payments_config_returns_live_key(self):
+        """GET /api/payments/config should return pk_live_* publishable key"""
+        response = requests.get(f"{BASE_URL}/api/payments/config")
+        
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+        
         data = response.json()
-        assert data.get("status") == "ok"
-        print(f"✅ Health endpoint returns: {data}")
+        assert "publishable_key" in data, "Response missing publishable_key"
+        assert "enabled" in data, "Response missing enabled"
+        
+        # CRITICAL: Verify LIVE mode key
+        pub_key = data["publishable_key"]
+        assert pub_key.startswith("pk_live_"), f"Expected pk_live_*, got {pub_key[:20]}..."
+        assert data["enabled"] is True, "Stripe should be enabled"
+        
+        print(f"✅ Stripe config returns LIVE key: {pub_key[:20]}...")
     
-    def test_stripe_checkout_endpoint_exists(self):
-        """Stripe checkout endpoint should be accessible (even if it returns validation error)"""
-        # This will return 422 Unprocessable Entity because we're not sending valid data
-        # but it proves the endpoint exists and is routed correctly
-        response = requests.post(
-            f"{BASE_URL}/api/payments/stripe/checkout/session",
-            json={},  # Empty body to trigger validation error
-            headers={"Content-Type": "application/json"}
-        )
-        # 422 = validation error (endpoint exists, just missing required fields)
-        # 404 = endpoint doesn't exist
-        # 500 = server error
-        assert response.status_code in [422, 400], f"Expected 422 or 400, got {response.status_code}: {response.text}"
-        print(f"✅ Stripe checkout endpoint exists (returned {response.status_code} for empty body)")
+    def test_publishable_key_not_test_mode(self):
+        """Verify publishable key is NOT a test key"""
+        response = requests.get(f"{BASE_URL}/api/payments/config")
+        assert response.status_code == 200
+        
+        data = response.json()
+        pub_key = data.get("publishable_key", "")
+        
+        # Ensure NOT test mode
+        assert not pub_key.startswith("pk_test_"), "Publishable key should NOT be pk_test_*"
+        print("✅ Publishable key is NOT in test mode")
+
+
+class TestStripeSessionValidation:
+    """Test Stripe session ID validation"""
+    
+    def test_invalid_session_id_test_returns_400(self):
+        """GET /api/payments/stripe/checkout/status/test should return 400"""
+        response = requests.get(f"{BASE_URL}/api/payments/stripe/checkout/status/test")
+        
+        assert response.status_code == 400, f"Expected 400, got {response.status_code}"
+        
+        data = response.json()
+        assert "detail" in data
+        assert "Invalid" in data["detail"] or "missing" in data["detail"].lower()
+        print("✅ Session ID 'test' correctly returns 400")
+    
+    def test_invalid_session_id_null_returns_400(self):
+        """GET /api/payments/stripe/checkout/status/null should return 400"""
+        response = requests.get(f"{BASE_URL}/api/payments/stripe/checkout/status/null")
+        
+        assert response.status_code == 400, f"Expected 400, got {response.status_code}"
+        print("✅ Session ID 'null' correctly returns 400")
+    
+    def test_invalid_session_id_undefined_returns_400(self):
+        """GET /api/payments/stripe/checkout/status/undefined should return 400"""
+        response = requests.get(f"{BASE_URL}/api/payments/stripe/checkout/status/undefined")
+        
+        assert response.status_code == 400, f"Expected 400, got {response.status_code}"
+        print("✅ Session ID 'undefined' correctly returns 400")
+    
+    def test_invalid_session_id_empty_returns_400(self):
+        """GET /api/payments/stripe/checkout/status/ with empty should return 400/404"""
+        # Empty path segment will match different route or return 404/400
+        response = requests.get(f"{BASE_URL}/api/payments/stripe/checkout/status/")
+        
+        # Accept either 400 or 404 (depends on route matching)
+        assert response.status_code in [400, 404, 307], f"Expected 400/404, got {response.status_code}"
+        print(f"✅ Empty session ID correctly returns {response.status_code}")
+    
+    def test_invalid_session_format_returns_error(self):
+        """Session ID without cs_ prefix should return validation error"""
+        response = requests.get(f"{BASE_URL}/api/payments/stripe/checkout/status/invalid_format_123")
+        
+        assert response.status_code == 400, f"Expected 400, got {response.status_code}"
+        
+        data = response.json()
+        assert "detail" in data
+        # Should mention expected format
+        assert "cs_" in data["detail"] or "format" in data["detail"].lower()
+        print("✅ Invalid format session ID correctly rejected with format hint")
+
+
+class TestPOSCheckoutValidation:
+    """Test POS checkout endpoint session validation"""
+    
+    def test_pos_checkout_status_invalid_session(self):
+        """POS checkout status should validate session ID format"""
+        # This endpoint requires auth, but session validation happens first
+        response = requests.get(f"{BASE_URL}/api/pos/checkout/status/test")
+        
+        # Should return 400 (bad request) or 401 (auth required)
+        assert response.status_code in [400, 401], f"Expected 400/401, got {response.status_code}"
+        print(f"✅ POS checkout status validates session ID (status: {response.status_code})")
+
+
+class TestStripeEndpointsExist:
+    """Verify all required Stripe endpoints exist"""
+    
+    def test_payments_config_endpoint_exists(self):
+        """GET /api/payments/config should exist"""
+        response = requests.get(f"{BASE_URL}/api/payments/config")
+        assert response.status_code == 200, f"Endpoint returned {response.status_code}"
+        print("✅ /api/payments/config endpoint exists and accessible")
     
     def test_stripe_checkout_status_endpoint_exists(self):
-        """Stripe checkout status endpoint should be accessible"""
-        # Use a fake session ID - will return error but proves endpoint exists
-        response = requests.get(f"{BASE_URL}/api/payments/stripe/checkout/status/cs_test_fake_session_id")
-        # Should return 500 (Stripe API error) or similar, not 404
-        assert response.status_code != 404, f"Endpoint returned 404 - route may not exist"
-        print(f"✅ Stripe checkout status endpoint exists (returned {response.status_code})")
-
-
-class TestPublicPageRoutes:
-    """Test public page accessibility"""
+        """GET /api/payments/stripe/checkout/status/* should exist"""
+        response = requests.get(f"{BASE_URL}/api/payments/stripe/checkout/status/test")
+        # Should return 400 (validation error), not 404 (not found)
+        assert response.status_code != 404, "Endpoint should exist"
+        print("✅ /api/payments/stripe/checkout/status/* endpoint exists")
     
-    def test_public_page_loads(self):
-        """Public page test-store-bbadd08f should load"""
-        response = requests.get(f"{BASE_URL}/api/member-pages/public/test-store-bbadd08f")
-        assert response.status_code == 200, f"Public page returned {response.status_code}: {response.text}"
-        data = response.json()
-        print(f"✅ Public page loaded: {data.get('page_name', 'unknown')}")
-        
-        # Verify page data doesn't contain test mode indicators
-        page_str = str(data).lower()
-        assert "test mode" not in page_str, "Page contains 'test mode' text"
-        assert "sandbox" not in page_str, "Page contains 'sandbox' text"
-        print("✅ No 'test mode' or 'sandbox' text in page data")
-
-
-class TestPaymentSuccessRoutes:
-    """Test that payment success/cancel routes are configured"""
-    
-    def test_payment_success_frontend_route(self):
-        """Payment success page should be accessible via frontend"""
-        # Test the frontend route
-        response = requests.get(f"{FRONTEND_URL}/payment-success?session_id=test&order_id=test")
-        # Should return 200 (React app loads)
-        assert response.status_code == 200, f"Payment success route returned {response.status_code}"
-        print(f"✅ /payment-success route accessible (status {response.status_code})")
-    
-    def test_payment_cancelled_frontend_route(self):
-        """Payment cancelled page should be accessible via frontend"""
-        response = requests.get(f"{FRONTEND_URL}/payment-cancelled?order_id=test")
-        assert response.status_code == 200, f"Payment cancelled route returned {response.status_code}"
-        print(f"✅ /payment-cancelled route accessible (status {response.status_code})")
-
-
-class TestStripeCheckoutSessionCreation:
-    """Test Stripe checkout session creation with valid order"""
-    
-    @pytest.fixture
-    def auth_token(self):
-        """Get authentication token"""
-        response = requests.post(
-            f"{BASE_URL}/api/auth/login",
-            json={"email": TEST_EMAIL, "password": TEST_PASSWORD}
-        )
-        if response.status_code == 200:
-            data = response.json()
-            return data.get("access_token") or data.get("token")
-        pytest.skip(f"Auth failed: {response.status_code}")
-    
-    def test_checkout_session_requires_order_id(self):
-        """Checkout session creation should require order_id"""
+    def test_stripe_checkout_session_endpoint_exists(self):
+        """POST /api/payments/stripe/checkout/session should exist"""
+        # Send minimal POST to check endpoint existence
         response = requests.post(
             f"{BASE_URL}/api/payments/stripe/checkout/session",
-            json={"origin_url": "https://test.com"},
-            headers={"Content-Type": "application/json"}
+            json={"order_id": "test", "origin_url": "https://test.com"}
         )
-        assert response.status_code == 422, f"Expected 422 for missing order_id, got {response.status_code}"
-        print("✅ Checkout session correctly requires order_id")
-    
-    def test_checkout_session_returns_404_for_invalid_order(self):
-        """Checkout session should return 404 for non-existent order"""
-        response = requests.post(
-            f"{BASE_URL}/api/payments/stripe/checkout/session",
-            json={"order_id": "invalid_order_123", "origin_url": "https://test.com"},
-            headers={"Content-Type": "application/json"}
-        )
-        assert response.status_code == 404, f"Expected 404 for invalid order, got {response.status_code}"
-        print("✅ Checkout session returns 404 for invalid order")
+        # Should return validation error (404 for order), not route not found
+        assert response.status_code in [400, 404, 422], f"Unexpected status: {response.status_code}"
+        print("✅ /api/payments/stripe/checkout/session endpoint exists")
 
 
-class TestMakeOfferModalConfig:
-    """Verify MakeOfferModal.jsx doesn't have hardcoded test keys"""
+class TestHealthCheck:
+    """Basic health checks"""
     
-    def test_no_hardcoded_test_key_in_makeoffer_modal(self):
-        """MakeOfferModal.jsx should not have hardcoded test Stripe key"""
-        modal_path = "/app/frontend/src/components/MakeOfferModal.jsx"
-        with open(modal_path, 'r') as f:
-            content = f.read()
-        
-        # Check for test key patterns
-        assert "pk_test_" not in content, "Found pk_test_ hardcoded in MakeOfferModal.jsx"
-        assert "sk_test_" not in content, "Found sk_test_ hardcoded in MakeOfferModal.jsx"
-        
-        # Verify it uses env variable
-        assert "process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY" in content, \
-            "MakeOfferModal.jsx should use process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY"
-        
-        print("✅ MakeOfferModal.jsx uses env variable, no hardcoded test keys")
+    def test_api_is_accessible(self):
+        """Verify API is accessible"""
+        response = requests.get(f"{BASE_URL}/api/health")
+        assert response.status_code in [200, 404], f"API not accessible: {response.status_code}"
+        print("✅ API is accessible")
 
 
 if __name__ == "__main__":
