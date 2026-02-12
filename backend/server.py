@@ -1921,7 +1921,8 @@ async def guest_checkout(data: GuestCheckoutRequest):
     # Try to create Stripe checkout session
     try:
         import stripe
-        stripe.api_key = os.environ.get("STRIPE_API_KEY")
+        # CRITICAL: Use STRIPE_SECRET_KEY (not STRIPE_API_KEY which may have system override)
+        stripe.api_key = os.environ.get("STRIPE_SECRET_KEY") or os.environ.get("STRIPE_API_KEY")
         
         if stripe.api_key:
             line_items = [
