@@ -432,7 +432,8 @@ async def process_stripe_refund(request: RefundPaymentRequest, http_request: Req
 @stripe_router.post("/webhook")
 async def handle_stripe_webhook(request: Request):
     """Handle Stripe webhook events"""
-    api_key = os.environ.get("STRIPE_API_KEY")
+    # CRITICAL: Use STRIPE_SECRET_KEY (not STRIPE_API_KEY which may have system override)
+    api_key = os.environ.get("STRIPE_SECRET_KEY") or os.environ.get("STRIPE_API_KEY")
     if not api_key:
         raise HTTPException(status_code=500, detail="Stripe not configured")
     
