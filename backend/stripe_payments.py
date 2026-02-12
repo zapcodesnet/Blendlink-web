@@ -206,6 +206,19 @@ async def get_checkout_status(session_id: str, http_request: Request):
     Check the status of a Stripe checkout session.
     Updates the database with the payment status.
     """
+    # CRITICAL: Validate session_id format before making API call
+    if not session_id or session_id in ["test", "null", "undefined", ""]:
+        logger.warning(f"Invalid session_id received: '{session_id}'")
+        raise HTTPException(status_code=400, detail="Invalid or missing session ID")
+    
+    # Stripe session IDs must start with cs_live_ or cs_test_
+    if not session_id.startswith("cs_"):
+        logger.warning(f"Session ID format invalid: '{session_id}' (must start with 'cs_')")
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid session ID format. Expected 'cs_live_...' or 'cs_test_...', got '{session_id[:20]}...'"
+        )
+    
     # Initialize Stripe
     api_key = os.environ.get("STRIPE_API_KEY")
     if not api_key:
@@ -218,8 +231,12 @@ async def get_checkout_status(session_id: str, http_request: Request):
     try:
         status: CheckoutStatusResponse = await stripe_checkout.get_checkout_status(session_id)
     except Exception as e:
-        logger.error(f"Stripe status check error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to check status: {str(e)}")
+        error_msg = str(e)
+        logger.error(f"Stripe status check error for session {session_id[:20]}...: {error_msg}")
+        # Handle specific Stripe errors
+        if "No such checkout.session" in error_msg:
+            raise HTTPException(status_code=404, detail="Checkout session not found or expired")
+        raise HTTPException(status_code=500, detail=f"Failed to check status: {error_msg}")
     
     # Find the transaction
     transaction = await db.payment_transactions.find_one({"stripe_session_id": session_id})
