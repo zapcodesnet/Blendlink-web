@@ -61,7 +61,7 @@ if stripe_api_key:
         logger.info(f"✅ STRIPE LIVE MODE VERIFIED - Key: {key_prefix}...")
         print(f"✅ STRIPE LIVE MODE VERIFIED (LIVE) - Key: {key_prefix}...")
     elif stripe_api_key.startswith("sk_test"):
-        logger.error(f"❌ STRIPE TEST MODE DETECTED - PRODUCTION SHOULD USE LIVE KEYS!")
+        logger.error("❌ STRIPE TEST MODE DETECTED - PRODUCTION SHOULD USE LIVE KEYS!")
         print(f"❌ STRIPE TEST MODE DETECTED - Key: {key_prefix}... (SHOULD BE sk_live_*)")
     else:
         logger.warning(f"⚠️ Unknown Stripe key format: {key_prefix}...")
@@ -74,7 +74,7 @@ if stripe_pub_key:
     if stripe_pub_key.startswith("pk_live"):
         logger.info(f"✅ STRIPE PUBLISHABLE KEY LIVE MODE - Key: {pub_key_prefix}...")
     elif stripe_pub_key.startswith("pk_test"):
-        logger.warning(f"⚠️ STRIPE PUBLISHABLE KEY IN TEST MODE!")
+        logger.warning("⚠️ STRIPE PUBLISHABLE KEY IN TEST MODE!")
 
 # Router
 stripe_router = APIRouter(prefix="/payments/stripe", tags=["Stripe Payments"])
