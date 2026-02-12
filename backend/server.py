@@ -2769,7 +2769,8 @@ async def stripe_webhook(request: Request):
     from emergentintegrations.payments.stripe.checkout import StripeCheckout
     import os
     
-    api_key = os.environ.get("STRIPE_API_KEY")
+    # CRITICAL: Use STRIPE_SECRET_KEY (not STRIPE_API_KEY which may have system override)
+    api_key = os.environ.get("STRIPE_SECRET_KEY") or os.environ.get("STRIPE_API_KEY")
     host_url = str(request.base_url).rstrip("/")
     webhook_url = f"{host_url}/api/webhook/stripe"
     
