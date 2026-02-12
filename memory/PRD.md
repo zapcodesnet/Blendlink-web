@@ -1,6 +1,45 @@
 # Blendlink Platform - Product Requirements Document
 
-## Latest Update: February 12, 2026 - CRITICAL Stripe Session ID Validation Fix
+## Latest Update: February 12, 2026 - CRITICAL ROOT CAUSE FIX: System Override Issue Resolved
+
+---
+
+## 🟢 ROOT CAUSE IDENTIFIED & FIXED (February 12, 2026)
+
+### Problem Root Cause
+**The Emergent platform has a system-level environment variable `STRIPE_API_KEY=sk_test_emergent` that was overriding the `.env` file's LIVE key.**
+
+When code called `os.environ.get("STRIPE_API_KEY")`, it received the SYSTEM test key instead of the .env LIVE key.
+
+### Solution Implemented
+Changed ALL Stripe key retrieval to prioritize `STRIPE_SECRET_KEY` over `STRIPE_API_KEY`:
+```python
+# BEFORE (broken):
+api_key = os.environ.get("STRIPE_API_KEY")  # Returns sk_test_emergent!
+
+# AFTER (fixed):
+api_key = os.environ.get("STRIPE_SECRET_KEY") or os.environ.get("STRIPE_API_KEY")  # Returns sk_live_...
+```
+
+### Files Fixed (All `STRIPE_API_KEY` → `STRIPE_SECRET_KEY or STRIPE_API_KEY`)
+1. `/app/backend/stripe_payments.py` - 5 occurrences fixed
+2. `/app/backend/media_sales.py` - 2 occurrences fixed
+3. `/app/backend/server.py` - 2 occurrences fixed
+4. `/app/backend/diamond_withdrawal_system.py` - 1 occurrence fixed
+
+### Verification Results
+```bash
+# Python verification shows LIVE key now used:
+Final API Key used: sk_live_51SkM5v...
+Key Mode: LIVE
+
+# Backend startup logs:
+✅ STRIPE LIVE MODE VERIFIED (LIVE) - Key: sk_live_51Sk...
+✅ STRIPE INTEGRATION: LIVE MODE VERIFIED - sk_live_51Sk...
+
+# Config endpoint returns LIVE publishable key:
+{"publishable_key":"pk_live_51SkM5v...","enabled":true}
+```
 
 ---
 
