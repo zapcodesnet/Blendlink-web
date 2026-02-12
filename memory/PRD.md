@@ -1,6 +1,43 @@
 # Blendlink Platform - Product Requirements Document
 
-## Latest Update: February 11, 2026 - STRIPE LIVE MODE FORCE-VERIFIED
+## Latest Update: February 12, 2026 - CRITICAL Stripe Session ID Validation Fix
+
+---
+
+## 🟢 STRIPE SESSION ID VALIDATION FIX (February 12, 2026)
+
+### Problem Diagnosed
+- API Error: `GET /v1/checkout/sessions/test` → 404 "No such checkout.session: test"
+- Root Cause: Invalid session IDs were being passed to Stripe API without validation
+- Affected endpoints: `/api/payments/stripe/checkout/status/{session_id}`, `/api/pos/checkout/status/{session_id}`, `/api/payments/status/{session_id}`
+
+### Solution Implemented
+All checkout status endpoints now validate session_id before calling Stripe API:
+
+| Validation | Action |
+|------------|--------|
+| Missing/null/undefined | Return 400 "Invalid or missing session ID" |
+| Value is "test"/"null"/"undefined" | Return 400 "Invalid or missing session ID" |
+| Doesn't start with "cs_" | Return 400 "Invalid session ID format" |
+| Valid format but not found | Return 404 "Checkout session not found or expired" |
+
+### Files Modified
+1. **`/app/backend/stripe_payments.py`** - Added session_id validation in `get_checkout_status()`
+2. **`/app/backend/member_pages_extended.py`** - Added session_id validation in `get_pos_checkout_status()`
+3. **`/app/backend/media_sales.py`** - Added session_id validation in `get_payment_status()`
+4. **`/app/frontend/src/pages/PaymentSuccess.jsx`** - Frontend validates before API call
+5. **`/app/frontend/src/components/member-pages/POSTerminal.jsx`** - POS validates before API call
+
+### Test Results
+```bash
+# Invalid "test" session → Returns 400 (doesn't hit Stripe API)
+curl /api/payments/stripe/checkout/status/test
+→ {"detail": "Invalid or missing session ID"}
+
+# Valid format but non-existent → Returns 404
+curl /api/payments/stripe/checkout/status/cs_test_invalid123
+→ {"detail": "Checkout session not found or expired"}
+```
 
 ---
 
