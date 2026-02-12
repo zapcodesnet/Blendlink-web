@@ -22,7 +22,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-API_URL = os.environ.get('API_URL', 'https://stripe-fix-29.preview.emergentagent.com')
+API_URL = os.environ.get('API_URL', 'https://prod-verify-1.preview.emergentagent.com')
 WS_URL = API_URL.replace('https://', 'wss://').replace('http://', 'ws://')
 
 USER1_EMAIL = 'test@blendlink.com'
