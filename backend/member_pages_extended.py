@@ -937,8 +937,8 @@ async def create_pos_checkout_session(
     await db.page_orders.insert_one(order.copy())
     order.pop("_id", None)
     
-    # Create Stripe checkout session - use LIVE key from environment
-    api_key = os.environ.get("STRIPE_API_KEY") or os.environ.get("STRIPE_SECRET_KEY")
+    # CRITICAL: Use STRIPE_SECRET_KEY first (STRIPE_API_KEY may have system override with test key)
+    api_key = os.environ.get("STRIPE_SECRET_KEY") or os.environ.get("STRIPE_API_KEY")
     if not api_key:
         raise HTTPException(status_code=500, detail="Stripe not configured")
     
@@ -1029,7 +1029,8 @@ async def get_pos_checkout_status(
     
     from emergentintegrations.payments.stripe.checkout import StripeCheckout
     
-    api_key = os.environ.get("STRIPE_API_KEY") or os.environ.get("STRIPE_SECRET_KEY")
+    # CRITICAL: Use STRIPE_SECRET_KEY first (STRIPE_API_KEY may have system override with test key)
+    api_key = os.environ.get("STRIPE_SECRET_KEY") or os.environ.get("STRIPE_API_KEY")
     if not api_key:
         raise HTTPException(status_code=500, detail="Stripe not configured")
     stripe_checkout = StripeCheckout(api_key=api_key, webhook_url="")

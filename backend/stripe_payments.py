@@ -716,7 +716,8 @@ async def get_subscription_status(session_id: str):
     Check the status of a subscription checkout session.
     Called after customer returns from Stripe.
     """
-    api_key = os.environ.get('STRIPE_API_KEY')
+    # CRITICAL: Use STRIPE_SECRET_KEY first (STRIPE_API_KEY may have system override with test key)
+    api_key = os.environ.get('STRIPE_SECRET_KEY') or os.environ.get('STRIPE_API_KEY')
     if not api_key:
         raise HTTPException(status_code=500, detail="Stripe not configured")
     
@@ -770,7 +771,8 @@ async def cancel_subscription(request: CancelSubscriptionRequest):
     """
     Cancel a customer's subscription.
     """
-    api_key = os.environ.get('STRIPE_API_KEY')
+    # CRITICAL: Use STRIPE_SECRET_KEY first (STRIPE_API_KEY may have system override with test key)
+    api_key = os.environ.get('STRIPE_SECRET_KEY') or os.environ.get('STRIPE_API_KEY')
     if not api_key:
         raise HTTPException(status_code=500, detail="Stripe not configured")
     
