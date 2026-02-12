@@ -1024,7 +1024,7 @@ async def get_pos_checkout_status(
         logger.warning(f"POS: Session ID format invalid: '{session_id}'")
         raise HTTPException(
             status_code=400, 
-            detail=f"Invalid session ID format. Expected 'cs_live_...' or 'cs_test_...'"
+            detail="Invalid session ID format. Expected 'cs_live_...' or 'cs_test_...'"
         )
     
     from emergentintegrations.payments.stripe.checkout import StripeCheckout
