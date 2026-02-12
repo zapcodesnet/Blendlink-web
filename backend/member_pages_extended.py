@@ -1014,6 +1014,19 @@ async def get_pos_checkout_status(
     current_user: dict = Depends(get_current_user)
 ):
     """Check the status of a POS checkout session"""
+    # CRITICAL: Validate session_id format before making API call
+    if not session_id or session_id in ["test", "null", "undefined", ""]:
+        logger.warning(f"POS: Invalid session_id received: '{session_id}'")
+        raise HTTPException(status_code=400, detail="Invalid or missing session ID")
+    
+    # Stripe session IDs must start with cs_live_ or cs_test_
+    if not session_id.startswith("cs_"):
+        logger.warning(f"POS: Session ID format invalid: '{session_id}'")
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid session ID format. Expected 'cs_live_...' or 'cs_test_...'"
+        )
+    
     from emergentintegrations.payments.stripe.checkout import StripeCheckout
     
     api_key = os.environ.get("STRIPE_API_KEY") or os.environ.get("STRIPE_SECRET_KEY")
