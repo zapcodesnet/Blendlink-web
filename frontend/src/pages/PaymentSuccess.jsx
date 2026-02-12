@@ -40,8 +40,9 @@ export default function PaymentSuccessPage() {
   // Page/Guest order payment verification
   const verifyPageOrderPayment = async () => {
     try {
-      if (sessionId) {
-        // Verify Stripe payment status
+      // CRITICAL: Validate session_id before making API call
+      if (sessionId && sessionId.startsWith('cs_')) {
+        // Valid Stripe session ID - verify payment status
         const statusRes = await fetch(`${API_BASE_URL}/api/payments/stripe/checkout/status/${sessionId}`);
         if (statusRes.ok) {
           const statusData = await statusRes.json();
@@ -56,8 +57,11 @@ export default function PaymentSuccessPage() {
             return;
           }
         }
+      } else if (sessionId) {
+        // Invalid session ID format - log warning but show success
+        console.warn(`Invalid session_id format: ${sessionId} (expected cs_live_... or cs_test_...)`);
       }
-      // Fallback - just show success
+      // Fallback - just show success (payment likely went through)
       setOrder({ order_id: orderId, is_guest_order: true });
       setStatus("success");
     } catch (error) {
