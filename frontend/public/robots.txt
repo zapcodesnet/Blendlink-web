@@ -1,0 +1,10 @@
+# Robots.txt for Blendlink
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /checkout
+Disallow: /payment/
+
+# Sitemap
+Sitemap: https://blendlink.net/sitemap.xml
