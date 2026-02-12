@@ -107,6 +107,13 @@ export default function PaymentSuccessPage() {
 
   // Media sales payment polling
   const pollPaymentStatus = async () => {
+    // CRITICAL: Validate session_id before making API call
+    if (!sessionId || !sessionId.startsWith('cs_')) {
+      console.warn(`Invalid session_id for polling: ${sessionId}`);
+      setStatus("success"); // Assume success - don't block user
+      return;
+    }
+    
     if (pollCount >= 10) {
       setStatus("success"); // Assume success after max polls
       return;
@@ -126,6 +133,11 @@ export default function PaymentSuccessPage() {
       }
     } catch (error) {
       console.error("Payment status check failed:", error);
+      // Check if it's a validation error (400) - don't retry
+      if (error.message?.includes('400') || error.message?.includes('Invalid')) {
+        setStatus("success"); // Show success anyway
+        return;
+      }
       setPollCount(prev => prev + 1);
       setTimeout(pollPaymentStatus, 2000);
     }
