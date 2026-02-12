@@ -597,6 +597,13 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
 
   // Poll payment status for card payments - PRODUCTION FIX: uses safeFetch
   const pollPaymentStatus = async (sessionId, attempts = 0) => {
+    // CRITICAL: Validate session_id before making API call
+    if (!sessionId || !sessionId.startsWith('cs_')) {
+      console.warn(`POS: Invalid session_id for polling: ${sessionId}`);
+      toast.error("Invalid payment session. Please try again.");
+      return;
+    }
+    
     const maxAttempts = 10;
     const pollInterval = 2000;
 
@@ -635,6 +642,11 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
       setTimeout(() => pollPaymentStatus(sessionId, attempts + 1), pollInterval);
     } catch (err) {
       console.error("Payment status check error:", err);
+      // Don't retry on validation errors (400)
+      if (err.message?.includes('400') || err.message?.includes('Invalid')) {
+        toast.error("Invalid payment session");
+        return;
+      }
       setTimeout(() => pollPaymentStatus(sessionId, attempts + 1), pollInterval);
     }
   };
