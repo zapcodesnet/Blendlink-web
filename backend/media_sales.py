@@ -744,13 +744,36 @@ async def create_checkout_session(offer_id: str, request: Request):
 @payments_router.get("/status/{session_id}")
 async def get_payment_status(session_id: str, request: Request):
     """Check payment status"""
+    # CRITICAL: Validate session_id format before making API call
+    if not session_id or session_id in ["test", "null", "undefined", ""]:
+        logger.warning(f"Media sales: Invalid session_id received: '{session_id}'")
+        raise HTTPException(status_code=400, detail="Invalid or missing session ID")
+    
+    # Stripe session IDs must start with cs_live_ or cs_test_
+    if not session_id.startswith("cs_"):
+        logger.warning(f"Media sales: Session ID format invalid: '{session_id}'")
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid session ID format. Expected 'cs_live_...' or 'cs_test_...'"
+        )
+    
     api_key = os.environ.get("STRIPE_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="Stripe not configured")
+    
     host_url = str(request.base_url).rstrip("/")
     webhook_url = f"{host_url}/api/webhook/stripe"
     
     stripe_checkout = StripeCheckout(api_key=api_key, webhook_url=webhook_url)
     
-    status = await stripe_checkout.get_checkout_status(session_id)
+    try:
+        status = await stripe_checkout.get_checkout_status(session_id)
+    except Exception as e:
+        error_msg = str(e)
+        logger.error(f"Media sales Stripe status check error: {error_msg}")
+        if "No such checkout.session" in error_msg:
+            raise HTTPException(status_code=404, detail="Checkout session not found or expired")
+        raise HTTPException(status_code=500, detail=f"Failed to check status: {error_msg}")
     
     # Update payment transaction
     if status.payment_status == "paid":
