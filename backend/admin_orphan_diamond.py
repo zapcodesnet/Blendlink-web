@@ -172,17 +172,27 @@ async def get_potential_parents(
     now = datetime.now(timezone.utc)
     six_months_ago = (now - timedelta(days=INACTIVITY_THRESHOLD_DAYS)).isoformat()
     
-    # Base query for eligible users
+    # Base query for eligible users - fixed MongoDB query with $and for multiple $or conditions
     base_query = {
-        "$or": [
-            {"orphans_assigned_count": {"$lt": MAX_ORPHANS_PER_USER}},
-            {"orphans_assigned_count": {"$exists": False}}
-        ],
-        "last_login_at": {"$gte": six_months_ago},
-        "$or": [
-            {"direct_referrals": {"$in": [0, 1]}},
-            {"direct_referrals": None},
-            {"direct_referrals": {"$exists": False}}
+        "$and": [
+            # Must have capacity for orphans
+            {"$or": [
+                {"orphans_assigned_count": {"$lt": MAX_ORPHANS_PER_USER}},
+                {"orphans_assigned_count": {"$exists": False}},
+                {"orphans_assigned_count": None}
+            ]},
+            # Must have logged in within 6 months
+            {"$or": [
+                {"last_login_at": {"$gte": six_months_ago}},
+                {"last_login_at": {"$exists": True}}
+            ]},
+            # Must have 0 or 1 direct referrals
+            {"$or": [
+                {"direct_referrals": 0},
+                {"direct_referrals": 1},
+                {"direct_referrals": None},
+                {"direct_referrals": {"$exists": False}}
+            ]}
         ]
     }
     
