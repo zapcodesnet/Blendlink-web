@@ -11,8 +11,9 @@ import {
   TrendingUp, TrendingDown, Eye, ShoppingCart, DollarSign, Users,
   Calendar, Download, RefreshCw, Loader2, BarChart3, PieChart, Copy
 } from "lucide-react";
+import { getApiUrl } from "../../utils/runtimeConfig";
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = getApiUrl();
 
 export default function AnalyticsDashboard({ pageId, pageName }) {
   const [analytics, setAnalytics] = useState(null);

@@ -10,8 +10,9 @@ import {
   DollarSign, TrendingUp, Clock, CreditCard, Banknote, Info,
   AlertTriangle, ChevronDown, ChevronUp, Calendar
 } from "lucide-react";
+import { getApiUrl } from "../../utils/runtimeConfig";
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = getApiUrl();
 
 export default function PlatformFeesManager({ pageId, currencySymbol = "$" }) {
   const [feesData, setFeesData] = useState(null);

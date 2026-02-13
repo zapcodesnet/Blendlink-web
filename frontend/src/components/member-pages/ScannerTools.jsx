@@ -12,8 +12,9 @@ import {
   ScanLine, Camera, Upload, Search, Loader2, Package, Check,
   ShoppingCart, X, Sparkles, QrCode
 } from "lucide-react";
+import { getApiUrl } from "../../utils/runtimeConfig";
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = getApiUrl();
 
 export default function ScannerTools({ pageId, pageType, onItemFound }) {
   const [activeTab, setActiveTab] = useState("barcode"); // barcode, ai

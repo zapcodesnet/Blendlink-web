@@ -20,8 +20,9 @@ import {
   Eye, Star, TrendingUp, Filter, ArrowUpDown, Grid3X3, List,
   BarChart3, X, ChevronRight, Sparkles, Image, Clock, AlertCircle
 } from "lucide-react";
+import { getApiUrl } from "../../utils/runtimeConfig";
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = getApiUrl();
 
 // Listing Card Component
 const ListingCard = ({ listing, onAction, actionLabel, actionIcon: ActionIcon, actionLoading, variant = "default" }) => {
