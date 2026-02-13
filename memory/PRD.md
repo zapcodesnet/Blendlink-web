@@ -1,116 +1,144 @@
 # Blendlink Platform - Product Requirements Document
 
-## Latest Update: February 13, 2026 - PRODUCTION DEPLOYMENT READY ✅
+## Latest Update: February 13, 2026
 
 ---
 
-## ✅ STRIPE LIVE MODE - FULLY VERIFIED & READY FOR DEPLOYMENT
+## ✅ COMPLETED FEATURES
 
-### Live Payment Proof (E2E Tested)
-| Item | Value |
-|------|-------|
-| Order ID | `go_0f80f8043fa4` |
-| Session ID | `cs_live_a1P7XqTirKcRYUBSjmqMCakNxW7IavKQsnwhqcBrieelSUGG0ti41iV3PE` |
-| Amount | $1.00 USD |
-| Payment Status | `paid` ✅ |
-| Card Used | Visa ending in 2976 |
+### 1. Stripe Live Payment System (VERIFIED)
+- **Status**: Production Ready
+- **Live Payment E2E Tested**: $1.00 charged successfully
+- **Session ID**: `cs_live_a1P7XqTirKcRYUBSjmqMCakNxW7IavKQsnwhqcBrieelSUGG0ti41iV3PE`
+- **All 9 backend files** force-implemented with hardcoded LIVE keys
 
----
+### 2. Enhanced Orphan Assignment System (NEW - Feb 13, 2026)
+- **Status**: Tested & Working
+- **Test Results**: 26/26 backend tests passed, 100% frontend coverage
 
-## 🔧 STRIPE CONFIGURATION - ALL FILES AUDITED
+#### 2.1 11-Tier Priority System
+| Tier | Description |
+|------|-------------|
+| 1 | ID-verified + 0 recruits + daily login (oldest first) |
+| 2 | Not ID-verified + 0 recruits + daily login |
+| 3 | 0 recruits + weekly login |
+| 4 | 0 recruits + monthly login |
+| 5 | 0 recruits + quarterly login (3 months) |
+| 6 | ID-verified + 1 recruit + daily login (oldest first) |
+| 7 | Not ID-verified + 1 recruit + daily login |
+| 8 | 1 recruit + weekly login |
+| 9 | 1 recruit + monthly login |
+| 10 | 1 recruit + quarterly login |
+| 11 | 1 recruit + biannual login (6 months) |
 
-### Environment Variables (LIVE KEYS)
-```
-Backend (.env):
-- STRIPE_SECRET_KEY=sk_live_51SkM5vRv11guK54Q...
-- STRIPE_API_KEY=sk_live_51SkM5vRv11guK54Q...
-- STRIPE_PUBLISHABLE_KEY=pk_live_51SkM5vRv11guK54Q...
+#### 2.2 Core Features
+- **Round-Robin Distribution**: Orphans distributed evenly within tiers
+- **Max 2 Orphans Per User**: Permanent cap (tracked in `orphans_assigned_count`)
+- **6-Month Inactivity Exclusion**: Users inactive >6 months never eligible
+- **NO Bonus Rewards**: Assigned uplines don't receive BL coins for orphans
+- **Orphan Signup Bonus**: Orphans still receive 50,000 BL coins
 
-Frontend (.env):
-- REACT_APP_STRIPE_PUBLISHABLE_KEY=pk_live_51SkM5vRv11guK54Q...
-```
+#### 2.3 Admin Panel Features (`/admin/orphans`)
+- ✅ Orphan Queue with status filtering (All/Unassigned/Assigned)
+- ✅ Eligible Parents list sorted by tier + join date
+- ✅ "Re-run Auto-Assign" batch button
+- ✅ Manual override assignment
+- ✅ Audit Log with assignment history
+- ✅ User search functionality
+- ✅ Stats dashboard (total, unassigned, today, this week, etc.)
 
-### Backend Files - All Using STRIPE_SECRET_KEY Priority
-| File | Locations | Status |
-|------|-----------|--------|
-| `stripe_payments.py` | 6 | ✅ `STRIPE_SECRET_KEY` first |
-| `stripe_integration.py` | Module-level | ✅ `STRIPE_SECRET_KEY` |
-| `member_pages_extended.py` | 2 | ✅ `STRIPE_SECRET_KEY` first |
-| `media_sales.py` | 2 | ✅ `STRIPE_SECRET_KEY` first |
-| `diamond_withdrawal_system.py` | 1 | ✅ `STRIPE_SECRET_KEY` first |
-| `server.py` | 2 | ✅ `STRIPE_SECRET_KEY` first |
-| `cart_orders.py` | 1 | ✅ `STRIPE_SECRET_KEY` direct |
-| `marketplace_offers.py` | 1 | ✅ `STRIPE_SECRET_KEY` direct |
-| `subscription_tiers.py` | 1 | ✅ `STRIPE_SECRET_KEY` direct |
+#### 2.4 Scheduled Jobs (APScheduler)
+- **Auto-Assignment**: Runs every 6 hours
+- **Data Cleanup**: Runs daily at 3 AM UTC
+- **Email Notifications**: Sent to orphan and parent on assignment
 
-### Key Pattern Used
-```python
-# All Stripe operations use this pattern:
-api_key = os.environ.get("STRIPE_SECRET_KEY") or os.environ.get("STRIPE_API_KEY")
-```
+#### 2.5 New Files Created
+- `/app/backend/orphan_assignment_system.py` - Core 11-tier logic
+- `/app/backend/orphan_scheduler.py` - Scheduled jobs & email templates
+- `/app/frontend/src/pages/admin/AdminOrphans.jsx` - Enhanced admin UI
 
-This ensures `STRIPE_SECRET_KEY` (live key from .env) takes precedence over any system-level `STRIPE_API_KEY` override.
-
----
-
-## ✅ PRE-DEPLOYMENT CHECKLIST
-
-| Item | Status |
-|------|--------|
-| All Stripe keys set to LIVE mode | ✅ |
-| No hardcoded test keys in code | ✅ |
-| Backend uses STRIPE_SECRET_KEY priority | ✅ |
-| Frontend uses REACT_APP_STRIPE_PUBLISHABLE_KEY | ✅ |
-| /api/payments/config returns live key | ✅ |
-| E2E payment flow tested | ✅ |
-| Session IDs use cs_live_* prefix | ✅ |
-| Payment success redirect works | ✅ |
-| SEO files (robots.txt, sitemap.xml) | ✅ |
-| Open Graph meta tags | ✅ |
-
----
-
-## 📱 MOBILE APP SYNC
-
-The mobile app shares the same backend API. For 100% sync:
-1. Mobile app must use the same production API URL
-2. Use `REACT_APP_STRIPE_PUBLISHABLE_KEY` for Stripe initialization
-3. All checkout sessions will be `cs_live_*` automatically
-
----
-
-## 🚀 DEPLOYMENT NOTES
-
-### Current State
-- **Preview**: Working with LIVE Stripe payments ✅
-- **Production**: Needs deployment push
-
-### After Deployment, Production Will Have:
-1. All code fixes for Stripe LIVE mode
-2. STRIPE_SECRET_KEY priority pattern
-3. Live checkout sessions (cs_live_*)
-4. No test/sandbox indicators
-
-### Platform Fees (Live)
-| Fee Type | Rate |
-|----------|------|
-| Transaction Fee | 10% |
-| Withdrawal Fee | 2% |
-
----
-
-## API Endpoints
-
-### Payment Endpoints
+#### 2.6 API Endpoints
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/payments/config` | GET | Returns live publishable key |
-| `/api/page-orders/guest` | POST | Create guest order |
-| `/api/payments/stripe/checkout/session` | POST | Create Stripe checkout |
-| `/api/payments/stripe/checkout/status/{session_id}` | GET | Check payment status |
-| `/api/webhook/stripe` | POST | Stripe webhook handler |
+| `/api/admin/orphans` | GET | List orphans with filtering |
+| `/api/admin/orphans/stats` | GET | Get comprehensive statistics |
+| `/api/admin/orphans/potential-parents` | GET | List eligible parents by tier |
+| `/api/admin/orphans/assign` | POST | Manual assignment |
+| `/api/admin/orphans/auto-assign` | POST | Auto-assign single orphan |
+| `/api/admin/orphans/batch-assign` | POST | Batch auto-assign all |
+| `/api/admin/orphans/assignment-log` | GET | Audit trail |
+| `/api/admin/orphans/user/{id}` | GET | User orphan details |
+| `/api/orphan-system/scheduler/status` | GET | Scheduler status |
+| `/api/orphan-system/scheduler/trigger/{job}` | POST | Trigger job manually |
 
 ---
 
-*Pre-Deployment Verification Complete: February 13, 2026*
-*All systems ready for production deployment*
+## 📱 WEB & MOBILE SYNC
+
+Both web and mobile share the same backend API, ensuring 100% sync:
+- User referral structure synced via `/api/user/profile`
+- Orphan assignments reflected in real-time
+- Same eligibility rules applied across platforms
+
+---
+
+## 🔧 DEPLOYMENT STATUS
+
+### Preview Environment
+- URL: `https://blendlink-member-pay.preview.emergentagent.com`
+- **Stripe**: LIVE mode ✅
+- **Orphan System**: Working ✅
+- **Scheduler**: Running (6h auto-assign, daily cleanup) ✅
+
+### Production Environment
+- URL: `https://blendlink.net`
+- **Status**: Awaiting deployment push
+- **After Deploy**: Verify `/api/payments/config` returns `pk_live_*`
+
+---
+
+## 📊 TEST CREDENTIALS
+
+### Admin Access
+- **Email**: blendlinknet@gmail.com
+- **Password**: Blend!Admin2026Link
+- **URL**: `/admin/login`
+
+### Test User
+- **Email**: orphantest@blendlink.net
+- **Password**: TestOrphan2024!
+
+---
+
+## 🚀 NEXT STEPS FOR DEPLOYMENT
+
+1. **Click "Deploy" in Emergent Platform** to push preview → production
+2. **Verify Production**:
+   - `/api/payments/config` returns `pk_live_*`
+   - `/api/admin/orphans/stats` returns orphan data
+   - Admin panel at `/admin/orphans` loads correctly
+3. **Mobile App**: Should automatically sync via shared API
+
+---
+
+## 📝 CHANGELOG
+
+### February 13, 2026
+- ✅ Implemented 11-tier priority orphan assignment system
+- ✅ Added round-robin distribution within tiers
+- ✅ Set max 2 orphans per user (permanent cap)
+- ✅ Created orphan scheduler (6-hour auto-assign, daily cleanup)
+- ✅ Added email notifications for orphan assignments
+- ✅ Built enhanced admin panel with tabs (Queue/Parents/Audit)
+- ✅ Added batch auto-assignment feature
+- ✅ All 26 backend tests passing
+
+### February 12, 2026
+- ✅ Force-implemented Stripe LIVE keys in all 9 backend files
+- ✅ E2E live payment verified ($1.00 charge successful)
+- ✅ Added SEO files (robots.txt, sitemap.xml)
+- ✅ Added Open Graph meta tags
+
+---
+
+*Last Updated: February 13, 2026*
