@@ -1617,44 +1617,84 @@ async def comment_on_post_reward(
 async def assign_orphan_to_queue(orphan_user_id: str) -> Optional[str]:
     """
     Assign an orphan user to a suitable upline based on 11 priority tiers.
-    Max 2 orphans per user, one at a time.
+    Uses the enhanced orphan assignment system with round-robin distribution.
+    Max 2 orphans per user (permanent cap).
+    
+    IMPORTANT: Assigned uplines do NOT receive BL coin bonuses for orphan assignments.
     """
-    recipient_id = await find_orphan_recipient()
-    
-    if not recipient_id:
-        logger.warning(f"No suitable recipient found for orphan {orphan_user_id}")
-        return None
-    
-    # Create relationship but DON'T award bonuses (as per requirements)
-    relationship = ReferralRelationship(
-        referrer_id=recipient_id,
-        referred_id=orphan_user_id,
-        level=1
-    )
-    rel_dict = relationship.model_dump()
-    rel_dict["created_at"] = rel_dict["created_at"].isoformat()
-    rel_dict["last_activity"] = rel_dict["last_activity"].isoformat()
-    rel_dict["is_orphan_assignment"] = True
-    await db.referral_relationships.insert_one(rel_dict)
-    
-    # Update orphan count for recipient
-    await db.users.update_one(
-        {"user_id": recipient_id},
-        {"$inc": {"orphans_assigned": 1, "direct_referrals": 1}}
-    )
-    
-    # Mark orphan as assigned
-    await db.users.update_one(
-        {"user_id": orphan_user_id},
-        {"$set": {
-            "referred_by": recipient_id,
-            "is_orphan_assigned": True,
-            "orphan_assigned_at": datetime.now(timezone.utc).isoformat()
-        }}
-    )
-    
-    logger.info(f"Orphan {orphan_user_id} assigned to {recipient_id}")
-    return recipient_id
+    try:
+        # Import the enhanced system
+        from orphan_assignment_system import (
+            find_eligible_recipient,
+            assign_orphan_to_recipient,
+            AssignmentType
+        )
+        
+        # Find eligible recipient
+        recipient = await find_eligible_recipient()
+        
+        if not recipient:
+            logger.warning(f"No suitable recipient found for orphan {orphan_user_id}")
+            return None
+        
+        recipient_id = recipient["user_id"]
+        tier = recipient.get("tier")
+        
+        # Use enhanced assignment
+        result = await assign_orphan_to_recipient(
+            orphan_user_id=orphan_user_id,
+            recipient_id=recipient_id,
+            assignment_type=AssignmentType.AUTO,
+            tier=tier
+        )
+        
+        if result.success:
+            logger.info(f"Orphan {orphan_user_id} assigned to {recipient_id} (Tier {tier})")
+            return recipient_id
+        else:
+            logger.error(f"Failed to assign orphan {orphan_user_id}: {result.message}")
+            return None
+            
+    except ImportError:
+        # Fallback to original logic if new system not available
+        logger.warning("Enhanced orphan system not available, using fallback")
+        recipient_id = await find_orphan_recipient()
+        
+        if not recipient_id:
+            logger.warning(f"No suitable recipient found for orphan {orphan_user_id}")
+            return None
+        
+        # Create relationship but DON'T award bonuses (as per requirements)
+        relationship = ReferralRelationship(
+            referrer_id=recipient_id,
+            referred_id=orphan_user_id,
+            level=1
+        )
+        rel_dict = relationship.model_dump()
+        rel_dict["created_at"] = rel_dict["created_at"].isoformat()
+        rel_dict["last_activity"] = rel_dict["last_activity"].isoformat()
+        rel_dict["is_orphan_assignment"] = True
+        await db.referral_relationships.insert_one(rel_dict)
+        
+        # Update orphan count for recipient
+        await db.users.update_one(
+            {"user_id": recipient_id},
+            {"$inc": {"orphans_assigned_count": 1, "direct_referrals": 1}}
+        )
+        
+        # Mark orphan as assigned
+        await db.users.update_one(
+            {"user_id": orphan_user_id},
+            {"$set": {
+                "referred_by": recipient_id,
+                "is_orphan": True,
+                "is_orphan_assigned": True,
+                "orphan_assigned_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        logger.info(f"Orphan {orphan_user_id} assigned to {recipient_id} (fallback)")
+        return recipient_id
 
 # Automatic demotion check (should be run as scheduled task)
 async def run_diamond_maintenance_checks():
