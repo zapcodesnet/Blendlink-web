@@ -1,25 +1,46 @@
 """
 Admin Orphan and Diamond Leader Management API
 Provides endpoints for managing orphans and diamond leaders from the admin panel.
+
+Enhanced with:
+- 11-tier priority orphan assignment system
+- Round-robin distribution within tiers
+- Max 2 orphans per user (permanent cap)
+- Manual override with validation
+- Comprehensive audit trail
+- Batch auto-assignment
 """
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from datetime import datetime, timezone, timedelta
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 import uuid
 import logging
 
 # Import shared dependencies
 from server import db, get_current_user
 
+# Import enhanced orphan system
+from orphan_assignment_system import (
+    find_eligible_recipient,
+    assign_orphan_to_recipient,
+    auto_assign_single_orphan,
+    batch_auto_assign_orphans,
+    get_login_frequency,
+    get_tier_description,
+    calculate_user_tier,
+    calculate_priority_score,
+    AssignmentType,
+    LoginFrequency,
+    MAX_ORPHANS_PER_USER,
+    INACTIVITY_THRESHOLD_DAYS
+)
+
 logger = logging.getLogger(__name__)
 
 # Create routers
 admin_orphans_router = APIRouter(prefix="/admin/orphans", tags=["Admin Orphans"])
 admin_diamonds_router = APIRouter(prefix="/admin/diamond-leaders", tags=["Admin Diamond Leaders"])
-
-# Constants
-MAX_ORPHANS_PER_USER = 2
 
 # ============== ORPHAN MANAGEMENT ==============
 
