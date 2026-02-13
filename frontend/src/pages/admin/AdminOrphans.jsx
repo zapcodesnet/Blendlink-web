@@ -420,6 +420,7 @@ export default function AdminOrphans() {
         {[
           { id: 'queue', label: 'Orphan Queue', icon: Users },
           { id: 'parents', label: 'Eligible Parents', icon: UserPlus },
+          { id: 'trends', label: 'Trends', icon: BarChart3 },
           { id: 'audit', label: 'Audit Log', icon: History }
         ].map(tab => (
           <Button
@@ -427,6 +428,7 @@ export default function AdminOrphans() {
             variant={activeTab === tab.id ? 'default' : 'ghost'}
             onClick={() => setActiveTab(tab.id)}
             className={activeTab === tab.id ? 'bg-purple-600' : 'text-slate-400'}
+            data-testid={`tab-${tab.id}`}
           >
             <tab.icon className="w-4 h-4 mr-2" />
             {tab.label}
