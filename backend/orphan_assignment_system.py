@@ -419,6 +419,33 @@ async def assign_orphan_to_recipient(
     
     logger.info(f"Orphan {orphan_user_id} assigned to {recipient_id} via {assignment_type.value} (Tier {tier})")
     
+    # Send email notifications (non-blocking)
+    try:
+        from orphan_scheduler import send_orphan_assignment_notification, send_parent_notification
+        
+        # Notify orphan
+        if orphan.get("email"):
+            asyncio.create_task(send_orphan_assignment_notification(
+                orphan_email=orphan["email"],
+                orphan_username=orphan.get("username", "User"),
+                parent_username=recipient.get("username", "Unknown"),
+                assignment_type=assignment_type.value,
+                tier=tier
+            ))
+        
+        # Notify parent
+        if recipient.get("email"):
+            asyncio.create_task(send_parent_notification(
+                parent_email=recipient["email"],
+                parent_username=recipient.get("username", "User"),
+                orphan_username=orphan.get("username", "Unknown"),
+                orphan_count=current_orphan_count + 1
+            ))
+    except ImportError:
+        logger.debug("Orphan scheduler not available for notifications")
+    except Exception as e:
+        logger.warning(f"Failed to send assignment notifications: {e}")
+    
     return AssignmentResult(
         success=True,
         orphan_user_id=orphan_user_id,
