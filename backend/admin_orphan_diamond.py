@@ -120,14 +120,24 @@ async def get_orphan_stats(current_user: dict = Depends(get_current_user)):
         "created_at": {"$gte": week_ago.isoformat()}
     })
     
-    # Count eligible parents
+    # Count eligible parents - use $or for last_activity OR last_login_at
     eligible_parents = await db.users.count_documents({
-        "$or": [
-            {"orphans_assigned_count": {"$lt": MAX_ORPHANS_PER_USER}},
-            {"orphans_assigned_count": {"$exists": False}}
-        ],
-        "last_login_at": {"$gte": six_months_ago},
-        "direct_referrals": {"$in": [0, 1, None]}
+        "$and": [
+            {"$or": [
+                {"orphans_assigned_count": {"$lt": MAX_ORPHANS_PER_USER}},
+                {"orphans_assigned_count": {"$exists": False}}
+            ]},
+            {"$or": [
+                {"last_activity": {"$gte": six_months_ago}},
+                {"last_login_at": {"$gte": six_months_ago}}
+            ]},
+            {"$or": [
+                {"direct_referrals": 0},
+                {"direct_referrals": 1},
+                {"direct_referrals": None},
+                {"direct_referrals": {"$exists": False}}
+            ]}
+        ]
     })
     
     # Count parents at capacity
