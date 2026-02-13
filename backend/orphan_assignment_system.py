@@ -189,71 +189,90 @@ async def find_eligible_recipient(exclude_user_id: Optional[str] = None) -> Opti
     Implements round-robin within tiers by:
     1. Excluding the last assigned user if possible
     2. Sorting by created_at (oldest first)
+    
+    NOTE: Uses both 'last_activity' and 'last_login_at' fields for compatibility,
+    as the DB may have either field populated.
     """
     thresholds = await get_time_thresholds()
     last_assigned = await get_last_assigned_user()
     
+    # Helper to create login time condition that checks both fields
+    def login_time_gte(threshold_key: str):
+        """Returns $or condition for login time >= threshold"""
+        return {"$or": [
+            {"last_activity": {"$gte": thresholds[threshold_key]}},
+            {"last_login_at": {"$gte": thresholds[threshold_key]}}
+        ]}
+    
+    def login_time_range(min_key: str, max_key: str):
+        """Returns condition for login time in range [min, max)"""
+        return {"$or": [
+            {"last_activity": {"$gte": thresholds[min_key], "$lt": thresholds[max_key]}},
+            {"last_login_at": {"$gte": thresholds[min_key], "$lt": thresholds[max_key]}}
+        ]}
+    
     # Build 11 tier queries in priority order
+    # Using $and to properly combine login time checks with other conditions
     tier_queries = [
         # Tier 1: ID-verified + 0 recruits + daily
-        {
-            "id_verified": True,
-            "direct_referrals": {"$in": [0, None]},
-            "last_login_at": {"$gte": thresholds["daily"]}
-        },
+        {"$and": [
+            {"id_verified": True},
+            {"direct_referrals": {"$in": [0, None]}},
+            login_time_gte("daily")
+        ]},
         # Tier 2: Non-ID-verified + 0 recruits + daily
-        {
-            "id_verified": {"$ne": True},
-            "direct_referrals": {"$in": [0, None]},
-            "last_login_at": {"$gte": thresholds["daily"]}
-        },
+        {"$and": [
+            {"id_verified": {"$ne": True}},
+            {"direct_referrals": {"$in": [0, None]}},
+            login_time_gte("daily")
+        ]},
         # Tier 3: 0 recruits + weekly (but not daily)
-        {
-            "direct_referrals": {"$in": [0, None]},
-            "last_login_at": {"$gte": thresholds["weekly"], "$lt": thresholds["daily"]}
-        },
+        {"$and": [
+            {"direct_referrals": {"$in": [0, None]}},
+            login_time_range("weekly", "daily")
+        ]},
         # Tier 4: 0 recruits + monthly (but not weekly)
-        {
-            "direct_referrals": {"$in": [0, None]},
-            "last_login_at": {"$gte": thresholds["monthly"], "$lt": thresholds["weekly"]}
-        },
+        {"$and": [
+            {"direct_referrals": {"$in": [0, None]}},
+            login_time_range("monthly", "weekly")
+        ]},
         # Tier 5: 0 recruits + quarterly (but not monthly)
-        {
-            "direct_referrals": {"$in": [0, None]},
-            "last_login_at": {"$gte": thresholds["quarterly"], "$lt": thresholds["monthly"]}
-        },
+        {"$and": [
+            {"direct_referrals": {"$in": [0, None]}},
+            login_time_range("quarterly", "monthly")
+        ]},
         # Tier 6: ID-verified + 1 recruit + daily
-        {
-            "id_verified": True,
-            "direct_referrals": 1,
-            "last_login_at": {"$gte": thresholds["daily"]}
-        },
+        {"$and": [
+            {"id_verified": True},
+            {"direct_referrals": 1},
+            login_time_gte("daily")
+        ]},
         # Tier 7: Non-ID-verified + 1 recruit + daily
-        {
-            "id_verified": {"$ne": True},
-            "direct_referrals": 1,
-            "last_login_at": {"$gte": thresholds["daily"]}
-        },
+        {"$and": [
+            {"id_verified": {"$ne": True}},
+            {"direct_referrals": 1},
+            login_time_gte("daily")
+        ]},
         # Tier 8: 1 recruit + weekly (but not daily)
-        {
-            "direct_referrals": 1,
-            "last_login_at": {"$gte": thresholds["weekly"], "$lt": thresholds["daily"]}
-        },
+        {"$and": [
+            {"direct_referrals": 1},
+            login_time_range("weekly", "daily")
+        ]},
         # Tier 9: 1 recruit + monthly (but not weekly)
-        {
-            "direct_referrals": 1,
-            "last_login_at": {"$gte": thresholds["monthly"], "$lt": thresholds["weekly"]}
-        },
+        {"$and": [
+            {"direct_referrals": 1},
+            login_time_range("monthly", "weekly")
+        ]},
         # Tier 10: 1 recruit + quarterly (but not monthly)
-        {
-            "direct_referrals": 1,
-            "last_login_at": {"$gte": thresholds["quarterly"], "$lt": thresholds["monthly"]}
-        },
+        {"$and": [
+            {"direct_referrals": 1},
+            login_time_range("quarterly", "monthly")
+        ]},
         # Tier 11: 1 recruit + biannual (but not quarterly)
-        {
-            "direct_referrals": 1,
-            "last_login_at": {"$gte": thresholds["biannual"], "$lt": thresholds["quarterly"]}
-        },
+        {"$and": [
+            {"direct_referrals": 1},
+            login_time_range("biannual", "quarterly")
+        ]},
     ]
     
     for tier_idx, tier_query in enumerate(tier_queries, 1):
