@@ -12,7 +12,55 @@
 - **Session ID**: `cs_live_a1P7XqTirKcRYUBSjmqMCakNxW7IavKQsnwhqcBrieelSUGG0ti41iV3PE`
 - **All 9 backend files** force-implemented with hardcoded LIVE keys
 
-### 2. Enhanced Orphan Assignment System (FIXED - Feb 13, 2026)
+### 2. Mobile UI Fix for Member Pages (NEW - Feb 13, 2026)
+- **Status**: ✅ Fixed & Verified
+- **Test Results**: 100% frontend pass
+
+#### 2.1 Bug Fixed
+| Bug | Fix Applied |
+|-----|-------------|
+| Add Menu Item/Product buttons blocked by bottom nav on mobile | Increased container padding from pb-24 (96px) to pb-32 (128px) |
+| Buttons not always visible on mobile scroll | Made items header sticky with `sticky top-0 z-10` classes |
+| Modal not mobile-optimized | Modal now slides up from bottom on mobile with `flex items-end md:items-center` |
+| No close button on mobile modal | Added X button to modal header for mobile users |
+| Safe area issues on notched phones | Added `paddingBottom: env(safe-area-inset-bottom)` to modal |
+
+#### 2.2 Files Modified
+- `/app/frontend/src/components/member-pages/MemberPageDashboard.jsx`
+
+### 3. Runtime URL Detection System (NEW - Feb 13, 2026)
+- **Status**: ✅ Implemented & Verified
+- **Purpose**: Prevent production builds from using preview URLs
+
+#### 3.1 Problem Solved
+| Issue | Solution |
+|-------|----------|
+| Preview URLs baked into production builds | Runtime hostname detection: `window.location.hostname === 'blendlink.net'` |
+| Multiple files had hardcoded process.env.REACT_APP_BACKEND_URL | Centralized utility `/app/frontend/src/utils/runtimeConfig.js` |
+
+#### 3.2 New Utility: runtimeConfig.js
+```javascript
+getApiUrl()      // Returns correct API base URL
+getWsUrl()       // Returns correct WebSocket URL
+getFrontendUrl() // Returns correct frontend URL
+```
+
+#### 3.3 Files Updated (20+ files)
+- `/app/frontend/src/utils/runtimeConfig.js` (NEW)
+- `/app/frontend/src/services/memberPagesApi.js`
+- `/app/frontend/src/services/referralApi.js`
+- `/app/frontend/src/services/mediaSalesApi.js`
+- `/app/frontend/src/hooks/usePushNotifications.js`
+- `/app/frontend/src/hooks/useAdminWebSocket.js`
+- `/app/frontend/src/components/member-pages/*.jsx` (all POS, Orders, Inventory, etc.)
+- `/app/frontend/src/components/BottomNav.jsx`
+- `/app/frontend/src/components/LanguageSelector.jsx`
+- `/app/frontend/src/components/AuctionBidPanel.jsx`
+- `/app/frontend/src/components/PhotoEditorModal.jsx`
+- `/app/frontend/src/components/LinkPreview.jsx`
+- `/app/frontend/src/components/OrphanTrendsWidget.jsx`
+
+### 4. Enhanced Orphan Assignment System (FIXED - Feb 13, 2026)
 - **Status**: ✅ Production Ready - All Critical Bugs Fixed
 - **Test Results**: 100% backend pass, 100% frontend pass
 
