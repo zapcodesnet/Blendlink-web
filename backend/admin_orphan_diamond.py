@@ -51,7 +51,7 @@ async def get_orphans(
     status: Optional[str] = None,  # 'unassigned', 'assigned', or None for all
     current_user: dict = Depends(get_current_user)
 ):
-    """Get list of orphans (users without referrers)"""
+    """Get list of orphans (users without referrers) with detailed info"""
     query = {"$or": [
         {"referred_by": None},
         {"referred_by": {"$exists": False}},
@@ -67,10 +67,11 @@ async def get_orphans(
         query,
         {"user_id": 1, "username": 1, "email": 1, "created_at": 1, 
          "is_orphan_assigned": 1, "referred_by": 1, "last_login_at": 1, 
-         "bl_coins": 1, "orphan_assigned_at": 1, "_id": 0}
+         "bl_coins": 1, "orphan_assigned_at": 1, "orphan_assignment_type": 1,
+         "orphan_assigned_tier": 1, "_id": 0}
     ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
     
-    # Get assigned parent info
+    # Enrich with assigned parent info and login frequency
     for orphan in orphans:
         if orphan.get("referred_by"):
             parent = await db.users.find_one(
@@ -78,8 +79,19 @@ async def get_orphans(
                 {"username": 1, "_id": 0}
             )
             orphan["assigned_to_username"] = parent.get("username") if parent else "Unknown"
+        
+        # Add login frequency
+        orphan["login_frequency"] = get_login_frequency(orphan.get("last_login_at")).value
     
-    return {"orphans": orphans}
+    # Get total count
+    total_count = await db.users.count_documents(query)
+    
+    return {
+        "orphans": orphans,
+        "total": total_count,
+        "skip": skip,
+        "limit": limit
+    }
 
 @admin_orphans_router.get("/stats")
 async def get_orphan_stats(current_user: dict = Depends(get_current_user)):
