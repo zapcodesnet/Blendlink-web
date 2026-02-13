@@ -144,12 +144,17 @@ async def create_checkout_session(request: CreateCheckoutRequest, http_request: 
     # Initialize Stripe checkout
     # CRITICAL: Use STRIPE_SECRET_KEY (not STRIPE_API_KEY which may have system override)
     api_key = os.environ.get("STRIPE_SECRET_KEY") or os.environ.get("STRIPE_API_KEY")
+    
+    # FORCE LIVE MODE - Override any test keys in production
+    if not api_key or not api_key.startswith("sk_live"):
+        logger.warning(f"⚠️ CHECKOUT SESSION: FORCING LIVE KEY - was {api_key[:15] if api_key else 'empty'}...")
+        api_key = LIVE_STRIPE_SECRET_KEY
+    
     if not api_key:
         raise HTTPException(status_code=500, detail="Stripe not configured")
     
-    # Verify we're using LIVE key
-    if not api_key.startswith("sk_live"):
-        logger.error(f"⚠️ Stripe key is NOT in LIVE mode! Key prefix: {api_key[:10]}")
+    # Log the key being used (prefix only)
+    logger.info(f"✅ Creating checkout session with key: {api_key[:12]}...")
     
     host_url = str(http_request.base_url).rstrip("/")
     webhook_url = f"{host_url}/api/webhook/stripe"
