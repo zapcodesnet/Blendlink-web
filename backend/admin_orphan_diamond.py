@@ -161,77 +161,90 @@ async def get_orphan_stats(current_user: dict = Depends(get_current_user)):
 
 @admin_orphans_router.get("/potential-parents")
 async def get_potential_parents(
-    limit: int = 20,
+    limit: int = 50,
+    tier: Optional[int] = None,
     current_user: dict = Depends(get_current_user)
 ):
-    """Get list of potential parents for orphan assignment, sorted by tier priority"""
+    """
+    Get list of potential parents for orphan assignment, sorted by 11-tier priority.
+    Shows detailed eligibility info for each user.
+    """
     now = datetime.now(timezone.utc)
-    six_months_ago = (now - timedelta(days=180)).isoformat()
-    daily_threshold = (now - timedelta(days=1)).isoformat()
-    weekly_threshold = (now - timedelta(days=7)).isoformat()
-    monthly_threshold = (now - timedelta(days=30)).isoformat()
-    quarterly_threshold = (now - timedelta(days=90)).isoformat()
+    six_months_ago = (now - timedelta(days=INACTIVITY_THRESHOLD_DAYS)).isoformat()
+    
+    # Base query for eligible users
+    base_query = {
+        "$or": [
+            {"orphans_assigned_count": {"$lt": MAX_ORPHANS_PER_USER}},
+            {"orphans_assigned_count": {"$exists": False}}
+        ],
+        "last_login_at": {"$gte": six_months_ago},
+        "$or": [
+            {"direct_referrals": {"$in": [0, 1]}},
+            {"direct_referrals": None},
+            {"direct_referrals": {"$exists": False}}
+        ]
+    }
+    
+    # Get candidates
+    candidates_cursor = db.users.find(
+        base_query,
+        {"user_id": 1, "username": 1, "email": 1, "id_verified": 1,
+         "direct_referrals": 1, "orphans_assigned_count": 1, "last_login_at": 1,
+         "created_at": 1, "_id": 0}
+    ).sort("created_at", 1).limit(limit * 3)
     
     parents = []
-    
-    # Define tier queries in priority order
-    tier_queries = [
-        {"id_verified": True, "direct_referrals": 0, "last_login_at": {"$gte": daily_threshold}},
-        {"direct_referrals": 0, "last_login_at": {"$gte": daily_threshold}},
-        {"direct_referrals": 0, "last_login_at": {"$gte": weekly_threshold}},
-        {"direct_referrals": 0, "last_login_at": {"$gte": monthly_threshold}},
-        {"direct_referrals": 0, "last_login_at": {"$gte": quarterly_threshold}},
-        {"id_verified": True, "direct_referrals": 1, "last_login_at": {"$gte": daily_threshold}},
-        {"direct_referrals": 1, "last_login_at": {"$gte": daily_threshold}},
-        {"direct_referrals": 1, "last_login_at": {"$gte": weekly_threshold}},
-        {"direct_referrals": 1, "last_login_at": {"$gte": monthly_threshold}},
-        {"direct_referrals": 1, "last_login_at": {"$gte": quarterly_threshold}},
-        {"direct_referrals": 1, "last_login_at": {"$gte": six_months_ago}},
-    ]
-    
-    tier_descriptions = [
-        "ID-verified + 0 recruits + daily login",
-        "0 recruits + daily login",
-        "0 recruits + weekly login",
-        "0 recruits + monthly login",
-        "0 recruits + quarterly login",
-        "ID-verified + 1 recruit + daily login",
-        "1 recruit + daily login",
-        "1 recruit + weekly login",
-        "1 recruit + monthly login",
-        "1 recruit + quarterly login",
-        "1 recruit + biannual login",
-    ]
-    
-    seen_ids = set()
-    
-    for tier_idx, tier_query in enumerate(tier_queries, 1):
+    async for user in candidates_cursor:
+        # Calculate login frequency and tier
+        login_freq = get_login_frequency(user.get("last_login_at"))
+        
+        # Skip inactive users
+        if login_freq == LoginFrequency.INACTIVE:
+            continue
+        
+        direct_recruits = user.get("direct_referrals") or 0
+        is_verified = user.get("id_verified", False)
+        user_tier = calculate_user_tier(direct_recruits, is_verified, login_freq)
+        
+        # Filter by tier if specified
+        if tier and user_tier != tier:
+            continue
+        
+        # Skip ineligible tiers
+        if user_tier > 11:
+            continue
+        
+        orphans_assigned = user.get("orphans_assigned_count") or 0
+        
+        parents.append({
+            "user_id": user["user_id"],
+            "username": user.get("username", "Unknown"),
+            "email": user.get("email"),
+            "tier": user_tier,
+            "tier_description": get_tier_description(user_tier),
+            "direct_recruits": direct_recruits,
+            "orphans_assigned": orphans_assigned,
+            "remaining_capacity": MAX_ORPHANS_PER_USER - orphans_assigned,
+            "id_verified": is_verified,
+            "login_frequency": login_freq.value,
+            "last_login_at": user.get("last_login_at"),
+            "created_at": user.get("created_at"),
+            "priority_score": calculate_priority_score(user_tier, user.get("created_at"))
+        })
+        
         if len(parents) >= limit:
             break
-            
-        base_query = {
-            **tier_query,
-            "orphans_assigned_count": {"$lt": MAX_ORPHANS_PER_USER},
-            "last_login_at": {"$gte": six_months_ago},
-        }
-        
-        candidates = await db.users.find(
-            base_query,
-            {"user_id": 1, "username": 1, "direct_referrals": 1, 
-             "orphans_assigned_count": 1, "last_login_at": 1, "_id": 0}
-        ).sort("created_at", 1).limit(5).to_list(5)
-        
-        for candidate in candidates:
-            if candidate["user_id"] not in seen_ids and len(parents) < limit:
-                seen_ids.add(candidate["user_id"])
-                parents.append({
-                    **candidate,
-                    "tier": tier_idx,
-                    "tier_desc": tier_descriptions[tier_idx - 1],
-                    "orphans_assigned": candidate.get("orphans_assigned_count", 0)
-                })
     
-    return {"parents": parents}
+    # Sort by tier (ascending) then created_at (oldest first)
+    parents.sort(key=lambda x: (x["tier"], x["created_at"] or ""))
+    
+    return {
+        "parents": parents,
+        "total": len(parents),
+        "max_orphans_per_user": MAX_ORPHANS_PER_USER,
+        "tier_descriptions": {i: get_tier_description(i) for i in range(1, 12)}
+    }
 
 @admin_orphans_router.post("/assign")
 async def manual_assign_orphan(
