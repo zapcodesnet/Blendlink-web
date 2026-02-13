@@ -9,8 +9,9 @@ import { safeFetch } from "../../services/memberPagesApi";
 import {
   Globe, Check, ChevronDown, Search, Loader2
 } from "lucide-react";
+import { getApiUrl } from "../../utils/runtimeConfig";
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = getApiUrl();
 
 export default function CurrencySelector({ pageId, currentCurrency = "USD", currentSymbol = "$", onUpdate }) {
   const [currencies, setCurrencies] = useState({});
