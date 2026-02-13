@@ -14,8 +14,9 @@ import {
   Car, UtensilsCrossed, ShoppingBag, Truck, Package, Clock,
   Phone, Mail, Globe
 } from "lucide-react";
+import { getApiUrl } from "../../utils/runtimeConfig";
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = getApiUrl();
 
 // Order type configurations
 const ORDER_TYPE_CONFIG = {

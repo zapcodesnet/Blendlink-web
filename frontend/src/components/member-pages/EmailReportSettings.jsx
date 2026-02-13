@@ -12,8 +12,9 @@ import {
   Mail, Clock, Bell, BellOff, Send, Check, Loader2,
   Settings, Calendar, AlertCircle, Info
 } from "lucide-react";
+import { getApiUrl } from "../../utils/runtimeConfig";
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = getApiUrl();
 
 // Time options for send hour
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => ({

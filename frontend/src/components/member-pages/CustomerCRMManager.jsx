@@ -12,8 +12,9 @@ import {
   TrendingUp, DollarSign, Calendar, ChevronRight, Loader2,
   Send, Copy, Heart, ShoppingBag, Clock, Filter
 } from "lucide-react";
+import { getApiUrl } from "../../utils/runtimeConfig";
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = getApiUrl();
 
 // Customer Card Component
 const CustomerCard = ({ customer, onSendOffer, onRequestReview, pageId }) => {

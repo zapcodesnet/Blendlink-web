@@ -14,8 +14,9 @@ import {
   ArrowLeft, Check, Loader2, Shield, Lock, Package, Truck,
   ChevronRight, X, Minus, Plus
 } from "lucide-react";
+import { getApiUrl } from "../../utils/runtimeConfig";
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = getApiUrl();
 
 // Payment method options
 const PAYMENT_METHODS = [
