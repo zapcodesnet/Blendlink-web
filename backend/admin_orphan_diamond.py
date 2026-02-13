@@ -240,7 +240,7 @@ async def get_potential_parents(
             "remaining_capacity": MAX_ORPHANS_PER_USER - orphans_assigned,
             "id_verified": is_verified,
             "login_frequency": login_freq.value,
-            "last_login_at": user.get("last_login_at"),
+            "last_login_at": login_time,  # Use the resolved login time (last_activity or last_login_at)
             "created_at": user.get("created_at"),
             "priority_score": calculate_priority_score(user_tier, user.get("created_at"))
         })
