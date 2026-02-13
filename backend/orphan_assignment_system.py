@@ -124,7 +124,7 @@ def get_login_frequency(last_login_str: Optional[str]) -> LoginFrequency:
     
     try:
         last_login = datetime.fromisoformat(last_login_str.replace("Z", "+00:00"))
-    except:
+    except (ValueError, AttributeError):
         return LoginFrequency.INACTIVE
     
     now = datetime.now(timezone.utc)
