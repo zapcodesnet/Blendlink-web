@@ -9,7 +9,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import { AuthContext } from "../App";
 import { FacebookShareOverlay } from "./FacebookShareOverlay";
 
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+// Runtime URL detection for production/preview environments
+const getApiBase = () => {
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname === 'blendlink.net' || hostname === 'www.blendlink.net') {
+      return 'https://blendlink.net';
+    }
+  }
+  return process.env.REACT_APP_BACKEND_URL || 'https://blendlink.net';
+};
+const API_BASE_URL = getApiBase();
 
 export const BottomNav = () => {
   const { t } = useTranslation();
