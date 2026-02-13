@@ -390,17 +390,31 @@ async def register(data: UserCreate, response: Response):
     
     # If no referrer was provided or found, try to assign from orphan queue
     if not has_referrer:
+        # Mark user as orphan first
+        await db.users.update_one(
+            {"user_id": user.user_id},
+            {"$set": {"is_orphan": True}}
+        )
+        
         try:
-            from referral_system import assign_orphan_to_queue
-            assigned_to = await assign_orphan_to_queue(user.user_id)
-            if assigned_to:
-                referrer_id = assigned_to
-                await db.users.update_one(
-                    {"user_id": user.user_id},
-                    {"$set": {"referred_by": assigned_to, "is_orphan_assigned": True}}
-                )
-                logger.info(f"Orphan user {user.user_id} assigned to {assigned_to}")
+            from orphan_assignment_system import auto_assign_single_orphan
+            result = await auto_assign_single_orphan(user.user_id)
+            if result.success:
+                referrer_id = result.assigned_to
+                logger.info(f"Orphan user {user.user_id} auto-assigned to {referrer_id} (Tier {result.tier})")
                 # Note: Assigned uplines do NOT receive bonuses for orphans
+            else:
+                logger.warning(f"No eligible parent for orphan {user.user_id}: {result.message}")
+        except ImportError:
+            # Fallback to old system
+            try:
+                from referral_system import assign_orphan_to_queue
+                assigned_to = await assign_orphan_to_queue(user.user_id)
+                if assigned_to:
+                    referrer_id = assigned_to
+                    logger.info(f"Orphan user {user.user_id} assigned to {assigned_to} via fallback")
+            except Exception as e:
+                logger.error(f"Fallback orphan assignment failed: {e}")
         except Exception as e:
             logger.error(f"Failed to assign orphan: {e}")
     
