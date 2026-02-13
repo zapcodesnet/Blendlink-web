@@ -791,14 +791,24 @@ async def get_orphan_stats(current_user: dict = Depends(get_current_user)):
         # This is a simplified count - actual query would be more complex
         tier_counts[f"tier_{tier_num}"] = 0
     
-    # Count eligible parents
+    # Count eligible parents - use both last_activity and last_login_at
     eligible_parents = await db.users.count_documents({
-        "$or": [
-            {"orphans_assigned_count": {"$lt": MAX_ORPHANS_PER_USER}},
-            {"orphans_assigned_count": {"$exists": False}}
-        ],
-        "last_login_at": {"$gte": thresholds["biannual"]},
-        "direct_referrals": {"$in": [0, 1, None]}
+        "$and": [
+            {"$or": [
+                {"orphans_assigned_count": {"$lt": MAX_ORPHANS_PER_USER}},
+                {"orphans_assigned_count": {"$exists": False}}
+            ]},
+            {"$or": [
+                {"last_activity": {"$gte": thresholds["biannual"]}},
+                {"last_login_at": {"$gte": thresholds["biannual"]}}
+            ]},
+            {"$or": [
+                {"direct_referrals": 0},
+                {"direct_referrals": 1},
+                {"direct_referrals": None},
+                {"direct_referrals": {"$exists": False}}
+            ]}
+        ]
     })
     
     # Users at capacity
