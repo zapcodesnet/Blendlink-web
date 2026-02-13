@@ -260,14 +260,14 @@ const ItemsTab = ({ page, pageType }) => {
   }
 
   return (
-    <div className="space-y-4 pb-24">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 pb-32 md:pb-24">
+      {/* Header - Mobile-optimized with sticky positioning */}
+      <div className="flex items-center justify-between sticky top-0 z-10 bg-gradient-to-br from-[#F0F5FF] via-white to-[#F0F8FF] py-2 -mx-4 px-4 md:relative md:bg-transparent md:py-0 md:mx-0">
         <h3 className="font-semibold flex items-center gap-2">
           <Icon className="w-5 h-5 text-primary" />
           {config.label} ({items.length})
         </h3>
-        <Button size="sm" onClick={() => { setEditingItem(null); setShowAddModal(true); }} data-testid="add-item-btn">
+        <Button size="sm" onClick={() => { setEditingItem(null); setShowAddModal(true); }} data-testid="add-item-btn" className="shadow-lg md:shadow-none">
           <Plus className="w-4 h-4 mr-1" /> Add {config.label.slice(0, -1)}
         </Button>
       </div>
