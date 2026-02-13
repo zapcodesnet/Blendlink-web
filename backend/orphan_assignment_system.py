@@ -567,19 +567,22 @@ async def get_orphan_queue(
     orphans_cursor = db.users.find(
         query,
         {"user_id": 1, "username": 1, "email": 1, "created_at": 1,
-         "last_login_at": 1, "bl_coins": 1, "is_orphan_assigned": 1,
+         "last_login_at": 1, "last_activity": 1, "bl_coins": 1, "is_orphan_assigned": 1,
          "referred_by": 1, "orphan_assigned_at": 1, "orphan_assignment_type": 1,
          "orphan_assigned_tier": 1, "_id": 0}
     ).sort("created_at", -1).skip(skip).limit(limit)
     
     orphans = []
     async for orphan in orphans_cursor:
+        # Resolve login time from either field
+        login_time = orphan.get("last_activity") or orphan.get("last_login_at")
+        
         orphan_data = OrphanUser(
             user_id=orphan["user_id"],
             username=orphan.get("username", "Unknown"),
             email=orphan.get("email"),
             created_at=orphan.get("created_at", ""),
-            last_login_at=orphan.get("last_login_at"),
+            last_login_at=login_time,  # Use resolved login time
             bl_coins=orphan.get("bl_coins", 0),
             is_assigned=orphan.get("is_orphan_assigned", False),
             assigned_to=orphan.get("referred_by"),
