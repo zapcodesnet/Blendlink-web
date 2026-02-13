@@ -13,10 +13,13 @@ import {
 
 // Runtime URL detection for production/preview environments
 const getApiBase = () => {
-  if (typeof window !== 'undefined' && window.location.hostname === 'blendlink.net') {
-    return 'https://blendlink.net';
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname === 'blendlink.net' || hostname === 'www.blendlink.net') {
+      return 'https://blendlink.net';
+    }
   }
-  return process.env.REACT_APP_BACKEND_URL || '';
+  return process.env.REACT_APP_BACKEND_URL || 'https://blendlink.net';
 };
 const API_BASE = getApiBase();
 
