@@ -960,3 +960,50 @@ async def get_user_orphan_info(
             "id_verified": user.get("id_verified", False),
         }
     }
+
+
+
+# ============== SCHEDULER ENDPOINTS ==============
+
+@orphan_router.get("/scheduler/status")
+async def get_scheduler_status_endpoint(current_user: dict = Depends(get_current_user)):
+    """Get the current status of the orphan assignment scheduler"""
+    try:
+        from orphan_scheduler import get_scheduler_status
+        return get_scheduler_status()
+    except ImportError:
+        return {"running": False, "jobs": [], "error": "Scheduler module not loaded"}
+
+@orphan_router.post("/scheduler/trigger/{job_type}")
+async def trigger_scheduler_job(
+    job_type: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Manually trigger a scheduler job.
+    job_type: 'auto_assign' or 'cleanup'
+    """
+    if job_type not in ["auto_assign", "cleanup"]:
+        raise HTTPException(status_code=400, detail="Invalid job type. Use 'auto_assign' or 'cleanup'")
+    
+    try:
+        from orphan_scheduler import trigger_orphan_job_now
+        result = await trigger_orphan_job_now(job_type)
+        return result
+    except ImportError:
+        raise HTTPException(status_code=500, detail="Scheduler module not available")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@orphan_router.get("/scheduler/history")
+async def get_scheduler_history(
+    limit: int = 20,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get history of scheduled orphan assignment jobs"""
+    history = await db.orphan_scheduled_jobs.find(
+        {},
+        {"_id": 0}
+    ).sort("run_at", -1).limit(limit).to_list(limit)
+    
+    return {"history": history, "total": len(history)}
