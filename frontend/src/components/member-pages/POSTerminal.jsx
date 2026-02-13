@@ -16,8 +16,9 @@ import {
   ArrowLeft, Volume2, Mail
 } from "lucide-react";
 import { Textarea } from "../ui/textarea";
+import { getApiUrl } from "../../utils/runtimeConfig";
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = getApiUrl();
 
 // Manual Entry Modal Component - Rendered via Portal for proper z-index
 const ManualEntryModal = ({ show, onClose, onAdd, manualItem, setManualItem }) => {
