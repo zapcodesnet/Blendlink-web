@@ -523,9 +523,18 @@ const AddItemModal = ({ pageId, pageType, onClose, onSuccess, editItem = null })
   const labels = getLabels();
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-card rounded-xl p-6 w-full max-w-md border border-border max-h-[90vh] overflow-y-auto">
-        <h2 className="text-lg font-bold mb-4">{labels.title}</h2>
+    <div className="fixed inset-0 bg-black/50 flex items-end md:items-center justify-center z-[60] p-0 md:p-4" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+      <div className="bg-card rounded-t-2xl md:rounded-xl p-6 w-full max-w-md border border-border max-h-[85vh] md:max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom md:zoom-in-95">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold">{labels.title}</h2>
+          <button 
+            type="button" 
+            onClick={onClose} 
+            className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 md:hidden"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Image Upload Section */}
