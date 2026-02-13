@@ -93,7 +93,7 @@ Both web and mobile share the same backend API, ensuring 100% sync:
 ## 🔧 DEPLOYMENT STATUS
 
 ### Preview Environment
-- URL: `https://priority-tier.preview.emergentagent.com`
+- URL: `https://orphan-dashboard.preview.emergentagent.com`
 - **Stripe**: LIVE mode ✅
 - **Orphan System**: Working ✅ (91 orphans, 15 eligible parents)
 - **Scheduler**: Running (6h auto-assign, daily cleanup) ✅

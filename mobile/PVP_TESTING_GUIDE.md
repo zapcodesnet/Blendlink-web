@@ -123,7 +123,7 @@ tail -f /var/log/supervisor/backend.err.log | grep -E "PVP|Lobby|WebSocket"
 
 ## API URLs
 
-- Web App: https://priority-tier.preview.emergentagent.com
+- Web App: https://orphan-dashboard.preview.emergentagent.com
 - Mobile API: Same as above (via EXPO_PUBLIC_API_URL)
 - Lobby WebSocket: `wss://[host]/api/ws/lobby/{gameId}/{token}`
 - PVP WebSocket: `wss://[host]/api/ws/pvp-game/{roomId}/{token}`

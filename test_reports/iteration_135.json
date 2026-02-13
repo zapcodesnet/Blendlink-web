@@ -73,8 +73,8 @@
     "stripe_card_payment": "Card payment gateway integration is MOCKED - manual card entry form exists but actual payment processing is not implemented"
   },
   "test_urls_used": [
-    "https://priority-tier.preview.emergentagent.com/myshop-1770708410",
-    "https://priority-tier.preview.emergentagent.com/api/member-pages/public/myshop-1770708410",
-    "https://priority-tier.preview.emergentagent.com/member-pages/mpage_ecfa1e28feee"
+    "https://orphan-dashboard.preview.emergentagent.com/myshop-1770708410",
+    "https://orphan-dashboard.preview.emergentagent.com/api/member-pages/public/myshop-1770708410",
+    "https://orphan-dashboard.preview.emergentagent.com/member-pages/mpage_ecfa1e28feee"
   ]
 }

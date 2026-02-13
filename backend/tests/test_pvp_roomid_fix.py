@@ -17,7 +17,7 @@ import time
 import json
 import threading
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://priority-tier.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://orphan-dashboard.preview.emergentagent.com')
 
 # Test credentials
 USER1 = {"email": "test@blendlink.com", "password": "admin"}

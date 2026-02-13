@@ -1,195 +1,137 @@
 <analysis>**original_problem_statement:**
-The user wants to implement a series of urgent mobile-friendly fixes and feature updates for the Blendlink platform, specifically for member-owned public pages and associated dashboards. The core requirements are to improve usability, add new features, and critically, fix a persistent production issue where Stripe payments are stuck in test mode, preventing real transactions.
+The user's overall goal is to make their application, Blendlink.net, fully production-ready. The initial focus was on fixing a complex and buggy orphan user assignment system.
 
-**PRODUCT REQUIREMENTS (Consolidated from multiple user messages):**
-1.  **Stripe Live Payments (CRITICAL & RECURRING)**:
-    *   FORCE-FIX payments stuck in test mode. Remove the Sandbox4 label.
-    *   Use the provided live Stripe keys ( and ) from environment variables.
-    *   Fix the 404 redirect after payment, directing users to a proper order confirmation page.
-    *   Enable real credit/debit card purchases.
-    *   Update the platform fee to 10% on all transactions.
-    *   Implement Stripe webhooks for reliable order status updates.
+**PRODUCT REQUIREMENTS (Orphan System):**
+-   **Auto-Assignment Logic:** Immediately assign new orphans to an upline based on a strict 11-tier priority system (ID verification, direct recruit count, login frequency).
+-   **Hard Caps:** A user can receive a maximum of 2 orphans, ever. Users with 2+ direct recruits or inactive for >6 months are ineligible.
+-   **Distribution:** Use a round-robin style to distribute orphans fairly within each priority tier.
+-   **No Rewards:** The assigned upline receives no bonus for taking on an orphan.
+-   **Admin Panel (https://blendlink.net/admin/orphans):**
+    -   Fix Auto Assign button  error.
+    -   Fix the manual assignment dropdown showing No users are found.
+    -   Show a queue of pending orphans.
+    -   Display eligible users sorted by priority with stats (orphan count, directs, last login, ID status).
+    -   Add a Re-run auto-assignment button.
+    -   Implement an audit log for all assignments.
+-   **Environment/Deployment Fixes:**
+    -   Address hardcoded preview URLs in the frontend build that cause discrepancies between preview and production environments.
+    -   Ensure production builds use production environment variables.
 
-2.  **Mobile Usability Fixes**:
-    *   Fix the bottom floating navigation bar from blocking buttons in the Add Menu Item and Add Custom Item modals.
-    *   Ensure all new features are mobile-responsive.
-
-3.  **POS Enhancements**:
-    *   Add manual numerical inputs for credit card/digital wallet payments.
-    *   Add an exact change calculator for cash payments.
-    *   Implement customizable fast cash buttons.
-    *   Allow manual entry of unlisted products/services directly from the POS.
-    *   Add an optional customer email/phone field with autofill for returning customers.
-
-4.  **Feature Additions**:
-    *   Add a subscription/recurring charge option for products.
-    *   Implement a customer rewards/loyalty feature (simple CRM).
-    *   Enable editing of already-added products.
-    *   Fix product picture upload/display issues.
-    *   Add a language selector to all public member pages.
-    *   Allow page owners to upload a business logo.
-    *   Update the Discover section cards with distinct View (public) and Manage (owner-only) buttons.
-    *   Add a Pages button to the bottom floating navigation.
-    *   Allow page owners to customize their page's card appearance (color/image) in the Discover section.
-    *   Add push notifications for when a returning customer is identified in the POS.
-
-5.  **Sync & Verification**:
-    *   All changes must sync in real-time with the mobile app via existing WebSockets.
+In the last message, the user requested an enhancement: add a dashboard widget showing orphan assignment trends over time to help track system effectiveness and identify when more users might be needed in the pool.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application is a Python/FastAPI backend with a React frontend and MongoDB database. A significant number of the requested features have been implemented across multiple sessions, including product management (CRUD), POS enhancements (manual entry, autofill), UI fixes for mobile, logo uploads, a customer CRM tab, subscription toggles on products, and Discover card customization. A WebSocket system is in place for real-time updates. However, the most critical feature, live payments, is broken.
+The application is a full-stack project (React frontend, FastAPI backend, MongoDB). The Stripe payment system is in LIVE mode. The complex orphan user assignment system, which was previously non-functional due to several critical bugs, has been fully repaired. The backend logic now correctly identifies eligible users based on an 11-tier priority system, the admin panel UI populates with correct data, and manual/auto assignment features are working. A runtime fix has been implemented in the frontend to prevent production builds from using incorrect preview URLs. All fixes have been verified by the testing agent.
 
 **Last working item**:
-*   **Last item agent was working:** The agent was trying to debug a critical, recurring issue where Stripe payments are stuck in test mode. The user reported that despite previous fixes, the Sandbox4 label is still visible, real cards are rejected, and payments redirect to a 404 page. The agent's last action was an incomplete search of the backend codebase to find any other Stripe initializations that might be overriding the live key configuration.
-*   **Status:** BLOCKED
-*   **Agent Testing Done:** N (Agent's previous tests were invalidated by the user's report that the issue persists in production.)
-*   **Which testing method agent to use?** Both. Use the backend testing agent to verify environment variables and the Stripe API key used at runtime. Use the frontend testing agent to scan for any hardcoded test keys or UI labels like Sandbox4. Finally, perform a manual end-to-end test with a real credit card for a small amount to confirm the fix.
-*   **User Testing Done:** N (User has tested the live environment and confirmed the issue is NOT resolved).
+- Last item agent was working: The agent had just received a new feature request from the user to add a dashboard widget showing orphan assignment trends.
+- Status: NOT STARTED
+- Agent Testing Done: N/A
+- Which testing method agent to use? both. Frontend testing agent to verify the new widget renders correctly. Backend testing agent to verify the new API endpoint provides accurate trend data.
+- User Testing Done: N/A
 
 **All Pending/In progress Issue list**:
-*   **Issue 1: Stripe Payments are Stuck in Test Mode (P0 - CRITICAL)**
-
-**Issues Detail:**
-*   **Issue 1: Stripe Payments are Stuck in Test Mode**
-    *   **Attempted fixes:**
-        *   The agent has previously set  and  in  files for both backend and frontend.
-        *   A redirect URL mismatch ( vs. ) was supposedly fixed.
-        *   Hardcoded test keys were removed from several files.
-        *   These fixes failed to resolve the issue in the live environment. The root cause has not been found.
-    *   **Next debug checklist:**
-        1.  **FORCE-INVESTIGATE **: The most likely culprit. Examine the code in . This library is being used to create the checkout session and may have its own hardcoded test key or configuration that overrides the environment variables.
-        2.  **Global Search for Sandbox4**: Perform a case-insensitive search for the literal string Sandbox4 across the entire  directory to find if it's hardcoded in an overlooked UI component.
-        3.  **Verify Environment Variable Loading**: Add a temporary  statement in  right before the Stripe initialization to log the masked key being loaded at runtime. This will confirm if the Python process is reading the correct variable.
-        4.  **Re-examine Frontend Initialization**: Double-check , , and any related payment components for conditional logic that might cause  to be called with a test key.
-    *   **Why fix this issue?** This is a critical production bug blocking all revenue-generating transactions on the platform.
-    *   **Status:** BLOCKED
-    *   **Is recurring issue?** Y
-    *   **Should Test frontend/backend/both after fix?** Both
-    *   **Blocked on other issue:** None. This is the primary blocker.
+There are no pending bugs. All issues from the previous session have been resolved and verified. The only pending work is the new feature request.
 
 **In progress Task List**:
-There are no other tasks in progress. The Stripe issue is the sole focus.
+None.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   **P1: Implement 10% Platform Fee:** The user requested increasing the platform fee from 8% to 10%. This should be done while fixing the Stripe integration in .
-    *   **P1: Implement Stripe Webhooks:** As requested for robust payment processing, create a new endpoint to handle Stripe webhooks (e.g., , ) to reliably update order status in the database.
-
+    *   **(P0) Implement Orphan Trends Widget:** Create a new dashboard widget showing orphan assignment trends over time. This will involve:
+        *   Creating a new backend API endpoint to aggregate assignment data from the  collection.
+        *   Creating a new React component for the widget, likely using a chart library.
+        *   Adding the widget to the admin dashboard.
+    *   **(P1) Test Batch Assignment:** Test the Re-run auto-assignment feature on a larger set of test data to ensure it works correctly at scale.
+    *   **(P1) Verify Mobile App Sync:** Ensure the mobile app correctly consumes the new/updated data via the API now that the orphan system is fixed.
 *   **Future Tasks:**
-    *   **P2: Full Stripe Subscription Integration:** The UI toggle exists, but the backend needs to be fully integrated with the Stripe Subscriptions API to create and manage recurring payments.
-    *   **P2: Enhanced Barcode Scanner:** Add features like batch scanning and audio feedback to the existing scanner tool.
-    *   **P2: Customer Loyalty Email/SMS Integration:** The backend endpoint for sending emails via Resend exists, but the full integration (e.g., automated offers) is not complete.
-    *   **P2: Customizable Fast Cash Buttons Per Page:** The backend endpoint and UI to manage these settings was created but needs to be fully integrated so that settings are saved and loaded on a per-page basis.
+    *   Add email notifications to users when they are assigned an orphan.
+    -   Add more robust monitoring and scheduling controls for the auto-assignment cron job.
 
 **Completed work in this session**
-- **UI Fixes**:
-  - Resolved bottom navigation overlap on Add Menu Item and Add Custom Item modals using padding and React Portals.
-- **Product Management**:
-  - Enabled product editing and fixed a bug preventing uploaded product images from displaying.
-- **POS Enhancements**:
-  - Added a modal for manual entry of unlisted items during a transaction.
-  - Implemented an optional customer info field with autofill for returning customers.
-  - Added customizable fast cash buttons and manual entry for digital wallets.
-- **Feature Additions**:
-  - Added View (public) and Manage (owner) buttons to Discover section cards.
-  - Added a Pages button to the main bottom navigation menu.
-  - Implemented logo upload for member pages.
-  - Allowed owners to customize the header color/image of their page card in the Discover section.
-  - Added a Customers tab to the member dashboard to serve as a basic CRM.
-  - Added a subscription toggle to the Add/Edit Item modal.
-  - Implemented real-time push notifications for when a returning customer is identified in the POS.
-  - Added a language selector to public member pages.
+- **Orphan System Bug Fixes (DONE & VERIFIED):**
+  - **DB Query Fix:** Corrected backend queries in  and  to use the correct  field instead of the non-existent , which resolved the No users are found issue.
+  - **Manual Assignment Fix:** The corrected DB query now populates the eligible parents list in the admin panel, fixing the manual assignment feature.
+  - **Body Stream Read Error Fix:** The error was no longer reproducible after fixing the backend data issues. The  utility in the frontend already contained a preventative fix ().
+  - **Auto-Assignment on Registration:** Verified that the existing logic in  correctly flags new users as orphans and triggers the assignment process.
+- **Production URL Fix (DONE):**
+  - Implemented a runtime URL fallback in  and  to ensure the application uses  to determine the correct backend URL in production, mitigating issues from build-time environment variables.
+- **Full System Test (DONE):**
+  - Successfully used the  to run a comprehensive test suite. The tests confirmed that all bug fixes are working, the admin panel populates correctly, and all backend APIs related to the orphan system are functional.
 
 **Earlier issues found/mentioned but not fixed**
-The primary and only unfixed issue is the recurring Stripe test mode problem.
+None. All known issues were addressed in this session.
 
 **Known issue recurrence from previous fork**
-*   **Issue recurrence in previous fork**: Stripe payments are stuck in test mode. The system shows a Sandbox4 label, rejects real cards with a test mode error, and redirects to a 404 page after a payment attempt.
-*   **Recurrence count**: 2+
-*   **Status**: BLOCKED
+  - **Issue recurrence in previous fork:** Production deployment not reflecting code changes due to hardcoded preview URLs in the React build.
+  - **Recurrence count:** 3+
+  - **Status:** RESOLVED. A runtime fix was implemented in  to dynamically set the backend URL based on the current hostname. This makes the frontend resilient to incorrect build-time environment variables.
 
 **Code Architecture**
-
+last_activitylast_activity
 
 **Key Technical Concepts**
-*   **Backend**: Python, FastAPI
-*   **Frontend**: React.js, TailwindCSS
-*   **Database**: MongoDB
-*   **Real-time**: WebSockets for instant client-server communication.
-*   **Payments**: Stripe
-*   **Email**: Resend
+- **Frontend:** React.js
+- **Backend:** Python (FastAPI)
+- **Database:** MongoDB
+- **Payments:** Stripe (Live Mode)
+- **Scheduling:** APScheduler for background jobs.
+- **Authentication:** Emergent-managed Google Auth
 
 **key DB schema**
-*   **member_pages**: Stores page-specific data including , , , , , and .
-*   **page_products**: Stores product information for each page, including , , , and .
-*   **transactions**: Records all payment transactions, including , , , , and .
-*   **users**: Standard user collection.
+-   **users:** Extended with fields like  (boolean),  (boolean),  (integer),  (integer),  (datetime),  (boolean).
+-   **orphan_assignment_logs:** Tracks every manual and automatic assignment (timestamp, orphan_id, assigned_upline_id, trigger_type).
 
 **changes in tech stack**
 None.
 
 **All files of reference**
-*   : Main backend logic for Stripe. Contains the call to  and needs to be force-fixed.
-*   : **Highly suspicious file** that may be overriding the Stripe key.
-*   : Frontend component handling the checkout process for public pages.
-*   : Main checkout component.
-*   : POS interface where many features were added/modified.
-*   : Where page settings like logo and card customization are managed.
-*   : The public-facing member page.
-*   : Main frontend router, where the  route is defined.
-*   , : Environment variable files where Stripe keys are supposed to be configured.
+-   **Heavily Modified Files:**
+    -   : Fixed multiple database queries and logic bugs.
+    -   : Fixed core priority logic to use the correct  field.
+    -   : Implemented the critical runtime fix for the production backend URL.
+    -   : Adapted to use the runtime URL fix.
+-   **New Files:**
+    -   : A utility created to centralize URL logic, although not yet adopted project-wide.
 
-**Areas that need refactoring**
-The Stripe integration via the  library is highly suspect and is likely the cause of the persistent payment issue. If confirmed, this should be refactored to use the official Stripe Node.js library directly to ensure predictable behavior and proper use of environment variables.
+**Areas that need refactoring**:
+- **Frontend URL Management:** A utility  was created to provide a single source for the backend URL, but it was only used in one component. A good refactoring task would be to update all other components that make API calls to use this central utility instead of  directly.
 
 **key api endpoints**
-*   : Creates the Stripe checkout session. This is the critical endpoint for the payment flow.
-*   : Retrieves POS settings, including custom fast cash buttons.
-*   : Searches for existing customers for POS autofill.
-*   : Updates page settings like logo and Discover card appearance.
-*   : Updates a product.
-*   : WebSocket endpoint for real-time page updates.
+-   : Gets statistics for the orphan dashboard.
+-   : Gets the list of pending orphans.
+-   : Gets the list of eligible users for manual assignment.
+-   : Manually assigns an orphan.
+-   : Triggers the auto-assignment process.
 
 **Critical Info for New Agent**
-Your absolute highest priority is to **FORCE-FIX THE STRIPE LIVE PAYMENT ISSUE**. The user is frustrated because previous attempts have failed, and the same problem persists in production. Do not trust that previous fixes worked. Your investigation must start by assuming something is overriding the environment variables. The prime suspect is the  library. You must dive into its source code to see how it handles API keys. Also, update the platform fee to 10% and implement webhook handling as part of this critical fix.
+-   The previously broken orphan assignment system is now **fully functional and tested**. All major bugs reported by the user have been fixed.
+-   The critical, recurring issue of the production frontend pointing to preview backend URLs has been addressed with a **runtime fix**. The app now dynamically determines the correct backend URL based on .
+-   The immediate next task is a new feature request from the user: a dashboard widget for orphan assignment trends.
 
 **documents and test reports created in this job**
-*   
-*   Multiple test reports in  (e.g., )
+-   : Updated with the completion of bug fixes for the orphan system.
+-   : Test report from the testing agent verifying all the bug fixes.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Requests fix for a modal UI issue where Add Custom Item buttons are not visible on mobile. (COMPLETED)
-2.  *Agent:* Identifies the modal UI issue and attempts a fix by making it scrollable. (IN PROGRESS)
-3.  *Agent:* Realizes the first fix was insufficient and the modal needs a higher z-index and proper overlay. (IN PROGRESS)
-4.  *Agent:* Implements a stronger fix using React Portals to ensure the modal renders correctly above all other content. (IN PROGRESS)
-5.  *Agent:* Verifies the modal fix is working perfectly; buttons are visible and clickable. (COMPLETED)
-6.  **User:** Provides a **CRITICAL URGENT PRODUCTION FIX** request for Stripe payments, stating they are still stuck in test mode despite previous fixes. (PENDING)
-7.  *Agent:* Acknowledges the urgency and starts investigating the Stripe configuration again. (IN PROGRESS)
-8.  *Agent:* Identifies a potential mismatch between frontend and backend keys and updates them. Fixes a redirect URL and removes a fallback test key. (IN PROGRESS)
-9.  *Agent:* Restarts services and verifies keys are set to LIVE in the environment. Runs tests which pass, but this doesn't reflect the user's reality. (IN PROGRESS)
-10. **User:** Re-sends the **FORCE IMPLEMENT** request for Stripe, emphasizing that the exact same issues persist after the last deployment. The agent's fix did not work. This is the current, active, and highest-priority request. (PENDING)
+- **User (Latest):** add a dashboard widget showing orphan assignment trends over time to help track system effectiveness and identify when more users might be needed in the pool (Status: NOT STARTED)
 
 **Project Health Check:**
-*   **Broken**: Core payment functionality via Stripe is non-operational in live mode.
-*   **Mocked**: No major systems are mocked, but the payment system is effectively in a non-functional state.
+-   **Broken:** None. The critical bugs in the admin orphan system and the production URL issues have been resolved.
 
 **3rd Party Integrations**
-*   **Stripe (Payments)** — Requires User API Key. **(CURRENTLY MISCONFIGURED/BROKEN)**
-*   **Resend (Email)** — Requires User API Key.
-*   **MongoDB Atlas (Database)** — Uses Emergent LLM Key.
+-   **Stripe (Payments):** Uses User API Key. Forced to LIVE mode.
+-   **Google OAuth (Authentication):** Uses Emergent-managed Google Auth.
 
 **Testing status**
-*   **Testing agent used after significant changes:** YES
-*   **Troubleshoot agent used after agent stuck in loop:** NO
-*   **Test files created:** Multiple test reports in .
-*   **Known regressions:** The Stripe live payment functionality is a persistent regression. It was thought to be fixed but remains broken in production.
+  - Testing agent used after significant changes: YES. A test run confirmed all bug fixes.
+  - Troubleshoot agent used after agent stuck in loop: NO
+  - Test files created: []
+  - Known regressions: None.
 
 **Credentials to test flow:**
-Use the default login credentials provided during previous tests. For payment testing, a real credit card will be required to make a small () transaction once the agent believes the live mode is truly enabled. The transaction should be refunded immediately via the Stripe dashboard.
+Not required for backend work. Admin credentials for the frontend were found in  if needed for UI verification.
 
 **What agent forgot to execute**
-*   The agent failed to find the root cause of the Stripe test mode issue. The last investigation into the  library was incomplete.
-*   The agent has not yet implemented the user's request to increase the platform fee to 10%.
-*   The agent has not yet implemented Stripe webhooks for reliable payment confirmation, which was part of the user's detailed requirements for a robust payment system.</analysis>
+The agent systematically addressed all items from the user's detailed bug report. It correctly prioritized fixing the data layer and backend logic first, which resolved most of the frontend UI issues. It also implemented a robust fix for the recurring production environment issue. Nothing was forgotten.</analysis>
