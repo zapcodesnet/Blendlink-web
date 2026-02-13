@@ -3708,9 +3708,27 @@ async def startup_report_scheduler():
     except Exception as e:
         logger.warning(f"Daily Report Scheduler startup warning: {e}")
 
+@app.on_event("startup")
+async def startup_orphan_scheduler():
+    """Start the orphan auto-assignment scheduler"""
+    try:
+        from orphan_scheduler import start_orphan_scheduler
+        start_orphan_scheduler()
+        logger.info("✅ Orphan Auto-Assignment Scheduler started (every 6h)")
+    except Exception as e:
+        logger.warning(f"Orphan Scheduler startup warning: {e}")
+
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
+    # Stop orphan scheduler
+    try:
+        from orphan_scheduler import stop_orphan_scheduler
+        stop_orphan_scheduler()
+        logger.info("Orphan Scheduler stopped")
+    except Exception as e:
+        logger.warning(f"Orphan scheduler cleanup warning: {e}")
+    
     # Stop report scheduler
     try:
         from report_scheduler import stop_scheduler
