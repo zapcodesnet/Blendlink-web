@@ -19,7 +19,7 @@ import os
 import uuid
 from datetime import datetime, timezone
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://blendlink-member-pay.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://priority-tier.preview.emergentagent.com')
 
 # Test user credentials
 TEST_EMAIL = "orphantest@blendlink.net"

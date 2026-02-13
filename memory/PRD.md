@@ -85,7 +85,7 @@ Both web and mobile share the same backend API, ensuring 100% sync:
 ## 🔧 DEPLOYMENT STATUS
 
 ### Preview Environment
-- URL: `https://blendlink-member-pay.preview.emergentagent.com`
+- URL: `https://priority-tier.preview.emergentagent.com`
 - **Stripe**: LIVE mode ✅
 - **Orphan System**: Working ✅
 - **Scheduler**: Running (6h auto-assign, daily cleanup) ✅
