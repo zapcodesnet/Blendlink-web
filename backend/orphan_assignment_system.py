@@ -276,39 +276,35 @@ async def find_eligible_recipient(exclude_user_id: Optional[str] = None) -> Opti
     ]
     
     for tier_idx, tier_query in enumerate(tier_queries, 1):
+        # Build the complete query by combining tier-specific filters with common eligibility
+        # Since tier_query already uses $and, we need to extend it
+        base_conditions = tier_query.get("$and", [tier_query])
+        
         # Add common eligibility filters
-        base_query = {
-            **tier_query,
-            # Max 2 orphans per user (permanent cap)
+        base_conditions.append({
             "$or": [
                 {"orphans_assigned_count": {"$lt": MAX_ORPHANS_PER_USER}},
                 {"orphans_assigned_count": {"$exists": False}}
-            ],
-            # Must have logged in within 6 months
-            "last_login_at": {"$gte": thresholds["biannual"]},
-            # Not an orphan themselves (they can still receive orphans, but let's prioritize others)
-        }
-        
-        # Merge the login threshold from tier_query
-        if "last_login_at" in tier_query:
-            base_query["last_login_at"] = tier_query["last_login_at"]
+            ]
+        })
         
         # Exclude specific user if provided
         if exclude_user_id:
-            base_query["user_id"] = {"$ne": exclude_user_id}
+            base_conditions.append({"user_id": {"$ne": exclude_user_id}})
+        
+        base_query = {"$and": base_conditions}
         
         # Try with round-robin (exclude last assigned)
         if last_assigned:
-            query_with_rr = {**base_query}
-            if "user_id" in query_with_rr and isinstance(query_with_rr["user_id"], dict):
-                query_with_rr["user_id"]["$nin"] = [last_assigned]
-            else:
-                query_with_rr["user_id"] = {"$ne": last_assigned}
+            rr_conditions = base_conditions.copy()
+            rr_conditions.append({"user_id": {"$ne": last_assigned}})
+            query_with_rr = {"$and": rr_conditions}
             
             candidate = await db.users.find_one(
                 query_with_rr,
                 {"user_id": 1, "username": 1, "email": 1, "id_verified": 1, 
-                 "direct_referrals": 1, "orphans_assigned_count": 1, "last_login_at": 1, "created_at": 1},
+                 "direct_referrals": 1, "orphans_assigned_count": 1, "last_login_at": 1,
+                 "last_activity": 1, "created_at": 1, "_id": 0},
                 sort=[("created_at", 1)]  # Oldest first
             )
             
@@ -321,7 +317,8 @@ async def find_eligible_recipient(exclude_user_id: Optional[str] = None) -> Opti
         candidate = await db.users.find_one(
             base_query,
             {"user_id": 1, "username": 1, "email": 1, "id_verified": 1,
-             "direct_referrals": 1, "orphans_assigned_count": 1, "last_login_at": 1, "created_at": 1},
+             "direct_referrals": 1, "orphans_assigned_count": 1, "last_login_at": 1,
+             "last_activity": 1, "created_at": 1, "_id": 0},
             sort=[("created_at", 1)]
         )
         
