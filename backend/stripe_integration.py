@@ -20,9 +20,23 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 # Stripe API keys - FORCE-LOAD from environment
-STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
-STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY", "")
+# CRITICAL: Prioritize STRIPE_SECRET_KEY over system STRIPE_API_KEY (which may be overridden)
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY") or os.environ.get("STRIPE_API_KEY", "")
+STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY") or os.environ.get("REACT_APP_STRIPE_PUBLISHABLE_KEY", "")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+
+# LIVE KEY ENFORCEMENT - These are the correct LIVE keys
+LIVE_STRIPE_SECRET_KEY = "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"
+LIVE_STRIPE_PUBLISHABLE_KEY = "pk_live_51SkM5vRv11guK54QJjH0t5IreOJB2sQCqjcxWGUKZbt9taHJ3AtSSejzi2ksQvU9aoq6KKIlA9nmGy48qJr08cm400a7cEoEpf"
+
+# FORCE LIVE MODE - Override any test keys that may be set in production environment
+if not STRIPE_SECRET_KEY.startswith("sk_live"):
+    logger.warning(f"⚠️ Overriding non-live secret key with LIVE key")
+    STRIPE_SECRET_KEY = LIVE_STRIPE_SECRET_KEY
+
+if not STRIPE_PUBLISHABLE_KEY.startswith("pk_live"):
+    logger.warning(f"⚠️ Overriding non-live publishable key with LIVE key")
+    STRIPE_PUBLISHABLE_KEY = LIVE_STRIPE_PUBLISHABLE_KEY
 
 # FORCE-VERIFY Stripe is in LIVE mode
 if STRIPE_SECRET_KEY:
