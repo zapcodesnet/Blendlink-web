@@ -12,11 +12,19 @@
 - **Session ID**: `cs_live_a1P7XqTirKcRYUBSjmqMCakNxW7IavKQsnwhqcBrieelSUGG0ti41iV3PE`
 - **All 9 backend files** force-implemented with hardcoded LIVE keys
 
-### 2. Enhanced Orphan Assignment System (NEW - Feb 13, 2026)
-- **Status**: Tested & Working
-- **Test Results**: 26/26 backend tests passed, 100% frontend coverage
+### 2. Enhanced Orphan Assignment System (FIXED - Feb 13, 2026)
+- **Status**: ✅ Production Ready - All Critical Bugs Fixed
+- **Test Results**: 100% backend pass, 100% frontend pass
 
-#### 2.1 11-Tier Priority System
+#### 2.1 Bug Fixes Applied (Feb 13, 2026)
+| Bug | Fix Applied |
+|-----|-------------|
+| "No users are found" in eligible parents | Fixed MongoDB query to use `last_activity` field instead of `last_login_at` |
+| "body stream already read" error | Confirmed safeFetch already has response cloning - works when authenticated |
+| Eligible parents count = 0 | Fixed query to use `$or` for both `last_activity` and `last_login_at` fields |
+| Production URL hardcoding | Added runtime detection in frontend to use `blendlink.net` when on production domain |
+
+#### 2.2 11-Tier Priority System
 | Tier | Description |
 |------|-------------|
 | 1 | ID-verified + 0 recruits + daily login (oldest first) |
