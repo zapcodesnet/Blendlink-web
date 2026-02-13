@@ -252,49 +252,60 @@ async def manual_assign_orphan(
     parent_id: str,
     current_user: dict = Depends(get_current_user)
 ):
-    """Manually assign an orphan to a specific parent"""
+    """
+    Manually assign an orphan to a specific parent.
+    Validates:
+    - Orphan exists and is unassigned
+    - Parent exists, has capacity, and is active within 6 months
+    """
     # Verify orphan exists
     orphan = await db.users.find_one({"user_id": orphan_id})
     if not orphan:
         raise HTTPException(status_code=404, detail="Orphan not found")
+    
+    if orphan.get("is_orphan_assigned") and orphan.get("referred_by"):
+        raise HTTPException(status_code=400, detail="Orphan is already assigned")
     
     # Verify parent exists and has capacity
     parent = await db.users.find_one({"user_id": parent_id})
     if not parent:
         raise HTTPException(status_code=404, detail="Parent not found")
     
+    # Check capacity
     if parent.get("orphans_assigned_count", 0) >= MAX_ORPHANS_PER_USER:
-        raise HTTPException(status_code=400, detail="Parent has reached orphan limit")
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Parent has reached orphan limit ({MAX_ORPHANS_PER_USER})"
+        )
     
-    # Assign orphan
-    await db.users.update_one(
-        {"user_id": orphan_id},
-        {"$set": {
-            "referred_by": parent_id,
-            "is_orphan": True,
-            "is_orphan_assigned": True,
-            "orphan_assigned_at": datetime.now(timezone.utc).isoformat(),
-            "orphan_assignment_type": "manual"
-        }}
+    # Check inactivity
+    six_months_ago = (datetime.now(timezone.utc) - timedelta(days=INACTIVITY_THRESHOLD_DAYS)).isoformat()
+    if parent.get("last_login_at") and parent["last_login_at"] < six_months_ago:
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot assign orphan to user inactive for more than 6 months"
+        )
+    
+    # Perform assignment using the enhanced system
+    result = await assign_orphan_to_recipient(
+        orphan_user_id=orphan_id,
+        recipient_id=parent_id,
+        assignment_type=AssignmentType.MANUAL,
+        assigned_by=current_user["user_id"],
+        tier=None
     )
     
-    # Update parent counts
-    await db.users.update_one(
-        {"user_id": parent_id},
-        {"$inc": {"orphans_assigned_count": 1, "direct_referrals": 1}}
-    )
+    if not result.success:
+        raise HTTPException(status_code=400, detail=result.message)
     
-    # Log assignment
-    await db.orphan_assignments.insert_one({
-        "assignment_id": f"orphan_{uuid.uuid4().hex[:12]}",
-        "orphan_user_id": orphan_id,
+    return {
+        "success": True,
+        "message": "Orphan assigned successfully",
+        "orphan_id": orphan_id,
         "assigned_to": parent_id,
-        "assignment_type": "manual",
-        "assigned_by": current_user["user_id"],
-        "created_at": datetime.now(timezone.utc).isoformat()
-    })
-    
-    return {"success": True, "message": "Orphan assigned successfully"}
+        "assigned_to_username": result.assigned_to_username,
+        "assigned_by": current_user["user_id"]
+    }
 
 @admin_orphans_router.post("/auto-assign")
 async def auto_assign_orphan(
