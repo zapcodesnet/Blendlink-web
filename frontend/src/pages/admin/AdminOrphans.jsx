@@ -5,8 +5,9 @@ import {
   Users, UserPlus, UserMinus, Search, RefreshCw, 
   AlertTriangle, CheckCircle, Clock, ArrowRight, 
   Filter, ChevronDown, Eye, X, Play, History,
-  Shield, Calendar, TrendingUp, Database
+  Shield, Calendar, TrendingUp, Database, BarChart3
 } from "lucide-react";
+import OrphanTrendsWidget from "../../components/OrphanTrendsWidget";
 
 // Runtime URL detection for production/preview environments
 const getApiBase = () => {
