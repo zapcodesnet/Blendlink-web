@@ -10,7 +10,7 @@
  * Get the API base URL with runtime detection
  * - On production domain (blendlink.net), always use production URL
  * - Otherwise, use the build-time environment variable
- * - Falls back to empty string for relative URLs
+ * - Falls back to production URL as ultimate fallback
  */
 export const getApiBaseUrl = () => {
   // Runtime detection: If on production domain, use production URL
@@ -22,12 +22,14 @@ export const getApiBaseUrl = () => {
       return 'https://blendlink.net';
     }
     
-    // Staging/preview domains can use their respective env vars
-    // For localhost, use env var or empty string
+    // Localhost development
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+    }
   }
   
-  // Use build-time env var or empty string for relative URLs
-  return process.env.REACT_APP_BACKEND_URL || '';
+  // Use build-time env var or production URL as fallback
+  return process.env.REACT_APP_BACKEND_URL || 'https://blendlink.net';
 };
 
 /**
