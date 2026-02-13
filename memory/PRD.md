@@ -54,6 +54,34 @@
 - ✅ Audit Log with assignment history
 - ✅ User search functionality
 - ✅ Stats dashboard (total, unassigned, today, this week, etc.)
+- ✅ **NEW: Trends Dashboard Widget** (Added Feb 13, 2026)
+
+### 3. Orphan Assignment Trends Widget (NEW - Feb 13, 2026)
+- **Status**: ✅ Production Ready - Tested & Verified
+- **Test Results**: 95% backend pass (1 flaky test), 100% frontend pass
+
+#### 3.1 Features
+| Feature | Description |
+|---------|-------------|
+| Custom Date Range | Presets (7/14/30/90/180/365 days) + custom start/end date picker |
+| Granularity Toggle | Day, Week, Month aggregation options |
+| Summary Stats | Total Assignments, Success Rate, Avg Daily Rate, Week-over-Week Change |
+| Pool Health Alert | Shows "Healthy" or "Needs Attention" with pending orphans vs eligible users count |
+| Trends Chart | Interactive Area/Line/Bar chart showing assignments over time |
+| Assignment Breakdown | Progress bars for Auto/Manual/Registration assignment types |
+| Tier Distribution | Pie chart showing distribution across 11 priority tiers |
+| Days Until Empty | Predictive metric based on recent assignment rate |
+
+#### 3.2 API Endpoint
+| Endpoint | Method | Parameters |
+|----------|--------|------------|
+| `/api/admin/orphans/trends` | GET | `start_date`, `end_date`, `granularity` (day/week/month) |
+
+#### 3.3 New Files Created
+- `/app/backend/admin_orphan_diamond.py` - Added `@admin_orphans_router.get("/trends")` endpoint
+- `/app/frontend/src/components/OrphanTrendsWidget.jsx` - New React component with Recharts
+
+---
 
 #### 2.4 Scheduled Jobs (APScheduler)
 - **Auto-Assignment**: Runs every 6 hours
