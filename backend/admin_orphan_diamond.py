@@ -312,41 +312,155 @@ async def auto_assign_orphan(
     orphan_id: str,
     current_user: dict = Depends(get_current_user)
 ):
-    """Auto-assign an orphan using the 11-tier priority system"""
-    from referral_system import find_orphan_recipient
-    
+    """Auto-assign a single orphan using the 11-tier priority system"""
     orphan = await db.users.find_one({"user_id": orphan_id})
     if not orphan:
         raise HTTPException(status_code=404, detail="Orphan not found")
     
-    parent_id = await find_orphan_recipient()
-    if not parent_id:
-        raise HTTPException(status_code=400, detail="No suitable parent found in any tier")
+    if orphan.get("is_orphan_assigned") and orphan.get("referred_by"):
+        raise HTTPException(status_code=400, detail="Orphan is already assigned")
     
-    parent = await db.users.find_one({"user_id": parent_id}, {"username": 1})
+    # Use enhanced auto-assignment
+    result = await auto_assign_single_orphan(orphan_id)
     
-    # Assign orphan
-    await db.users.update_one(
-        {"user_id": orphan_id},
-        {"$set": {
-            "referred_by": parent_id,
-            "is_orphan": True,
-            "is_orphan_assigned": True,
-            "orphan_assigned_at": datetime.now(timezone.utc).isoformat(),
-            "orphan_assignment_type": "auto"
-        }}
-    )
-    
-    # Update parent counts
-    await db.users.update_one(
-        {"user_id": parent_id},
-        {"$inc": {"orphans_assigned_count": 1, "direct_referrals": 1}}
-    )
+    if not result.success:
+        raise HTTPException(status_code=400, detail=result.message)
     
     return {
-        "success": True, 
-        "assigned_to": parent_id,
-        "assigned_to_username": parent.get("username", "Unknown")
+        "success": True,
+        "message": f"Orphan auto-assigned to Tier {result.tier}",
+        "orphan_id": orphan_id,
+        "assigned_to": result.assigned_to,
+        "assigned_to_username": result.assigned_to_username,
+        "tier": result.tier,
+        "tier_description": get_tier_description(result.tier) if result.tier else None
+    }
+
+@admin_orphans_router.post("/batch-assign")
+async def batch_assign_orphans(
+    limit: int = 100,
+    background_tasks: BackgroundTasks = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Re-run auto-assignment for all unassigned orphans.
+    Processes one orphan at a time with round-robin distribution within tiers.
+    """
+    results = await batch_auto_assign_orphans(limit=limit)
+    
+    # Log batch operation
+    await db.orphan_batch_operations.insert_one({
+        "operation_id": f"batch_{uuid.uuid4().hex[:12]}",
+        "initiated_by": current_user["user_id"],
+        "initiated_by_username": current_user.get("username"),
+        "total_processed": results["total_processed"],
+        "successful": results["successful"],
+        "failed": results["failed"],
+        "no_eligible": results["no_eligible_recipients"],
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {
+        "success": True,
+        "message": f"Batch assignment complete: {results['successful']}/{results['total_processed']} successful",
+        **results
+    }
+
+@admin_orphans_router.get("/assignment-log")
+async def get_assignment_log(
+    skip: int = 0,
+    limit: int = 50,
+    assignment_type: Optional[str] = None,
+    orphan_id: Optional[str] = None,
+    assigned_to: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get orphan assignment audit log with filtering"""
+    query = {}
+    
+    if assignment_type:
+        query["assignment_type"] = assignment_type
+    if orphan_id:
+        query["orphan_user_id"] = orphan_id
+    if assigned_to:
+        query["assigned_to"] = assigned_to
+    
+    logs = await db.orphan_assignments.find(
+        query,
+        {"_id": 0}
+    ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    total = await db.orphan_assignments.count_documents(query)
+    
+    return {
+        "logs": logs,
+        "total": total,
+        "skip": skip,
+        "limit": limit
+    }
+
+@admin_orphans_router.get("/user/{user_id}")
+async def get_user_orphan_details(
+    user_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get detailed orphan-related information for a specific user"""
+    user = await db.users.find_one(
+        {"user_id": user_id},
+        {"_id": 0, "password": 0}
+    )
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get orphans assigned to this user
+    assigned_orphans = await db.users.find(
+        {"referred_by": user_id, "is_orphan": True},
+        {"user_id": 1, "username": 1, "orphan_assigned_at": 1, "_id": 0}
+    ).to_list(MAX_ORPHANS_PER_USER)
+    
+    # Get assignment history for this user (as recipient)
+    assignment_history = await db.orphan_assignments.find(
+        {"assigned_to": user_id},
+        {"_id": 0}
+    ).sort("created_at", -1).limit(10).to_list(10)
+    
+    # Calculate eligibility
+    login_freq = get_login_frequency(user.get("last_login_at"))
+    direct_recruits = user.get("direct_referrals") or 0
+    orphans_assigned = user.get("orphans_assigned_count") or 0
+    is_verified = user.get("id_verified", False)
+    
+    is_eligible = (
+        login_freq != LoginFrequency.INACTIVE and
+        direct_recruits <= 1 and
+        orphans_assigned < MAX_ORPHANS_PER_USER
+    )
+    
+    tier = calculate_user_tier(direct_recruits, is_verified, login_freq) if is_eligible else None
+    
+    return {
+        "user_id": user_id,
+        "username": user.get("username"),
+        "email": user.get("email"),
+        "is_orphan": user.get("is_orphan", False),
+        "is_orphan_assigned": user.get("is_orphan_assigned", False),
+        "assigned_upline": user.get("referred_by"),
+        "orphan_assigned_at": user.get("orphan_assigned_at"),
+        "orphans_assigned_count": orphans_assigned,
+        "orphans_capacity_remaining": MAX_ORPHANS_PER_USER - orphans_assigned,
+        "assigned_orphans": assigned_orphans,
+        "assignment_history": assignment_history,
+        "eligibility": {
+            "is_eligible_to_receive": is_eligible,
+            "tier": tier,
+            "tier_description": get_tier_description(tier) if tier else "Not eligible",
+            "login_frequency": login_freq.value,
+            "direct_recruits": direct_recruits,
+            "id_verified": is_verified,
+            "last_login_at": user.get("last_login_at"),
+            "created_at": user.get("created_at")
+        }
     }
 
 # ============== DIAMOND LEADER MANAGEMENT ==============
