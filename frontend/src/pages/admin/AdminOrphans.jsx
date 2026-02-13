@@ -8,7 +8,14 @@ import {
   Shield, Calendar, TrendingUp, Database
 } from "lucide-react";
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
+// Runtime URL detection for production/preview environments
+const getApiBase = () => {
+  if (typeof window !== 'undefined' && window.location.hostname === 'blendlink.net') {
+    return 'https://blendlink.net';
+  }
+  return process.env.REACT_APP_BACKEND_URL || '';
+};
+const API_BASE = getApiBase();
 
 // Safe fetch helper - properly handles response body without double-read issues
 const safeFetch = async (url, options = {}) => {
