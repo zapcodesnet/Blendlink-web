@@ -624,14 +624,24 @@ async def get_eligible_parents(
     """
     thresholds = await get_time_thresholds()
     
-    # Base eligibility query
+    # Base eligibility query - use both last_activity and last_login_at
     base_query = {
-        "$or": [
-            {"orphans_assigned_count": {"$lt": MAX_ORPHANS_PER_USER}},
-            {"orphans_assigned_count": {"$exists": False}}
-        ],
-        "last_login_at": {"$gte": thresholds["biannual"]},
-        "direct_referrals": {"$in": [0, 1, None]}  # Only 0 or 1 recruits
+        "$and": [
+            {"$or": [
+                {"orphans_assigned_count": {"$lt": MAX_ORPHANS_PER_USER}},
+                {"orphans_assigned_count": {"$exists": False}}
+            ]},
+            {"$or": [
+                {"last_activity": {"$gte": thresholds["biannual"]}},
+                {"last_login_at": {"$gte": thresholds["biannual"]}}
+            ]},
+            {"$or": [
+                {"direct_referrals": 0},
+                {"direct_referrals": 1},
+                {"direct_referrals": None},
+                {"direct_referrals": {"$exists": False}}
+            ]}
+        ]
     }
     
     # Get all potentially eligible users
@@ -639,13 +649,14 @@ async def get_eligible_parents(
         base_query,
         {"user_id": 1, "username": 1, "email": 1, "id_verified": 1,
          "direct_referrals": 1, "orphans_assigned_count": 1, "last_login_at": 1,
-         "created_at": 1, "_id": 0}
+         "last_activity": 1, "created_at": 1, "_id": 0}
     ).sort("created_at", 1).limit(limit * 2)  # Get more to allow filtering
     
     parents = []
     async for user in users_cursor:
-        # Determine tier
-        login_freq = get_login_frequency(user.get("last_login_at"))
+        # Determine tier - use last_activity OR last_login_at
+        login_time = user.get("last_activity") or user.get("last_login_at")
+        login_freq = get_login_frequency(login_time)
         direct_recruits = user.get("direct_referrals") or 0
         is_verified = user.get("id_verified", False)
         
@@ -673,7 +684,7 @@ async def get_eligible_parents(
             remaining_capacity=MAX_ORPHANS_PER_USER - orphans_assigned,
             id_verified=is_verified,
             login_frequency=login_freq.value,
-            last_login_at=user.get("last_login_at"),
+            last_login_at=login_time,  # Use resolved login time
             created_at=user.get("created_at", ""),
             priority_score=calculate_priority_score(user_tier, user.get("created_at"))
         )
