@@ -15,8 +15,9 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { safeFetch } from "../../services/memberPagesApi";
+import { getApiUrl } from "../../utils/runtimeConfig";
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = getApiUrl();
 
 // Order Status Badge
 const StatusBadge = ({ status }) => {

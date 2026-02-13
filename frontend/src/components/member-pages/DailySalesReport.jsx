@@ -13,8 +13,9 @@ import {
   BarChart3, ShoppingCart, Users, Star, Printer, Mail, Share2, Settings
 } from "lucide-react";
 import EmailReportSettings from "./EmailReportSettings";
+import { getApiUrl } from "../../utils/runtimeConfig";
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = getApiUrl();
 
 // Format currency
 const formatCurrency = (amount) => {

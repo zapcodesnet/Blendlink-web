@@ -12,8 +12,9 @@ import {
   Package, AlertTriangle, Search, Filter, Download, Upload,
   RefreshCw, Loader2, Plus, Minus, Edit2, Check, X
 } from "lucide-react";
+import { getApiUrl } from "../../utils/runtimeConfig";
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = getApiUrl();
 
 export default function InventoryManager({ pageId, pageType }) {
   const [inventory, setInventory] = useState([]);

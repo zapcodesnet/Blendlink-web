@@ -10,8 +10,9 @@ import { safeFetch } from "../../services/memberPagesApi";
 import {
   Users, UserPlus, Trash2, Mail, Shield, Crown, Loader2, X, Check
 } from "lucide-react";
+import { getApiUrl } from "../../utils/runtimeConfig";
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = getApiUrl();
 
 export default function TeamMembersManager({ pageId, isOwner }) {
   const [teamMembers, setTeamMembers] = useState([]);
