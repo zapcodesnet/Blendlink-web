@@ -95,13 +95,14 @@ Both web and mobile share the same backend API, ensuring 100% sync:
 ### Preview Environment
 - URL: `https://priority-tier.preview.emergentagent.com`
 - **Stripe**: LIVE mode ✅
-- **Orphan System**: Working ✅
+- **Orphan System**: Working ✅ (91 orphans, 15 eligible parents)
 - **Scheduler**: Running (6h auto-assign, daily cleanup) ✅
 
 ### Production Environment
 - URL: `https://blendlink.net`
-- **Status**: Awaiting deployment push
-- **After Deploy**: Verify `/api/payments/config` returns `pk_live_*`
+- **Status**: Ready for deployment
+- **Runtime URL Detection**: Frontend now auto-detects production domain and uses correct API URLs
+- **After Deploy**: Verify `/api/admin/orphans/stats` returns eligible parents > 0
 
 ---
 
