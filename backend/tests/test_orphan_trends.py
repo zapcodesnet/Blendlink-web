@@ -31,17 +31,20 @@ class TestOrphanTrendsEndpoint:
         self.session = requests.Session()
         self.session.headers.update({"Content-Type": "application/json"})
         
-        # Login with admin credentials
+        # Login with admin credentials via secure admin endpoint
         response = self.session.post(
-            f"{BASE_URL}/api/admin/login",
+            f"{BASE_URL}/api/admin-auth/secure/login",
             json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
         )
         
         if response.status_code == 200:
             data = response.json()
-            self.token = data.get("token")
-            if self.token:
-                self.session.headers.update({"Authorization": f"Bearer {self.token}"})
+            if data.get("success"):
+                self.token = data.get("token")
+                if self.token:
+                    self.session.headers.update({"Authorization": f"Bearer {self.token}"})
+            else:
+                pytest.skip(f"Admin login failed: {data.get('message')}")
         else:
             pytest.skip(f"Could not authenticate as admin: {response.status_code}")
 
