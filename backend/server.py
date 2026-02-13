@@ -2863,6 +2863,7 @@ try:
     from admin_security_routes import admin_security_router
     from admin_orphan_diamond import admin_orphans_router, admin_diamonds_router
     from reactions_system import reactions_router
+    from orphan_assignment_system import orphan_router
     api_router.include_router(admin_auth_router)
     api_router.include_router(secure_admin_router)
     api_router.include_router(admin_users_router)
@@ -2876,9 +2877,10 @@ try:
     api_router.include_router(admin_orphans_router)
     api_router.include_router(admin_diamonds_router)
     api_router.include_router(reactions_router)
+    api_router.include_router(orphan_router)
     # WebSocket router needs to be on the app directly
     app.include_router(admin_realtime_router, prefix="/api")
-    logger.info("Production Admin System routers loaded (Auth, Secure OTP, Users, Finance, Genealogy, Content, Roles, System, Notifications, Security, Orphans, Diamonds, Reactions)")
+    logger.info("Production Admin System routers loaded (Auth, Secure OTP, Users, Finance, Genealogy, Content, Roles, System, Notifications, Security, Orphans, Diamonds, Reactions, OrphanSystem)")
 except ImportError as e:
     logger.warning(f"Could not load production admin system: {e}")
 
