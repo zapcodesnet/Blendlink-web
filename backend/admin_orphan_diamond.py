@@ -95,8 +95,11 @@ async def get_orphans(
 
 @admin_orphans_router.get("/stats")
 async def get_orphan_stats(current_user: dict = Depends(get_current_user)):
-    """Get orphan statistics"""
-    today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    """Get comprehensive orphan statistics"""
+    now = datetime.now(timezone.utc)
+    today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    week_ago = (now - timedelta(days=7))
+    six_months_ago = (now - timedelta(days=INACTIVITY_THRESHOLD_DAYS)).isoformat()
     
     total = await db.users.count_documents({"$or": [
         {"referred_by": None},
@@ -109,15 +112,51 @@ async def get_orphan_stats(current_user: dict = Depends(get_current_user)):
         "is_orphan_assigned": {"$ne": True}
     })
     
-    assigned_today = await db.users.count_documents({
-        "orphan_assigned_at": {"$gte": today.isoformat()}
+    assigned_today = await db.orphan_assignments.count_documents({
+        "created_at": {"$gte": today.isoformat()}
+    })
+    
+    assigned_week = await db.orphan_assignments.count_documents({
+        "created_at": {"$gte": week_ago.isoformat()}
+    })
+    
+    # Count eligible parents
+    eligible_parents = await db.users.count_documents({
+        "$or": [
+            {"orphans_assigned_count": {"$lt": MAX_ORPHANS_PER_USER}},
+            {"orphans_assigned_count": {"$exists": False}}
+        ],
+        "last_login_at": {"$gte": six_months_ago},
+        "direct_referrals": {"$in": [0, 1, None]}
+    })
+    
+    # Count parents at capacity
+    at_capacity = await db.users.count_documents({
+        "orphans_assigned_count": {"$gte": MAX_ORPHANS_PER_USER}
+    })
+    
+    # Auto vs manual assignment breakdown
+    auto_assignments = await db.orphan_assignments.count_documents({
+        "assignment_type": "auto"
+    })
+    manual_assignments = await db.orphan_assignments.count_documents({
+        "assignment_type": "manual"
     })
     
     return {
         "total_orphans": total,
         "unassigned": unassigned,
+        "assigned": total - unassigned,
         "assigned_today": assigned_today,
-        "avg_assignment_time": 24  # Default value
+        "assigned_this_week": assigned_week,
+        "eligible_parents": eligible_parents,
+        "parents_at_capacity": at_capacity,
+        "max_orphans_per_user": MAX_ORPHANS_PER_USER,
+        "assignment_breakdown": {
+            "auto": auto_assignments,
+            "manual": manual_assignments
+        },
+        "tier_descriptions": {i: get_tier_description(i) for i in range(1, 12)}
     }
 
 @admin_orphans_router.get("/potential-parents")
