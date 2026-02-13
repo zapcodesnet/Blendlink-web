@@ -5,8 +5,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
+import { getApiUrl } from '../utils/runtimeConfig';
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE = getApiUrl();
 
 // VAPID public key for web push (you should generate your own)
 // This is a placeholder - in production, generate with: npx web-push generate-vapid-keys

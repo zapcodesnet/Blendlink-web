@@ -1,5 +1,6 @@
 // Referral System API Service - Updated for new compensation system
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+import { getApiUrl } from '../utils/runtimeConfig';
+const API_BASE_URL = getApiUrl();
 const API_PREFIX = '/api';
 
 // Get token from localStorage

@@ -5,12 +5,13 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
+import { getApiUrl, getWsUrl } from '../utils/runtimeConfig';
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE = getApiUrl();
 
 // Convert HTTP URL to WebSocket URL
 const getWebSocketUrl = () => {
-  const baseUrl = API_BASE.replace(/^http/, 'ws');
+  const baseUrl = getWsUrl();
   return `${baseUrl}/api/realtime/ws/analytics`;
 };
 

@@ -1,5 +1,6 @@
 // Media Sales API Service - Watermarks, Offers, Contracts, Payments
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+import { getApiUrl } from '../utils/runtimeConfig';
+const API_BASE_URL = getApiUrl();
 
 // Get token from localStorage
 const getToken = () => localStorage.getItem('blendlink_token');
