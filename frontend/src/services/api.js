@@ -1,5 +1,15 @@
 // API Service - Connects to the internal Blendlink backend
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+// Runtime detection: If we're on production domain, use production URL regardless of build-time env
+const getBaseUrl = () => {
+  // Check if we're on production domain
+  if (typeof window !== 'undefined' && window.location.hostname === 'blendlink.net') {
+    return 'https://blendlink.net';
+  }
+  // Otherwise use the build-time env var or empty string for relative URLs
+  return process.env.REACT_APP_BACKEND_URL || '';
+};
+
+const API_BASE_URL = getBaseUrl();
 const API_PREFIX = '/api';
 
 // Token management
