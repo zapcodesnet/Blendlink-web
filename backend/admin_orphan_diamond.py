@@ -67,7 +67,7 @@ async def get_orphans(
         query,
         {"user_id": 1, "username": 1, "email": 1, "created_at": 1, 
          "is_orphan_assigned": 1, "referred_by": 1, "last_login_at": 1, 
-         "bl_coins": 1, "orphan_assigned_at": 1, "orphan_assignment_type": 1,
+         "last_activity": 1, "bl_coins": 1, "orphan_assigned_at": 1, "orphan_assignment_type": 1,
          "orphan_assigned_tier": 1, "_id": 0}
     ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
     
@@ -80,8 +80,10 @@ async def get_orphans(
             )
             orphan["assigned_to_username"] = parent.get("username") if parent else "Unknown"
         
-        # Add login frequency
-        orphan["login_frequency"] = get_login_frequency(orphan.get("last_login_at")).value
+        # Add login frequency - use last_activity OR last_login_at
+        login_time = orphan.get("last_activity") or orphan.get("last_login_at")
+        orphan["login_frequency"] = get_login_frequency(login_time).value
+        orphan["last_login_at"] = login_time  # Normalize the field
     
     # Get total count
     total_count = await db.users.count_documents(query)
