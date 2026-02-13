@@ -428,7 +428,7 @@ const AddItemModal = ({ pageId, pageType, onClose, onSuccess, editItem = null })
       formDataUpload.append('file', file);
       
       const token = localStorage.getItem('blendlink_token');
-      const API_URL = process.env.REACT_APP_BACKEND_URL;
+      // Use module-level API_URL which has runtime detection
       
       const response = await fetch(`${API_URL}/api/upload/image`, {
         method: 'POST',
