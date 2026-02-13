@@ -95,6 +95,227 @@ async def get_orphans(
         "limit": limit
     }
 
+@admin_orphans_router.get("/trends")
+async def get_orphan_trends(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    granularity: str = "day",  # 'day', 'week', 'month'
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get comprehensive orphan assignment trends for dashboard analytics.
+    Includes: daily assignments, success rates, pool utilization, and predictions.
+    """
+    now = datetime.now(timezone.utc)
+    
+    # Default to last 30 days if no dates provided
+    if not end_date:
+        end_dt = now
+    else:
+        try:
+            end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+        except:
+            end_dt = now
+    
+    if not start_date:
+        start_dt = end_dt - timedelta(days=30)
+    else:
+        try:
+            start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+        except:
+            start_dt = end_dt - timedelta(days=30)
+    
+    start_iso = start_dt.isoformat()
+    end_iso = end_dt.isoformat()
+    
+    # Get all assignments in date range
+    assignments = await db.orphan_assignments.find({
+        "created_at": {"$gte": start_iso, "$lte": end_iso}
+    }).sort("created_at", 1).to_list(10000)
+    
+    # Aggregate by day/week/month
+    date_buckets = {}
+    for assignment in assignments:
+        created = assignment.get("created_at", "")
+        if not created:
+            continue
+        try:
+            dt = datetime.fromisoformat(created.replace('Z', '+00:00'))
+            if granularity == "day":
+                bucket_key = dt.strftime("%Y-%m-%d")
+            elif granularity == "week":
+                # Get the Monday of the week
+                monday = dt - timedelta(days=dt.weekday())
+                bucket_key = monday.strftime("%Y-%m-%d")
+            else:  # month
+                bucket_key = dt.strftime("%Y-%m")
+            
+            if bucket_key not in date_buckets:
+                date_buckets[bucket_key] = {
+                    "date": bucket_key,
+                    "total": 0,
+                    "auto": 0,
+                    "manual": 0,
+                    "registration": 0,
+                    "successful": 0,
+                    "failed": 0,
+                    "tiers": {str(i): 0 for i in range(1, 12)}
+                }
+            
+            date_buckets[bucket_key]["total"] += 1
+            
+            atype = assignment.get("assignment_type", "auto")
+            if atype == "auto":
+                date_buckets[bucket_key]["auto"] += 1
+            elif atype == "manual":
+                date_buckets[bucket_key]["manual"] += 1
+            else:
+                date_buckets[bucket_key]["registration"] += 1
+            
+            # Track success (has assigned_to)
+            if assignment.get("assigned_to"):
+                date_buckets[bucket_key]["successful"] += 1
+            else:
+                date_buckets[bucket_key]["failed"] += 1
+            
+            # Track tier distribution
+            tier = str(assignment.get("tier", 0))
+            if tier in date_buckets[bucket_key]["tiers"]:
+                date_buckets[bucket_key]["tiers"][tier] += 1
+                
+        except Exception as e:
+            logger.warning(f"Error parsing assignment date: {e}")
+            continue
+    
+    # Fill in missing dates for continuous chart
+    timeline = []
+    current = start_dt
+    while current <= end_dt:
+        if granularity == "day":
+            bucket_key = current.strftime("%Y-%m-%d")
+            current += timedelta(days=1)
+        elif granularity == "week":
+            monday = current - timedelta(days=current.weekday())
+            bucket_key = monday.strftime("%Y-%m-%d")
+            current += timedelta(days=7)
+        else:
+            bucket_key = current.strftime("%Y-%m")
+            # Move to next month
+            if current.month == 12:
+                current = current.replace(year=current.year + 1, month=1)
+            else:
+                current = current.replace(month=current.month + 1)
+        
+        if bucket_key in date_buckets:
+            timeline.append(date_buckets[bucket_key])
+        else:
+            timeline.append({
+                "date": bucket_key,
+                "total": 0,
+                "auto": 0,
+                "manual": 0,
+                "registration": 0,
+                "successful": 0,
+                "failed": 0,
+                "tiers": {str(i): 0 for i in range(1, 12)}
+            })
+    
+    # Remove duplicates (for week/month granularity)
+    seen = set()
+    unique_timeline = []
+    for item in timeline:
+        if item["date"] not in seen:
+            seen.add(item["date"])
+            unique_timeline.append(item)
+    
+    # Calculate summary statistics
+    total_in_range = sum(d["total"] for d in unique_timeline)
+    total_auto = sum(d["auto"] for d in unique_timeline)
+    total_manual = sum(d["manual"] for d in unique_timeline)
+    total_registration = sum(d["registration"] for d in unique_timeline)
+    total_successful = sum(d["successful"] for d in unique_timeline)
+    total_failed = sum(d["failed"] for d in unique_timeline)
+    
+    success_rate = (total_successful / total_in_range * 100) if total_in_range > 0 else 0
+    
+    # Calculate average daily rate
+    days_in_range = max((end_dt - start_dt).days, 1)
+    avg_daily_rate = total_in_range / days_in_range
+    
+    # Get current pool status
+    six_months_ago = (now - timedelta(days=INACTIVITY_THRESHOLD_DAYS)).isoformat()
+    
+    current_unassigned = await db.users.count_documents({
+        "$or": [{"referred_by": None}, {"referred_by": {"$exists": False}}],
+        "is_orphan_assigned": {"$ne": True}
+    })
+    
+    current_eligible = await db.users.count_documents({
+        "$and": [
+            {"$or": [
+                {"orphans_assigned_count": {"$lt": MAX_ORPHANS_PER_USER}},
+                {"orphans_assigned_count": {"$exists": False}}
+            ]},
+            {"$or": [
+                {"last_activity": {"$gte": six_months_ago}},
+                {"last_login_at": {"$gte": six_months_ago}}
+            ]},
+            {"$or": [
+                {"direct_referrals": 0},
+                {"direct_referrals": 1},
+                {"direct_referrals": None},
+                {"direct_referrals": {"$exists": False}}
+            ]}
+        ]
+    })
+    
+    # Calculate tier distribution across all time
+    tier_totals = {str(i): 0 for i in range(1, 12)}
+    for bucket in unique_timeline:
+        for tier, count in bucket["tiers"].items():
+            tier_totals[tier] += count
+    
+    # Predict days until pool exhaustion (based on recent rate)
+    recent_7_days = sum(d["total"] for d in unique_timeline[-7:]) if len(unique_timeline) >= 7 else total_in_range
+    recent_daily_rate = recent_7_days / 7 if len(unique_timeline) >= 7 else avg_daily_rate
+    days_until_exhaustion = int(current_eligible / recent_daily_rate) if recent_daily_rate > 0 else 999
+    
+    # Calculate week-over-week change
+    if len(unique_timeline) >= 14:
+        this_week = sum(d["total"] for d in unique_timeline[-7:])
+        last_week = sum(d["total"] for d in unique_timeline[-14:-7])
+        wow_change = ((this_week - last_week) / last_week * 100) if last_week > 0 else 0
+    else:
+        wow_change = 0
+    
+    return {
+        "timeline": unique_timeline,
+        "summary": {
+            "total_assignments": total_in_range,
+            "total_auto": total_auto,
+            "total_manual": total_manual,
+            "total_registration": total_registration,
+            "success_rate": round(success_rate, 1),
+            "avg_daily_rate": round(avg_daily_rate, 2),
+            "recent_daily_rate": round(recent_daily_rate, 2),
+            "week_over_week_change": round(wow_change, 1)
+        },
+        "pool_status": {
+            "current_unassigned": current_unassigned,
+            "current_eligible": current_eligible,
+            "days_until_exhaustion": days_until_exhaustion,
+            "pool_health": "healthy" if current_eligible >= current_unassigned else "needs_attention"
+        },
+        "tier_distribution": tier_totals,
+        "date_range": {
+            "start": start_iso,
+            "end": end_iso,
+            "granularity": granularity,
+            "days": days_in_range
+        }
+    }
+
+
 @admin_orphans_router.get("/stats")
 async def get_orphan_stats(current_user: dict = Depends(get_current_user)):
     """Get comprehensive orphan statistics"""
