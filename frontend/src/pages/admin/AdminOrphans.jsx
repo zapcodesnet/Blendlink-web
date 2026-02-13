@@ -10,9 +10,9 @@ import {
 
 const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
 
-// Safe fetch helper
+// Safe fetch helper - properly handles response body without double-read issues
 const safeFetch = async (url, options = {}) => {
-  const token = localStorage.getItem('blendlink_token');
+  const token = localStorage.getItem('blendlink_token') || localStorage.getItem('admin_token');
   const headers = {
     'Content-Type': 'application/json',
     ...options.headers,
@@ -21,21 +21,40 @@ const safeFetch = async (url, options = {}) => {
     headers['Authorization'] = `Bearer ${token}`;
   }
   
-  const response = await fetch(url, { ...options, headers });
-  const rawText = await response.text();
-  
-  let data = {};
   try {
-    data = rawText ? JSON.parse(rawText) : {};
-  } catch (e) {
-    console.error('JSON parse error:', e);
+    const response = await fetch(url, { ...options, headers });
+    
+    // Clone the response before reading to avoid "body stream already read" error
+    const clonedResponse = response.clone();
+    
+    let data = {};
+    try {
+      // Try to parse as JSON first
+      data = await response.json();
+    } catch (jsonError) {
+      // If JSON parse fails, try text from cloned response
+      try {
+        const text = await clonedResponse.text();
+        if (text) {
+          data = { message: text };
+        }
+      } catch (textError) {
+        console.error('Failed to read response:', textError);
+      }
+    }
+    
+    if (!response.ok) {
+      throw new Error(data.detail || data.message || `Request failed with status ${response.status}`);
+    }
+    
+    return data;
+  } catch (error) {
+    // Re-throw with better error message
+    if (error.name === 'TypeError' && error.message.includes('body stream')) {
+      throw new Error('Network error - please try again');
+    }
+    throw error;
   }
-  
-  if (!response.ok) {
-    throw new Error(data.detail || 'Request failed');
-  }
-  
-  return data;
 };
 
 // Priority tier descriptions
