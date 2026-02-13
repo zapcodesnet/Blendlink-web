@@ -173,6 +173,7 @@ async def get_potential_parents(
     six_months_ago = (now - timedelta(days=INACTIVITY_THRESHOLD_DAYS)).isoformat()
     
     # Base query for eligible users - fixed MongoDB query with $and for multiple $or conditions
+    # NOTE: Using "last_activity" field (the actual field in DB) instead of "last_login_at"
     base_query = {
         "$and": [
             # Must have capacity for orphans
@@ -181,10 +182,10 @@ async def get_potential_parents(
                 {"orphans_assigned_count": {"$exists": False}},
                 {"orphans_assigned_count": None}
             ]},
-            # Must have logged in within 6 months
+            # Must have logged in within 6 months - use last_activity field
             {"$or": [
-                {"last_login_at": {"$gte": six_months_ago}},
-                {"last_login_at": {"$exists": True}}
+                {"last_activity": {"$gte": six_months_ago}},
+                {"last_login_at": {"$gte": six_months_ago}}
             ]},
             # Must have 0 or 1 direct referrals
             {"$or": [
@@ -196,18 +197,19 @@ async def get_potential_parents(
         ]
     }
     
-    # Get candidates
+    # Get candidates - include both last_activity and last_login_at for compatibility
     candidates_cursor = db.users.find(
         base_query,
         {"user_id": 1, "username": 1, "email": 1, "id_verified": 1,
          "direct_referrals": 1, "orphans_assigned_count": 1, "last_login_at": 1,
-         "created_at": 1, "_id": 0}
+         "last_activity": 1, "created_at": 1, "_id": 0}
     ).sort("created_at", 1).limit(limit * 3)
     
     parents = []
     async for user in candidates_cursor:
-        # Calculate login frequency and tier
-        login_freq = get_login_frequency(user.get("last_login_at"))
+        # Calculate login frequency and tier - use last_activity OR last_login_at (whichever is set)
+        login_time = user.get("last_activity") or user.get("last_login_at")
+        login_freq = get_login_frequency(login_time)
         
         # Skip inactive users
         if login_freq == LoginFrequency.INACTIVE:
