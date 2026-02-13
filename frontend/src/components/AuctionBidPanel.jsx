@@ -10,8 +10,9 @@ import {
   Loader2, AlertCircle, Check, ChevronDown, ChevronUp,
   Shield, Trophy
 } from "lucide-react";
+import { getApiUrl } from "../utils/runtimeConfig";
 
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE_URL = getApiUrl();
 
 // Format time remaining
 const formatTimeRemaining = (timeObj) => {

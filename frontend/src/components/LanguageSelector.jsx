@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Globe, ChevronDown, Check, Search } from 'lucide-react';
 import { SUPPORTED_LANGUAGES } from '../i18n';
+import { getApiUrl } from '../utils/runtimeConfig';
 
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE_URL = getApiUrl();
 
 export default function LanguageSelector({ className = "", compact = false }) {
   const { i18n, t } = useTranslation();

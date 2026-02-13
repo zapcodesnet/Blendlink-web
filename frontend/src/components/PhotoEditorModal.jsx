@@ -28,8 +28,9 @@ import {
   ZoomOut,
   Move,
 } from "lucide-react";
+import { getApiUrl } from "../utils/runtimeConfig";
 
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE_URL = getApiUrl();
 
 // API helper with improved error handling, timeout, and retry support
 const apiRequest = async (endpoint, options = {}, retries = 1, timeout = 60000) => {

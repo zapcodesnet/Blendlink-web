@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ExternalLink, Loader2, Globe } from 'lucide-react';
+import { getApiUrl } from '../utils/runtimeConfig';
 
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE_URL = getApiUrl();
 
 // Extract URLs from text
 export const extractUrls = (text) => {
