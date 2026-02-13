@@ -742,7 +742,7 @@ def calculate_priority_score(tier: int, created_at: Optional[str]) -> float:
             created = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
             days_old = (datetime.now(timezone.utc) - created).days
             age_bonus = max(0, 3650 - days_old)  # Up to 10 years bonus
-        except:
+        except (ValueError, AttributeError):
             age_bonus = 0
     else:
         age_bonus = 0
