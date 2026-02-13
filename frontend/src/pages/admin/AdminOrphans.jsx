@@ -648,6 +648,10 @@ export default function AdminOrphans() {
         </>
       )}
 
+      {activeTab === 'trends' && (
+        <OrphanTrendsWidget />
+      )}
+
       {activeTab === 'audit' && (
         <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
           <div className="p-4 border-b border-slate-700 flex items-center justify-between">
