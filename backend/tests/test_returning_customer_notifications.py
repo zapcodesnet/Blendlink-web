@@ -13,7 +13,7 @@ import os
 import time
 from datetime import datetime
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://prod-verify-1.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://blendlink-member-pay.preview.emergentagent.com').rstrip('/')
 
 TEST_EMAIL = "tester@blendlink.net"
 TEST_PASSWORD = "BlendLink2024!"
