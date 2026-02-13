@@ -160,7 +160,20 @@ Both web and mobile share the same backend API, ensuring 100% sync:
 
 ## 📝 CHANGELOG
 
-### February 13, 2026
+### February 13, 2026 (Latest)
+- ✅ **NEW: Orphan Assignment Trends Widget** added to Admin Panel
+  - Custom date range selector (7/14/30/90/180/365 days + custom)
+  - Granularity toggle (Day/Week/Month)
+  - Summary stats: Total Assignments, Success Rate, Avg Daily Rate, Week-over-Week Change
+  - Pool Health Alert with predictive "Days Until Empty"
+  - Interactive Area/Line/Bar charts using Recharts
+  - Assignment type breakdown (Auto/Manual/Registration)
+  - Tier distribution pie chart
+- ✅ New backend endpoint: `/api/admin/orphans/trends`
+- ✅ New frontend component: `/app/frontend/src/components/OrphanTrendsWidget.jsx`
+- ✅ All tests passing (95% backend, 100% frontend)
+
+### February 13, 2026 (Earlier)
 - ✅ Implemented 11-tier priority orphan assignment system
 - ✅ Added round-robin distribution within tiers
 - ✅ Set max 2 orphans per user (permanent cap)
