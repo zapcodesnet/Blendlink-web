@@ -145,6 +145,8 @@ export default function AdminOrphans() {
   useEffect(() => {
     loadOrphans();
     loadStats();
+    // Also load potential parents on initial load for manual assignment modal
+    loadPotentialParents();
   }, [loadOrphans]);
 
   useEffect(() => {
@@ -154,6 +156,13 @@ export default function AdminOrphans() {
       loadAuditLog();
     }
   }, [activeTab, loadPotentialParents]);
+
+  // Load potential parents when manual assign modal opens
+  useEffect(() => {
+    if (assignModal) {
+      loadPotentialParents();
+    }
+  }, [assignModal, loadPotentialParents]);
 
   const assignOrphan = async (orphanId, parentId) => {
     setAssigning(true);
