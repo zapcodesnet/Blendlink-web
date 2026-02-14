@@ -560,16 +560,18 @@ Both web and mobile share the same backend API, ensuring 100% sync:
 
 ## 🔮 FUTURE/BACKLOG TASKS
 
-### P2 - Enhancement Tasks
-1. **Payment Fallback Chain Enhancement** - Implement full fallback: Stripe Connect → Card → Bank
-2. **Commission Monitoring Dashboard** - Detailed analytics for admin
-3. **Suspicious Transaction Flagging** - Automated detection system
-4. **Real-time Commission Controls** - Admin ability to adjust/hold payouts
-5. **Custom Membership Benefits** - Admin ability to create new benefit types
+### Completed P2/P3 Tasks
+- ✅ Full Payment Fallback Chain (Balance → Stripe → Card → Bank)
+- ✅ Commission Monitoring Dashboard
+- ✅ Suspicious Transaction Auto-Flagging
+- ✅ Mobile App Sync Verification
 
-### P3 - Mobile Sync & Verification
-1. **Full Mobile App Sync Verification** - Ensure 100% API compatibility
-2. **Push Notifications** - Subscription events on mobile
+### Remaining Future Tasks
+1. **Real-time Commission Controls** - Admin ability to adjust payouts in real-time
+2. **Custom Membership Benefits** - Admin ability to create new benefit types
+3. **Advanced Fraud Analytics** - ML-based anomaly detection
+4. **Push Notifications for Mobile** - Subscription events on mobile
+5. **A/B Testing for Pricing** - Test different subscription prices
 
 ---
 
