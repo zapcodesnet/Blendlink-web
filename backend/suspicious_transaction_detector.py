@@ -105,6 +105,120 @@ DETECTION_RULES = {
         "description": "Dormant account suddenly active with large transactions",
         "dormant_days": 30,
         "severity": "medium"
+    },
+    
+    # ============== ADVANCED ML-INSPIRED RULES ==============
+    
+    # Statistical Anomaly Detection
+    "statistical_amount_anomaly": {
+        "enabled": True,
+        "description": "Transaction amount significantly deviates from user's historical pattern (Z-score > 3)",
+        "z_score_threshold": 3.0,  # Standard deviations from mean
+        "min_history_count": 10,  # Minimum transactions needed for baseline
+        "severity": "high"
+    },
+    
+    # Time-based Behavioral Analysis
+    "unusual_time_pattern": {
+        "enabled": True,
+        "description": "Transaction at unusual time compared to user's typical behavior",
+        "off_hours_start": 2,  # 2 AM
+        "off_hours_end": 5,    # 5 AM
+        "requires_history": True,
+        "severity": "medium"
+    },
+    
+    # Velocity Acceleration Detection
+    "velocity_acceleration": {
+        "enabled": True,
+        "description": "Transaction velocity increasing faster than normal (acceleration anomaly)",
+        "acceleration_multiplier": 3.0,  # 3x increase in activity rate
+        "comparison_period_hours": 24,
+        "baseline_period_hours": 168,  # 7 days
+        "severity": "high"
+    },
+    
+    # Network/Graph Analysis
+    "cluster_activity_pattern": {
+        "enabled": True,
+        "description": "Suspicious coordinated activity among connected accounts",
+        "min_cluster_size": 3,  # Minimum accounts in cluster
+        "time_window_minutes": 30,  # Activity within this window
+        "severity": "critical"
+    },
+    
+    # Amount Structuring Detection (Smurfing)
+    "amount_structuring": {
+        "enabled": True,
+        "description": "Multiple transactions just below threshold (potential structuring)",
+        "threshold_amount": 500,  # The amount people try to stay under
+        "tolerance_percentage": 10,  # Within 10% of threshold
+        "min_count": 3,  # At least 3 transactions fitting pattern
+        "window_hours": 24,
+        "severity": "critical"
+    },
+    
+    # Round Amount Pattern
+    "round_amount_pattern": {
+        "enabled": True,
+        "description": "Unusual frequency of round-number transactions",
+        "round_threshold": 50,  # Amounts divisible by this
+        "min_count": 5,  # At least 5 round amounts
+        "window_hours": 48,
+        "severity": "medium"
+    },
+    
+    # Recipient Diversity Analysis
+    "low_recipient_diversity": {
+        "enabled": True,
+        "description": "High volume transactions to very few unique recipients",
+        "min_transaction_count": 10,
+        "max_recipient_ratio": 0.2,  # If recipients/transactions < 20%, flag
+        "window_hours": 24,
+        "severity": "high"
+    },
+    
+    # Beneficiary Risk Score
+    "high_risk_beneficiary": {
+        "enabled": True,
+        "description": "Transaction to or from account with existing fraud flags",
+        "severity": "critical"
+    },
+    
+    # Failed Transaction Pattern
+    "excessive_failed_attempts": {
+        "enabled": True,
+        "description": "Multiple failed transactions before successful one (testing pattern)",
+        "max_failures_before_success": 3,
+        "window_minutes": 60,
+        "severity": "high"
+    },
+    
+    # Device/Session Anomaly
+    "multi_account_device": {
+        "enabled": True,
+        "description": "Multiple accounts transacting from same device/session",
+        "max_accounts_per_device": 2,
+        "window_hours": 24,
+        "severity": "critical"
+    },
+    
+    # Geographic Velocity (Impossible Travel)
+    "impossible_travel": {
+        "enabled": True,
+        "description": "Transactions from geographically distant locations in impossible timeframe",
+        "min_distance_km": 500,
+        "max_travel_time_hours": 1,
+        "severity": "critical"
+    },
+    
+    # Layering Detection
+    "layering_pattern": {
+        "enabled": True,
+        "description": "Funds moving through multiple accounts rapidly (layering)",
+        "max_hops": 3,
+        "time_window_hours": 4,
+        "severity": "critical"
     }
 }
 
