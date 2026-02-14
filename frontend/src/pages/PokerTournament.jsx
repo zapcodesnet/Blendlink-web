@@ -5,6 +5,7 @@ import api from "../services/api";
 import { toast } from "sonner";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
+import { getApiUrl } from "../utils/runtimeConfig";
 import { 
   ChevronLeft, Users, Trophy, Clock, Send, 
   Volume2, VolumeX, Maximize2, Minimize2,
@@ -518,7 +519,8 @@ export default function PokerTournament() {
     if (!tournamentId || !user) return;
     
     const token = localStorage.getItem("blendlink_token");
-    const wsUrl = `${process.env.REACT_APP_BACKEND_URL?.replace("https://", "wss://").replace("http://", "ws://")}/api/poker/ws/${tournamentId}?token=${token}`;
+    const backendUrl = getApiUrl();
+    const wsUrl = `${backendUrl?.replace("https://", "wss://").replace("http://", "ws://")}/api/poker/ws/${tournamentId}?token=${token}`;
     
     try {
       wsRef.current = new WebSocket(wsUrl);
