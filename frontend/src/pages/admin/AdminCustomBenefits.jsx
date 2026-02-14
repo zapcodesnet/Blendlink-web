@@ -423,7 +423,7 @@ export default function AdminCustomBenefits() {
                     placeholder="e.g., Priority Support"
                     value={form.name}
                     onChange={(e) => setForm({...form, name: e.target.value})}
-                    className="bg-slate-900 border-slate-700"
+                    className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
                   />
                 </div>
                 <div>
@@ -432,7 +432,7 @@ export default function AdminCustomBenefits() {
                     type="number"
                     value={form.display_order}
                     onChange={(e) => setForm({...form, display_order: parseInt(e.target.value) || 0})}
-                    className="bg-slate-900 border-slate-700"
+                    className="bg-slate-900 border-slate-700 text-white"
                   />
                 </div>
               </div>
