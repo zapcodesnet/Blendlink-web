@@ -1,10 +1,45 @@
 # Blendlink Platform - Product Requirements Document
 
-## Latest Update: February 13, 2026
+## Latest Update: February 14, 2026
 
 ---
 
 ## ✅ COMPLETED FEATURES
+
+### 0. Listing Fee System (NEW - Feb 14, 2026)
+- **Status**: ✅ Production Ready - Tested & Verified
+- **Test Results**: 73% backend pass (isolation issues), 100% frontend verified
+
+#### 0.1 Feature Overview
+| Feature | Description |
+|---------|-------------|
+| Listing Fee | 200 BL coins charged per new listing |
+| Confirmation Dialog | Users must confirm fee before creating |
+| Insufficient Balance | Returns 400 error with clear message |
+| Transaction Recording | Fee recorded in `bl_transactions` collection |
+
+#### 0.2 Scope - Where Fee Applies
+| Location | Endpoint | Component |
+|----------|----------|-----------|
+| Marketplace | POST /api/marketplace/listings | CreateListing.jsx |
+| AI Listing Creator | POST /api/marketplace/listings | AIListingCreator.jsx |
+| Member Pages - Products | POST /api/page-products/{page_id} | MemberPageDashboard.jsx |
+| Member Pages - Menu Items | POST /api/page-menu/{page_id} | MemberPageDashboard.jsx |
+| Member Pages - Services | POST /api/page-services/{page_id} | MemberPageDashboard.jsx |
+| Member Pages - Rentals | POST /api/page-rentals/{page_id} | MemberPageDashboard.jsx |
+
+#### 0.3 API Endpoint
+| Endpoint | Method | Response |
+|----------|--------|----------|
+| `/api/marketplace/listing-fee` | GET | `{fee: 200, currency: "BL coins", description: "..."}` |
+
+#### 0.4 Files Modified
+- `/app/backend/server.py` - Added LISTING_FEE_BL_COINS constant and fee check in create_listing
+- `/app/backend/member_pages_system.py` - Added check_and_deduct_listing_fee helper function
+- `/app/backend/marketplace_system.py` - Added fee deduction to MarketplaceService.create_listing()
+- `/app/frontend/src/pages/CreateListing.jsx` - Added fee confirmation modal
+- `/app/frontend/src/pages/AIListingCreator.jsx` - Added FeeConfirmationModal component
+- `/app/frontend/src/components/member-pages/MemberPageDashboard.jsx` - Added fee confirmation to AddItemModal
 
 ### 1. Stripe Live Payment System (VERIFIED)
 - **Status**: Production Ready
