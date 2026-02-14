@@ -7,6 +7,7 @@ import { Switch } from "../components/ui/switch";
 import { toast } from "sonner";
 import AuctionSettingsForm from "../components/AuctionSettingsForm";
 import TopUpCoinsModal from "../components/TopUpCoinsModal";
+import StripeOnboardingPrompt, { useStripeOnboarding } from "../components/StripeOnboardingPrompt";
 import api from "../services/api";
 import { getApiUrl } from "../utils/runtimeConfig";
 import { 
