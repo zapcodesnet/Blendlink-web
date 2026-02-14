@@ -149,6 +149,7 @@ WITHDRAWAL_FEE_RATE = 0.03  # 3% withdrawal fee
 
 # ============== ACTIVITY REWARDS (Phase 2) ==============
 # BL coins earned for various activities
+# Negative values indicate fees/charges
 ACTIVITY_REWARDS = {
     "post_video": 50,
     "post_story": 50,
@@ -156,7 +157,7 @@ ACTIVITY_REWARDS = {
     "post_photo": 30,
     "create_event": 20,
     "create_group": 40,
-    "create_page": 40,
+    "create_page": -2000,  # Changed from +40 reward to -2000 fee
     "page_subscribe": 10,  # Both subscriber and page owner get this
     "share_post": 10,
     "share_ai_image": 50,
