@@ -392,11 +392,9 @@ class SubscriptionService:
         if not tier_info:
             raise HTTPException(status_code=400, detail=f"Tier configuration not found for: {tier}")
         
-        price_id = tier_info.get("stripe_price_id")
-        
-        if not price_id:
-            # Create dynamic price if no pre-configured one
-            # Create a one-time price for the subscription
+        # Always create a dynamic price for subscription
+        # This ensures the price exists in the current Stripe account
+        try:
             price = stripe.Price.create(
                 unit_amount=int(tier_info["price_monthly"] * 100),  # Convert to cents
                 currency="usd",
@@ -404,6 +402,7 @@ class SubscriptionService:
                 product_data={"name": f"BlendLink {tier_info['name']} Membership"},
             )
             price_id = price.id
+            logger.info(f"Created dynamic price {price_id} for tier {tier}")
         
         # Get or create Stripe customer
         user = await self.db.users.find_one({"user_id": user_id}, {"_id": 0})
