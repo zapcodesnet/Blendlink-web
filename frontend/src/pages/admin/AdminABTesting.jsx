@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "../../components/ui/button";
 import { toast } from "sonner";
+import { getApiUrl } from "../../utils/runtimeConfig";
 import { 
   FlaskConical, Play, Pause, Check, Trash2, Plus,
   ChevronDown, ChevronUp, Eye, Target, TrendingUp,
   RefreshCw, Download, Filter, BarChart3
 } from "lucide-react";
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE = getApiUrl();
 
 const TEST_TYPES = [
   { id: 'ui_element', label: 'UI Element', icon: '🎨', desc: 'Button colors, layouts, CTAs' },

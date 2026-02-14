@@ -4,13 +4,14 @@ import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
 import { toast } from "sonner";
 import { adminAPI } from "./AdminLayout";
+import { getApiUrl } from "../../utils/runtimeConfig";
 import { 
   Shield, Plus, Trash2, Edit2, UserPlus, Check, X,
   Crown, User, Eye, Settings, RefreshCw, Key, 
   AlertTriangle, Search, Clock, Activity
 } from "lucide-react";
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE = getApiUrl();
 
 const getToken = () => localStorage.getItem('blendlink_token');
 

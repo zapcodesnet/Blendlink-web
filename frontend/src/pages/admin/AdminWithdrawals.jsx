@@ -4,13 +4,14 @@ import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { Input } from "../../components/ui/input";
 import { toast } from "sonner";
+import { getApiUrl } from "../../utils/runtimeConfig";
 import {
   Wallet, Search, RefreshCw, Check, X, Clock, AlertTriangle,
   ChevronLeft, ChevronRight, Shield, User, DollarSign, Filter,
   CheckCircle, XCircle, Eye, CreditCard, Building
 } from "lucide-react";
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || "";
+const API_BASE = getApiUrl();
 
 const getToken = () => localStorage.getItem("blendlink_token");
 

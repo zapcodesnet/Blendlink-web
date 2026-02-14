@@ -4,6 +4,7 @@ import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
 import { toast } from "sonner";
 import { adminAPI } from "./AdminLayout";
+import { getApiUrl } from "../../utils/runtimeConfig";
 import { 
   GitBranch, Users, RefreshCw, Move, User, Search,
   ChevronRight, ChevronDown, Eye,
@@ -11,7 +12,7 @@ import {
   Network, ZoomIn, ZoomOut
 } from "lucide-react";
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE = getApiUrl();
 
 // Safe fetch helper to avoid "body stream already read" errors
 const safeFetch = async (url, options = {}) => {
