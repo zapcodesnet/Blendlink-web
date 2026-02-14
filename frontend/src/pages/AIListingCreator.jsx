@@ -884,7 +884,7 @@ export default function AIListingCreator() {
     }
   };
   
-  const publishListing = async () => {
+  const handlePublishClick = () => {
     const effectivePrice = auctionSettings.is_auction 
       ? (auctionSettings.starting_bid || userPrice)
       : userPrice;
@@ -899,6 +899,16 @@ export default function AIListingCreator() {
       setStep(3);
       return;
     }
+    
+    // Show fee confirmation dialog
+    setShowFeeConfirmation(true);
+  };
+  
+  const publishListing = async () => {
+    setShowFeeConfirmation(false);
+    const effectivePrice = auctionSettings.is_auction 
+      ? (auctionSettings.starting_bid || userPrice)
+      : userPrice;
     
     setIsPublishing(true);
     const token = localStorage.getItem('blendlink_token');
