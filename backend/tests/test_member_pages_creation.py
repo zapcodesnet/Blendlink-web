@@ -9,7 +9,7 @@ import os
 import time
 import uuid
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://listing-payment.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://insufficient-balance.preview.emergentagent.com')
 if BASE_URL:
     BASE_URL = BASE_URL.rstrip('/')
 

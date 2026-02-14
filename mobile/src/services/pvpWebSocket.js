@@ -30,7 +30,7 @@
 
 import { getToken } from './api';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://listing-payment.preview.emergentagent.com';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://insufficient-balance.preview.emergentagent.com';
 
 class PVPWebSocketService {
   constructor() {

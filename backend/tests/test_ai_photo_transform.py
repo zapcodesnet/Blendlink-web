@@ -10,7 +10,7 @@ import base64
 import time
 
 # Get BASE_URL from environment
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://listing-payment.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://insufficient-balance.preview.emergentagent.com').rstrip('/')
 
 # Test credentials
 TEST_USER = {
