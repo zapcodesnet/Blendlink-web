@@ -591,7 +591,7 @@ const AddItemModal = ({ pageId, pageType, onClose, onSuccess, editItem = null })
           </button>
         </div>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleFormSubmit} className="space-y-4">
           {/* Image Upload Section */}
           <div>
             <label className="text-sm font-medium mb-2 block">Product Image</label>
