@@ -126,12 +126,12 @@ class TestWithdrawalValidation:
 class TestPageCreationFee:
     """Tests to verify page creation charges 2000 BL instead of rewarding 40 BL"""
     
-    def test_social_page_create_endpoint_exists(self):
-        """Test that page creation endpoint exists"""
+    def test_member_pages_discover_endpoint_exists(self):
+        """Test that page discovery endpoint exists"""
         # Test that the pages endpoint exists (may require auth)
-        response = requests.get(f"{BASE_URL}/api/social/pages/discover")
-        # Should return 200 or 401/403 if auth required
-        assert response.status_code in [200, 401, 403], f"Expected 200/401/403, got {response.status_code}"
+        response = requests.get(f"{BASE_URL}/api/member-pages/discover")
+        # Should return 200 or 401 if auth required
+        assert response.status_code in [200, 401], f"Expected 200/401, got {response.status_code}"
         print("✓ Pages discover endpoint exists")
     
     def test_member_pages_endpoint_exists(self):
