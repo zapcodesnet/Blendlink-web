@@ -463,12 +463,10 @@ async def process_checkout(data: CheckoutRequest, request: Request):
     
     # Try Stripe checkout
     try:
-        api_key = os.environ.get("STRIPE_SECRET_KEY")
+        api_key = os.environ.get("STRIPE_SECRET_KEY") or os.environ.get("STRIPE_API_KEY")
         
-        # FORCE LIVE MODE - Override any test keys in production
-        LIVE_STRIPE_SECRET_KEY = "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"
-        if not api_key or not api_key.startswith("sk_live"):
-            api_key = LIVE_STRIPE_SECRET_KEY
+        if not api_key:
+            raise HTTPException(status_code=500, detail="Stripe API key not configured")
         
         stripe.api_key = api_key
         
