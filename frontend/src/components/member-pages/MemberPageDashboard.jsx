@@ -396,7 +396,10 @@ const AddItemModal = ({ pageId, pageType, onClose, onSuccess, editItem = null })
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState(editItem?.images?.[0] || null);
+  const [showFeeConfirmation, setShowFeeConfirmation] = useState(false);
   const fileInputRef = React.useRef(null);
+
+  const LISTING_FEE = 200; // BL coins
 
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -463,13 +466,24 @@ const AddItemModal = ({ pageId, pageType, onClose, onSuccess, editItem = null })
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleFormSubmit = (e) => {
     e.preventDefault();
     if (!formData.name || !formData.price) {
       toast.error("Name and price are required");
       return;
     }
+    
+    // Show confirmation for new items (fee applies)
+    if (!isEditMode) {
+      setShowFeeConfirmation(true);
+    } else {
+      // Direct submit for edits (no fee)
+      executeSubmit();
+    }
+  };
 
+  const executeSubmit = async () => {
+    setShowFeeConfirmation(false);
     setLoading(true);
     try {
       const data = {
@@ -501,7 +515,7 @@ const AddItemModal = ({ pageId, pageType, onClose, onSuccess, editItem = null })
         } else if (pageType === "rental") {
           await memberPagesAPI.createRental(pageId, { ...data, daily_rate: data.price });
         }
-        toast.success("Item added successfully!");
+        toast.success("Item added successfully! 200 BL coins have been deducted.");
       }
       onSuccess();
     } catch (err) {
@@ -512,15 +526,56 @@ const AddItemModal = ({ pageId, pageType, onClose, onSuccess, editItem = null })
 
   const getLabels = () => {
     switch (pageType) {
-      case "store": return { title: isEditMode ? "Edit Product" : "Add Product", priceLabel: "Price" };
-      case "restaurant": return { title: isEditMode ? "Edit Menu Item" : "Add Menu Item", priceLabel: "Price" };
-      case "services": return { title: isEditMode ? "Edit Service" : "Add Service", priceLabel: "Price" };
-      case "rental": return { title: isEditMode ? "Edit Rental Item" : "Add Rental Item", priceLabel: "Daily Rate" };
-      default: return { title: isEditMode ? "Edit Item" : "Add Item", priceLabel: "Price" };
+      case "store": return { title: isEditMode ? "Edit Product" : "Add Product", priceLabel: "Price", itemType: "product" };
+      case "restaurant": return { title: isEditMode ? "Edit Menu Item" : "Add Menu Item", priceLabel: "Price", itemType: "menu item" };
+      case "services": return { title: isEditMode ? "Edit Service" : "Add Service", priceLabel: "Price", itemType: "service" };
+      case "rental": return { title: isEditMode ? "Edit Rental Item" : "Add Rental Item", priceLabel: "Daily Rate", itemType: "rental" };
+      default: return { title: isEditMode ? "Edit Item" : "Add Item", priceLabel: "Price", itemType: "item" };
     }
   };
 
   const labels = getLabels();
+
+  // Fee Confirmation Dialog
+  if (showFeeConfirmation) {
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70] p-4">
+        <div className="bg-card rounded-2xl p-6 w-full max-w-sm border border-border animate-in zoom-in-95">
+          <div className="text-center">
+            <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
+              <DollarSign className="w-8 h-8 text-amber-600" />
+            </div>
+            <h3 className="text-lg font-bold mb-2">Confirm Listing Fee</h3>
+            <p className="text-muted-foreground mb-4">
+              Creating a new {labels.itemType} requires a listing fee of <strong className="text-foreground">{LISTING_FEE} BL coins</strong>.
+            </p>
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 text-sm text-amber-800">
+              This fee will be deducted from your BL coins wallet.
+            </div>
+            <div className="flex gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowFeeConfirmation(false)} 
+                className="flex-1"
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={executeSubmit} 
+                className="flex-1 bg-amber-500 hover:bg-amber-600"
+                disabled={loading}
+                data-testid="confirm-fee-btn"
+              >
+                {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                Pay {LISTING_FEE} BL & Create
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-end md:items-center justify-center z-[60] p-0 md:p-4" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
