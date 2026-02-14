@@ -382,8 +382,8 @@ export default function Wallet() {
           return;
         }
         
-        // Purchase from balance
-        const response = await api.post("/payments/bl-coins/purchase-from-balance", {
+        // Purchase from balance - correct endpoint
+        const response = await api.post("/payments/stripe/bl-coins/purchase-from-balance", {
           package_id: pkg.id,
           quantity: quantity,
           amount: totalPrice,
