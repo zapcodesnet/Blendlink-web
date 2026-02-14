@@ -670,6 +670,81 @@ class MarketplaceService:
             {"$set": {"is_listed": is_listed, "listing_id": listing_id}}
         )
     
+    async def _check_and_deduct_listing_fee(self, user_id: str, item_type: str = "listing") -> Dict[str, Any]:
+        """
+        Check if user has sufficient BL coins for listing fee and deduct if so.
+        Returns success status, new balance, and error message if applicable.
+        """
+        import uuid
+        
+        # Get user's current BL coins balance
+        user = await self.db.users.find_one({"user_id": user_id}, {"_id": 0, "bl_coins": 1})
+        if not user:
+            return {"success": False, "error": "User not found"}
+        
+        current_balance = user.get("bl_coins", 0)
+        
+        if current_balance < LISTING_FEE_BL_COINS:
+            return {
+                "success": False,
+                "error": f"Insufficient BL coins. You need {LISTING_FEE_BL_COINS} BL coins to create a listing. Current balance: {current_balance}",
+                "required": LISTING_FEE_BL_COINS,
+                "current_balance": current_balance
+            }
+        
+        # Deduct the listing fee
+        result = await self.db.users.update_one(
+            {"user_id": user_id, "bl_coins": {"$gte": LISTING_FEE_BL_COINS}},
+            {"$inc": {"bl_coins": -LISTING_FEE_BL_COINS}}
+        )
+        
+        if result.modified_count == 0:
+            return {"success": False, "error": "Failed to deduct listing fee. Please try again."}
+        
+        # Record the transaction
+        await self.db.bl_transactions.insert_one({
+            "transaction_id": f"bltxn_{uuid.uuid4().hex[:16]}",
+            "user_id": user_id,
+            "amount": -LISTING_FEE_BL_COINS,
+            "type": "listing_fee",
+            "description": f"Listing fee for {item_type}",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        # Get updated balance
+        updated_user = await self.db.users.find_one({"user_id": user_id}, {"_id": 0, "bl_coins": 1})
+        new_balance = updated_user.get("bl_coins", 0) if updated_user else current_balance - LISTING_FEE_BL_COINS
+        
+        logger.info(f"Deducted {LISTING_FEE_BL_COINS} BL coins from user {user_id} for {item_type}")
+        
+        return {
+            "success": True,
+            "fee_deducted": LISTING_FEE_BL_COINS,
+            "new_balance": new_balance
+        }
+    
+    async def _refund_listing_fee(self, user_id: str, reason: str) -> None:
+        """Refund listing fee if listing creation fails after fee was deducted"""
+        import uuid
+        
+        # Refund the fee
+        await self.db.users.update_one(
+            {"user_id": user_id},
+            {"$inc": {"bl_coins": LISTING_FEE_BL_COINS}}
+        )
+        
+        # Record the refund transaction
+        await self.db.bl_transactions.insert_one({
+            "transaction_id": f"bltxn_{uuid.uuid4().hex[:16]}",
+            "user_id": user_id,
+            "amount": LISTING_FEE_BL_COINS,
+            "type": "listing_fee_refund",
+            "description": f"Listing fee refund: {reason}",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        logger.info(f"Refunded {LISTING_FEE_BL_COINS} BL coins to user {user_id}: {reason}")
+    
     async def _transfer_ownership(
         self,
         content_type: str,
