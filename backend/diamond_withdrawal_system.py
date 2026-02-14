@@ -476,13 +476,19 @@ async def init_kyc_verification(
         import stripe
         import os
         
-        # CRITICAL: Use STRIPE_SECRET_KEY (not STRIPE_API_KEY which may have system override)
+        # CRITICAL: Use STRIPE_SECRET_KEY from environment
         api_key = os.environ.get("STRIPE_SECRET_KEY") or os.environ.get("STRIPE_API_KEY")
         
-        # FORCE LIVE MODE - Override any test keys in production
-        LIVE_STRIPE_SECRET_KEY = "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"
-        if not api_key or not api_key.startswith("sk_live"):
-            api_key = LIVE_STRIPE_SECRET_KEY
+        if not api_key:
+            # Fallback to manual verification if Stripe not configured
+            await db.users.update_one(
+                {"user_id": current_user["user_id"]},
+                {"$set": {"kyc_status": "pending"}}
+            )
+            return {
+                "status": "pending",
+                "message": "KYC verification pending - Stripe not configured"
+            }
         
         stripe.api_key = api_key
         
