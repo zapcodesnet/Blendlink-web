@@ -282,7 +282,6 @@ async def get_mobile_sync_health():
     # Database check
     try:
         mongo_url = os.environ.get('MONGO_URL')
-        db_name = os.environ.get('DB_NAME', 'blendlink')
         client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=5000)
         await client.admin.command('ping')
         health_checks["database"] = {"status": "healthy", "latency_ms": 0}
