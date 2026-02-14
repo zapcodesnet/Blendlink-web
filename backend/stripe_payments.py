@@ -854,6 +854,301 @@ async def get_page_subscriptions(page_id: str):
     }
 
 
+# ============== BL COINS PURCHASE ==============
+
+# BL Coins pricing tiers
+BL_COINS_TIERS = {
+    "starter": {"price": 4.99, "coins": 30000, "label": "Starter Pack"},
+    "popular": {"price": 9.99, "coins": 80000, "label": "Popular"},
+    "premium": {"price": 14.99, "coins": 400000, "label": "Premium"},
+    "ultimate": {"price": 29.99, "coins": 1000000, "label": "Ultimate"}
+}
+
+
+class BLCoinsCheckoutRequest(BaseModel):
+    """Request to create a BL coins purchase checkout session"""
+    tier_id: str
+    amount_usd: float
+    coins_amount: int
+    origin_url: str
+
+
+@stripe_router.post("/bl-coins/checkout")
+async def create_bl_coins_checkout(request: BLCoinsCheckoutRequest, http_request: Request):
+    """
+    Create a Stripe checkout session for purchasing BL coins.
+    After successful payment, coins are credited to user's wallet.
+    """
+    # Verify the tier and amounts match
+    tier = BL_COINS_TIERS.get(request.tier_id)
+    if not tier:
+        raise HTTPException(status_code=400, detail="Invalid tier selected")
+    
+    if abs(tier["price"] - request.amount_usd) > 0.01 or tier["coins"] != request.coins_amount:
+        raise HTTPException(status_code=400, detail="Price mismatch. Please refresh and try again.")
+    
+    # Get current user from token
+    from server import get_current_user_from_token
+    token = http_request.headers.get("Authorization", "").replace("Bearer ", "")
+    if not token:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    
+    user = await get_current_user_from_token(token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    user_id = user.get("user_id")
+    user_email = user.get("email", "")
+    
+    # FORCE LIVE MODE
+    api_key = LIVE_STRIPE_SECRET_KEY
+    
+    host_url = str(http_request.base_url).rstrip("/")
+    webhook_url = f"{host_url}/api/webhook/stripe"
+    
+    stripe_checkout = StripeCheckout(api_key=api_key, webhook_url=webhook_url)
+    
+    # Build URLs
+    origin = request.origin_url.rstrip("/")
+    success_url = f"{origin}/coins-purchase-success?session_id={{CHECKOUT_SESSION_ID}}"
+    cancel_url = f"{origin}/coins-purchase-cancelled"
+    
+    # Create checkout session with metadata
+    metadata = {
+        "purchase_type": "bl_coins",
+        "user_id": user_id,
+        "user_email": user_email,
+        "tier_id": request.tier_id,
+        "coins_amount": str(request.coins_amount),
+        "send_receipt": "true"
+    }
+    
+    checkout_request = CheckoutSessionRequest(
+        amount=request.amount_usd,
+        currency="usd",
+        success_url=success_url,
+        cancel_url=cancel_url,
+        metadata=metadata,
+        payment_methods=["card"]
+    )
+    
+    try:
+        session: CheckoutSessionResponse = await stripe_checkout.create_checkout_session(checkout_request)
+    except Exception as e:
+        logger.error(f"Stripe BL coins checkout error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to create checkout: {str(e)}")
+    
+    # Create purchase record
+    purchase_id = f"blp_{uuid.uuid4().hex[:12]}"
+    purchase_record = {
+        "purchase_id": purchase_id,
+        "stripe_session_id": session.session_id,
+        "user_id": user_id,
+        "user_email": user_email,
+        "tier_id": request.tier_id,
+        "amount_usd": request.amount_usd,
+        "coins_amount": request.coins_amount,
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.bl_coins_purchases.insert_one(purchase_record)
+    
+    logger.info(f"Created BL coins checkout for user {user_id}: {request.coins_amount} coins for ${request.amount_usd}")
+    
+    return {
+        "url": session.url,
+        "session_id": session.session_id,
+        "purchase_id": purchase_id
+    }
+
+
+@stripe_router.get("/bl-coins/status/{session_id}")
+async def get_bl_coins_purchase_status(session_id: str, http_request: Request):
+    """
+    Check the status of a BL coins purchase and credit coins if paid.
+    """
+    # Validate session ID
+    if not session_id or not session_id.startswith("cs_"):
+        raise HTTPException(status_code=400, detail="Invalid session ID")
+    
+    # FORCE LIVE MODE
+    api_key = LIVE_STRIPE_SECRET_KEY
+    
+    host_url = str(http_request.base_url).rstrip("/")
+    webhook_url = f"{host_url}/api/webhook/stripe"
+    stripe_checkout = StripeCheckout(api_key=api_key, webhook_url=webhook_url)
+    
+    try:
+        status: CheckoutStatusResponse = await stripe_checkout.get_checkout_status(session_id)
+    except Exception as e:
+        logger.error(f"Stripe status check error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to check status: {str(e)}")
+    
+    # Find the purchase record
+    purchase = await db.bl_coins_purchases.find_one({"stripe_session_id": session_id})
+    
+    if not purchase:
+        raise HTTPException(status_code=404, detail="Purchase record not found")
+    
+    # If already processed, return success
+    if purchase.get("status") == "completed":
+        return {
+            "status": "completed",
+            "coins_credited": purchase.get("coins_amount"),
+            "new_balance": purchase.get("new_balance"),
+            "already_processed": True
+        }
+    
+    # If payment successful, credit coins
+    if status.payment_status == "paid" and purchase.get("status") != "completed":
+        user_id = purchase.get("user_id")
+        coins_amount = purchase.get("coins_amount", 0)
+        user_email = purchase.get("user_email", "")
+        
+        # Credit coins to user
+        result = await db.users.find_one_and_update(
+            {"user_id": user_id},
+            {"$inc": {"bl_coins": coins_amount}},
+            return_document=True
+        )
+        
+        new_balance = result.get("bl_coins", 0) if result else coins_amount
+        
+        # Update purchase record
+        await db.bl_coins_purchases.update_one(
+            {"stripe_session_id": session_id},
+            {"$set": {
+                "status": "completed",
+                "new_balance": new_balance,
+                "completed_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        # Record transaction
+        await db.bl_transactions.insert_one({
+            "transaction_id": f"tx_{uuid.uuid4().hex[:12]}",
+            "user_id": user_id,
+            "type": "purchase",
+            "amount": coins_amount,
+            "description": f"Purchased {coins_amount:,} BL coins for ${purchase.get('amount_usd', 0):.2f}",
+            "reference_id": purchase.get("purchase_id"),
+            "stripe_session_id": session_id,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        logger.info(f"Credited {coins_amount} BL coins to user {user_id}. New balance: {new_balance}")
+        
+        # Send receipt email
+        if user_email:
+            try:
+                await send_bl_coins_receipt_email(
+                    email=user_email,
+                    coins_amount=coins_amount,
+                    amount_usd=purchase.get("amount_usd", 0),
+                    tier_label=BL_COINS_TIERS.get(purchase.get("tier_id"), {}).get("label", "BL Coins"),
+                    new_balance=new_balance
+                )
+            except Exception as e:
+                logger.error(f"Failed to send receipt email: {e}")
+        
+        return {
+            "status": "completed",
+            "coins_credited": coins_amount,
+            "new_balance": new_balance,
+            "already_processed": False
+        }
+    
+    return {
+        "status": status.payment_status,
+        "session_status": status.status,
+        "coins_amount": purchase.get("coins_amount")
+    }
+
+
+async def send_bl_coins_receipt_email(email: str, coins_amount: int, amount_usd: float, tier_label: str, new_balance: int):
+    """Send receipt email after successful BL coins purchase"""
+    from email_report_service import send_email_notification
+    
+    subject = f"Receipt: {coins_amount:,} BL Coins Purchase - Blendlink"
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+            .header {{ background: linear-gradient(135deg, #f59e0b, #ea580c); padding: 30px; border-radius: 12px 12px 0 0; text-align: center; }}
+            .header h1 {{ color: white; margin: 0; }}
+            .content {{ background: #fff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; }}
+            .receipt-box {{ background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; padding: 20px; margin: 20px 0; }}
+            .detail-row {{ display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e5e7eb; }}
+            .detail-row:last-child {{ border-bottom: none; }}
+            .amount {{ font-size: 24px; font-weight: bold; color: #059669; }}
+            .footer {{ text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Purchase Confirmed!</h1>
+            </div>
+            <div class="content">
+                <p>Thank you for your purchase! Your BL coins have been added to your wallet.</p>
+                
+                <div class="receipt-box">
+                    <h3 style="margin-top: 0;">Receipt Details</h3>
+                    <div class="detail-row">
+                        <span>Package:</span>
+                        <strong>{tier_label}</strong>
+                    </div>
+                    <div class="detail-row">
+                        <span>BL Coins:</span>
+                        <strong>+{coins_amount:,} BL</strong>
+                    </div>
+                    <div class="detail-row">
+                        <span>Amount Paid:</span>
+                        <strong>${amount_usd:.2f} USD</strong>
+                    </div>
+                    <div class="detail-row">
+                        <span>New Balance:</span>
+                        <span class="amount">{new_balance:,} BL</span>
+                    </div>
+                </div>
+                
+                <p>You can now use your BL coins to:</p>
+                <ul>
+                    <li>Create marketplace listings (200 BL each)</li>
+                    <li>Play games and win prizes</li>
+                    <li>Mint photos and collectibles</li>
+                    <li>And much more!</li>
+                </ul>
+                
+                <p style="margin-top: 20px;">
+                    <a href="https://blendlink.net/wallet" style="background: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">
+                        View Your Wallet
+                    </a>
+                </p>
+            </div>
+            <div class="footer">
+                <p>This is an automated receipt from Blendlink.</p>
+                <p>If you have any questions, please contact support@blendlink.net</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    await send_email_notification(
+        to_email=email,
+        subject=subject,
+        html_content=html_content
+    )
+    
+    logger.info(f"Sent BL coins purchase receipt to {email}")
+
+
 # ============== EXPORT ==============
 
 def get_stripe_router():
