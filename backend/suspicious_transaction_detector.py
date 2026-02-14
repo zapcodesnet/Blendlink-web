@@ -116,8 +116,6 @@ async def analyze_transaction(transaction: dict) -> list:
     """
     triggered_rules = []
     user_id = transaction.get("user_id")
-    amount = transaction.get("amount_usd") or transaction.get("amount", 0)
-    transaction_type = transaction.get("transaction_type", "")
     
     if not user_id:
         return triggered_rules
