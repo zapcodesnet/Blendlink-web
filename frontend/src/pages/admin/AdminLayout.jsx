@@ -435,6 +435,7 @@ export default function AdminLayout() {
     { icon: Percent, label: 'Membership Tiers', path: '/admin/membership-tiers' },
     { icon: Tag, label: 'Promo Codes', path: '/admin/promo-codes' },
     { icon: Activity, label: 'Transactions', path: '/admin/transactions' },
+    { icon: DollarSign, label: 'Commissions', path: '/admin/commissions' },
     { icon: Bell, label: 'Notifications', path: '/admin/notifications' },
     { icon: Palette, label: 'Themes', path: '/admin/themes' },
     { icon: Code, label: 'UI Editor', path: '/admin/ui-editor' },
