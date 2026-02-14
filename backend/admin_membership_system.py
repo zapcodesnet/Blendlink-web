@@ -146,7 +146,6 @@ async def get_all_tiers(admin: dict = Depends(get_admin_user)):
     override_map = {o["tier_id"]: o for o in overrides}
     
     # Get active promo codes per tier
-    now = datetime.now(timezone.utc).isoformat()
     promo_codes = await db.promo_codes.find(
         {"is_active": True},
         {"_id": 0}
