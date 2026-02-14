@@ -446,14 +446,30 @@ export default function Wallet() {
           setUser({ ...user, subscription_tier: tierId });
         }
       } else {
-        // Use Stripe checkout for subscription
-        const response = await api.post("/subscriptions/create-checkout", {
-          tier: tierId,
-          price_monthly: tier.price
+        // Use Stripe checkout for subscription - redirect to Stripe checkout via subscription endpoint
+        const successUrl = `${window.location.origin}/wallet?subscription_success=true`;
+        const cancelUrl = `${window.location.origin}/wallet`;
+        
+        const response = await fetch(`${API_BASE}/api/subscriptions/checkout?tier=${tierId}&success_url=${encodeURIComponent(successUrl)}&cancel_url=${encodeURIComponent(cancelUrl)}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('blendlink_token')}`,
+            'Content-Type': 'application/json'
+          }
         });
         
-        if (response.data?.url) {
-          window.location.href = response.data.url;
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.detail || 'Failed to create checkout');
+        }
+        
+        const data = await response.json();
+        if (data.checkout_url) {
+          window.location.href = data.checkout_url;
+        } else if (data.url) {
+          window.location.href = data.url;
+        } else {
+          throw new Error('No checkout URL received');
         }
       }
     } catch (error) {
