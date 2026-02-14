@@ -228,13 +228,14 @@ async def process_single_renewal(subscription: dict) -> bool:
 async def attempt_payment_with_fallback(user: dict, amount: float, tier: str, subscription_id: str) -> dict:
     """
     Attempt payment using fallback methods in order:
-    1. USD Balance
+    1. USD Balance (BlendLink earnings)
     2. Stripe Connect (card on file)
-    3. Default payment method
+    3. Default payment method (saved card)
+    4. Bank Account (ACH)
     """
     user_id = user["user_id"]
     
-    # Method 1: USD Balance
+    # Method 1: USD Balance (BlendLink earnings)
     usd_balance = user.get("usd_balance", 0)
     if usd_balance >= amount:
         logger.info(f"Attempting balance payment for {user_id}: ${amount}")
@@ -254,23 +255,34 @@ async def attempt_payment_with_fallback(user: dict, amount: float, tier: str, su
     connect_account = await db.stripe_connect_accounts.find_one({"user_id": user_id})
     if connect_account and connect_account.get("default_payment_method"):
         try:
-            logger.info(f"Attempting Stripe payment for {user_id}")
+            logger.info(f"Attempting Stripe Connect payment for {user_id}")
             result = await charge_stripe_customer(user_id, amount, tier, subscription_id)
             if result["success"]:
-                return {"success": True, "method": "stripe_card"}
+                return {"success": True, "method": "stripe_connect_card"}
         except Exception as e:
-            logger.error(f"Stripe payment failed for {user_id}: {e}")
+            logger.error(f"Stripe Connect payment failed for {user_id}: {e}")
     
-    # Method 3: User's saved payment method
-    payment_methods = await db.payment_methods.find({"user_id": user_id, "is_default": True}).to_list(1)
+    # Method 3: User's saved payment method (card)
+    payment_methods = await db.payment_methods.find({"user_id": user_id, "is_default": True, "type": "card"}).to_list(1)
     if payment_methods:
         try:
-            logger.info(f"Attempting saved payment method for {user_id}")
+            logger.info(f"Attempting saved card payment for {user_id}")
             result = await charge_saved_payment_method(user_id, payment_methods[0], amount, tier)
             if result["success"]:
                 return {"success": True, "method": "saved_card"}
         except Exception as e:
-            logger.error(f"Saved payment method failed for {user_id}: {e}")
+            logger.error(f"Saved card payment failed for {user_id}: {e}")
+    
+    # Method 4: Bank Account (ACH)
+    bank_accounts = await db.payment_methods.find({"user_id": user_id, "type": "bank_account", "verified": True}).to_list(1)
+    if bank_accounts:
+        try:
+            logger.info(f"Attempting bank account (ACH) payment for {user_id}")
+            result = await charge_bank_account(user_id, bank_accounts[0], amount, tier, subscription_id)
+            if result["success"]:
+                return {"success": True, "method": "bank_account"}
+        except Exception as e:
+            logger.error(f"Bank account payment failed for {user_id}: {e}")
     
     # All methods failed
     return {"success": False, "error": "All payment methods failed"}
