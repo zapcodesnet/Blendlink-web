@@ -1438,6 +1438,41 @@ class CreateListing(BaseModel):
 
 @marketplace_router.post("/listings")
 async def create_listing(data: CreateListing, current_user: dict = Depends(get_current_user)):
+    # Check and deduct listing fee (200 BL coins)
+    user_id = current_user["user_id"]
+    user = await db.users.find_one({"user_id": user_id}, {"_id": 0, "bl_coins": 1})
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    LISTING_FEE_BL_COINS = 200
+    current_balance = user.get("bl_coins", 0)
+    
+    if current_balance < LISTING_FEE_BL_COINS:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Insufficient BL coins. You need {LISTING_FEE_BL_COINS} BL coins to create a listing. Current balance: {current_balance}"
+        )
+    
+    # Deduct the listing fee
+    fee_result = await db.users.update_one(
+        {"user_id": user_id, "bl_coins": {"$gte": LISTING_FEE_BL_COINS}},
+        {"$inc": {"bl_coins": -LISTING_FEE_BL_COINS}}
+    )
+    
+    if fee_result.modified_count == 0:
+        raise HTTPException(status_code=400, detail="Failed to deduct listing fee. Please try again.")
+    
+    # Record the listing fee transaction
+    await db.bl_transactions.insert_one({
+        "transaction_id": f"bltxn_{uuid.uuid4().hex[:16]}",
+        "user_id": user_id,
+        "amount": -LISTING_FEE_BL_COINS,
+        "type": "listing_fee",
+        "description": f"Listing fee for marketplace item: {data.title[:50]}",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
     listing = ListingBase(
         user_id=current_user["user_id"],
         title=data.title,
