@@ -170,8 +170,8 @@ class TestMarketplaceListingEndpoints:
     """Test marketplace listing related endpoints"""
     
     def test_my_listings_requires_auth(self):
-        """GET /api/marketplace/my-listings - Should require authentication"""
-        response = requests.get(f"{BASE_URL}/api/marketplace/my-listings")
+        """GET /api/marketplace/listings/my - Should require authentication"""
+        response = requests.get(f"{BASE_URL}/api/marketplace/listings/my")
         
         assert response.status_code in [401, 403], f"Expected 401/403, got {response.status_code}"
         print("✓ My listings endpoint requires authentication")
