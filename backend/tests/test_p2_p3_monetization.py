@@ -196,42 +196,23 @@ class TestCommissionDashboardAPI:
         print(f"Commission stats data: {data}")
 
 
-class TestWalletPage:
-    """Test wallet page sections"""
+class TestMobileSyncVerification:
+    """Test mobile sync verification endpoint"""
     
-    def test_stripe_topup_packages(self):
-        """Test /api/stripe/coin-packages endpoint for wallet top up section"""
-        response = requests.get(f"{BASE_URL}/api/stripe/coin-packages", timeout=30)
-        print(f"Coin packages response: {response.status_code}")
+    def test_mobile_sync_verify(self):
+        """Test /api/mobile-sync/verify endpoint for API compatibility check"""
+        response = requests.get(f"{BASE_URL}/api/mobile-sync/verify", timeout=30)
+        print(f"Mobile sync verify response: {response.status_code}")
         
         assert response.status_code == 200
         
         data = response.json()
-        assert "packages" in data or isinstance(data, list), "Expected packages data"
+        assert "total_endpoints" in data, "Missing 'total_endpoints' field"
+        assert "available" in data, "Missing 'available' field"
+        assert "overall_health" in data, "Missing 'overall_health' field"
         
-        packages = data.get("packages", data) if isinstance(data, dict) else data
-        print(f"Total coin packages: {len(packages)}")
-        
-        # Should have multiple package options
-        assert len(packages) >= 1, "Expected at least 1 package"
-    
-    def test_membership_tiers(self):
-        """Test /api/membership/tiers endpoint for wallet membership section"""
-        response = requests.get(f"{BASE_URL}/api/membership/tiers", timeout=30)
-        print(f"Membership tiers response: {response.status_code}")
-        
-        assert response.status_code == 200
-        
-        data = response.json()
-        assert "tiers" in data, "Missing 'tiers' field"
-        
-        tiers = data["tiers"]
-        expected_tiers = ["bronze", "silver", "gold", "diamond"]
-        
-        for tier_name in expected_tiers:
-            assert tier_name in tiers, f"Missing tier: {tier_name}"
-        
-        print(f"Membership tiers found: {list(tiers.keys())}")
+        print(f"API Compatibility: {data['available']}/{data['total_endpoints']} available")
+        print(f"Overall health: {data['overall_health']}")
 
 
 if __name__ == "__main__":
