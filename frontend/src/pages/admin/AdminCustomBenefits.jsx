@@ -229,7 +229,7 @@ export default function AdminCustomBenefits() {
           tier_values: {...form.tier_values, [tier]: e.target.value}
         })}
         placeholder={form.default_value?.toString() || "Value"}
-        className="bg-slate-700 border-slate-600 text-sm"
+        className="bg-slate-700 border-slate-600 text-white text-sm placeholder:text-slate-400"
       />
     );
   };
