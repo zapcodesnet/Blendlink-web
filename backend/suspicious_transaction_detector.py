@@ -371,6 +371,279 @@ async def check_rule(rule_id: str, rule: dict, transaction: dict, user: dict, no
             except ValueError:
                 pass
     
+    # ============== ADVANCED ML-INSPIRED RULE CHECKS ==============
+    
+    elif rule_id == "statistical_amount_anomaly":
+        # Calculate Z-score for transaction amount
+        min_history = rule.get("min_history_count", 10)
+        pipeline = [
+            {"$match": {"user_id": user_id}},
+            {"$group": {
+                "_id": None,
+                "mean": {"$avg": "$amount_usd"},
+                "count": {"$sum": 1},
+                "amounts": {"$push": "$amount_usd"}
+            }}
+        ]
+        result = await db.bl_transactions.aggregate(pipeline).to_list(1)
+        if result and result[0]["count"] >= min_history:
+            mean = result[0]["mean"]
+            amounts = [a for a in result[0]["amounts"] if a is not None]
+            if amounts and mean > 0:
+                # Calculate standard deviation
+                variance = sum((x - mean) ** 2 for x in amounts) / len(amounts)
+                std_dev = variance ** 0.5
+                if std_dev > 0:
+                    z_score = (amount - mean) / std_dev
+                    if abs(z_score) >= rule["z_score_threshold"]:
+                        return {
+                            "z_score": round(z_score, 2),
+                            "amount": amount,
+                            "user_mean": round(mean, 2),
+                            "user_std_dev": round(std_dev, 2)
+                        }
+    
+    elif rule_id == "unusual_time_pattern":
+        txn_created = transaction.get("created_at")
+        if txn_created:
+            try:
+                txn_time = datetime.fromisoformat(txn_created.replace("Z", "+00:00"))
+                hour = txn_time.hour
+                off_start = rule.get("off_hours_start", 2)
+                off_end = rule.get("off_hours_end", 5)
+                if off_start <= hour < off_end:
+                    return {"transaction_hour": hour, "off_hours_range": f"{off_start}-{off_end}"}
+            except ValueError:
+                pass
+    
+    elif rule_id == "velocity_acceleration":
+        comparison_hours = rule.get("comparison_period_hours", 24)
+        baseline_hours = rule.get("baseline_period_hours", 168)
+        
+        comparison_start = (now - timedelta(hours=comparison_hours)).isoformat()
+        baseline_start = (now - timedelta(hours=baseline_hours)).isoformat()
+        
+        recent_count = await db.bl_transactions.count_documents({
+            "user_id": user_id,
+            "created_at": {"$gte": comparison_start}
+        })
+        
+        baseline_count = await db.bl_transactions.count_documents({
+            "user_id": user_id,
+            "created_at": {"$gte": baseline_start, "$lt": comparison_start}
+        })
+        
+        if baseline_count > 0:
+            # Normalize to per-day rates
+            recent_rate = recent_count / (comparison_hours / 24)
+            baseline_rate = baseline_count / ((baseline_hours - comparison_hours) / 24)
+            
+            if baseline_rate > 0 and recent_rate > baseline_rate * rule["acceleration_multiplier"]:
+                return {
+                    "recent_rate": round(recent_rate, 2),
+                    "baseline_rate": round(baseline_rate, 2),
+                    "acceleration": round(recent_rate / baseline_rate, 2)
+                }
+    
+    elif rule_id == "amount_structuring":
+        threshold = rule.get("threshold_amount", 500)
+        tolerance = rule.get("tolerance_percentage", 10) / 100
+        window_hours = rule.get("window_hours", 24)
+        min_count = rule.get("min_count", 3)
+        
+        window_start = (now - timedelta(hours=window_hours)).isoformat()
+        lower_bound = threshold * (1 - tolerance)
+        
+        structuring_txns = await db.bl_transactions.count_documents({
+            "user_id": user_id,
+            "created_at": {"$gte": window_start},
+            "amount_usd": {"$gte": lower_bound, "$lt": threshold}
+        })
+        
+        if structuring_txns >= min_count:
+            return {
+                "count": structuring_txns,
+                "threshold": threshold,
+                "pattern": f"Multiple transactions between ${lower_bound:.0f}-${threshold}"
+            }
+    
+    elif rule_id == "round_amount_pattern":
+        round_threshold = rule.get("round_threshold", 50)
+        window_hours = rule.get("window_hours", 48)
+        min_count = rule.get("min_count", 5)
+        
+        window_start = (now - timedelta(hours=window_hours)).isoformat()
+        
+        # Count transactions with round amounts
+        pipeline = [
+            {"$match": {"user_id": user_id, "created_at": {"$gte": window_start}}},
+            {"$addFields": {
+                "is_round": {"$eq": [{"$mod": ["$amount_usd", round_threshold]}, 0]}
+            }},
+            {"$match": {"is_round": True}},
+            {"$count": "round_count"}
+        ]
+        result = await db.bl_transactions.aggregate(pipeline).to_list(1)
+        round_count = result[0]["round_count"] if result else 0
+        
+        if round_count >= min_count:
+            return {
+                "round_transaction_count": round_count,
+                "round_threshold": round_threshold,
+                "window_hours": window_hours
+            }
+    
+    elif rule_id == "low_recipient_diversity":
+        window_hours = rule.get("window_hours", 24)
+        min_txn_count = rule.get("min_transaction_count", 10)
+        max_ratio = rule.get("max_recipient_ratio", 0.2)
+        
+        window_start = (now - timedelta(hours=window_hours)).isoformat()
+        
+        pipeline = [
+            {"$match": {"user_id": user_id, "created_at": {"$gte": window_start}}},
+            {"$group": {
+                "_id": None,
+                "total_transactions": {"$sum": 1},
+                "unique_recipients": {"$addToSet": "$recipient_id"}
+            }}
+        ]
+        result = await db.bl_transactions.aggregate(pipeline).to_list(1)
+        
+        if result and result[0]["total_transactions"] >= min_txn_count:
+            total = result[0]["total_transactions"]
+            unique = len([r for r in result[0]["unique_recipients"] if r])
+            ratio = unique / total if total > 0 else 1
+            
+            if ratio < max_ratio:
+                return {
+                    "total_transactions": total,
+                    "unique_recipients": unique,
+                    "diversity_ratio": round(ratio, 3)
+                }
+    
+    elif rule_id == "high_risk_beneficiary":
+        recipient_id = transaction.get("recipient_id") or transaction.get("beneficiary_id")
+        if recipient_id:
+            # Check if recipient has existing fraud flags
+            flagged_user = await db.users.find_one({
+                "user_id": recipient_id,
+                "$or": [
+                    {"is_flagged": True},
+                    {"fraud_score": {"$gte": 0.7}},
+                    {"commission_hold": True}
+                ]
+            })
+            if flagged_user:
+                return {
+                    "flagged_user_id": recipient_id,
+                    "flag_reason": flagged_user.get("flag_reason", "Previous fraud detection")
+                }
+    
+    elif rule_id == "excessive_failed_attempts":
+        window_minutes = rule.get("window_minutes", 60)
+        max_failures = rule.get("max_failures_before_success", 3)
+        
+        window_start = (now - timedelta(minutes=window_minutes)).isoformat()
+        
+        # Count failed transactions before this one
+        failed_count = await db.bl_transactions.count_documents({
+            "user_id": user_id,
+            "created_at": {"$gte": window_start},
+            "status": {"$in": ["failed", "declined", "error"]}
+        })
+        
+        if failed_count >= max_failures and transaction.get("status") == "completed":
+            return {
+                "failed_attempts": failed_count,
+                "window_minutes": window_minutes,
+                "pattern": "Testing pattern detected"
+            }
+    
+    elif rule_id == "multi_account_device":
+        device_id = transaction.get("device_id") or user.get("last_device_id")
+        if device_id:
+            window_hours = rule.get("window_hours", 24)
+            max_accounts = rule.get("max_accounts_per_device", 2)
+            
+            window_start = (now - timedelta(hours=window_hours)).isoformat()
+            
+            # Find other users with same device
+            other_accounts = await db.users.count_documents({
+                "user_id": {"$ne": user_id},
+                "$or": [
+                    {"last_device_id": device_id},
+                    {"device_ids": device_id}
+                ],
+                "last_activity": {"$gte": window_start}
+            })
+            
+            if other_accounts >= max_accounts:
+                return {
+                    "device_id": device_id,
+                    "accounts_on_device": other_accounts + 1
+                }
+    
+    elif rule_id == "impossible_travel":
+        current_location = transaction.get("location") or transaction.get("ip_location")
+        if current_location:
+            # Get previous transaction location
+            prev_txn = await db.bl_transactions.find_one(
+                {"user_id": user_id, "created_at": {"$lt": transaction.get("created_at")}},
+                sort=[("created_at", -1)]
+            )
+            if prev_txn:
+                prev_location = prev_txn.get("location") or prev_txn.get("ip_location")
+                if prev_location and prev_location.get("country") != current_location.get("country"):
+                    try:
+                        prev_time = datetime.fromisoformat(prev_txn["created_at"].replace("Z", "+00:00"))
+                        curr_time = datetime.fromisoformat(transaction["created_at"].replace("Z", "+00:00"))
+                        time_diff_hours = (curr_time - prev_time).total_seconds() / 3600
+                        
+                        if time_diff_hours < rule.get("max_travel_time_hours", 1):
+                            return {
+                                "previous_location": prev_location.get("country"),
+                                "current_location": current_location.get("country"),
+                                "time_between_hours": round(time_diff_hours, 2)
+                            }
+                    except (ValueError, TypeError):
+                        pass
+    
+    elif rule_id == "layering_pattern":
+        # Look for funds that quickly hop through accounts
+        max_hops = rule.get("max_hops", 3)
+        window_hours = rule.get("time_window_hours", 4)
+        window_start = (now - timedelta(hours=window_hours)).isoformat()
+        
+        # Trace back incoming transfers
+        incoming_source = transaction.get("source_user_id")
+        if incoming_source and amount > 50:  # Only check meaningful amounts
+            hop_count = 0
+            current_source = incoming_source
+            sources_chain = [user_id]
+            
+            for _ in range(max_hops):
+                # Find where this source got the money
+                source_txn = await db.bl_transactions.find_one({
+                    "user_id": current_source,
+                    "transaction_type": {"$in": ["transfer_in", "deposit"]},
+                    "created_at": {"$gte": window_start}
+                }, sort=[("created_at", -1)])
+                
+                if source_txn and source_txn.get("source_user_id"):
+                    hop_count += 1
+                    sources_chain.append(current_source)
+                    current_source = source_txn.get("source_user_id")
+                else:
+                    break
+            
+            if hop_count >= max_hops:
+                return {
+                    "hop_count": hop_count,
+                    "sources_chain": sources_chain[:5],  # Limit for display
+                    "window_hours": window_hours
+                }
+    
     return None
 
 
