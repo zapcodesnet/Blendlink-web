@@ -6,6 +6,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { toast } from "sonner";
+import { getApiUrl } from "../utils/runtimeConfig";
 import { 
   ArrowLeft, Heart, Share2, MessageCircle, MapPin, Package, 
   ShoppingCart, CreditCard, Truck, ChevronLeft, ChevronRight,
@@ -17,7 +18,7 @@ import AuctionBidPanel from "../components/AuctionBidPanel";
 import BottomNav from "../components/BottomNav";
 import BackToGroupFAB from "../components/BackToGroupFAB";
 
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE_URL = getApiUrl();
 
 // Photo Gallery Component with Zoom
 const PhotoGallery = ({ images, title }) => {

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
+import { getApiUrl } from "../utils/runtimeConfig";
 import {
   Calendar,
   Plus,
@@ -20,7 +21,7 @@ import {
   Coins,
 } from "lucide-react";
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = getApiUrl();
 
 // API functions for events
 const eventsAPI = {

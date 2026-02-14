@@ -3,13 +3,14 @@ import { useNavigate, useParams } from "react-router-dom";
 import { AuthContext } from "../App";
 import { Button } from "../components/ui/button";
 import { toast } from "sonner";
+import { getApiUrl } from "../utils/runtimeConfig";
 import { 
   ArrowLeft, Heart, Share2, Edit2, Plus, Trash2, Eye,
   Image, Video, Music, Sparkles, Globe, Lock, Grid,
   Download, Play, Pause, Check, X, Loader2
 } from "lucide-react";
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE = getApiUrl();
 
 export default function AICollectionDetail() {
   const { collectionId } = useParams();
