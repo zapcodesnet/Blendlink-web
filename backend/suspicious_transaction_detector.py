@@ -239,7 +239,7 @@ async def check_rule(rule_id: str, rule: dict, transaction: dict, user: dict, no
                 account_age = (now - created_date).days
                 if account_age <= rule["account_age_days"] and amount >= rule["threshold_usd"]:
                     return {"account_age_days": account_age, "amount": amount}
-            except:
+            except ValueError:
                 pass
     
     elif rule_id == "dormant_account_activation":
@@ -254,7 +254,7 @@ async def check_rule(rule_id: str, rule: dict, transaction: dict, user: dict, no
                 days_inactive = (now - last_date).days
                 if days_inactive >= rule["dormant_days"]:
                     return {"days_inactive": days_inactive}
-            except:
+            except ValueError:
                 pass
     
     return None
