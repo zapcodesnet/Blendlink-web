@@ -15,7 +15,7 @@ import requests
 import os
 from datetime import datetime, timedelta
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://wallet-coins.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://fraud-detection-7.preview.emergentagent.com')
 
 # Admin credentials for authenticated requests
 ADMIN_EMAIL = "blendlinknet@gmail.com"
