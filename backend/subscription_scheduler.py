@@ -493,6 +493,7 @@ async def send_payment_notification(
 ):
     """
     Send notification to user about their subscription payment status.
+    Includes in-app notification, push notification, and email.
     """
     user_id = user["user_id"]
     user_email = user.get("email", "")
@@ -532,6 +533,37 @@ async def send_payment_notification(
         })
     
     await db.notifications.insert_one(notification_data)
+    
+    # Send push notification for mobile app
+    try:
+        from push_notifications import PushNotificationService
+        push_service = PushNotificationService(db)
+        
+        if notification_type == "success":
+            # Calculate next billing date (30 days from now)
+            next_billing = (datetime.now(timezone.utc) + timedelta(days=30)).strftime('%b %d, %Y')
+            await push_service.notify_subscription_renewed(
+                user_id=user_id,
+                tier=tier.capitalize(),
+                amount=amount,
+                next_billing_date=next_billing
+            )
+        elif notification_type == "retry":
+            next_retry_str = next_retry.strftime('%b %d, %Y') if next_retry else "soon"
+            await push_service.notify_subscription_retry(
+                user_id=user_id,
+                tier=tier.capitalize(),
+                retry_count=retry_attempt,
+                next_retry_date=next_retry_str
+            )
+        elif notification_type == "downgrade":
+            await push_service.notify_subscription_cancelled(
+                user_id=user_id,
+                tier=tier.capitalize(),
+                end_date=datetime.now(timezone.utc).strftime('%b %d, %Y')
+            )
+    except Exception as e:
+        logger.error(f"Failed to send push notification to {user_id}: {e}")
     
     # Send email notification
     if user_email:
