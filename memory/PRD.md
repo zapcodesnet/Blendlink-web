@@ -70,7 +70,14 @@
 - Hook `useStripeOnboarding()` for integration
 - `WithdrawalStripeCheck` wrapper for withdrawal protection
 
-### 4. Commission Structure & Membership System (Feb 14, 2026)
+### 4. Subscription Status Display Across Pages (Feb 14, 2026)
+- **Status**: ✅ Implemented
+- **Updated Pages**:
+  - **Wallet.jsx**: Daily claim amount now reflects subscription tier (Bronze: 15K, Silver: 40K, Gold: 200K, Diamond: 500K)
+  - **MyTeam.jsx**: Added Membership Status section showing commission rates based on tier
+  - **MintedPhotos.jsx**: Added XP Multiplier stat card showing tier bonus (x2-x5)
+
+### 5. Commission Structure & Membership System (Feb 14, 2026)
 - **Status**: ✅ Production Ready - Tested & Verified
 - **Test Results**: 100% backend pass, 100% frontend verified
 
