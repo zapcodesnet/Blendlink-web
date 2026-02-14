@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "../components/ui/button";
 import { toast } from "sonner";
+import { getApiUrl } from "../utils/runtimeConfig";
 import { 
   Image, Video, Music, Sparkles, Download, Play, Pause,
   RefreshCw, Clock, CheckCircle, XCircle, Loader2
 } from "lucide-react";
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE = getApiUrl();
 
 export default function AIGeneration() {
   const [activeTab, setActiveTab] = useState('image');

@@ -4,13 +4,14 @@ import { AuthContext } from "../App";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { toast } from "sonner";
+import { getApiUrl } from "../utils/runtimeConfig";
 import { 
   FolderPlus, Folder, Heart, Eye, Trash2, Edit2, Plus,
   ArrowLeft, Grid, Image, Video, Music, Sparkles, Share2,
   Globe, Lock, MoreVertical, Check, X, Loader2
 } from "lucide-react";
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE = getApiUrl();
 
 export default function AICollections() {
   const { user } = useContext(AuthContext);

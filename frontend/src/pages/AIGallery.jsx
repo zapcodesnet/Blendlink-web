@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../App";
 import { Button } from "../components/ui/button";
 import { toast } from "sonner";
+import { getApiUrl } from "../utils/runtimeConfig";
 import { 
   Image, Video, Music, Sparkles, Download, Play, Pause, 
   Trash2, Eye, Share2, Heart, ArrowLeft, Filter, Grid,
@@ -10,7 +11,7 @@ import {
   ExternalLink, FolderOpen, Plus
 } from "lucide-react";
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE = getApiUrl();
 
 export default function AIGallery() {
   const { user } = useContext(AuthContext);
