@@ -5,12 +5,13 @@ import api from "../services/api";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { toast } from "sonner";
+import { getApiUrl } from "../utils/runtimeConfig";
 import { 
   ArrowLeft, ShoppingCart, CreditCard, Truck, Trash2, Package,
   Loader2, MapPin, User, Phone, Mail, Home, Check, AlertCircle, Globe, Info
 } from "lucide-react";
 
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE_URL = getApiUrl();
 
 // Comprehensive list of countries
 const ALL_COUNTRIES = [

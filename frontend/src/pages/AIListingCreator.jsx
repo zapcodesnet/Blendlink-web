@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import AuctionSettingsForm from "../components/AuctionSettingsForm";
 import TopUpCoinsModal from "../components/TopUpCoinsModal";
 import api from "../services/api";
+import { getApiUrl } from "../utils/runtimeConfig";
 import { 
   Camera, Upload, Sparkles, DollarSign, Tag, FileText, 
   ChevronRight, ChevronLeft, Check, Loader2, Image as ImageIcon,
@@ -15,7 +16,7 @@ import {
   MapPin, Truck, Scale, Ruler, Edit2, Save, Printer, Navigation, Share2, Gavel
 } from "lucide-react";
 
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE_URL = getApiUrl();
 
 // Unit conversion utilities
 const convertWeight = (value, from, to) => {

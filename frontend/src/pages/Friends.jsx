@@ -5,6 +5,7 @@ import api from "../services/api";
 import { toast } from "sonner";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
+import { getApiUrl } from "../utils/runtimeConfig";
 import {
   Users,
   UserPlus,
@@ -19,11 +20,13 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 
+const API_URL = getApiUrl();
+
 // API functions for friends
 const friendsAPI = {
   getFriends: async () => {
     const token = localStorage.getItem("blendlink_token") || localStorage.getItem("blendlink_token") || localStorage.getItem("token");
-    const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/friends/`, {
+    const res = await fetch(`${API_URL}/api/friends/`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) throw new Error("Failed to load friends");
