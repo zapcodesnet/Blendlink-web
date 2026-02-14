@@ -3,15 +3,20 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../App";
 import api from "../services/api";
 import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
 import { 
   Coins, TrendingUp, ArrowUpRight, ArrowDownRight, 
   Gift, Gamepad2, Trophy, Share2, ChevronRight, RefreshCw,
   Users, DollarSign, Crown, Sparkles, Clock, Eye, EyeOff,
-  Wifi, WifiOff
+  Wifi, WifiOff, CreditCard, AlertCircle, CheckCircle, ExternalLink,
+  Wallet as WalletIcon, Banknote
 } from "lucide-react";
 import { toast } from "sonner";
 
 const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
+
+// Withdrawal fee constant
+const WITHDRAWAL_FEE_RATE = 0.03; // 3%
 
 export default function Wallet() {
   const { user, setUser } = useContext(AuthContext);
@@ -21,6 +26,14 @@ export default function Wallet() {
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState(false);
   const [dailyClaimStatus, setDailyClaimStatus] = useState(null);
+  
+  // Withdrawal state
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawing, setWithdrawing] = useState(false);
+  const [stripeConnected, setStripeConnected] = useState(false);
+  const [stripeOnboardingUrl, setStripeOnboardingUrl] = useState(null);
+  const [loadingStripeStatus, setLoadingStripeStatus] = useState(true);
   
   // Real-time feeds
   const [teamEarnings, setTeamEarnings] = useState([]);
