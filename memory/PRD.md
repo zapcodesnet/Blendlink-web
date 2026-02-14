@@ -520,9 +520,12 @@ Both web and mobile share the same backend API, ensuring 100% sync:
 - ✅ **Stripe Onboarding Enforcement** - Integrated into AIListingCreator.jsx using checkAndPrompt
 - ✅ **Admin Dashboard** - Fully functional Membership Tiers, Promo Codes, Transaction Monitor pages
 - ✅ **Enhanced Wallet Page** - Top Up BL Coins and Membership Subscriptions sections permanently visible
-- ✅ **Payment Retry Logic** - 3 retries with fallback: Balance → Stripe → Saved Card → Downgrade
+- ✅ **Full Payment Fallback Chain** - Balance → Stripe Connect → Card → Bank Account (ACH) → Downgrade after 3 retries
+- ✅ **Commission Monitoring Dashboard** - Charts, top earners, hold/release controls at /admin/commissions
+- ✅ **Suspicious Transaction Detector** - 9 auto-flagging rules (velocity, amount, commission, account patterns)
+- ✅ **Mobile App Sync System** - API compatibility verification with 27 endpoints and 6 feature flags
 - ✅ **User Notifications** - In-app + email notifications for subscription events
-- ✅ Test Results: 100% backend pass (13 passed), 100% frontend verified
+- ✅ Test Results: 100% backend pass, 100% frontend verified
 
 ### February 13, 2026 (Latest)
 - ✅ **NEW: Orphan Assignment Trends Widget** added to Admin Panel
