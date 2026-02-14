@@ -378,14 +378,35 @@ class SubscriptionService:
     
     async def create_checkout_session(self, user_id: str, tier: str, success_url: str, cancel_url: str) -> Dict[str, Any]:
         """Create Stripe checkout session for subscription"""
-        if tier not in ["basic", "premium"]:
-            raise HTTPException(status_code=400, detail="Invalid subscription tier")
+        # Support all membership tiers
+        valid_tiers = ["bronze", "silver", "gold", "diamond"]
         
-        tier_info = SUBSCRIPTION_TIERS[tier]
+        # Handle legacy tier names
+        if tier in LEGACY_TIER_MAP:
+            tier = LEGACY_TIER_MAP[tier]
+        
+        if tier not in valid_tiers:
+            raise HTTPException(status_code=400, detail=f"Invalid subscription tier. Valid options: {', '.join(valid_tiers)}")
+        
+        tier_info = SUBSCRIPTION_TIERS.get(tier)
+        if not tier_info:
+            raise HTTPException(status_code=400, detail=f"Tier configuration not found for: {tier}")
+        
         price_id = tier_info.get("stripe_price_id")
         
         if not price_id:
-            raise HTTPException(status_code=400, detail="Stripe not configured for this tier")
+            # Create dynamic price if no pre-configured one
+            import stripe
+            stripe.api_key = os.environ.get("STRIPE_LIVE_SECRET_KEY") or os.environ.get("STRIPE_TEST_SECRET_KEY")
+            
+            # Create a one-time price for the subscription
+            price = stripe.Price.create(
+                unit_amount=int(tier_info["price_monthly"] * 100),  # Convert to cents
+                currency="usd",
+                recurring={"interval": "month"},
+                product_data={"name": f"BlendLink {tier_info['name']} Membership"},
+            )
+            price_id = price.id
         
         # Get or create Stripe customer
         user = await self.db.users.find_one({"user_id": user_id}, {"_id": 0})
