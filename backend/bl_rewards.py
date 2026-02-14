@@ -29,10 +29,16 @@ class ContentReward(Enum):
     REACTION_RECEIVED = 10
     FIRST_COMMENT = 10
 
-# Downline bonus rates
+# Downline bonus rates - Now determined by subscription tier
+# These are used as fallback only; actual rates come from subscription_tiers.py
 DOWNLINE_RATES = {
-    "regular": {"l1": 0.03, "l2": 0.01},  # 3% L1, 1% L2
-    "diamond": {"l1": 0.04, "l2": 0.02},  # 4% L1, 2% L2
+    "free": {"l1": 0.02, "l2": 0.01},      # 2% L1, 1% L2
+    "bronze": {"l1": 0.03, "l2": 0.02},    # 3% L1, 2% L2
+    "silver": {"l1": 0.03, "l2": 0.02},    # 3% L1, 2% L2
+    "gold": {"l1": 0.03, "l2": 0.02},      # 3% L1, 2% L2
+    "diamond": {"l1": 0.04, "l2": 0.03},   # 4% L1, 3% L2
+    # Legacy mappings
+    "regular": {"l1": 0.02, "l2": 0.01},   # Same as free
 }
 
 # Privacy lock duration (hours)
