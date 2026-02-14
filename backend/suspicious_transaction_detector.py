@@ -281,7 +281,7 @@ async def flag_transaction(transaction_id: str, triggered_rules: list, auto_flag
     }
     
     # Update in bl_transactions
-    result = await db.bl_transactions.update_one(
+    await db.bl_transactions.update_one(
         {"transaction_id": transaction_id},
         {"$set": flag_data}
     )
