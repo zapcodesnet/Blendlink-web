@@ -3022,6 +3022,14 @@ try:
 except ImportError as e:
     logger.warning(f"Could not load subscription routes: {e}")
 
+# Load Admin Membership System
+try:
+    from admin_membership_system import admin_membership_router
+    api_router.include_router(admin_membership_router)
+    logger.info("Admin Membership System loaded (Tier Management, Promo Codes, Transaction Monitoring)")
+except ImportError as e:
+    logger.warning(f"Could not load admin membership system: {e}")
+
 # Load Marketplace Offers System
 try:
     from marketplace_offers import offer_router
