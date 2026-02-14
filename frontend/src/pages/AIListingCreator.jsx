@@ -1032,6 +1032,11 @@ export default function AIListingCreator() {
         }
       }
       
+      // Update local balance after successful listing
+      if (setUser) {
+        setUser(prev => ({ ...prev, bl_coins: (prev.bl_coins || 0) - LISTING_FEE }));
+      }
+      
       toast.success('Listing published successfully! 200 BL coins have been deducted.');
       setStep(4);
       
@@ -1040,7 +1045,12 @@ export default function AIListingCreator() {
       }, 2000);
       
     } catch (err) {
-      toast.error(err.message);
+      // Check if error is due to insufficient balance
+      if (err.message?.toLowerCase().includes("insufficient")) {
+        setShowTopUpModal(true);
+      } else {
+        toast.error(err.message);
+      }
     } finally {
       setIsPublishing(false);
     }
