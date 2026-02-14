@@ -384,6 +384,7 @@ const ItemsTab = ({ page, pageType }) => {
 
 // Add/Edit Item Modal Component - supports both create and edit modes
 const AddItemModal = ({ pageId, pageType, onClose, onSuccess, editItem = null }) => {
+  const { user, setUser } = useContext(AuthContext);
   const isEditMode = !!editItem;
   const [formData, setFormData] = useState({
     name: editItem?.name || "",
@@ -399,9 +400,11 @@ const AddItemModal = ({ pageId, pageType, onClose, onSuccess, editItem = null })
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState(editItem?.images?.[0] || null);
   const [showFeeConfirmation, setShowFeeConfirmation] = useState(false);
+  const [showTopUpModal, setShowTopUpModal] = useState(false);
   const fileInputRef = React.useRef(null);
 
   const LISTING_FEE = 200; // BL coins
+  const userBalance = user?.bl_coins || 0;
 
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
