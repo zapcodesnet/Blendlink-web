@@ -292,9 +292,9 @@ class RewardService:
         reference_id: str
     ) -> None:
         """
-        Distribute downline bonuses to uplines
-        - L1 (direct upline): 3% regular, 4% diamond
-        - L2 (upline's upline): 1% regular, 2% diamond
+        Distribute downline bonuses to uplines based on their subscription tier.
+        - L1 (direct upline): Rate based on their tier (2-4%)
+        - L2 (upline's upline): Rate based on their tier (1-3%)
         """
         if bl_amount <= 0:
             return
@@ -311,15 +311,16 @@ class RewardService:
         # Get L1 (direct upline)
         l1_user = await self.db.users.find_one(
             {"user_id": user["referred_by"]},
-            {"user_id": 1, "referred_by": 1, "is_diamond": 1}
+            {"user_id": 1, "referred_by": 1, "subscription_tier": 1}
         )
         
         if not l1_user:
             return
         
-        # Determine L1 rate
-        l1_is_diamond = l1_user.get("is_diamond", False)
-        l1_rate = DOWNLINE_RATES["diamond"]["l1"] if l1_is_diamond else DOWNLINE_RATES["regular"]["l1"]
+        # Determine L1 rate based on subscription tier
+        l1_tier = l1_user.get("subscription_tier", "free")
+        l1_rates = DOWNLINE_RATES.get(l1_tier, DOWNLINE_RATES["free"])
+        l1_rate = l1_rates["l1"]
         l1_bonus = round(bl_amount * l1_rate)
         
         if l1_bonus > 0:
@@ -342,10 +343,11 @@ class RewardService:
                     "from_user": user_id,
                     "activity": activity_type,
                     "rate": l1_rate,
+                    "tier": l1_tier,
                 }
             )
             
-            logger.info(f"L1 bonus: {l1_bonus} BL to {l1_user['user_id']} from {user_id}")
+            logger.info(f"L1 bonus: {l1_bonus} BL to {l1_user['user_id']} from {user_id} (tier: {l1_tier})")
         
         # Get L2 (upline's upline)
         if not l1_user.get("referred_by"):
@@ -353,15 +355,16 @@ class RewardService:
         
         l2_user = await self.db.users.find_one(
             {"user_id": l1_user["referred_by"]},
-            {"user_id": 1, "is_diamond": 1}
+            {"user_id": 1, "subscription_tier": 1}
         )
         
         if not l2_user:
             return
         
-        # Determine L2 rate
-        l2_is_diamond = l2_user.get("is_diamond", False)
-        l2_rate = DOWNLINE_RATES["diamond"]["l2"] if l2_is_diamond else DOWNLINE_RATES["regular"]["l2"]
+        # Determine L2 rate based on subscription tier
+        l2_tier = l2_user.get("subscription_tier", "free")
+        l2_rates = DOWNLINE_RATES.get(l2_tier, DOWNLINE_RATES["free"])
+        l2_rate = l2_rates["l2"]
         l2_bonus = round(bl_amount * l2_rate)
         
         if l2_bonus > 0:
@@ -384,10 +387,11 @@ class RewardService:
                     "from_user": user_id,
                     "activity": activity_type,
                     "rate": l2_rate,
+                    "tier": l2_tier,
                 }
             )
             
-            logger.info(f"L2 bonus: {l2_bonus} BL to {l2_user['user_id']} from {user_id}")
+            logger.info(f"L2 bonus: {l2_bonus} BL to {l2_user['user_id']} from {user_id} (tier: {l2_tier})")
 
 
 # Initialize service
