@@ -1062,6 +1062,18 @@ async def get_bl_coins_purchase_status(session_id: str, http_request: Request):
         
         logger.info(f"Credited {coins_amount} BL coins to user {user_id}. New balance: {new_balance}")
         
+        # Send push notification for mobile app
+        try:
+            from push_notifications import PushNotificationService
+            push_service = PushNotificationService(db)
+            await push_service.notify_bl_coins_credited(
+                user_id=user_id,
+                coins=coins_amount,
+                source="purchase"
+            )
+        except Exception as e:
+            logger.error(f"Failed to send push notification: {e}")
+        
         # Send receipt email
         if user_email:
             try:
