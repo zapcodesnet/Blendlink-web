@@ -3030,6 +3030,43 @@ try:
 except ImportError as e:
     logger.warning(f"Could not load admin membership system: {e}")
 
+# Load Subscription Scheduler for recurring payments
+try:
+    from subscription_scheduler import (
+        start_subscription_scheduler, 
+        get_scheduler_status,
+        trigger_renewal_check,
+        trigger_retry_check
+    )
+    
+    # Create admin endpoints for scheduler management
+    @api_router.get("/admin/subscription-scheduler/status")
+    async def get_subscription_scheduler_status():
+        """Get status of subscription scheduler"""
+        return get_scheduler_status()
+    
+    @api_router.post("/admin/subscription-scheduler/trigger-renewals")
+    async def admin_trigger_renewals():
+        """Manually trigger subscription renewal check"""
+        result = await trigger_renewal_check()
+        return {"success": True, "result": result}
+    
+    @api_router.post("/admin/subscription-scheduler/trigger-retries")
+    async def admin_trigger_retries():
+        """Manually trigger payment retry check"""
+        result = await trigger_retry_check()
+        return {"success": True, "result": result}
+    
+    # Start scheduler on app startup
+    @app.on_event("startup")
+    async def start_subscription_scheduler_on_startup():
+        start_subscription_scheduler()
+        logger.info("Subscription scheduler started")
+    
+    logger.info("Subscription Scheduler loaded (Recurring Payments, Retries, Notifications)")
+except ImportError as e:
+    logger.warning(f"Could not load subscription scheduler: {e}")
+
 # Load Marketplace Offers System
 try:
     from marketplace_offers import offer_router
