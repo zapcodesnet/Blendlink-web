@@ -1393,9 +1393,63 @@ async def create_page(
     request: CreatePageRequest,
     current_user: dict = Depends(get_current_user)
 ):
-    """Create a new page"""
+    """Create a new page - Charges 2,000 BL coins fee"""
     user_id = current_user["user_id"]
     
+    # Page creation fee
+    PAGE_CREATION_FEE = 2000
+    
+    # Check user's subscription tier limits
+    user = await db.users.find_one({"user_id": user_id}, {"bl_coins": 1, "subscription_tier": 1})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user_tier = user.get("subscription_tier", "free")
+    current_balance = user.get("bl_coins", 0)
+    
+    # Get tier limits
+    try:
+        from subscription_tiers import SUBSCRIPTION_TIERS, LEGACY_TIER_MAP
+        if user_tier in LEGACY_TIER_MAP:
+            user_tier = LEGACY_TIER_MAP[user_tier]
+        tier_info = SUBSCRIPTION_TIERS.get(user_tier, SUBSCRIPTION_TIERS["free"])
+        max_pages = tier_info.get("max_member_pages", 1)
+    except ImportError:
+        # Fallback limits
+        max_pages = {"free": 1, "bronze": 3, "silver": 10, "gold": 25, "diamond": 999999}.get(user_tier, 1)
+    
+    # Count existing pages
+    existing_pages_count = await db.pages.count_documents({"creator_id": user_id})
+    if existing_pages_count >= max_pages:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"You've reached the maximum of {max_pages} pages for your {user_tier.title()} membership. Upgrade to create more!"
+        )
+    
+    # Check balance for fee
+    if current_balance < PAGE_CREATION_FEE:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Insufficient BL coins. Page creation costs {PAGE_CREATION_FEE} BL. You have {current_balance} BL."
+        )
+    
+    # Deduct fee
+    await db.users.update_one(
+        {"user_id": user_id},
+        {"$inc": {"bl_coins": -PAGE_CREATION_FEE}}
+    )
+    
+    # Record transaction
+    from referral_system import record_transaction, TransactionType, Currency
+    await record_transaction(
+        user_id=user_id,
+        transaction_type=TransactionType.CREATE_PAGE,
+        currency=Currency.BL,
+        amount=-PAGE_CREATION_FEE,
+        details={"page_name": request.name, "type": "page_creation_fee"}
+    )
+    
+    # Create the page
     page = Page(
         name=request.name,
         description=request.description,
@@ -1410,16 +1464,13 @@ async def create_page(
     page_dict["created_at"] = page_dict["created_at"].isoformat()
     await db.pages.insert_one(page_dict.copy())
     
-    # Award BL coins
-    bl_earned = BL_REWARDS["create_page"]
-    await award_bl_coins(user_id, bl_earned, f"Created page: {request.name}")
-    
     # Remove _id if present (MongoDB adds it)
     page_dict.pop("_id", None)
     
     return {
         "page": page_dict,
-        "bl_coins_earned": bl_earned
+        "bl_coins_charged": PAGE_CREATION_FEE,
+        "new_balance": current_balance - PAGE_CREATION_FEE
     }
 
 @pages_router.post("/{page_id}/subscribe")
