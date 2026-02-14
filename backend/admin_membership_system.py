@@ -420,9 +420,9 @@ async def get_transactions(
     all_transactions = all_transactions[:limit]
     
     # Get total counts
-    total_bl = await db.bl_transactions.count_documents(query if not "payment_method" in query else {})
+    total_bl = await db.bl_transactions.count_documents(query if "payment_method" not in query else {})
     total_payment = await db.payment_transactions.count_documents(payment_query if payment_query else {})
-    total_commission = await db.commission_history.count_documents(query if not "payment_method" in query else {})
+    total_commission = await db.commission_history.count_documents(query if "payment_method" not in query else {})
     
     return {
         "transactions": all_transactions,
@@ -645,7 +645,7 @@ async def hold_user_commissions(
     
     return {
         "success": True,
-        "message": f"Hold placed on user's commissions",
+        "message": "Hold placed on user's commissions",
         "commissions_held": result.modified_count
     }
 
@@ -683,7 +683,7 @@ async def release_user_commissions(
     
     return {
         "success": True,
-        "message": f"Commission hold released",
+        "message": "Commission hold released",
         "commissions_released": result.modified_count
     }
 
