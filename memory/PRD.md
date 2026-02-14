@@ -64,11 +64,45 @@
 - Cancel subscription option
 
 ### 3. Stripe Onboarding Prompt (Feb 14, 2026)
-- **Status**: ✅ Implemented - Testing Pending
+- **Status**: ✅ Implemented - TESTED & VERIFIED
 - **Component**: `StripeOnboardingPrompt.jsx`
 - Auto-prompts on first listing creation
 - Hook `useStripeOnboarding()` for integration
 - `WithdrawalStripeCheck` wrapper for withdrawal protection
+- **Integration**: `AIListingCreator.jsx` - uses `checkAndPrompt()` before publish
+
+### 6. Subscription Scheduler System (Feb 14, 2026)
+- **Status**: ✅ Implemented - TESTED & VERIFIED
+- **File**: `backend/subscription_scheduler.py`
+- **Test Results**: 100% pass rate
+
+#### 6.1 Scheduled Jobs
+| Job ID | Schedule | Description |
+|--------|----------|-------------|
+| `subscription_renewals` | Daily at 3:00 AM UTC | Process all due subscription renewals |
+| `payment_retries` | Every 6 hours | Retry failed subscription payments |
+
+#### 6.2 Payment Retry Logic
+- Max 3 retry attempts for failed payments
+- Retry intervals: 24hrs, 48hrs, 72hrs
+- Payment fallback order: 1) Balance → 2) Stripe Card → 3) Saved Payment Method
+- Auto-downgrade to Free tier after all retries fail
+
+#### 6.3 Notifications
+- In-app notifications for all payment events
+- Email notifications for: success, retry scheduled, subscription cancelled
+- Priority levels: normal, high (retry), urgent (downgrade)
+
+#### 6.4 Admin Endpoints
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/admin/subscription-scheduler/status` | GET | Get scheduler status and job info |
+| `/api/admin/subscription-scheduler/trigger-renewals` | POST | Manually trigger renewal check |
+| `/api/admin/subscription-scheduler/trigger-retries` | POST | Manually trigger retry check |
+
+#### 6.5 New Files
+- `backend/subscription_scheduler.py` - Full scheduler with APScheduler
+- Database collections: `subscriptions`, `subscription_events`, `scheduler_logs`
 
 ### 4. Subscription Status Display Across Pages (Feb 14, 2026)
 - **Status**: ✅ Implemented
