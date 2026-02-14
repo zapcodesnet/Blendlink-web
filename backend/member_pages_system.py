@@ -2134,6 +2134,11 @@ async def create_menu_item(
     if page["page_type"] != "restaurant":
         raise HTTPException(status_code=400, detail="Menu items can only be added to restaurant pages")
     
+    # Check and deduct listing fee (200 BL coins)
+    fee_result = await check_and_deduct_listing_fee(user_id, "menu item")
+    if not fee_result["success"]:
+        raise HTTPException(status_code=400, detail=fee_result["error"])
+    
     # Get max display order
     max_order = await db.page_menu_items.find_one(
         {"page_id": page_id, "category": request.category},
