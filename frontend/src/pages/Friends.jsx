@@ -87,7 +87,7 @@ const friendsAPI = {
   
   searchUsers: async (query) => {
     const token = localStorage.getItem("blendlink_token") || localStorage.getItem("token");
-    const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/users/search?q=${encodeURIComponent(query)}`, {
+    const res = await fetch(`${API_URL}/api/users/search?q=${encodeURIComponent(query)}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) throw new Error("Failed to search users");
