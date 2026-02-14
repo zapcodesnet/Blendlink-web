@@ -97,10 +97,10 @@ import BackToGroupFAB from "./components/BackToGroupFAB";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import LanguageSelector from "./components/LanguageSelector";
 import LanguageTour, { useLanguageTour } from "./components/LanguageTour";
-import { getApiBaseUrl } from "./utils/config";
+import { getApiUrl } from "./utils/runtimeConfig";
 
 // API base URL - connected to internal backend with runtime detection for production
-export const API_BASE_URL = getApiBaseUrl();
+export const API_BASE_URL = getApiUrl();
 
 // Auth context
 export const AuthContext = createContext(null);
