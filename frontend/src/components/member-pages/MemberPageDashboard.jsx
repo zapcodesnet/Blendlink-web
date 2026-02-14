@@ -37,6 +37,8 @@ import TeamMembersManager from "./TeamMembersManager";
 import PlatformFeesManager from "./PlatformFeesManager";
 import CurrencySelector from "./CurrencySelector";
 import CustomerCRMManager from "./CustomerCRMManager";
+import TopUpCoinsModal from "../TopUpCoinsModal";
+import api from "../../services/api";
 
 // Runtime URL detection for production/preview environments
 // This ensures the app works correctly regardless of build-time env variables
