@@ -385,10 +385,16 @@ async def get_login_frequency(user_id: str) -> str:
 
 async def calculate_commission(sale_amount: float, seller_id: str) -> CommissionCalculation:
     """
-    Calculate commissions for a sale.
+    Calculate commissions for a sale based on uplines' subscription tiers.
+    
+    The 10% platform fee is deducted from sale and distributed:
+    - L1 upline gets their tier's L1 rate
+    - L2 upline gets their tier's L2 rate  
+    - Remaining goes to platform
+    
     Returns breakdown of L1, L2, and platform fees.
     """
-    total_fee = sale_amount * TOTAL_FEE_RATE
+    total_fee = sale_amount * PLATFORM_FEE_RATE  # 10% platform fee
     
     l1_upline_id, l2_upline_id = await get_upline_chain(seller_id)
     
@@ -396,15 +402,16 @@ async def calculate_commission(sale_amount: float, seller_id: str) -> Commission
         total_fee=total_fee
     )
     
-    # Calculate L1 commission
+    # Calculate L1 commission based on L1 upline's subscription tier
     if l1_upline_id:
-        l1_rate, l2_rate, platform_rate = await get_commission_rates(l1_upline_id)
+        l1_rate, _, _ = await get_tier_commission_rates(l1_upline_id)
         result.l1_recipient_id = l1_upline_id
         result.l1_amount = sale_amount * l1_rate
         result.l1_rate = l1_rate
         
-        # Calculate L2 commission
+        # Calculate L2 commission based on L2 upline's subscription tier
         if l2_upline_id:
+            _, l2_rate, _ = await get_tier_commission_rates(l2_upline_id)
             result.l2_recipient_id = l2_upline_id
             result.l2_amount = sale_amount * l2_rate
             result.l2_rate = l2_rate
@@ -414,7 +421,7 @@ async def calculate_commission(sale_amount: float, seller_id: str) -> Commission
     else:
         # No upline, all fees go to platform
         result.platform_amount = total_fee
-        result.platform_rate = TOTAL_FEE_RATE
+        result.platform_rate = PLATFORM_FEE_RATE
     
     return result
 
