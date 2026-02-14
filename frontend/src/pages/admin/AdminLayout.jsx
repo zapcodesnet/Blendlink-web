@@ -3,6 +3,7 @@ import { useNavigate, Routes, Route, Link, useLocation } from "react-router-dom"
 import { AuthContext } from "../../App";
 import { Button } from "../../components/ui/button";
 import { toast } from "sonner";
+import { getApiUrl } from "../../utils/runtimeConfig";
 import { 
   Shield, Users, Palette, Layout, GitBranch, Bot, 
   Settings, FileText, BarChart3, LogOut, Menu, X,
@@ -39,7 +40,7 @@ import { AdminRealtimeStatus, RealtimeMetricsPanel } from "../../components/admi
 export const AdminContext = createContext(null);
 
 // Admin API
-const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE = getApiUrl();
 
 // Ultra-robust fetch helper with detailed error logging
 const adminApiRequest = async (endpoint, options = {}) => {

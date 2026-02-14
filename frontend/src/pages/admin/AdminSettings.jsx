@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "../../components/ui/button";
 import { toast } from "sonner";
+import { getApiUrl } from "../../utils/runtimeConfig";
 import { 
   Settings, Save, RefreshCw, Shield, Users, ShoppingBag,
   Gamepad2, Coins, Mail, Bell, Globe, Lock, CreditCard,
@@ -10,7 +11,7 @@ import {
   Zap, Gift, Target, TrendingUp, ChevronDown, ChevronUp
 } from "lucide-react";
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE = getApiUrl();
 
 // Settings categories like Facebook/eBay admin
 const SETTINGS_SCHEMA = {
