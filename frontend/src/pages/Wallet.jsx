@@ -10,7 +10,8 @@ import {
   Gift, Gamepad2, Trophy, Share2, ChevronRight, RefreshCw,
   Users, DollarSign, Crown, Sparkles, Clock, Eye, EyeOff,
   Wifi, WifiOff, CreditCard, AlertCircle, CheckCircle, ExternalLink,
-  Wallet as WalletIcon, Banknote
+  Wallet as WalletIcon, Banknote, Shield, Star, Zap, Image, FileText,
+  Percent, Info, Minus, Plus
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -18,6 +19,70 @@ const API_BASE = getApiUrl();
 
 // Withdrawal fee constant
 const WITHDRAWAL_FEE_RATE = 0.03; // 3%
+
+// BL Coin Top-Up Packages
+const BL_COIN_PACKAGES = [
+  { id: 'pack_30k', price: 4.99, coins: 30000, label: 'Starter Pack' },
+  { id: 'pack_80k', price: 9.99, coins: 80000, label: 'Value Pack' },
+  { id: 'pack_400k', price: 14.99, coins: 400000, label: 'Pro Pack' },
+  { id: 'pack_1m', price: 29.99, coins: 1000000, label: 'Premium Pack', allowMultiple: true },
+];
+
+// Membership Tiers Configuration
+const MEMBERSHIP_TIERS = {
+  bronze: {
+    name: 'Bronze',
+    price: 4.99,
+    color: 'from-amber-600 to-amber-700',
+    icon: Shield,
+    commission_l1: 3,
+    commission_l2: 2,
+    daily_mint: 20,
+    xp_multiplier: 2,
+    daily_bl_bonus: 15000,
+    max_pages: 3,
+    features: ['3% L1 Commission', '2% L2 Commission', '20 daily mints', 'x2 XP bonus', '15,000 daily BL coins', '3 member pages']
+  },
+  silver: {
+    name: 'Silver',
+    price: 9.99,
+    color: 'from-gray-400 to-slate-500',
+    icon: Star,
+    commission_l1: 3,
+    commission_l2: 2,
+    daily_mint: 50,
+    xp_multiplier: 3,
+    daily_bl_bonus: 40000,
+    max_pages: 10,
+    features: ['3% L1 Commission', '2% L2 Commission', '50 daily mints', 'x3 XP bonus', '40,000 daily BL coins', '10 member pages']
+  },
+  gold: {
+    name: 'Gold',
+    price: 14.99,
+    color: 'from-yellow-500 to-amber-500',
+    icon: Crown,
+    commission_l1: 3,
+    commission_l2: 2,
+    daily_mint: 150,
+    xp_multiplier: 4,
+    daily_bl_bonus: 200000,
+    max_pages: 25,
+    features: ['3% L1 Commission', '2% L2 Commission', '150 daily mints', 'x4 XP bonus', '200,000 daily BL coins', '25 member pages']
+  },
+  diamond: {
+    name: 'Diamond',
+    price: 29.99,
+    color: 'from-cyan-400 to-blue-500',
+    icon: Sparkles,
+    commission_l1: 4,
+    commission_l2: 3,
+    daily_mint: 999999,
+    xp_multiplier: 5,
+    daily_bl_bonus: 500000,
+    max_pages: 999999,
+    features: ['4% L1 Commission', '3% L2 Commission', 'Unlimited mints', 'x5 XP bonus', '500,000 daily BL coins', 'Unlimited pages']
+  }
+};
 
 export default function Wallet() {
   const { user, setUser } = useContext(AuthContext);
