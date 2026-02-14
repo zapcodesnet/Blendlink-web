@@ -12,6 +12,7 @@ import { Input } from "../ui/input";
 import { toast } from "sonner";
 import { memberPagesApi, safeFetch } from "../../services/memberPagesApi";
 import PageCheckout from "./PageCheckout";
+import { getApiUrl } from "../../utils/runtimeConfig";
 import {
   Store, Utensils, Briefcase, Home, MapPin, Phone, Globe, Clock,
   Heart, Share2, Star, ShoppingCart, ChevronLeft, ExternalLink,
@@ -20,20 +21,7 @@ import {
 } from "lucide-react";
 import LanguageSelector from "../LanguageSelector";
 
-// Runtime URL detection for production/preview environments
-// This ensures the app works correctly regardless of build-time env variables
-const getApiBase = () => {
-  // Production detection - runtime override
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    if (hostname === 'blendlink.net' || hostname === 'www.blendlink.net') {
-      return 'https://blendlink.net';
-    }
-  }
-  // Fallback to env variable (for preview/development)
-  return process.env.REACT_APP_BACKEND_URL || 'https://blendlink.net';
-};
-const API_URL = getApiBase();
+const API_URL = getApiUrl();
 
 // Page type configurations
 const PAGE_TYPES = {
