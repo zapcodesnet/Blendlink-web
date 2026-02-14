@@ -19,6 +19,7 @@ import {
 } from "../components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { AuthContext } from "../App";
+import { getApiUrl } from "../utils/runtimeConfig";
 import {
   FeedPageSkeleton,
   FeedSkeleton,
@@ -51,7 +52,7 @@ import {
   Facebook,
 } from "lucide-react";
 
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE_URL = getApiUrl();
 
 // Facebook Widget Fallback content when widget fails to load
 const FacebookFallbackContent = () => (
