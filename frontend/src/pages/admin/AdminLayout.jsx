@@ -31,6 +31,9 @@ import AdminOrphans from "./AdminOrphans";
 import AdminDiamondLeaders from "./AdminDiamondLeaders";
 import AdminUIEditor from "./AdminUIEditor";
 import AdminWalletManagement from "./AdminWalletManagement";
+import AdminMembershipTiers from "./AdminMembershipTiers";
+import AdminPromoCodes from "./AdminPromoCodes";
+import AdminTransactionMonitor from "./AdminTransactionMonitor";
 
 // Import real-time components
 import { useAdminWebSocket } from "../../hooks/useAdminWebSocket";
