@@ -17,6 +17,7 @@ import {
 import { toast } from 'sonner';
 import { Button } from '../ui/button';
 import api from '../../services/api';
+import { getApiUrl } from '../../utils/runtimeConfig';
 
 // Constants
 const COUNTDOWN_SECONDS = 10;
@@ -230,7 +231,7 @@ export const GameLobby = ({
     const token = localStorage.getItem('blendlink_token');
     if (!token || !gameState?.game_id) return null;
     
-    const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+    const backendUrl = getApiUrl();
     // Convert HTTP(S) to WS(S)
     const wsProtocol = backendUrl.startsWith('https') ? 'wss' : 'ws';
     const wsHost = backendUrl.replace(/^https?:\/\//, '');
