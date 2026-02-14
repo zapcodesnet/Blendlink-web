@@ -35,7 +35,7 @@ const friendsAPI = {
   
   getRequests: async () => {
     const token = localStorage.getItem("blendlink_token") || localStorage.getItem("blendlink_token") || localStorage.getItem("token");
-    const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/friends/requests`, {
+    const res = await fetch(`${API_URL}/api/friends/requests`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) throw new Error("Failed to load requests");
@@ -44,7 +44,7 @@ const friendsAPI = {
   
   sendRequest: async (userId) => {
     const token = localStorage.getItem("blendlink_token") || localStorage.getItem("token");
-    const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/friends/request/${userId}`, {
+    const res = await fetch(`${API_URL}/api/friends/request/${userId}`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -57,7 +57,7 @@ const friendsAPI = {
   
   acceptRequest: async (requestId) => {
     const token = localStorage.getItem("blendlink_token") || localStorage.getItem("token");
-    const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/friends/accept/${requestId}`, {
+    const res = await fetch(`${API_URL}/api/friends/accept/${requestId}`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -67,7 +67,7 @@ const friendsAPI = {
   
   declineRequest: async (requestId) => {
     const token = localStorage.getItem("blendlink_token") || localStorage.getItem("token");
-    const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/friends/decline/${requestId}`, {
+    const res = await fetch(`${API_URL}/api/friends/decline/${requestId}`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -77,7 +77,7 @@ const friendsAPI = {
   
   removeFriend: async (userId) => {
     const token = localStorage.getItem("blendlink_token") || localStorage.getItem("token");
-    const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/friends/remove/${userId}`, {
+    const res = await fetch(`${API_URL}/api/friends/remove/${userId}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
