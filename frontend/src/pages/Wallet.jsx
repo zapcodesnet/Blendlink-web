@@ -4,6 +4,7 @@ import { AuthContext } from "../App";
 import api from "../services/api";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
+import { getApiUrl } from "../utils/runtimeConfig";
 import { 
   Coins, TrendingUp, ArrowUpRight, ArrowDownRight, 
   Gift, Gamepad2, Trophy, Share2, ChevronRight, RefreshCw,
@@ -13,7 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE = getApiUrl();
 
 // Withdrawal fee constant
 const WITHDRAWAL_FEE_RATE = 0.03; // 3%
