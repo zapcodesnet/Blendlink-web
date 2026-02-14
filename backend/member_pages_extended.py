@@ -1030,14 +1030,8 @@ async def get_pos_checkout_status(
     
     from emergentintegrations.payments.stripe.checkout import StripeCheckout
     
-    # CRITICAL: Use STRIPE_SECRET_KEY first (STRIPE_API_KEY may have system override with test key)
+    # Use Stripe key from environment only
     api_key = os.environ.get("STRIPE_SECRET_KEY") or os.environ.get("STRIPE_API_KEY")
-    
-    # FORCE LIVE MODE - Override any test keys in production
-    LIVE_STRIPE_SECRET_KEY = "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"
-    if not api_key or not api_key.startswith("sk_live"):
-        logger.warning(f"⚠️ POS STATUS CHECK: FORCING LIVE KEY")
-        api_key = LIVE_STRIPE_SECRET_KEY
     
     if not api_key:
         raise HTTPException(status_code=500, detail="Stripe not configured")
