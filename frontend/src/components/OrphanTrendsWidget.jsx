@@ -5,23 +5,14 @@ import {
   PieChart, Pie, Cell
 } from "recharts";
 import { Button } from "./ui/button";
+import { getApiUrl } from "../utils/runtimeConfig";
 import { 
   TrendingUp, TrendingDown, Calendar, Users, 
   Activity, AlertTriangle, CheckCircle, RefreshCw,
   ChevronDown, Zap, Clock, Target
 } from "lucide-react";
 
-// Runtime URL detection for production/preview environments
-const getApiBase = () => {
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    if (hostname === 'blendlink.net' || hostname === 'www.blendlink.net') {
-      return 'https://blendlink.net';
-    }
-  }
-  return process.env.REACT_APP_BACKEND_URL || 'https://blendlink.net';
-};
-const API_BASE = getApiBase();
+const API_BASE = getApiUrl();
 
 // Chart colors
 const COLORS = {

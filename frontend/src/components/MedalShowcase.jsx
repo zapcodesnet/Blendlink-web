@@ -15,8 +15,9 @@ import {
 import { toast } from 'sonner';
 import { Button } from './ui/button';
 import api from '../services/api';
+import { getApiUrl } from '../utils/runtimeConfig';
 
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE_URL = getApiUrl();
 
 // Medal Photo Card
 const MedalPhotoCard = ({ photo, showStats = true, size = 'md', onClick }) => {

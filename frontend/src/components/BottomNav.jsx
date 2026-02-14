@@ -8,18 +8,9 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { AuthContext } from "../App";
 import { FacebookShareOverlay } from "./FacebookShareOverlay";
+import { getApiUrl } from "../utils/runtimeConfig";
 
-// Runtime URL detection for production/preview environments
-const getApiBase = () => {
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    if (hostname === 'blendlink.net' || hostname === 'www.blendlink.net') {
-      return 'https://blendlink.net';
-    }
-  }
-  return process.env.REACT_APP_BACKEND_URL || 'https://blendlink.net';
-};
-const API_BASE_URL = getApiBase();
+const API_BASE_URL = getApiUrl();
 
 export const BottomNav = () => {
   const { t } = useTranslation();

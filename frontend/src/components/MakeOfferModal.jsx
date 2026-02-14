@@ -6,12 +6,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { toast } from "sonner";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import { getApiUrl } from "../utils/runtimeConfig";
 import {
   X, DollarSign, MessageSquare, Loader2, Check, AlertCircle,
   ArrowRight, ArrowLeft, Shield, Clock, Gavel, Send
 } from "lucide-react";
 
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE_URL = getApiUrl();
 
 // Load Stripe with live key from environment
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
