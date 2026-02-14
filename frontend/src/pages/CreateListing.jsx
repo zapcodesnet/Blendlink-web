@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../App";
 import api from "../services/api";
 import { toast } from "sonner";
@@ -17,13 +17,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
+import TopUpCoinsModal from "../components/TopUpCoinsModal";
 
 export default function CreateListing() {
-  const { user } = useContext(AuthContext);
+  const { user, setUser } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showFeeConfirmation, setShowFeeConfirmation] = useState(false);
+  const [showTopUpModal, setShowTopUpModal] = useState(false);
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -35,6 +38,27 @@ export default function CreateListing() {
   });
 
   const LISTING_FEE = 200; // BL coins
+  const userBalance = user?.bl_coins || 0;
+
+  // Check if user just returned from coin purchase
+  useEffect(() => {
+    if (location.state?.coinsAdded) {
+      toast.success("Coins added! You can now create your listing.");
+      // Re-fetch user data to get updated balance
+      fetchUserBalance();
+    }
+  }, [location.state]);
+
+  const fetchUserBalance = async () => {
+    try {
+      const balanceData = await api.wallet.getBalance();
+      if (balanceData && setUser) {
+        setUser(prev => ({ ...prev, bl_coins: balanceData.balance }));
+      }
+    } catch (err) {
+      console.error("Failed to fetch balance:", err);
+    }
+  };
 
   useEffect(() => {
     fetchCategories();
@@ -57,6 +81,12 @@ export default function CreateListing() {
       return;
     }
     
+    // Check if user has enough balance
+    if (userBalance < LISTING_FEE) {
+      setShowTopUpModal(true);
+      return;
+    }
+    
     // Show fee confirmation dialog
     setShowFeeConfirmation(true);
   };
@@ -70,9 +100,18 @@ export default function CreateListing() {
         price: parseFloat(form.price) 
       });
       toast.success("Listing created! 200 BL coins have been deducted.");
+      // Update local balance
+      if (setUser) {
+        setUser(prev => ({ ...prev, bl_coins: (prev.bl_coins || 0) - LISTING_FEE }));
+      }
       navigate("/marketplace");
     } catch (error) {
-      toast.error(error.message || "Failed to create listing");
+      // Check if error is due to insufficient balance
+      if (error.message?.toLowerCase().includes("insufficient")) {
+        setShowTopUpModal(true);
+      } else {
+        toast.error(error.message || "Failed to create listing");
+      }
     } finally {
       setLoading(false);
     }
