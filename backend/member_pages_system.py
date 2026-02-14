@@ -2001,6 +2001,11 @@ async def create_product(
     if page["page_type"] != "store":
         raise HTTPException(status_code=400, detail="Products can only be added to store pages")
     
+    # Check and deduct listing fee (200 BL coins)
+    fee_result = await check_and_deduct_listing_fee(user_id, "product")
+    if not fee_result["success"]:
+        raise HTTPException(status_code=400, detail=fee_result["error"])
+    
     product = PageProduct(
         page_id=page_id,
         **request.model_dump()
