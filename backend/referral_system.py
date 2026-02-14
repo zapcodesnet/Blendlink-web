@@ -99,24 +99,33 @@ class ReassignmentStatus(str, Enum):
 
 # ============== CONSTANTS ==============
 
-# Compensation rates
-REGULAR_L1_RATE = 0.03  # 3%
-REGULAR_L2_RATE = 0.01  # 1%
-REGULAR_PLATFORM_RATE = 0.04  # 4%
+# Platform fee rate (10% of sale amount)
+PLATFORM_FEE_RATE = 0.10  # 10% platform fee
 
-DIAMOND_L1_RATE = 0.04  # 4%
-DIAMOND_L2_RATE = 0.02  # 2%
-DIAMOND_PLATFORM_RATE = 0.02  # 2%
+# Commission rates based on membership tier (from subscription_tiers.py)
+# These are percentages of the PLATFORM_FEE_RATE distributed to uplines
+# Free: 2% L1, 1% L2
+# Bronze/Silver/Gold: 3% L1, 2% L2  
+# Diamond: 4% L1, 3% L2
 
-TOTAL_FEE_RATE = 0.08  # 8% total
+# Legacy rates for backward compatibility (deprecated - use get_tier_commission_rates)
+REGULAR_L1_RATE = 0.02  # 2% for free members
+REGULAR_L2_RATE = 0.01  # 1% for free members
+REGULAR_PLATFORM_RATE = 0.07  # Remaining goes to platform
+
+DIAMOND_L1_RATE = 0.04  # 4% for diamond members
+DIAMOND_L2_RATE = 0.03  # 3% for diamond members
+DIAMOND_PLATFORM_RATE = 0.03  # Remaining goes to platform
+
+TOTAL_FEE_RATE = 0.10  # 10% total platform fee
 
 # Bonuses
 SIGNUP_BONUS_BL = 50000
 REFERRAL_BONUS_BL = 50000
 
-# Daily claims
+# Daily claims based on tier (legacy - use subscription_tiers.py)
 REGULAR_DAILY_CLAIM_BL = 2000
-DIAMOND_DAILY_CLAIM_BL = 5000
+DIAMOND_DAILY_CLAIM_BL = 500000
 DAILY_CLAIM_COOLDOWN_HOURS = 24
 
 # Diamond Leader requirements
@@ -135,8 +144,8 @@ DIAMOND_MAINTENANCE_PERIOD_DAYS = 30
 DIAMOND_REWARD_USD_DEFAULT = 100.0
 DIAMOND_REWARD_BL = 500000
 
-# Withdrawal
-WITHDRAWAL_FEE_RATE = 0.01  # 1%
+# Withdrawal fee - Updated to 3%
+WITHDRAWAL_FEE_RATE = 0.03  # 3% withdrawal fee
 
 # ============== ACTIVITY REWARDS (Phase 2) ==============
 # BL coins earned for various activities
