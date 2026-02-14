@@ -3118,6 +3118,14 @@ try:
 except ImportError as e:
     logger.warning(f"Could not load suspicious transaction detector: {e}")
 
+# Load Mobile Sync Verification System
+try:
+    from mobile_sync_system import mobile_sync_router
+    api_router.include_router(mobile_sync_router)
+    logger.info("Mobile Sync System loaded (API Compatibility, Health Checks)")
+except ImportError as e:
+    logger.warning(f"Could not load mobile sync system: {e}")
+
 # Load Marketplace Offers System
 try:
     from marketplace_offers import offer_router
