@@ -60,7 +60,7 @@ class TestBLCoinsPurchaseFeature:
             "tier_id": "starter",
             "amount_usd": 4.99,
             "coins_amount": 30000,
-            "origin_url": "https://production-url-fix.preview.emergentagent.com"
+            "origin_url": "https://wallet-coins.preview.emergentagent.com"
         })
         # Should return 401 or 422 without auth
         assert response.status_code in [401, 422], f"Expected 401/422 without auth, got {response.status_code}"
@@ -77,7 +77,7 @@ class TestBLCoinsPurchaseFeature:
             "tier_id": "starter",
             "amount_usd": 4.99,
             "coins_amount": 30000,
-            "origin_url": "https://production-url-fix.preview.emergentagent.com"
+            "origin_url": "https://wallet-coins.preview.emergentagent.com"
         })
         
         print(f"Checkout response status: {response.status_code}")
@@ -109,7 +109,7 @@ class TestBLCoinsPurchaseFeature:
                 "tier_id": tier["tier_id"],
                 "amount_usd": tier["price"],
                 "coins_amount": tier["coins"],
-                "origin_url": "https://production-url-fix.preview.emergentagent.com"
+                "origin_url": "https://wallet-coins.preview.emergentagent.com"
             })
             
             assert response.status_code == 200, f"Tier {tier['tier_id']} checkout failed: {response.text}"
@@ -127,7 +127,7 @@ class TestBLCoinsPurchaseFeature:
             "tier_id": "invalid_tier",
             "amount_usd": 99.99,
             "coins_amount": 999999,
-            "origin_url": "https://production-url-fix.preview.emergentagent.com"
+            "origin_url": "https://wallet-coins.preview.emergentagent.com"
         })
         
         assert response.status_code == 400, f"Expected 400 for invalid tier, got {response.status_code}"
@@ -144,7 +144,7 @@ class TestBLCoinsPurchaseFeature:
             "tier_id": "starter",
             "amount_usd": 1.99,  # Wrong price (should be 4.99)
             "coins_amount": 30000,
-            "origin_url": "https://production-url-fix.preview.emergentagent.com"
+            "origin_url": "https://wallet-coins.preview.emergentagent.com"
         })
         
         assert response.status_code == 400, f"Expected 400 for price mismatch, got {response.status_code}"

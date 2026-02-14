@@ -8,7 +8,7 @@ import requests
 import os
 
 # Use production URL
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://production-url-fix.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://wallet-coins.preview.emergentagent.com')
 
 class TestStripeConfiguration:
     """Test Stripe configuration endpoints"""

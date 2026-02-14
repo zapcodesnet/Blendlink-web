@@ -18,7 +18,7 @@ yarn install
 ### Step 3: Configure Environment
 The `.env` file should already have:
 ```
-EXPO_PUBLIC_API_URL=https://production-url-fix.preview.emergentagent.com
+EXPO_PUBLIC_API_URL=https://wallet-coins.preview.emergentagent.com
 ```
 
 ### Step 4: Start Expo
@@ -38,14 +38,14 @@ npx expo start --tunnel
 You can test the PVP flow using two browser windows:
 
 ### Browser 1 (Incognito/Private Window):
-1. Go to: https://production-url-fix.preview.emergentagent.com
+1. Go to: https://wallet-coins.preview.emergentagent.com
 2. Login: `test@blendlink.com` / `admin`
 3. Navigate to Games → Photo Battle
 4. Create a new PVP game, select 5 photos
 5. Wait in lobby
 
 ### Browser 2 (Regular Window):
-1. Go to: https://production-url-fix.preview.emergentagent.com
+1. Go to: https://wallet-coins.preview.emergentagent.com
 2. Login: `test@example.com` / `test123`
 3. Navigate to Games → Photo Battle
 4. Find and join the open game

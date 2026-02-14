@@ -9,7 +9,7 @@ import os
 import json
 from datetime import datetime
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://production-url-fix.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://wallet-coins.preview.emergentagent.com')
 
 class TestMarketplaceCategories:
     """Test marketplace categories including Digital Goods & NFTs"""
