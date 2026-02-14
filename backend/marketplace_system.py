@@ -167,9 +167,16 @@ class MarketplaceService:
         auction_duration_hours: int = 24,
     ) -> Dict[str, Any]:
         """Create a new marketplace listing"""
+        # Check and deduct listing fee (200 BL coins)
+        fee_result = await self._check_and_deduct_listing_fee(seller_id, "marketplace listing")
+        if not fee_result["success"]:
+            return {"success": False, "error": fee_result["error"]}
+        
         # Verify ownership
         ownership = await self._verify_ownership(seller_id, content_type, content_id)
         if not ownership["owned"]:
+            # Refund the listing fee since verification failed
+            await self._refund_listing_fee(seller_id, "ownership verification failed")
             return {"success": False, "error": "You don't own this content"}
         
         # Check if already listed
@@ -178,6 +185,8 @@ class MarketplaceService:
             "status": ListingStatus.ACTIVE.value,
         })
         if existing:
+            # Refund the listing fee since item already listed
+            await self._refund_listing_fee(seller_id, "content already listed")
             return {"success": False, "error": "Content is already listed"}
         
         # Create listing
@@ -212,6 +221,8 @@ class MarketplaceService:
         return {
             "success": True,
             "listing": listing_dict,
+            "fee_deducted": LISTING_FEE_BL_COINS,
+            "new_balance": fee_result.get("new_balance", 0)
         }
     
     async def get_listings(
