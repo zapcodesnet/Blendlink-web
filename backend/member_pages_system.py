@@ -2243,6 +2243,11 @@ async def create_service(
     if page["page_type"] != "services":
         raise HTTPException(status_code=400, detail="Services can only be added to services pages")
     
+    # Check and deduct listing fee (200 BL coins)
+    fee_result = await check_and_deduct_listing_fee(user_id, "service")
+    if not fee_result["success"]:
+        raise HTTPException(status_code=400, detail=fee_result["error"])
+    
     service = PageService(
         page_id=page_id,
         **request.model_dump()
