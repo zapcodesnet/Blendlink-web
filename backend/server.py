@@ -1436,6 +1436,18 @@ class CreateListing(BaseModel):
     auction: Optional[AuctionSettingsModel] = None  # Auction settings
     share_to_feed: bool = False  # Share listing to social feed
 
+# Listing Fee Constant
+LISTING_FEE_BL_COINS = 200  # 200 BL coins per listing
+
+@marketplace_router.get("/listing-fee")
+async def get_listing_fee():
+    """Get the current listing fee in BL coins"""
+    return {
+        "fee": LISTING_FEE_BL_COINS,
+        "currency": "BL coins",
+        "description": "Fee charged per listing creation"
+    }
+
 @marketplace_router.post("/listings")
 async def create_listing(data: CreateListing, current_user: dict = Depends(get_current_user)):
     # Check and deduct listing fee (200 BL coins)
