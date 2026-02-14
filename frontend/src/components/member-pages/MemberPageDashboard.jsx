@@ -480,6 +480,11 @@ const AddItemModal = ({ pageId, pageType, onClose, onSuccess, editItem = null })
     
     // Show confirmation for new items (fee applies)
     if (!isEditMode) {
+      // Check if user has enough balance
+      if (userBalance < LISTING_FEE) {
+        setShowTopUpModal(true);
+        return;
+      }
       setShowFeeConfirmation(true);
     } else {
       // Direct submit for edits (no fee)
@@ -520,11 +525,20 @@ const AddItemModal = ({ pageId, pageType, onClose, onSuccess, editItem = null })
         } else if (pageType === "rental") {
           await memberPagesAPI.createRental(pageId, { ...data, daily_rate: data.price });
         }
+        // Update local balance after successful creation
+        if (setUser) {
+          setUser(prev => ({ ...prev, bl_coins: (prev.bl_coins || 0) - LISTING_FEE }));
+        }
         toast.success("Item added successfully! 200 BL coins have been deducted.");
       }
       onSuccess();
     } catch (err) {
-      toast.error(err.message || `Failed to ${isEditMode ? 'update' : 'add'} item`);
+      // Check if error is due to insufficient balance
+      if (err.message?.toLowerCase().includes("insufficient")) {
+        setShowTopUpModal(true);
+      } else {
+        toast.error(err.message || `Failed to ${isEditMode ? 'update' : 'add'} item`);
+      }
     }
     setLoading(false);
   };
