@@ -2432,6 +2432,11 @@ async def create_rental(
     if page["page_type"] != "rental":
         raise HTTPException(status_code=400, detail="Rentals can only be added to rental pages")
     
+    # Check and deduct listing fee (200 BL coins)
+    fee_result = await check_and_deduct_listing_fee(user_id, "rental")
+    if not fee_result["success"]:
+        raise HTTPException(status_code=400, detail=fee_result["error"])
+    
     rental = PageRentalItem(
         page_id=page_id,
         **request.model_dump()
