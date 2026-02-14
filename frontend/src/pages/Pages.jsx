@@ -707,8 +707,8 @@ export default function Pages() {
               <div>
                 <h3 className="font-bold text-gray-900 text-lg">Grow Your Pages</h3>
                 <p className="text-gray-600 mt-1">
-                  Earn <span className="font-bold text-cyan-600">40 BL Coins</span> for each new page and{" "}
-                  <span className="font-bold text-cyan-600">10 BL Coins</span> for every new follower!
+                  Page creation costs <span className="font-bold text-amber-600">2,000 BL Coins</span>. 
+                  Earn <span className="font-bold text-cyan-600">10 BL Coins</span> for every new follower!
                 </p>
               </div>
             </div>
