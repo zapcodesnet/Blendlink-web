@@ -396,9 +396,6 @@ class SubscriptionService:
         
         if not price_id:
             # Create dynamic price if no pre-configured one
-            import stripe
-            stripe.api_key = os.environ.get("STRIPE_LIVE_SECRET_KEY") or os.environ.get("STRIPE_TEST_SECRET_KEY")
-            
             # Create a one-time price for the subscription
             price = stripe.Price.create(
                 unit_amount=int(tier_info["price_monthly"] * 100),  # Convert to cents
