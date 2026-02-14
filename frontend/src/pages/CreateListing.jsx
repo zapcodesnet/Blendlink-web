@@ -23,6 +23,7 @@ export default function CreateListing() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showFeeConfirmation, setShowFeeConfirmation] = useState(false);
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -32,6 +33,8 @@ export default function CreateListing() {
     images: [],
     is_digital: false
   });
+
+  const LISTING_FEE = 200; // BL coins
 
   useEffect(() => {
     fetchCategories();
@@ -46,24 +49,30 @@ export default function CreateListing() {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleFormSubmit = (e) => {
     e.preventDefault();
     
     if (!form.title || !form.price || !form.category) {
       toast.error("Please fill in all required fields");
       return;
     }
+    
+    // Show fee confirmation dialog
+    setShowFeeConfirmation(true);
+  };
 
+  const executeSubmit = async () => {
+    setShowFeeConfirmation(false);
     setLoading(true);
     try {
       await api.marketplace.createListing({ 
         ...form, 
         price: parseFloat(form.price) 
       });
-      toast.success("Listing created!");
+      toast.success("Listing created! 200 BL coins have been deducted.");
       navigate("/marketplace");
     } catch (error) {
-      toast.error(error.message || "Marketplace coming soon to mobile API");
+      toast.error(error.message || "Failed to create listing");
     } finally {
       setLoading(false);
     }
