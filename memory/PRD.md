@@ -16,30 +16,61 @@
 - **Updated**: 60+ frontend files to use `getApiUrl()` from `runtimeConfig.js`
 - **Fixed**: `App.js` import to use `runtimeConfig.js` instead of deleted `config.js`
 
-#### 0.2 Runtime Detection Logic
-```javascript
-// Production domain detection
-if (hostname === 'blendlink.net' || hostname === 'www.blendlink.net') {
-  return 'https://blendlink.net';
-}
-// Preview/staging environments
-if (hostname.includes('.preview.emergentagent.com')) {
-  return `${protocol}//${hostname}`;
-}
-// Fallback
-return process.env.REACT_APP_BACKEND_URL || 'https://blendlink.net';
-```
+### 1. Admin Dashboard Enhancements (Feb 14, 2026)
+- **Status**: ✅ Implemented - Testing Pending
+- **Components Created**:
+  - `AdminMembershipTiers.jsx` - Tier management with edit capabilities
+  - `AdminPromoCodes.jsx` - Promo code creation/management system
+  - `AdminTransactionMonitor.jsx` - Transaction monitoring and flagging
+- **Backend**: `admin_membership_system.py` - Full CRUD for tiers, promo codes, transactions
 
-#### 0.3 Files Updated (60+)
-All frontend files now import `getApiUrl` from `../utils/runtimeConfig`:
-- All pages in `src/pages/*.jsx`
-- All admin pages in `src/pages/admin/*.jsx`
-- All game components in `src/components/game/*.jsx`
-- All member page components in `src/components/member-pages/*.jsx`
-- Services: `api.js`, `memberPagesApi.js`, `referralApi.js`, `mediaSalesApi.js`
-- Components: `BottomNav`, `MakeOfferModal`, `MedalShowcase`, `OrphanTrendsWidget`
+#### 1.1 Admin Membership Tier Management
+- View all membership tiers with subscriber counts
+- Edit tier benefits (daily mints, BL bonus, XP, pages, commission rates)
+- Override mechanism with audit logging
+- Revert to defaults capability
 
-### 1. Commission Structure & Membership System Update (Feb 14, 2026)
+#### 1.2 Promo Code System
+- Create/edit/delete promo codes
+- Support for percentage, fixed amount, and BL coin discounts
+- Max uses and expiration dates
+- Applicable tiers selection
+- Usage tracking
+
+#### 1.3 Transaction Monitoring
+- Filter by type, status, amount, user, date
+- Flag suspicious transactions (low/medium/high/critical)
+- Resolve flagged transactions
+- Cross-collection search (bl_transactions, payment_transactions, commissions)
+
+### 2. Enhanced Wallet Page (Feb 14, 2026)
+- **Status**: ✅ Implemented - Testing Pending
+- **Location**: `/app/frontend/src/pages/Wallet.jsx`
+
+#### 2.1 Top Up BL Coins Section
+- Permanently visible below Withdraw Earnings
+- 4 pricing tiers: $4.99/30K, $9.99/80K, $14.99/400K, $29.99/1M
+- Quantity multiplier for $29.99 tier (1-100x)
+- Pay from real cash balance option
+- Stripe checkout fallback
+
+#### 2.2 Membership Subscriptions Section
+- All 4 tiers displayed (Bronze, Silver, Gold, Diamond)
+- Expandable tier cards with full benefit details
+- Commission rates (L1/L2) clearly shown
+- Pay from real cash balance option
+- Payment fallback logic: Balance → Stripe → Card → Bank
+- Current subscription status display
+- Cancel subscription option
+
+### 3. Stripe Onboarding Prompt (Feb 14, 2026)
+- **Status**: ✅ Implemented - Testing Pending
+- **Component**: `StripeOnboardingPrompt.jsx`
+- Auto-prompts on first listing creation
+- Hook `useStripeOnboarding()` for integration
+- `WithdrawalStripeCheck` wrapper for withdrawal protection
+
+### 4. Commission Structure & Membership System (Feb 14, 2026)
 - **Status**: ✅ Production Ready - Tested & Verified
 - **Test Results**: 100% backend pass, 100% frontend verified
 
