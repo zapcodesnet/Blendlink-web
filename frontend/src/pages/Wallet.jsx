@@ -22,10 +22,10 @@ const WITHDRAWAL_FEE_RATE = 0.03; // 3%
 
 // BL Coin Top-Up Packages
 const BL_COIN_PACKAGES = [
-  { id: 'pack_30k', price: 4.99, coins: 30000, label: 'Starter Pack' },
-  { id: 'pack_80k', price: 9.99, coins: 80000, label: 'Value Pack' },
-  { id: 'pack_400k', price: 14.99, coins: 400000, label: 'Pro Pack' },
-  { id: 'pack_1m', price: 29.99, coins: 1000000, label: 'Premium Pack', allowMultiple: true },
+  { id: 'starter', price: 4.99, coins: 30000, label: 'Starter Pack' },
+  { id: 'popular', price: 9.99, coins: 80000, label: 'Value Pack' },
+  { id: 'premium', price: 14.99, coins: 400000, label: 'Pro Pack' },
+  { id: 'ultimate', price: 29.99, coins: 1000000, label: 'Premium Pack', allowMultiple: true },
 ];
 
 // Membership Tiers Configuration
