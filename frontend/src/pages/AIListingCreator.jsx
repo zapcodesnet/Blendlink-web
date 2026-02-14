@@ -606,6 +606,7 @@ export default function AIListingCreator() {
   const [error, setError] = useState(null);
   const [categories, setCategories] = useState([]);
   const [shareToFeed, setShareToFeed] = useState(true); // ON by default per user preference
+  const [showFeeConfirmation, setShowFeeConfirmation] = useState(false);
   const [auctionSettings, setAuctionSettings] = useState({
     is_auction: false,
     duration: "1d",
@@ -615,6 +616,8 @@ export default function AIListingCreator() {
     auto_relist: false,
     auto_extend: true
   });
+  
+  const LISTING_FEE = 200; // BL coins
   
   // Comprehensive list of target market countries (as requested by user)
   const TARGET_MARKET_COUNTRIES = [
