@@ -693,6 +693,7 @@ export default function AdminLayout() {
               <Route path="membership-tiers" element={<AdminMembershipTiers />} />
               <Route path="promo-codes" element={<AdminPromoCodes />} />
               <Route path="transactions" element={<AdminTransactionMonitor />} />
+              <Route path="commissions" element={<AdminCommissionDashboard />} />
               <Route path="notifications" element={<AdminNotificationSettings />} />
               <Route path="themes" element={<AdminThemes />} />
               <Route path="ui-editor" element={<AdminUIEditor />} />
