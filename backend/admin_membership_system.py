@@ -606,6 +606,37 @@ async def get_commission_stats(
     }
 
 
+@admin_membership_router.get("/commissions/held")
+async def get_held_commissions(admin: dict = Depends(get_admin_user)):
+    """Get list of all users with held commissions"""
+    # Find users with commission hold
+    users_with_hold = await db.users.find(
+        {"commission_hold": True},
+        {"_id": 0, "user_id": 1, "username": 1, "email": 1, "commission_hold_reason": 1}
+    ).to_list(length=100)
+    
+    # Get held amounts for each user
+    for user in users_with_hold:
+        # Get total held amount
+        pipeline = [
+            {"$match": {"beneficiary_id": user["user_id"], "status": "held"}},
+            {"$group": {"_id": None, "total": {"$sum": "$amount_usd"}, "count": {"$sum": 1}}}
+        ]
+        result = await db.commission_history.aggregate(pipeline).to_list(1)
+        user["held_amount"] = result[0]["total"] if result else 0
+        user["held_count"] = result[0]["count"] if result else 0
+        
+        # Get when hold was placed
+        held_record = await db.admin_audit_logs.find_one(
+            {"action": "commission_hold", "user_id": user["user_id"]},
+            sort=[("created_at", -1)]
+        )
+        user["held_at"] = held_record.get("created_at") if held_record else None
+        user["reason"] = user.get("commission_hold_reason", "")
+    
+    return {"held_commissions": users_with_hold}
+
+
 @admin_membership_router.post("/commission-hold/{user_id}")
 async def hold_user_commissions(
     user_id: str,
