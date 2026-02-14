@@ -757,11 +757,183 @@ export default function Wallet() {
           </div>
         </div>
 
+        {/* Withdraw Earnings Section */}
+        <div className="bg-card rounded-xl border border-border/50 overflow-hidden mt-6" data-testid="withdraw-section">
+          <div className="p-4 border-b border-border/50">
+            <h2 className="font-semibold flex items-center gap-2">
+              <Banknote className="w-5 h-5 text-green-500" />
+              Withdraw Earnings
+            </h2>
+          </div>
+          
+          <div className="p-4">
+            {/* USD Balance Display */}
+            <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl p-4 mb-4">
+              <p className="text-sm text-muted-foreground">Available for Withdrawal</p>
+              <p className="text-3xl font-bold text-green-600">
+                ${(balance?.usd_balance || 0).toFixed(2)}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Team commissions + Personal sales earnings
+              </p>
+            </div>
+
+            {/* Stripe Connection Status */}
+            {loadingStripeStatus ? (
+              <div className="flex items-center justify-center py-4">
+                <RefreshCw className="w-5 h-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : stripeConnected ? (
+              <div className="bg-green-500/10 rounded-lg p-3 mb-4 flex items-center gap-3">
+                <CheckCircle className="w-5 h-5 text-green-500" />
+                <div>
+                  <p className="text-sm font-medium text-green-700">Stripe Connected</p>
+                  <p className="text-xs text-green-600">Ready to receive payouts</p>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-amber-500/10 rounded-lg p-3 mb-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <AlertCircle className="w-5 h-5 text-amber-500" />
+                  <div>
+                    <p className="text-sm font-medium text-amber-700">Connect Stripe Account</p>
+                    <p className="text-xs text-amber-600">Required to withdraw earnings</p>
+                  </div>
+                </div>
+                <Button 
+                  onClick={handleStripeOnboarding}
+                  className="w-full mt-2 bg-amber-500 hover:bg-amber-600"
+                  data-testid="stripe-onboard-btn"
+                >
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  Connect Stripe Account
+                </Button>
+              </div>
+            )}
+
+            {/* Withdrawal Info */}
+            <div className="bg-muted/30 rounded-lg p-3 mb-4 text-sm">
+              <div className="flex justify-between mb-1">
+                <span className="text-muted-foreground">Withdrawal Fee</span>
+                <span className="font-medium">3%</span>
+              </div>
+              <div className="flex justify-between mb-1">
+                <span className="text-muted-foreground">Minimum Withdrawal</span>
+                <span className="font-medium">$10.00</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Processing Time</span>
+                <span className="font-medium">48h - 7 days</span>
+              </div>
+            </div>
+
+            {/* Withdraw Button */}
+            <Button
+              onClick={() => setShowWithdrawModal(true)}
+              disabled={!stripeConnected || (balance?.usd_balance || 0) < 10}
+              className="w-full bg-green-600 hover:bg-green-700"
+              data-testid="withdraw-btn"
+            >
+              <Banknote className="w-4 h-4 mr-2" />
+              Withdraw to Stripe
+            </Button>
+
+            {!stripeConnected && (
+              <p className="text-xs text-center text-muted-foreground mt-2">
+                Connect your Stripe account to enable withdrawals
+              </p>
+            )}
+          </div>
+        </div>
+
         {/* Sync Notice */}
         <p className="text-center text-xs text-muted-foreground mt-6">
           🔄 Synced with Blendlink mobile app
         </p>
       </main>
+
+      {/* Withdrawal Modal */}
+      {showWithdrawModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-xl max-w-md w-full p-6 border border-border">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Banknote className="w-5 h-5 text-green-500" />
+              Withdraw Earnings
+            </h3>
+
+            <div className="mb-4">
+              <label className="text-sm text-muted-foreground">Amount (USD)</label>
+              <Input
+                type="number"
+                placeholder="Enter amount"
+                value={withdrawAmount}
+                onChange={(e) => setWithdrawAmount(e.target.value)}
+                min="10"
+                max={balance?.usd_balance || 0}
+                className="mt-1"
+                data-testid="withdraw-amount-input"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Available: ${(balance?.usd_balance || 0).toFixed(2)}
+              </p>
+            </div>
+
+            {/* Fee Calculation */}
+            {withdrawAmount && parseFloat(withdrawAmount) > 0 && (
+              <div className="bg-muted/30 rounded-lg p-3 mb-4 text-sm">
+                <div className="flex justify-between mb-1">
+                  <span>Amount</span>
+                  <span>${parseFloat(withdrawAmount).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between mb-1 text-amber-600">
+                  <span>Fee (3%)</span>
+                  <span>-${(parseFloat(withdrawAmount) * 0.03).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between font-medium border-t pt-1 mt-1">
+                  <span>You'll Receive</span>
+                  <span className="text-green-600">
+                    ${(parseFloat(withdrawAmount) * 0.97).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Processing Notice */}
+            <div className="bg-blue-500/10 rounded-lg p-3 mb-4 text-sm">
+              <p className="text-blue-700 flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                Processing takes 48 hours to 7 days
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowWithdrawModal(false);
+                  setWithdrawAmount('');
+                }}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleWithdraw}
+                disabled={withdrawing || !withdrawAmount || parseFloat(withdrawAmount) < 10}
+                className="flex-1 bg-green-600 hover:bg-green-700"
+                data-testid="confirm-withdraw-btn"
+              >
+                {withdrawing ? (
+                  <RefreshCw className="w-4 h-4 animate-spin mr-2" />
+                ) : (
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                )}
+                Confirm Withdrawal
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
