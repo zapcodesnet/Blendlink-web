@@ -54,28 +54,15 @@ PLATFORM_FEE_RATE = 0.10  # 10%
 stripe_api_key = os.environ.get("STRIPE_SECRET_KEY", "") or os.environ.get("STRIPE_API_KEY", "")
 stripe_pub_key = os.environ.get("STRIPE_PUBLISHABLE_KEY", "")
 
-# LIVE KEY ENFORCEMENT - Hardcoded LIVE keys to override any test keys in production
-LIVE_STRIPE_SECRET_KEY = "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"
-LIVE_STRIPE_PUBLISHABLE_KEY = "pk_live_51SkM5vRv11guK54QJjH0t5IreOJB2sQCqjcxWGUKZbt9taHJ3AtSSejzi2ksQvU9aoq6KKIlA9nmGy48qJr08cm400a7cEoEpf"
-
-# FORCE LIVE MODE - Override any test keys
-if not stripe_api_key.startswith("sk_live"):
-    logger.warning(f"⚠️ FORCING LIVE SECRET KEY - overriding {stripe_api_key[:15] if stripe_api_key else 'empty'}...")
-    stripe_api_key = LIVE_STRIPE_SECRET_KEY
-
-if not stripe_pub_key.startswith("pk_live"):
-    logger.warning(f"⚠️ FORCING LIVE PUBLISHABLE KEY - overriding {stripe_pub_key[:15] if stripe_pub_key else 'empty'}...")
-    stripe_pub_key = LIVE_STRIPE_PUBLISHABLE_KEY
-
-# CRITICAL: Verify LIVE mode - halt if not configured correctly
+# Validate Stripe key configuration from environment
 if stripe_api_key:
     key_prefix = stripe_api_key[:12] if len(stripe_api_key) > 12 else "******"
     if stripe_api_key.startswith("sk_live"):
         logger.info(f"✅ STRIPE LIVE MODE VERIFIED - Key: {key_prefix}...")
         print(f"✅ STRIPE LIVE MODE VERIFIED (LIVE) - Key: {key_prefix}...")
     elif stripe_api_key.startswith("sk_test"):
-        logger.error("❌ STRIPE TEST MODE DETECTED - PRODUCTION SHOULD USE LIVE KEYS!")
-        print(f"❌ STRIPE TEST MODE DETECTED - Key: {key_prefix}... (SHOULD BE sk_live_*)")
+        logger.warning("⚠️ STRIPE TEST MODE DETECTED - Consider using LIVE keys in production")
+        print(f"⚠️ STRIPE TEST MODE DETECTED - Key: {key_prefix}...")
     else:
         logger.warning(f"⚠️ Unknown Stripe key format: {key_prefix}...")
 else:
