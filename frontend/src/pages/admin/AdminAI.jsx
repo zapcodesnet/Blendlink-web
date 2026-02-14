@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "../../components/ui/button";
 import { toast } from "sonner";
+import { getApiUrl } from "../../utils/runtimeConfig";
 import { 
   Bot, Send, Plus, Trash2, MessageSquare, Sparkles,
   Code, HelpCircle, Bug, RefreshCw, Loader2
 } from "lucide-react";
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE = getApiUrl();
 
 // Safe fetch helper to avoid "body stream already read" errors
 const safeFetch = async (url, options = {}) => {

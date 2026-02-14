@@ -4,6 +4,7 @@ import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
 import { toast } from "sonner";
 import { adminAPI } from "./AdminLayout";
+import { getApiUrl } from "../../utils/runtimeConfig";
 import { 
   FileText, Search, Filter, RefreshCw, Download,
   User, Eye, Ban, Trash2, Palette, Layout, Shield,
@@ -12,7 +13,7 @@ import {
   AlertTriangle, CheckCircle, XCircle, Activity
 } from "lucide-react";
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE = getApiUrl();
 
 // Map audit actions to icons and colors
 const ACTION_CONFIG = {
