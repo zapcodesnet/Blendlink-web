@@ -70,6 +70,62 @@ PAGE_TYPES = {
 
 ORDER_TYPES = ["dine_in", "drive_thru", "pickup", "delivery", "shipping"]
 
+# Listing Fee in BL Coins
+LISTING_FEE_BL_COINS = 200  # 200 BL coins per listing
+
+
+# ============== HELPER: BL COINS LISTING FEE ==============
+async def check_and_deduct_listing_fee(user_id: str, item_type: str = "listing") -> Dict[str, Any]:
+    """
+    Check if user has sufficient BL coins for listing fee and deduct if so.
+    Returns success status, new balance, and error message if applicable.
+    """
+    # Get user's current BL coins balance
+    user = await db.users.find_one({"user_id": user_id}, {"_id": 0, "bl_coins": 1})
+    if not user:
+        return {"success": False, "error": "User not found"}
+    
+    current_balance = user.get("bl_coins", 0)
+    
+    if current_balance < LISTING_FEE_BL_COINS:
+        return {
+            "success": False,
+            "error": f"Insufficient BL coins. You need {LISTING_FEE_BL_COINS} BL coins to create a listing. Current balance: {current_balance}",
+            "required": LISTING_FEE_BL_COINS,
+            "current_balance": current_balance
+        }
+    
+    # Deduct the listing fee
+    result = await db.users.update_one(
+        {"user_id": user_id, "bl_coins": {"$gte": LISTING_FEE_BL_COINS}},
+        {"$inc": {"bl_coins": -LISTING_FEE_BL_COINS}}
+    )
+    
+    if result.modified_count == 0:
+        return {"success": False, "error": "Failed to deduct listing fee. Please try again."}
+    
+    # Record the transaction
+    await db.bl_transactions.insert_one({
+        "transaction_id": f"bltxn_{uuid.uuid4().hex[:16]}",
+        "user_id": user_id,
+        "amount": -LISTING_FEE_BL_COINS,
+        "type": "listing_fee",
+        "description": f"Listing fee for {item_type}",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Get updated balance
+    updated_user = await db.users.find_one({"user_id": user_id}, {"_id": 0, "bl_coins": 1})
+    new_balance = updated_user.get("bl_coins", 0) if updated_user else current_balance - LISTING_FEE_BL_COINS
+    
+    logger.info(f"Deducted {LISTING_FEE_BL_COINS} BL coins from user {user_id} for {item_type} listing")
+    
+    return {
+        "success": True,
+        "fee_deducted": LISTING_FEE_BL_COINS,
+        "new_balance": new_balance
+    }
+
 # ============== MODELS ==============
 
 class PageLocation(BaseModel):
