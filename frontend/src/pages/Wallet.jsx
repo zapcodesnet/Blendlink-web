@@ -365,6 +365,135 @@ export default function Wallet() {
     }
   };
 
+  // Purchase BL Coins
+  const handlePurchaseCoins = async (pkg) => {
+    setPurchasingCoins(true);
+    const quantity = pkg.allowMultiple ? packageQuantity : 1;
+    const totalPrice = pkg.price * quantity;
+    const totalCoins = pkg.coins * quantity;
+    
+    try {
+      // Check if using balance
+      if (useBalanceForCoins) {
+        const availableBalance = balance?.usd_balance || 0;
+        if (availableBalance < totalPrice) {
+          toast.error(`Insufficient balance. You have $${availableBalance.toFixed(2)} available.`);
+          setPurchasingCoins(false);
+          return;
+        }
+        
+        // Purchase from balance
+        const response = await api.post("/payments/bl-coins/purchase-from-balance", {
+          package_id: pkg.id,
+          quantity: quantity,
+          amount: totalPrice,
+          coins: totalCoins
+        });
+        
+        toast.success(`Successfully purchased ${totalCoins.toLocaleString()} BL coins!`);
+        fetchWalletData();
+      } else {
+        // Use Stripe checkout
+        const response = await api.post("/stripe/create-checkout-session-coins", {
+          package_id: pkg.id,
+          quantity: quantity,
+          amount_cents: Math.round(totalPrice * 100),
+          coins: totalCoins
+        });
+        
+        if (response.data?.url) {
+          window.location.href = response.data.url;
+        }
+      }
+    } catch (error) {
+      const msg = error.response?.data?.detail || "Failed to process purchase";
+      toast.error(msg);
+    } finally {
+      setPurchasingCoins(false);
+      setSelectedPackage(null);
+      setPackageQuantity(1);
+    }
+  };
+
+  // Subscribe to Membership Tier
+  const handleSubscribe = async (tierId) => {
+    setSubscribing(true);
+    const tier = MEMBERSHIP_TIERS[tierId];
+    
+    try {
+      // Check if using balance
+      if (useBalanceForSubscription) {
+        const availableBalance = balance?.usd_balance || 0;
+        if (availableBalance < tier.price) {
+          toast.error(`Insufficient balance. You have $${availableBalance.toFixed(2)} available.`);
+          setSubscribing(false);
+          return;
+        }
+        
+        // Subscribe from balance
+        const response = await api.post("/subscriptions/subscribe-from-balance", {
+          tier: tierId,
+          amount: tier.price
+        });
+        
+        toast.success(`Successfully subscribed to ${tier.name} membership!`);
+        setCurrentSubscription(response.data.subscription);
+        fetchWalletData();
+        fetchDailyClaimStatus();
+        
+        // Update user context
+        if (user) {
+          setUser({ ...user, subscription_tier: tierId });
+        }
+      } else {
+        // Use Stripe checkout for subscription
+        const response = await api.post("/subscriptions/create-checkout", {
+          tier: tierId,
+          price_monthly: tier.price
+        });
+        
+        if (response.data?.url) {
+          window.location.href = response.data.url;
+        }
+      }
+    } catch (error) {
+      const msg = error.response?.data?.detail || "Failed to process subscription";
+      toast.error(msg);
+    } finally {
+      setSubscribing(false);
+      setSelectedTier(null);
+    }
+  };
+
+  // Cancel subscription
+  const handleCancelSubscription = async () => {
+    if (!window.confirm("Are you sure you want to cancel your subscription? You'll lose access to premium features at the end of your billing period.")) {
+      return;
+    }
+    
+    try {
+      await api.post("/subscriptions/cancel");
+      toast.success("Subscription cancelled. Access will end at the end of your billing period.");
+      fetchWalletData();
+    } catch (error) {
+      toast.error("Failed to cancel subscription");
+    }
+  };
+
+  // Get current subscription status
+  useEffect(() => {
+    const fetchSubscription = async () => {
+      try {
+        const response = await api.get("/subscriptions/current");
+        setCurrentSubscription(response.data);
+      } catch (error) {
+        // No active subscription
+        setCurrentSubscription(null);
+      }
+    };
+    fetchSubscription();
+  }, []);
+
   const fetchDailyClaimStatus = async () => {
     try {
       const response = await api.get("/referral/daily-claim/status");
