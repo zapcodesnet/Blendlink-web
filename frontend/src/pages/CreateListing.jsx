@@ -149,6 +149,17 @@ export default function CreateListing() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Stripe Onboarding Prompt */}
+      <StripeOnboardingPrompt
+        isOpen={showPrompt}
+        onClose={() => {
+          closePrompt();
+          setPendingSubmit(false);
+        }}
+        onComplete={handleStripeComplete}
+        isFirstListing={isFirstListing}
+      />
+      
       {/* Top Up Coins Modal */}
       <TopUpCoinsModal
         isOpen={showTopUpModal}
