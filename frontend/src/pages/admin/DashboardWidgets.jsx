@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "../../components/ui/button";
 import { toast } from "sonner";
+import { getApiUrl } from "../../utils/runtimeConfig";
 import { 
   Users, ShoppingBag, Coins, TrendingUp, BarChart3, Calendar,
   Activity, Shield, Eye, Settings, GripVertical, X, Plus, Check
 } from "lucide-react";
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE = getApiUrl();
 
 // Available widget types
 const WIDGET_TYPES = {

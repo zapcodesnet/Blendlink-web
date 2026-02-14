@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "../../components/ui/button";
 import { toast } from "sonner";
+import { getApiUrl } from "../../utils/runtimeConfig";
 import { 
   Code, Save, RefreshCw, Play, Eye, EyeOff, 
   Smartphone, Monitor, FileCode, Settings, 
@@ -8,7 +9,7 @@ import {
   ChevronDown, Copy, Download, Upload
 } from "lucide-react";
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE = getApiUrl();
 
 // Safe fetch helper
 const safeFetch = async (url, options = {}) => {

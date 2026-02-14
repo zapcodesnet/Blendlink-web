@@ -4,12 +4,13 @@ import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
 import { toast } from "sonner";
 import { adminAPI } from "./AdminLayout";
+import { getApiUrl } from "../../utils/runtimeConfig";
 import {
   Coins, Search, RefreshCw, User, AlertTriangle, CheckCircle,
   Plus, Minus, Wallet, History, X, Gift, FileText
 } from "lucide-react";
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || "";
+const API_BASE = getApiUrl();
 const getToken = () => localStorage.getItem("blendlink_token");
 
 // Robust API request helper with detailed logging
