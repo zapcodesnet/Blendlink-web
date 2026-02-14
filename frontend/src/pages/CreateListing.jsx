@@ -130,6 +130,16 @@ export default function CreateListing() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Top Up Coins Modal */}
+      <TopUpCoinsModal
+        isOpen={showTopUpModal}
+        onClose={() => setShowTopUpModal(false)}
+        currentBalance={userBalance}
+        requiredAmount={LISTING_FEE}
+        returnUrl="/marketplace/create"
+        returnState={{ form }}
+      />
+
       {/* Fee Confirmation Modal */}
       {showFeeConfirmation && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70] p-4">
