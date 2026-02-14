@@ -11,13 +11,14 @@ import {
   DialogTrigger,
 } from "../components/ui/dialog";
 import { toast } from "sonner";
+import { getApiUrl } from "../utils/runtimeConfig";
 import { 
   Plus, Upload, Image as ImageIcon, Video, Music, 
   Trash2, Edit, Eye, Lock, Users, Globe, ChevronLeft,
   MoreVertical, Play, Folder, Grid, List, Loader2
 } from "lucide-react";
 
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE_URL = getApiUrl();
 
 // Helper function for API requests
 const apiRequest = async (endpoint, options = {}) => {

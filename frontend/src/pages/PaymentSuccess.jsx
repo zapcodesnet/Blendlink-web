@@ -3,8 +3,9 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { CheckCircle2, FileText, Loader2, Package, ShoppingBag, UserPlus } from "lucide-react";
 import { paymentsAPI } from "../services/mediaSalesApi";
+import { getApiUrl } from "../utils/runtimeConfig";
 
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE_URL = getApiUrl();
 
 export default function PaymentSuccessPage() {
   const [searchParams] = useSearchParams();

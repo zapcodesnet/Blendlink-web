@@ -5,12 +5,13 @@ import api from "../services/api";
 import { Button } from "../components/ui/button";
 import { toast } from "sonner";
 import { OfferNegotiationModal } from "../components/MakeOfferModal";
+import { getApiUrl } from "../utils/runtimeConfig";
 import {
   ArrowLeft, Gavel, Package, Clock, Check, X, AlertCircle,
   Loader2, DollarSign, MessageSquare, Filter, ChevronRight
 } from "lucide-react";
 
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE_URL = getApiUrl();
 
 const OfferStatusBadge = ({ status }) => {
   const statusConfig = {
