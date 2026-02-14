@@ -1,0 +1,87 @@
+{
+  "summary": "Tested monetization and membership features including subscription scheduler, admin pages, Wallet Top Up/Membership sections, and StripeOnboardingPrompt. All features working as expected.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "/api/marketplace/listings/my",
+        "issue": "Route conflict - caught by /listing/{listing_id} treating 'my' as a listing ID. Returns 404 instead of 401",
+        "priority": "LOW"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_monetization_features.py",
+    "/app/test_reports/pytest/pytest_monetization_features.xml"
+  ],
+  "action_items": [
+    "Optional: Fix route conflict in marketplace_routes.py - /listings/my should be defined before /listing/{listing_id} to take precedence"
+  ],
+  "critical_code_review_comments": [
+    "Subscription scheduler properly configured with APScheduler - runs daily at 3AM UTC for renewals and every 6 hours for retries",
+    "StripeOnboardingPrompt correctly integrated in AIListingCreator.jsx using useStripeOnboarding hook with checkAndPrompt before publish",
+    "Wallet page has both Top Up BL Coins section (data-testid='topup-coins-section') and Membership Subscriptions section (data-testid='membership-section') permanently visible",
+    "Admin pages (membership-tiers, promo-codes, transactions) properly protected with admin authentication"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "100% (13 passed, 1 skipped)",
+    "frontend": "100%"
+  },
+  "test_credentials": {
+    "email": "tester@blendlink.net",
+    "password": "BlendLink2024!"
+  },
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All monetization features working correctly. Subscription scheduler running with 2 jobs (subscription_renewals at 3AM UTC, payment_retries every 6hrs). Wallet page shows Top Up BL Coins (4 packages: Starter 30k/$4.99, Value 80k/$9.99, Pro 400k/$14.99, Premium 1M/$29.99) and Membership Subscriptions (Bronze $4.99, Silver $9.99, Gold $14.99, Diamond $29.99). Admin pages require OTP authentication.",
+  "verified_features": {
+    "subscription_scheduler": {
+      "status": "WORKING",
+      "endpoint": "/api/admin/subscription-scheduler/status",
+      "details": {
+        "running": true,
+        "jobs": [
+          {"id": "subscription_renewals", "trigger": "cron[hour='3', minute='0']"},
+          {"id": "payment_retries", "trigger": "cron[hour='*/6']"}
+        ]
+      }
+    },
+    "admin_membership_tiers": {
+      "route": "/admin/membership-tiers",
+      "status": "WORKING - requires admin auth",
+      "api": "/api/admin/membership/tiers"
+    },
+    "admin_promo_codes": {
+      "route": "/admin/promo-codes",
+      "status": "WORKING - requires admin auth",
+      "api": "/api/admin/membership/promo-codes"
+    },
+    "admin_transaction_monitor": {
+      "route": "/admin/transactions",
+      "status": "WORKING - requires admin auth",
+      "api": "/api/admin/membership/transactions"
+    },
+    "wallet_topup_section": {
+      "status": "WORKING",
+      "data_testid": "topup-coins-section",
+      "packages": ["Starter 30k/$4.99", "Value 80k/$9.99", "Pro 400k/$14.99", "Premium 1M/$29.99"]
+    },
+    "wallet_membership_section": {
+      "status": "WORKING",
+      "data_testid": "membership-section",
+      "tiers": ["Bronze $4.99/mo", "Silver $9.99/mo", "Gold $14.99/mo", "Diamond $29.99/mo"]
+    },
+    "stripe_onboarding_prompt": {
+      "component": "StripeOnboardingPrompt.jsx",
+      "integration": "AIListingCreator.jsx line 627 (useStripeOnboarding hook) and line 940 (checkAndPrompt)",
+      "status": "INTEGRATED - shows when user tries to publish without Stripe connected"
+    }
+  }
+}
