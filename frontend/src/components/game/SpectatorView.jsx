@@ -12,6 +12,7 @@ import {
 import { Button } from '../ui/button';
 import { getToken } from '../../services/api';
 import { toast } from 'sonner';
+import { getApiUrl } from '../../utils/runtimeConfig';
 
 const SpectatorView = ({ roomId, onExit }) => {
   const [gameState, setGameState] = useState(null);
@@ -31,7 +32,8 @@ const SpectatorView = ({ roomId, onExit }) => {
     }
     
     const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    const wsHost = process.env.REACT_APP_BACKEND_URL?.replace(/^https?:\/\//, '') || window.location.host;
+    const backendUrl = getApiUrl();
+    const wsHost = backendUrl?.replace(/^https?:\/\//, '') || window.location.host;
     const wsUrl = `${wsProtocol}://${wsHost}/api/ws/spectate/${roomId}/${token}`;
     
     console.log('[SpectatorView] Connecting to:', wsUrl);
