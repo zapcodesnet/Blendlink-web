@@ -1054,6 +1054,313 @@ export default function Wallet() {
           </div>
         </div>
 
+        {/* Top Up BL Coins Section */}
+        <div className="bg-card rounded-xl border border-border/50 overflow-hidden mt-6" data-testid="topup-coins-section">
+          <div className="p-4 border-b border-border/50">
+            <h2 className="font-semibold flex items-center gap-2">
+              <Coins className="w-5 h-5 text-amber-500" />
+              Top Up Your BL Coins Balance
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Purchase BL coins instantly using your real cash earnings balance or connected payment method. More coins mean more fun in games, minting, using app features, and listing more in the marketplace or member's page.
+            </p>
+          </div>
+          
+          <div className="p-4 space-y-4">
+            {/* Payment Method Toggle */}
+            <div className="bg-muted/30 rounded-lg p-3">
+              <label className="flex items-center justify-between cursor-pointer">
+                <span className="text-sm flex items-center gap-2">
+                  <WalletIcon className="w-4 h-4" />
+                  Pay from Real Cash Balance (${(balance?.usd_balance || 0).toFixed(2)})
+                </span>
+                <input
+                  type="checkbox"
+                  checked={useBalanceForCoins}
+                  onChange={(e) => setUseBalanceForCoins(e.target.checked)}
+                  className="w-4 h-4 rounded"
+                />
+              </label>
+              {!useBalanceForCoins && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Payment will be processed via Stripe
+                </p>
+              )}
+            </div>
+            
+            {/* Package Cards */}
+            <div className="grid grid-cols-2 gap-3">
+              {BL_COIN_PACKAGES.map((pkg) => (
+                <div
+                  key={pkg.id}
+                  className={`relative rounded-xl border-2 p-4 cursor-pointer transition-all ${
+                    selectedPackage?.id === pkg.id
+                      ? "border-amber-500 bg-amber-500/10"
+                      : "border-border/50 hover:border-amber-500/50"
+                  }`}
+                  onClick={() => {
+                    setSelectedPackage(pkg);
+                    setPackageQuantity(1);
+                  }}
+                >
+                  <div className="text-center">
+                    <Coins className="w-8 h-8 mx-auto mb-2 text-amber-500" />
+                    <p className="text-xl font-bold">{pkg.coins.toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground">BL Coins</p>
+                    <p className="text-lg font-semibold text-amber-600 mt-2">${pkg.price.toFixed(2)}</p>
+                    <p className="text-xs text-muted-foreground">{pkg.label}</p>
+                  </div>
+                  
+                  {pkg.allowMultiple && selectedPackage?.id === pkg.id && (
+                    <div className="mt-3 pt-3 border-t border-border/50">
+                      <p className="text-xs text-muted-foreground mb-2">Quantity</p>
+                      <div className="flex items-center justify-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPackageQuantity(Math.max(1, packageQuantity - 1));
+                          }}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Minus className="w-4 h-4" />
+                        </Button>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="100"
+                          value={packageQuantity}
+                          onChange={(e) => setPackageQuantity(Math.max(1, Math.min(100, parseInt(e.target.value) || 1)))}
+                          className="w-16 h-8 text-center"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPackageQuantity(Math.min(100, packageQuantity + 1));
+                          }}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <p className="text-center mt-2 text-sm font-medium">
+                        Total: ${(pkg.price * packageQuantity).toFixed(2)} → {(pkg.coins * packageQuantity).toLocaleString()} BL
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            
+            {/* Purchase Button */}
+            {selectedPackage && (
+              <Button
+                onClick={() => handlePurchaseCoins(selectedPackage)}
+                disabled={purchasingCoins || (useBalanceForCoins && (balance?.usd_balance || 0) < selectedPackage.price * (selectedPackage.allowMultiple ? packageQuantity : 1))}
+                className="w-full bg-amber-500 hover:bg-amber-600 text-black font-semibold"
+                data-testid="purchase-coins-btn"
+              >
+                {purchasingCoins ? (
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Coins className="w-4 h-4 mr-2" />
+                )}
+                Purchase {((selectedPackage.coins * (selectedPackage.allowMultiple ? packageQuantity : 1))).toLocaleString()} BL Coins
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Membership Subscriptions Section */}
+        <div className="bg-card rounded-xl border border-border/50 overflow-hidden mt-6" data-testid="membership-section">
+          <div className="p-4 border-b border-border/50">
+            <h2 className="font-semibold flex items-center gap-2">
+              <Crown className="w-5 h-5 text-purple-500" />
+              Upgrade Your Membership for More Earnings & Perks
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Subscriptions are recurring monthly. Payments are deducted from your preferred payment method. If deductions fail from your BlendLink earnings balance, we automatically attempt your connected Stripe account, credit/debit card, or bank account.
+            </p>
+          </div>
+          
+          <div className="p-4 space-y-4">
+            {/* Current Subscription Status */}
+            {(user?.subscription_tier && user.subscription_tier !== 'free') && (
+              <div className={`bg-gradient-to-r ${MEMBERSHIP_TIERS[user.subscription_tier]?.color || 'from-gray-500 to-gray-600'} rounded-xl p-4 text-white`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {MEMBERSHIP_TIERS[user.subscription_tier] && 
+                      React.createElement(MEMBERSHIP_TIERS[user.subscription_tier].icon, { className: "w-8 h-8" })}
+                    <div>
+                      <p className="font-bold text-lg">Current: {MEMBERSHIP_TIERS[user.subscription_tier]?.name || user.subscription_tier}</p>
+                      <p className="text-sm opacity-90">Active subscription</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCancelSubscription}
+                    className="bg-white/10 border-white/30 text-white hover:bg-white/20"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Payment Method Toggle */}
+            <div className="bg-muted/30 rounded-lg p-3">
+              <label className="flex items-center justify-between cursor-pointer">
+                <span className="text-sm flex items-center gap-2">
+                  <WalletIcon className="w-4 h-4" />
+                  Pay from Real Cash Balance (${(balance?.usd_balance || 0).toFixed(2)})
+                </span>
+                <input
+                  type="checkbox"
+                  checked={useBalanceForSubscription}
+                  onChange={(e) => setUseBalanceForSubscription(e.target.checked)}
+                  className="w-4 h-4 rounded"
+                />
+              </label>
+              <div className="mt-2 text-xs text-muted-foreground flex items-start gap-2">
+                <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                <span>
+                  Payment priority: BlendLink earnings → Connected Stripe → Linked Card → Bank Account. 
+                  Failed payments will retry up to 3 times.
+                </span>
+              </div>
+            </div>
+            
+            {/* Tier Cards */}
+            <div className="space-y-3">
+              {Object.entries(MEMBERSHIP_TIERS).map(([tierId, tier]) => {
+                const TierIcon = tier.icon;
+                const isCurrentTier = user?.subscription_tier === tierId;
+                const isExpanded = expandedTier === tierId;
+                
+                return (
+                  <div
+                    key={tierId}
+                    className={`rounded-xl border-2 overflow-hidden transition-all ${
+                      isCurrentTier
+                        ? "border-green-500 bg-green-500/5"
+                        : selectedTier === tierId
+                        ? "border-purple-500 bg-purple-500/5"
+                        : "border-border/50 hover:border-purple-500/50"
+                    }`}
+                  >
+                    {/* Tier Header */}
+                    <div
+                      className={`p-4 cursor-pointer bg-gradient-to-r ${tier.color}`}
+                      onClick={() => setExpandedTier(isExpanded ? null : tierId)}
+                    >
+                      <div className="flex items-center justify-between text-white">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                            <TierIcon className="w-6 h-6" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-bold flex items-center gap-2">
+                              {tier.name} Member
+                              {isCurrentTier && (
+                                <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">Current</span>
+                              )}
+                            </h3>
+                            <p className="text-sm opacity-90">${tier.price.toFixed(2)}/month</p>
+                          </div>
+                        </div>
+                        <ChevronRight className={`w-6 h-6 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                      </div>
+                    </div>
+                    
+                    {/* Expanded Details */}
+                    {isExpanded && (
+                      <div className="p-4 space-y-4">
+                        {/* Commission Rates */}
+                        <div className="bg-muted/30 rounded-lg p-3">
+                          <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                            <Percent className="w-4 h-4 text-green-500" />
+                            Commission Rates
+                          </h4>
+                          <p className="text-sm text-muted-foreground">
+                            Earn <span className="font-bold text-green-600">{tier.commission_l1}% commission</span> from direct recruits (Level 1) and <span className="font-bold text-green-600">{tier.commission_l2}%</span> from indirect recruits (Level 2) on each successful sale of products, services, digital goods, rentals, foods, etc.
+                          </p>
+                        </div>
+                        
+                        {/* Benefits Grid */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="bg-muted/30 rounded-lg p-3 text-center">
+                            <Image className="w-5 h-5 mx-auto mb-1 text-blue-500" />
+                            <p className="text-lg font-bold">
+                              {tier.daily_mint >= 999999 ? '∞' : tier.daily_mint}
+                            </p>
+                            <p className="text-xs text-muted-foreground">Daily Mints</p>
+                          </div>
+                          <div className="bg-muted/30 rounded-lg p-3 text-center">
+                            <Zap className="w-5 h-5 mx-auto mb-1 text-yellow-500" />
+                            <p className="text-lg font-bold">x{tier.xp_multiplier}</p>
+                            <p className="text-xs text-muted-foreground">XP Multiplier</p>
+                          </div>
+                          <div className="bg-muted/30 rounded-lg p-3 text-center">
+                            <Coins className="w-5 h-5 mx-auto mb-1 text-amber-500" />
+                            <p className="text-lg font-bold">{tier.daily_bl_bonus.toLocaleString()}</p>
+                            <p className="text-xs text-muted-foreground">Daily BL Coins</p>
+                          </div>
+                          <div className="bg-muted/30 rounded-lg p-3 text-center">
+                            <FileText className="w-5 h-5 mx-auto mb-1 text-purple-500" />
+                            <p className="text-lg font-bold">
+                              {tier.max_pages >= 999999 ? '∞' : tier.max_pages}
+                            </p>
+                            <p className="text-xs text-muted-foreground">Member Pages</p>
+                          </div>
+                        </div>
+                        
+                        {/* Feature List */}
+                        <div className="space-y-2">
+                          {tier.features.map((feature, idx) => (
+                            <div key={idx} className="flex items-center gap-2 text-sm">
+                              <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                              <span>{feature}</span>
+                            </div>
+                          ))}
+                        </div>
+                        
+                        {/* Subscribe Button */}
+                        {!isCurrentTier && (
+                          <Button
+                            onClick={() => handleSubscribe(tierId)}
+                            disabled={subscribing || (useBalanceForSubscription && (balance?.usd_balance || 0) < tier.price)}
+                            className={`w-full bg-gradient-to-r ${tier.color} text-white font-semibold`}
+                            data-testid={`subscribe-${tierId}-btn`}
+                          >
+                            {subscribing && selectedTier === tierId ? (
+                              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                            ) : (
+                              <TierIcon className="w-4 h-4 mr-2" />
+                            )}
+                            Subscribe to {tier.name} - ${tier.price.toFixed(2)}/mo
+                          </Button>
+                        )}
+                        
+                        {isCurrentTier && (
+                          <div className="bg-green-500/10 rounded-lg p-3 flex items-center gap-2 text-green-700">
+                            <CheckCircle className="w-5 h-5" />
+                            <span className="font-medium">This is your current plan</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
         {/* Sync Notice */}
         <p className="text-center text-xs text-muted-foreground mt-6">
           🔄 Synced with Blendlink mobile app
