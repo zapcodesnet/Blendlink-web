@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 # ============== CONSTANTS ==============
 PLATFORM_FEE_PERCENT = 8  # 8% total platform fee
+LISTING_FEE_BL_COINS = 200  # 200 BL coins per listing
 
 # Fee distribution rates
 FEE_DISTRIBUTION = {
