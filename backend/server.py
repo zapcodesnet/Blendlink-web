@@ -1393,6 +1393,25 @@ async def get_listings(request: Request, category: Optional[str] = None, search:
     
     return listings
 
+# CRITICAL: This route must come BEFORE /listings/{listing_id} to prevent 'my' being interpreted as a listing_id
+@marketplace_router.get("/listings/my")
+async def get_my_listings_server(
+    request: Request,
+    status: str = "active",
+    skip: int = 0,
+    limit: int = 20
+):
+    """Get current user's listings - duplicate of marketplace_routes for route priority"""
+    current_user = await get_current_user(request)
+    
+    query = {"user_id": current_user["user_id"]}
+    if status != "all":
+        query["status"] = status
+    
+    listings = await db.listings.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    return {"listings": listings, "count": len(listings)}
+
 @marketplace_router.get("/listings/{listing_id}")
 async def get_listing(listing_id: str, request: Request):
     listing = await db.listings.find_one({"listing_id": listing_id}, {"_id": 0})
