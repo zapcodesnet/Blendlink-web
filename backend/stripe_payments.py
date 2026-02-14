@@ -93,6 +93,39 @@ if stripe_pub_key:
 stripe_router = APIRouter(prefix="/payments/stripe", tags=["Stripe Payments"])
 
 
+# ============== AUTH HELPER ==============
+
+async def get_current_user(request: Request) -> dict:
+    """Get authenticated user from request"""
+    from jose import jwt, JWTError
+    
+    JWT_SECRET = os.environ.get('JWT_SECRET')
+    JWT_ALGORITHM = os.environ.get('JWT_ALGORITHM', 'HS256')
+    
+    token = request.cookies.get("session_token")
+    if not token:
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header[7:]
+    
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        user_id = payload.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
+        user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+        
+        return user
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+
 # ============== REQUEST/RESPONSE MODELS ==============
 
 class CreateCheckoutRequest(BaseModel):
