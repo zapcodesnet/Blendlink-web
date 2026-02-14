@@ -101,6 +101,19 @@ export default function Wallet() {
   const [stripeOnboardingUrl, setStripeOnboardingUrl] = useState(null);
   const [loadingStripeStatus, setLoadingStripeStatus] = useState(true);
   
+  // Top Up BL Coins state
+  const [selectedPackage, setSelectedPackage] = useState(null);
+  const [packageQuantity, setPackageQuantity] = useState(1);
+  const [purchasingCoins, setPurchasingCoins] = useState(false);
+  const [useBalanceForCoins, setUseBalanceForCoins] = useState(false);
+  
+  // Membership Subscription state
+  const [selectedTier, setSelectedTier] = useState(null);
+  const [subscribing, setSubscribing] = useState(false);
+  const [useBalanceForSubscription, setUseBalanceForSubscription] = useState(false);
+  const [currentSubscription, setCurrentSubscription] = useState(null);
+  const [expandedTier, setExpandedTier] = useState(null);
+  
   // Real-time feeds
   const [teamEarnings, setTeamEarnings] = useState([]);
   const [personalEarnings, setPersonalEarnings] = useState([]);
