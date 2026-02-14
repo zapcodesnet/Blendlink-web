@@ -924,6 +924,12 @@ export default function AIListingCreator() {
       return;
     }
     
+    // Check if user has enough balance
+    if (userBalance < LISTING_FEE) {
+      setShowTopUpModal(true);
+      return;
+    }
+    
     // Show fee confirmation dialog
     setShowFeeConfirmation(true);
   };
