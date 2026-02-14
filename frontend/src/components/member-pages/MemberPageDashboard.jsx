@@ -16,6 +16,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { safeFetch } from "../../services/memberPagesApi";
+import { getApiUrl } from "../../utils/runtimeConfig";
 import {
   ChevronLeft, Settings, Package, UtensilsCrossed, Briefcase, Home,
   Plus, Edit2, Trash2, Eye, EyeOff, BarChart3, ShoppingCart, Bell,
@@ -40,20 +41,7 @@ import CustomerCRMManager from "./CustomerCRMManager";
 import TopUpCoinsModal from "../TopUpCoinsModal";
 import api from "../../services/api";
 
-// Runtime URL detection for production/preview environments
-// This ensures the app works correctly regardless of build-time env variables
-const getApiBase = () => {
-  // Production detection - runtime override
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    if (hostname === 'blendlink.net' || hostname === 'www.blendlink.net') {
-      return 'https://blendlink.net';
-    }
-  }
-  // Fallback to env variable (for preview/development)
-  return process.env.REACT_APP_BACKEND_URL || 'https://blendlink.net';
-};
-const API_URL = getApiBase();
+const API_URL = getApiUrl();
 
 // Dashboard Tab Components
 const OverviewTab = ({ page, analytics, onRefresh }) => {
