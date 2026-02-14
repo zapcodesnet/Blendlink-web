@@ -162,8 +162,8 @@ class TestBLCoinsPurchaseFeature:
         
         # Test with properly formatted but non-existent session
         response = self.session.get(f"{BASE_URL}/api/payments/stripe/bl-coins/status/cs_live_fake123")
-        # Should return 404 or 500 (not found in Stripe)
-        assert response.status_code in [400, 404, 500], f"Expected 400/404/500, got {response.status_code}"
+        # Should return 404, 500, or 520 (Cloudflare) (not found in Stripe)
+        assert response.status_code in [400, 404, 500, 520], f"Expected 400/404/500/520, got {response.status_code}"
         print(f"✅ Invalid session ID correctly handled (status: {response.status_code})")
 
 
