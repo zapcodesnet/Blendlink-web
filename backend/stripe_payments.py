@@ -1403,6 +1403,253 @@ async def withdraw_to_stripe(request: WithdrawRequest, http_request: Request):
         raise HTTPException(status_code=500, detail=f"Withdrawal failed: {str(e)}")
 
 
+# ============== BL COINS FROM BALANCE ==============
+
+class PurchaseCoinsFromBalanceRequest(BaseModel):
+    """Request to purchase BL coins from USD balance"""
+    package_id: str
+    quantity: int = 1
+    amount: float
+    coins: int
+
+
+@stripe_router.post("/bl-coins/purchase-from-balance")
+async def purchase_bl_coins_from_balance(
+    request: PurchaseCoinsFromBalanceRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Purchase BL coins by deducting from user's USD balance"""
+    user_id = current_user["user_id"]
+    
+    # Get current balance
+    user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    usd_balance = user.get("usd_balance", 0)
+    
+    if usd_balance < request.amount:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Insufficient balance. Available: ${usd_balance:.2f}, Required: ${request.amount:.2f}"
+        )
+    
+    # Deduct from USD balance and add BL coins
+    new_usd_balance = usd_balance - request.amount
+    current_bl_coins = user.get("bl_coins", 0)
+    new_bl_coins = current_bl_coins + request.coins
+    
+    # Update user in atomic operation
+    result = await db.users.update_one(
+        {"user_id": user_id, "usd_balance": usd_balance},  # Optimistic lock
+        {
+            "$set": {
+                "usd_balance": new_usd_balance,
+                "bl_coins": new_bl_coins,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=409, detail="Balance changed during transaction. Please try again.")
+    
+    # Log the transaction
+    transaction_id = f"coins_balance_{uuid.uuid4().hex[:12]}"
+    await db.bl_transactions.insert_one({
+        "transaction_id": transaction_id,
+        "user_id": user_id,
+        "transaction_type": "coins_purchase_from_balance",
+        "amount": request.coins,
+        "usd_amount": request.amount,
+        "package_id": request.package_id,
+        "quantity": request.quantity,
+        "description": f"Purchased {request.coins:,} BL coins for ${request.amount:.2f}",
+        "status": "completed",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    logger.info(f"BL coins purchased from balance: {user_id} - {request.coins} coins for ${request.amount}")
+    
+    return {
+        "success": True,
+        "transaction_id": transaction_id,
+        "coins_purchased": request.coins,
+        "amount_charged": request.amount,
+        "new_bl_balance": new_bl_coins,
+        "new_usd_balance": new_usd_balance
+    }
+
+
+# ============== SUBSCRIPTION FROM BALANCE ==============
+
+class SubscribeFromBalanceRequest(BaseModel):
+    """Request to subscribe using USD balance"""
+    tier: str
+    amount: float
+
+
+@stripe_router.post("/subscriptions/subscribe-from-balance")
+async def subscribe_from_balance(
+    request: SubscribeFromBalanceRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Subscribe to a tier by deducting from user's USD balance"""
+    user_id = current_user["user_id"]
+    
+    # Validate tier
+    valid_tiers = ["bronze", "silver", "gold", "diamond"]
+    if request.tier not in valid_tiers:
+        raise HTTPException(status_code=400, detail="Invalid tier")
+    
+    # Get current user data
+    user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    usd_balance = user.get("usd_balance", 0)
+    
+    if usd_balance < request.amount:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Insufficient balance. Available: ${usd_balance:.2f}, Required: ${request.amount:.2f}"
+        )
+    
+    # Calculate next billing date (1 month from now)
+    now = datetime.now(timezone.utc)
+    from dateutil.relativedelta import relativedelta
+    next_billing = (now + relativedelta(months=1)).isoformat()
+    
+    # Deduct balance and update subscription
+    new_usd_balance = usd_balance - request.amount
+    
+    # Update user in atomic operation
+    result = await db.users.update_one(
+        {"user_id": user_id, "usd_balance": usd_balance},  # Optimistic lock
+        {
+            "$set": {
+                "usd_balance": new_usd_balance,
+                "subscription_tier": request.tier,
+                "subscription_status": "active",
+                "subscription_started": now.isoformat(),
+                "subscription_next_billing": next_billing,
+                "subscription_payment_method": "balance",
+                "updated_at": now.isoformat()
+            }
+        }
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=409, detail="Balance changed during transaction. Please try again.")
+    
+    # Create subscription record
+    subscription_id = f"sub_{uuid.uuid4().hex[:12]}"
+    subscription = {
+        "subscription_id": subscription_id,
+        "user_id": user_id,
+        "tier": request.tier,
+        "status": "active",
+        "amount": request.amount,
+        "payment_method": "balance",
+        "started_at": now.isoformat(),
+        "next_billing": next_billing,
+        "retry_count": 0,
+        "created_at": now.isoformat()
+    }
+    
+    await db.subscriptions.insert_one(subscription)
+    
+    # Log the transaction
+    transaction_id = f"sub_balance_{uuid.uuid4().hex[:12]}"
+    await db.bl_transactions.insert_one({
+        "transaction_id": transaction_id,
+        "user_id": user_id,
+        "transaction_type": "subscription",
+        "tier": request.tier,
+        "amount_usd": request.amount,
+        "description": f"Subscribed to {request.tier.capitalize()} membership",
+        "status": "completed",
+        "created_at": now.isoformat()
+    })
+    
+    logger.info(f"Subscription from balance: {user_id} - {request.tier} for ${request.amount}")
+    
+    return {
+        "success": True,
+        "subscription_id": subscription_id,
+        "tier": request.tier,
+        "amount_charged": request.amount,
+        "new_usd_balance": new_usd_balance,
+        "next_billing_date": next_billing,
+        "subscription": {
+            "subscription_id": subscription_id,
+            "tier": request.tier,
+            "status": "active",
+            "next_billing": next_billing
+        }
+    }
+
+
+@stripe_router.get("/subscriptions/current")
+async def get_current_subscription(
+    current_user: dict = Depends(get_current_user)
+):
+    """Get user's current subscription status"""
+    user_id = current_user["user_id"]
+    
+    subscription = await db.subscriptions.find_one(
+        {"user_id": user_id, "status": "active"},
+        {"_id": 0}
+    )
+    
+    if not subscription:
+        # Check user record for legacy subscription
+        user = await db.users.find_one(
+            {"user_id": user_id},
+            {"_id": 0, "subscription_tier": 1, "subscription_status": 1, "subscription_next_billing": 1}
+        )
+        if user and user.get("subscription_tier") and user.get("subscription_tier") != "free":
+            return {
+                "tier": user.get("subscription_tier"),
+                "status": user.get("subscription_status", "active"),
+                "next_billing": user.get("subscription_next_billing")
+            }
+        raise HTTPException(status_code=404, detail="No active subscription")
+    
+    return subscription
+
+
+@stripe_router.post("/subscriptions/cancel")
+async def cancel_subscription(
+    current_user: dict = Depends(get_current_user)
+):
+    """Cancel user's subscription (effective at end of billing period)"""
+    user_id = current_user["user_id"]
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Update subscription
+    result = await db.subscriptions.update_one(
+        {"user_id": user_id, "status": "active"},
+        {"$set": {
+            "status": "cancelled",
+            "cancelled_at": now,
+            "cancel_at_period_end": True
+        }}
+    )
+    
+    # Update user
+    await db.users.update_one(
+        {"user_id": user_id},
+        {"$set": {
+            "subscription_status": "cancelled",
+            "subscription_cancel_at_period_end": True,
+            "updated_at": now
+        }}
+    )
+    
+    return {"success": True, "message": "Subscription will be cancelled at the end of the billing period"}
+
+
 # ============== EXPORT ==============
 
 def get_stripe_router():
