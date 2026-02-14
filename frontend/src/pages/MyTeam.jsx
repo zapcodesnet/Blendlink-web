@@ -620,36 +620,83 @@ export default function MyTeam() {
           </div>
         </div>
 
-        {/* Commission Info */}
+        {/* Commission Info - Updated with Tier-Based Rates */}
         <div className="bg-muted/30 rounded-xl p-4">
           <h3 className="font-semibold mb-3">Commission Structure</h3>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <p className="text-muted-foreground mb-1">Regular Members</p>
+          <p className="text-xs text-muted-foreground mb-3">
+            Earn from your downlines' sales (% of 10% platform fee)
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+            {/* Free Members */}
+            <div className="bg-background/50 rounded-lg p-3">
+              <p className="text-muted-foreground mb-2 text-xs font-medium">Free</p>
               <div className="space-y-1">
                 <div className="flex justify-between">
-                  <span>Level 1</span>
-                  <span className="font-medium">3%</span>
+                  <span className="text-xs">L1</span>
+                  <span className="font-medium text-green-600">2%</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Level 2</span>
-                  <span className="font-medium">1%</span>
+                  <span className="text-xs">L2</span>
+                  <span className="font-medium text-green-600">1%</span>
                 </div>
               </div>
             </div>
-            <div>
-              <p className="text-muted-foreground mb-1 flex items-center gap-1">
-                <Crown className="w-3 h-3 text-yellow-500" />
-                Diamond Leaders
+            
+            {/* Bronze/Silver/Gold Members */}
+            <div className="bg-background/50 rounded-lg p-3">
+              <p className="text-muted-foreground mb-2 text-xs font-medium flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-amber-600"></span>
+                Bronze/Silver/Gold
               </p>
               <div className="space-y-1">
                 <div className="flex justify-between">
-                  <span>Level 1</span>
-                  <span className="font-medium text-yellow-600">4%</span>
+                  <span className="text-xs">L1</span>
+                  <span className="font-medium text-amber-600">3%</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Level 2</span>
-                  <span className="font-medium text-yellow-600">2%</span>
+                  <span className="text-xs">L2</span>
+                  <span className="font-medium text-amber-600">2%</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Diamond Members */}
+            <div className="bg-background/50 rounded-lg p-3 border border-cyan-200">
+              <p className="text-muted-foreground mb-2 text-xs font-medium flex items-center gap-1">
+                <Crown className="w-3 h-3 text-cyan-500" />
+                Diamond
+              </p>
+              <div className="space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-xs">L1</span>
+                  <span className="font-medium text-cyan-600">4%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-xs">L2</span>
+                  <span className="font-medium text-cyan-600">3%</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Tier Prices */}
+            <div className="bg-background/50 rounded-lg p-3">
+              <p className="text-muted-foreground mb-2 text-xs font-medium">Monthly Tiers</p>
+              <div className="space-y-1 text-xs">
+                <div className="flex justify-between">
+                  <span>Bronze</span>
+                  <span className="font-medium">$4.99</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Silver</span>
+                  <span className="font-medium">$9.99</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Gold</span>
+                  <span className="font-medium">$14.99</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Diamond</span>
+                  <span className="font-medium">$29.99</span>
                 </div>
               </div>
             </div>
