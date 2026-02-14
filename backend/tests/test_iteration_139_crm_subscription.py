@@ -10,7 +10,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://insufficient-balance.preview.emergentagent.com").rstrip("/")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://production-url-fix.preview.emergentagent.com").rstrip("/")
 TEST_PAGE_ID = "mpage_000a72b44296"
 
 
