@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 
 class BlendlinkAPITester:
-    def __init__(self, base_url: str = "https://core-bugs-patch.preview.emergentagent.com"):
+    def __init__(self, base_url: str = "https://blendlink-fixes.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.session = requests.Session()
