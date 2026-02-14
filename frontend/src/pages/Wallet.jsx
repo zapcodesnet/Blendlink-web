@@ -430,8 +430,8 @@ export default function Wallet() {
           return;
         }
         
-        // Subscribe from balance
-        const response = await api.post("/subscriptions/subscribe-from-balance", {
+        // Subscribe from balance - use correct endpoint
+        const response = await api.post("/payments/stripe/subscriptions/subscribe-from-balance", {
           tier: tierId,
           amount: tier.price
         });
