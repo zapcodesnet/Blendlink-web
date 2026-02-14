@@ -1002,7 +1002,7 @@ export default function AIListingCreator() {
         }
       }
       
-      toast.success('Listing published successfully!');
+      toast.success('Listing published successfully! 200 BL coins have been deducted.');
       setStep(4);
       
       setTimeout(() => {
@@ -1016,8 +1016,50 @@ export default function AIListingCreator() {
     }
   };
   
+  // Fee Confirmation Modal
+  const FeeConfirmationModal = () => (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70] p-4">
+      <div className="bg-card rounded-2xl p-6 w-full max-w-sm border border-border animate-in zoom-in-95">
+        <div className="text-center">
+          <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
+            <DollarSign className="w-8 h-8 text-amber-600" />
+          </div>
+          <h3 className="text-lg font-bold mb-2">Confirm Listing Fee</h3>
+          <p className="text-muted-foreground mb-4">
+            Creating this listing requires a fee of <strong className="text-foreground">{LISTING_FEE} BL coins</strong>.
+          </p>
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 text-sm text-amber-800">
+            This fee will be deducted from your BL coins wallet.
+          </div>
+          <div className="flex gap-3">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowFeeConfirmation(false)} 
+              className="flex-1"
+              disabled={isPublishing}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={publishListing} 
+              className="flex-1 bg-amber-500 hover:bg-amber-600"
+              disabled={isPublishing}
+              data-testid="confirm-fee-btn"
+            >
+              {isPublishing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Pay {LISTING_FEE} BL & Publish
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+  
   return (
     <div className="min-h-screen bg-background pb-20">
+      {/* Fee Confirmation Modal */}
+      {showFeeConfirmation && <FeeConfirmationModal />}
+      
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-lg border-b">
         <div className="max-w-2xl mx-auto px-4 py-3">
