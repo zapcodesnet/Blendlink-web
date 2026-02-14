@@ -180,7 +180,7 @@ class TestBLCoinsFromBalance(TestSetup):
     def test_purchase_coins_from_balance_requires_auth(self, api_client):
         """Test that purchasing coins requires authentication"""
         response = api_client.post(
-            f"{BASE_URL}/api/payments/bl-coins/purchase-from-balance",
+            f"{BASE_URL}/api/payments/stripe/bl-coins/purchase-from-balance",
             json={
                 "package_id": "pack_30k",
                 "quantity": 1,
@@ -198,7 +198,7 @@ class TestBLCoinsFromBalance(TestSetup):
         
         # Try to purchase with a large amount likely to exceed balance
         response = api_client.post(
-            f"{BASE_URL}/api/payments/bl-coins/purchase-from-balance",
+            f"{BASE_URL}/api/payments/stripe/bl-coins/purchase-from-balance",
             headers={"Authorization": f"Bearer {user_token}"},
             json={
                 "package_id": "pack_1m",
@@ -227,7 +227,7 @@ class TestSubscriptionFromBalance(TestSetup):
     def test_subscribe_from_balance_requires_auth(self, api_client):
         """Test that subscribing requires authentication"""
         response = api_client.post(
-            f"{BASE_URL}/api/payments/subscriptions/subscribe-from-balance",
+            f"{BASE_URL}/api/payments/stripe/subscriptions/subscribe-from-balance",
             json={
                 "tier": "bronze",
                 "amount": 4.99
@@ -242,7 +242,7 @@ class TestSubscriptionFromBalance(TestSetup):
             pytest.skip("No user token available")
         
         response = api_client.post(
-            f"{BASE_URL}/api/payments/subscriptions/subscribe-from-balance",
+            f"{BASE_URL}/api/payments/stripe/subscriptions/subscribe-from-balance",
             headers={"Authorization": f"Bearer {user_token}"},
             json={
                 "tier": "invalid_tier_xyz",
@@ -260,7 +260,7 @@ class TestCurrentSubscription(TestSetup):
     
     def test_get_current_subscription_requires_auth(self, api_client):
         """Test that getting subscription status requires authentication"""
-        response = api_client.get(f"{BASE_URL}/api/payments/subscriptions/current")
+        response = api_client.get(f"{BASE_URL}/api/payments/stripe/subscriptions/current")
         assert response.status_code == 401, f"Expected 401 without auth, got {response.status_code}"
         print("[Subscription Status] PASSED - No auth returns 401")
     
@@ -270,7 +270,7 @@ class TestCurrentSubscription(TestSetup):
             pytest.skip("No user token available")
         
         response = api_client.get(
-            f"{BASE_URL}/api/payments/subscriptions/current",
+            f"{BASE_URL}/api/payments/stripe/subscriptions/current",
             headers={"Authorization": f"Bearer {user_token}"}
         )
         
@@ -318,21 +318,21 @@ class TestAPIEndpointsAccessibility:
     
     def test_bl_coins_purchase_endpoint_exists(self):
         """Verify BL coins purchase from balance endpoint exists"""
-        response = requests.post(f"{BASE_URL}/api/payments/bl-coins/purchase-from-balance", json={})
-        assert response.status_code != 404, "Endpoint /api/payments/bl-coins/purchase-from-balance not found"
-        print(f"[Endpoint] /api/payments/bl-coins/purchase-from-balance exists (status: {response.status_code})")
+        response = requests.post(f"{BASE_URL}/api/payments/stripe/bl-coins/purchase-from-balance", json={})
+        assert response.status_code != 404, "Endpoint /api/payments/stripe/bl-coins/purchase-from-balance not found"
+        print(f"[Endpoint] /api/payments/stripe/bl-coins/purchase-from-balance exists (status: {response.status_code})")
     
     def test_subscribe_from_balance_endpoint_exists(self):
         """Verify subscribe from balance endpoint exists"""
-        response = requests.post(f"{BASE_URL}/api/payments/subscriptions/subscribe-from-balance", json={})
-        assert response.status_code != 404, "Endpoint /api/payments/subscriptions/subscribe-from-balance not found"
-        print(f"[Endpoint] /api/payments/subscriptions/subscribe-from-balance exists (status: {response.status_code})")
+        response = requests.post(f"{BASE_URL}/api/payments/stripe/subscriptions/subscribe-from-balance", json={})
+        assert response.status_code != 404, "Endpoint /api/payments/stripe/subscriptions/subscribe-from-balance not found"
+        print(f"[Endpoint] /api/payments/stripe/subscriptions/subscribe-from-balance exists (status: {response.status_code})")
     
     def test_current_subscription_endpoint_exists(self):
         """Verify current subscription endpoint exists"""
-        response = requests.get(f"{BASE_URL}/api/payments/subscriptions/current")
-        assert response.status_code != 404, "Endpoint /api/payments/subscriptions/current not found"
-        print(f"[Endpoint] /api/payments/subscriptions/current exists (status: {response.status_code})")
+        response = requests.get(f"{BASE_URL}/api/payments/stripe/subscriptions/current")
+        assert response.status_code != 404, "Endpoint /api/payments/stripe/subscriptions/current not found"
+        print(f"[Endpoint] /api/payments/stripe/subscriptions/current exists (status: {response.status_code})")
 
 
 if __name__ == "__main__":
