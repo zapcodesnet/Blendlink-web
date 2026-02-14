@@ -6,7 +6,40 @@
 
 ## ✅ COMPLETED FEATURES
 
-### 0. Commission Structure & Membership System Update (NEW - Feb 14, 2026)
+### 0. Critical URL Fix - Runtime Detection System (Feb 14, 2026)
+- **Status**: ✅ FIXED - Production Ready
+- **Issue**: Hardcoded preview URLs causing production instability (recurring issue 4+ times)
+- **Solution**: Centralized runtime URL detection via `runtimeConfig.js`
+
+#### 0.1 Changes Made
+- **Deleted**: `frontend/src/utils/config.js` (redundant file)
+- **Updated**: 60+ frontend files to use `getApiUrl()` from `runtimeConfig.js`
+- **Fixed**: `App.js` import to use `runtimeConfig.js` instead of deleted `config.js`
+
+#### 0.2 Runtime Detection Logic
+```javascript
+// Production domain detection
+if (hostname === 'blendlink.net' || hostname === 'www.blendlink.net') {
+  return 'https://blendlink.net';
+}
+// Preview/staging environments
+if (hostname.includes('.preview.emergentagent.com')) {
+  return `${protocol}//${hostname}`;
+}
+// Fallback
+return process.env.REACT_APP_BACKEND_URL || 'https://blendlink.net';
+```
+
+#### 0.3 Files Updated (60+)
+All frontend files now import `getApiUrl` from `../utils/runtimeConfig`:
+- All pages in `src/pages/*.jsx`
+- All admin pages in `src/pages/admin/*.jsx`
+- All game components in `src/components/game/*.jsx`
+- All member page components in `src/components/member-pages/*.jsx`
+- Services: `api.js`, `memberPagesApi.js`, `referralApi.js`, `mediaSalesApi.js`
+- Components: `BottomNav`, `MakeOfferModal`, `MedalShowcase`, `OrphanTrendsWidget`
+
+### 1. Commission Structure & Membership System Update (Feb 14, 2026)
 - **Status**: ✅ Production Ready - Tested & Verified
 - **Test Results**: 100% backend pass, 100% frontend verified
 
