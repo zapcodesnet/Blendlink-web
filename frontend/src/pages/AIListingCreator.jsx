@@ -588,7 +588,7 @@ const LocationShippingSection = ({ location, setLocation, shippingData, setShipp
 export default function AIListingCreator() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useContext(AuthContext);
+  const { user, setUser } = useContext(AuthContext);
   
   const [step, setStep] = useState(0);
   const [images, setImages] = useState([]);
@@ -609,6 +609,7 @@ export default function AIListingCreator() {
   const [categories, setCategories] = useState([]);
   const [shareToFeed, setShareToFeed] = useState(true); // ON by default per user preference
   const [showFeeConfirmation, setShowFeeConfirmation] = useState(false);
+  const [showTopUpModal, setShowTopUpModal] = useState(false);
   const [auctionSettings, setAuctionSettings] = useState({
     is_auction: false,
     duration: "1d",
@@ -620,6 +621,27 @@ export default function AIListingCreator() {
   });
   
   const LISTING_FEE = 200; // BL coins
+  const userBalance = user?.bl_coins || 0;
+
+  // Check if user just returned from coin purchase
+  useEffect(() => {
+    if (location.state?.coinsAdded) {
+      toast.success("Coins added! You can now publish your listing.");
+      // Re-fetch user data to get updated balance
+      fetchUserBalance();
+    }
+  }, [location.state]);
+
+  const fetchUserBalance = async () => {
+    try {
+      const balanceData = await api.wallet.getBalance();
+      if (balanceData && setUser) {
+        setUser(prev => ({ ...prev, bl_coins: balanceData.balance }));
+      }
+    } catch (err) {
+      console.error("Failed to fetch balance:", err);
+    }
+  };
   
   // Comprehensive list of target market countries (as requested by user)
   const TARGET_MARKET_COUNTRIES = [
