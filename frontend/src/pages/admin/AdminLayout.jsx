@@ -9,7 +9,8 @@ import {
   Settings, FileText, BarChart3, LogOut, Menu, X,
   ChevronRight, Home, Bell, Search, ZoomIn, ZoomOut,
   RotateCcw, Maximize2, FlaskConical, Wallet, Lock,
-  Crown, UserPlus, Code, Coins, Tag, Activity, Percent, DollarSign
+  Crown, UserPlus, Code, Coins, Tag, Activity, Percent, DollarSign,
+  Sliders, Gift, AlertTriangle
 } from "lucide-react";
 
 // Import admin components
@@ -35,6 +36,9 @@ import AdminMembershipTiers from "./AdminMembershipTiers";
 import AdminPromoCodes from "./AdminPromoCodes";
 import AdminTransactionMonitor from "./AdminTransactionMonitor";
 import AdminCommissionDashboard from "./AdminCommissionDashboard";
+import AdminCommissionControls from "./AdminCommissionControls";
+import AdminCustomBenefits from "./AdminCustomBenefits";
+import AdminFraudAnalytics from "./AdminFraudAnalytics";
 
 // Import real-time components
 import { useAdminWebSocket } from "../../hooks/useAdminWebSocket";
