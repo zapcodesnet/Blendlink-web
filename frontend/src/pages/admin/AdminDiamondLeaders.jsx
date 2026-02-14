@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "../../components/ui/button";
 import { toast } from "sonner";
+import { getApiUrl } from "../../utils/runtimeConfig";
 import { 
   Crown, Users, DollarSign, TrendingUp, Search, RefreshCw,
   ChevronUp, ChevronDown, AlertTriangle, CheckCircle, Clock,
   Award, Target, X, ArrowUpRight, ArrowDownRight
 } from "lucide-react";
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE = getApiUrl();
 
 // Safe fetch helper
 const safeFetch = async (url, options = {}) => {

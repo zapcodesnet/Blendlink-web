@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "../../components/ui/button";
 import { toast } from "sonner";
+import { getApiUrl } from "../../utils/runtimeConfig";
 import { 
   Users, UserPlus, UserMinus, Search, RefreshCw, 
   AlertTriangle, CheckCircle, Clock, ArrowRight, 
@@ -9,14 +10,7 @@ import {
 } from "lucide-react";
 import OrphanTrendsWidget from "../../components/OrphanTrendsWidget";
 
-// Runtime URL detection for production/preview environments
-const getApiBase = () => {
-  if (typeof window !== 'undefined' && window.location.hostname === 'blendlink.net') {
-    return 'https://blendlink.net';
-  }
-  return process.env.REACT_APP_BACKEND_URL || '';
-};
-const API_BASE = getApiBase();
+const API_BASE = getApiUrl();
 
 // Safe fetch helper - properly handles response body without double-read issues
 const safeFetch = async (url, options = {}) => {

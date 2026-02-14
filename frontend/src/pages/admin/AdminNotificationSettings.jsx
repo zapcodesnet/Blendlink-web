@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { toast } from "sonner";
+import { getApiUrl } from "../../utils/runtimeConfig";
 import { 
   Bell, BellOff, Shield, DollarSign, Users, Diamond,
   AlertTriangle, Clock, Moon, RefreshCw, Check, X,
@@ -12,7 +13,7 @@ import { usePushNotifications } from "../../hooks/usePushNotifications";
 
 // Note: Using local apiRequest instead of importing from AdminLayout to avoid circular dependency
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE = getApiUrl();
 
 const getToken = () => localStorage.getItem('blendlink_token');
 
