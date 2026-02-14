@@ -282,6 +282,144 @@ class PushNotificationService:
                 "screen": "PhotoGameArena"
             }
         )
+    
+    # ============== PAYMENT NOTIFICATIONS ==============
+    
+    async def notify_payment_successful(self, user_id: str, amount: float, payment_type: str, details: Dict = None):
+        """Notify user of successful payment"""
+        type_labels = {
+            "subscription": "Subscription",
+            "bl_coins": "BL Coins Purchase",
+            "order": "Order Payment",
+            "marketplace": "Marketplace Purchase"
+        }
+        label = type_labels.get(payment_type, "Payment")
+        
+        await self.send_notification(
+            user_id=user_id,
+            title="✅ Payment Successful",
+            body=f"Your {label} of ${amount:.2f} has been processed successfully!",
+            data={
+                "type": "payment_successful",
+                "payment_type": payment_type,
+                "amount": amount,
+                "screen": "Wallet",
+                **(details or {})
+            }
+        )
+    
+    async def notify_payment_failed(self, user_id: str, amount: float, payment_type: str, reason: str = None):
+        """Notify user of failed payment"""
+        type_labels = {
+            "subscription": "subscription",
+            "bl_coins": "BL coins purchase",
+            "order": "order payment",
+            "marketplace": "marketplace purchase"
+        }
+        label = type_labels.get(payment_type, "payment")
+        
+        body = f"Your {label} of ${amount:.2f} could not be processed."
+        if reason:
+            body += f" Reason: {reason}"
+        
+        await self.send_notification(
+            user_id=user_id,
+            title="❌ Payment Failed",
+            body=body,
+            data={
+                "type": "payment_failed",
+                "payment_type": payment_type,
+                "amount": amount,
+                "reason": reason,
+                "screen": "Wallet"
+            }
+        )
+    
+    async def notify_subscription_renewed(self, user_id: str, tier: str, amount: float, next_billing_date: str):
+        """Notify user of subscription renewal"""
+        await self.send_notification(
+            user_id=user_id,
+            title="🔄 Subscription Renewed",
+            body=f"Your {tier} membership has been renewed for ${amount:.2f}. Next billing: {next_billing_date}",
+            data={
+                "type": "subscription_renewed",
+                "tier": tier,
+                "amount": amount,
+                "next_billing_date": next_billing_date,
+                "screen": "Wallet"
+            }
+        )
+    
+    async def notify_subscription_cancelled(self, user_id: str, tier: str, end_date: str):
+        """Notify user of subscription cancellation"""
+        await self.send_notification(
+            user_id=user_id,
+            title="📋 Subscription Cancelled",
+            body=f"Your {tier} membership will end on {end_date}. You can resubscribe anytime!",
+            data={
+                "type": "subscription_cancelled",
+                "tier": tier,
+                "end_date": end_date,
+                "screen": "Subscriptions"
+            }
+        )
+    
+    async def notify_subscription_retry(self, user_id: str, tier: str, retry_count: int, next_retry_date: str):
+        """Notify user about payment retry for subscription"""
+        await self.send_notification(
+            user_id=user_id,
+            title="⚠️ Payment Retry Scheduled",
+            body=f"We couldn't renew your {tier} membership. We'll retry on {next_retry_date}. Please update your payment method.",
+            data={
+                "type": "subscription_retry",
+                "tier": tier,
+                "retry_count": retry_count,
+                "next_retry_date": next_retry_date,
+                "screen": "Wallet"
+            }
+        )
+    
+    async def notify_withdrawal_success(self, user_id: str, amount: float, net_amount: float):
+        """Notify user of successful withdrawal"""
+        await self.send_notification(
+            user_id=user_id,
+            title="💰 Withdrawal Processed",
+            body=f"${net_amount:.2f} has been transferred to your bank account (after 3% fee from ${amount:.2f}).",
+            data={
+                "type": "withdrawal_success",
+                "gross_amount": amount,
+                "net_amount": net_amount,
+                "screen": "Wallet"
+            }
+        )
+    
+    async def notify_withdrawal_failed(self, user_id: str, amount: float, reason: str):
+        """Notify user of failed withdrawal"""
+        await self.send_notification(
+            user_id=user_id,
+            title="❌ Withdrawal Failed",
+            body=f"Your withdrawal of ${amount:.2f} could not be processed. {reason}",
+            data={
+                "type": "withdrawal_failed",
+                "amount": amount,
+                "reason": reason,
+                "screen": "Wallet"
+            }
+        )
+    
+    async def notify_bl_coins_credited(self, user_id: str, coins: int, source: str):
+        """Notify user of BL coins credited to their account"""
+        await self.send_notification(
+            user_id=user_id,
+            title="🪙 BL Coins Credited!",
+            body=f"{coins:,} BL Coins have been added to your wallet from {source}!",
+            data={
+                "type": "bl_coins_credited",
+                "coins": coins,
+                "source": source,
+                "screen": "Wallet"
+            }
+        )
 
 
 # ============== API ROUTES ==============
