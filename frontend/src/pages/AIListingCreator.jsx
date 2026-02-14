@@ -1100,6 +1100,16 @@ export default function AIListingCreator() {
       {/* Fee Confirmation Modal */}
       {showFeeConfirmation && <FeeConfirmationModal />}
       
+      {/* Top Up Coins Modal */}
+      <TopUpCoinsModal
+        isOpen={showTopUpModal}
+        onClose={() => setShowTopUpModal(false)}
+        currentBalance={userBalance}
+        requiredAmount={LISTING_FEE}
+        returnUrl="/ai-listing-creator"
+        returnState={{ step, aiData, images: images.map(i => i.preview) }}
+      />
+      
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-lg border-b">
         <div className="max-w-2xl mx-auto px-4 py-3">
