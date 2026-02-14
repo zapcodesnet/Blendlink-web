@@ -393,16 +393,18 @@ export default function Wallet() {
         toast.success(`Successfully purchased ${totalCoins.toLocaleString()} BL coins!`);
         fetchWalletData();
       } else {
-        // Use Stripe checkout
-        const response = await api.post("/stripe/create-checkout-session-coins", {
-          package_id: pkg.id,
-          quantity: quantity,
-          amount_cents: Math.round(totalPrice * 100),
-          coins: totalCoins
+        // Use Stripe checkout for BL coins - correct endpoint
+        const response = await api.post("/payments/stripe/bl-coins/checkout", {
+          tier_id: pkg.id,
+          amount_usd: totalPrice,
+          coins_amount: totalCoins,
+          origin_url: window.location.origin
         });
         
         if (response.data?.url) {
           window.location.href = response.data.url;
+        } else {
+          throw new Error('No checkout URL received');
         }
       }
     } catch (error) {
