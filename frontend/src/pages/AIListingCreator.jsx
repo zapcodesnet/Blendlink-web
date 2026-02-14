@@ -1119,6 +1119,17 @@ export default function AIListingCreator() {
   
   return (
     <div className="min-h-screen bg-background pb-20">
+      {/* Stripe Onboarding Prompt */}
+      <StripeOnboardingPrompt
+        isOpen={showPrompt}
+        onClose={() => {
+          closePrompt();
+          setPendingSubmit(false);
+        }}
+        onComplete={handleStripeComplete}
+        isFirstListing={isFirstListing}
+      />
+      
       {/* Fee Confirmation Modal */}
       {showFeeConfirmation && <FeeConfirmationModal />}
       
