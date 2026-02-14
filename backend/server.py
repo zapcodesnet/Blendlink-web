@@ -300,6 +300,20 @@ async def get_current_user(request: Request) -> dict:
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
+async def get_current_user_from_token(token: str) -> dict:
+    """Helper function to get user from token string directly (for use in other modules)"""
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        user_id = payload.get("user_id")
+        if not user_id:
+            return None
+        user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+        return user
+    except JWTError:
+        return None
+
 # ============== AUTH ROUTES ==============
 @auth_router.post("/register")
 async def register(data: UserCreate, response: Response):
