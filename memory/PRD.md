@@ -6,11 +6,52 @@
 
 ## ✅ COMPLETED FEATURES
 
-### 0. Listing Fee System (NEW - Feb 14, 2026)
+### 0. Top Up BL Coins System (NEW - Feb 14, 2026)
+- **Status**: ✅ Production Ready - Tested & Verified
+- **Test Results**: 100% backend pass (12/12 tests), 100% frontend verified
+
+#### 0.1 Feature Overview
+| Feature | Description |
+|---------|-------------|
+| Top Up Modal | Appears when user has insufficient balance (<200 BL) during listing creation |
+| 4 Pricing Tiers | $4.99/30K, $9.99/80K, $14.99/400K, $29.99/1M BL coins |
+| Stripe Integration | Uses existing Stripe live mode checkout |
+| Receipt Email | Confirmation email sent after successful purchase |
+| Auto-redirect | Returns user to continue listing creation after purchase |
+
+#### 0.2 Pricing Tiers
+| Tier ID | Price | BL Coins | Description |
+|---------|-------|----------|-------------|
+| starter | $4.99 | 30,000 | Starter Pack (~150 listings) |
+| popular | $9.99 | 80,000 | Popular - Best Value (~400 listings) |
+| premium | $14.99 | 400,000 | Premium (~2,000 listings) |
+| ultimate | $29.99 | 1,000,000 | Ultimate (~5,000 listings) |
+
+#### 0.3 New API Endpoints
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/payments/stripe/bl-coins/checkout` | POST | Create Stripe checkout session for coin purchase |
+| `/api/payments/stripe/bl-coins/status/{session_id}` | GET | Check purchase status and credit coins |
+
+#### 0.4 New/Modified Files
+- `/app/frontend/src/components/TopUpCoinsModal.jsx` - Reusable modal component
+- `/app/frontend/src/pages/CoinsPurchaseSuccess.jsx` - Success page after Stripe checkout
+- `/app/frontend/src/pages/CreateListing.jsx` - Added showTopUpModal trigger
+- `/app/frontend/src/pages/AIListingCreator.jsx` - Added showTopUpModal trigger
+- `/app/frontend/src/components/member-pages/MemberPageDashboard.jsx` - Added showTopUpModal to AddItemModal
+- `/app/backend/stripe_payments.py` - Added BL coins checkout and status endpoints
+- `/app/backend/server.py` - Added get_current_user_from_token helper
+
+#### 0.5 Database Collections Used
+- `bl_coins_purchases` - Stores purchase records with session IDs
+- `bl_transactions` - Transaction history for coin credits
+- `users` - User balance (bl_coins field)
+
+### 1. Listing Fee System (Feb 14, 2026)
 - **Status**: ✅ Production Ready - Tested & Verified
 - **Test Results**: 73% backend pass (isolation issues), 100% frontend verified
 
-#### 0.1 Feature Overview
+#### 1.1 Feature Overview
 | Feature | Description |
 |---------|-------------|
 | Listing Fee | 200 BL coins charged per new listing |
@@ -18,7 +59,7 @@
 | Insufficient Balance | Returns 400 error with clear message |
 | Transaction Recording | Fee recorded in `bl_transactions` collection |
 
-#### 0.2 Scope - Where Fee Applies
+#### 1.2 Scope - Where Fee Applies
 | Location | Endpoint | Component |
 |----------|----------|-----------|
 | Marketplace | POST /api/marketplace/listings | CreateListing.jsx |
@@ -28,12 +69,12 @@
 | Member Pages - Services | POST /api/page-services/{page_id} | MemberPageDashboard.jsx |
 | Member Pages - Rentals | POST /api/page-rentals/{page_id} | MemberPageDashboard.jsx |
 
-#### 0.3 API Endpoint
+#### 1.3 API Endpoint
 | Endpoint | Method | Response |
 |----------|--------|----------|
 | `/api/marketplace/listing-fee` | GET | `{fee: 200, currency: "BL coins", description: "..."}` |
 
-#### 0.4 Files Modified
+#### 1.4 Files Modified
 - `/app/backend/server.py` - Added LISTING_FEE_BL_COINS constant and fee check in create_listing
 - `/app/backend/member_pages_system.py` - Added check_and_deduct_listing_fee helper function
 - `/app/backend/marketplace_system.py` - Added fee deduction to MarketplaceService.create_listing()
@@ -41,17 +82,17 @@
 - `/app/frontend/src/pages/AIListingCreator.jsx` - Added FeeConfirmationModal component
 - `/app/frontend/src/components/member-pages/MemberPageDashboard.jsx` - Added fee confirmation to AddItemModal
 
-### 1. Stripe Live Payment System (VERIFIED)
+### 2. Stripe Live Payment System (VERIFIED)
 - **Status**: Production Ready
 - **Live Payment E2E Tested**: $1.00 charged successfully
 - **Session ID**: `cs_live_a1P7XqTirKcRYUBSjmqMCakNxW7IavKQsnwhqcBrieelSUGG0ti41iV3PE`
 - **All 9 backend files** force-implemented with hardcoded LIVE keys
 
-### 2. Mobile UI Fix for Member Pages (NEW - Feb 13, 2026)
+### 3. Mobile UI Fix for Member Pages (Feb 13, 2026)
 - **Status**: ✅ Fixed & Verified
 - **Test Results**: 100% frontend pass
 
-#### 2.1 Bug Fixed
+#### 3.1 Bug Fixed
 | Bug | Fix Applied |
 |-----|-------------|
 | Add Menu Item/Product buttons blocked by bottom nav on mobile | Increased container padding from pb-24 (96px) to pb-32 (128px) |
@@ -60,20 +101,20 @@
 | No close button on mobile modal | Added X button to modal header for mobile users |
 | Safe area issues on notched phones | Added `paddingBottom: env(safe-area-inset-bottom)` to modal |
 
-#### 2.2 Files Modified
+#### 3.2 Files Modified
 - `/app/frontend/src/components/member-pages/MemberPageDashboard.jsx`
 
-### 3. Runtime URL Detection System (NEW - Feb 13, 2026)
+### 4. Runtime URL Detection System (Feb 13, 2026)
 - **Status**: ✅ Implemented & Verified
 - **Purpose**: Prevent production builds from using preview URLs
 
-#### 3.1 Problem Solved
+#### 4.1 Problem Solved
 | Issue | Solution |
 |-------|----------|
 | Preview URLs baked into production builds | Runtime hostname detection: `window.location.hostname === 'blendlink.net'` |
 | Multiple files had hardcoded process.env.REACT_APP_BACKEND_URL | Centralized utility `/app/frontend/src/utils/runtimeConfig.js` |
 
-#### 3.2 New Utility: runtimeConfig.js
+#### 4.2 New Utility: runtimeConfig.js
 ```javascript
 getApiUrl()      // Returns correct API base URL
 getWsUrl()       // Returns correct WebSocket URL
