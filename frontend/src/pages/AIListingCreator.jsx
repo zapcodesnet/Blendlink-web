@@ -6,6 +6,8 @@ import { Input } from "../components/ui/input";
 import { Switch } from "../components/ui/switch";
 import { toast } from "sonner";
 import AuctionSettingsForm from "../components/AuctionSettingsForm";
+import TopUpCoinsModal from "../components/TopUpCoinsModal";
+import api from "../services/api";
 import { 
   Camera, Upload, Sparkles, DollarSign, Tag, FileText, 
   ChevronRight, ChevronLeft, Check, Loader2, Image as ImageIcon,
