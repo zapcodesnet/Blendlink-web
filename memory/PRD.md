@@ -6,11 +6,57 @@
 
 ## ✅ COMPLETED FEATURES
 
-### 0. Top Up BL Coins System (NEW - Feb 14, 2026)
+### 0. Commission Structure & Membership System Update (NEW - Feb 14, 2026)
+- **Status**: ✅ Production Ready - Tested & Verified
+- **Test Results**: 100% backend pass, 100% frontend verified
+
+#### 0.1 Tier-Based Commission Rates
+| Membership Tier | Monthly Price | L1 Rate | L2 Rate | Platform Keeps |
+|-----------------|---------------|---------|---------|----------------|
+| Free | $0 | 2% | 1% | 7% |
+| Bronze | $4.99 | 3% | 2% | 5% |
+| Silver | $9.99 | 3% | 2% | 5% |
+| Gold | $14.99 | 3% | 2% | 5% |
+| Diamond | $29.99 | 4% | 3% | 3% |
+
+#### 0.2 Membership Benefits by Tier
+| Tier | Daily Mints | Daily BL Claim | XP Multiplier | Max Pages |
+|------|-------------|----------------|---------------|-----------|
+| Free | 5 | 2,000 | 1x | 1 |
+| Bronze | 20 | 15,000 | 2x | 3 |
+| Silver | 50 | 40,000 | 3x | 10 |
+| Gold | 150 | 200,000 | 4x | 25 |
+| Diamond | Unlimited | 500,000 | 5x | Unlimited |
+
+#### 0.3 Key Changes
+- **Platform Fee**: 10% on all sales (marketplace, member pages)
+- **Commission Distribution**: Based on upline's subscription tier (not seller's)
+- **Diamond replaces Platinum**: $29.99/month with 4%/3% commission rates
+- **Withdrawal Fee**: Changed from 1% to **3%**
+- **Page Creation**: Changed from +40 BL reward to **-2,000 BL fee**
+
+#### 0.4 New Endpoints
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/payments/stripe/connect/status` | GET | Check Stripe Connect account status |
+| `/api/payments/stripe/connect/onboard` | POST | Create Stripe Connect onboarding link |
+| `/api/payments/stripe/withdraw` | POST | Withdraw earnings to Stripe (3% fee) |
+
+#### 0.5 Modified Files
+- `backend/subscription_tiers.py` - Updated tiers with commission rates
+- `backend/referral_system.py` - Tier-based commission calculation, 3% withdrawal fee
+- `backend/bl_rewards.py` - Tier-based downline rates
+- `backend/social_system.py` - Page creation with 2,000 BL fee
+- `backend/stripe_payments.py` - Stripe Connect & withdrawal endpoints
+- `frontend/src/pages/MyTeam.jsx` - Updated commission structure display
+- `frontend/src/pages/Wallet.jsx` - Added withdrawal section with Stripe Connect
+- `frontend/src/pages/Pages.jsx` - Page creation with 2,000 BL fee
+
+### 1. Top Up BL Coins System (Feb 14, 2026)
 - **Status**: ✅ Production Ready - Tested & Verified
 - **Test Results**: 100% backend pass (12/12 tests), 100% frontend verified
 
-#### 0.1 Feature Overview
+#### 1.1 Feature Overview
 | Feature | Description |
 |---------|-------------|
 | Top Up Modal | Appears when user has insufficient balance (<200 BL) during listing creation |
@@ -19,7 +65,7 @@
 | Receipt Email | Confirmation email sent after successful purchase |
 | Auto-redirect | Returns user to continue listing creation after purchase |
 
-#### 0.2 Pricing Tiers
+#### 1.2 Pricing Tiers
 | Tier ID | Price | BL Coins | Description |
 |---------|-------|----------|-------------|
 | starter | $4.99 | 30,000 | Starter Pack (~150 listings) |
@@ -27,13 +73,13 @@
 | premium | $14.99 | 400,000 | Premium (~2,000 listings) |
 | ultimate | $29.99 | 1,000,000 | Ultimate (~5,000 listings) |
 
-#### 0.3 New API Endpoints
+#### 1.3 New API Endpoints
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/payments/stripe/bl-coins/checkout` | POST | Create Stripe checkout session for coin purchase |
 | `/api/payments/stripe/bl-coins/status/{session_id}` | GET | Check purchase status and credit coins |
 
-#### 0.4 New/Modified Files
+#### 1.4 New/Modified Files
 - `/app/frontend/src/components/TopUpCoinsModal.jsx` - Reusable modal component
 - `/app/frontend/src/pages/CoinsPurchaseSuccess.jsx` - Success page after Stripe checkout
 - `/app/frontend/src/pages/CreateListing.jsx` - Added showTopUpModal trigger
@@ -42,12 +88,12 @@
 - `/app/backend/stripe_payments.py` - Added BL coins checkout and status endpoints
 - `/app/backend/server.py` - Added get_current_user_from_token helper
 
-#### 0.5 Database Collections Used
+#### 1.5 Database Collections Used
 - `bl_coins_purchases` - Stores purchase records with session IDs
 - `bl_transactions` - Transaction history for coin credits
 - `users` - User balance (bl_coins field)
 
-### 1. Listing Fee System (Feb 14, 2026)
+### 2. Listing Fee System (Feb 14, 2026)
 - **Status**: ✅ Production Ready - Tested & Verified
 - **Test Results**: 73% backend pass (isolation issues), 100% frontend verified
 
