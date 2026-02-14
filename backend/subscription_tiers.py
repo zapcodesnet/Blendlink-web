@@ -403,6 +403,9 @@ class SubscriptionService:
             )
             price_id = price.id
             logger.info(f"Created dynamic price {price_id} for tier {tier}")
+        except Exception as e:
+            logger.error(f"Failed to create Stripe price for tier {tier}: {e}")
+            raise HTTPException(status_code=500, detail=f"Unable to process subscription. Please try again later.")
         
         # Get or create Stripe customer
         user = await self.db.users.find_one({"user_id": user_id}, {"_id": 0})
