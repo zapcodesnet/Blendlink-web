@@ -350,7 +350,7 @@ export const BattleReplayViewer = ({
     
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_BACKEND_URL}/api/photo-game/battle-replay/${replay.replay_id}/export-video?quality=high`,
+        `${API_BASE_URL}/api/photo-game/battle-replay/${replay.replay_id}/export-video?quality=high`,
         { method: 'GET' }
       );
       
@@ -381,7 +381,7 @@ export const BattleReplayViewer = ({
     try {
       const token = localStorage.getItem('blendlink_token');
       const response = await fetch(
-        `${process.env.REACT_APP_BACKEND_URL}/api/photo-game/battle-replay/${replay.replay_id}/generate-gif`,
+        `${API_BASE_URL}/api/photo-game/battle-replay/${replay.replay_id}/generate-gif`,
         { 
           method: 'POST',
           headers: {
