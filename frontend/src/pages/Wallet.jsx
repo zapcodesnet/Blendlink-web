@@ -701,7 +701,15 @@ export default function Wallet() {
           {/* Enhanced Daily Claim Button */}
           <Button 
             className={`w-full mt-4 ${
-              isDiamond 
+              user?.subscription_tier === 'diamond'
+                ? 'bg-cyan-400/30 hover:bg-cyan-400/40 text-white border border-cyan-300/30'
+                : user?.subscription_tier === 'gold'
+                ? 'bg-yellow-400/30 hover:bg-yellow-400/40 text-white border border-yellow-300/30'
+                : user?.subscription_tier === 'silver'
+                ? 'bg-gray-400/30 hover:bg-gray-400/40 text-white border border-gray-300/30'
+                : user?.subscription_tier === 'bronze'
+                ? 'bg-amber-400/30 hover:bg-amber-400/40 text-white border border-amber-300/30'
+                : isDiamond 
                 ? 'bg-yellow-400/30 hover:bg-yellow-400/40 text-white border border-yellow-300/30' 
                 : 'bg-white/20 hover:bg-white/30 text-white'
             }`}
@@ -713,7 +721,15 @@ export default function Wallet() {
               <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
             ) : (
               <>
-                {isDiamond ? <Crown className="w-4 h-4 mr-2" /> : <Gift className="w-4 h-4 mr-2" />}
+                {user?.subscription_tier && user?.subscription_tier !== 'free' ? (
+                  MEMBERSHIP_TIERS[user.subscription_tier] ? 
+                    React.createElement(MEMBERSHIP_TIERS[user.subscription_tier].icon, { className: "w-4 h-4 mr-2" }) :
+                    <Gift className="w-4 h-4 mr-2" />
+                ) : isDiamond ? (
+                  <Crown className="w-4 h-4 mr-2" />
+                ) : (
+                  <Gift className="w-4 h-4 mr-2" />
+                )}
               </>
             )}
             {canClaim ? (
@@ -723,7 +739,15 @@ export default function Wallet() {
             )}
           </Button>
           
-          {isDiamond && (
+          {/* Subscription tier bonus indicator */}
+          {user?.subscription_tier && user?.subscription_tier !== 'free' && (
+            <p className="text-center text-white/70 text-xs mt-2 flex items-center justify-center gap-1">
+              <Sparkles className="w-3 h-3" />
+              {user.subscription_tier.charAt(0).toUpperCase() + user.subscription_tier.slice(1)} Member: {claimAmount.toLocaleString()} BL daily
+            </p>
+          )}
+          
+          {isDiamond && !user?.subscription_tier && (
             <p className="text-center text-yellow-200/70 text-xs mt-2 flex items-center justify-center gap-1">
               <Sparkles className="w-3 h-3" />
               Diamond Leader Bonus: +3,000 BL daily
