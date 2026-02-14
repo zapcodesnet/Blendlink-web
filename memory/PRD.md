@@ -191,6 +191,113 @@
   - **MyTeam.jsx**: Added Membership Status section showing commission rates based on tier
   - **MintedPhotos.jsx**: Added XP Multiplier stat card showing tier bonus (x2-x5)
 
+### 4.5 Real-Time Commission Adjustments (Dec 22, 2025)
+- **Status**: ✅ Implemented - TESTED & VERIFIED
+- **Files**: 
+  - Backend: `admin_membership_system.py` (commission adjustment endpoints)
+  - Frontend: `AdminCommissionControls.jsx`
+- **Test Results**: 100% pass rate
+
+#### 4.5.1 Individual Commission Adjustments
+| Feature | Description |
+|---------|-------------|
+| Adjustment Types | Percentage (+/-), Fixed amount (+/-), Override value |
+| Target | User ID or Transaction ID |
+| Apply to Future | Option to apply adjustment to all future commissions |
+| User Notification | Optional notification to affected user |
+| Audit Logging | Full audit trail in `admin_audit_logs` collection |
+
+#### 4.5.2 Global Commission Overrides
+| Feature | Description |
+|---------|-------------|
+| L1/L2 Rate Override | Override L1 and L2 commission rates globally |
+| Affected Tiers | Select which tiers (free/bronze/silver/gold/diamond) are affected |
+| Expiration | Optional expiration date for automatic deactivation |
+| History | Full history of all global overrides |
+
+#### 4.5.3 Admin Endpoints
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/admin/membership/commissions/adjust` | POST | Create commission adjustment |
+| `/api/admin/membership/commissions/global-override` | POST | Create global override |
+| `/api/admin/membership/commissions/global-override` | GET | Get active override & history |
+| `/api/admin/membership/commissions/global-override/{id}` | DELETE | Remove global override |
+| `/api/admin/membership/commissions/adjustments` | GET | Get adjustment history |
+
+### 4.6 Custom Membership Benefits (Dec 22, 2025)
+- **Status**: ✅ Implemented - TESTED & VERIFIED
+- **Files**:
+  - Backend: `admin_membership_system.py` (custom benefits endpoints)
+  - Frontend: `AdminCustomBenefits.jsx`
+- **Test Results**: 100% pass rate
+
+#### 4.6.1 Benefit Configuration
+| Feature | Description |
+|---------|-------------|
+| Benefit Types | Numeric, Boolean, Text, Percentage |
+| Per-Tier Values | Custom value for each tier (free/bronze/silver/gold/diamond) |
+| Icon Selection | Choose from star, zap, crown, shield, gift, sparkles, etc. |
+| Display Order | Control order of benefits in UI |
+
+#### 4.6.2 Admin Endpoints
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/admin/membership/custom-benefits` | GET | Get all custom benefits |
+| `/api/admin/membership/custom-benefits` | POST | Create new benefit |
+| `/api/admin/membership/custom-benefits/{id}` | PUT | Update benefit |
+| `/api/admin/membership/custom-benefits/{id}` | DELETE | Delete benefit |
+| `/api/admin/membership/custom-benefits/{id}/tier-value` | PUT | Update specific tier value |
+
+### 4.7 Advanced Fraud Analytics (Dec 22, 2025)
+- **Status**: ✅ Implemented - TESTED & VERIFIED
+- **Files**:
+  - Backend: `suspicious_transaction_detector.py` (21 detection rules, analytics)
+  - Backend: `server.py` (fraud detection endpoints)
+  - Frontend: `AdminFraudAnalytics.jsx`
+- **Test Results**: 100% pass rate (21 rules verified)
+
+#### 4.7.1 ML-Inspired Detection Rules (21 Total)
+| Category | Rules |
+|----------|-------|
+| Velocity | high_frequency_transactions, rapid_withdrawals, velocity_acceleration |
+| Amount | large_single_transaction, large_daily_volume, sudden_balance_spike, amount_structuring, round_amount_pattern |
+| Commission | self_referral_pattern, commission_farming |
+| Account | new_account_large_transaction, dormant_account_activation |
+| Statistical | statistical_amount_anomaly (Z-score), unusual_time_pattern |
+| Network | cluster_activity_pattern, low_recipient_diversity, high_risk_beneficiary, multi_account_device, impossible_travel, layering_pattern |
+| Testing Pattern | excessive_failed_attempts |
+
+#### 4.7.2 User Risk Scoring
+| Factor | Weight | Description |
+|--------|--------|-------------|
+| Account Age | 15% | Newer accounts = higher risk |
+| Previous Flags | 25% | Past flagged transactions |
+| Transaction Velocity | 15% | Recent transaction frequency |
+| Commission Hold | 20% | Whether user has commissions on hold |
+| Verification Status | 15% | ID and email verification |
+| Referral Quality | 10% | Quality of referred users |
+
+#### 4.7.3 Analytics Dashboard Features
+- Summary metrics: total transactions, flagged count, flag rate
+- Severity distribution pie chart
+- Top rules triggered bar chart
+- Daily fraud trend area chart
+- Top flagged users table
+- Peak fraud hour identification
+- Rule enable/disable controls
+- User risk score calculator
+
+#### 4.7.4 Admin Endpoints
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/admin/fraud-detection/rules` | GET | Get all detection rules |
+| `/api/admin/fraud-detection/rules/{id}` | PUT | Update rule settings |
+| `/api/admin/fraud-detection/scan` | POST | Trigger fraud scan |
+| `/api/admin/fraud-detection/analyze/{txn_id}` | POST | Analyze single transaction |
+| `/api/admin/fraud-detection/analytics` | GET | Get comprehensive analytics |
+| `/api/admin/fraud-detection/user-risk/{user_id}` | GET | Calculate user risk score |
+| `/api/admin/fraud-detection/batch-risk-scores` | POST | Calculate batch risk scores |
+
 ### 5. Commission Structure & Membership System (Feb 14, 2026)
 - **Status**: ✅ Production Ready - Tested & Verified
 - **Test Results**: 100% backend pass, 100% frontend verified
