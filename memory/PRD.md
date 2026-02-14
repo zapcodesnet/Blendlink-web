@@ -169,7 +169,7 @@ Both web and mobile share the same backend API, ensuring 100% sync:
 ## 🔧 DEPLOYMENT STATUS
 
 ### Preview Environment
-- URL: `https://orphan-dashboard.preview.emergentagent.com`
+- URL: `https://listing-payment.preview.emergentagent.com`
 - **Stripe**: LIVE mode ✅
 - **Orphan System**: Working ✅ (91 orphans, 15 eligible parents)
 - **Scheduler**: Running (6h auto-assign, daily cleanup) ✅
