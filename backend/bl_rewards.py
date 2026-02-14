@@ -15,14 +15,14 @@ logger = logging.getLogger(__name__)
 
 # ============== REWARD CONSTANTS ==============
 class ContentReward(Enum):
-    """BL coin rewards for content actions"""
+    """BL coin rewards/fees for content actions"""
     POST_VIDEO = 50
     POST_STORY = 50
     POST_MUSIC = 30
     POST_PHOTO = 20
     CREATE_EVENT = 20
     CREATE_GROUP = 40
-    CREATE_PAGE = 40
+    CREATE_PAGE = -2000  # Changed to FEE (negative = charge)
     PAGE_SUBSCRIBE = 10  # Both subscriber and owner get this
     SHARE_POST = 10
     REACTION_GIVEN = 10
