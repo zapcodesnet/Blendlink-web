@@ -176,6 +176,7 @@ export default function Wallet() {
     fetchDailyClaimStatus();
     fetchTeamEarnings(0);
     fetchPersonalEarnings(0);
+    fetchStripeStatus();
     
     // Fallback polling for new earnings (every 60 seconds) when WebSocket not connected
     const interval = setInterval(() => {
@@ -200,6 +201,88 @@ export default function Wallet() {
       console.error("Wallet error:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Stripe Connect status check
+  const fetchStripeStatus = async () => {
+    setLoadingStripeStatus(true);
+    try {
+      const response = await api.get("/payments/stripe/connect/status");
+      const data = response.data;
+      setStripeConnected(data.is_connected && data.charges_enabled);
+      if (!data.is_connected && data.onboarding_url) {
+        setStripeOnboardingUrl(data.onboarding_url);
+      }
+    } catch (error) {
+      console.error("Stripe status error:", error);
+      setStripeConnected(false);
+    } finally {
+      setLoadingStripeStatus(false);
+    }
+  };
+
+  // Start Stripe onboarding
+  const handleStripeOnboarding = async () => {
+    try {
+      const response = await api.post("/payments/stripe/connect/onboard");
+      const data = response.data;
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      toast.error("Failed to start Stripe onboarding");
+    }
+  };
+
+  // Handle withdrawal
+  const handleWithdraw = async () => {
+    const amount = parseFloat(withdrawAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+
+    const availableBalance = balance?.usd_balance || 0;
+    if (amount > availableBalance) {
+      toast.error(`Insufficient balance. Available: $${availableBalance.toFixed(2)}`);
+      return;
+    }
+
+    if (amount < 10) {
+      toast.error("Minimum withdrawal is $10.00");
+      return;
+    }
+
+    if (!stripeConnected) {
+      toast.error("Please connect your Stripe account first");
+      return;
+    }
+
+    setWithdrawing(true);
+    try {
+      const response = await api.post("/payments/stripe/withdraw", {
+        amount: amount
+      });
+      const data = response.data;
+      
+      toast.success(
+        <div>
+          <p className="font-medium">Withdrawal Submitted!</p>
+          <p className="text-sm">Amount: ${data.amount.toFixed(2)}</p>
+          <p className="text-sm">Fee (3%): ${data.fee.toFixed(2)}</p>
+          <p className="text-sm">Net: ${data.net_amount.toFixed(2)}</p>
+        </div>
+      );
+      
+      setShowWithdrawModal(false);
+      setWithdrawAmount('');
+      fetchWalletData();
+    } catch (error) {
+      const msg = error.response?.data?.detail || "Withdrawal failed";
+      toast.error(msg);
+    } finally {
+      setWithdrawing(false);
     }
   };
 
