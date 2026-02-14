@@ -4,6 +4,7 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { AuthContext } from "../App";
 import { toast } from "sonner";
+import { getApiUrl } from "../utils/runtimeConfig";
 import {
   Bell,
   BellOff,
@@ -25,7 +26,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE_URL = getApiUrl();
 
 // API helper
 const apiRequest = async (endpoint, options = {}) => {

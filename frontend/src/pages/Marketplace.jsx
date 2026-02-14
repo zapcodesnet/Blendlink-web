@@ -10,6 +10,7 @@ import CartIcon from "../components/CartIcon";
 import BottomNav from "../components/BottomNav";
 import BackToGroupFAB from "../components/BackToGroupFAB";
 import { toast } from "sonner";
+import { getApiUrl } from "../utils/runtimeConfig";
 import { 
   Search, Plus, Filter, Smartphone, Shirt, Home, Car, 
   Dumbbell, Download, Wrench, Package, ChevronRight, ShoppingBag,
@@ -18,7 +19,7 @@ import {
   CreditCard, Loader2, ArrowLeft
 } from "lucide-react";
 
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE_URL = getApiUrl();
 
 const categoryIcons = {
   electronics: Smartphone,

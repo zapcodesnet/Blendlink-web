@@ -7,8 +7,9 @@ import { Button } from "../components/ui/button";
 import { ArrowLeft, MessageCircle, Search, Plus, Users, X } from "lucide-react";
 import { Input } from "../components/ui/input";
 import { toast } from "sonner";
+import { getApiUrl } from "../utils/runtimeConfig";
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL;
+const API_BASE = getApiUrl();
 const getToken = () => localStorage.getItem("blendlink_token");
 
 export default function Messages() {

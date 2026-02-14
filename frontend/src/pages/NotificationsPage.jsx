@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { AuthContext } from "../App";
 import { toast } from "sonner";
+import { getApiUrl } from "../utils/runtimeConfig";
 import {
   Bell,
   ThumbsUp,
@@ -19,7 +20,7 @@ import {
   BellOff,
 } from "lucide-react";
 
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE_URL = getApiUrl();
 
 // API helper
 const apiRequest = async (endpoint, options = {}) => {
