@@ -721,6 +721,15 @@ export default function Pages() {
         <CreatePageModal
           onClose={() => setShowCreateModal(false)}
           onCreate={handleCreatePage}
+          userBalance={user?.bl_coins || 0}
+          userTier={user?.subscription_tier || "free"}
+          maxPages={
+            user?.subscription_tier === "diamond" ? 999999 :
+            user?.subscription_tier === "gold" ? 25 :
+            user?.subscription_tier === "silver" ? 10 :
+            user?.subscription_tier === "bronze" ? 3 : 1
+          }
+          currentPagesCount={myPages.length}
         />
       )}
     </div>
