@@ -435,6 +435,15 @@ Both web and mobile share the same backend API, ensuring 100% sync:
 
 ## 📝 CHANGELOG
 
+### February 14, 2026 (Latest)
+- ✅ **Subscription Scheduler System** - APScheduler with daily renewals at 3AM UTC and 6-hourly payment retries
+- ✅ **Stripe Onboarding Enforcement** - Integrated into AIListingCreator.jsx using checkAndPrompt
+- ✅ **Admin Dashboard** - Fully functional Membership Tiers, Promo Codes, Transaction Monitor pages
+- ✅ **Enhanced Wallet Page** - Top Up BL Coins and Membership Subscriptions sections permanently visible
+- ✅ **Payment Retry Logic** - 3 retries with fallback: Balance → Stripe → Saved Card → Downgrade
+- ✅ **User Notifications** - In-app + email notifications for subscription events
+- ✅ Test Results: 100% backend pass (13 passed), 100% frontend verified
+
 ### February 13, 2026 (Latest)
 - ✅ **NEW: Orphan Assignment Trends Widget** added to Admin Panel
   - Custom date range selector (7/14/30/90/180/365 days + custom)
