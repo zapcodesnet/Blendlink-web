@@ -555,6 +555,20 @@ const AddItemModal = ({ pageId, pageType, onClose, onSuccess, editItem = null })
 
   const labels = getLabels();
 
+  // Top Up Coins Modal (shown when balance insufficient)
+  if (showTopUpModal) {
+    return (
+      <TopUpCoinsModal
+        isOpen={showTopUpModal}
+        onClose={() => setShowTopUpModal(false)}
+        currentBalance={userBalance}
+        requiredAmount={LISTING_FEE}
+        returnUrl={`/member-pages/${pageId}`}
+        returnState={{ showAddModal: true, formData }}
+      />
+    );
+  }
+
   // Fee Confirmation Dialog
   if (showFeeConfirmation) {
     return (
