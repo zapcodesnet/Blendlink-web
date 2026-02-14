@@ -3067,6 +3067,57 @@ try:
 except ImportError as e:
     logger.warning(f"Could not load subscription scheduler: {e}")
 
+# Load Suspicious Transaction Detector
+try:
+    from suspicious_transaction_detector import (
+        scan_recent_transactions,
+        get_detection_rules,
+        update_detection_rule,
+        analyze_transaction,
+        flag_transaction
+    )
+    
+    @api_router.get("/admin/fraud-detection/rules")
+    async def get_fraud_detection_rules():
+        """Get current fraud detection rules configuration"""
+        rules = await get_detection_rules()
+        return {"rules": rules}
+    
+    @api_router.put("/admin/fraud-detection/rules/{rule_id}")
+    async def update_fraud_rule(rule_id: str, updates: dict):
+        """Update a fraud detection rule"""
+        result = await update_detection_rule(rule_id, updates)
+        return result
+    
+    @api_router.post("/admin/fraud-detection/scan")
+    async def trigger_fraud_scan(hours: int = 24):
+        """Manually trigger a fraud detection scan on recent transactions"""
+        result = await scan_recent_transactions(hours)
+        return {"success": True, "result": result}
+    
+    @api_router.post("/admin/fraud-detection/analyze/{transaction_id}")
+    async def analyze_single_transaction(transaction_id: str):
+        """Analyze a specific transaction for fraud indicators"""
+        # Get transaction from either collection
+        txn = await db.bl_transactions.find_one({"transaction_id": transaction_id})
+        if not txn:
+            txn = await db.commission_history.find_one({"commission_id": transaction_id})
+        if not txn:
+            raise HTTPException(status_code=404, detail="Transaction not found")
+        
+        from suspicious_transaction_detector import analyze_transaction as analyze_txn
+        triggered_rules = await analyze_txn(txn)
+        
+        return {
+            "transaction_id": transaction_id,
+            "triggered_rules": triggered_rules,
+            "is_suspicious": len(triggered_rules) > 0
+        }
+    
+    logger.info("Suspicious Transaction Detector loaded (Auto-flagging, Fraud rules)")
+except ImportError as e:
+    logger.warning(f"Could not load suspicious transaction detector: {e}")
+
 # Load Marketplace Offers System
 try:
     from marketplace_offers import offer_router
