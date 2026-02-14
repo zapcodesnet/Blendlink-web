@@ -21,6 +21,7 @@ import { TappingArena } from './TappingArena';
 import { RPSBidding } from './RPSBidding';
 import MedalCelebration from '../MedalCelebration';
 import api from '../../services/api';
+import { getApiUrl } from '../../utils/runtimeConfig';
 
 // Constants
 const STARTING_RPS_MONEY = 5_000_000;
@@ -267,7 +268,7 @@ export const PVPBattleArena = ({
     const token = localStorage.getItem('blendlink_token');
     if (!token) return null;
     
-    const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+    const backendUrl = getApiUrl();
     const wsProtocol = backendUrl.startsWith('https') ? 'wss' : 'ws';
     const wsHost = backendUrl.replace(/^https?:\/\//, '');
     
