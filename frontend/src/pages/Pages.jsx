@@ -214,7 +214,7 @@ const PageCard = ({ page, onFollow, onUnfollow, onView, onManage, isFollowing, i
 };
 
 // Create Page Modal - Premium Glassmorphism Design (Mobile-First)
-const CreatePageModal = ({ onClose, onCreate }) => {
+const CreatePageModal = ({ onClose, onCreate, userBalance = 0, userTier = "free", maxPages = 1, currentPagesCount = 0 }) => {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -224,6 +224,10 @@ const CreatePageModal = ({ onClose, onCreate }) => {
   });
   const [loading, setLoading] = useState(false);
 
+  const PAGE_CREATION_FEE = 2000;
+  const hasEnoughBalance = userBalance >= PAGE_CREATION_FEE;
+  const hasReachedLimit = currentPagesCount >= maxPages;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name.trim()) {
@@ -231,10 +235,20 @@ const CreatePageModal = ({ onClose, onCreate }) => {
       return;
     }
     
+    if (!hasEnoughBalance) {
+      toast.error(`Insufficient BL Coins. You need ${PAGE_CREATION_FEE.toLocaleString()} BL to create a page.`);
+      return;
+    }
+
+    if (hasReachedLimit) {
+      toast.error(`You've reached the limit of ${maxPages} pages for your ${userTier} membership. Upgrade to create more!`);
+      return;
+    }
+    
     setLoading(true);
     try {
       await onCreate(formData);
-      toast.success("Page created! +40 BL Coins", {
+      toast.success(`Page created! ${PAGE_CREATION_FEE.toLocaleString()} BL Coins deducted`, {
         description: "Your new business page is ready to customize!"
       });
       onClose();
@@ -358,16 +372,38 @@ const CreatePageModal = ({ onClose, onCreate }) => {
               />
             </div>
           
-            {/* BL Coins Reward */}
-            <div className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-2xl p-3 flex items-center gap-3 border border-cyan-100/50">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-400 flex items-center justify-center shadow-lg shadow-yellow-400/25 flex-shrink-0">
+            {/* BL Coins Fee Box */}
+            <div className={`rounded-2xl p-3 flex items-center gap-3 border ${
+              hasEnoughBalance 
+                ? "bg-gradient-to-r from-amber-50 to-orange-50 border-amber-100/50" 
+                : "bg-gradient-to-r from-red-50 to-pink-50 border-red-100/50"
+            }`}>
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0 ${
+                hasEnoughBalance 
+                  ? "bg-gradient-to-br from-amber-400 to-orange-400 shadow-amber-400/25" 
+                  : "bg-gradient-to-br from-red-400 to-pink-400 shadow-red-400/25"
+              }`}>
                 <Coins className="w-4 h-4 text-white" />
               </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-800">Earn 40 BL Coins!</p>
-                <p className="text-xs text-gray-500">Create your page and start earning</p>
+              <div className="flex-1">
+                <p className={`text-sm font-semibold ${hasEnoughBalance ? "text-gray-800" : "text-red-700"}`}>
+                  {PAGE_CREATION_FEE.toLocaleString()} BL Coins Fee
+                </p>
+                <p className="text-xs text-gray-500">
+                  {hasEnoughBalance 
+                    ? "Create your page and start earning" 
+                    : `Insufficient balance (You have: ${userBalance.toLocaleString()} BL)`}
+                </p>
               </div>
             </div>
+
+            {/* Page Limit Warning */}
+            {hasReachedLimit && (
+              <div className="rounded-2xl p-3 bg-red-50 border border-red-100 text-sm text-red-700">
+                You've reached the maximum of {maxPages} pages for your {userTier} membership. 
+                <a href="/subscriptions" className="underline ml-1">Upgrade now</a>
+              </div>
+            )}
           
             {/* Actions */}
             <div className="flex gap-3 pt-1">
@@ -381,8 +417,8 @@ const CreatePageModal = ({ onClose, onCreate }) => {
               </Button>
               <Button 
                 type="submit" 
-                disabled={loading} 
-                className="flex-1 h-11 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white border-0 shadow-lg shadow-cyan-500/25 font-semibold"
+                disabled={loading || !hasEnoughBalance || hasReachedLimit} 
+                className="flex-1 h-11 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white border-0 shadow-lg shadow-cyan-500/25 font-semibold disabled:opacity-50"
                 data-testid="create-page-submit"
               >
                 {loading ? (
