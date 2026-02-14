@@ -688,6 +688,9 @@ export default function AdminLayout() {
               <Route path="admins" element={<AdminManagement />} />
               <Route path="security" element={<AdminSecurityDashboard />} />
               <Route path="withdrawals" element={<AdminWithdrawals />} />
+              <Route path="membership-tiers" element={<AdminMembershipTiers />} />
+              <Route path="promo-codes" element={<AdminPromoCodes />} />
+              <Route path="transactions" element={<AdminTransactionMonitor />} />
               <Route path="notifications" element={<AdminNotificationSettings />} />
               <Route path="themes" element={<AdminThemes />} />
               <Route path="ui-editor" element={<AdminUIEditor />} />
