@@ -718,6 +718,402 @@ async def release_user_commissions(
     }
 
 
+# ============== REAL-TIME COMMISSION ADJUSTMENTS ==============
+
+class CommissionAdjustmentRequest(BaseModel):
+    """Request to adjust commission for a user or transaction"""
+    user_id: Optional[str] = None
+    transaction_id: Optional[str] = None
+    adjustment_type: str = "percentage"  # percentage, fixed, override
+    adjustment_value: float
+    reason: str
+    notify_user: bool = True
+    apply_to_future: bool = False  # If true, applies to future commissions
+
+
+class GlobalCommissionOverrideRequest(BaseModel):
+    """Request to temporarily override global commission rates"""
+    l1_rate_override: Optional[float] = None
+    l2_rate_override: Optional[float] = None
+    affected_tiers: List[str] = ["free", "bronze", "silver", "gold", "diamond"]
+    reason: str
+    starts_at: Optional[str] = None
+    expires_at: Optional[str] = None
+    is_active: bool = True
+
+
+@admin_membership_router.post("/commissions/adjust")
+async def adjust_commission(request: CommissionAdjustmentRequest, admin: dict = Depends(get_admin_user)):
+    """Adjust commission for a specific user or transaction in real-time"""
+    now = datetime.now(timezone.utc).isoformat()
+    
+    if not request.user_id and not request.transaction_id:
+        raise HTTPException(status_code=400, detail="Either user_id or transaction_id is required")
+    
+    adjustment_record = {
+        "adjustment_id": f"adj_{uuid.uuid4().hex[:12]}",
+        "user_id": request.user_id,
+        "transaction_id": request.transaction_id,
+        "adjustment_type": request.adjustment_type,
+        "adjustment_value": request.adjustment_value,
+        "reason": request.reason,
+        "apply_to_future": request.apply_to_future,
+        "created_by": admin["user_id"],
+        "created_at": now,
+        "status": "applied"
+    }
+    
+    # If adjusting a specific transaction
+    if request.transaction_id:
+        txn = await db.commission_history.find_one({"commission_id": request.transaction_id})
+        if not txn:
+            raise HTTPException(status_code=404, detail="Commission transaction not found")
+        
+        original_amount = txn.get("amount_usd", 0)
+        
+        if request.adjustment_type == "percentage":
+            new_amount = original_amount * (1 + request.adjustment_value / 100)
+        elif request.adjustment_type == "fixed":
+            new_amount = original_amount + request.adjustment_value
+        else:  # override
+            new_amount = request.adjustment_value
+        
+        # Update the commission
+        await db.commission_history.update_one(
+            {"commission_id": request.transaction_id},
+            {"$set": {
+                "amount_usd": new_amount,
+                "original_amount_usd": original_amount,
+                "adjusted": True,
+                "adjustment_reason": request.reason,
+                "adjusted_at": now,
+                "adjusted_by": admin["user_id"]
+            }}
+        )
+        
+        adjustment_record["original_amount"] = original_amount
+        adjustment_record["new_amount"] = new_amount
+        adjustment_record["affected_user_id"] = txn.get("beneficiary_id")
+        
+        # Update user's pending balance if needed
+        if txn.get("status") == "pending":
+            diff = new_amount - original_amount
+            await db.users.update_one(
+                {"user_id": txn.get("beneficiary_id")},
+                {"$inc": {"pending_commissions": diff}}
+            )
+    
+    # If applying a user-level adjustment for future commissions
+    if request.user_id and request.apply_to_future:
+        await db.users.update_one(
+            {"user_id": request.user_id},
+            {"$set": {
+                "commission_adjustment": {
+                    "type": request.adjustment_type,
+                    "value": request.adjustment_value,
+                    "reason": request.reason,
+                    "set_by": admin["user_id"],
+                    "set_at": now
+                }
+            }}
+        )
+    
+    # Store adjustment record
+    await db.commission_adjustments.insert_one(adjustment_record)
+    
+    # Audit log
+    await db.admin_audit_logs.insert_one({
+        "action": "commission_adjusted",
+        "details": adjustment_record,
+        "admin_id": admin["user_id"],
+        "created_at": now
+    })
+    
+    # Notify user if requested
+    if request.notify_user:
+        target_user_id = request.user_id or adjustment_record.get("affected_user_id")
+        if target_user_id:
+            await db.notifications.insert_one({
+                "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+                "user_id": target_user_id,
+                "type": "commission_adjustment",
+                "title": "Commission Adjustment",
+                "message": f"Your commission has been adjusted. Reason: {request.reason}",
+                "read": False,
+                "created_at": now
+            })
+    
+    return {
+        "success": True,
+        "adjustment_id": adjustment_record["adjustment_id"],
+        "message": "Commission adjusted successfully"
+    }
+
+
+@admin_membership_router.post("/commissions/global-override")
+async def set_global_commission_override(request: GlobalCommissionOverrideRequest, admin: dict = Depends(get_admin_user)):
+    """Set a global commission rate override affecting all or specific tiers"""
+    now = datetime.now(timezone.utc).isoformat()
+    
+    override_record = {
+        "override_id": f"gco_{uuid.uuid4().hex[:12]}",
+        "l1_rate_override": request.l1_rate_override,
+        "l2_rate_override": request.l2_rate_override,
+        "affected_tiers": request.affected_tiers,
+        "reason": request.reason,
+        "starts_at": request.starts_at or now,
+        "expires_at": request.expires_at,
+        "is_active": request.is_active,
+        "created_by": admin["user_id"],
+        "created_at": now
+    }
+    
+    # Deactivate any existing active overrides
+    await db.global_commission_overrides.update_many(
+        {"is_active": True},
+        {"$set": {"is_active": False, "deactivated_at": now, "deactivated_by": admin["user_id"]}}
+    )
+    
+    # Insert new override
+    await db.global_commission_overrides.insert_one(override_record)
+    
+    # Audit log
+    await db.admin_audit_logs.insert_one({
+        "action": "global_commission_override_set",
+        "details": override_record,
+        "admin_id": admin["user_id"],
+        "created_at": now
+    })
+    
+    return {
+        "success": True,
+        "override_id": override_record["override_id"],
+        "message": "Global commission override applied"
+    }
+
+
+@admin_membership_router.get("/commissions/global-override")
+async def get_global_commission_override(admin: dict = Depends(get_admin_user)):
+    """Get current active global commission override"""
+    override = await db.global_commission_overrides.find_one(
+        {"is_active": True},
+        {"_id": 0}
+    )
+    
+    history = await db.global_commission_overrides.find(
+        {},
+        {"_id": 0}
+    ).sort("created_at", -1).limit(10).to_list(length=10)
+    
+    return {
+        "active_override": override,
+        "history": history
+    }
+
+
+@admin_membership_router.delete("/commissions/global-override/{override_id}")
+async def remove_global_commission_override(override_id: str, admin: dict = Depends(get_admin_user)):
+    """Remove a global commission override"""
+    result = await db.global_commission_overrides.update_one(
+        {"override_id": override_id},
+        {"$set": {
+            "is_active": False,
+            "deactivated_at": datetime.now(timezone.utc).isoformat(),
+            "deactivated_by": admin["user_id"]
+        }}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Override not found")
+    
+    await db.admin_audit_logs.insert_one({
+        "action": "global_commission_override_removed",
+        "override_id": override_id,
+        "admin_id": admin["user_id"],
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"success": True, "message": "Global commission override removed"}
+
+
+@admin_membership_router.get("/commissions/adjustments")
+async def get_commission_adjustments(
+    user_id: Optional[str] = None,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
+    admin: dict = Depends(get_admin_user)
+):
+    """Get history of commission adjustments"""
+    query = {}
+    if user_id:
+        query["$or"] = [{"user_id": user_id}, {"affected_user_id": user_id}]
+    
+    adjustments = await db.commission_adjustments.find(
+        query, {"_id": 0}
+    ).sort("created_at", -1).skip(skip).limit(limit).to_list(length=limit)
+    
+    total = await db.commission_adjustments.count_documents(query)
+    
+    return {
+        "adjustments": adjustments,
+        "total": total,
+        "skip": skip,
+        "limit": limit
+    }
+
+
+# ============== CUSTOM MEMBERSHIP BENEFITS ==============
+
+class CustomBenefitRequest(BaseModel):
+    """Request to create or update a custom benefit"""
+    benefit_id: Optional[str] = None  # For updates
+    name: str
+    description: str
+    benefit_type: str  # numeric, boolean, text, percentage
+    default_value: Any
+    icon: Optional[str] = None
+    display_order: int = 0
+    tier_values: Optional[Dict[str, Any]] = None  # Override values per tier
+
+
+@admin_membership_router.get("/custom-benefits")
+async def get_custom_benefits(admin: dict = Depends(get_admin_user)):
+    """Get all custom benefits"""
+    benefits = await db.custom_membership_benefits.find(
+        {},
+        {"_id": 0}
+    ).sort("display_order", 1).to_list(length=100)
+    
+    return {"benefits": benefits}
+
+
+@admin_membership_router.post("/custom-benefits")
+async def create_custom_benefit(request: CustomBenefitRequest, admin: dict = Depends(get_admin_user)):
+    """Create a new custom membership benefit"""
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Check for duplicate name
+    existing = await db.custom_membership_benefits.find_one({"name": request.name})
+    if existing:
+        raise HTTPException(status_code=400, detail="A benefit with this name already exists")
+    
+    benefit_id = f"benefit_{uuid.uuid4().hex[:12]}"
+    
+    benefit = {
+        "benefit_id": benefit_id,
+        "name": request.name,
+        "description": request.description,
+        "benefit_type": request.benefit_type,
+        "default_value": request.default_value,
+        "icon": request.icon,
+        "display_order": request.display_order,
+        "tier_values": request.tier_values or {
+            "free": request.default_value,
+            "bronze": request.default_value,
+            "silver": request.default_value,
+            "gold": request.default_value,
+            "diamond": request.default_value
+        },
+        "created_by": admin["user_id"],
+        "created_at": now,
+        "is_active": True
+    }
+    
+    await db.custom_membership_benefits.insert_one(benefit)
+    
+    await db.admin_audit_logs.insert_one({
+        "action": "custom_benefit_created",
+        "benefit": benefit,
+        "admin_id": admin["user_id"],
+        "created_at": now
+    })
+    
+    return {"success": True, "benefit_id": benefit_id, "benefit": {k: v for k, v in benefit.items() if k != "_id"}}
+
+
+@admin_membership_router.put("/custom-benefits/{benefit_id}")
+async def update_custom_benefit(benefit_id: str, request: CustomBenefitRequest, admin: dict = Depends(get_admin_user)):
+    """Update an existing custom benefit"""
+    existing = await db.custom_membership_benefits.find_one({"benefit_id": benefit_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Benefit not found")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    update_data = {
+        "name": request.name,
+        "description": request.description,
+        "benefit_type": request.benefit_type,
+        "default_value": request.default_value,
+        "icon": request.icon,
+        "display_order": request.display_order,
+        "updated_by": admin["user_id"],
+        "updated_at": now
+    }
+    
+    if request.tier_values:
+        update_data["tier_values"] = request.tier_values
+    
+    await db.custom_membership_benefits.update_one(
+        {"benefit_id": benefit_id},
+        {"$set": update_data}
+    )
+    
+    await db.admin_audit_logs.insert_one({
+        "action": "custom_benefit_updated",
+        "benefit_id": benefit_id,
+        "changes": update_data,
+        "admin_id": admin["user_id"],
+        "created_at": now
+    })
+    
+    return {"success": True, "message": f"Benefit '{request.name}' updated"}
+
+
+@admin_membership_router.delete("/custom-benefits/{benefit_id}")
+async def delete_custom_benefit(benefit_id: str, admin: dict = Depends(get_admin_user)):
+    """Delete a custom benefit"""
+    result = await db.custom_membership_benefits.delete_one({"benefit_id": benefit_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Benefit not found")
+    
+    await db.admin_audit_logs.insert_one({
+        "action": "custom_benefit_deleted",
+        "benefit_id": benefit_id,
+        "admin_id": admin["user_id"],
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"success": True, "message": "Custom benefit deleted"}
+
+
+@admin_membership_router.put("/custom-benefits/{benefit_id}/tier-value")
+async def update_benefit_tier_value(
+    benefit_id: str,
+    tier_id: str = Query(...),
+    value: Any = Query(...),
+    admin: dict = Depends(get_admin_user)
+):
+    """Update a specific tier's value for a custom benefit"""
+    valid_tiers = ["free", "bronze", "silver", "gold", "diamond"]
+    if tier_id not in valid_tiers:
+        raise HTTPException(status_code=400, detail=f"Invalid tier. Must be one of: {valid_tiers}")
+    
+    result = await db.custom_membership_benefits.update_one(
+        {"benefit_id": benefit_id},
+        {"$set": {
+            f"tier_values.{tier_id}": value,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Benefit not found")
+    
+    return {"success": True, "message": f"Tier '{tier_id}' value updated to {value}"}
+
+
 # ============== SUBSCRIPTION ANALYTICS ==============
 
 @admin_membership_router.get("/subscription-analytics")
