@@ -223,17 +223,52 @@ class ReferralRelationship(BaseModel):
 
 # ============== HELPER FUNCTIONS ==============
 
+async def get_user_subscription_tier(user_id: str) -> str:
+    """Get user's subscription tier from database"""
+    user = await db.users.find_one({"user_id": user_id}, {"subscription_tier": 1})
+    return user.get("subscription_tier", "free") if user else "free"
+
+async def get_tier_commission_rates(user_id: str) -> tuple:
+    """
+    Get commission rates based on user's subscription tier.
+    Returns (l1_rate, l2_rate, platform_rate) as decimal percentages.
+    
+    Commission rates (from 10% platform fee):
+    - Free: 2% L1, 1% L2 → Platform keeps 7%
+    - Bronze/Silver/Gold: 3% L1, 2% L2 → Platform keeps 5%
+    - Diamond: 4% L1, 3% L2 → Platform keeps 3%
+    """
+    tier = await get_user_subscription_tier(user_id)
+    
+    # Import tiers dynamically to avoid circular imports
+    try:
+        from subscription_tiers import SUBSCRIPTION_TIERS, LEGACY_TIER_MAP
+        
+        # Handle legacy tier names
+        if tier in LEGACY_TIER_MAP:
+            tier = LEGACY_TIER_MAP[tier]
+        
+        tier_info = SUBSCRIPTION_TIERS.get(tier, SUBSCRIPTION_TIERS["free"])
+        l1_rate = tier_info.get("commission_l1_rate", 0.02)
+        l2_rate = tier_info.get("commission_l2_rate", 0.01)
+        platform_rate = PLATFORM_FEE_RATE - l1_rate - l2_rate
+        
+        return l1_rate, l2_rate, platform_rate
+    except ImportError:
+        # Fallback to legacy rates
+        return REGULAR_L1_RATE, REGULAR_L2_RATE, REGULAR_PLATFORM_RATE
+
 async def get_user_rank(user_id: str) -> UserRank:
-    """Get user's current rank"""
+    """Get user's current rank (Diamond Leader or Regular)"""
     user = await db.users.find_one({"user_id": user_id}, {"rank": 1})
     return UserRank(user.get("rank", "regular")) if user else UserRank.REGULAR
 
 async def get_commission_rates(user_id: str) -> tuple:
-    """Get commission rates based on user rank"""
-    rank = await get_user_rank(user_id)
-    if rank == UserRank.DIAMOND_LEADER:
-        return DIAMOND_L1_RATE, DIAMOND_L2_RATE, DIAMOND_PLATFORM_RATE
-    return REGULAR_L1_RATE, REGULAR_L2_RATE, REGULAR_PLATFORM_RATE
+    """
+    Get commission rates based on user's subscription tier.
+    Updated to use tier-based rates instead of just Diamond Leader status.
+    """
+    return await get_tier_commission_rates(user_id)
 
 async def get_upline_chain(user_id: str) -> tuple:
     """Get L1 and L2 upline for a user"""
