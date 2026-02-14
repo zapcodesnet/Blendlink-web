@@ -1643,7 +1643,7 @@ async def get_current_subscription(
 
 
 @stripe_router.post("/subscriptions/cancel")
-async def cancel_subscription(
+async def cancel_user_subscription(
     current_user: dict = Depends(get_current_user)
 ):
     """Cancel user's subscription (effective at end of billing period)"""
@@ -1651,7 +1651,7 @@ async def cancel_subscription(
     now = datetime.now(timezone.utc).isoformat()
     
     # Update subscription
-    result = await db.subscriptions.update_one(
+    await db.subscriptions.update_one(
         {"user_id": user_id, "status": "active"},
         {"$set": {
             "status": "cancelled",
