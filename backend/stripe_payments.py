@@ -1149,6 +1149,260 @@ async def send_bl_coins_receipt_email(email: str, coins_amount: int, amount_usd:
     logger.info(f"Sent BL coins purchase receipt to {email}")
 
 
+# ============== STRIPE CONNECT & WITHDRAWALS ==============
+
+# Withdrawal fee - 3%
+WITHDRAWAL_FEE_RATE = 0.03
+
+@stripe_router.get("/connect/status")
+async def get_stripe_connect_status(http_request: Request):
+    """Get user's Stripe Connect account status"""
+    from server import get_current_user_from_token
+    
+    token = http_request.headers.get("Authorization", "").replace("Bearer ", "")
+    if not token:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    
+    user = await get_current_user_from_token(token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    user_id = user.get("user_id")
+    
+    # Check if user has a connected Stripe account
+    connect_account = await db.stripe_connect_accounts.find_one({"user_id": user_id})
+    
+    if not connect_account:
+        return {
+            "is_connected": False,
+            "charges_enabled": False,
+            "payouts_enabled": False,
+            "onboarding_url": None
+        }
+    
+    # Verify account status with Stripe
+    try:
+        import stripe
+        stripe.api_key = LIVE_STRIPE_SECRET_KEY
+        
+        account = stripe.Account.retrieve(connect_account["stripe_account_id"])
+        
+        # Update local record
+        await db.stripe_connect_accounts.update_one(
+            {"user_id": user_id},
+            {"$set": {
+                "charges_enabled": account.charges_enabled,
+                "payouts_enabled": account.payouts_enabled,
+                "details_submitted": account.details_submitted,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        return {
+            "is_connected": True,
+            "charges_enabled": account.charges_enabled,
+            "payouts_enabled": account.payouts_enabled,
+            "details_submitted": account.details_submitted
+        }
+    except Exception as e:
+        logger.error(f"Stripe Connect status error: {e}")
+        return {
+            "is_connected": connect_account is not None,
+            "charges_enabled": connect_account.get("charges_enabled", False),
+            "payouts_enabled": connect_account.get("payouts_enabled", False),
+            "error": str(e)
+        }
+
+
+@stripe_router.post("/connect/onboard")
+async def create_stripe_connect_onboarding(http_request: Request):
+    """Create Stripe Connect onboarding link for user"""
+    from server import get_current_user_from_token
+    
+    token = http_request.headers.get("Authorization", "").replace("Bearer ", "")
+    if not token:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    
+    user = await get_current_user_from_token(token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    user_id = user.get("user_id")
+    user_email = user.get("email", "")
+    
+    try:
+        import stripe
+        stripe.api_key = LIVE_STRIPE_SECRET_KEY
+        
+        # Check if user already has an account
+        connect_account = await db.stripe_connect_accounts.find_one({"user_id": user_id})
+        
+        if connect_account:
+            stripe_account_id = connect_account["stripe_account_id"]
+        else:
+            # Create new Stripe Express account
+            account = stripe.Account.create(
+                type="express",
+                email=user_email,
+                capabilities={
+                    "transfers": {"requested": True},
+                },
+                metadata={
+                    "blendlink_user_id": user_id
+                }
+            )
+            stripe_account_id = account.id
+            
+            # Save to database
+            await db.stripe_connect_accounts.insert_one({
+                "user_id": user_id,
+                "stripe_account_id": stripe_account_id,
+                "email": user_email,
+                "charges_enabled": False,
+                "payouts_enabled": False,
+                "details_submitted": False,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+        
+        # Create onboarding link
+        host_url = str(http_request.headers.get("origin", "https://blendlink.net"))
+        
+        account_link = stripe.AccountLink.create(
+            account=stripe_account_id,
+            refresh_url=f"{host_url}/wallet?stripe_refresh=true",
+            return_url=f"{host_url}/wallet?stripe_connected=true",
+            type="account_onboarding",
+        )
+        
+        return {"url": account_link.url}
+        
+    except Exception as e:
+        logger.error(f"Stripe Connect onboarding error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to create onboarding link: {str(e)}")
+
+
+class WithdrawRequest(BaseModel):
+    amount: float = Field(..., gt=0, description="Amount to withdraw in USD")
+
+
+@stripe_router.post("/withdraw")
+async def withdraw_to_stripe(request: WithdrawRequest, http_request: Request):
+    """
+    Withdraw earnings to user's connected Stripe account.
+    Applies 3% withdrawal fee.
+    """
+    from server import get_current_user_from_token
+    
+    token = http_request.headers.get("Authorization", "").replace("Bearer ", "")
+    if not token:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    
+    user = await get_current_user_from_token(token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    user_id = user.get("user_id")
+    
+    # Validate minimum amount
+    if request.amount < 10:
+        raise HTTPException(status_code=400, detail="Minimum withdrawal is $10.00")
+    
+    # Check user's USD balance
+    user_data = await db.users.find_one({"user_id": user_id}, {"usd_balance": 1})
+    available_balance = user_data.get("usd_balance", 0) if user_data else 0
+    
+    if request.amount > available_balance:
+        raise HTTPException(status_code=400, detail=f"Insufficient balance. Available: ${available_balance:.2f}")
+    
+    # Check Stripe Connect status
+    connect_account = await db.stripe_connect_accounts.find_one({"user_id": user_id})
+    
+    if not connect_account:
+        raise HTTPException(status_code=400, detail="Please connect your Stripe account first")
+    
+    if not connect_account.get("payouts_enabled"):
+        raise HTTPException(status_code=400, detail="Stripe account is not fully set up. Please complete onboarding.")
+    
+    stripe_account_id = connect_account["stripe_account_id"]
+    
+    # Calculate fee
+    fee = request.amount * WITHDRAWAL_FEE_RATE
+    net_amount = request.amount - fee
+    
+    try:
+        import stripe
+        stripe.api_key = LIVE_STRIPE_SECRET_KEY
+        
+        # Create transfer to connected account
+        transfer = stripe.Transfer.create(
+            amount=int(net_amount * 100),  # Convert to cents
+            currency="usd",
+            destination=stripe_account_id,
+            description=f"BlendLink withdrawal for user {user_id}",
+            metadata={
+                "user_id": user_id,
+                "gross_amount": str(request.amount),
+                "fee": str(fee),
+                "net_amount": str(net_amount)
+            }
+        )
+        
+        # Deduct from user's USD balance
+        new_balance = available_balance - request.amount
+        await db.users.update_one(
+            {"user_id": user_id},
+            {"$set": {"usd_balance": new_balance}}
+        )
+        
+        # Record withdrawal
+        withdrawal_id = f"wd_{uuid.uuid4().hex[:12]}"
+        await db.withdrawals.insert_one({
+            "withdrawal_id": withdrawal_id,
+            "user_id": user_id,
+            "stripe_transfer_id": transfer.id,
+            "stripe_account_id": stripe_account_id,
+            "amount": request.amount,
+            "fee": fee,
+            "net_amount": net_amount,
+            "status": "pending",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        # Record transaction
+        from referral_system import record_transaction, TransactionType, Currency
+        await record_transaction(
+            user_id=user_id,
+            transaction_type=TransactionType.WITHDRAWAL,
+            currency=Currency.USD,
+            amount=-request.amount,
+            reference_id=withdrawal_id,
+            details={
+                "stripe_transfer_id": transfer.id,
+                "fee": fee,
+                "net_amount": net_amount
+            }
+        )
+        
+        logger.info(f"Withdrawal processed: {withdrawal_id} - ${net_amount:.2f} to {stripe_account_id}")
+        
+        return {
+            "success": True,
+            "withdrawal_id": withdrawal_id,
+            "amount": request.amount,
+            "fee": fee,
+            "net_amount": net_amount,
+            "new_balance": new_balance,
+            "message": "Withdrawal submitted. Processing takes 48 hours to 7 days."
+        }
+        
+    except stripe.error.StripeError as e:
+        logger.error(f"Stripe withdrawal error: {e}")
+        raise HTTPException(status_code=500, detail=f"Withdrawal failed: {str(e)}")
+    except Exception as e:
+        logger.error(f"Withdrawal error: {e}")
+        raise HTTPException(status_code=500, detail=f"Withdrawal failed: {str(e)}")
+
+
 # ============== EXPORT ==============
 
 def get_stripe_router():
