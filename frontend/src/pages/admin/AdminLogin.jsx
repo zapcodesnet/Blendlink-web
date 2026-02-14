@@ -4,8 +4,9 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { toast } from "sonner";
 import { Shield, Lock, Mail, LogIn, Eye, EyeOff, RefreshCw } from "lucide-react";
+import { getApiUrl } from "../../utils/runtimeConfig";
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE = getApiUrl();
 
 export default function AdminLogin() {
   const navigate = useNavigate();

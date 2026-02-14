@@ -4,13 +4,14 @@ import { useTranslation } from "react-i18next";
 import { Button } from "../components/ui/button";
 import LanguageSelector from "../components/LanguageSelector";
 import { getToken } from "../services/api";
+import { getApiUrl } from "../utils/runtimeConfig";
 import { 
   Users, ShoppingBag, Home, Briefcase, Gamepad2, Gift, 
   Coins, Share2, ChevronRight, Smartphone, Bell, Zap,
   ChevronLeft, Eye, ShoppingCart
 } from "lucide-react";
 
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE_URL = getApiUrl();
 
 // Featured Item Card Component
 const FeaturedItemCard = ({ item, type, onViewDetails }) => {
