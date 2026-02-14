@@ -9,7 +9,7 @@ import {
   Settings, FileText, BarChart3, LogOut, Menu, X,
   ChevronRight, Home, Bell, Search, ZoomIn, ZoomOut,
   RotateCcw, Maximize2, FlaskConical, Wallet, Lock,
-  Crown, UserPlus, Code, Coins, Tag, Activity, Percent
+  Crown, UserPlus, Code, Coins, Tag, Activity, Percent, DollarSign
 } from "lucide-react";
 
 // Import admin components
