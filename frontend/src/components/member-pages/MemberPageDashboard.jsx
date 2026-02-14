@@ -733,6 +733,16 @@ const AddItemModal = ({ pageId, pageType, onClose, onSuccess, editItem = null })
             )}
           </div>
 
+          {/* Fee Notice for new items */}
+          {!isEditMode && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm">
+              <div className="flex items-center gap-2 text-amber-800">
+                <DollarSign className="w-4 h-4" />
+                <span><strong>Listing Fee:</strong> 200 BL coins will be charged</span>
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-2 pt-2">
             <Button type="button" variant="outline" onClick={onClose} className="flex-1">
               Cancel
