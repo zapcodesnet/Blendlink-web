@@ -295,6 +295,7 @@ function AppRouter() {
       <Route path="/battle/:sessionId" element={<BattleReplayPage />} />
       <Route path="/replay/:replayId" element={<BattleReplayPage />} />
       <Route path="/subscription" element={<ProtectedRoute><SubscriptionTiers /></ProtectedRoute>} />
+      <Route path="/subscriptions" element={<ProtectedRoute><SubscriptionTiers /></ProtectedRoute>} />
       
       {/* AI Listing Creator Route */}
       <Route path="/ai-listing-creator" element={<ProtectedRoute><AIListingCreator /></ProtectedRoute>} />
