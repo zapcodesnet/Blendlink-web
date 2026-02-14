@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="4" skipped="0" tests="7" time="42.329" timestamp="2026-02-14T00:44:07.240025+00:00" hostname="agent-env-1832e617-c9f2-4b43-a45c-6342ade26c58"><testcase classname="backend.tests.test_listing_fee.TestListingFeeEndpoint" name="test_get_listing_fee_returns_correct_value" time="38.573" /><testcase classname="backend.tests.test_listing_fee.TestMarketplaceListingFee" name="test_create_listing_requires_authentication" time="0.083" /><testcase classname="backend.tests.test_listing_fee.TestMarketplaceListingFee" name="test_create_listing_insufficient_balance" time="1.506"><failure message="AssertionError: Expected 400 for insufficient balance, got 401&#10;assert 401 == 400&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_listing_fee.py:190: in test_create_listing_insufficient_balance
+    assert response.status_code == 400, f"Expected 400 for insufficient balance, got {response.status_code}"
+E   AssertionError: Expected 400 for insufficient balance, got 401
+E   assert 401 == 400
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_listing_fee.TestMarketplaceListingFee" name="test_create_listing_deducts_fee" time="0.686"><failure message="AssertionError: Expected 200/201, got 401: {&quot;detail&quot;:&quot;Invalid token&quot;}&#10;assert 401 in [200, 201]&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_listing_fee.py:225: in test_create_listing_deducts_fee
+    assert response.status_code in [200, 201], f"Expected 200/201, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200/201, got 401: {"detail":"Invalid token"}
+E   assert 401 in [200, 201]
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_listing_fee.TestMemberPageItemsFee" name="test_create_product_insufficient_balance" time="0.369"><failure message="AssertionError: Expected 400 for insufficient balance, got 401&#10;assert 401 == 400&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_listing_fee.py:412: in test_create_product_insufficient_balance
+    assert response.status_code == 400, f"Expected 400 for insufficient balance, got {response.status_code}"
+E   AssertionError: Expected 400 for insufficient balance, got 401
+E   assert 401 == 400
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_listing_fee.TestMemberPageItemsFee" name="test_create_menu_item_insufficient_balance" time="0.361"><failure message="AssertionError: Expected 400 for insufficient balance, got 401&#10;assert 401 == 400&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_listing_fee.py:457: in test_create_menu_item_insufficient_balance
+    assert response.status_code == 400, f"Expected 400 for insufficient balance, got {response.status_code}"
+E   AssertionError: Expected 400 for insufficient balance, got 401
+E   assert 401 == 400
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_listing_fee.TestBLTransactionRecords" name="test_listing_fee_transaction_recorded" time="0.646" /></testsuite></testsuites>
