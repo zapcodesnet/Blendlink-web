@@ -13,20 +13,9 @@
  *   const data = await safeFetch('/api/some-endpoint', { method: 'POST', body: JSON.stringify(data) });
  */
 
-// Runtime URL detection for production/preview environments
-// This ensures the app works correctly regardless of build-time env variables
-const getApiBase = () => {
-  // Production detection - runtime override
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    if (hostname === 'blendlink.net' || hostname === 'www.blendlink.net') {
-      return 'https://blendlink.net';
-    }
-  }
-  // Fallback to env variable (for preview/development)
-  return process.env.REACT_APP_BACKEND_URL || 'https://blendlink.net';
-};
-const API_URL = getApiBase();
+import { getApiUrl } from '../utils/runtimeConfig';
+
+const API_URL = getApiUrl();
 
 // ============== CORE REQUEST HELPER ==============
 // Production-safe fetch wrapper with text-first JSON parsing
