@@ -19,6 +19,9 @@ import {
 import { Button } from '../ui/button';
 import { toast } from 'sonner';
 import api from '../../api';
+import { getApiUrl } from '../../utils/runtimeConfig';
+
+const API_BASE_URL = getApiUrl();
 
 // Scenery config
 const SCENERY_CONFIG = {
