@@ -496,7 +496,7 @@ export default function AdminCustomBenefits() {
                     placeholder="Default value for all tiers"
                     value={form.default_value}
                     onChange={(e) => setForm({...form, default_value: e.target.value})}
-                    className="bg-slate-900 border-slate-700"
+                    className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
                   />
                 )}
               </div>
