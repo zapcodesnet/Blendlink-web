@@ -42,6 +42,7 @@ const Offers = lazy(() => import("./pages/Offers"));
 const Contract = lazy(() => import("./pages/Contract"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
 const PaymentCancel = lazy(() => import("./pages/PaymentCancel"));
+const CoinsPurchaseSuccess = lazy(() => import("./pages/CoinsPurchaseSuccess"));
 
 // Referral/Earnings Pages - lazy loaded
 const EarningsDashboard = lazy(() => import("./pages/EarningsDashboard"));
