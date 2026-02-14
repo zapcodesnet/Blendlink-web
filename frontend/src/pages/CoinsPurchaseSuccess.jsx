@@ -19,7 +19,9 @@ const API_URL = getApiUrl();
 export default function CoinsPurchaseSuccess() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user, setUser } = useContext(AuthContext);
+  const authContext = useContext(AuthContext);
+  const user = authContext?.user;
+  const setUser = authContext?.setUser;
   
   const [status, setStatus] = useState("loading"); // loading, success, error
   const [purchaseData, setPurchaseData] = useState(null);
