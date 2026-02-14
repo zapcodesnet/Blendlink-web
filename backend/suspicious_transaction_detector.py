@@ -778,3 +778,378 @@ async def auto_analyze_on_create(transaction: dict):
             await flag_transaction(transaction_id, triggered_rules, auto_flag=True)
     except Exception as e:
         logger.error(f"Error in auto-analyze: {e}")
+
+
+# ============== FRAUD ANALYTICS ==============
+
+async def get_fraud_analytics(days: int = 30) -> dict:
+    """
+    Get comprehensive fraud analytics and patterns.
+    Provides ML-like insights without external ML service.
+    """
+    now = datetime.now(timezone.utc)
+    start_date = (now - timedelta(days=days)).isoformat()
+    
+    analytics = {
+        "period_days": days,
+        "generated_at": now.isoformat()
+    }
+    
+    # Total flagged transactions
+    total_flagged = await db.bl_transactions.count_documents({
+        "is_flagged": True,
+        "flagged_at": {"$gte": start_date}
+    })
+    
+    total_transactions = await db.bl_transactions.count_documents({
+        "created_at": {"$gte": start_date}
+    })
+    
+    analytics["summary"] = {
+        "total_transactions": total_transactions,
+        "flagged_transactions": total_flagged,
+        "flag_rate_percentage": round(total_flagged / max(total_transactions, 1) * 100, 2)
+    }
+    
+    # Flags by rule
+    rule_pipeline = [
+        {"$match": {"is_flagged": True, "flagged_at": {"$gte": start_date}}},
+        {"$unwind": "$flag_reasons"},
+        {"$group": {
+            "_id": "$flag_reasons.rule_id",
+            "count": {"$sum": 1},
+            "avg_severity_score": {
+                "$avg": {
+                    "$switch": {
+                        "branches": [
+                            {"case": {"$eq": ["$flag_reasons.severity", "low"]}, "then": 1},
+                            {"case": {"$eq": ["$flag_reasons.severity", "medium"]}, "then": 2},
+                            {"case": {"$eq": ["$flag_reasons.severity", "high"]}, "then": 3},
+                            {"case": {"$eq": ["$flag_reasons.severity", "critical"]}, "then": 4}
+                        ],
+                        "default": 2
+                    }
+                }
+            }
+        }},
+        {"$sort": {"count": -1}}
+    ]
+    rules_breakdown = await db.bl_transactions.aggregate(rule_pipeline).to_list(50)
+    analytics["rules_breakdown"] = rules_breakdown
+    
+    # Top flagged users
+    user_pipeline = [
+        {"$match": {"is_flagged": True, "flagged_at": {"$gte": start_date}}},
+        {"$group": {
+            "_id": "$user_id",
+            "flag_count": {"$sum": 1},
+            "total_flagged_amount": {"$sum": "$amount_usd"},
+            "severities": {"$push": "$flag_severity"}
+        }},
+        {"$sort": {"flag_count": -1}},
+        {"$limit": 20}
+    ]
+    top_flagged_users = await db.bl_transactions.aggregate(user_pipeline).to_list(20)
+    
+    # Enrich with user data
+    for user in top_flagged_users:
+        user_data = await db.users.find_one(
+            {"user_id": user["_id"]},
+            {"_id": 0, "username": 1, "email": 1, "subscription_tier": 1}
+        )
+        if user_data:
+            user.update(user_data)
+        # Calculate most common severity
+        if user["severities"]:
+            user["most_common_severity"] = max(set(user["severities"]), key=user["severities"].count)
+    
+    analytics["top_flagged_users"] = top_flagged_users
+    
+    # Severity distribution
+    severity_pipeline = [
+        {"$match": {"is_flagged": True, "flagged_at": {"$gte": start_date}}},
+        {"$group": {
+            "_id": "$flag_severity",
+            "count": {"$sum": 1},
+            "total_amount": {"$sum": "$amount_usd"}
+        }}
+    ]
+    severity_distribution = await db.bl_transactions.aggregate(severity_pipeline).to_list(10)
+    analytics["severity_distribution"] = severity_distribution
+    
+    # Time-based patterns (detect peak fraud hours)
+    hour_pipeline = [
+        {"$match": {"is_flagged": True, "flagged_at": {"$gte": start_date}}},
+        {"$addFields": {
+            "hour": {"$hour": {"$dateFromString": {"dateString": "$flagged_at"}}}
+        }},
+        {"$group": {
+            "_id": "$hour",
+            "count": {"$sum": 1}
+        }},
+        {"$sort": {"_id": 1}}
+    ]
+    hourly_distribution = await db.bl_transactions.aggregate(hour_pipeline).to_list(24)
+    analytics["hourly_distribution"] = hourly_distribution
+    
+    # Find peak hours
+    if hourly_distribution:
+        peak_hour = max(hourly_distribution, key=lambda x: x["count"])
+        analytics["peak_fraud_hour"] = peak_hour["_id"]
+    
+    # Daily trend
+    daily_pipeline = [
+        {"$match": {"is_flagged": True, "flagged_at": {"$gte": start_date}}},
+        {"$addFields": {
+            "date": {"$dateToString": {"format": "%Y-%m-%d", "date": {"$dateFromString": {"dateString": "$flagged_at"}}}}
+        }},
+        {"$group": {
+            "_id": "$date",
+            "count": {"$sum": 1},
+            "total_amount": {"$sum": "$amount_usd"}
+        }},
+        {"$sort": {"_id": 1}}
+    ]
+    daily_trend = await db.bl_transactions.aggregate(daily_pipeline).to_list(days)
+    analytics["daily_trend"] = daily_trend
+    
+    # Calculate risk score percentiles
+    risk_pipeline = [
+        {"$match": {"fraud_score": {"$exists": True}}},
+        {"$group": {
+            "_id": None,
+            "avg_risk_score": {"$avg": "$fraud_score"},
+            "max_risk_score": {"$max": "$fraud_score"},
+            "high_risk_count": {"$sum": {"$cond": [{"$gte": ["$fraud_score", 0.7]}, 1, 0]}}
+        }}
+    ]
+    risk_stats = await db.users.aggregate(risk_pipeline).to_list(1)
+    analytics["risk_score_stats"] = risk_stats[0] if risk_stats else {}
+    
+    # Pending alerts
+    pending_alerts = await db.admin_alerts.count_documents({
+        "type": "suspicious_transaction",
+        "status": "unread"
+    })
+    analytics["pending_alerts"] = pending_alerts
+    
+    return analytics
+
+
+async def calculate_user_risk_score(user_id: str) -> dict:
+    """
+    Calculate a comprehensive risk score for a user based on multiple factors.
+    Score ranges from 0.0 (safe) to 1.0 (high risk).
+    """
+    now = datetime.now(timezone.utc)
+    user = await db.users.find_one({"user_id": user_id})
+    
+    if not user:
+        return {"error": "User not found", "risk_score": 0.5}
+    
+    risk_factors = []
+    total_weight = 0
+    weighted_score = 0
+    
+    # Factor 1: Account age (newer = higher risk)
+    created_at = user.get("created_at")
+    if created_at:
+        try:
+            created = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+            account_age_days = (now - created).days
+            
+            if account_age_days < 7:
+                score = 0.8
+            elif account_age_days < 30:
+                score = 0.5
+            elif account_age_days < 90:
+                score = 0.3
+            else:
+                score = 0.1
+            
+            weight = 15
+            risk_factors.append({
+                "factor": "account_age",
+                "score": score,
+                "weight": weight,
+                "detail": f"{account_age_days} days old"
+            })
+            weighted_score += score * weight
+            total_weight += weight
+        except ValueError:
+            pass
+    
+    # Factor 2: Previous flags
+    flag_count = await db.bl_transactions.count_documents({
+        "user_id": user_id,
+        "is_flagged": True
+    })
+    
+    if flag_count > 10:
+        score = 0.9
+    elif flag_count > 5:
+        score = 0.7
+    elif flag_count > 0:
+        score = 0.4
+    else:
+        score = 0.0
+    
+    weight = 25
+    risk_factors.append({
+        "factor": "previous_flags",
+        "score": score,
+        "weight": weight,
+        "detail": f"{flag_count} flagged transactions"
+    })
+    weighted_score += score * weight
+    total_weight += weight
+    
+    # Factor 3: Transaction velocity
+    week_ago = (now - timedelta(days=7)).isoformat()
+    recent_txn_count = await db.bl_transactions.count_documents({
+        "user_id": user_id,
+        "created_at": {"$gte": week_ago}
+    })
+    
+    if recent_txn_count > 100:
+        score = 0.8
+    elif recent_txn_count > 50:
+        score = 0.5
+    elif recent_txn_count > 20:
+        score = 0.3
+    else:
+        score = 0.1
+    
+    weight = 15
+    risk_factors.append({
+        "factor": "transaction_velocity",
+        "score": score,
+        "weight": weight,
+        "detail": f"{recent_txn_count} transactions this week"
+    })
+    weighted_score += score * weight
+    total_weight += weight
+    
+    # Factor 4: Commission hold status
+    if user.get("commission_hold"):
+        score = 0.9
+        detail = "Currently on commission hold"
+    else:
+        score = 0.0
+        detail = "No holds"
+    
+    weight = 20
+    risk_factors.append({
+        "factor": "commission_hold",
+        "score": score,
+        "weight": weight,
+        "detail": detail
+    })
+    weighted_score += score * weight
+    total_weight += weight
+    
+    # Factor 5: Verification status
+    if user.get("id_verified"):
+        score = 0.0
+    elif user.get("email_verified"):
+        score = 0.3
+    else:
+        score = 0.6
+    
+    weight = 15
+    risk_factors.append({
+        "factor": "verification_status",
+        "score": score,
+        "weight": weight,
+        "detail": f"ID: {user.get('id_verified', False)}, Email: {user.get('email_verified', False)}"
+    })
+    weighted_score += score * weight
+    total_weight += weight
+    
+    # Factor 6: Referral patterns
+    referral_count = await db.users.count_documents({"referred_by": user_id})
+    suspicious_referrals = await db.users.count_documents({
+        "referred_by": user_id,
+        "$or": [{"is_flagged": True}, {"fraud_score": {"$gte": 0.7}}]
+    })
+    
+    if referral_count > 0:
+        suspicious_ratio = suspicious_referrals / referral_count
+        score = min(suspicious_ratio * 1.5, 1.0)
+    else:
+        score = 0.2  # No referrals is slightly suspicious
+    
+    weight = 10
+    risk_factors.append({
+        "factor": "referral_quality",
+        "score": score,
+        "weight": weight,
+        "detail": f"{suspicious_referrals}/{referral_count} suspicious referrals"
+    })
+    weighted_score += score * weight
+    total_weight += weight
+    
+    # Calculate final score
+    final_score = weighted_score / total_weight if total_weight > 0 else 0.5
+    final_score = round(min(max(final_score, 0), 1), 3)  # Clamp between 0-1
+    
+    # Determine risk level
+    if final_score >= 0.7:
+        risk_level = "high"
+    elif final_score >= 0.4:
+        risk_level = "medium"
+    else:
+        risk_level = "low"
+    
+    # Update user's fraud score
+    await db.users.update_one(
+        {"user_id": user_id},
+        {"$set": {
+            "fraud_score": final_score,
+            "fraud_score_updated_at": now.isoformat()
+        }}
+    )
+    
+    return {
+        "user_id": user_id,
+        "risk_score": final_score,
+        "risk_level": risk_level,
+        "risk_factors": risk_factors,
+        "calculated_at": now.isoformat()
+    }
+
+
+async def batch_calculate_risk_scores(limit: int = 100) -> dict:
+    """Calculate risk scores for users with recent activity"""
+    week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+    
+    # Find users with recent transactions
+    pipeline = [
+        {"$match": {"created_at": {"$gte": week_ago}}},
+        {"$group": {"_id": "$user_id"}},
+        {"$limit": limit}
+    ]
+    active_users = await db.bl_transactions.aggregate(pipeline).to_list(limit)
+    
+    results = {
+        "processed": 0,
+        "high_risk": 0,
+        "medium_risk": 0,
+        "low_risk": 0
+    }
+    
+    for user in active_users:
+        try:
+            score_result = await calculate_user_risk_score(user["_id"])
+            results["processed"] += 1
+            
+            if score_result.get("risk_level") == "high":
+                results["high_risk"] += 1
+            elif score_result.get("risk_level") == "medium":
+                results["medium_risk"] += 1
+            else:
+                results["low_risk"] += 1
+        except Exception as e:
+            logger.error(f"Error calculating risk for {user['_id']}: {e}")
+    
+    return results
