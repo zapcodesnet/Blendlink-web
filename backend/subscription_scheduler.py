@@ -379,6 +379,59 @@ async def charge_saved_payment_method(user_id: str, payment_method: dict, amount
         return {"success": False, "error": str(e)}
 
 
+async def charge_bank_account(user_id: str, bank_account: dict, amount: float, tier: str, subscription_id: str) -> dict:
+    """Charge using user's verified bank account (ACH)"""
+    import stripe
+    
+    stripe.api_key = os.environ.get("STRIPE_SECRET_KEY") or os.environ.get("STRIPE_API_KEY")
+    
+    stripe_bank_account_id = bank_account.get("stripe_payment_method_id")
+    
+    if not stripe_bank_account_id:
+        return {"success": False, "error": "No Stripe bank account ID"}
+    
+    try:
+        # Get or create Stripe customer
+        user = await db.users.find_one({"user_id": user_id})
+        stripe_customer_id = user.get("stripe_customer_id")
+        
+        if not stripe_customer_id:
+            return {"success": False, "error": "No Stripe customer ID for bank account charge"}
+        
+        # Create ACH payment intent
+        payment_intent = stripe.PaymentIntent.create(
+            amount=int(amount * 100),
+            currency="usd",
+            customer=stripe_customer_id,
+            payment_method=stripe_bank_account_id,
+            payment_method_types=["us_bank_account"],
+            off_session=True,
+            confirm=True,
+            mandate_data={
+                "customer_acceptance": {
+                    "type": "offline"
+                }
+            },
+            metadata={
+                "user_id": user_id,
+                "subscription_id": subscription_id,
+                "tier": tier,
+                "type": "subscription_renewal_ach"
+            }
+        )
+        
+        # ACH payments may be processing (not immediate)
+        if payment_intent.status in ["succeeded", "processing"]:
+            return {"success": True, "payment_intent_id": payment_intent.id, "status": payment_intent.status}
+        else:
+            return {"success": False, "error": f"ACH payment status: {payment_intent.status}"}
+            
+    except stripe.error.StripeError as e:
+        return {"success": False, "error": str(e)}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
 async def handle_subscription_downgrade(user_id: str, subscription_id: str, previous_tier: str):
     """
     Handle subscription downgrade after all payment retries fail.
