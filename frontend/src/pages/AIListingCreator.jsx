@@ -914,7 +914,7 @@ export default function AIListingCreator() {
     }
   };
   
-  const handlePublishClick = () => {
+  const handlePublishClick = async () => {
     const effectivePrice = auctionSettings.is_auction 
       ? (auctionSettings.starting_bid || userPrice)
       : userPrice;
@@ -936,8 +936,24 @@ export default function AIListingCreator() {
       return;
     }
     
+    // Check Stripe onboarding status - mandatory for sellers
+    const stripeConnected = await checkAndPrompt(false);
+    if (!stripeConnected) {
+      setPendingSubmit(true);
+      return;
+    }
+    
     // Show fee confirmation dialog
     setShowFeeConfirmation(true);
+  };
+  
+  // Handle Stripe onboarding completion
+  const handleStripeComplete = () => {
+    closePrompt();
+    if (pendingSubmit) {
+      setPendingSubmit(false);
+      setShowFeeConfirmation(true);
+    }
   };
   
   const publishListing = async () => {
