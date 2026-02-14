@@ -540,6 +540,66 @@ export default function MyTeam() {
           </div>
         )}
 
+        {/* Membership & Commission Status */}
+        <div className="bg-card rounded-2xl p-5 border border-border" data-testid="membership-status-section">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Crown className="w-5 h-5 text-purple-500" />
+              <span className="font-semibold">Membership Status</span>
+            </div>
+            <Badge 
+              className={`${
+                user?.subscription_tier === 'diamond' ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white' :
+                user?.subscription_tier === 'gold' ? 'bg-gradient-to-r from-yellow-500 to-amber-500 text-black' :
+                user?.subscription_tier === 'silver' ? 'bg-gradient-to-r from-gray-400 to-slate-500 text-white' :
+                user?.subscription_tier === 'bronze' ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-white' :
+                'bg-slate-600 text-white'
+              }`}
+            >
+              {user?.subscription_tier ? user.subscription_tier.charAt(0).toUpperCase() + user.subscription_tier.slice(1) : 'Free'}
+            </Badge>
+          </div>
+          
+          {/* Commission Rates based on tier */}
+          <div className="bg-muted/30 rounded-xl p-4 space-y-3">
+            <h4 className="text-sm font-medium flex items-center gap-2">
+              <Coins className="w-4 h-4 text-green-500" />
+              Your Commission Rates
+            </h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-green-600">
+                  {user?.subscription_tier === 'diamond' ? '4%' : 
+                   user?.subscription_tier === 'free' || !user?.subscription_tier ? '2%' : '3%'}
+                </p>
+                <p className="text-xs text-muted-foreground">Level 1 (Direct)</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-green-600">
+                  {user?.subscription_tier === 'diamond' ? '3%' : 
+                   user?.subscription_tier === 'free' || !user?.subscription_tier ? '1%' : '2%'}
+                </p>
+                <p className="text-xs text-muted-foreground">Level 2 (Indirect)</p>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground text-center">
+              Earn commissions when your downlines make sales in the marketplace or member pages
+            </p>
+          </div>
+          
+          {/* Upgrade prompt for non-premium users */}
+          {(!user?.subscription_tier || user?.subscription_tier === 'free') && (
+            <Button 
+              variant="outline" 
+              className="w-full mt-4"
+              onClick={() => navigate('/wallet')}
+            >
+              <Crown className="w-4 h-4 mr-2" />
+              Upgrade for Higher Commissions
+            </Button>
+          )}
+        </div>
+
         {/* Genealogy Tree */}
         <div className="bg-card rounded-2xl border border-border overflow-hidden">
           <div className="p-4 border-b border-border flex items-center justify-between">
