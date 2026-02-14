@@ -1465,7 +1465,7 @@ async def withdraw_to_stripe(request: WithdrawRequest, http_request: Request):
                 amount=request.amount,
                 reason=str(e)
             )
-        except:
+        except Exception:
             pass
         
         raise HTTPException(status_code=500, detail=f"Withdrawal failed: {str(e)}")
