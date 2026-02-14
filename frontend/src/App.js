@@ -273,6 +273,8 @@ function AppRouter() {
       <Route path="/payment-success" element={<PaymentSuccess />} />
       <Route path="/payment/cancel" element={<PaymentCancel />} />
       <Route path="/payment-cancelled" element={<PaymentCancel />} />
+      <Route path="/coins-purchase-success" element={<CoinsPurchaseSuccess />} />
+      <Route path="/coins-purchase-cancelled" element={<Navigate to="/wallet" replace />} />
       
       {/* Earnings/Referral Routes */}
       <Route path="/earnings" element={<ProtectedRoute><EarningsDashboard /></ProtectedRoute>} />
