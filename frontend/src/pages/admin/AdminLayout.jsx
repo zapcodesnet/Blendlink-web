@@ -34,6 +34,7 @@ import AdminWalletManagement from "./AdminWalletManagement";
 import AdminMembershipTiers from "./AdminMembershipTiers";
 import AdminPromoCodes from "./AdminPromoCodes";
 import AdminTransactionMonitor from "./AdminTransactionMonitor";
+import AdminCommissionDashboard from "./AdminCommissionDashboard";
 
 // Import real-time components
 import { useAdminWebSocket } from "../../hooks/useAdminWebSocket";
