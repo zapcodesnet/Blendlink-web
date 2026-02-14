@@ -3,12 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../App";
 import { toast } from "sonner";
 import { Button } from "../components/ui/button";
+import { getApiUrl } from "../utils/runtimeConfig";
 import { 
   Crown, Check, Zap, Target, Trophy, Star, Sparkles, 
   Shield, Rocket, Gift, Clock, TrendingUp, Medal 
 } from "lucide-react";
 
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE_URL = getApiUrl();
 
 const SubscriptionTiers = () => {
   const { user } = useContext(AuthContext);

@@ -2,9 +2,10 @@ import React, { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../App";
 import { toast } from "sonner";
+import { getApiUrl } from "../utils/runtimeConfig";
 import { Gamepad2, Trophy, Swords, Image, Store, Lock } from "lucide-react";
 
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE_URL = getApiUrl();
 
 // Admin email for full access
 const ADMIN_EMAIL = "blendlinknet@gmail.com";

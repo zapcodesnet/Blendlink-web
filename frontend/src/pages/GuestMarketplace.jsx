@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
+import { getApiUrl } from "../utils/runtimeConfig";
 import { 
   ShoppingCart, Search, Filter, X, Plus, Minus, 
   Trash2, ChevronLeft, CreditCard, User, Mail, MapPin,
@@ -15,7 +16,7 @@ import {
   DialogTitle,
 } from "../components/ui/dialog";
 
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE_URL = getApiUrl();
 
 export default function GuestMarketplace() {
   const navigate = useNavigate();

@@ -9,6 +9,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import LanguageSelector from "../components/LanguageSelector";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
+import { getApiUrl } from "../utils/runtimeConfig";
 import { 
   ArrowLeft, User, Bell, Moon, Shield, HelpCircle, 
   LogOut, ChevronRight, Camera, Globe, Eye, EyeOff,
@@ -16,7 +17,7 @@ import {
   Move, ZoomIn, ZoomOut, RotateCcw
 } from "lucide-react";
 
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE_URL = getApiUrl();
 
 // Image Position Editor Component
 const ImagePositionEditor = ({ imageUrl, onPositionChange, initialPosition }) => {
