@@ -583,7 +583,7 @@ Both web and mobile share the same backend API, ensuring 100% sync:
 ## 🔧 DEPLOYMENT STATUS
 
 ### Preview Environment
-- URL: `https://fraud-detection-7.preview.emergentagent.com`
+- URL: `https://emergency-fixes-1.preview.emergentagent.com`
 - **Stripe**: LIVE mode ✅
 - **Orphan System**: Working ✅ (91 orphans, 15 eligible parents)
 - **Scheduler**: Running (6h auto-assign, daily cleanup) ✅

@@ -1,93 +1,401 @@
 <analysis>**original_problem_statement:**
-The user wants to implement a comprehensive set of features related to monetization and membership. This includes:
-1.  **Admin Dashboard:** Build a comprehensive admin panel to manage membership tiers, commission rates, user benefits, create promo codes, and monitor transactions, including a new commission dashboard.
-2.  **Stripe Onboarding:** Implement an automated prompt for users to connect their Stripe account when they create their first listing, making it mandatory for withdrawals.
-3.  **Wallet Page Overhaul & Recurring Subscriptions:**
-    *   Make Top Up BL Coins and Membership Subscriptions sections permanently visible on the wallet page.
-    *   Allow users to purchase coins and subscriptions using their real cash earnings balance.
-    *   Implement logic for recurring monthly subscription payments with a specific fallback order: 1. BlendLink earnings balance, 2. Connected Stripe account, 3. Linked card/bank account.
-    *   Handle failed payments with a retry mechanism and user notifications.
-    *   Implement an auto-flagging system for suspicious transactions.
-4.  **Feature Synchronization:** Ensure that membership status and its associated perks are correctly reflected across all relevant pages of the application and that a verification endpoint exists for the mobile app.
+The user has reported a series of critical, widespread bugs that are breaking core functionality across the application. The previous tasks are considered complete, and the following bug fixes are now the top priority. All fixes must be synchronized between the web and mobile applications.
+
+**PRODUCT REQUIREMENTS:**
+
+1.  **Fix Missing Subscription Page:** The  page is broken or missing. It must be created or restored to display all four membership tiers (Bronze, Silver, Gold, Diamond) with detailed explanations of benefits, commission rates, and perks. The page needs to include functional buttons for upgrading, downgrading, and canceling subscriptions.
+2.  **Fix Broken Payment Processing:** Real payments with Stripe are failing across the marketplace, member pages, and the main payment page. The system is generating receipts without processing actual payments. The fix requires implementing a proper Stripe payment flow: prompt for card details, redirect to Stripe's hosted page, process payment, and only generate a receipt upon successful confirmation.
+3.  **Fix Wallet Page Errors:** The  page has multiple broken features:
+    *   The Connect Stripe Account button fails.
+    *   Subscribing or upgrading a membership fails.
+    *   Topping up BL Coins fails.
+    These flows must be repaired to handle payments correctly (using earnings balance first, then Stripe) and update user data instantly.
+4.  **Fix Broken Admin Panel:** The  panel is non-functional. Data fails to load, updates are not reflected, and input fields are not working. All admin functionalities must be restored, ensuring real-time data display and functional controls.
+5.  **Fix Environment & Hardcoded URL Issues:** The application suffers from environment-specific issues, such as hardcoded URLs and incorrect environment variable handling, causing sync problems between preview and production. All hardcoded URLs must be replaced with dynamic logic (e.g.,  or ), and a full frontend rebuild with correct production environment variables is required.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application is a full-stack project using React, FastAPI, and MongoDB. The agent has successfully implemented several major features:
-1.  **Stripe Onboarding Enforcement:** The  is now fully integrated into all listing creation flows ( and ), making Stripe connection mandatory.
-2.  **Recurring Subscription System:** A robust backend scheduler () is in place (). It handles daily subscription renewals and retries failed payments every 6 hours. The payment logic includes a full fallback chain: user's cash balance -> saved card -> saved bank account.
-3.  **Functional Admin Dashboard:** The admin dashboard is fully functional. It includes pages for managing membership tiers, promo codes, and a comprehensive transaction monitor. A new commission dashboard () has been added to view key metrics and manage held commissions.
-4.  **Suspicious Transaction System:** A transaction auto-flagging system () has been implemented to identify potentially fraudulent activity based on predefined rules.
-5.  **Mobile Sync Verification:** A dedicated API endpoint () has been created to support synchronization verification with the mobile application.
-6.  All new features have been successfully verified by the testing agent.
+The agent has just completed the implementation of several admin-facing features: real-time commission adjustments, custom membership benefit creation, and an enhanced rule-based fraud detection system. Following this, the agent ran a deployment health check, which identified and then fixed critical deployment blockers, primarily by removing numerous hardcoded Stripe API keys from backend files and correcting an authentication redirect URL. The agent believed the application was ready for deployment before receiving the user's new list of critical bugs.
 
 **Last working item**:
-- Last item agent was working: The agent just completed a large batch of P2 and P3 tasks, including the commission dashboard, payment fallback enhancement, suspicious transaction flagging, and mobile sync verification. All work was verified by the testing agent, and the agent called the  tool. The user has provided a new list of tasks to work on next.
-- Status: COMPLETED
-- Agent Testing Done: Y
-- Which testing method agent to use? NA
+- Last item agent was working: The agent's last action was acknowledging the user's new, extensive list of critical bugs that need to be fixed across the entire application. Before that, the agent had just finished fixing critical deployment blockers (hardcoded Stripe keys and incorrect redirect URLs) and confirmed the fixes by re-running the deployment health check.
+- Status: NOT STARTED (on the new list of critical bugs).
+- Agent Testing Done: Y (for the deployment blocker fixes, via  health check).
+- Which testing method agent to use? both (The fixes will be extensive, touching frontend, backend, and payment integrations. The  will be required to perform comprehensive E2E testing after implementation).
 - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-  There are no pending issues. All work from the previous phase has been completed and verified.
+All issues are P0 priority as they represent critical production bugs reported by the user.
+
+-   **Issue 1: Missing/Broken Subscription Page (P0)**
+-   **Issue 2: Broken Stripe Payment Processing (P0)**
+-   **Issue 3: Wallet Page Errors (P0)**
+-   **Issue 4: Broken Admin Panel (P0)**
+-   **Issue 5: Environment and Deployment/Hardcoded URL Issues (P0)**
+
+**Issues Detail:**
+-   **Issue 1: Missing/Broken Subscription Page**
+    -   **Attempted fixes:** None. This is a new issue reported by the user.
+    -   **Next debug checklist:**
+        1.  Check frontend routing in  to see if a route for  exists.
+        2.  If the route exists, check the component it points to for errors.
+        3.  If no component exists, create a new page .
+        4.  Implement the UI to display the four membership tiers (Bronze, Silver, Gold, Diamond) with all details as specified by the user.
+        5.  Connect upgrade/downgrade/cancel buttons to the relevant backend subscription endpoints.
+    -   **Why fix this issue and what will be achieved with the fix?** This is a critical monetization feature. Fixing it will allow users to view and purchase memberships, a core revenue stream for the application.
+    -   **Status:** NOT STARTED
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** both
+    -   **Blocked on other issue:** None.
+
+-   **Issue 2, 3, 4 (Payments, Wallet, Admin Panel):** These are all likely related to the same root causes: incorrect environment variable handling, broken API calls, or database connection issues, exacerbated by the recent removal of hardcoded keys.
+    -   **Attempted fixes:** The agent fixed specific instances of hardcoded keys but may have missed others or introduced regressions.
+    -   **Next debug checklist:**
+        1.  **Environment:** Verify  in  and ensure the backend is correctly loading Stripe keys from .
+        2.  **Backend Logs:** Check supervisor logs (==> /var/log/supervisor/backend.err.log <==
+ERROR:member_pages_system:Change stream error for page_rentals: The $changeStream stage is only supported on replica sets, full error: {'ok': 0.0, 'errmsg': 'The $changeStream stage is only supported on replica sets', 'code': 40573, 'codeName': 'Location40573'}
+ERROR:member_pages_system:Change stream error for member_pages: The $changeStream stage is only supported on replica sets, full error: {'ok': 0.0, 'errmsg': 'The $changeStream stage is only supported on replica sets', 'code': 40573, 'codeName': 'Location40573'}
+ERROR:member_pages_system:Change stream error for page_products: The $changeStream stage is only supported on replica sets, full error: {'ok': 0.0, 'errmsg': 'The $changeStream stage is only supported on replica sets', 'code': 40573, 'codeName': 'Location40573'}
+ERROR:member_pages_system:Change stream error for member_page_subscriptions: The $changeStream stage is only supported on replica sets, full error: {'ok': 0.0, 'errmsg': 'The $changeStream stage is only supported on replica sets', 'code': 40573, 'codeName': 'Location40573'}
+ERROR:member_pages_system:Change stream error for page_services: The $changeStream stage is only supported on replica sets, full error: {'ok': 0.0, 'errmsg': 'The $changeStream stage is only supported on replica sets', 'code': 40573, 'codeName': 'Location40573'}
+ERROR:member_pages_system:Change stream error for page_inventory: The $changeStream stage is only supported on replica sets, full error: {'ok': 0.0, 'errmsg': 'The $changeStream stage is only supported on replica sets', 'code': 40573, 'codeName': 'Location40573'}
+ERROR:member_pages_system:Change stream error for page_rentals: The $changeStream stage is only supported on replica sets, full error: {'ok': 0.0, 'errmsg': 'The $changeStream stage is only supported on replica sets', 'code': 40573, 'codeName': 'Location40573'}
+ERROR:member_pages_system:Change stream error for page_orders: The $changeStream stage is only supported on replica sets, full error: {'ok': 0.0, 'errmsg': 'The $changeStream stage is only supported on replica sets', 'code': 40573, 'codeName': 'Location40573'}
+ERROR:member_pages_system:Change stream error for page_menu_items: The $changeStream stage is only supported on replica sets, full error: {'ok': 0.0, 'errmsg': 'The $changeStream stage is only supported on replica sets', 'code': 40573, 'codeName': 'Location40573'}
+INFO:     Will watch for changes in these directories: ['/app/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [47] using WatchFiles
+INFO:server:AI Photo Transform System loaded
+INFO:server:Member Pages System loaded
+INFO:server:Member Pages Extended Features loaded (Barcode, AI Scan, POS, Referrals, Marketplace Link, Customer Options)
+INFO:stripe_payments:✅ STRIPE LIVE MODE VERIFIED - Key: sk_live_51Sk...
+INFO:stripe_payments:✅ STRIPE PUBLISHABLE KEY LIVE MODE - Key: pk_live_51Sk...
+INFO:server:Page Stripe Payments loaded
+INFO:stripe_integration:✅ STRIPE INTEGRATION: LIVE MODE VERIFIED - sk_live_51Sk...
+INFO:server:Stripe integration router loaded
+INFO:server:Real-time analytics, A/B testing, and biometric routers loaded
+INFO:server:Referral, Diamond, Withdrawal, KYC, Reassignment, Admin Withdrawal, and Notifications routers loaded
+INFO:server:Production Admin System routers loaded (Auth, Secure OTP, Users, Finance, Genealogy, Content, Roles, System, Notifications, Security, Orphans, Diamonds, Reactions, OrphanSystem)
+INFO:minting_routes:Minting services initialized
+INFO:server:Internal Minting System loaded (Photo/Video/Music collectibles)
+INFO:game_routes:Photo Game services initialized
+INFO:server:Photo Game System loaded (Battles, Leaderboards, XP)
+INFO:marketplace_routes:Marketplace services initialized
+INFO:server:Marketplace System loaded (Sales, Offers, Auctions)
+INFO:server:BL Rewards System loaded (Content rewards, Downline bonuses)
+INFO:server:Shipping System loaded (Shippo integration)
+INFO:server:Cart & Orders System loaded (Guest checkout, Order management)
+INFO:server:Subscription System loaded (Tiers, Daily Bonuses, Ranked, Tournaments)
+INFO:server:Admin Membership System loaded (Tier Management, Promo Codes, Transaction Monitoring)
+INFO:server:Subscription Scheduler loaded (Recurring Payments, Retries, Notifications)
+INFO:server:Suspicious Transaction Detector loaded (Auto-flagging, Fraud rules, Analytics)
+INFO:server:Mobile Sync System loaded (API Compatibility, Health Checks)
+INFO:server:Marketplace Offers System loaded (Make an Offer, Counter-offers, Deposits)
+INFO:server:Auction System loaded (Bidding, Auto-extend, Real-time updates)
+INFO:server:WebSocket Notifications loaded
+INFO:server:Auction Bidding WebSocket loaded
+INFO:server:Game Lobby WebSocket loaded
+INFO:server:PVP Game WebSocket loaded
+INFO:server:Spectator WebSocket and Live Battles API loaded
+INFO:server:Push Notifications loaded (Expo push tokens)
+INFO:     Started server process [92]
+INFO:     Waiting for application startup.
+INFO:subscription_scheduler:Subscription scheduler configured
+INFO:subscription_scheduler:Subscription scheduler started
+INFO:server:Subscription scheduler started
+INFO:mongodb_pvp_optimization:Created/verified index idx_session_id on pvp_sessions
+INFO:mongodb_pvp_optimization:Created/verified index idx_open_game_id on pvp_sessions
+WARNING:mongodb_pvp_optimization:Index creation warning for pvp_sessions: Index already exists with a different name: player1_sessions_idx, full error: {'ok': 0.0, 'errmsg': 'Index already exists with a different name: player1_sessions_idx', 'code': 85, 'codeName': 'IndexOptionsConflict', '$clusterTime': {'clusterTime': Timestamp(1771100086, 8), 'signature': {'hash': b'\xf7g\xa1\xe0T\x8d\x7f\xf8\xeb2\xaef\xb3\xa6\xd3j\xae+\xdc\\', 'keyId': 7546234487982522385}}, 'operationTime': Timestamp(1771100086, 8)}
+WARNING:mongodb_pvp_optimization:Index creation warning for pvp_sessions: Index already exists with a different name: player2_sessions_idx, full error: {'ok': 0.0, 'errmsg': 'Index already exists with a different name: player2_sessions_idx', 'code': 85, 'codeName': 'IndexOptionsConflict', '$clusterTime': {'clusterTime': Timestamp(1771100086, 8), 'signature': {'hash': b'\xf7g\xa1\xe0T\x8d\x7f\xf8\xeb2\xaef\xb3\xa6\xd3j\xae+\xdc\\', 'keyId': 7546234487982522385}}, 'operationTime': Timestamp(1771100086, 8)}
+INFO:mongodb_pvp_optimization:Created/verified index idx_status_updated on pvp_sessions
+INFO:mongodb_pvp_optimization:Created/verified index idx_round_status on pvp_sessions
+INFO:mongodb_pvp_optimization:Created/verified index idx_ttl_completed on pvp_sessions
+INFO:mongodb_pvp_optimization:Created/verified index idx_game_id on open_games
+INFO:mongodb_pvp_optimization:Created/verified index idx_status_created on open_games
+INFO:mongodb_pvp_optimization:Created/verified index idx_creator_status on open_games
+INFO:mongodb_pvp_optimization:Created/verified index idx_opponent_status on open_games
+INFO:mongodb_pvp_optimization:Created/verified index idx_ttl_waiting on open_games
+INFO:mongodb_pvp_optimization:Created/verified index idx_session_round on pvp_round_results
+INFO:mongodb_pvp_optimization:Created/verified index idx_winner_history on pvp_round_results
+INFO:mongodb_pvp_optimization:PVP indexes created/verified
+INFO:mongodb_pvp_optimization:Change streams available
+INFO:mongodb_pvp_optimization:Atomic operations ready
+INFO:server:MongoDB PVP Optimizations initialized: {'indexes_created': {'pvp_sessions': ['idx_session_id', 'idx_open_game_id', 'idx_status_updated', 'idx_round_status', 'idx_ttl_completed'], 'open_games': ['idx_game_id', 'idx_status_created', 'idx_creator_status', 'idx_opponent_status', 'idx_ttl_waiting'], 'pvp_round_results': ['idx_session_round', 'idx_winner_history']}, 'change_streams_available': True, 'atomic_ops_ready': True}
+INFO:server:  pvp_sessions: 5 indexes
+INFO:server:  open_games: 5 indexes
+INFO:server:  pvp_round_results: 2 indexes
+INFO:server:  ✅ Change streams available for real-time sync
+INFO:server:  ✅ Atomic operations ready
+INFO:member_pages_system:🔄 Starting MongoDB Change Streams for real-time sync...
+INFO:member_pages_system:   ✅ Watching collection: member_pages
+INFO:member_pages_system:   ✅ Watching collection: page_products
+INFO:member_pages_system:   ✅ Watching collection: page_menu_items
+INFO:member_pages_system:   ✅ Watching collection: page_services
+INFO:member_pages_system:   ✅ Watching collection: page_rentals
+INFO:member_pages_system:   ✅ Watching collection: page_orders
+INFO:member_pages_system:   ✅ Watching collection: page_inventory
+INFO:member_pages_system:   ✅ Watching collection: member_page_subscriptions
+INFO:member_pages_system:🎉 MongoDB Change Streams active - Real-time sync enabled!
+INFO:server:✅ Member Pages Change Streams initialized for real-time sync
+INFO:report_scheduler:Daily report scheduler started - checking every hour
+INFO:server:✅ Daily Report Email Scheduler started
+INFO:orphan_scheduler:Orphan assignment scheduler started (auto-assign every 6h, cleanup daily at 3 AM UTC)
+INFO:server:✅ Orphan Auto-Assignment Scheduler started (every 6h)
+INFO:     Application startup complete.
+INFO:member_pages_system:Change stream connected for page_rentals
+INFO:member_pages_system:Change stream connected for page_inventory
+INFO:member_pages_system:Change stream connected for page_orders
+INFO:member_pages_system:Change stream connected for member_pages
+INFO:member_pages_system:Change stream connected for member_page_subscriptions
+INFO:member_pages_system:Change stream connected for page_services
+INFO:member_pages_system:Change stream connected for page_products
+INFO:member_pages_system:Change stream connected for page_menu_items
+INFO:     Will watch for changes in these directories: ['/app/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [48] using WatchFiles
+
+==> /var/log/supervisor/backend.out.log <==
+INFO:     10.64.133.200:59224 - "GET /api/rentals?limit=6 HTTP/1.1" 404 Not Found
+INFO:     10.64.132.108:57300 - "GET /api/services?limit=6 HTTP/1.1" 200 OK
+INFO:     10.64.133.200:59224 - "GET /api/marketplace/listings?limit=6 HTTP/1.1" 200 OK
+INFO:     10.64.133.74:44712 - "GET /api/rentals?limit=6 HTTP/1.1" 404 Not Found
+INFO:     10.64.133.74:54712 - "POST /api/auth/google-session HTTP/1.1" 200 OK
+INFO:     10.64.131.6:48966 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.64.133.74:54712 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.64.131.6:48966 - "GET /api/wallet/balance HTTP/1.1" 200 OK
+INFO:     10.64.131.6:48966 - "GET /api/wallet/balance HTTP/1.1" 200 OK
+INFO:     10.64.131.6:48976 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.64.131.6:48966 - "GET /api/notifications/?limit=1 HTTP/1.1" 200 OK
+INFO:     10.64.132.108:51514 - "GET /api/social/feed?skip=0&limit=10 HTTP/1.1" 200 OK
+INFO:     10.64.133.74:54712 - "GET /api/wallet/balance HTTP/1.1" 200 OK
+INFO:     10.64.133.74:54712 - "GET /api/notifications/?limit=1 HTTP/1.1" 200 OK
+INFO:     10.64.131.6:48966 - "GET /api/social/feed?skip=0&limit=10 HTTP/1.1" 200 OK
+INFO:     10.64.132.108:51514 - "GET /api/stories/ HTTP/1.1" 200 OK
+INFO:     10.64.133.200:34314 - "GET /api/stories/ HTTP/1.1" 200 OK
+INFO:     10.64.131.6:37372 - "GET /api/marketplace/categories HTTP/1.1" 200 OK
+INFO:     10.64.133.200:49766 - "GET /api/notifications/?limit=1 HTTP/1.1" 200 OK
+INFO:     10.64.130.12:50248 - "GET /api/marketplace/listings?sort=newest HTTP/1.1" 200 OK
+INFO:     10.64.133.74:57720 - "GET /api/marketplace/categories HTTP/1.1" 200 OK
+INFO:     10.64.133.74:57720 - "GET /api/notifications/?limit=1 HTTP/1.1" 200 OK
+INFO:     10.64.130.12:50248 - "GET /api/marketplace/listings?sort=newest HTTP/1.1" 200 OK
+INFO:     10.64.133.200:39550 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.64.133.200:39550 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.64.130.12:41806 - "GET /api/wallet/balance HTTP/1.1" 200 OK
+INFO:     10.64.133.74:41528 - "GET /api/wallet/balance HTTP/1.1" 200 OK
+INFO:     10.64.133.74:41528 - "GET /api/notifications/?skip=0&limit=20&unread_only=false HTTP/1.1" 200 OK
+INFO:     10.64.131.6:40590 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.64.133.74:41538 - "GET /api/notifications/?limit=1 HTTP/1.1" 200 OK
+INFO:     10.64.132.108:44634 - "GET /api/notifications/?skip=0&limit=20&unread_only=false HTTP/1.1" 200 OK
+INFO:     10.64.133.200:39550 - "GET /api/notifications/?limit=1 HTTP/1.1" 200 OK
+INFO:     10.64.131.6:40590 - "GET /api/wallet/balance HTTP/1.1" 200 OK
+INFO:     10.64.132.108:44634 - "GET /api/subscriptions/current HTTP/1.1" 404 Not Found
+INFO:     10.64.130.12:41806 - "GET /api/wallet/balance HTTP/1.1" 200 OK
+INFO:     10.64.133.200:39550 - "GET /api/referral/daily-claim/status HTTP/1.1" 200 OK
+INFO:     10.64.133.74:41538 - "GET /api/wallet/transactions?skip=0&limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.12:38812 - "GET /api/referral/transaction-history?skip=0&limit=20&transaction_type=sale_earnings HTTP/1.1" 200 OK
+INFO:     10.64.133.74:41528 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.64.131.6:40590 - "GET /api/referral/commission-history?skip=0&limit=20 HTTP/1.1" 200 OK
+INFO:     10.64.133.200:39550 - "GET /api/subscriptions/current HTTP/1.1" 404 Not Found
+INFO:     10.64.133.74:41552 - "GET /api/payments/stripe/connect/status HTTP/1.1" 200 OK
+INFO:     10.64.131.6:40590 - "GET /api/wallet/balance HTTP/1.1" 200 OK
+INFO:     10.64.131.6:40598 - "GET /api/wallet/transactions?skip=0&limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.133.74:41528 - "GET /api/referral/daily-claim/status HTTP/1.1" 200 OK
+INFO:     10.64.133.200:39550 - "GET /api/payments/stripe/connect/status HTTP/1.1" 200 OK
+INFO:     10.64.132.108:44634 - "GET /api/referral/transaction-history?skip=0&limit=20&transaction_type=sale_earnings HTTP/1.1" 200 OK
+INFO:     10.64.133.74:41528 - "GET /api/referral/commission-history?skip=0&limit=20 HTTP/1.1" 200 OK
+INFO:     10.64.130.12:38812 - "GET /api/wallet/transactions?skip=0&limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.131.6:40590 - "GET /api/wallet/balance HTTP/1.1" 200 OK
+INFO:     10.64.133.200:39550 - "GET /api/referral/daily-claim/status HTTP/1.1" 200 OK
+INFO:     10.64.133.74:41528 - "GET /api/payments/stripe/connect/status HTTP/1.1" 200 OK
+INFO:     10.64.130.12:38812 - "GET /api/referral/transaction-history?skip=0&limit=20&transaction_type=sale_earnings HTTP/1.1" 200 OK
+INFO:     10.64.131.6:40590 - "GET /api/referral/commission-history?skip=0&limit=20 HTTP/1.1" 200 OK
+INFO:     10.64.133.74:41528 - "GET /api/wallet/balance HTTP/1.1" 200 OK
+INFO:     10.64.133.74:51436 - "GET /api/notifications/?limit=1 HTTP/1.1" 200 OK
+INFO:     10.64.133.200:42098 - "GET /api/notifications/?limit=1 HTTP/1.1" 200 OK
+INFO:     10.64.132.108:37902 - "GET /api/wallet/balance HTTP/1.1" 200 OK
+INFO:     10.64.133.74:37540 - "GET /api/wallet/transactions?skip=0&limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.133.74:37540 - "GET /api/referral/daily-claim/status HTTP/1.1" 200 OK
+INFO:     10.64.131.6:55168 - "GET /api/referral/commission-history?skip=0&limit=20 HTTP/1.1" 200 OK
+INFO:     10.64.132.108:37902 - "GET /api/referral/transaction-history?skip=0&limit=20&transaction_type=sale_earnings HTTP/1.1" 200 OK
+INFO:     10.64.131.6:55162 - "GET /api/payments/stripe/connect/status HTTP/1.1" 200 OK
+✅ Connected to MongoDB Atlas: blendlink
+✅ STRIPE LIVE MODE VERIFIED (LIVE) - Key: sk_live_51Sk...
+✅ STRIPE INTEGRATION: LIVE MODE VERIFIED - sk_live_51Sk...
+⚠️ Atlas connection failed (No replica set members match selector "Primary()", Timeout: 5.0s, Topology Description: <TopologyDescription id: 6990c552cda2062c4a62bf3c, topology_type: ReplicaSetNoPrimary, servers: [<ServerDescription ('ac-yylvnge-shard-00-00.oyhdotc.mongodb.net', 27017) server_type: RSSecondary, rtt: 0.0018807790038408712>, <ServerDescription ('ac-yylvnge-shard-00-01.oyhdotc.mongodb.net', 27017) server_type: RSSecondary, rtt: 0.002544137001677882>, <ServerDescription ('ac-yylvnge-shard-00-02.oyhdotc.mongodb.net', 27017) server_type: Unknown, rtt: None>]>), falling back to local MongoDB
+✅ Connected to Local MongoDB: blendlink
+✅ STRIPE LIVE MODE VERIFIED (LIVE) - Key: sk_live_51Sk...
+✅ STRIPE INTEGRATION: LIVE MODE VERIFIED - sk_live_51Sk...
+⚠️ Atlas connection failed (No replica set members match selector "Primary()", Timeout: 5.0s, Topology Description: <TopologyDescription id: 6990c583fdf864e72eed6b5e, topology_type: ReplicaSetNoPrimary, servers: [<ServerDescription ('ac-yylvnge-shard-00-00.oyhdotc.mongodb.net', 27017) server_type: RSSecondary, rtt: 0.0013571349991252646>, <ServerDescription ('ac-yylvnge-shard-00-01.oyhdotc.mongodb.net', 27017) server_type: RSSecondary, rtt: 0.0024113839972415008>, <ServerDescription ('ac-yylvnge-shard-00-02.oyhdotc.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('SSL handshake failed: ac-yylvnge-shard-00-02.oyhdotc.mongodb.net:27017: [SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error (_ssl.c:1016)')>]>), falling back to local MongoDB
+✅ Connected to Local MongoDB: blendlink
+✅ STRIPE LIVE MODE VERIFIED (LIVE) - Key: sk_live_51Sk...
+✅ STRIPE INTEGRATION: LIVE MODE VERIFIED - sk_live_51Sk...
+INFO:     10.64.133.200:50130 - "GET /api/marketplace/listings?limit=6 HTTP/1.1" 200 OK
+INFO:     10.64.132.108:54838 - "GET /api/rentals?limit=6 HTTP/1.1" 404 Not Found
+INFO:     10.64.132.108:54854 - "GET /api/services?limit=6 HTTP/1.1" 200 OK
+INFO:     10.64.133.200:50130 - "GET /api/marketplace/listings?limit=6 HTTP/1.1" 200 OK
+INFO:     10.64.133.200:50130 - "GET /api/rentals?limit=6 HTTP/1.1" 404 Not Found
+INFO:     10.64.133.200:50142 - "GET /api/services?limit=6 HTTP/1.1" 200 OK
+INFO:     10.64.132.108:42718 - "GET /api/rentals?limit=6 HTTP/1.1" 404 Not Found
+INFO:     10.64.131.6:52918 - "GET /api/services?limit=6 HTTP/1.1" 200 OK
+INFO:     10.64.133.200:58428 - "GET /api/marketplace/listings?limit=6 HTTP/1.1" 200 OK
+INFO:     10.64.133.200:58428 - "GET /api/rentals?limit=6 HTTP/1.1" 404 Not Found
+INFO:     10.64.132.108:42718 - "GET /api/services?limit=6 HTTP/1.1" 200 OK
+INFO:     10.64.130.12:58002 - "GET /api/marketplace/listings?limit=6 HTTP/1.1" 200 OK
+INFO:     10.64.130.12:52770 - "GET /api/services?limit=6 HTTP/1.1" 200 OK
+INFO:     10.64.132.108:46752 - "GET /api/rentals?limit=6 HTTP/1.1" 404 Not Found
+INFO:     10.64.130.12:52770 - "GET /api/services?limit=6 HTTP/1.1" 200 OK
+INFO:     10.64.132.108:46760 - "GET /api/marketplace/listings?limit=6 HTTP/1.1" 200 OK
+INFO:     10.64.133.200:56198 - "GET /api/rentals?limit=6 HTTP/1.1" 404 Not Found
+INFO:     10.64.132.108:46760 - "GET /api/marketplace/listings?limit=6 HTTP/1.1" 200 OK
+INFO:     10.64.132.108:46764 - "GET /api/utils/detect-language HTTP/1.1" 200 OK
+INFO:     10.64.133.200:45900 - "GET /api/rentals?limit=6 HTTP/1.1" 404 Not Found
+INFO:     10.64.130.12:59094 - "GET /api/services?limit=6 HTTP/1.1" 200 OK
+INFO:     10.64.133.74:44384 - "GET /api/marketplace/listings?limit=6 HTTP/1.1" 200 OK
+INFO:     10.64.132.108:47194 - "GET /api/rentals?limit=6 HTTP/1.1" 404 Not Found
+INFO:     10.64.130.12:59094 - "GET /api/services?limit=6 HTTP/1.1" 200 OK
+INFO:     10.64.131.6:54442 - "GET /api/marketplace/listings?limit=6 HTTP/1.1" 200 OK
+INFO:     10.64.132.108:47184 - "GET /api/utils/detect-language HTTP/1.1" 200 OK) for any runtime errors when API calls are made.
+        3.  **Network Tab:** Use the browser's developer tools to inspect failed API calls from the Wallet and Admin pages to identify incorrect request URLs or error responses (e.g., 401, 404, 500).
+        4.  **Stripe API Logic:** Review  and other related files to ensure the logic correctly initializes the Stripe client with keys from .
+        5.  **Admin Panel APIs:** Trace the API calls made by the admin panel components and check the corresponding backend routers for failures.
+    -   **Why fix this issue and what will be achieved with the fix?** These bugs break all core user and admin functionalities, including payments, subscriptions, and management. Fixing them is essential for the application to be usable.
+    -   **Status:** NOT STARTED
+    -   **Is recurring issue?** Y (The underlying cause of environment/key issues is recurrent).
+    -   **Should Test frontend/backend/both after fix?** both
+    -   **Blocked on other issue:** Issue 5 (Environment issues) is a likely blocker for all of these.
+
+-   **Issue 5: Environment and Deployment Issues**
+    -   **Attempted fixes:** Agent removed hardcoded Stripe keys from ~9 files and fixed one redirect URL.
+    -   **Next debug checklist:**
+        1.  Run a global search (/app/frontend/src/utils/runtimeConfig.js:      return 'https://blendlink.net';
+/app/frontend/src/utils/runtimeConfig.js:      return process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+/app/frontend/src/utils/runtimeConfig.js:  return process.env.REACT_APP_BACKEND_URL || 'https://blendlink.net';
+/app/frontend/src/utils/runtimeConfig.js:  return apiUrl.replace(/^http/, 'ws');
+/app/frontend/src/utils/runtimeConfig.js:  return 'https://blendlink.net';
+/app/frontend/src/styles/premium-design-system.css:@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
+/app/frontend/src/index.css:@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+/app/frontend/src/services/api.js:    window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
+/app/frontend/src/services/faceDetection.js:const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
+/app/frontend/src/components/member-pages/PublicPageView.jsx:  const mapUrl = `https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodedAddress}`;
+/app/frontend/src/components/member-pages/PublicPageView.jsx:  const fallbackUrl = `https://maps.google.com/maps?q=${encodedAddress}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+/app/frontend/src/components/member-pages/PublicPageView.jsx:                      href={`https://maps.google.com/?q=${encodeURIComponent(`${loc.address}, ${loc.city}`)}`}
+/app/frontend/src/components/member-pages/AnalyticsDashboard.jsx:                  value={`https://blendlink.net/${pageName?.toLowerCase().replace(/[^a-z0-9]+/g, '-')}?ref=${analytics.referral_stats.referral_code}`}
+/app/frontend/src/components/member-pages/AnalyticsDashboard.jsx:                    navigator.clipboard.writeText(`https://blendlink.net/${pageName?.toLowerCase().replace(/[^a-z0-9]+/g, '-')}?ref=${analytics.referral_stats.referral_code}`);
+/app/frontend/src/components/member-pages/AnalyticsDashboard.jsx:                  const url = `https://blendlink.net/${pageName?.toLowerCase().replace(/[^a-z0-9]+/g, '-')}?ref=${analytics.referral_stats.referral_code}`;
+/app/frontend/src/components/member-pages/AnalyticsDashboard.jsx:                  window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(`Check out ${pageName} on BlendLink!`)}`, '_blank');
+/app/frontend/src/components/member-pages/AnalyticsDashboard.jsx:                  const url = `https://blendlink.net/${pageName?.toLowerCase().replace(/[^a-z0-9]+/g, '-')}?ref=${analytics.referral_stats.referral_code}`;
+/app/frontend/src/components/member-pages/AnalyticsDashboard.jsx:                  window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
+/app/frontend/src/components/member-pages/AnalyticsDashboard.jsx:                  const url = `https://blendlink.net/${pageName?.toLowerCase().replace(/[^a-z0-9]+/g, '-')}?ref=${analytics.referral_stats.referral_code}`;
+/app/frontend/src/components/member-pages/AnalyticsDashboard.jsx:                  window.open(`https://wa.me/?text=${encodeURIComponent(`Check out ${pageName} on BlendLink! ${url}`)}`, '_blank');
+/app/frontend/src/components/member-pages/CustomerOptionsManager.jsx:                            ? `https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${loc.latitude},${loc.longitude}&zoom=15`
+/app/frontend/src/components/member-pages/CustomerOptionsManager.jsx:                            : `https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodeURIComponent(`${loc.address}, ${loc.city}, ${loc.state}`)}`
+/app/frontend/src/components/member-pages/CustomerOptionsManager.jsx:                      href={`https://maps.google.com/?q=${encodeURIComponent(`${loc.address}, ${loc.city}, ${loc.state}`)}`}
+/app/frontend/src/components/member-pages/MemberPageDashboard.jsx:      const imageUrl = data.url.startsWith('http') ? data.url : `${API_URL}${data.url}`;
+/app/frontend/src/components/member-pages/MemberPageDashboard.jsx:      const imageUrl = data.url.startsWith('http') ? data.url : `${API_URL}${data.url}`;
+/app/frontend/src/components/member-pages/MemberPageDashboard.jsx:      const imageUrl = data.url.startsWith('http') ? data.url : `${API_URL}${data.url}`;
+/app/frontend/src/components/member-pages/MemberPageDashboard.jsx:              placeholder="https://yourwebsite.com"
+/app/frontend/src/components/member-pages/MemberPageDashboard.jsx:    const wsUrl = `${API_URL.replace('http', 'ws')}/api/member-pages/ws/${pageId}?token=${token}`;
+/app/frontend/src/components/AuctionBidPanel.jsx:    const wsUrl = API_BASE_URL.replace('https://', 'wss://').replace('http://', 'ws://');
+/app/frontend/src/components/FacebookShareOverlay.jsx:const FACEBOOK_GROUP_URL = "https://www.facebook.com/groups/938837402074960?ref=blendlink";
+/app/frontend/src/components/StripeOnboardingPrompt.jsx:                  href="https://stripe.com/legal"
+/app/frontend/src/components/LinkPreview.jsx:  const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/gi;
+/app/frontend/src/components/LinkPreview.jsx:  return matches.map(url => url.startsWith('http') ? url : `https://${url}`);
+/app/frontend/src/components/game/SpectatorView.jsx:    const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+/app/frontend/src/components/game/SpectatorView.jsx:    const wsHost = backendUrl?.replace(/^https?:\/\//, '') || window.location.host;
+/app/frontend/src/components/game/BattleReplayViewer.jsx:    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`;
+/app/frontend/src/components/game/BattleReplayViewer.jsx:    const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+/app/frontend/src/components/game/PVPBattleArena.jsx:    const wsProtocol = backendUrl.startsWith('https') ? 'wss' : 'ws';
+/app/frontend/src/components/game/PVPBattleArena.jsx:    const wsHost = backendUrl.replace(/^https?:\/\//, '');
+/app/frontend/src/components/game/MatchHistory.jsx:const FACEBOOK_GROUP_URL = "https://www.facebook.com/groups/938837402074960";
+/app/frontend/src/components/game/MatchHistory.jsx:    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
+/app/frontend/src/components/game/GameLobby.jsx:    const wsProtocol = backendUrl.startsWith('https') ? 'wss' : 'ws';
+/app/frontend/src/components/game/GameLobby.jsx:    const wsHost = backendUrl.replace(/^https?:\/\//, '');
+/app/frontend/src/components/WatermarkCreator.jsx:const SAMPLE_IMAGE = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop";
+/app/frontend/src/pages/Landing.jsx:          src={item.image || `https://ui-avatars.com/api/?name=${item.title.replace(/\s/g, '+')}&background=random&size=256`}
+/app/frontend/src/pages/GuestMarketplace.jsx:        image: p.images?.[0] || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.title)}&background=random&size=256`
+/app/frontend/src/pages/GuestMarketplace.jsx:        image: r.images?.[0] || `https://ui-avatars.com/api/?name=${encodeURIComponent(r.title)}&background=random&size=256`
+/app/frontend/src/pages/GuestMarketplace.jsx:        image: s.images?.[0] || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.title)}&background=random&size=256`
+/app/frontend/src/pages/GuestMarketplace.jsx:      { id: 1, title: 'iPhone 15 Pro', description: 'Latest Apple smartphone with titanium design', price: 999, type: 'product', category: 'Electronics', image: 'https://ui-avatars.com/api/?name=iPhone+15&background=3b82f6&color=fff&size=256' },
+/app/frontend/src/pages/GuestMarketplace.jsx:      { id: 2, title: 'Downtown Apartment', description: '2BR modern apartment with city views', price: 2500, type: 'rental', category: 'Apartment', image: 'https://ui-avatars.com/api/?name=Apt&background=22c55e&color=fff&size=256' },
+/app/frontend/src/pages/GuestMarketplace.jsx:      { id: 3, title: 'Web Development', description: 'Full stack development services', price: 75, type: 'service', category: 'Technology', image: 'https://ui-avatars.com/api/?name=Web+Dev&background=8b5cf6&color=fff&size=256' },
+/app/frontend/src/pages/GuestMarketplace.jsx:      { id: 4, title: 'MacBook Pro M3', description: 'Powerful laptop for professionals', price: 1999, type: 'product', category: 'Electronics', image: 'https://ui-avatars.com/api/?name=MacBook&background=3b82f6&color=fff&size=256' },
+/app/frontend/src/pages/GuestMarketplace.jsx:      { id: 5, title: 'Beach House', description: '3BR vacation rental near the ocean', price: 350, type: 'rental', category: 'House', image: 'https://ui-avatars.com/api/?name=Beach&background=22c55e&color=fff&size=256' },
+/app/frontend/src/pages/GuestMarketplace.jsx:      { id: 6, title: 'Logo Design', description: 'Professional branding and logo creation', price: 150, type: 'service', category: 'Design', image: 'https://ui-avatars.com/api/?name=Logo&background=8b5cf6&color=fff&size=256' },
+/app/frontend/src/pages/GuestMarketplace.jsx:      { id: 7, title: 'Gaming Console PS5', description: 'PlayStation 5 with extra controller', price: 450, type: 'product', category: 'Electronics', image: 'https://ui-avatars.com/api/?name=PS5&background=3b82f6&color=fff&size=256' },
+/app/frontend/src/pages/GuestMarketplace.jsx:      { id: 8, title: 'Studio Apartment', description: 'Cozy studio in the heart of downtown', price: 1200, type: 'rental', category: 'Apartment', image: 'https://ui-avatars.com/api/?name=Studio&background=22c55e&color=fff&size=256' },
+/app/frontend/src/pages/GuestMarketplace.jsx:      { id: 9, title: 'Photography', description: 'Professional event photography', price: 200, type: 'service', category: 'Media', image: 'https://ui-avatars.com/api/?name=Photo&background=8b5cf6&color=fff&size=256' },
+/app/frontend/src/pages/GuestMarketplace.jsx:      { id: 10, title: 'Vintage Watch', description: 'Classic timepiece in excellent condition', price: 800, type: 'product', category: 'Fashion', image: 'https://ui-avatars.com/api/?name=Watch&background=3b82f6&color=fff&size=256' },
+/app/frontend/src/pages/GuestMarketplace.jsx:      { id: 11, title: 'Mountain Cabin', description: 'Scenic retreat with fireplace', price: 180, type: 'rental', category: 'Cabin', image: 'https://ui-avatars.com/api/?name=Cabin&background=22c55e&color=fff&size=256' },
+/app/frontend/src/pages/GuestMarketplace.jsx:      { id: 12, title: 'Marketing Consulting', description: 'Digital marketing strategy', price: 100, type: 'service', category: 'Business', image: 'https://ui-avatars.com/api/?name=Marketing&background=8b5cf6&color=fff&size=256' },
+/app/frontend/src/pages/Register.jsx:              src="https://customer-assets.emergentagent.com/job_857ca676-869a-4a5c-aa17-a86be06ad92a/artifacts/fb7jx2y8_Blendlink%20logo%20transparent%20background%20PNG.png"
+/app/frontend/src/pages/BattleReplayPage.jsx:const FACEBOOK_GROUP_URL = "https://www.facebook.com/groups/938837402074960";
+/app/frontend/src/pages/BattleReplayPage.jsx:                const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(`⚔️ Watch this epic Photo Battle on Blendlink!\n${player1_info?.username} vs ${player2_info?.username}\nScore: ${player1_wins}-${player2_wins}\n\n${window.location.href}\n\n#Blendlink #PhotoBattle`)}`;
+/app/frontend/src/pages/SocialFeed.jsx:      href="https://www.facebook.com/blendlinknet" 
+/app/frontend/src/pages/SocialFeed.jsx:          script.src = 'https://embedsocial.com/cdn/ht.js';
+/app/frontend/src/pages/Login.jsx:              src="https://customer-assets.emergentagent.com/job_857ca676-869a-4a5c-aa17-a86be06ad92a/artifacts/fb7jx2y8_Blendlink%20logo%20transparent%20background%20PNG.png"
+/app/frontend/src/pages/ListingDetail.jsx:              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`
+/app/frontend/src/pages/Albums.jsx:            src={album.cover_image.startsWith('data:') || album.cover_image.startsWith('http') 
+/app/frontend/src/pages/Albums.jsx:    if (url.startsWith('data:') || url.startsWith('http')) return url;
+/app/frontend/src/pages/Albums.jsx:    const src = item.media_url.startsWith('data:') || item.media_url.startsWith('http')
+/app/frontend/src/pages/PokerTournament.jsx:    const wsUrl = `${backendUrl?.replace("https://", "wss://").replace("http://", "ws://")}/api/poker/ws/${tournamentId}?token=${token}`;
+/app/frontend/src/pages/SellerDashboard.jsx:    { id: "create", label: "AI Create Listing", icon: Sparkles, externalLink: "https://blendlink.net/ai-listing-creator" },
+/app/frontend/src/pages/AIGallery.jsx:    link.href = url.startsWith('http') ? url : `${API_BASE}${url}`;
+/app/frontend/src/pages/Wallet.jsx:      const wsUrl = API_BASE.replace('https://', 'wss://').replace('http://', 'ws://');
+/app/frontend/src/pages/Referrals.jsx:      url: `https://blendlink.app/register?ref=${code}`) for any remaining hardcoded URLs.
+        2.  Replace any found URLs with .
+        3.  Ensure all API calls in frontend services (e.g., ) use a dynamic base URL.
+    -   **Why fix this issue and what will be achieved with the fix?** This is the root cause of the platform's instability and synchronization problems. Fixing it will make the application robust across different environments (preview, production).
+    -   **Status:** IN PROGRESS (partially addressed, but clearly not fully resolved).
+    -   **Is recurring issue?** Y
+    -   **Should Test frontend/backend/both after fix?** both
+    -   **Blocked on other issue:** None.
 
 **In progress Task List**:
-  There are no tasks currently in progress. The next agent should start on the Upcoming Tasks.
+  - There are no tasks currently in progress. All work is now categorized as P0 bug fixes.
 
 **Upcoming and Future Tasks**
-*   **Upcoming Tasks:**
-    *   **(P2) Real-time commission adjustments:** Implement functionality for admins to make real-time adjustments to commissions.
-    *   **(P2) Custom membership benefit creation:** Build the functionality for admins to create entirely new, custom benefits for membership tiers from the admin panel.
-    *   **(P3) Advanced ML-based fraud analytics:** Integrate a more advanced, machine-learning-based model for fraud detection, replacing or augmenting the current rule-based system.
 *   **Future Tasks:**
     *   **(P3) Mobile push notifications:** Implement a system for sending push notifications to the mobile app for events like failed payments, subscription renewals, etc.
 
 **Completed work in this session**
-- **Stripe Onboarding Prompt Integration (DONE & VERIFIED):**
-  - Fixed the integration in  to correctly enforce the prompt.
-- **Recurring Subscription System (DONE & VERIFIED):**
-  - Created backend scheduler  using  for renewals and payment retries.
-  - Enhanced payment logic in  to include bank accounts in the fallback chain.
-- **Admin Commission Dashboard (DONE & VERIFIED):**
-  - Created frontend page .
-  - Added backend endpoint  in .
-- **Suspicious Transaction Auto-Flagging (DONE & VERIFIED):**
-  - Created  for rule-based flagging.
-  - Added new admin API router .
-- **Mobile Sync Verification Endpoint (DONE & VERIFIED):**
-  - Created new API router  with a  endpoint.
-- **Comprehensive Testing (DONE):**
-  - Ran  twice, achieving 100% pass rate on all new and existing features.
+- **Admin Features (DONE & VERIFIED by agent):**
+  - Implemented real-time commission adjustments (, ).
+  - Implemented custom membership benefit creation (, ).
+  - Implemented enhanced rule-based fraud detector and analytics dashboard (, , ).
+- **Deployment Readiness Fixes (DONE):**
+  - Removed hardcoded Stripe API keys from , , , , , , , , and .
+  - Fixed auth redirect URL in .
 
 **Earlier issues found/mentioned but not fixed**
-   - Issue 1: A low-priority potential route conflict ( vs ) was noted by the testing agent. The agent investigated and concluded it was not a functional blocker, deferring any action.
-     - Debug checklist: Review the order of route registration in .
-     - Why to solve this issue and what will be achieved with this? To prevent potential edge cases where a request for a specific listing might be incorrectly routed.
-     - Should Test frontend/backend/both after fix: backend
-     - Is recurring issue? N
+   - **Issue 1: Potential route conflict ( vs ).**
+     - **Debug checklist:** Review the order of route registration in .
+     - **Why to solve this issue and what will be achieved with this?** To prevent potential edge cases where a request for a specific listing might be incorrectly routed.
+     - **Should Test frontend/backend/both after fix:** backend
+     - **Is recurring issue?** N
 
 **Known issue recurrence from previous fork**
-  - Issue recurrence in previous fork: Production deployment instability due to hardcoded preview URLs.
-  - Recurrence count: 4+
-  - Status: RESOLVED (The fix has held, and no recurrence was observed in this session).
+  - **Issue recurrence in previous fork:** Production deployment instability due to hardcoded URLs and secrets.
+  - **Recurrence count:** 5+
+  - **Status:** IN PROGRESS. The agent fixed many instances of hardcoded Stripe keys, but the user's latest message confirms this is still a pervasive and critical issue, now manifesting as broken functionality across the app.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Frontend:** React.js,  for icons
-- **Backend:** Python (FastAPI),  for cron jobs
+- **Frontend:** React.js, 
+- **Backend:** Python (FastAPI), 
 - **Database:** MongoDB
-- **Payments:** Stripe (Checkout, Connect, Bank Debits)
-- **Recurring Jobs:**  is used for daily subscription renewals and periodic payment retries.
+- **Payments:** Stripe (Connect, Checkout)
+- **Deployment:** The agent uses a  for health checks.
 
 **key DB schema**
 - **users:** , , , , .
 - **transactions:**  (e.g., 'completed', 'failed', 'flagged'), , .
-- **held_commissions:** , , ,  ('held', 'released').
+- **held_commissions:** , , , .
 
 **changes in tech stack**
--  was added to the backend to manage recurring background tasks.
+- No new technologies were added.
 
 **All files of reference**
 - **Created:**
@@ -95,48 +403,51 @@ The application is a full-stack project using React, FastAPI, and MongoDB. The a
   - 
   - 
   - 
-  - 
 - **Updated:**
+  - , , , , , , , ,  (to remove hardcoded keys)
   - 
   - 
   - 
   - 
   - 
-  -  & 
+  - 
+  - 
 
 **Areas that need refactoring**:
-None. The previously mocked admin pages are now fully functional.
+The entire application's environment variable and API endpoint configuration needs a thorough audit to eliminate all hardcoded values and ensure stability, as requested by the user.
 
 **key api endpoints**
-- : Manually trigger a scheduled job (admin only).
-- : Get a list of all held commissions (admin only).
-- : Manually run the suspicious transaction detector (admin only).
-- : Simple endpoint for mobile app to verify API connectivity.
-- : Endpoint for the new commission dashboard.
+- 
+- 
+- 
+- 
+- 
 
 **Critical Info for New Agent**
-- The project is in a very healthy state. The agent has just completed a major set of features (P0, P1, P2) which have all been successfully tested by the testing agent.
-- The next set of tasks has been provided directly by the user and is listed in the Upcoming Tasks section.
-- The immediate priority is to start planning the implementation for real-time commission adjustments and custom membership benefit creation.
-- The backend now contains a scheduler () that runs automatically on startup. Any changes to recurring jobs should be made in .
+- **STOP EVERYTHING AND FOCUS ON THE USER'S LATEST MESSAGE (Chat Message 168).** The application is critically broken in production despite passing recent agent-led tests. The user has provided a detailed list of P0 bugs that must be the sole focus.
+- The previous agent's work on new features and deployment fixes is complete, but the outcome is a non-functional application according to the user. Do not assume any part of the application works.
+- The root cause of most issues is likely the recurring problem of hardcoded URLs and secrets, or regressions caused by fixing them improperly. Start by investigating environment configurations and backend logs.
+- Address the user's bug list in the order provided, starting with the environment/URL fixes, as they likely block everything else.
 
 **documents and test reports created in this job**
 -  (Updated)
--  (Created/Updated)
--  (Passed)
--  (Passed)
+-  (Passed, but its results are now questionable given the user's report).
 
 **Last 10 User Messages and any pending HUMAN messages**
-- **User (Latest):** Continue Next Action Items: 🟢 Real-time commission adjustments 🟢 Custom membership benefit creation 🟢 Advanced ML-based fraud analytics 🟢 Mobile push notifications - This message defines the next set of tasks for the new agent. (Status: NOT STARTED)
-- **Agent:** Finished the P2/P3 tasks, updated the PRD, and summarized the work. (Status: ACKNOWLEDGED)
-- **User:** Continue and complete all P2/P3 tasks. (Status: COMPLETED)
-- **Agent:** Confirmed understanding and started working on the P2/P3 tasks. (Status: ACKNOWLEDGED)
-- **User:** Continue and complete Next Action Items - Instruction to proceed with the first batch of tasks. (Status: COMPLETED)
-- **Agent:** Presented the plan for P0, P1, and P2 tasks and asked for confirmation. (Status: ACKNOWLEDGED)
+1.  **User (LATEST):** Provided a long, detailed list of critical bugs breaking the subscriptions page, Stripe payments, wallet, admin panel, and environment configurations. Instructed the agent to fix everything immediately while ensuring web/mobile sync. (Status: NOT STARTED)
+2.  **Agent:** Acknowledged the user's new instructions. (Status: ACKNOWLEDGED)
+3.  **User:** Instructed the agent to deploy the app. (Status: COMPLETED, but led to discovery of blockers)
+4.  **Agent:** Summarized that all deployment blockers were fixed and the app was ready for deployment. (Status: SUPERSEDED by user's bug report)
+5.  **Agent:** Fixed all hardcoded Stripe keys. (Status: COMPLETED)
+6.  **Agent:** Identified multiple hardcoded Stripe keys that needed to be fixed. (Status: COMPLETED)
+7.  **Agent:** Found critical deployment blockers via the deployment agent (hardcoded keys). (Status: COMPLETED)
+8.  **User:** Asked the agent to call the deployer agent. (Status: COMPLETED)
+9.  **Agent:** Called the finish tool after completing all feature work. (Status: SUPERSEDED)
+10. **Agent:** Updated PRD.md with the newly completed features. (Status: COMPLETED)
 
 **Project Health Check:**
-- **Broken:** None.
-- **Mocked:** None. The admin dashboard is now fully functional.
+- **Broken:** Subscriptions Page, Stripe Payment Processing, Wallet Page, Admin Panel.
+- **Mocked:** None.
 
 **3rd Party Integrations**
 - **Stripe (Payments):** Handles checkouts, subscriptions, and payouts via Stripe Connect.
@@ -144,13 +455,13 @@ None. The previously mocked admin pages are now fully functional.
 - **APScheduler (Library):** Used for backend background jobs.
 
 **Testing status**
-  - Testing agent used after significant changes: YES. The testing agent was used twice to perform comprehensive end-to-end testing of all newly implemented features. All tests passed with a 100% success rate.
-  - Troubleshoot agent used after agent stuck in loop: NO
-  - Test files created: []
-  - Known regressions: None.
+- Testing agent used after significant changes: YES, but the tests did not catch the critical bugs reported by the user. This implies the test coverage is insufficient.
+- Troubleshoot agent used after agent stuck in loop: NO
+- Test files created: []
+- Known regressions: The entire application seems to have regressed into a broken state.
 
 **Credentials to test flow:**
-Standard test user credentials are required to access authenticated routes. Admin credentials are required to access admin panels and endpoints. Stripe test keys are needed to test payment flows.
+Standard test user and admin credentials from the project's documentation will be required. Stripe test keys are configured in the environment.
 
 **What agent forgot to execute**
-The agent successfully completed all user-requested tasks. The minor, low-priority routing conflict identified by the testing agent was intentionally deferred as it was not a blocker.</analysis>
+The agent did not perform adequate regression testing after fixing the deployment blockers. It relied on a  health check instead of the , which might have caught the widespread functional breakages before the agent declared the work complete. The agent followed its instructions but failed to validate the end-user experience.</analysis>
