@@ -1431,6 +1431,18 @@ async def withdraw_to_stripe(request: WithdrawRequest, http_request: Request):
         
         logger.info(f"Withdrawal processed: {withdrawal_id} - ${net_amount:.2f} to {stripe_account_id}")
         
+        # Send push notification
+        try:
+            from push_notifications import PushNotificationService
+            push_service = PushNotificationService(db)
+            await push_service.notify_withdrawal_success(
+                user_id=user_id,
+                amount=request.amount,
+                net_amount=net_amount
+            )
+        except Exception as e:
+            logger.error(f"Failed to send push notification: {e}")
+        
         return {
             "success": True,
             "withdrawal_id": withdrawal_id,
@@ -1443,6 +1455,19 @@ async def withdraw_to_stripe(request: WithdrawRequest, http_request: Request):
         
     except stripe.error.StripeError as e:
         logger.error(f"Stripe withdrawal error: {e}")
+        
+        # Send failure notification
+        try:
+            from push_notifications import PushNotificationService
+            push_service = PushNotificationService(db)
+            await push_service.notify_withdrawal_failed(
+                user_id=user_id,
+                amount=request.amount,
+                reason=str(e)
+            )
+        except:
+            pass
+        
         raise HTTPException(status_code=500, detail=f"Withdrawal failed: {str(e)}")
     except Exception as e:
         logger.error(f"Withdrawal error: {e}")
