@@ -76,7 +76,7 @@ export default function CreateListing() {
     }
   };
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
     
     if (!form.title || !form.price || !form.category) {
@@ -90,8 +90,24 @@ export default function CreateListing() {
       return;
     }
     
+    // Check Stripe onboarding status for first listing
+    const stripeConnected = await checkAndPrompt(false);
+    if (!stripeConnected) {
+      setPendingSubmit(true);
+      return;
+    }
+    
     // Show fee confirmation dialog
     setShowFeeConfirmation(true);
+  };
+
+  // Handle Stripe onboarding completion
+  const handleStripeComplete = () => {
+    closePrompt();
+    if (pendingSubmit) {
+      setPendingSubmit(false);
+      setShowFeeConfirmation(true);
+    }
   };
 
   const executeSubmit = async () => {
