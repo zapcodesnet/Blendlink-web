@@ -1358,8 +1358,19 @@ export default function AIListingCreator() {
               </div>
             </div>
             
+            {/* Listing Fee Notice */}
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <div className="flex items-center gap-3">
+                <DollarSign className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                <div>
+                  <p className="font-medium text-amber-800">Listing Fee: {LISTING_FEE} BL coins</p>
+                  <p className="text-xs text-amber-600">This fee will be charged when you publish your listing</p>
+                </div>
+              </div>
+            </div>
+            
             <Button 
-              onClick={publishListing}
+              onClick={handlePublishClick}
               disabled={isPublishing}
               className="w-full h-12"
               data-testid="publish-listing-btn"
