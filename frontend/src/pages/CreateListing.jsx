@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "../components/ui/select";
 import TopUpCoinsModal from "../components/TopUpCoinsModal";
+import StripeOnboardingPrompt, { useStripeOnboarding } from "../components/StripeOnboardingPrompt";
 
 export default function CreateListing() {
   const { user, setUser } = useContext(AuthContext);
@@ -27,6 +28,8 @@ export default function CreateListing() {
   const [loading, setLoading] = useState(false);
   const [showFeeConfirmation, setShowFeeConfirmation] = useState(false);
   const [showTopUpModal, setShowTopUpModal] = useState(false);
+  const [pendingSubmit, setPendingSubmit] = useState(false);
+  const { showPrompt, isFirstListing, checkAndPrompt, closePrompt } = useStripeOnboarding();
   const [form, setForm] = useState({
     title: "",
     description: "",
