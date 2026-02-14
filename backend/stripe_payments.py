@@ -54,6 +54,9 @@ PLATFORM_FEE_RATE = 0.10  # 10%
 stripe_api_key = os.environ.get("STRIPE_SECRET_KEY", "") or os.environ.get("STRIPE_API_KEY", "")
 stripe_pub_key = os.environ.get("STRIPE_PUBLISHABLE_KEY", "")
 
+# Define LIVE_STRIPE_SECRET_KEY from environment
+LIVE_STRIPE_SECRET_KEY = os.environ.get("STRIPE_LIVE_SECRET_KEY") or os.environ.get("STRIPE_SECRET_KEY") or stripe_api_key
+
 # Validate Stripe key configuration from environment
 if stripe_api_key:
     key_prefix = stripe_api_key[:12] if len(stripe_api_key) > 12 else "******"
