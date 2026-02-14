@@ -4,9 +4,9 @@
  * Provides runtime URL detection to ensure the app works correctly
  * regardless of build-time environment variables.
  * 
- * This is critical because React bakes env variables at build time,
- * meaning a preview build would have preview URLs baked in even when
- * deployed to production.
+ * CRITICAL: React bakes env variables at build time, meaning a preview build 
+ * would have preview URLs baked in even when deployed to production.
+ * This utility detects the runtime hostname and returns the correct URL.
  * 
  * Usage:
  *   import { getApiUrl, getWsUrl } from '../utils/runtimeConfig';
@@ -18,23 +18,28 @@
  * @returns {string} The correct API base URL for the current environment
  */
 export const getApiUrl = () => {
-  // Runtime production detection
+  // Runtime detection based on actual hostname
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
+    const protocol = window.location.protocol;
     
     // Production - always use production URL
     if (hostname === 'blendlink.net' || hostname === 'www.blendlink.net') {
       return 'https://blendlink.net';
     }
     
-    // If on localhost, use localhost
+    // Localhost development
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
       return process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
     }
+    
+    // Preview/staging environments - use same origin (important for API routing)
+    if (hostname.includes('.preview.emergentagent.com') || hostname.includes('.stage-preview.emergentagent.com')) {
+      return `${protocol}//${hostname}`;
+    }
   }
   
-  // Fallback to env variable (for preview/development)
-  // Final fallback to production if nothing is set
+  // Ultimate fallback: use env variable or production
   return process.env.REACT_APP_BACKEND_URL || 'https://blendlink.net';
 };
 
