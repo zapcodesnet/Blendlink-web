@@ -1623,7 +1623,27 @@ const MintedPhotos = () => {
           </div>
           
           {/* Stats */}
-          <div className="grid grid-cols-4 gap-4 mt-6">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-6">
+            {/* Subscription XP Multiplier */}
+            <div className={`rounded-xl p-4 border ${
+              user?.subscription_tier === 'diamond' ? 'bg-gradient-to-r from-cyan-900/50 to-blue-900/50 border-cyan-500/50' :
+              user?.subscription_tier === 'gold' ? 'bg-gradient-to-r from-yellow-900/50 to-amber-900/50 border-yellow-500/50' :
+              user?.subscription_tier === 'silver' ? 'bg-gradient-to-r from-gray-700/50 to-slate-700/50 border-gray-500/50' :
+              user?.subscription_tier === 'bronze' ? 'bg-gradient-to-r from-amber-900/50 to-orange-900/50 border-amber-500/50' :
+              'bg-gray-800/50 border-gray-700/50'
+            }`}>
+              <div className="flex items-center gap-2 text-gray-300 mb-1">
+                <Zap className="w-4 h-4 text-yellow-400" />
+                <span className="text-sm">XP Multiplier</span>
+              </div>
+              <p className="text-2xl font-bold text-yellow-400">
+                x{user?.subscription_tier === 'diamond' ? '5' : 
+                  user?.subscription_tier === 'gold' ? '4' :
+                  user?.subscription_tier === 'silver' ? '3' :
+                  user?.subscription_tier === 'bronze' ? '2' : '1'}
+              </p>
+              <p className="text-xs text-gray-400 capitalize">{user?.subscription_tier || 'Free'} tier</p>
+            </div>
             <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700/50">
               <div className="flex items-center gap-2 text-gray-400 mb-1">
                 <Image className="w-4 h-4" />
