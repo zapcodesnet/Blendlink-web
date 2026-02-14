@@ -243,6 +243,17 @@ export default function CreateListing() {
             />
           </div>
 
+          {/* Listing Fee Notice */}
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <DollarSign className="w-5 h-5 text-amber-600 flex-shrink-0" />
+              <div>
+                <p className="font-medium text-amber-800">Listing Fee: {LISTING_FEE} BL coins</p>
+                <p className="text-xs text-amber-600">This fee will be charged when you create your listing</p>
+              </div>
+            </div>
+          </div>
+
           {/* Submit */}
           <Button 
             type="submit" 
@@ -250,12 +261,12 @@ export default function CreateListing() {
             disabled={loading}
             data-testid="create-listing-submit"
           >
-            {loading ? "Creating..." : "Create Listing - Free!"}
+            {loading ? "Creating..." : `Create Listing (${LISTING_FEE} BL)`}
           </Button>
 
           {/* Note */}
           <p className="text-xs text-muted-foreground text-center">
-            Note: Marketplace is being added to the mobile API
+            Your BL coins will be deducted upon listing creation
           </p>
         </form>
       </main>
