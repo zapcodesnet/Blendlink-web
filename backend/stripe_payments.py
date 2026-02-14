@@ -1300,8 +1300,19 @@ async def create_stripe_connect_onboarding(http_request: Request):
         return {"url": account_link.url}
         
     except Exception as e:
-        logger.error(f"Stripe Connect onboarding error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to create onboarding link: {str(e)}")
+        error_msg = str(e)
+        logger.error(f"Stripe Connect onboarding error: {error_msg}")
+        
+        # Provide user-friendly error messages
+        if "platform-profile" in error_msg.lower():
+            raise HTTPException(
+                status_code=503, 
+                detail="Stripe Connect is being configured. Please try again later or contact support."
+            )
+        elif "account" in error_msg.lower() and "already" in error_msg.lower():
+            raise HTTPException(status_code=400, detail="Your Stripe account is already connected.")
+        else:
+            raise HTTPException(status_code=500, detail="Unable to start Stripe onboarding. Please try again later.")
 
 
 class WithdrawRequest(BaseModel):
