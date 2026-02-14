@@ -3074,7 +3074,10 @@ try:
         get_detection_rules,
         update_detection_rule,
         analyze_transaction,
-        flag_transaction
+        flag_transaction,
+        get_fraud_analytics,
+        calculate_user_risk_score,
+        batch_calculate_risk_scores
     )
     
     @api_router.get("/admin/fraud-detection/rules")
@@ -3114,7 +3117,25 @@ try:
             "is_suspicious": len(triggered_rules) > 0
         }
     
-    logger.info("Suspicious Transaction Detector loaded (Auto-flagging, Fraud rules)")
+    @api_router.get("/admin/fraud-detection/analytics")
+    async def get_fraud_analytics_endpoint(days: int = 30):
+        """Get comprehensive fraud analytics and patterns"""
+        analytics = await get_fraud_analytics(days)
+        return analytics
+    
+    @api_router.get("/admin/fraud-detection/user-risk/{user_id}")
+    async def get_user_risk_score(user_id: str):
+        """Calculate and return risk score for a specific user"""
+        result = await calculate_user_risk_score(user_id)
+        return result
+    
+    @api_router.post("/admin/fraud-detection/batch-risk-scores")
+    async def calculate_batch_risk_scores(limit: int = 100):
+        """Calculate risk scores for recently active users"""
+        result = await batch_calculate_risk_scores(limit)
+        return {"success": True, "result": result}
+    
+    logger.info("Suspicious Transaction Detector loaded (Auto-flagging, Fraud rules, Analytics)")
 except ImportError as e:
     logger.warning(f"Could not load suspicious transaction detector: {e}")
 
