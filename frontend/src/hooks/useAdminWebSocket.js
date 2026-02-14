@@ -12,7 +12,7 @@ const API_BASE = getApiUrl();
 // Convert HTTP URL to WebSocket URL
 const getWebSocketUrl = () => {
   const baseUrl = getWsUrl();
-  return `${baseUrl}/api/realtime/ws/analytics`;
+  return `${baseUrl}/api/admin-realtime/ws`;
 };
 
 export function useAdminWebSocket() {
