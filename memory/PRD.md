@@ -1,10 +1,46 @@
 # Blendlink Platform - Product Requirements Document
 
-## Latest Update: February 14, 2026
+## Latest Update: December 2025
 
 ---
 
 ## ✅ COMPLETED FEATURES
+
+### -1. Critical Bug Fixes (Dec 2025)
+- **Status**: ✅ FIXED & TESTED
+- **Test Report**: `/app/test_reports/iteration_157.json`
+
+#### Bug Fixes Implemented:
+
+**1. Missing /subscriptions Page - FIXED**
+- Added `/subscriptions` route in `App.js` (line 298)
+- Created comprehensive `SubscriptionTiers.jsx` with all 4 membership tiers
+- Tiers: Bronze ($4.99), Silver ($9.99), Gold ($14.99), Diamond ($29.99)
+- Full commission rates, benefits, and XP multipliers displayed
+- Upgrade/downgrade/cancel buttons functional
+- Stripe checkout integration for payments
+
+**2. Stripe Payment Processing - FIXED**
+- Fixed `LIVE_STRIPE_SECRET_KEY` not being defined in `stripe_payments.py`
+- Fixed `create_checkout_session` to support bronze/silver/gold/diamond tiers
+- Corrected API endpoint paths in `Wallet.jsx`:
+  - `/payments/stripe/connect/onboard` (Stripe Connect)
+  - `/payments/stripe/bl-coins/checkout` (BL coins purchase)
+  - `/payments/stripe/subscriptions/subscribe-from-balance` (subscription from balance)
+- LIVE MODE VERIFIED (sk_live_51Sk...)
+
+**3. Wallet Page Errors - FIXED**
+- Stripe Connect onboarding button uses correct endpoint
+- BL coins purchase uses correct checkout flow
+- Membership subscription uses correct checkout endpoint
+
+**4. Admin Panel Input Visibility - FIXED**
+- Added `text-white` class to inputs in `AdminCustomBenefits.jsx`
+- Fixed placeholder text color styling
+
+**5. Environment URL Handling - VERIFIED**
+- `runtimeConfig.js` handles preview/production environments correctly
+- No hardcoded URLs found in frontend code
 
 ### 0. Critical URL Fix - Runtime Detection System (Feb 14, 2026)
 - **Status**: ✅ FIXED - Production Ready
