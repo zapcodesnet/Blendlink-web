@@ -261,6 +261,15 @@ export default function Wallet() {
     fetchPersonalEarnings(0);
     fetchStripeStatus();
     
+    // Check for subscription success callback from Stripe
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('subscription_success') === 'true') {
+      // Try to verify and activate subscription from Stripe session
+      verifySubscriptionFromStripe();
+      // Clean URL
+      window.history.replaceState({}, '', '/wallet');
+    }
+    
     // Fallback polling for new earnings (every 60 seconds) when WebSocket not connected
     const interval = setInterval(() => {
       if (!wsConnected) {
