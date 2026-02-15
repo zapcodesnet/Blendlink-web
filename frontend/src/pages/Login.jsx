@@ -35,9 +35,16 @@ export default function Login() {
     
     setLoading(true);
     try {
-      await api.auth.login(form.email, form.password);
-      toast.success("Welcome back!");
-      navigate("/feed");
+      const response = await api.auth.login(form.email, form.password);
+      
+      // Check if email verification is pending
+      if (response.email_verified === false) {
+        toast.info("Please verify your email address to access all features.");
+        navigate("/feed"); // ProtectedRoute will show verification pending screen
+      } else {
+        toast.success("Welcome back!");
+        navigate("/feed");
+      }
     } catch (error) {
       const errorMsg = error.message || "Login failed";
       if (errorMsg.includes("Failed to fetch") || errorMsg.includes("Network")) {
