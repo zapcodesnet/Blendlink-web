@@ -780,18 +780,14 @@ export default {
           throw new Error('Unauthorized');
         }
         
-        // PRODUCTION FIX: Clone + text-first pattern for FormData responses
-        const cloned = response.clone();
+        // Read body as text first then parse - standard approach
         let responseText;
         try {
           responseText = await response.text();
         } catch (readError) {
-          try {
-            responseText = await cloned.text();
-          } catch (cloneError) {
-            console.error('[FormData POST] Failed to read response:', readError, cloneError);
-            throw new Error('Unable to read server response. Please try again.');
-          }
+          console.error('[FormData POST] Failed to read response:', readError);
+          if (response.ok) return { data: {} };
+          throw new Error(`Request failed (${response.status}). Please try again.`);
         }
         
         let result;
