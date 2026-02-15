@@ -1243,13 +1243,19 @@ async def create_stripe_connect_onboarding(http_request: Request):
         import stripe
         stripe.api_key = LIVE_STRIPE_SECRET_KEY
         
-        # Check if user already has an account
         connect_account = await db.stripe_connect_accounts.find_one({"user_id": user_id})
+        stripe_account_id = connect_account["stripe_account_id"] if connect_account else None
         
-        if connect_account:
-            stripe_account_id = connect_account["stripe_account_id"]
-        else:
-            # Create new Stripe Express account
+        # Validate existing account or clear stale one
+        if stripe_account_id:
+            try:
+                stripe.Account.retrieve(stripe_account_id)
+            except stripe.error.InvalidRequestError:
+                logger.warning(f"Removing stale Stripe Connect account {stripe_account_id} for user {user_id}")
+                await db.stripe_connect_accounts.delete_many({"user_id": user_id})
+                stripe_account_id = None
+        
+        if not stripe_account_id:
             account = stripe.Account.create(
                 type="express",
                 email=user_email,
@@ -1257,13 +1263,11 @@ async def create_stripe_connect_onboarding(http_request: Request):
                     "card_payments": {"requested": True},
                     "transfers": {"requested": True},
                 },
-                metadata={
-                    "blendlink_user_id": user_id
-                }
+                metadata={"blendlink_user_id": user_id}
             )
             stripe_account_id = account.id
             
-            # Save to database
+            await db.stripe_connect_accounts.delete_many({"user_id": user_id})
             await db.stripe_connect_accounts.insert_one({
                 "user_id": user_id,
                 "stripe_account_id": stripe_account_id,
@@ -1274,7 +1278,6 @@ async def create_stripe_connect_onboarding(http_request: Request):
                 "created_at": datetime.now(timezone.utc).isoformat()
             })
         
-        # Create onboarding link
         host_url = str(http_request.headers.get("origin", "https://blendlink.net"))
         
         account_link = stripe.AccountLink.create(
@@ -1290,16 +1293,12 @@ async def create_stripe_connect_onboarding(http_request: Request):
         error_msg = str(e)
         logger.error(f"Stripe Connect onboarding error: {error_msg}")
         
-        # Provide user-friendly error messages
         if "platform-profile" in error_msg.lower():
-            raise HTTPException(
-                status_code=503, 
-                detail="Stripe Connect is being configured. Please try again later or contact support."
-            )
+            raise HTTPException(status_code=503, detail="Stripe Connect is being configured. Please try again later.")
         elif "account" in error_msg.lower() and "already" in error_msg.lower():
             raise HTTPException(status_code=400, detail="Your Stripe account is already connected.")
         else:
-            raise HTTPException(status_code=500, detail="Unable to start Stripe onboarding. Please try again later.")
+            raise HTTPException(status_code=500, detail=f"Unable to start Stripe onboarding: {error_msg}")
 
 
 @stripe_router.get("/connect/onboard-redirect")
