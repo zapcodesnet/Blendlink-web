@@ -162,26 +162,22 @@ const SubscriptionTiers = () => {
     setSubscribing(true);
 
     try {
+      const token = localStorage.getItem('blendlink_token');
+      if (!token) {
+        toast.error("Please login to subscribe");
+        navigate("/login");
+        return;
+      }
+      
       const successUrl = `${window.location.origin}/subscriptions?success=true`;
       const cancelUrl = `${window.location.origin}/subscriptions`;
 
-      // Use api service for robust body parsing (prevents "body stream already read" errors)
-      const response = await api.post(
-        `/subscriptions/checkout?tier=${tierId}&success_url=${encodeURIComponent(successUrl)}&cancel_url=${encodeURIComponent(cancelUrl)}`
-      );
-      const data = response.data;
-      
-      if (data.checkout_url) {
-        window.location.href = data.checkout_url;
-      } else if (data.url) {
-        window.location.href = data.url;
-      } else {
-        toast.error("No checkout URL received. Please try again.");
-      }
+      // Use GET redirect endpoint - browser follows 302 redirect natively, no JSON parsing needed
+      window.location.href = `${API_BASE_URL}/api/subscriptions/checkout-redirect?tier=${tierId}&success_url=${encodeURIComponent(successUrl)}&cancel_url=${encodeURIComponent(cancelUrl)}&token=${encodeURIComponent(token)}`;
+      return; // Don't reset subscribing since we're navigating away
     } catch (error) {
       console.error("Subscription error:", error);
       toast.error(error.message || "Failed to start subscription process. Please try again.");
-    } finally {
       setSubscribing(false);
     }
   };
