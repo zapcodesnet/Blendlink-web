@@ -1038,6 +1038,63 @@ async def cancel_subscription(current_user: dict = Depends(get_current_user)):
     return await service.cancel_subscription(current_user["user_id"])
 
 
+@subscription_router.get("/verify-session")
+async def verify_subscription_session(session_id: str, current_user: dict = Depends(get_current_user)):
+    """
+    Verify a Stripe checkout session and activate subscription.
+    Called by the frontend after successful Stripe payment redirect.
+    This is the PRIMARY activation path (webhooks are backup).
+    """
+    stripe.api_key = "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"
+    
+    try:
+        session = stripe.checkout.Session.retrieve(session_id)
+        
+        if session.payment_status != "paid":
+            return {"status": "pending", "message": "Payment not yet confirmed"}
+        
+        user_id = session.metadata.get("user_id")
+        tier = session.metadata.get("tier")
+        subscription_id = session.subscription
+        
+        if not user_id or not tier:
+            raise HTTPException(status_code=400, detail="Invalid session metadata")
+        
+        # Verify the session belongs to this user
+        if user_id != current_user["user_id"]:
+            raise HTTPException(status_code=403, detail="Session does not belong to this user")
+        
+        # Activate the subscription
+        service = get_subscription_service()
+        await service._activate_subscription(user_id, tier, subscription_id)
+        
+        # Get the updated subscription with tier details
+        tier_info = SUBSCRIPTION_TIERS.get(tier, SUBSCRIPTION_TIERS["free"])
+        
+        # Credit daily BL coins bonus for the first day
+        daily_bonus = tier_info.get("daily_bl_bonus", 0)
+        if daily_bonus > 0:
+            await service.db.users.update_one(
+                {"user_id": user_id},
+                {"$inc": {"bl_coins": daily_bonus}}
+            )
+            logger.info(f"Credited {daily_bonus} welcome BL coins to user {user_id} for {tier} subscription")
+        
+        return {
+            "status": "activated",
+            "tier": tier,
+            "tier_details": tier_info,
+            "bl_coins_credited": daily_bonus,
+            "message": f"Successfully subscribed to {tier_info.get('name', tier)} membership!"
+        }
+    except stripe.error.InvalidRequestError as e:
+        logger.error(f"Invalid session: {e}")
+        raise HTTPException(status_code=400, detail="Invalid checkout session")
+    except Exception as e:
+        logger.error(f"Session verification error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @subscription_router.post("/webhook")
 async def stripe_webhook(request: Request):
     """Handle Stripe webhooks"""
