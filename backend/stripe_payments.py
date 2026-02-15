@@ -7,6 +7,7 @@ Handles payment processing for:
 """
 
 from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, List
 from datetime import datetime, timezone
