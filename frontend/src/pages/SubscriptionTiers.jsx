@@ -528,8 +528,8 @@ const SubscriptionTiers = () => {
         <div className="mt-8 text-center">
           <p className="text-gray-500 text-sm">
             Need help? Contact support at{" "}
-            <a href="mailto:support@blendlink.net" className="text-purple-400 hover:underline">
-              support@blendlink.net
+            <a href="mailto:virtual@blendlink.net" className="text-purple-400 hover:underline">
+              virtual@blendlink.net
             </a>
           </p>
         </div>
