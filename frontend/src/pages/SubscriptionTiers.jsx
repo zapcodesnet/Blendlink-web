@@ -392,7 +392,7 @@ const SubscriptionTiers = () => {
                   ) : (
                     <CreditCard className="w-4 h-4 mr-2" />
                   )}
-                  Upgrade to {tier.name} - ${tier.price.toFixed(2)}/mo
+                  Upgrade to {tier.name} - ${tier.price.toFixed(2)}/mo <span className="line-through opacity-60 ml-1">${tier.standardPrice.toFixed(2)}</span>
                 </Button>
               ) : canDowngrade ? (
                 <Button
