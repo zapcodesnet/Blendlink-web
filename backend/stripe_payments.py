@@ -1302,6 +1302,71 @@ async def create_stripe_connect_onboarding(http_request: Request):
             raise HTTPException(status_code=500, detail="Unable to start Stripe onboarding. Please try again later.")
 
 
+@stripe_router.get("/connect/onboard-redirect")
+async def stripe_connect_onboard_redirect(token: str, http_request: Request):
+    """
+    GET-based redirect endpoint for Stripe Connect onboarding.
+    Returns a 302 redirect to Stripe - bypasses all JSON body parsing issues.
+    """
+    from server import get_current_user_from_token
+    
+    user = await get_current_user_from_token(token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    user_id = user.get("user_id")
+    user_email = user.get("email", "")
+    
+    try:
+        import stripe
+        stripe.api_key = LIVE_STRIPE_SECRET_KEY
+        
+        connect_account = await db.stripe_connect_accounts.find_one({"user_id": user_id})
+        
+        if connect_account:
+            stripe_account_id = connect_account["stripe_account_id"]
+        else:
+            account = stripe.Account.create(
+                type="express",
+                email=user_email,
+                capabilities={
+                    "card_payments": {"requested": True},
+                    "transfers": {"requested": True},
+                },
+                metadata={"blendlink_user_id": user_id}
+            )
+            stripe_account_id = account.id
+            
+            await db.stripe_connect_accounts.insert_one({
+                "user_id": user_id,
+                "stripe_account_id": stripe_account_id,
+                "email": user_email,
+                "charges_enabled": False,
+                "payouts_enabled": False,
+                "details_submitted": False,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+        
+        host_url = str(http_request.headers.get("origin") or http_request.headers.get("referer", "https://blendlink.net")).rstrip("/")
+        if "//" in host_url:
+            parts = host_url.split("//", 1)
+            domain = parts[1].split("/")[0]
+            host_url = f"{parts[0]}//{domain}"
+        
+        account_link = stripe.AccountLink.create(
+            account=stripe_account_id,
+            refresh_url=f"{host_url}/wallet?stripe_refresh=true",
+            return_url=f"{host_url}/wallet?stripe_connected=true",
+            type="account_onboarding",
+        )
+        
+        return RedirectResponse(url=account_link.url, status_code=302)
+        
+    except Exception as e:
+        logger.error(f"Stripe Connect redirect error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 class WithdrawRequest(BaseModel):
     amount: float = Field(..., gt=0, description="Amount to withdraw in USD")
 
