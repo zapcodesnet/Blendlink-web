@@ -616,6 +616,31 @@ async def login(data: UserLogin, response: Response):
         logger.warning(f"Login attempt failed: Invalid password for user {user.get('user_id')}")
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
+    # Check if user is banned
+    if user.get("is_banned"):
+        raise HTTPException(status_code=403, detail="Your account has been permanently banned. Contact support for more information.")
+    
+    # Check if user is suspended
+    if user.get("is_suspended"):
+        suspension_expires = user.get("suspension_expires")
+        if suspension_expires:
+            # Check if suspension has expired
+            from datetime import datetime as dt
+            try:
+                exp = dt.fromisoformat(suspension_expires.replace("Z", "+00:00"))
+                if exp > datetime.now(timezone.utc):
+                    raise HTTPException(status_code=403, detail=f"Your account is suspended until {exp.strftime('%Y-%m-%d %H:%M UTC')}. Reason: {user.get('suspension_reason', 'N/A')}")
+                else:
+                    # Suspension expired, auto-unsuspend
+                    await db.users.update_one(
+                        {"user_id": user["user_id"]},
+                        {"$set": {"is_suspended": False, "suspended_at": None, "suspended_by": None, "suspension_reason": None, "suspension_expires": None}}
+                    )
+            except (ValueError, TypeError):
+                raise HTTPException(status_code=403, detail=f"Your account is suspended. Reason: {user.get('suspension_reason', 'N/A')}")
+        else:
+            raise HTTPException(status_code=403, detail=f"Your account has been suspended indefinitely. Reason: {user.get('suspension_reason', 'N/A')}")
+    
     # Check email verification status
     # Existing users (registered before email verification was added) are grandfathered in
     email_verified = user.get("email_verified", True)  # Default True for existing users
