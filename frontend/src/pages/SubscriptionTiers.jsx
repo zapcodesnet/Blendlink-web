@@ -172,12 +172,18 @@ const SubscriptionTiers = () => {
         }
       );
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || "Failed to create checkout session");
+      // Read body as text first to prevent "body stream already read" errors in production
+      const responseText = await response.text();
+      let data;
+      try {
+        data = responseText ? JSON.parse(responseText) : {};
+      } catch (e) {
+        throw new Error("Invalid server response");
       }
 
-      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || "Failed to create checkout session");
+      }
       
       if (data.checkout_url) {
         // Redirect to Stripe checkout
