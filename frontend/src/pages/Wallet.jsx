@@ -305,19 +305,18 @@ export default function Wallet() {
     }
   };
 
-  // Start Stripe onboarding
+  // Start Stripe onboarding - uses GET redirect to bypass body parsing issues
   const handleStripeOnboarding = async () => {
     try {
-      const response = await api.post("/payments/stripe/connect/onboard");
-      const data = response.data;
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error("No onboarding URL received");
+      const token = localStorage.getItem('blendlink_token');
+      if (!token) {
+        toast.error("Please log in to connect your Stripe account.");
+        return;
       }
+      // Use GET redirect endpoint - browser follows 302 redirect natively, no JSON parsing needed
+      window.location.href = `${API_BASE}/api/payments/stripe/connect/onboard-redirect?token=${encodeURIComponent(token)}`;
     } catch (error) {
-      const msg = error.message || "Failed to start Stripe onboarding. Please try again.";
-      toast.error(msg);
+      toast.error("Failed to start Stripe onboarding. Please try again.");
     }
   };
 
