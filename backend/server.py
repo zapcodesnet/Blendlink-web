@@ -387,6 +387,11 @@ async def register(data: UserCreate, response: Response):
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
     
+    # Check if email is banned
+    banned = await db.banned_emails.find_one({"email": data.email.lower()})
+    if banned:
+        raise HTTPException(status_code=403, detail="This email address has been banned from registration.")
+    
     existing_username = await db.users.find_one({"username": data.username}, {"_id": 0})
     if existing_username:
         raise HTTPException(status_code=400, detail="Username already taken")
