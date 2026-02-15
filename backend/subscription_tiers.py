@@ -953,6 +953,38 @@ async def create_checkout(
     )
 
 
+@subscription_router.get("/checkout-redirect")
+async def checkout_redirect(
+    tier: str,
+    success_url: str,
+    cancel_url: str,
+    token: str,
+    request: Request
+):
+    """
+    GET-based redirect endpoint for subscription checkout.
+    Returns a 302 redirect to Stripe - bypasses all JSON body parsing issues.
+    """
+    from server import get_current_user_from_token
+    
+    user = await get_current_user_from_token(token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    service = get_subscription_service()
+    result = await service.create_checkout_session(
+        user["user_id"],
+        tier,
+        success_url,
+        cancel_url
+    )
+    
+    checkout_url = result.get("checkout_url") or result.get("url")
+    if checkout_url:
+        return RedirectResponse(url=checkout_url, status_code=302)
+    raise HTTPException(status_code=500, detail="Failed to create checkout session")
+
+
 @subscription_router.post("/claim-daily-bonus")
 async def claim_daily_bonus(current_user: dict = Depends(get_current_user)):
     """Claim daily BL coin bonus"""
