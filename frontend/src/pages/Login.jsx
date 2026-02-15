@@ -15,8 +15,11 @@ import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import api from "../services/api";
-import { Eye, EyeOff, Mail, Lock, User, Check } from "lucide-react";
+import { getApiUrl } from "../utils/runtimeConfig";
+import { Eye, EyeOff, Mail, Lock, User, Check, RefreshCw } from "lucide-react";
 import "../styles/premium-design-system.css";
+
+const API_BASE = getApiUrl();
 
 export default function Login() {
   const navigate = useNavigate();
@@ -25,6 +28,8 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const [form, setForm] = useState({ email: "", password: "" });
   const [focusedField, setFocusedField] = useState(null);
+  const [showResendVerification, setShowResendVerification] = useState(false);
+  const [resendingVerification, setResendingVerification] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,12 +39,14 @@ export default function Login() {
     }
     
     setLoading(true);
+    setShowResendVerification(false);
     try {
       const response = await api.auth.login(form.email, form.password);
       
       // Check if email verification is pending
       if (response.email_verified === false) {
-        toast.info("Please verify your email address to access all features.");
+        setShowResendVerification(true);
+        toast.info("Please verify your email first. Check your inbox for the verification link.");
         navigate("/feed"); // ProtectedRoute will show verification pending screen
       } else {
         toast.success("Welcome back!");
@@ -47,7 +54,10 @@ export default function Login() {
       }
     } catch (error) {
       const errorMsg = error.message || "Login failed";
-      if (errorMsg.includes("Failed to fetch") || errorMsg.includes("Network")) {
+      if (errorMsg.includes("verify your email") || errorMsg.includes("email_verified")) {
+        setShowResendVerification(true);
+        toast.info("Please verify your email first.");
+      } else if (errorMsg.includes("Failed to fetch") || errorMsg.includes("Network")) {
         toast.error("Unable to connect to server. Please check your internet connection.");
       } else if (errorMsg.includes("Invalid credentials") || errorMsg.includes("401")) {
         toast.error("Invalid email or password. Please try again.");
@@ -56,6 +66,27 @@ export default function Login() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!form.email) {
+      toast.error("Please enter your email address first.");
+      return;
+    }
+    setResendingVerification(true);
+    try {
+      const response = await fetch(`${API_BASE}/api/auth/resend-verification-public`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email }),
+      });
+      const data = await response.json();
+      toast.success(data.message || "Verification email sent! Check your inbox.");
+    } catch (error) {
+      toast.error("Failed to resend verification email.");
+    } finally {
+      setResendingVerification(false);
     }
   };
 
