@@ -143,8 +143,7 @@ async def create_checkout_session(request: CreateCheckoutRequest, http_request: 
     cancel_url = f"{origin}/payment-cancelled?order_id={request.order_id}"
     
     # Initialize Stripe checkout
-    # CRITICAL: Use STRIPE_SECRET_KEY (not STRIPE_API_KEY which may have system override)
-    api_key = os.environ.get("STRIPE_SECRET_KEY") or os.environ.get("STRIPE_API_KEY")
+    api_key = LIVE_STRIPE_SECRET_KEY
     
     # FORCE LIVE MODE - Override any test keys in production
     if not api_key or not api_key.startswith("sk_live"):
@@ -245,8 +244,7 @@ async def get_checkout_status(session_id: str, http_request: Request):
         )
     
     # Initialize Stripe
-    # CRITICAL: Use STRIPE_SECRET_KEY (not STRIPE_API_KEY which may have system override)
-    api_key = os.environ.get("STRIPE_SECRET_KEY") or os.environ.get("STRIPE_API_KEY")
+    api_key = LIVE_STRIPE_SECRET_KEY
     if not api_key:
         raise HTTPException(status_code=500, detail="Stripe not configured")
     
@@ -452,8 +450,7 @@ async def process_stripe_refund(request: RefundPaymentRequest, http_request: Req
 @stripe_router.post("/webhook")
 async def handle_stripe_webhook(request: Request):
     """Handle Stripe webhook events"""
-    # CRITICAL: Use STRIPE_SECRET_KEY (not STRIPE_API_KEY which may have system override)
-    api_key = os.environ.get("STRIPE_SECRET_KEY") or os.environ.get("STRIPE_API_KEY")
+    api_key = LIVE_STRIPE_SECRET_KEY
     if not api_key:
         raise HTTPException(status_code=500, detail="Stripe not configured")
     
@@ -735,8 +732,7 @@ async def get_subscription_status(session_id: str):
     Check the status of a subscription checkout session.
     Called after customer returns from Stripe.
     """
-    # CRITICAL: Use STRIPE_SECRET_KEY first (STRIPE_API_KEY may have system override with test key)
-    api_key = os.environ.get('STRIPE_SECRET_KEY') or os.environ.get('STRIPE_API_KEY')
+    api_key = "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"
     if not api_key:
         raise HTTPException(status_code=500, detail="Stripe not configured")
     
@@ -790,8 +786,7 @@ async def cancel_subscription(request: CancelSubscriptionRequest):
     """
     Cancel a customer's subscription.
     """
-    # CRITICAL: Use STRIPE_SECRET_KEY first (STRIPE_API_KEY may have system override with test key)
-    api_key = os.environ.get('STRIPE_SECRET_KEY') or os.environ.get('STRIPE_API_KEY')
+    api_key = "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"
     if not api_key:
         raise HTTPException(status_code=500, detail="Stripe not configured")
     
