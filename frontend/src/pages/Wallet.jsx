@@ -501,6 +501,46 @@ export default function Wallet() {
     }
   };
 
+  // Verify subscription after Stripe payment success redirect
+  const verifySubscriptionFromStripe = async () => {
+    try {
+      // Get the most recent checkout session for this user
+      const response = await api.get("/subscriptions/my-subscription");
+      const sub = response.data;
+      
+      // Check if there's a stripe_customer_id - look up recent sessions
+      if (sub?.stripe_customer_id) {
+        // Try to find and verify the latest checkout session
+        const token = localStorage.getItem('blendlink_token');
+        const sessionsResponse = await fetch(`${API_BASE}/api/subscriptions/verify-latest`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (sessionsResponse.ok) {
+          const result = await sessionsResponse.json();
+          if (result.status === 'activated') {
+            toast.success(`${result.message}`, { duration: 5000 });
+            // Refresh all data
+            fetchWalletData();
+            fetchDailyClaimStatus();
+            // Update user context
+            if (user && result.tier) {
+              setUser({ ...user, subscription_tier: result.tier });
+            }
+            return;
+          }
+        }
+      }
+      
+      // Fallback: just refresh to pick up any webhook-activated changes
+      fetchWalletData();
+      toast.success("Subscription payment received! Your benefits will be activated shortly.");
+    } catch (error) {
+      console.error("Subscription verification error:", error);
+      toast.info("Payment received. Your subscription is being activated...");
+    }
+  };
+
   // Get current subscription status
   useEffect(() => {
     const fetchSubscription = async () => {
