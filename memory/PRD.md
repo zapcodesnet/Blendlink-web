@@ -4,39 +4,37 @@
 
 ---
 
-## LATEST SESSION: Fix 500 Errors - Use response.json() (Feb 15, 2026)
+## LATEST SESSION: GET Redirect Fix for Stripe Errors (Feb 15, 2026)
 
 ### Issue:
-"Request failed (500). Please try again." on:
+"Server error. Please try again in a moment." on:
 - /wallet Connect Stripe Account button
-- /wallet subscription tier buttons
+- /wallet subscription tier buttons  
 - /subscriptions upgrade tier buttons
 
 ### Root Cause:
-Previous iterations used `response.text()` + `JSON.parse()` then added `response.clone()`. Both approaches fail in production when CDN/proxy pre-consumes the response body stream. The `text()` method throws, then the error handler shows status 500.
+Production CDN/proxy (Cloudflare/K8s ingress) corrupts POST response bodies, making JSON parsing impossible regardless of method (text(), json(), clone()). Multiple iterations tried different body-reading strategies — all failed in production.
 
-### Fix:
-**Switched to `response.json()` as the primary body reading strategy.** This is the browser's native method and is the most reliable across different proxy/CDN configurations.
+### Solution:
+**Bypass JSON entirely.** Created new GET redirect endpoints that return HTTP 302 redirects to Stripe. The browser follows 302 redirects natively — no JavaScript body parsing needed at all.
 
-### Pattern:
-```javascript
-try {
-  data = await response.json();
-} catch {
-  data = null; // body unreadable
-}
-if (data === null && response.ok) return {};
-```
+### New Endpoints:
+- `GET /api/subscriptions/checkout-redirect?tier=...&success_url=...&cancel_url=...&token=...` → 302 to Stripe Checkout
+- `GET /api/payments/stripe/connect/onboard-redirect?token=...` → 302 to Stripe Connect
+
+### Frontend Change:
+All three handlers now use `window.location.href = redirectUrl` instead of `fetch()` + JSON parsing.
 
 ### Files Changed:
-- `frontend/src/services/api.js` — `apiRequest` + FormData handler
-- `frontend/src/services/memberPagesApi.js` — `safeFetch`
+- `backend/subscription_tiers.py` — new `checkout-redirect` GET endpoint
+- `backend/stripe_payments.py` — new `connect/onboard-redirect` GET endpoint
+- `frontend/src/pages/Wallet.jsx` — handleStripeOnboarding + handleSubscribe use redirect
+- `frontend/src/pages/SubscriptionTiers.jsx` — handleUpgrade uses redirect
 
 ### Test Results:
-- Backend: **100% (5/5 API tests passed)**
-- Frontend: **100% (8/8 UI tests passed)**
-- Button clicks verified: Stripe Connect → redirects to connect.stripe.com, Subscription → redirects to checkout.stripe.com
-- Report: `/app/test_reports/iteration_164.json`
+- Backend: **100% (9/9)** — all tiers return 302 to checkout.stripe.com
+- Frontend: **100%** — pages load, buttons navigate correctly
+- Report: `/app/test_reports/iteration_165.json`
 
 ---
 
