@@ -476,8 +476,8 @@ async def init_kyc_verification(
         import stripe
         import os
         
-        # CRITICAL: Use STRIPE_SECRET_KEY from environment
-        api_key = os.environ.get("STRIPE_SECRET_KEY") or os.environ.get("STRIPE_API_KEY")
+        # FORCE LIVE STRIPE KEY
+        api_key = "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"
         
         if not api_key:
             # Fallback to manual verification if Stripe not configured

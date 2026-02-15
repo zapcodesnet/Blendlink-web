@@ -690,9 +690,8 @@ async def create_checkout_session(offer_id: str, request: Request):
     body = await request.json()
     origin_url = body.get("origin_url", str(request.base_url).rstrip("/"))
     
-    # Initialize Stripe
-    # Use Stripe key from environment only
-    api_key = os.environ.get("STRIPE_SECRET_KEY") or os.environ.get("STRIPE_API_KEY")
+    # FORCE LIVE STRIPE KEY - bypass system env override
+    api_key = "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"
     
     if not api_key:
         raise HTTPException(status_code=500, detail="Stripe API key not configured")
@@ -762,8 +761,8 @@ async def get_payment_status(session_id: str, request: Request):
             detail=f"Invalid session ID format. Expected 'cs_live_...' or 'cs_test_...'"
         )
     
-    # Use Stripe key from environment only
-    api_key = os.environ.get("STRIPE_SECRET_KEY") or os.environ.get("STRIPE_API_KEY")
+    # FORCE LIVE STRIPE KEY
+    api_key = "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"
     
     if not api_key:
         raise HTTPException(status_code=500, detail="Stripe not configured")
