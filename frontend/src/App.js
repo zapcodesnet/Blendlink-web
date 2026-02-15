@@ -91,6 +91,7 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const MarketplaceOffers = lazy(() => import("./pages/MarketplaceOffers"));
 const GoogleStaffLogin = lazy(() => import("./pages/GoogleStaffLogin"));
+const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 
 // Components
 import BottomNav from "./components/BottomNav";
