@@ -1,0 +1,128 @@
+{
+  "summary": "Iteration 166: Verified Stripe stale ID fixes. All GET redirect endpoints return 302 to Stripe (connect.stripe.com and checkout.stripe.com). POST endpoints preserved for backward compatibility. Frontend correctly uses window.location.href for navigation to Stripe checkout/onboarding.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_results": {
+    "backend_tests": {
+      "total": 12,
+      "passed": 12,
+      "failed": 0,
+      "test_file": "/app/backend/tests/test_stripe_stale_id_fix.py"
+    },
+    "get_redirect_endpoints": {
+      "connect_onboard_redirect": {
+        "status": "PASS",
+        "endpoint": "GET /api/payments/stripe/connect/onboard-redirect?token=...",
+        "response": "302 redirect to connect.stripe.com"
+      },
+      "checkout_redirect_bronze": {
+        "status": "PASS",
+        "endpoint": "GET /api/subscriptions/checkout-redirect?tier=bronze",
+        "response": "302 redirect to checkout.stripe.com"
+      },
+      "checkout_redirect_silver": {
+        "status": "PASS",
+        "endpoint": "GET /api/subscriptions/checkout-redirect?tier=silver",
+        "response": "302 redirect to checkout.stripe.com"
+      },
+      "checkout_redirect_gold": {
+        "status": "PASS",
+        "endpoint": "GET /api/subscriptions/checkout-redirect?tier=gold",
+        "response": "302 redirect to checkout.stripe.com"
+      },
+      "checkout_redirect_diamond": {
+        "status": "PASS",
+        "endpoint": "GET /api/subscriptions/checkout-redirect?tier=diamond",
+        "response": "302 redirect to checkout.stripe.com"
+      }
+    },
+    "backward_compatibility": {
+      "post_subscription_checkout": {
+        "status": "PASS",
+        "endpoint": "POST /api/subscriptions/checkout?tier=bronze",
+        "response": "200 with checkout_url and session_id"
+      },
+      "post_connect_onboard": {
+        "status": "PASS",
+        "endpoint": "POST /api/payments/stripe/connect/onboard",
+        "response": "200 with url"
+      }
+    },
+    "error_handling": {
+      "invalid_tier_400": {
+        "status": "PASS",
+        "description": "Invalid tier returns 400 error"
+      },
+      "missing_token_422": {
+        "status": "PASS",
+        "description": "Missing token returns 422 error"
+      },
+      "invalid_token_401": {
+        "status": "PASS",
+        "description": "Invalid token returns 401 error"
+      }
+    },
+    "ui_testing": {
+      "wallet_page": {
+        "status": "PASS",
+        "details": "Wallet page loads with membership section showing all 4 tiers"
+      },
+      "subscriptions_page": {
+        "status": "PASS",
+        "details": "Subscriptions page shows Bronze/Silver/Gold/Diamond tiers with upgrade buttons"
+      },
+      "stripe_checkout_redirect": {
+        "status": "PASS",
+        "details": "Clicking 'Upgrade to Bronze Member' button redirects to checkout.stripe.com with correct price ($4.99/month)"
+      }
+    }
+  },
+  "verified_fixes": {
+    "stale_stripe_connect_account_fix": {
+      "status": "VERIFIED",
+      "problem": "'account not connected to your platform or does not exist' error when connecting Stripe account",
+      "root_cause": "Stale Stripe Connect account IDs in database from test mode - live API rejected them",
+      "solution": "stripe_payments.py connect/onboard-redirect validates account with stripe.Account.retrieve(), deletes and recreates if stale"
+    },
+    "stale_stripe_customer_id_fix": {
+      "status": "VERIFIED",
+      "problem": "'Internal Server Error' on subscription checkout",
+      "root_cause": "Stale Stripe customer IDs in database - live API rejected them",
+      "solution": "subscription_tiers.py create_checkout_session validates customer with stripe.Customer.retrieve(), recreates if stale"
+    }
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_stripe_stale_id_fix.py",
+    "/app/test_reports/pytest/pytest_stripe_stale_id_fix_iter166.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "GET redirect pattern correctly bypasses CDN/proxy JSON body corruption issues",
+    "Token passed as query parameter for GET requests works correctly",
+    "Backend validates existing Stripe IDs before use, recreates if stale",
+    "stripe.api_key explicitly forced to live key before Stripe API calls",
+    "Original POST endpoints preserved for backward compatibility"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_stripe_stale_id_fix.py"
+  ],
+  "success_rate": {
+    "backend": "100% (12/12 tests passed)",
+    "frontend": "100% (UI verified - checkout redirects to Stripe)"
+  },
+  "test_credentials": {
+    "email": "tester@blendlink.net",
+    "password": "BlendLink2024!"
+  },
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iteration 166 verified fixes for stale Stripe IDs. The key fixes are: 1) GET redirect endpoints that return HTTP 302 to Stripe URLs, bypassing JSON body parsing issues, 2) Validation of existing Stripe account/customer IDs with Stripe API before use, 3) Automatic recreation of stale IDs. All subscription tiers (bronze $4.99, silver $9.99, gold $14.99, diamond $29.99) and Stripe Connect onboarding work correctly."
+}
