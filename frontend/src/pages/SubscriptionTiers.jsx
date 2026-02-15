@@ -268,7 +268,10 @@ const SubscriptionTiers = () => {
                     <span className="text-xs bg-white/20 px-2 py-1 rounded-full">Current</span>
                   )}
                 </h3>
-                <p className="text-white/90 text-lg font-semibold">${tier.price.toFixed(2)}/month</p>
+                <p className="text-white/90 text-lg font-semibold">
+                  ${tier.price.toFixed(2)}/month{' '}
+                  <span className="line-through opacity-60 text-sm">${tier.standardPrice.toFixed(2)}/month</span>
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
