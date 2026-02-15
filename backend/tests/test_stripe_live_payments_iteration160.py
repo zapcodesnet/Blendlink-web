@@ -106,12 +106,13 @@ class TestLiveStripePayments:
         """POST /api/payments/stripe/bl-coins/checkout must return cs_live_* URL"""
         self.login_user()
         
+        # Starter tier: $4.99 for 30,000 coins (per BL_COINS_TIERS definition)
         response = self.session.post(
             f"{BASE_URL}/api/payments/stripe/bl-coins/checkout",
             json={
                 "tier_id": "starter",
                 "amount_usd": 4.99,
-                "coins_amount": 50000,
+                "coins_amount": 30000,
                 "origin_url": BASE_URL
             }
         )
@@ -296,12 +297,13 @@ class TestAuthAndIntegration:
         assert response.status_code == 200, f"Tiers endpoint failed: {response.text}"
         data = response.json()
         
-        # Should have Bronze, Silver, Gold, etc.
-        tiers = data if isinstance(data, list) else data.get("tiers", [])
-        tier_names = [t.get("name", "").lower() for t in tiers]
+        # Response is {"tiers": {...dict...}, "ranked_tiers": {...}}
+        tiers_dict = data.get("tiers", {})
         
-        assert "bronze" in tier_names or any("bronze" in str(t).lower() for t in tiers), f"Bronze tier not found: {data}"
-        print(f"✅ Subscription tiers endpoint returns data with {len(tiers)} tiers")
+        # Check for Bronze tier in dictionary
+        assert "bronze" in tiers_dict, f"Bronze tier not found in tiers: {list(tiers_dict.keys())}"
+        assert tiers_dict["bronze"]["price_monthly"] == 4.99, f"Bronze price incorrect"
+        print(f"✅ Subscription tiers endpoint returns data with {len(tiers_dict)} tiers: {list(tiers_dict.keys())}")
 
 
 if __name__ == "__main__":
