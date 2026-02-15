@@ -308,9 +308,12 @@ export default function Wallet() {
       const data = response.data;
       if (data.url) {
         window.location.href = data.url;
+      } else {
+        throw new Error("No onboarding URL received");
       }
     } catch (error) {
-      toast.error("Failed to start Stripe onboarding");
+      const msg = error.message || "Failed to start Stripe onboarding. Please try again.";
+      toast.error(msg);
     }
   };
 
