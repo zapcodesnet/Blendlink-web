@@ -4,49 +4,41 @@
 
 ---
 
-## LATEST SESSION: Remove response.clone() Bug Fix (Feb 15, 2026)
+## LATEST SESSION: Fix 500 Errors - Use response.json() (Feb 15, 2026)
 
 ### Issue:
-"Failed to execute 'clone' on 'Response': body is already used" errors on:
+"Request failed (500). Please try again." on:
 - /wallet Connect Stripe Account button
 - /wallet subscription tier buttons
 - /subscriptions upgrade tier buttons
 
 ### Root Cause:
-Previous fix (iteration 162) incorrectly added `response.clone()` to handle "body stream already read" errors. But `clone()` itself fails when the body has already been consumed by production CDN/proxy (Cloudflare).
+Previous iterations used `response.text()` + `JSON.parse()` then added `response.clone()`. Both approaches fail in production when CDN/proxy pre-consumes the response body stream. The `text()` method throws, then the error handler shows status 500.
 
-### Fix Applied:
-**Removed ALL `response.clone()` calls** from the codebase. Replaced with simple `response.text()` → `JSON.parse()` pattern with graceful error handling.
+### Fix:
+**Switched to `response.json()` as the primary body reading strategy.** This is the browser's native method and is the most reliable across different proxy/CDN configurations.
 
-### Files Fixed:
-- `frontend/src/services/api.js` — `apiRequest` + FormData handler
-- `frontend/src/services/memberPagesApi.js` — `safeFetch`
-- `frontend/src/components/OrphanTrendsWidget.jsx` — fetch helper
-- `frontend/src/pages/admin/AdminOrphans.jsx` — fetch helper
-
-### Pattern Used (no clone):
+### Pattern:
 ```javascript
-let responseText;
 try {
-  responseText = await response.text();
-} catch (readError) {
-  // Graceful fallback
+  data = await response.json();
+} catch {
+  data = null; // body unreadable
 }
-let data = responseText ? JSON.parse(responseText) : {};
+if (data === null && response.ok) return {};
 ```
 
+### Files Changed:
+- `frontend/src/services/api.js` — `apiRequest` + FormData handler
+- `frontend/src/services/memberPagesApi.js` — `safeFetch`
+
 ### Test Results:
-- Backend: **100% (7/7)**
-- Frontend: **100% (10/10)**
-- Codebase: **100% (0 clone() calls remaining)**
-- Report: `/app/test_reports/iteration_163.json`
+- Backend: **100% (5/5 API tests passed)**
+- Frontend: **100% (8/8 UI tests passed)**
+- Button clicks verified: Stripe Connect → redirects to connect.stripe.com, Subscription → redirects to checkout.stripe.com
+- Report: `/app/test_reports/iteration_164.json`
 
 ---
-
-## Previous Sessions
-- **Iteration 162**: Added clone() pattern (caused new bug, reverted this session)
-- **Iteration 161**: BL Coins quantity fix, founding members text, strikethrough prices
-- **Iteration 160**: Forced live Stripe keys in all 10 backend files
 
 ## TEST CREDENTIALS
 | Role | Email | Password |
