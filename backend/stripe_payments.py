@@ -1247,6 +1247,7 @@ async def create_stripe_connect_onboarding(http_request: Request):
                 type="express",
                 email=user_email,
                 capabilities={
+                    "card_payments": {"requested": True},
                     "transfers": {"requested": True},
                 },
                 metadata={
