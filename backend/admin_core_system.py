@@ -352,31 +352,36 @@ async def delete_user(
     data: UserActionRequest,
     admin: Dict = Depends(require_admin)
 ):
-    """Permanently delete a user (DANGEROUS)"""
+    """Permanently delete a user and all associated data (IRREVERSIBLE)"""
     if not await check_admin_permission(admin, "delete_users"):
         raise HTTPException(status_code=403, detail="Permission denied")
     
-    # Soft delete - mark as deleted but keep data
-    now = datetime.now(timezone.utc)
-    await db.users.update_one(
-        {"user_id": user_id},
-        {"$set": {
-            "is_deleted": True,
-            "deleted_at": now.isoformat(),
-            "deleted_by": admin["admin_id"],
-            "deletion_reason": data.reason,
-            "email": f"deleted_{user_id}@deleted.local",  # Anonymize email
-        }}
-    )
+    # Get user info for audit log before deletion
+    user = await db.users.find_one({"user_id": user_id}, {"_id": 0, "password_hash": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
     
+    user_email = user.get("email", "")
+    
+    # Log the action BEFORE deletion (so we have the record)
     await log_admin_action(
         admin["admin_id"], admin["email"], admin.get("name", ""),
         AdminAuditAction.USER_DELETE, "user", user_id,
-        {"reason": data.reason},
+        {"reason": data.reason, "deleted_email": user_email, "permanent": True},
         request
     )
     
-    return {"success": True, "message": f"User {user_id} deleted"}
+    # Permanently delete user and ALL associated data
+    await db.users.delete_one({"user_id": user_id})
+    await db.subscriptions.delete_many({"user_id": user_id})
+    await db.transactions.delete_many({"user_id": user_id})
+    await db.referral_relationships.delete_many({"$or": [{"referrer_id": user_id}, {"referred_id": user_id}]})
+    await db.stripe_connect_accounts.delete_many({"user_id": user_id})
+    await db.posts.delete_many({"user_id": user_id})
+    await db.notifications.delete_many({"user_id": user_id})
+    await db.bl_coins_purchases.delete_many({"user_id": user_id})
+    
+    return {"success": True, "message": f"User {user_id} permanently deleted. Email {user_email} is now available for re-registration."}
 
 @admin_users_router.post("/{user_id}/reset-password")
 async def admin_reset_user_password(
