@@ -46,6 +46,7 @@ const MEMBERSHIP_TIERS = {
     id: "silver",
     name: "Silver Member",
     price: 9.99,
+    standardPrice: 19.99,
     color: "from-gray-400 to-slate-600",
     bgColor: "bg-slate-800/30",
     borderColor: "border-slate-400",
