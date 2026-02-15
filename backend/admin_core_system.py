@@ -415,15 +415,21 @@ async def force_logout_user(
     user_id: str,
     admin: Dict = Depends(require_admin)
 ):
-    """Force logout user from all sessions"""
+    """Force logout user from all sessions (web + mobile)"""
     if not await check_admin_permission(admin, "force_logout_users"):
         raise HTTPException(status_code=403, detail="Permission denied")
     
     # Invalidate all tokens by updating token_version
     await db.users.update_one(
         {"user_id": user_id},
-        {"$inc": {"token_version": 1}}
+        {
+            "$inc": {"token_version": 1},
+            "$set": {"force_logout_at": datetime.now(timezone.utc).isoformat()}
+        }
     )
+    
+    # Clear any stored sessions
+    await db.sessions.delete_many({"user_id": user_id})
     
     await log_admin_action(
         admin["admin_id"], admin["email"], admin.get("name", ""),
@@ -432,7 +438,7 @@ async def force_logout_user(
         request
     )
     
-    return {"success": True, "message": "User logged out from all sessions"}
+    return {"success": True, "message": "User logged out from all sessions (web + mobile)"}
 
 # ============== FINANCIAL MANAGEMENT ==============
 
