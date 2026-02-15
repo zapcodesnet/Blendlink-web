@@ -92,40 +92,48 @@ const apiRequest = async (endpoint, options = {}) => {
       throw new Error('Unauthorized');
     }
 
-    // Read body as text first, then parse as JSON
-    // This is the standard approach that works in preview and production
-    let responseText;
+    // Try multiple strategies to read the response body
+    // Some production CDN/proxy environments interfere with body streams
+    let data = null;
+    
+    // Strategy 1: response.json() - browser native, most reliable
     try {
-      responseText = await response.text();
-    } catch (readError) {
-      console.error('Failed to read response body:', readError);
-      if (response.ok) {
-        // Response was successful but body unreadable - return empty
-        return {};
-      }
-      throw new Error(`Request failed (${response.status}). Please try again.`);
+      data = await response.json();
+    } catch (jsonError) {
+      // Strategy 2: response.text() + JSON.parse  
+      // (response may have been partially consumed, so this might also fail)
+      data = null;
     }
     
-    // Try to parse as JSON
-    let data;
-    try {
-      data = responseText ? JSON.parse(responseText) : {};
-    } catch (parseError) {
-      console.error('JSON parse error. Response text:', responseText?.substring(0, 200));
-      throw new Error('Invalid server response');
+    // If json() failed, the response body may be consumed.
+    // For successful responses with no parseable body, return empty object
+    if (data === null) {
+      if (response.ok) {
+        return {};
+      }
+      // For error responses where we can't read the body, provide status-based message
+      const statusMessages = {
+        400: 'Bad request. Please check your input.',
+        403: 'Access denied.',
+        404: 'Resource not found.',
+        422: 'Invalid data submitted.',
+        429: 'Too many requests. Please wait a moment.',
+        500: 'Server error. Please try again in a moment.',
+        502: 'Server temporarily unavailable. Please try again.',
+        503: 'Service unavailable. Please try again later.',
+      };
+      throw new Error(statusMessages[response.status] || `Request failed (${response.status})`);
     }
     
     if (!response.ok) {
-      // Handle error detail from FastAPI
       const errorMessage = data.detail?.message || data.detail || data.message || 'Request failed';
       throw new Error(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
     }
 
     return data;
   } catch (error) {
-    // Handle network errors
     if (error.name === 'TypeError' && error.message.includes('fetch')) {
-      throw new Error('Failed to fetch - Unable to connect to server');
+      throw new Error('Unable to connect to server. Please check your connection.');
     }
     throw error;
   }
