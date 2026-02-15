@@ -200,6 +200,20 @@ const ProtectedRoute = ({ children }) => {
     return null;
   }
 
+  // Check if email is verified (existing users without the field are grandfathered in)
+  if (user && user.email_verified === false) {
+    return (
+      <AuthContext.Provider value={{ user, setUser: updateUser, refreshUser }}>
+        <EmailVerificationPending 
+          email={user.email} 
+          onLogout={() => {
+            api.auth.logout();
+          }}
+        />
+      </AuthContext.Provider>
+    );
+  }
+
   return (
     <AuthContext.Provider value={{ user, setUser: updateUser, refreshUser }}>
       <NavContext.Provider value={{ hideNav, setHideNav }}>
