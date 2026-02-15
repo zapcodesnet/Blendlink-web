@@ -1307,6 +1307,7 @@ async def stripe_connect_onboard_redirect(token: str, http_request: Request):
     """
     GET-based redirect endpoint for Stripe Connect onboarding.
     Returns a 302 redirect to Stripe - bypasses all JSON body parsing issues.
+    Handles stale/invalid Stripe accounts by recreating them.
     """
     from server import get_current_user_from_token
     
@@ -1322,10 +1323,20 @@ async def stripe_connect_onboard_redirect(token: str, http_request: Request):
         stripe.api_key = LIVE_STRIPE_SECRET_KEY
         
         connect_account = await db.stripe_connect_accounts.find_one({"user_id": user_id})
+        stripe_account_id = connect_account["stripe_account_id"] if connect_account else None
         
-        if connect_account:
-            stripe_account_id = connect_account["stripe_account_id"]
-        else:
+        # If we have an existing account, verify it's valid
+        if stripe_account_id:
+            try:
+                stripe.Account.retrieve(stripe_account_id)
+            except stripe.error.InvalidRequestError:
+                # Account is stale/invalid (wrong platform, deleted, etc.) - remove and recreate
+                logger.warning(f"Removing stale Stripe Connect account {stripe_account_id} for user {user_id}")
+                await db.stripe_connect_accounts.delete_many({"user_id": user_id})
+                stripe_account_id = None
+        
+        # Create new account if needed
+        if not stripe_account_id:
             account = stripe.Account.create(
                 type="express",
                 email=user_email,
@@ -1337,6 +1348,7 @@ async def stripe_connect_onboard_redirect(token: str, http_request: Request):
             )
             stripe_account_id = account.id
             
+            await db.stripe_connect_accounts.delete_many({"user_id": user_id})
             await db.stripe_connect_accounts.insert_one({
                 "user_id": user_id,
                 "stripe_account_id": stripe_account_id,
