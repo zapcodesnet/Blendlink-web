@@ -4,38 +4,42 @@
 
 ---
 
-## LATEST SESSION: Stripe Connect + Subscription Activation Fixes (Feb 15, 2026)
+## LATEST SESSION: 5 Feature Changes (Feb 15, 2026)
 
-### Issues Fixed:
+### 1. Google Button Removal from Public Auth Pages
+- **Login** (`/login`): Google button and "or" divider completely removed from JSX
+- **Register** (`/register`): Google button and "or" divider completely removed from JSX
+- Referral code `?ref=` parameter capture still works
+- Not CSS hidden — elements physically excluded from component tree
 
-| Issue | Error | Root Cause | Fix |
-|-------|-------|-----------|-----|
-| Stripe Connect | "key does not have access to account" | Only `InvalidRequestError` was caught; `PermissionError` was missed | Changed to catch ALL exceptions from stale accounts |
-| Subscription not activating after payment | No BL coins, no tier change, no XP, membership stays "Free" | Activation relied solely on webhooks which may not be configured | Added `verify-latest` endpoint as PRIMARY activation path |
+### 2. Profile Share Link Update
+- Share button on `/profile` now navigates to `/profile` instead of `/referrals`
 
-### New Endpoints:
-- `GET /api/subscriptions/verify-latest` — Checks Stripe for recent paid sessions, activates subscription + credits BL coins
-- `GET /api/subscriptions/verify-session?session_id=...` — Verifies a specific Stripe session
+### 3. Member Page Analytics Referral Section Removal
+- `AnalyticsDashboard.jsx`: Removed "Referral Performance", "Your Referral Code", "Share Your Referral Link" sections
+- `MemberPageDashboard.jsx`: Removed "Referral Program" section
+- Other analytics content (stats, charts) remains intact
 
-### How Subscription Activation Now Works:
-1. User clicks Subscribe → redirected to Stripe Checkout
-2. User completes payment → redirected back to `/wallet?subscription_success=true`
-3. Frontend detects `subscription_success=true` → calls `verify-latest`
-4. Backend queries Stripe for paid sessions → finds the tier → activates subscription
-5. User profile updated: tier, BL coins credited, all benefits applied instantly
+### 4. Hidden Staff-Only Google Auth Page (`/google`)
+- **Not logged in** → "Staff Access Only" with Go to Login button
+- **Logged in, non-staff** → "Access Denied: reserved for staff only"
+- **Logged in, staff (admin/co_admin/moderator)** → Shows Google button
+- Backend: `GET /api/auth/staff-check` checks user role
+- No links from any menu, footer, nav, or sitemap
 
-### Membership Tier Benefits (Applied Instantly):
-| Tier | Price | L1 Commission | L2 Commission | Daily Mints | XP | Daily BL Coins | Pages |
-|------|-------|---------------|---------------|-------------|-----|---------------|-------|
-| Bronze | $4.99/mo | 3% | 2% | 20 | x2 | 15,000 | 3 |
-| Silver | $9.99/mo | 3% | 2% | 50 | x3 | 40,000 | 10 |
-| Gold | $14.99/mo | 3% | 2% | 150 | x4 | 200,000 | 25 |
-| Diamond | $29.99/mo | 4% | 3% | Unlimited | x5 | 500,000 | Unlimited |
+### 5. Mandatory Email Verification for New Registrations
+- New users get `email_verified: false` in database
+- Verification email sent via Resend API after registration
+- `GET /api/auth/verify-email?token=...` verifies email
+- `POST /api/auth/resend-verification` resends email
+- Login returns `email_verified: false` for unverified users
+- ProtectedRoute shows verification pending screen for unverified users
+- **Existing users grandfathered** (no `email_verified` field = treated as verified)
 
 ### Test Results:
-- Backend: **100% (17/17)**
-- Frontend: **100%**
-- Report: `/app/test_reports/iteration_167.json`
+- Backend: **100% (15/15)**
+- Frontend: **100%** (all features verified)
+- Report: `/app/test_reports/iteration_168.json`
 
 ---
 
