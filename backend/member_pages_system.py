@@ -524,8 +524,8 @@ class CreateRentalBookingRequest(BaseModel):
 
 # ============== HELPER FUNCTIONS ==============
 
-# JWT configuration
-JWT_SECRET = os.environ.get("JWT_SECRET", "bl-secret-key-2024-super-secure")
+# JWT configuration - MUST match server.py
+JWT_SECRET = os.environ.get("JWT_SECRET", "blendlink-jwt-secret-key-2024")
 JWT_ALGORITHM = "HS256"
 
 async def get_current_user(request: Request) -> dict:
