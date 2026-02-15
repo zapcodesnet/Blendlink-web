@@ -456,30 +456,14 @@ export default function Wallet() {
           setUser({ ...user, subscription_tier: tierId });
         }
       } else {
-        // Use Stripe checkout for subscription - production-safe text-first pattern
+        // Use Stripe checkout for subscription via api service (handles body stream issues)
         const successUrl = `${window.location.origin}/wallet?subscription_success=true`;
         const cancelUrl = `${window.location.origin}/wallet`;
         
-        const response = await fetch(`${API_BASE}/api/subscriptions/checkout?tier=${tierId}&success_url=${encodeURIComponent(successUrl)}&cancel_url=${encodeURIComponent(cancelUrl)}`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('blendlink_token')}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        // Read body as text first to prevent "body stream already read" errors
-        const responseText = await response.text();
-        let data;
-        try {
-          data = responseText ? JSON.parse(responseText) : {};
-        } catch (e) {
-          throw new Error('Invalid server response');
-        }
-        
-        if (!response.ok) {
-          throw new Error(data.detail || 'Failed to create checkout');
-        }
+        const response = await api.post(
+          `/subscriptions/checkout?tier=${tierId}&success_url=${encodeURIComponent(successUrl)}&cancel_url=${encodeURIComponent(cancelUrl)}`
+        );
+        const data = response.data;
         
         if (data.checkout_url) {
           window.location.href = data.checkout_url;
