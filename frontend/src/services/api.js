@@ -788,23 +788,20 @@ export default {
           throw new Error('Unauthorized');
         }
         
-        // Read body as text first then parse - standard approach
-        let responseText;
+        // Read response body - use json() directly (most reliable)
+        let result = null;
         try {
-          responseText = await response.text();
-        } catch (readError) {
-          console.error('[FormData POST] Failed to read response:', readError);
-          if (response.ok) return { data: {} };
-          throw new Error(`Request failed (${response.status}). Please try again.`);
+          result = await response.json();
+        } catch (parseError) {
+          if (response.ok) {
+            result = {};
+          }
         }
         
-        let result;
-        try {
-          result = responseText ? JSON.parse(responseText) : {};
-        } catch (parseError) {
-          console.error('[FormData POST] JSON parse error:', parseError);
-          throw new Error('Server returned invalid response');
+        if (result === null && !response.ok) {
+          throw new Error(`Request failed (${response.status}). Please try again.`);
         }
+        result = result || {};
         
         if (!response.ok) {
           const errorMessage = result.detail?.message || result.detail || result.message || 'Request failed';
