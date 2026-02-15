@@ -390,11 +390,13 @@ class SubscriptionService:
         if not tier_info:
             raise HTTPException(status_code=400, detail=f"Tier configuration not found for: {tier}")
         
-        # Always create a dynamic price for subscription
-        # This ensures the price exists in the current Stripe account
+        # Force live Stripe key before any API calls
+        stripe.api_key = "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"
+        
+        # Create dynamic price for subscription
         try:
             price = stripe.Price.create(
-                unit_amount=int(tier_info["price_monthly"] * 100),  # Convert to cents
+                unit_amount=int(tier_info["price_monthly"] * 100),
                 currency="usd",
                 recurring={"interval": "month"},
                 product_data={"name": f"BlendLink {tier_info['name']} Membership"},
@@ -413,38 +415,75 @@ class SubscriptionService:
         sub = await self.get_subscription(user_id)
         customer_id = sub.get("stripe_customer_id")
         
+        # Validate existing customer or create new one
+        if customer_id:
+            try:
+                stripe.Customer.retrieve(customer_id)
+            except stripe.error.InvalidRequestError:
+                logger.warning(f"Stale Stripe customer {customer_id} for user {user_id}, creating new one")
+                customer_id = None
+        
         if not customer_id:
-            # Create new Stripe customer
-            customer = stripe.Customer.create(
-                email=user.get("email"),
-                metadata={"user_id": user_id}
-            )
-            customer_id = customer.id
-            
-            # Save customer ID
-            await self.db.subscriptions.update_one(
-                {"user_id": user_id},
-                {"$set": {"stripe_customer_id": customer_id}}
-            )
+            try:
+                customer = stripe.Customer.create(
+                    email=user.get("email"),
+                    metadata={"user_id": user_id}
+                )
+                customer_id = customer.id
+                await self.db.subscriptions.update_one(
+                    {"user_id": user_id},
+                    {"$set": {"stripe_customer_id": customer_id}},
+                    upsert=True
+                )
+            except Exception as e:
+                logger.error(f"Failed to create Stripe customer: {e}")
+                raise HTTPException(status_code=500, detail="Unable to create payment account. Please try again.")
         
         # Create checkout session
-        session = stripe.checkout.Session.create(
-            customer=customer_id,
-            mode="subscription",
-            payment_method_types=["card"],
-            line_items=[{"price": price_id, "quantity": 1}],
-            success_url=success_url,
-            cancel_url=cancel_url,
-            metadata={
-                "user_id": user_id,
-                "tier": tier
+        try:
+            session = stripe.checkout.Session.create(
+                customer=customer_id,
+                mode="subscription",
+                payment_method_types=["card"],
+                line_items=[{"price": price_id, "quantity": 1}],
+                success_url=success_url,
+                cancel_url=cancel_url,
+                metadata={
+                    "user_id": user_id,
+                    "tier": tier
+                }
+            )
+            
+            return {
+                "checkout_url": session.url,
+                "session_id": session.id
             }
-        )
-        
-        return {
-            "checkout_url": session.url,
-            "session_id": session.id
-        }
+        except stripe.error.InvalidRequestError as e:
+            logger.error(f"Stripe checkout session error: {e}")
+            # If customer is invalid, clear and retry once
+            if "customer" in str(e).lower():
+                logger.warning(f"Clearing invalid customer for user {user_id}, retrying...")
+                customer = stripe.Customer.create(
+                    email=user.get("email"),
+                    metadata={"user_id": user_id}
+                )
+                customer_id = customer.id
+                await self.db.subscriptions.update_one(
+                    {"user_id": user_id},
+                    {"$set": {"stripe_customer_id": customer_id}},
+                    upsert=True
+                )
+                session = stripe.checkout.Session.create(
+                    customer=customer_id,
+                    mode="subscription",
+                    payment_method_types=["card"],
+                    line_items=[{"price": price_id, "quantity": 1}],
+                    success_url=success_url,
+                    cancel_url=cancel_url,
+                    metadata={"user_id": user_id, "tier": tier}
+                )
+                return {"checkout_url": session.url, "session_id": session.id}
+            raise HTTPException(status_code=500, detail="Payment processing error. Please try again.")
     
     async def handle_webhook(self, event: Dict[str, Any]) -> Dict[str, Any]:
         """Handle Stripe webhook events"""
