@@ -55,25 +55,16 @@ export const safeFetch = async (url, options = {}) => {
     throw new Error('Network error - please check your connection');
   }
 
-  // 2. Read body as TEXT first then parse (production-safe)
-  let responseText = '';
-  try {
-    responseText = await response.text();
-  } catch (readError) {
-    console.warn(`[safeFetch] Body read warning for ${response.status}:`, readError.message);
-    responseText = '';
-  }
-
-  // 3. Parse text as JSON
+  // 2. Read body using json() directly - most reliable across environments
   let data;
   try {
-    data = responseText ? JSON.parse(responseText) : {};
+    data = await response.json();
   } catch (parseError) {
-    // Some endpoints may return empty or non-JSON
-    data = { _rawText: responseText, success: response.ok };
+    // If json() fails, body may be empty or unreadable
+    data = {};
   }
 
-  // 4. Handle HTTP errors
+  // 3. Handle HTTP errors
   if (!response.ok) {
     const errorMessage = data?.detail?.message || data?.detail || data?.message || `Request failed (${response.status})`;
     const error = new Error(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
