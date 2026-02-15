@@ -82,8 +82,15 @@ export default function Register() {
       });
       
       const bonus = response.bl_coins_bonus || 50000;
-      toast.success(`Account created! You earned ${bonus.toLocaleString()} BL Coins!`);
-      navigate("/feed");
+      
+      // Check if email verification is required
+      if (response.email_verified === false) {
+        toast.success(`Account created! Please check your email to verify your account.`);
+        navigate("/login");
+      } else {
+        toast.success(`Account created! You earned ${bonus.toLocaleString()} BL Coins!`);
+        navigate("/feed");
+      }
     } catch (error) {
       toast.error(error.message || "Registration failed");
     } finally {
