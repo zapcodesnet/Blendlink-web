@@ -19,11 +19,8 @@ import json
 
 logger = logging.getLogger(__name__)
 
-# Initialize Stripe from environment only
-# FORCE LIVE STRIPE KEY
+# Initialize Stripe - FORCE LIVE KEY
 stripe.api_key = "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"
-else:
-    logger.warning("Stripe API key not configured - payment features will be unavailable")
 
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "https://blendlink.net")
 
