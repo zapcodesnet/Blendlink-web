@@ -21,6 +21,7 @@ const MEMBERSHIP_TIERS = {
     id: "bronze",
     name: "Bronze Member",
     price: 4.99,
+    standardPrice: 9.99,
     color: "from-amber-600 to-amber-800",
     bgColor: "bg-amber-900/20",
     borderColor: "border-amber-600",
