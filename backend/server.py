@@ -1983,7 +1983,7 @@ class GuestCheckoutRequest(BaseModel):
     total: float
 
 @marketplace_router.post("/guest-checkout")
-async def guest_checkout(data: GuestCheckoutRequest):
+async def guest_checkout(data: GuestCheckoutRequest, request: Request):
     """Process a guest checkout without requiring login"""
     # Validate customer info
     if not data.customer.get("name") or not data.customer.get("email"):
