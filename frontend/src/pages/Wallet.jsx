@@ -47,6 +47,7 @@ const MEMBERSHIP_TIERS = {
   silver: {
     name: 'Silver',
     price: 9.99,
+    standardPrice: 19.99,
     color: 'from-gray-400 to-slate-500',
     icon: Star,
     commission_l1: 3,
@@ -60,6 +61,7 @@ const MEMBERSHIP_TIERS = {
   gold: {
     name: 'Gold',
     price: 14.99,
+    standardPrice: 29.99,
     color: 'from-yellow-500 to-amber-500',
     icon: Crown,
     commission_l1: 3,
@@ -73,6 +75,7 @@ const MEMBERSHIP_TIERS = {
   diamond: {
     name: 'Diamond',
     price: 29.99,
+    standardPrice: 59.99,
     color: 'from-cyan-400 to-blue-500',
     icon: Sparkles,
     commission_l1: 4,
