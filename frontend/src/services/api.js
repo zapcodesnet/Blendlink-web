@@ -783,13 +783,18 @@ export default {
           throw new Error('Unauthorized');
         }
         
-        // PRODUCTION FIX: Use text-first pattern for FormData responses too
+        // PRODUCTION FIX: Clone + text-first pattern for FormData responses
+        const cloned = response.clone();
         let responseText;
         try {
           responseText = await response.text();
         } catch (readError) {
-          console.error('[FormData POST] Failed to read response:', readError);
-          throw new Error('Failed to read server response');
+          try {
+            responseText = await cloned.text();
+          } catch (cloneError) {
+            console.error('[FormData POST] Failed to read response:', readError, cloneError);
+            throw new Error('Unable to read server response. Please try again.');
+          }
         }
         
         let result;
