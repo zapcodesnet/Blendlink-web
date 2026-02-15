@@ -449,7 +449,7 @@ export default function Wallet() {
           setUser({ ...user, subscription_tier: tierId });
         }
       } else {
-        // Use Stripe checkout for subscription - redirect to Stripe checkout via subscription endpoint
+        // Use Stripe checkout for subscription - production-safe text-first pattern
         const successUrl = `${window.location.origin}/wallet?subscription_success=true`;
         const cancelUrl = `${window.location.origin}/wallet`;
         
@@ -461,12 +461,19 @@ export default function Wallet() {
           }
         });
         
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.detail || 'Failed to create checkout');
+        // Read body as text first to prevent "body stream already read" errors
+        const responseText = await response.text();
+        let data;
+        try {
+          data = responseText ? JSON.parse(responseText) : {};
+        } catch (e) {
+          throw new Error('Invalid server response');
         }
         
-        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.detail || 'Failed to create checkout');
+        }
+        
         if (data.checkout_url) {
           window.location.href = data.checkout_url;
         } else if (data.url) {
