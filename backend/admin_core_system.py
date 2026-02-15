@@ -222,6 +222,10 @@ async def suspend_user(
     
     await db.users.update_one({"user_id": user_id}, {"$set": update_data})
     
+    # Invalidate all sessions immediately
+    await db.users.update_one({"user_id": user_id}, {"$inc": {"token_version": 1}})
+    await db.sessions.delete_many({"user_id": user_id})
+    
     # Log action
     await log_admin_action(
         admin["admin_id"], admin["email"], admin.get("name", ""),
@@ -239,7 +243,7 @@ async def suspend_user(
         "timestamp": now.isoformat(),
     })
     
-    return {"success": True, "message": f"User {user_id} suspended"}
+    return {"success": True, "message": f"User {user_id} suspended. All sessions invalidated."}
 
 @admin_users_router.post("/{user_id}/unsuspend")
 async def unsuspend_user(
