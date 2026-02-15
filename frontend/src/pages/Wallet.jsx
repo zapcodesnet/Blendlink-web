@@ -33,6 +33,7 @@ const MEMBERSHIP_TIERS = {
   bronze: {
     name: 'Bronze',
     price: 4.99,
+    standardPrice: 9.99,
     color: 'from-amber-600 to-amber-700',
     icon: Shield,
     commission_l1: 3,
