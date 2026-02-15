@@ -130,37 +130,6 @@ const OverviewTab = ({ page, analytics, onRefresh }) => {
           </div>
         </div>
       )}
-
-      {/* Referral Stats */}
-      <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl border border-primary/20 p-4">
-        <h3 className="font-semibold mb-3 flex items-center gap-2">
-          <Users className="w-4 h-4 text-primary" />
-          Referral Program
-        </h3>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">Your referral code</p>
-            <div className="flex items-center gap-2 mt-1">
-              <code className="px-3 py-1 bg-background rounded-lg font-mono text-sm">
-                {analytics.referral_stats?.referral_code || page.referral_code}
-              </code>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(analytics.referral_stats?.referral_code || page.referral_code);
-                  toast.success("Referral code copied!");
-                }}
-                className="p-1.5 hover:bg-background rounded transition-colors"
-              >
-                <Copy className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-          <div className="text-right">
-            <p className="text-2xl font-bold">{analytics.referral_stats?.signups || 0}</p>
-            <p className="text-sm text-muted-foreground">Signups</p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
