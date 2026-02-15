@@ -140,6 +140,45 @@ export default function Register() {
     },
   };
 
+  // Show verification confirmation screen after successful registration
+  if (registrationComplete) {
+    return (
+      <div className="bl-premium-bg min-h-screen flex flex-col items-center justify-center px-6 py-8 relative overflow-hidden">
+        <motion.div
+          className="bl-glass-card max-w-md w-full p-8 text-center space-y-6"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+        >
+          <div className="w-20 h-20 mx-auto rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(0,240,255,0.15), rgba(189,0,255,0.15))' }}>
+            <Mail className="w-10 h-10" style={{ color: '#00F0FF' }} />
+          </div>
+          
+          <h1 className="text-2xl font-bold" style={{ color: '#1a1a2e' }}>Verify Your Email</h1>
+          
+          <p className="text-base" style={{ color: '#4b5563', lineHeight: 1.6 }}>
+            An email verification has been sent to{" "}
+            <strong style={{ color: '#1a1a2e' }}>{registeredEmail}</strong>.
+            Please verify and confirm your email before gaining full access.
+          </p>
+          
+          <div style={{ background: '#f8fafc', borderRadius: '12px', padding: '16px', border: '1px solid #e5e7eb' }}>
+            <p className="text-sm" style={{ color: '#6b7280' }}>Check your inbox and spam folder. The verification link expires in 24 hours.</p>
+          </div>
+          
+          <button
+            onClick={() => navigate("/login")}
+            className="w-full py-3 px-6 rounded-full font-semibold text-white"
+            style={{ background: 'linear-gradient(135deg, #00F0FF, #BD00FF)' }}
+            data-testid="goto-login-after-register"
+          >
+            Continue to Login
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="bl-premium-bg min-h-screen flex flex-col items-center px-6 py-8 bl-safe-top bl-safe-bottom relative overflow-hidden">
       {/* Background subtle glow effects */}
