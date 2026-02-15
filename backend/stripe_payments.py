@@ -534,11 +534,8 @@ async def create_subscription_product(request: CreateSubscriptionProductRequest)
     Create a Stripe Product and Price for a recurring subscription.
     This must be called by page owners when they mark a product as subscription-based.
     """
-    # CRITICAL: Use STRIPE_SECRET_KEY (not STRIPE_API_KEY which may have system override)
-    api_key = os.environ.get('STRIPE_SECRET_KEY') or os.environ.get('STRIPE_API_KEY')
-    if not api_key:
-        raise HTTPException(status_code=500, detail="Stripe not configured")
-    
+    # FORCE LIVE KEY
+    api_key = LIVE_STRIPE_SECRET_KEY
     stripe.api_key = api_key
     
     try:
@@ -634,11 +631,8 @@ async def create_subscription_checkout(request: CreateSubscriptionRequest, http_
     Create a Stripe Checkout Session for subscription.
     Customer will be redirected to Stripe to complete payment.
     """
-    # CRITICAL: Use STRIPE_SECRET_KEY (not STRIPE_API_KEY which may have system override)
-    api_key = os.environ.get('STRIPE_SECRET_KEY') or os.environ.get('STRIPE_API_KEY')
-    if not api_key:
-        raise HTTPException(status_code=500, detail="Stripe not configured")
-    
+    # FORCE LIVE KEY
+    api_key = LIVE_STRIPE_SECRET_KEY
     stripe.api_key = api_key
     
     try:
