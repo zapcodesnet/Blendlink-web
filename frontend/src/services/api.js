@@ -92,21 +92,18 @@ const apiRequest = async (endpoint, options = {}) => {
       throw new Error('Unauthorized');
     }
 
-    // PRODUCTION FIX: Clone response before reading body to prevent
-    // "body stream already read" errors from production proxies/CDN
-    const cloned = response.clone();
-    
+    // Read body as text first, then parse as JSON
+    // This is the standard approach that works in preview and production
     let responseText;
     try {
       responseText = await response.text();
     } catch (readError) {
-      // Fallback: try reading from the cloned response
-      try {
-        responseText = await cloned.text();
-      } catch (cloneError) {
-        console.error('Failed to read response body from both original and clone:', readError, cloneError);
-        throw new Error('Unable to read server response. Please try again.');
+      console.error('Failed to read response body:', readError);
+      if (response.ok) {
+        // Response was successful but body unreadable - return empty
+        return {};
       }
+      throw new Error(`Request failed (${response.status}). Please try again.`);
     }
     
     // Try to parse as JSON
