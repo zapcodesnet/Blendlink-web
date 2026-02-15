@@ -55,20 +55,13 @@ export const safeFetch = async (url, options = {}) => {
     throw new Error('Network error - please check your connection');
   }
 
-  // 2. Read body as TEXT first (production-safe)
-  // Clone the response first to handle "body stream already read" errors from production proxies
-  const cloned = response.clone();
+  // 2. Read body as TEXT first then parse (production-safe)
   let responseText = '';
   try {
     responseText = await response.text();
   } catch (readError) {
-    // Fallback: try reading from the cloned response
-    try {
-      responseText = await cloned.text();
-    } catch (cloneError) {
-      console.warn(`[safeFetch] Body read warning for ${response.status}:`, readError.message);
-      responseText = '';
-    }
+    console.warn(`[safeFetch] Body read warning for ${response.status}:`, readError.message);
+    responseText = '';
   }
 
   // 3. Parse text as JSON
