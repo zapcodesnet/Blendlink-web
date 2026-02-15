@@ -2018,46 +2018,42 @@ async def guest_checkout(data: GuestCheckoutRequest, request: Request):
         # FORCE LIVE STRIPE KEY
         stripe.api_key = "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"
         
-        if stripe.api_key:
-            line_items = [
-                {
-                    "price_data": {
-                        "currency": "usd",
-                        "product_data": {
-                            "name": item.get("title", "Item"),
-                            "description": f"{item.get('type', 'product').title()}"
-                        },
-                        "unit_amount": int(item.get("price", 0) * 100),
+        # Use request origin for dynamic redirect URLs
+        origin = request.headers.get("origin") or "https://blendlink.net"
+        
+        line_items = [
+            {
+                "price_data": {
+                    "currency": "usd",
+                    "product_data": {
+                        "name": item.get("title", "Item"),
+                        "description": f"{item.get('type', 'product').title()}"
                     },
-                    "quantity": item.get("quantity", 1)
-                }
-                for item in data.items
-            ]
-            
-            checkout_session = stripe.checkout.Session.create(
-                payment_method_types=["card"],
-                line_items=line_items,
-                mode="payment",
-                customer_email=data.customer.get("email"),
-                success_url=f"{os.environ.get('FRONTEND_URL')}/payment/success?order_id={order_id}",
-                cancel_url=f"{os.environ.get('FRONTEND_URL')}/payment/cancel?order_id={order_id}",
-                metadata={"order_id": order_id, "is_guest": "true"}
-            )
-            
-            return {
-                "order_id": order_id,
-                "payment_url": checkout_session.url,
-                "message": "Redirecting to payment"
+                    "unit_amount": int(item.get("price", 0) * 100),
+                },
+                "quantity": item.get("quantity", 1)
             }
+            for item in data.items
+        ]
+        
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=line_items,
+            mode="payment",
+            customer_email=data.customer.get("email"),
+            success_url=f"{origin}/payment/success?order_id={order_id}&session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{origin}/payment/cancel?order_id={order_id}",
+            metadata={"order_id": order_id, "is_guest": "true"}
+        )
+        
+        return {
+            "order_id": order_id,
+            "payment_url": checkout_session.url,
+            "message": "Redirecting to payment"
+        }
     except Exception as e:
         logger.error(f"Stripe checkout error: {e}")
-    
-    # Fallback: return success without payment
-    return {
-        "order_id": order_id,
-        "message": "Order placed successfully. Payment will be processed offline.",
-        "status": "pending_payment"
-    }
+        raise HTTPException(status_code=500, detail=f"Payment processing failed: {str(e)}")
 
 # ============== RENTALS ROUTES ==============
 @rentals_router.get("/properties")
