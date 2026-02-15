@@ -1250,8 +1250,8 @@ async def create_stripe_connect_onboarding(http_request: Request):
         if stripe_account_id:
             try:
                 stripe.Account.retrieve(stripe_account_id)
-            except stripe.error.InvalidRequestError:
-                logger.warning(f"Removing stale Stripe Connect account {stripe_account_id} for user {user_id}")
+            except Exception as account_err:
+                logger.warning(f"Removing stale Stripe Connect account {stripe_account_id} for user {user_id}: {account_err}")
                 await db.stripe_connect_accounts.delete_many({"user_id": user_id})
                 stripe_account_id = None
         
