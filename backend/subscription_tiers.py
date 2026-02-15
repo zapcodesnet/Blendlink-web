@@ -1095,6 +1095,73 @@ async def verify_subscription_session(session_id: str, current_user: dict = Depe
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@subscription_router.get("/verify-latest")
+async def verify_latest_subscription(current_user: dict = Depends(get_current_user)):
+    """
+    Verify and activate the latest Stripe checkout session for the user.
+    Called by the frontend after redirect from Stripe payment.
+    """
+    stripe.api_key = "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"
+    
+    user_id = current_user["user_id"]
+    service = get_subscription_service()
+    sub = await service.get_subscription(user_id)
+    customer_id = sub.get("stripe_customer_id")
+    
+    if not customer_id:
+        return {"status": "no_customer", "message": "No payment account found"}
+    
+    try:
+        # List recent checkout sessions for this customer
+        sessions = stripe.checkout.Session.list(
+            customer=customer_id,
+            limit=5
+        )
+        
+        for session in sessions.data:
+            if session.payment_status == "paid" and session.metadata.get("tier"):
+                tier = session.metadata.get("tier")
+                subscription_id = session.subscription
+                
+                # Check if already activated
+                current_tier = sub.get("tier", "free")
+                if current_tier == tier and sub.get("status") == "active":
+                    tier_info = SUBSCRIPTION_TIERS.get(tier, SUBSCRIPTION_TIERS["free"])
+                    return {
+                        "status": "already_active",
+                        "tier": tier,
+                        "tier_details": tier_info,
+                        "message": f"Your {tier_info.get('name', tier)} membership is active!"
+                    }
+                
+                # Activate the subscription
+                await service._activate_subscription(user_id, tier, subscription_id)
+                
+                tier_info = SUBSCRIPTION_TIERS.get(tier, SUBSCRIPTION_TIERS["free"])
+                
+                # Credit welcome BL coins
+                daily_bonus = tier_info.get("daily_bl_bonus", 0)
+                if daily_bonus > 0:
+                    await service.db.users.update_one(
+                        {"user_id": user_id},
+                        {"$inc": {"bl_coins": daily_bonus}}
+                    )
+                
+                return {
+                    "status": "activated",
+                    "tier": tier,
+                    "tier_details": tier_info,
+                    "bl_coins_credited": daily_bonus,
+                    "message": f"Successfully subscribed to {tier_info.get('name', tier)} membership!"
+                }
+        
+        return {"status": "no_paid_session", "message": "No completed payment found. It may still be processing."}
+        
+    except Exception as e:
+        logger.error(f"Verify latest subscription error: {e}")
+        return {"status": "error", "message": str(e)}
+
+
 @subscription_router.post("/webhook")
 async def stripe_webhook(request: Request):
     """Handle Stripe webhooks"""
