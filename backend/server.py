@@ -601,7 +601,6 @@ async def login(data: UserLogin, response: Response):
     # Find user by email (case-insensitive)
     user = await db.users.find_one({"email": data.email.lower()}, {"_id": 0})
     
-    # Log for debugging (remove in production if needed)
     if not user:
         logger.warning(f"Login attempt failed: User not found for email {data.email}")
         raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -611,6 +610,20 @@ async def login(data: UserLogin, response: Response):
     if not password_valid:
         logger.warning(f"Login attempt failed: Invalid password for user {user.get('user_id')}")
         raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # Check email verification status
+    # Existing users (registered before email verification was added) are grandfathered in
+    email_verified = user.get("email_verified", True)  # Default True for existing users
+    
+    if not email_verified:
+        # Still issue a token so they can access verification-related endpoints
+        token = create_token(user["user_id"])
+        return {
+            "token": token,
+            "user": {**{k: v for k, v in user.items() if k != "password_hash"}, "email_verified": False},
+            "email_verified": False,
+            "message": "Please verify your email address to access all features."
+        }
     
     token = create_token(user["user_id"])
     response.set_cookie(
@@ -632,6 +645,60 @@ async def login(data: UserLogin, response: Response):
     user.pop("password_hash", None)
     logger.info(f"Login successful for user {user.get('user_id')}")
     return {"token": token, "user": user}
+
+
+@auth_router.get("/verify-email")
+async def verify_email(token: str):
+    """Verify user's email address using the token from the verification email"""
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        
+        if payload.get("purpose") != "email_verify":
+            raise HTTPException(status_code=400, detail="Invalid verification token")
+        
+        user_id = payload.get("sub")
+        email = payload.get("email")
+        
+        if not user_id or not email:
+            raise HTTPException(status_code=400, detail="Invalid verification token")
+        
+        # Verify user exists and email matches
+        user = await db.users.find_one({"user_id": user_id, "email": email}, {"_id": 0})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        if user.get("email_verified"):
+            return {"status": "already_verified", "message": "Email already verified. You can log in."}
+        
+        # Mark as verified
+        await db.users.update_one(
+            {"user_id": user_id},
+            {"$set": {
+                "email_verified": True,
+                "email_verified_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        logger.info(f"Email verified for user {user_id} ({email})")
+        return {"status": "verified", "message": "Email verified successfully! You can now log in."}
+        
+    except JWTError:
+        raise HTTPException(status_code=400, detail="Invalid or expired verification link. Please request a new one.")
+
+
+@auth_router.post("/resend-verification")
+async def resend_verification_email(current_user: dict = Depends(get_current_user)):
+    """Resend verification email for unverified users"""
+    if current_user.get("email_verified", True):
+        return {"message": "Email already verified"}
+    
+    verification_token = create_verification_token(current_user["user_id"], current_user["email"])
+    sent = await send_verification_email(current_user["email"], current_user.get("name", ""), verification_token)
+    
+    if sent:
+        return {"message": "Verification email sent! Check your inbox."}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to send verification email. Please try again.")
 
 @auth_router.get("/verify-test-user")
 async def verify_test_user():
