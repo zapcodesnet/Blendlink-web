@@ -8,7 +8,7 @@ import requests
 import os
 
 # Use production URL
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://blendlink-fixes.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://blendlink-live.preview.emergentagent.com')
 
 class TestStripeConfiguration:
     """Test Stripe configuration endpoints"""

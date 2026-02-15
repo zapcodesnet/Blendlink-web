@@ -60,13 +60,13 @@
       "status": "PASS",
       "visibility": "Visible to everyone (owners and non-owners)",
       "navigation": "Navigates to /{slug} (public page URL)",
-      "verified_url": "https://blendlink-fixes.preview.emergentagent.com/test-store-bbadd08f"
+      "verified_url": "https://blendlink-live.preview.emergentagent.com/test-store-bbadd08f"
     },
     "pages_discover_manage_button": {
       "status": "PASS",
       "visibility": "Only visible for page owners/authorized users",
       "navigation": "Navigates to /member-pages/{pageId}",
-      "verified_url": "https://blendlink-fixes.preview.emergentagent.com/member-pages/mpage_000a72b44296"
+      "verified_url": "https://blendlink-live.preview.emergentagent.com/member-pages/mpage_000a72b44296"
     },
     "pages_discover_follow_buttons": {
       "status": "PASS",

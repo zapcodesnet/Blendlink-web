@@ -13,7 +13,7 @@ import os
 import json
 from datetime import datetime
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://blendlink-fixes.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://blendlink-live.preview.emergentagent.com')
 
 # Test session to persist authentication
 test_session = requests.Session()
@@ -111,8 +111,8 @@ class TestSubscriptionCheckout:
     
     def test_subscription_checkout_bronze(self):
         """Test Bronze subscription checkout generates Stripe URL"""
-        success_url = "https://blendlink-fixes.preview.emergentagent.com/subscriptions?success=true"
-        cancel_url = "https://blendlink-fixes.preview.emergentagent.com/subscriptions"
+        success_url = "https://blendlink-live.preview.emergentagent.com/subscriptions?success=true"
+        cancel_url = "https://blendlink-live.preview.emergentagent.com/subscriptions"
         
         response = test_session.post(
             f"{BASE_URL}/api/subscriptions/checkout",
@@ -227,7 +227,7 @@ class TestBLCoinsEndpoints:
                 "tier_id": "starter",
                 "amount_usd": 4.99,
                 "coins_amount": 30000,
-                "origin_url": "https://blendlink-fixes.preview.emergentagent.com"
+                "origin_url": "https://blendlink-live.preview.emergentagent.com"
             }
         )
         

@@ -8,7 +8,7 @@ import os
 from datetime import datetime
 
 # Use preview URL from environment
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://blendlink-fixes.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://blendlink-live.preview.emergentagent.com').rstrip('/')
 
 
 class TestMobileSyncSystem:
