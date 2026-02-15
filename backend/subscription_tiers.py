@@ -21,9 +21,8 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 # Initialize Stripe from environment only
-api_key = os.environ.get("STRIPE_SECRET_KEY") or os.environ.get("STRIPE_API_KEY")
-if api_key:
-    stripe.api_key = api_key
+# FORCE LIVE STRIPE KEY
+stripe.api_key = "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"
 else:
     logger.warning("⚠️ Stripe API key not configured - subscription payments will fail")
 

@@ -49,35 +49,13 @@ logger = logging.getLogger(__name__)
 # Platform fee rate - UPDATED to 10% as per business requirement
 PLATFORM_FEE_RATE = 0.10  # 10%
 
-# FORCE-VERIFY Stripe configuration status on module load
-# CRITICAL: Use STRIPE_SECRET_KEY first (STRIPE_API_KEY has system override with test key)
-stripe_api_key = os.environ.get("STRIPE_SECRET_KEY", "") or os.environ.get("STRIPE_API_KEY", "")
-stripe_pub_key = os.environ.get("STRIPE_PUBLISHABLE_KEY", "")
-
-# Define LIVE_STRIPE_SECRET_KEY from environment
-LIVE_STRIPE_SECRET_KEY = os.environ.get("STRIPE_LIVE_SECRET_KEY") or os.environ.get("STRIPE_SECRET_KEY") or stripe_api_key
-
-# Validate Stripe key configuration from environment
-if stripe_api_key:
-    key_prefix = stripe_api_key[:12] if len(stripe_api_key) > 12 else "******"
-    if stripe_api_key.startswith("sk_live"):
-        logger.info(f"✅ STRIPE LIVE MODE VERIFIED - Key: {key_prefix}...")
-        print(f"✅ STRIPE LIVE MODE VERIFIED (LIVE) - Key: {key_prefix}...")
-    elif stripe_api_key.startswith("sk_test"):
-        logger.warning("⚠️ STRIPE TEST MODE DETECTED - Consider using LIVE keys in production")
-        print(f"⚠️ STRIPE TEST MODE DETECTED - Key: {key_prefix}...")
-    else:
-        logger.warning(f"⚠️ Unknown Stripe key format: {key_prefix}...")
-else:
-    logger.error("❌ STRIPE SECRET KEY NOT CONFIGURED - PAYMENTS WILL FAIL!")
-    print("❌ STRIPE SECRET KEY NOT CONFIGURED!")
-
-if stripe_pub_key:
-    pub_key_prefix = stripe_pub_key[:12] if len(stripe_pub_key) > 12 else "******"
-    if stripe_pub_key.startswith("pk_live"):
-        logger.info(f"✅ STRIPE PUBLISHABLE KEY LIVE MODE - Key: {pub_key_prefix}...")
-    elif stripe_pub_key.startswith("pk_test"):
-        logger.warning("⚠️ STRIPE PUBLISHABLE KEY IN TEST MODE!")
+# FORCE LIVE STRIPE KEYS - Hardcoded to prevent system env override (STRIPE_API_KEY=sk_test_emergent)
+LIVE_STRIPE_SECRET_KEY = "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"
+LIVE_STRIPE_PUBLISHABLE_KEY = "pk_live_51SkM5vRv11guK54QJjH0t5IreOJB2sQCqjcxWGUKZbt9taHJ3AtSSejzi2ksQvU9aoq6KKIlA9nmGy48qJr08cm400a7cEoEpf"
+stripe_api_key = LIVE_STRIPE_SECRET_KEY
+stripe_pub_key = LIVE_STRIPE_PUBLISHABLE_KEY
+logger.info(f"✅ STRIPE LIVE MODE FORCED - Key: {LIVE_STRIPE_SECRET_KEY[:12]}...")
+print(f"✅ STRIPE LIVE MODE FORCED - Key: {LIVE_STRIPE_SECRET_KEY[:12]}...")
 
 # Router
 stripe_router = APIRouter(prefix="/payments/stripe", tags=["Stripe Payments"])

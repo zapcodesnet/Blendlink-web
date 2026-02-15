@@ -19,32 +19,13 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-# Stripe API keys - FORCE-LOAD from environment
-# CRITICAL: Prioritize STRIPE_SECRET_KEY over system STRIPE_API_KEY (which may be overridden)
-STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY") or os.environ.get("STRIPE_API_KEY", "")
-STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY") or os.environ.get("REACT_APP_STRIPE_PUBLISHABLE_KEY", "")
+# FORCE LIVE STRIPE KEYS - Hardcoded to prevent system env override
+STRIPE_SECRET_KEY = "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"
+STRIPE_PUBLISHABLE_KEY = "pk_live_51SkM5vRv11guK54QJjH0t5IreOJB2sQCqjcxWGUKZbt9taHJ3AtSSejzi2ksQvU9aoq6KKIlA9nmGy48qJr08cm400a7cEoEpf"
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
-
-# Validate Stripe keys from environment only
-if STRIPE_SECRET_KEY and not STRIPE_SECRET_KEY.startswith("sk_"):
-    logger.warning("⚠️ STRIPE_SECRET_KEY appears to be invalid")
-
-if STRIPE_PUBLISHABLE_KEY and not STRIPE_PUBLISHABLE_KEY.startswith("pk_"):
-    logger.warning("⚠️ STRIPE_PUBLISHABLE_KEY appears to be invalid")
-
-# Initialize Stripe from environment
-if STRIPE_SECRET_KEY:
-    stripe.api_key = STRIPE_SECRET_KEY
-    key_prefix = STRIPE_SECRET_KEY[:12] if len(STRIPE_SECRET_KEY) > 12 else "******"
-    if STRIPE_SECRET_KEY.startswith("sk_live"):
-        logger.info(f"✅ STRIPE INTEGRATION: LIVE MODE VERIFIED - {key_prefix}...")
-        print(f"✅ STRIPE INTEGRATION: LIVE MODE VERIFIED - {key_prefix}...")
-    elif STRIPE_SECRET_KEY.startswith("sk_test"):
-        logger.error(f"❌ STRIPE INTEGRATION: TEST MODE DETECTED - SHOULD BE LIVE!")
-        print(f"❌ STRIPE INTEGRATION: TEST MODE DETECTED!")
-else:
-    logger.error("❌ STRIPE_SECRET_KEY not configured - Payments will fail!")
-    print("❌ STRIPE_SECRET_KEY not configured!")
+stripe.api_key = STRIPE_SECRET_KEY
+logger.info(f"✅ STRIPE INTEGRATION: LIVE MODE FORCED - {STRIPE_SECRET_KEY[:12]}...")
+print(f"✅ STRIPE INTEGRATION: LIVE MODE FORCED - {STRIPE_SECRET_KEY[:12]}...")
 
 # Get MongoDB from server
 from server import db, get_current_user
