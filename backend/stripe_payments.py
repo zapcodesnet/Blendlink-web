@@ -861,6 +861,7 @@ class BLCoinsCheckoutRequest(BaseModel):
     amount_usd: float
     coins_amount: int
     origin_url: str
+    quantity: Optional[int] = 1
 
 
 @stripe_router.post("/bl-coins/checkout")
@@ -868,13 +869,18 @@ async def create_bl_coins_checkout(request: BLCoinsCheckoutRequest, http_request
     """
     Create a Stripe checkout session for purchasing BL coins.
     After successful payment, coins are credited to user's wallet.
+    Supports quantity > 1 for the ultimate tier.
     """
     # Verify the tier and amounts match
     tier = BL_COINS_TIERS.get(request.tier_id)
     if not tier:
         raise HTTPException(status_code=400, detail="Invalid tier selected")
     
-    if abs(tier["price"] - request.amount_usd) > 0.01 or tier["coins"] != request.coins_amount:
+    quantity = max(1, request.quantity or 1)
+    expected_price = round(tier["price"] * quantity, 2)
+    expected_coins = tier["coins"] * quantity
+    
+    if abs(expected_price - request.amount_usd) > 0.02 or expected_coins != request.coins_amount:
         raise HTTPException(status_code=400, detail="Price mismatch. Please refresh and try again.")
     
     # Get current user from token
