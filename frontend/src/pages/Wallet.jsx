@@ -483,7 +483,7 @@ export default function Wallet() {
         }
       }
     } catch (error) {
-      const msg = error.response?.data?.detail || "Failed to process subscription";
+      const msg = error.message || error.response?.data?.detail || "Failed to process subscription";
       toast.error(msg);
     } finally {
       setSubscribing(false);
