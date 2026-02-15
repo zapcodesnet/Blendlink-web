@@ -347,9 +347,11 @@ async def unban_user(
     user_id: str,
     admin: Dict = Depends(require_admin)
 ):
-    """Remove ban from user"""
+    """Remove ban from user and remove email from blacklist"""
     if not await check_admin_permission(admin, "ban_users"):
         raise HTTPException(status_code=403, detail="Permission denied")
+    
+    user = await db.users.find_one({"user_id": user_id}, {"email": 1})
     
     await db.users.update_one(
         {"user_id": user_id},
@@ -360,6 +362,10 @@ async def unban_user(
             "ban_reason": None,
         }}
     )
+    
+    # Remove email from blacklist
+    if user and user.get("email"):
+        await db.banned_emails.delete_one({"email": user["email"].lower()})
     
     await log_admin_action(
         admin["admin_id"], admin["email"], admin.get("name", ""),
