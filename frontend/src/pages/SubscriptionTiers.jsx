@@ -457,6 +457,11 @@ const SubscriptionTiers = () => {
             Choose the membership tier that suits your needs. Earn commissions from your team's sales, 
             get more daily rewards, and unlock premium features.
           </p>
+          <div className="mt-4 max-w-2xl mx-auto bg-gradient-to-r from-purple-500/10 to-amber-500/10 border border-purple-500/30 rounded-lg p-4">
+            <p className="text-sm font-semibold text-purple-400">
+              Founding members who join during the pre-launch/launch period will have their subscription rate locked at 50% off the standard price for as long as they remain active members. Available for a Limited Time Only!
+            </p>
+          </div>
         </div>
 
         {/* Current Status */}
