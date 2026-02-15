@@ -165,32 +165,13 @@ const SubscriptionTiers = () => {
       const successUrl = `${window.location.origin}/subscriptions?success=true`;
       const cancelUrl = `${window.location.origin}/subscriptions`;
 
-      const response = await fetch(
-        `${API_BASE_URL}/api/subscriptions/checkout?tier=${tierId}&success_url=${encodeURIComponent(successUrl)}&cancel_url=${encodeURIComponent(cancelUrl)}`,
-        {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${localStorage.getItem("blendlink_token")}`,
-            "Content-Type": "application/json"
-          }
-        }
+      // Use api service for robust body parsing (prevents "body stream already read" errors)
+      const response = await api.post(
+        `/subscriptions/checkout?tier=${tierId}&success_url=${encodeURIComponent(successUrl)}&cancel_url=${encodeURIComponent(cancelUrl)}`
       );
-
-      // Read body as text first to prevent "body stream already read" errors in production
-      const responseText = await response.text();
-      let data;
-      try {
-        data = responseText ? JSON.parse(responseText) : {};
-      } catch (e) {
-        throw new Error("Invalid server response");
-      }
-
-      if (!response.ok) {
-        throw new Error(data.detail || "Failed to create checkout session");
-      }
+      const data = response.data;
       
       if (data.checkout_url) {
-        // Redirect to Stripe checkout
         window.location.href = data.checkout_url;
       } else if (data.url) {
         window.location.href = data.url;
