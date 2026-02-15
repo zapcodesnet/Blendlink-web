@@ -96,6 +96,7 @@ const MEMBERSHIP_TIERS = {
     id: "diamond",
     name: "Diamond Member",
     price: 29.99,
+    standardPrice: 59.99,
     color: "from-cyan-400 to-blue-600",
     bgColor: "bg-cyan-900/20",
     borderColor: "border-cyan-400",
