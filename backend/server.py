@@ -749,7 +749,7 @@ async def verify_email(token: str):
 
 @auth_router.post("/resend-verification")
 async def resend_verification_email(current_user: dict = Depends(get_current_user)):
-    """Resend verification email for unverified users"""
+    """Resend verification email for unverified users (authenticated)"""
     if current_user.get("email_verified", True):
         return {"message": "Email already verified"}
     
@@ -760,6 +760,27 @@ async def resend_verification_email(current_user: dict = Depends(get_current_use
         return {"message": "Verification email sent! Check your inbox."}
     else:
         raise HTTPException(status_code=500, detail="Failed to send verification email. Please try again.")
+
+
+class ResendVerificationPublic(BaseModel):
+    email: str
+
+
+@auth_router.post("/resend-verification-public")
+async def resend_verification_public(data: ResendVerificationPublic):
+    """Resend verification email (public - for unverified users on login page)"""
+    user = await db.users.find_one({"email": data.email.lower()}, {"_id": 0})
+    if not user:
+        # Don't reveal whether email exists
+        return {"message": "If an account exists with this email, a verification email has been sent."}
+    
+    if user.get("email_verified", True):
+        return {"message": "Email already verified. You can log in normally."}
+    
+    verification_token = create_verification_token(user["user_id"], user["email"])
+    sent = await send_verification_email(user["email"], user.get("name", ""), verification_token)
+    
+    return {"message": "Verification email sent! Check your inbox."}
 
 @auth_router.get("/verify-test-user")
 async def verify_test_user():
