@@ -464,67 +464,66 @@ async def process_checkout(data: CheckoutRequest, request: Request):
     # Try Stripe checkout
     try:
         # FORCE LIVE STRIPE KEY
-        api_key = "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"
+        stripe.api_key = "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"
         
-        stripe.api_key = api_key
+        # Use request origin for redirect URLs (handles preview AND production correctly)
+        origin = request.headers.get("origin") or request.headers.get("referer", "").rstrip("/") or "https://blendlink.net"
+        # Strip any trailing path from referer
+        if "//" in origin:
+            parts = origin.split("//", 1)
+            domain_part = parts[1].split("/")[0]
+            origin = f"{parts[0]}//{domain_part}"
         
-        if stripe.api_key:
-            line_items = []
-            
-            # Add items
-            for item in data.items:
-                line_items.append({
-                    "price_data": {
-                        "currency": "usd",
-                        "product_data": {
-                            "name": item.get("title", "Item"),
-                            "images": [item.get("image")] if item.get("image") else []
-                        },
-                        "unit_amount": int(float(item.get("price", 0)) * 100),
+        line_items = []
+        
+        # Add items
+        for item in data.items:
+            line_items.append({
+                "price_data": {
+                    "currency": "usd",
+                    "product_data": {
+                        "name": item.get("title", "Item"),
+                        "images": [item.get("image")] if item.get("image") else []
                     },
-                    "quantity": item.get("quantity", 1)
-                })
-            
-            # Add shipping
-            if data.shipping_cost > 0:
-                line_items.append({
-                    "price_data": {
-                        "currency": "usd",
-                        "product_data": {
-                            "name": f"Shipping ({data.shipping_option.get('carrier', '')} {data.shipping_option.get('service', '')})" if data.shipping_option else "Shipping"
-                        },
-                        "unit_amount": int(data.shipping_cost * 100),
+                    "unit_amount": int(float(item.get("price", 0)) * 100),
+                },
+                "quantity": item.get("quantity", 1)
+            })
+        
+        # Add shipping
+        if data.shipping_cost > 0:
+            line_items.append({
+                "price_data": {
+                    "currency": "usd",
+                    "product_data": {
+                        "name": f"Shipping ({data.shipping_option.get('carrier', '')} {data.shipping_option.get('service', '')})" if data.shipping_option else "Shipping"
                     },
-                    "quantity": 1
-                })
-            
-            checkout_session = stripe.checkout.Session.create(
-                payment_method_types=["card"],
-                line_items=line_items,
-                mode="payment",
-                customer_email=data.customer.get("email"),
-                success_url=f"{FRONTEND_URL}/payment/success?order_id={order_id}",
-                cancel_url=f"{FRONTEND_URL}/payment/cancel?order_id={order_id}",
-                metadata={
-                    "order_id": order_id,
-                    "is_guest": str(user_id is None).lower()
-                }
-            )
-            
-            return {
+                    "unit_amount": int(data.shipping_cost * 100),
+                },
+                "quantity": 1
+            })
+        
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=line_items,
+            mode="payment",
+            customer_email=data.customer.get("email"),
+            success_url=f"{origin}/payment/success?order_id={order_id}&session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{origin}/payment/cancel?order_id={order_id}",
+            metadata={
                 "order_id": order_id,
-                "payment_url": checkout_session.url,
-                "message": "Redirecting to payment"
+                "is_guest": str(user_id is None).lower()
             }
+        )
+        
+        return {
+            "order_id": order_id,
+            "payment_url": checkout_session.url,
+            "message": "Redirecting to payment"
+        }
     except Exception as e:
         logger.error(f"Stripe checkout error: {e}")
-    
-    # Fallback: Mark as pending payment
-    return {
-        "order_id": order_id,
-        "message": "Order created. Payment will be processed.",
-        "status": "pending_payment"
-    }
+        raise HTTPException(status_code=500, detail=f"Payment processing failed: {str(e)}")
 
 @orders_router.post("/{order_id}/confirm")
 async def confirm_order(order_id: str):
