@@ -286,6 +286,38 @@ export default function Login() {
           </motion.div>
         </form>
 
+        {/* Resend Verification - shown when login detects unverified email */}
+        {showResendVerification && (
+          <motion.div 
+            className="mt-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <p className="text-sm text-center mb-3" style={{ color: '#d97706' }}>
+              Please verify your email first. Check your inbox for the verification link.
+            </p>
+            <button
+              type="button"
+              onClick={handleResendVerification}
+              disabled={resendingVerification}
+              className="w-full py-2.5 px-4 rounded-full text-sm font-medium transition-all"
+              style={{ 
+                background: resendingVerification ? '#6b7280' : 'linear-gradient(135deg, #f59e0b, #d97706)', 
+                color: 'white' 
+              }}
+              data-testid="resend-verification-btn"
+            >
+              {resendingVerification ? (
+                <span className="flex items-center justify-center gap-2">
+                  <RefreshCw className="w-4 h-4 animate-spin" /> Sending...
+                </span>
+              ) : (
+                "Resend Verification Email"
+              )}
+            </button>
+          </motion.div>
+        )}
+
         {/* Footer - Sign Up Link */}
         <motion.p 
           className="text-center mt-12 bl-text-body"
