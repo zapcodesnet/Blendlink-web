@@ -1249,6 +1249,11 @@ export default function Wallet() {
             <p className="text-sm text-muted-foreground mt-1">
               Subscriptions are recurring monthly. Payments are deducted from your preferred payment method. If deductions fail from your BlendLink earnings balance, we automatically attempt your connected Stripe account, credit/debit card, or bank account.
             </p>
+            <div className="mt-3 bg-gradient-to-r from-purple-500/10 to-amber-500/10 border border-purple-500/30 rounded-lg p-3">
+              <p className="text-sm font-semibold text-purple-400">
+                Founding members who join during the pre-launch/launch period will have their subscription rate locked at 50% off the standard price for as long as they remain active members. Available for a Limited Time Only!
+              </p>
+            </div>
           </div>
           
           <div className="p-4 space-y-4">
