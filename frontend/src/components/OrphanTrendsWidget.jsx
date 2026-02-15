@@ -42,16 +42,13 @@ const safeFetch = async (url, options = {}) => {
   }
   
   const response = await fetch(url, { ...options, headers });
-  const clonedResponse = response.clone();
   
   let data = {};
   try {
-    data = await response.json();
+    const text = await response.text();
+    data = text ? JSON.parse(text) : {};
   } catch {
-    try {
-      const text = await clonedResponse.text();
-      if (text) data = { message: text };
-    } catch { /* ignore */ }
+    // Body unreadable - use empty object
   }
   
   if (!response.ok) {

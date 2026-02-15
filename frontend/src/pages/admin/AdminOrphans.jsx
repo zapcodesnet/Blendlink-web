@@ -26,23 +26,12 @@ const safeFetch = async (url, options = {}) => {
   try {
     const response = await fetch(url, { ...options, headers });
     
-    // Clone the response before reading to avoid "body stream already read" error
-    const clonedResponse = response.clone();
-    
     let data = {};
     try {
-      // Try to parse as JSON first
-      data = await response.json();
-    } catch (jsonError) {
-      // If JSON parse fails, try text from cloned response
-      try {
-        const text = await clonedResponse.text();
-        if (text) {
-          data = { message: text };
-        }
-      } catch (textError) {
-        console.error('Failed to read response:', textError);
-      }
+      const text = await response.text();
+      data = text ? JSON.parse(text) : {};
+    } catch (parseError) {
+      console.error('Failed to read response:', parseError);
     }
     
     if (!response.ok) {
