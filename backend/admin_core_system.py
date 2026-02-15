@@ -289,9 +289,13 @@ async def ban_user(
     data: UserActionRequest,
     admin: Dict = Depends(require_admin)
 ):
-    """Permanently ban a user"""
+    """Permanently ban a user - stronger than suspend. Blacklists email."""
     if not await check_admin_permission(admin, "ban_users"):
         raise HTTPException(status_code=403, detail="Permission denied")
+    
+    user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
     
     now = datetime.now(timezone.utc)
     await db.users.update_one(
@@ -304,10 +308,27 @@ async def ban_user(
         }}
     )
     
+    # Blacklist email to prevent re-registration
+    await db.banned_emails.update_one(
+        {"email": user.get("email", "").lower()},
+        {"$set": {
+            "email": user.get("email", "").lower(),
+            "user_id": user_id,
+            "banned_by": admin["admin_id"],
+            "reason": data.reason,
+            "banned_at": now.isoformat(),
+        }},
+        upsert=True
+    )
+    
+    # Invalidate all sessions immediately
+    await db.users.update_one({"user_id": user_id}, {"$inc": {"token_version": 1}})
+    await db.sessions.delete_many({"user_id": user_id})
+    
     await log_admin_action(
         admin["admin_id"], admin["email"], admin.get("name", ""),
         AdminAuditAction.USER_BAN, "user", user_id,
-        {"reason": data.reason},
+        {"reason": data.reason, "email_blacklisted": user.get("email", "")},
         request
     )
     
@@ -318,7 +339,7 @@ async def ban_user(
         "admin": admin["email"],
     })
     
-    return {"success": True, "message": f"User {user_id} banned"}
+    return {"success": True, "message": f"User {user_id} banned. Email blacklisted. All sessions invalidated."}
 
 @admin_users_router.post("/{user_id}/unban")
 async def unban_user(
