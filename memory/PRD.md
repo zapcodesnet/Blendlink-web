@@ -4,39 +4,35 @@
 
 ---
 
-## LATEST SESSION: GET Redirect Fix for Stripe Errors (Feb 15, 2026)
+## LATEST SESSION: Fix Stale Stripe Account/Customer IDs (Feb 15, 2026)
 
-### Issue:
-"Server error. Please try again in a moment." on:
-- /wallet Connect Stripe Account button
-- /wallet subscription tier buttons  
-- /subscriptions upgrade tier buttons
+### Issues Fixed:
 
-### Root Cause:
-Production CDN/proxy (Cloudflare/K8s ingress) corrupts POST response bodies, making JSON parsing impossible regardless of method (text(), json(), clone()). Multiple iterations tried different body-reading strategies — all failed in production.
+| Issue | Error | Root Cause | Fix |
+|-------|-------|-----------|-----|
+| Connect Stripe Account | "account not connected to your platform or does not exist" | Stale Stripe Connect account IDs from test mode in database | Validate with `stripe.Account.retrieve()`, recreate if stale |
+| Subscription checkout | "Internal Server Error" | Stale Stripe customer IDs from test mode | Validate with `stripe.Customer.retrieve()`, recreate if stale |
 
-### Solution:
-**Bypass JSON entirely.** Created new GET redirect endpoints that return HTTP 302 redirects to Stripe. The browser follows 302 redirects natively — no JavaScript body parsing needed at all.
-
-### New Endpoints:
-- `GET /api/subscriptions/checkout-redirect?tier=...&success_url=...&cancel_url=...&token=...` → 302 to Stripe Checkout
-- `GET /api/payments/stripe/connect/onboard-redirect?token=...` → 302 to Stripe Connect
-
-### Frontend Change:
-All three handlers now use `window.location.href = redirectUrl` instead of `fetch()` + JSON parsing.
+### How the Fix Works:
+1. Before using any stored Stripe ID, the backend now calls `stripe.Account.retrieve()` or `stripe.Customer.retrieve()` to verify it exists on the live platform
+2. If the ID is invalid (from test mode, deleted, or wrong platform), it's deleted from the database
+3. A new Stripe account/customer is created with the live key
+4. This ensures ALL users work correctly regardless of their Stripe history
 
 ### Files Changed:
-- `backend/subscription_tiers.py` — new `checkout-redirect` GET endpoint
-- `backend/stripe_payments.py` — new `connect/onboard-redirect` GET endpoint
-- `frontend/src/pages/Wallet.jsx` — handleStripeOnboarding + handleSubscribe use redirect
-- `frontend/src/pages/SubscriptionTiers.jsx` — handleUpgrade uses redirect
+- `backend/stripe_payments.py` — Both GET redirect and POST endpoints validate Connect accounts
+- `backend/subscription_tiers.py` — `create_checkout_session` validates customers + forces live API key
 
 ### Test Results:
-- Backend: **100% (9/9)** — all tiers return 302 to checkout.stripe.com
-- Frontend: **100%** — pages load, buttons navigate correctly
-- Report: `/app/test_reports/iteration_165.json`
+- Backend: **100% (12/12)**
+- Frontend: **100%** — button clicks redirect to Stripe
+- Report: `/app/test_reports/iteration_166.json`
 
 ---
+
+## Previous Fixes (This Session):
+- **GET redirect endpoints** — bypass CDN/proxy JSON body corruption (iteration 165)
+- **response.json() approach** — simplified body parsing (iteration 164)
 
 ## TEST CREDENTIALS
 | Role | Email | Password |
