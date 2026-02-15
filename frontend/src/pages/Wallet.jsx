@@ -455,22 +455,18 @@ export default function Wallet() {
           setUser({ ...user, subscription_tier: tierId });
         }
       } else {
-        // Use Stripe checkout for subscription via api service (handles body stream issues)
+        // Use GET redirect endpoint - browser follows 302 redirect natively, no JSON parsing needed
+        const token = localStorage.getItem('blendlink_token');
+        if (!token) {
+          toast.error("Please log in to subscribe.");
+          setSubscribing(false);
+          return;
+        }
         const successUrl = `${window.location.origin}/wallet?subscription_success=true`;
         const cancelUrl = `${window.location.origin}/wallet`;
         
-        const response = await api.post(
-          `/subscriptions/checkout?tier=${tierId}&success_url=${encodeURIComponent(successUrl)}&cancel_url=${encodeURIComponent(cancelUrl)}`
-        );
-        const data = response.data;
-        
-        if (data.checkout_url) {
-          window.location.href = data.checkout_url;
-        } else if (data.url) {
-          window.location.href = data.url;
-        } else {
-          throw new Error('No checkout URL received');
-        }
+        window.location.href = `${API_BASE}/api/subscriptions/checkout-redirect?tier=${tierId}&success_url=${encodeURIComponent(successUrl)}&cancel_url=${encodeURIComponent(cancelUrl)}&token=${encodeURIComponent(token)}`;
+        return; // Don't set subscribing=false since we're navigating away
       }
     } catch (error) {
       const msg = error.message || error.response?.data?.detail || "Failed to process subscription";
