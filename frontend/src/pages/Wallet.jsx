@@ -398,6 +398,7 @@ export default function Wallet() {
           tier_id: pkg.id,
           amount_usd: totalPrice,
           coins_amount: totalCoins,
+          quantity: quantity,
           origin_url: window.location.origin
         });
         
