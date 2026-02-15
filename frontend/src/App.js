@@ -238,6 +238,7 @@ function AppRouter() {
       <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/google" element={<GoogleStaffLogin />} />
       <Route path="/marketplace/guest" element={<GuestMarketplace />} />
       <Route path="/feed" element={<ProtectedRoute><SocialFeed /></ProtectedRoute>} />
       <Route path="/social" element={<ProtectedRoute><SocialFeed /></ProtectedRoute>} />
