@@ -749,6 +749,29 @@ async def logout(response: Response):
     response.delete_cookie("session_token", path="/")
     return {"message": "Logged out"}
 
+
+@auth_router.get("/staff-check")
+async def check_staff_status(current_user: dict = Depends(get_current_user)):
+    """Check if the current user has staff role (admin, co-admin, moderator)"""
+    user_id = current_user["user_id"]
+    email = current_user.get("email", "")
+    
+    # Check if user is admin in users collection
+    if current_user.get("is_admin"):
+        return {"is_staff": True, "role": "admin"}
+    
+    # Check admin_admins collection for staff roles
+    admin_record = await db.admin_admins.find_one(
+        {"email": email, "is_active": True},
+        {"_id": 0, "role": 1}
+    )
+    
+    if admin_record and admin_record.get("role") in ["super_admin", "co_admin", "moderator"]:
+        return {"is_staff": True, "role": admin_record["role"]}
+    
+    return {"is_staff": False, "role": None}
+
+
 # ============== USER ROUTES ==============
 @users_router.get("/{user_id}")
 async def get_user(user_id: str, request: Request):
