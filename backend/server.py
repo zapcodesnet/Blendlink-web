@@ -406,6 +406,8 @@ async def register(data: UserCreate, response: Response):
     user_dict["created_at"] = user_dict["created_at"].isoformat()
     user_dict["disclaimer_accepted"] = True
     user_dict["disclaimer_accepted_at"] = datetime.now(timezone.utc).isoformat()
+    user_dict["email_verified"] = False
+    user_dict["email_verified_at"] = None
     
     # Initialize new referral system fields
     user_dict["bl_coins"] = 0  # Will be added via transaction
