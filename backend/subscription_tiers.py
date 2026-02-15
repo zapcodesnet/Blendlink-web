@@ -20,11 +20,9 @@ from dotenv import load_dotenv
 load_dotenv()
 logger = logging.getLogger(__name__)
 
-# Initialize Stripe from environment only
-# FORCE LIVE STRIPE KEY
+# Initialize Stripe - FORCE LIVE KEY
 stripe.api_key = "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"
-else:
-    logger.warning("⚠️ Stripe API key not configured - subscription payments will fail")
+logger.info(f"✅ SUBSCRIPTION_TIERS: STRIPE LIVE MODE FORCED")
 
 # ============== SUBSCRIPTION TIERS ==============
 # Updated Feb 2026: New commission-based membership system
