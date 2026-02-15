@@ -294,7 +294,6 @@ async def send_verification_email(email: str, name: str, verification_token: str
     """Send verification email using Resend"""
     import resend
     resend_key = os.environ.get("RESEND_API_KEY")
-    sender_email = os.environ.get("SENDER_EMAIL", "admin@blendlink.net")
     
     if not resend_key:
         logger.warning("RESEND_API_KEY not set - skipping verification email")
@@ -302,39 +301,71 @@ async def send_verification_email(email: str, name: str, verification_token: str
     
     resend.api_key = resend_key
     
-    # Use runtime detection for verify URL
-    verify_url = f"https://blendlink.net/verify-email?token={verification_token}"
+    # Dynamic base URL - works in both preview and production
+    base_url = os.environ.get("FRONTEND_URL", "https://blendlink.net").rstrip("/")
+    verify_url = f"{base_url}/verify-email?token={verification_token}&email={email}"
     
     html_content = f"""
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-        <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #1a1a2e; font-size: 28px; margin: 0;">Welcome to BlendLink!</h1>
-        </div>
-        <div style="background: #f8f9fa; border-radius: 12px; padding: 30px; margin-bottom: 20px;">
-            <p style="color: #333; font-size: 16px; line-height: 1.6;">Hi {name},</p>
-            <p style="color: #333; font-size: 16px; line-height: 1.6;">
-                Thanks for signing up! Please verify your email address to activate your account and start earning BL coins.
-            </p>
-            <div style="text-align: center; margin: 30px 0;">
-                <a href="{verify_url}" 
-                   style="display: inline-block; background: linear-gradient(135deg, #00F0FF, #BD00FF); color: white; 
-                          text-decoration: none; padding: 14px 40px; border-radius: 50px; font-weight: 600; font-size: 16px;">
-                    Verify My Email
-                </a>
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+    <body style="margin: 0; padding: 0; background-color: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+        <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+            <!-- Header -->
+            <div style="text-align: center; margin-bottom: 32px;">
+                <div style="display: inline-block; background: linear-gradient(135deg, #00F0FF, #BD00FF); padding: 16px 32px; border-radius: 16px; margin-bottom: 16px;">
+                    <span style="color: white; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;">BlendLink</span>
+                </div>
             </div>
-            <p style="color: #666; font-size: 14px; line-height: 1.5;">
-                This link expires in 24 hours. If you didn't create an account, you can safely ignore this email.
-            </p>
+            
+            <!-- Main Card -->
+            <div style="background: #ffffff; border-radius: 16px; padding: 40px 32px; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+                <h1 style="color: #1a1a2e; font-size: 24px; font-weight: 700; margin: 0 0 8px 0; text-align: center;">Welcome to BlendLink!</h1>
+                <p style="color: #6b7280; font-size: 15px; text-align: center; margin: 0 0 32px 0;">Verify your email to get started</p>
+                
+                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 8px 0;">Hi <strong>{name}</strong>,</p>
+                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
+                    Thanks for creating your BlendLink account! Please verify your email address to activate your account and unlock all features — earning BL coins, referral commissions, marketplace access, and more.
+                </p>
+                
+                <!-- User Info -->
+                <div style="background: #f8fafc; border-radius: 12px; padding: 16px; margin-bottom: 32px; border: 1px solid #e5e7eb;">
+                    <table style="width: 100%;">
+                        <tr><td style="color: #6b7280; font-size: 13px; padding: 4px 0;">Name</td><td style="color: #111827; font-size: 14px; font-weight: 600; text-align: right;">{name}</td></tr>
+                        <tr><td style="color: #6b7280; font-size: 13px; padding: 4px 0;">Email</td><td style="color: #111827; font-size: 14px; font-weight: 600; text-align: right;">{email}</td></tr>
+                    </table>
+                </div>
+                
+                <!-- CTA Button -->
+                <div style="text-align: center; margin: 32px 0;">
+                    <a href="{verify_url}" 
+                       style="display: inline-block; background: linear-gradient(135deg, #00F0FF, #BD00FF); color: white; 
+                              text-decoration: none; padding: 16px 48px; border-radius: 50px; font-weight: 700; font-size: 16px;
+                              box-shadow: 0 4px 16px rgba(0, 240, 255, 0.3);">
+                        Verify My Email
+                    </a>
+                </div>
+                
+                <p style="color: #9ca3af; font-size: 13px; line-height: 1.5; text-align: center; margin: 24px 0 0 0;">
+                    This link expires in 24 hours.<br>If you didn't create an account, you can safely ignore this email.
+                </p>
+            </div>
+            
+            <!-- Footer -->
+            <div style="text-align: center; margin-top: 32px;">
+                <p style="color: #9ca3af; font-size: 12px; margin: 0;">BlendLink &mdash; Earn, Share, and Grow Together</p>
+                <p style="color: #d1d5db; font-size: 11px; margin: 8px 0 0 0;">If the button doesn't work, copy this link:<br>
+                    <a href="{verify_url}" style="color: #6b7280; word-break: break-all;">{verify_url}</a>
+                </p>
+            </div>
         </div>
-        <p style="color: #999; font-size: 12px; text-align: center;">
-            BlendLink &mdash; Earn, Share, and Grow Together
-        </p>
-    </div>
+    </body>
+    </html>
     """
     
     try:
         params = {
-            "from": f"BlendLink <{sender_email}>",
+            "from": "BlendLink <virtual@blendlink.net>",
             "to": [email],
             "subject": "Verify your BlendLink email address",
             "html": html_content,
