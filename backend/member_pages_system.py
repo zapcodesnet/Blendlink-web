@@ -3217,7 +3217,7 @@ async def page_websocket(websocket: WebSocket, page_id: str):
     try:
         # Verify token
         import jwt
-        payload = jwt.decode(token, os.environ.get("JWT_SECRET", "secret"), algorithms=["HS256"])
+        payload = jwt.decode(token, os.environ.get("JWT_SECRET", "blendlink-jwt-secret-key-2024"), algorithms=["HS256"])
         user_id = payload.get("user_id")
         
         if not user_id:
