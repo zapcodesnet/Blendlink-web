@@ -4,42 +4,32 @@
 
 ---
 
-## LATEST SESSION: 5 Feature Changes (Feb 15, 2026)
+## LATEST SESSION: Admin User Management Actions (Feb 15, 2026)
 
-### 1. Google Button Removal from Public Auth Pages
-- **Login** (`/login`): Google button and "or" divider completely removed from JSX
-- **Register** (`/register`): Google button and "or" divider completely removed from JSX
-- Referral code `?ref=` parameter capture still works
-- Not CSS hidden — elements physically excluded from component tree
+### 6 Admin Actions Implemented
 
-### 2. Profile Share Link Update
-- Share button on `/profile` now navigates to `/profile` instead of `/referrals`
+All restricted to Super Admin, Co-Admin, and Authorized Moderator roles:
 
-### 3. Member Page Analytics Referral Section Removal
-- `AnalyticsDashboard.jsx`: Removed "Referral Performance", "Your Referral Code", "Share Your Referral Link" sections
-- `MemberPageDashboard.jsx`: Removed "Referral Program" section
-- Other analytics content (stats, charts) remains intact
+| Action | Endpoint | What it does |
+|--------|----------|-------------|
+| **Permanently Delete User** | `DELETE /api/admin/users/{user_id}` | Removes user + all associated data from DB. Email becomes re-registerable immediately. |
+| **Completely Suspend User** | `POST /api/admin/users/{user_id}/suspend` | Sets suspension flag + invalidates all sessions. Optional duration. User sees reason on login. |
+| **Completely Ban User** | `POST /api/admin/users/{user_id}/ban` | Bans user + blacklists email in `banned_emails` collection + invalidates sessions. Prevents re-registration. |
+| **Reset Password** | `POST /api/admin/users/{user_id}/reset-password` | Admin sets new password. Displayed in admin panel. |
+| **Force Logout** | `POST /api/admin/users/{user_id}/force-logout` | Invalidates all tokens + clears sessions. Immediate effect on web + mobile. |
+| **Adjust Balance** | `POST /api/admin/finance/adjust-balance/{user_id}` | Add/subtract balance with admin ID, timestamp, reason, before/after values in audit trail. |
 
-### 4. Hidden Staff-Only Google Auth Page (`/google`)
-- **Not logged in** → "Staff Access Only" with Go to Login button
-- **Logged in, non-staff** → "Access Denied: reserved for staff only"
-- **Logged in, staff (admin/co_admin/moderator)** → Shows Google button
-- Backend: `GET /api/auth/staff-check` checks user role
-- No links from any menu, footer, nav, or sitemap
-
-### 5. Mandatory Email Verification for New Registrations
-- New users get `email_verified: false` in database
-- Verification email sent via Resend API after registration
-- `GET /api/auth/verify-email?token=...` verifies email
-- `POST /api/auth/resend-verification` resends email
-- Login returns `email_verified: false` for unverified users
-- ProtectedRoute shows verification pending screen for unverified users
-- **Existing users grandfathered** (no `email_verified` field = treated as verified)
+### Security Enhancements
+- Login endpoint checks `is_banned` and `is_suspended` before allowing login
+- Register endpoint checks `banned_emails` collection to prevent re-registration by banned users
+- Suspended users see reason + expiry date on login attempt
+- Banned users see permanent ban message on login attempt
+- All destructive actions invalidate sessions immediately (web + mobile)
+- All actions logged in admin audit trail
 
 ### Test Results:
-- Backend: **100% (15/15)**
-- Frontend: **100%** (all features verified)
-- Report: `/app/test_reports/iteration_168.json`
+- Backend: **100% (25/25)**
+- Report: `/app/test_reports/iteration_169.json`
 
 ---
 
@@ -47,6 +37,7 @@
 | Role | Email | Password |
 |------|-------|----------|
 | Test User | tester@blendlink.net | BlendLink2024! |
+| User | vinwebs0@gmail.com | Mikaela2021! |
 | Admin | blendlinknet@gmail.com | Blend!Admin2026Link |
 
 ---
