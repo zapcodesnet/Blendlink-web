@@ -1,25 +1,21 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../App";
-import api from "../services/api";
+import api, { getToken } from "../services/api";
 import { Shield, AlertTriangle, LogIn } from "lucide-react";
-import { toast } from "sonner";
 
 export default function GoogleStaffLogin() {
-  const { user } = useContext(AuthContext) || {};
   const navigate = useNavigate();
-  const [checking, setChecking] = useState(true);
-  const [isStaff, setIsStaff] = useState(false);
+  const [state, setState] = useState("loading"); // loading | not_logged_in | access_denied | staff
   const [staffRole, setStaffRole] = useState(null);
-  const [accessDenied, setAccessDenied] = useState(false);
 
   useEffect(() => {
     checkAccess();
-  }, [user]);
+  }, []);
 
   const checkAccess = async () => {
-    if (!user) {
-      setChecking(false);
+    const token = getToken();
+    if (!token) {
+      setState("not_logged_in");
       return;
     }
 
@@ -27,15 +23,18 @@ export default function GoogleStaffLogin() {
       const response = await api.get("/auth/staff-check");
       const data = response.data;
       if (data.is_staff) {
-        setIsStaff(true);
+        setState("staff");
         setStaffRole(data.role);
       } else {
-        setAccessDenied(true);
+        setState("access_denied");
       }
     } catch (error) {
-      setAccessDenied(true);
-    } finally {
-      setChecking(false);
+      // If 401, not logged in. Otherwise access denied.
+      if (error.message?.includes("Unauthorized") || error.message?.includes("401")) {
+        setState("not_logged_in");
+      } else {
+        setState("access_denied");
+      }
     }
   };
 
@@ -43,7 +42,7 @@ export default function GoogleStaffLogin() {
     api.auth.googleAuth();
   };
 
-  if (checking) {
+  if (state === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
@@ -51,8 +50,7 @@ export default function GoogleStaffLogin() {
     );
   }
 
-  // Not logged in
-  if (!user) {
+  if (state === "not_logged_in") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <div className="max-w-md w-full text-center space-y-6">
@@ -76,8 +74,7 @@ export default function GoogleStaffLogin() {
     );
   }
 
-  // Logged in but not staff
-  if (accessDenied) {
+  if (state === "access_denied") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <div className="max-w-md w-full text-center space-y-6">
