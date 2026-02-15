@@ -1418,7 +1418,7 @@ export default function Wallet() {
                             ) : (
                               <TierIcon className="w-4 h-4 mr-2" />
                             )}
-                            Subscribe to {tier.name} - ${tier.price.toFixed(2)}/mo
+                            Subscribe to {tier.name} - ${tier.price.toFixed(2)}/mo <span className="line-through opacity-60 ml-1">${tier.standardPrice.toFixed(2)}</span>
                           </Button>
                         )}
                         
