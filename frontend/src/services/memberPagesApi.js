@@ -56,21 +56,19 @@ export const safeFetch = async (url, options = {}) => {
   }
 
   // 2. Read body as TEXT first (production-safe)
-  // Handle case where body may have been consumed by proxy/ingress
+  // Clone the response first to handle "body stream already read" errors from production proxies
+  const cloned = response.clone();
   let responseText = '';
   try {
-    // Check if body is available before trying to read
-    if (response.body && !response.bodyUsed) {
-      responseText = await response.text();
-    } else {
-      // Body already consumed (by proxy, service worker, etc.)
-      // Create a synthetic error response based on status
+    responseText = await response.text();
+  } catch (readError) {
+    // Fallback: try reading from the cloned response
+    try {
+      responseText = await cloned.text();
+    } catch (cloneError) {
+      console.warn(`[safeFetch] Body read warning for ${response.status}:`, readError.message);
       responseText = '';
     }
-  } catch (readError) {
-    // Body stream error - handle gracefully
-    console.warn(`[safeFetch] Body read warning for ${response.status}:`, readError.message);
-    responseText = '';
   }
 
   // 3. Parse text as JSON
