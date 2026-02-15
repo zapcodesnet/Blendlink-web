@@ -1343,7 +1343,10 @@ export default function Wallet() {
                                 <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">Current</span>
                               )}
                             </h3>
-                            <p className="text-sm opacity-90">${tier.price.toFixed(2)}/month</p>
+                            <p className="text-sm opacity-90">
+                              ${tier.price.toFixed(2)}/month{' '}
+                              <span className="line-through opacity-60">${tier.standardPrice.toFixed(2)}/month</span>
+                            </p>
                           </div>
                         </div>
                         <ChevronRight className={`w-6 h-6 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
