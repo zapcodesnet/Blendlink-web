@@ -280,6 +280,72 @@ def decode_token(token: str) -> dict:
     except JWTError as e:
         raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
 
+
+def create_verification_token(user_id: str, email: str) -> str:
+    """Create a short-lived token for email verification (24 hours)"""
+    expires = datetime.now(timezone.utc) + timedelta(hours=24)
+    return jwt.encode(
+        {"sub": user_id, "email": email, "purpose": "email_verify", "exp": expires},
+        JWT_SECRET, algorithm=JWT_ALGORITHM
+    )
+
+
+async def send_verification_email(email: str, name: str, verification_token: str):
+    """Send verification email using Resend"""
+    import resend
+    resend_key = os.environ.get("RESEND_API_KEY")
+    sender_email = os.environ.get("SENDER_EMAIL", "admin@blendlink.net")
+    
+    if not resend_key:
+        logger.warning("RESEND_API_KEY not set - skipping verification email")
+        return False
+    
+    resend.api_key = resend_key
+    
+    # Use runtime detection for verify URL
+    verify_url = f"https://blendlink.net/verify-email?token={verification_token}"
+    
+    html_content = f"""
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #1a1a2e; font-size: 28px; margin: 0;">Welcome to BlendLink!</h1>
+        </div>
+        <div style="background: #f8f9fa; border-radius: 12px; padding: 30px; margin-bottom: 20px;">
+            <p style="color: #333; font-size: 16px; line-height: 1.6;">Hi {name},</p>
+            <p style="color: #333; font-size: 16px; line-height: 1.6;">
+                Thanks for signing up! Please verify your email address to activate your account and start earning BL coins.
+            </p>
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{verify_url}" 
+                   style="display: inline-block; background: linear-gradient(135deg, #00F0FF, #BD00FF); color: white; 
+                          text-decoration: none; padding: 14px 40px; border-radius: 50px; font-weight: 600; font-size: 16px;">
+                    Verify My Email
+                </a>
+            </div>
+            <p style="color: #666; font-size: 14px; line-height: 1.5;">
+                This link expires in 24 hours. If you didn't create an account, you can safely ignore this email.
+            </p>
+        </div>
+        <p style="color: #999; font-size: 12px; text-align: center;">
+            BlendLink &mdash; Earn, Share, and Grow Together
+        </p>
+    </div>
+    """
+    
+    try:
+        params = {
+            "from": f"BlendLink <{sender_email}>",
+            "to": [email],
+            "subject": "Verify your BlendLink email address",
+            "html": html_content,
+        }
+        await asyncio.to_thread(resend.Emails.send, params)
+        logger.info(f"Verification email sent to {email}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send verification email to {email}: {e}")
+        return False
+
 async def get_current_user(request: Request) -> dict:
     token = request.cookies.get("session_token")
     if not token:
