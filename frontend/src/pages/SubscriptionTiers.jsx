@@ -132,13 +132,35 @@ const SubscriptionTiers = () => {
   useEffect(() => {
     fetchSubscriptionData();
     
-    // Check for success callback from Stripe
+    // Check for success callback from Stripe - verify and activate subscription
     if (searchParams.get("success") === "true") {
-      toast.success("Subscription activated successfully! Enjoy your new benefits.");
-      // Refresh user data to update UI
-      if (refreshUser) refreshUser();
+      verifyAndActivateSubscription();
     }
   }, [searchParams]);
+
+  const verifyAndActivateSubscription = async () => {
+    try {
+      const response = await api.get("/subscriptions/verify-latest");
+      const result = response.data;
+      
+      if (result.status === 'activated') {
+        toast.success(result.message || "Subscription activated successfully!", { duration: 5000 });
+        if (refreshUser) refreshUser();
+        fetchSubscriptionData();
+      } else if (result.status === 'already_active') {
+        toast.success(result.message || "Your membership is active!", { duration: 3000 });
+        fetchSubscriptionData();
+      } else {
+        toast.success("Payment received! Your subscription is being activated.");
+        if (refreshUser) refreshUser();
+      }
+      // Clean URL
+      window.history.replaceState({}, '', '/subscriptions');
+    } catch (error) {
+      console.error("Subscription verification error:", error);
+      toast.info("Payment received. Your subscription will be activated shortly.");
+    }
+  };
 
   const fetchSubscriptionData = async () => {
     try {
