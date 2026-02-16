@@ -127,11 +127,10 @@ export default function Register() {
       <AnimatePresence>
         {showDisclaimer && (
           <div 
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"}}}
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4""
           >
             <div 
-              className="bl-glass-strong max-w-lg w-full max-h-[90vh] overflow-hidden"}}}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="bl-glass-strong max-w-lg w-full max-h-[90vh] overflow-hidden""
             >
               <div className="p-6 border-b border-gray-200/50">
                 <div className="flex items-center gap-3">
@@ -166,7 +165,7 @@ export default function Register() {
                 <button
                   className="bl-btn-primary flex-1"
                   onClick={handleAcceptDisclaimer}
-                  disabled={loading}}}
+                  disabled={loading"
                   data-testid="accept-disclaimer-btn"
                 >
                   <CheckCircle2 className="w-5 h-5" />
@@ -181,7 +180,6 @@ export default function Register() {
       {/* Back Button */}
       <div 
         className="w-full max-w-[400px] mb-4"}}
-        transition={{ delay: 0.1 }}
       >
         <button
           onClick={() => navigate("/")}
@@ -352,13 +350,12 @@ export default function Register() {
             <button
               type="submit"
               className="bl-btn-primary mt-2"
-              disabled={loading}}}
+              disabled={loading"
               data-testid="register-submit-btn"
             >
               {loading ? (
                 <div
                   className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full"}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                 />
               ) : (
                 "Create Account"
