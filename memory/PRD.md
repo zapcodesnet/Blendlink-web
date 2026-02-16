@@ -1,41 +1,20 @@
-# BlendLink Platform - Product Requirements Document
+# BlendLink Platform - PRD
 
-## Latest Update: February 16, 2026
+## Latest: Touch Scroll Fix v7 (Feb 16, 2026)
 
----
+### Approach: 5-layer defense against scroll blocking
 
-## LATEST SESSION: Touch Scroll Fix (Nuclear JS Approach) (Feb 16, 2026)
+1. **index.html HEAD script**: Patches `addEventListener` to force passive on ALL touch/pointer events
+2. **index.html HEAD script**: Overrides `Event.prototype.preventDefault` to no-op for touchmove/touchstart
+3. **index.html HEAD script**: MutationObserver prevents overflow:hidden on body/html
+4. **index.html HEAD script**: Periodic scan forces `touch-action: pan-y` on any element with `touch-action: none`
+5. **CSS (index.css)**: Universal `* { touch-action: pan-y pan-x pinch-zoom !important; }` rule
 
-### Root Cause:
-framer-motion and React's internal event handlers call `preventDefault()` on `touchmove` events, which blocks native page scrolling. CSS `touch-action` cannot override JavaScript `preventDefault()`.
-
-### Fix Applied (3-pronged):
-
-1. **`index.html` (HEAD)** — Monkey-patches `EventTarget.prototype.addEventListener` BEFORE React loads:
-   - Forces ALL `touchstart` and `touchmove` listeners to be `{ passive: true }`
-   - This means `preventDefault()` calls inside framer-motion become no-ops
-   - Also uses MutationObserver to prevent JS from setting `overflow: hidden` on body/html
-
-2. **`premium-design-system.css`** — `.bl-premium-bg`: Changed `overflow: hidden` → `overflow-y: auto; overflow-x: hidden`
-
-3. **`index.css`** — Added global `touch-action: pan-y` on all card elements, grids, images, admin panels
-
-### Landing Page:
-- Removed "Social, Shop, Play & Earn Rewards" hero section
-- Kept "Everything You Need" + "One app, endless possibilities" + all feature icons
-
-### Test Results:
-- addEventListener monkey-patch confirmed active ✅
-- `.bl-premium-bg` overflow-y: auto confirmed ✅
-- Register page scrollHeight > clientHeight confirmed ✅
-
----
-
-## TEST CREDENTIALS
-| Role | Email | Password |
-|------|-------|----------|
-| Test User | tester@blendlink.net | BlendLink2024! |
-| User | vinwebs0@gmail.com | Mikaela2021! |
+### Specific fixes:
+- Register.jsx: `overflow-hidden` → `overflow-x-hidden overflow-y-auto` on main wrapper
+- premium-design-system.css: `.bl-premium-bg` → `overflow-y: auto; overflow-x: hidden`
+- MintedPhotos.jsx: `touchAction: 'none'` → `touchAction: 'pan-y'`
+- index.css: Removed 550 lines of conflicting scroll-fix CSS, replaced with clean minimal set
 
 ---
 *Last Updated: February 16, 2026*
