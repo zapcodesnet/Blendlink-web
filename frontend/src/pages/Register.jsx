@@ -132,7 +132,7 @@ export default function Register() {
   };
 
   return (
-    <div className="bl-premium-bg min-h-screen flex flex-col items-center px-6 py-8 bl-safe-top bl-safe-bottom relative overflow-hidden">
+    <div className="bl-premium-bg min-h-screen flex flex-col items-center px-6 py-8 bl-safe-top bl-safe-bottom relative overflow-x-hidden overflow-y-auto">
       {/* Background subtle glow effects */}
       <div 
         className="absolute top-[-15%] right-[-15%] w-[45%] h-[45%] rounded-full opacity-25 pointer-events-none"
