@@ -29,6 +29,40 @@
         <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/apple-touch-icon.png" />
         <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
         <title>Blendlink - Super App</title>
+        
+        <!-- GLOBAL TOUCH SCROLL FIX - MUST be first script before React/framer-motion -->
+        <script>
+        (function() {
+            // Monkey-patch addEventListener BEFORE any library loads
+            // Forces ALL touchstart/touchmove listeners to be passive
+            // This prevents framer-motion, React, and any JS from blocking native scroll
+            var origAdd = EventTarget.prototype.addEventListener;
+            EventTarget.prototype.addEventListener = function(type, fn, opts) {
+                if (type === 'touchstart' || type === 'touchmove') {
+                    if (typeof opts === 'object' && opts !== null) {
+                        opts = Object.assign({}, opts, { passive: true });
+                    } else {
+                        opts = { capture: !!opts, passive: true };
+                    }
+                }
+                return origAdd.call(this, type, fn, opts);
+            };
+            
+            // Ensure body/html never get overflow:hidden from JS (modals, dialogs, etc.)
+            document.addEventListener('DOMContentLoaded', function() {
+                var observer = new MutationObserver(function() {
+                    var b = document.body, h = document.documentElement;
+                    if (b && b.style.overflow === 'hidden') b.style.overflow = '';
+                    if (b && b.style.overflowY === 'hidden') b.style.overflowY = '';
+                    if (h && h.style.overflow === 'hidden') h.style.overflow = '';
+                    if (h && h.style.overflowY === 'hidden') h.style.overflowY = '';
+                });
+                observer.observe(document.body, { attributes: true, attributeFilter: ['style'] });
+                observer.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] });
+            });
+        })();
+        </script>
+        
         <script src="https://assets.emergent.sh/scripts/emergent-main.js"></script>
         <!--
         These two scripts have been added for the Visual Edits, please do not edit or remove them
