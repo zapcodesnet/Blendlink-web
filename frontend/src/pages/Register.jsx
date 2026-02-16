@@ -105,33 +105,8 @@ export default function Register() {
     api.auth.googleAuth();
   };
 
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.06,
-        delayChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 16 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        type: "spring",
-        stiffness: 280,
-        damping: 26,
-      },
-    },
-  };
-
   return (
-    <div className="bl-premium-bg min-h-screen flex flex-col items-center px-6 py-8 bl-safe-top bl-safe-bottom relative overflow-hidden">
+    <div className="bl-premium-bg min-h-screen flex flex-col items-center px-6 py-8 bl-safe-top bl-safe-bottom relative">
       {/* Background subtle glow effects */}
       <div 
         className="absolute top-[-15%] right-[-15%] w-[45%] h-[45%] rounded-full opacity-25 pointer-events-none"
