@@ -152,17 +152,11 @@ export default function Register() {
       {/* Disclaimer Modal */}
       <AnimatePresence>
         {showDisclaimer && (
-          <motion.div 
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <div 
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"}}}
           >
-            <motion.div 
-              className="bl-glass-strong max-w-lg w-full max-h-[90vh] overflow-hidden"
-              initial={{ scale: 0.95, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+            <div 
+              className="bl-glass-strong max-w-lg w-full max-h-[90vh] overflow-hidden"}}}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
             >
               <div className="p-6 border-b border-gray-200/50">
@@ -195,28 +189,24 @@ export default function Register() {
                 >
                   Cancel
                 </button>
-                <motion.button
+                <button
                   className="bl-btn-primary flex-1"
                   onClick={handleAcceptDisclaimer}
-                  disabled={loading}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  disabled={loading}}}
                   data-testid="accept-disclaimer-btn"
                 >
                   <CheckCircle2 className="w-5 h-5" />
                   {loading ? "Creating..." : "I Accept"}
-                </motion.button>
+                </button>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
       </AnimatePresence>
 
       {/* Back Button */}
-      <motion.div 
-        className="w-full max-w-[400px] mb-4"
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
+      <div 
+        className="w-full max-w-[400px] mb-4"}}
         transition={{ delay: 0.1 }}
       >
         <button
@@ -226,18 +216,16 @@ export default function Register() {
         >
           <ArrowLeft className="w-5 h-5" style={{ color: 'var(--bl-gray-medium)' }} />
         </button>
-      </motion.div>
+      </div>
 
-      <motion.div
+      <div
         className="w-full max-w-[400px] relative z-10 flex-1"
-        variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
         {/* Avatar with Plus Icon */}
-        <motion.div 
+        <div 
           className="flex justify-center mb-6"
-          variants={itemVariants}
         >
           <div className="bl-avatar bl-animate-glow relative">
             <img 
@@ -246,10 +234,10 @@ export default function Register() {
               className="bl-avatar-logo"
             />
           </div>
-        </motion.div>
+        </div>
 
         {/* Headline */}
-        <motion.div className="text-center mb-6" variants={itemVariants}>
+        <div className="text-center mb-6">
           <h1 className="bl-heading-xl mb-2" style={{ fontSize: '34px' }}>
             Create Account
           </h1>
@@ -262,12 +250,12 @@ export default function Register() {
               Get 50,000 BL Coins bonus!
             </span>
           </div>
-        </motion.div>
+        </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Full Name */}
-          <motion.div className="bl-input-wrapper" variants={itemVariants}>
+          <div className="bl-input-wrapper">
             <User 
               className="bl-input-icon" 
               strokeWidth={2}
@@ -283,10 +271,10 @@ export default function Register() {
               onBlur={() => setFocusedField(null)}
               data-testid="name-input"
             />
-          </motion.div>
+          </div>
 
           {/* Username */}
-          <motion.div className="bl-input-wrapper" variants={itemVariants}>
+          <div className="bl-input-wrapper">
             <span 
               className="bl-input-icon font-bold text-lg"
               style={{ color: focusedField === 'username' ? '#00F0FF' : 'var(--bl-gray-light)' }}
@@ -303,10 +291,10 @@ export default function Register() {
               onBlur={() => setFocusedField(null)}
               data-testid="username-input"
             />
-          </motion.div>
+          </div>
 
           {/* Email */}
-          <motion.div className="bl-input-wrapper" variants={itemVariants}>
+          <div className="bl-input-wrapper">
             <Mail 
               className="bl-input-icon" 
               strokeWidth={2}
@@ -322,10 +310,10 @@ export default function Register() {
               onBlur={() => setFocusedField(null)}
               data-testid="email-input"
             />
-          </motion.div>
+          </div>
 
           {/* Password */}
-          <motion.div className="bl-input-wrapper" variants={itemVariants}>
+          <div className="bl-input-wrapper">
             <Lock 
               className="bl-input-icon" 
               strokeWidth={2}
@@ -350,10 +338,10 @@ export default function Register() {
             >
               {showPassword ? <EyeOff strokeWidth={2} /> : <Eye strokeWidth={2} />}
             </button>
-          </motion.div>
+          </div>
 
           {/* Referral Code */}
-          <motion.div className="bl-input-wrapper" variants={itemVariants}>
+          <div className="bl-input-wrapper">
             <Gift 
               className="bl-input-icon" 
               strokeWidth={2}
@@ -383,42 +371,38 @@ export default function Register() {
                 Applied
               </div>
             )}
-          </motion.div>
+          </div>
 
           {/* Create Account Button */}
-          <motion.div variants={itemVariants}>
-            <motion.button
+          <div>
+            <button
               type="submit"
               className="bl-btn-primary mt-2"
-              disabled={loading}
-              whileHover={{ scale: loading ? 1 : 1.02 }}
-              whileTap={{ scale: loading ? 1 : 0.98 }}
+              disabled={loading}}}
               data-testid="register-submit-btn"
             >
               {loading ? (
-                <motion.div
-                  className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full"
-                  animate={{ rotate: 360 }}
+                <div
+                  className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full"}
                   transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                 />
               ) : (
                 "Create Account"
               )}
-            </motion.button>
-          </motion.div>
+            </button>
+          </div>
         </form>
 
         {/* Footer - Sign In Link */}
-        <motion.p 
+        <p 
           className="text-center mt-8 bl-text-body"
-          variants={itemVariants}
         >
           Already have an account?{" "}
           <Link to="/login" className="bl-link">
             Sign in
           </Link>
-        </motion.p>
-      </motion.div>
+        </p>
+      </div>
     </div>
   );
 }

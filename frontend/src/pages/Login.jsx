@@ -106,16 +106,14 @@ export default function Login() {
         }}
       />
 
-      <motion.div
+      <div
         className="w-full max-w-[380px] relative z-10"
-        variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
         {/* Avatar with Blendlink Logo */}
-        <motion.div 
+        <div 
           className="flex justify-center mb-10"
-          variants={itemVariants}
         >
           <div className="bl-avatar bl-animate-glow">
             <img 
@@ -124,10 +122,10 @@ export default function Login() {
               className="bl-avatar-logo"
             />
           </div>
-        </motion.div>
+        </div>
 
         {/* Headline - Extra large and bold */}
-        <motion.div className="text-center mb-10" variants={itemVariants}>
+        <div className="text-center mb-10">
           <h1 
             className="bl-heading-xl mb-4"
             style={{ letterSpacing: '-1px' }}
@@ -137,12 +135,12 @@ export default function Login() {
           <p className="bl-text-body">
             Please sign in to continue
           </p>
-        </motion.div>
+        </div>
 
         {/* Form with generous spacing */}
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Email Input */}
-          <motion.div className="bl-input-wrapper" variants={itemVariants}>
+          <div className="bl-input-wrapper">
             <Mail 
               className="bl-input-icon" 
               strokeWidth={2}
@@ -161,10 +159,10 @@ export default function Login() {
               onBlur={() => setFocusedField(null)}
               data-testid="email-input"
             />
-          </motion.div>
+          </div>
 
           {/* Password Input */}
-          <motion.div className="bl-input-wrapper" variants={itemVariants}>
+          <div className="bl-input-wrapper">
             <Lock 
               className="bl-input-icon" 
               strokeWidth={2}
@@ -195,12 +193,11 @@ export default function Login() {
             >
               {showPassword ? <EyeOff strokeWidth={2} /> : <Eye strokeWidth={2} />}
             </button>
-          </motion.div>
+          </div>
 
           {/* Remember Me & Forgot Password */}
-          <motion.div 
+          <div 
             className="flex items-center justify-between pt-1"
-            variants={itemVariants}
           >
             <button
               type="button"
@@ -223,42 +220,38 @@ export default function Login() {
             >
               Forgot password?
             </Link>
-          </motion.div>
+          </div>
 
           {/* Sign In Button - Most eye-catching element */}
-          <motion.div variants={itemVariants} className="pt-3">
-            <motion.button
+          <div className="pt-3">
+            <button
               type="submit"
               className="bl-btn-primary"
-              disabled={loading}
-              whileHover={{ scale: loading ? 1 : 1.02, y: loading ? 0 : -3 }}
-              whileTap={{ scale: loading ? 1 : 0.98 }}
+              disabled={loading}}}
               data-testid="login-submit-btn"
             >
               {loading ? (
-                <motion.div
-                  className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full"
-                  animate={{ rotate: 360 }}
+                <div
+                  className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full"}
                   transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                 />
               ) : (
                 "Sign In"
               )}
-            </motion.button>
-          </motion.div>
+            </button>
+          </div>
         </form>
 
         {/* Footer - Sign Up Link */}
-        <motion.p 
+        <p 
           className="text-center mt-12 bl-text-body"
-          variants={itemVariants}
         >
           Don&apos;t have an account?{" "}
           <Link to="/register" className="bl-link">
             Sign up
           </Link>
-        </motion.p>
-      </motion.div>
+        </p>
+      </div>
     </div>
   );
 }
