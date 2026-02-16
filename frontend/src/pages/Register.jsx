@@ -124,7 +124,7 @@ export default function Register() {
       />
 
       {/* Disclaimer Modal */}
-      <AnimatePresence>
+      <>
         {showDisclaimer && (
           <div 
             className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4""
@@ -175,7 +175,7 @@ export default function Register() {
             </div>
           </div>
         )}
-      </AnimatePresence>
+      </>
 
       {/* Back Button */}
       <div 
