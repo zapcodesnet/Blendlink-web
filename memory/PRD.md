@@ -4,35 +4,30 @@
 
 ---
 
-## LATEST SESSION: Touch Scroll Fix + Hero Card Removal (Feb 16, 2026)
+## LATEST SESSION: Touch Scroll Fix (Nuclear JS Approach) (Feb 16, 2026)
 
-### Root Cause of Scroll Issues:
-`.bl-premium-bg` in `premium-design-system.css` had `overflow: hidden` — this class is used on Login, Register, and other pages. It completely blocked vertical scrolling.
+### Root Cause:
+framer-motion and React's internal event handlers call `preventDefault()` on `touchmove` events, which blocks native page scrolling. CSS `touch-action` cannot override JavaScript `preventDefault()`.
 
-### Fixes Applied:
+### Fix Applied (3-pronged):
 
-| Fix | File | What Changed |
-|-----|------|-------------|
-| **`.bl-premium-bg` overflow** | `premium-design-system.css` | Changed `overflow: hidden` → `overflow-y: auto; overflow-x: hidden` |
-| **Global touch-action rules** | `index.css` (bottom) | Added `touch-action: pan-y !important` on ALL card-like elements, grids, images, admin panels, subscription cards, wallet sections |
-| **Hero card removed** | `Landing.jsx` | Removed "Social, Shop, Play & Earn Rewards" section. Kept "Everything You Need" + icons below |
+1. **`index.html` (HEAD)** — Monkey-patches `EventTarget.prototype.addEventListener` BEFORE React loads:
+   - Forces ALL `touchstart` and `touchmove` listeners to be `{ passive: true }`
+   - This means `preventDefault()` calls inside framer-motion become no-ops
+   - Also uses MutationObserver to prevent JS from setting `overflow: hidden` on body/html
 
-### Pages Fixed:
-1. Register (/register) — now scrollable
-2. Landing (/) — cards scrollable, hero removed
-3. Marketplace (/marketplace) — card scroll fixed
-4. Minted Photos (/minted-photos) — photo cards scrollable
-5. Photo Game (/photo-game) — same
-6. Wallet (/wallet) — all sections scrollable
-7. Games (/games) — arena/casino cards scrollable
-8. Profile (/profile) — minted/post sections scrollable
-9. Subscriptions (/subscriptions) — tier cards scrollable
-10. Member Pages (/pages, /[slug]) — all cards scrollable
-11. Admin Panel (/admin/*) — all pages scrollable
+2. **`premium-design-system.css`** — `.bl-premium-bg`: Changed `overflow: hidden` → `overflow-y: auto; overflow-x: hidden`
+
+3. **`index.css`** — Added global `touch-action: pan-y` on all card elements, grids, images, admin panels
+
+### Landing Page:
+- Removed "Social, Shop, Play & Earn Rewards" hero section
+- Kept "Everything You Need" + "One app, endless possibilities" + all feature icons
 
 ### Test Results:
-- Frontend: **100% (16/16)**
-- Report: `/app/test_reports/iteration_171.json`
+- addEventListener monkey-patch confirmed active ✅
+- `.bl-premium-bg` overflow-y: auto confirmed ✅
+- Register page scrollHeight > clientHeight confirmed ✅
 
 ---
 
