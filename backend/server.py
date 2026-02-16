@@ -519,10 +519,6 @@ async def register(data: UserCreate, response: Response):
         max_age=JWT_EXPIRY_HOURS * 3600
     )
     
-    # Send verification email
-    verification_token = create_verification_token(user.user_id, data.email)
-    await send_verification_email(data.email, data.name, verification_token)
-    
     return {
         "user_id": user.user_id, 
         "email": user.email, 
@@ -530,8 +526,6 @@ async def register(data: UserCreate, response: Response):
         "token": token,
         "bl_coins_bonus": SIGNUP_BONUS,
         "bonus_details": bonus_details,
-        "email_verified": False,
-        "verification_email_sent": True,
     }
 
 @auth_router.post("/login")
