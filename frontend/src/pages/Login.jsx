@@ -12,6 +12,7 @@
 
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import api from "../services/api";
 import { Eye, EyeOff, Mail, Lock, User, Check } from "lucide-react";
@@ -55,6 +56,31 @@ export default function Login() {
     api.auth.googleAuth();
   };
 
+  // Ultra-smooth animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.07,
+        delayChildren: 0.15,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 24 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 220,
+        damping: 22,
+      },
+    },
+  };
+
   return (
     <div className="bl-premium-bg min-h-screen flex flex-col items-center justify-center px-6 py-16 bl-safe-top bl-safe-bottom relative">
       {/* Extra ambient glow orbs */}
@@ -80,14 +106,16 @@ export default function Login() {
         }}
       />
 
-      <div
+      <motion.div
         className="w-full max-w-[380px] relative z-10"
+        variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
         {/* Avatar with Blendlink Logo */}
-        <div 
+        <motion.div 
           className="flex justify-center mb-10"
+          variants={itemVariants}
         >
           <div className="bl-avatar bl-animate-glow">
             <img 
@@ -96,10 +124,10 @@ export default function Login() {
               className="bl-avatar-logo"
             />
           </div>
-        </div>
+        </motion.div>
 
         {/* Headline - Extra large and bold */}
-        <div className="text-center mb-10">
+        <motion.div className="text-center mb-10" variants={itemVariants}>
           <h1 
             className="bl-heading-xl mb-4"
             style={{ letterSpacing: '-1px' }}
@@ -109,12 +137,12 @@ export default function Login() {
           <p className="bl-text-body">
             Please sign in to continue
           </p>
-        </div>
+        </motion.div>
 
         {/* Form with generous spacing */}
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Email Input */}
-          <div className="bl-input-wrapper">
+          <motion.div className="bl-input-wrapper" variants={itemVariants}>
             <Mail 
               className="bl-input-icon" 
               strokeWidth={2}
@@ -133,10 +161,10 @@ export default function Login() {
               onBlur={() => setFocusedField(null)}
               data-testid="email-input"
             />
-          </div>
+          </motion.div>
 
           {/* Password Input */}
-          <div className="bl-input-wrapper">
+          <motion.div className="bl-input-wrapper" variants={itemVariants}>
             <Lock 
               className="bl-input-icon" 
               strokeWidth={2}
@@ -167,11 +195,12 @@ export default function Login() {
             >
               {showPassword ? <EyeOff strokeWidth={2} /> : <Eye strokeWidth={2} />}
             </button>
-          </div>
+          </motion.div>
 
           {/* Remember Me & Forgot Password */}
-          <div 
+          <motion.div 
             className="flex items-center justify-between pt-1"
+            variants={itemVariants}
           >
             <button
               type="button"
@@ -194,38 +223,42 @@ export default function Login() {
             >
               Forgot password?
             </Link>
-          </div>
+          </motion.div>
 
           {/* Sign In Button - Most eye-catching element */}
-          <div className="pt-3">
-            <button
+          <motion.div variants={itemVariants} className="pt-3">
+            <motion.button
               type="submit"
               className="bl-btn-primary"
-              disabled={loading}}}
+              disabled={loading}
+              whileHover={{ scale: loading ? 1 : 1.02, y: loading ? 0 : -3 }}
+              whileTap={{ scale: loading ? 1 : 0.98 }}
               data-testid="login-submit-btn"
             >
               {loading ? (
-                <div
-                  className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full"}
+                <motion.div
+                  className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full"
+                  animate={{ rotate: 360 }}
                   transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                 />
               ) : (
                 "Sign In"
               )}
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
         </form>
 
         {/* Footer - Sign Up Link */}
-        <p 
+        <motion.p 
           className="text-center mt-12 bl-text-body"
+          variants={itemVariants}
         >
           Don&apos;t have an account?{" "}
           <Link to="/register" className="bl-link">
             Sign up
           </Link>
-        </p>
-      </div>
+        </motion.p>
+      </motion.div>
     </div>
   );
 }

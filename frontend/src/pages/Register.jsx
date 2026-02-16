@@ -6,6 +6,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import api from "../services/api";
 import { Eye, EyeOff, Mail, Lock, User, UserPlus, Gift, AlertTriangle, CheckCircle2, ArrowLeft, Check } from "lucide-react";
@@ -105,8 +106,33 @@ export default function Register() {
     api.auth.googleAuth();
   };
 
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.06,
+        delayChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 16 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 280,
+        damping: 26,
+      },
+    },
+  };
+
   return (
-    <div className="bl-premium-bg min-h-screen flex flex-col items-center px-6 py-8 bl-safe-top bl-safe-bottom relative">
+    <div className="bl-premium-bg min-h-screen flex flex-col items-center px-6 py-8 bl-safe-top bl-safe-bottom relative overflow-hidden">
       {/* Background subtle glow effects */}
       <div 
         className="absolute top-[-15%] right-[-15%] w-[45%] h-[45%] rounded-full opacity-25 pointer-events-none"
@@ -124,13 +150,20 @@ export default function Register() {
       />
 
       {/* Disclaimer Modal */}
-      <>
+      <AnimatePresence>
         {showDisclaimer && (
-          <div 
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4""
+          <motion.div 
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
           >
-            <div 
-              className="bl-glass-strong max-w-lg w-full max-h-[90vh] overflow-hidden""
+            <motion.div 
+              className="bl-glass-strong max-w-lg w-full max-h-[90vh] overflow-hidden"
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
             >
               <div className="p-6 border-b border-gray-200/50">
                 <div className="flex items-center gap-3">
@@ -162,24 +195,29 @@ export default function Register() {
                 >
                   Cancel
                 </button>
-                <button
+                <motion.button
                   className="bl-btn-primary flex-1"
                   onClick={handleAcceptDisclaimer}
-                  disabled={loading"
+                  disabled={loading}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   data-testid="accept-disclaimer-btn"
                 >
                   <CheckCircle2 className="w-5 h-5" />
                   {loading ? "Creating..." : "I Accept"}
-                </button>
+                </motion.button>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
-      </>
+      </AnimatePresence>
 
       {/* Back Button */}
-      <div 
-        className="w-full max-w-[400px] mb-4"}}
+      <motion.div 
+        className="w-full max-w-[400px] mb-4"
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.1 }}
       >
         <button
           onClick={() => navigate("/")}
@@ -188,16 +226,18 @@ export default function Register() {
         >
           <ArrowLeft className="w-5 h-5" style={{ color: 'var(--bl-gray-medium)' }} />
         </button>
-      </div>
+      </motion.div>
 
-      <div
+      <motion.div
         className="w-full max-w-[400px] relative z-10 flex-1"
+        variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
         {/* Avatar with Plus Icon */}
-        <div 
+        <motion.div 
           className="flex justify-center mb-6"
+          variants={itemVariants}
         >
           <div className="bl-avatar bl-animate-glow relative">
             <img 
@@ -206,10 +246,10 @@ export default function Register() {
               className="bl-avatar-logo"
             />
           </div>
-        </div>
+        </motion.div>
 
         {/* Headline */}
-        <div className="text-center mb-6">
+        <motion.div className="text-center mb-6" variants={itemVariants}>
           <h1 className="bl-heading-xl mb-2" style={{ fontSize: '34px' }}>
             Create Account
           </h1>
@@ -222,12 +262,12 @@ export default function Register() {
               Get 50,000 BL Coins bonus!
             </span>
           </div>
-        </div>
+        </motion.div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Full Name */}
-          <div className="bl-input-wrapper">
+          <motion.div className="bl-input-wrapper" variants={itemVariants}>
             <User 
               className="bl-input-icon" 
               strokeWidth={2}
@@ -243,10 +283,10 @@ export default function Register() {
               onBlur={() => setFocusedField(null)}
               data-testid="name-input"
             />
-          </div>
+          </motion.div>
 
           {/* Username */}
-          <div className="bl-input-wrapper">
+          <motion.div className="bl-input-wrapper" variants={itemVariants}>
             <span 
               className="bl-input-icon font-bold text-lg"
               style={{ color: focusedField === 'username' ? '#00F0FF' : 'var(--bl-gray-light)' }}
@@ -263,10 +303,10 @@ export default function Register() {
               onBlur={() => setFocusedField(null)}
               data-testid="username-input"
             />
-          </div>
+          </motion.div>
 
           {/* Email */}
-          <div className="bl-input-wrapper">
+          <motion.div className="bl-input-wrapper" variants={itemVariants}>
             <Mail 
               className="bl-input-icon" 
               strokeWidth={2}
@@ -282,10 +322,10 @@ export default function Register() {
               onBlur={() => setFocusedField(null)}
               data-testid="email-input"
             />
-          </div>
+          </motion.div>
 
           {/* Password */}
-          <div className="bl-input-wrapper">
+          <motion.div className="bl-input-wrapper" variants={itemVariants}>
             <Lock 
               className="bl-input-icon" 
               strokeWidth={2}
@@ -310,10 +350,10 @@ export default function Register() {
             >
               {showPassword ? <EyeOff strokeWidth={2} /> : <Eye strokeWidth={2} />}
             </button>
-          </div>
+          </motion.div>
 
           {/* Referral Code */}
-          <div className="bl-input-wrapper">
+          <motion.div className="bl-input-wrapper" variants={itemVariants}>
             <Gift 
               className="bl-input-icon" 
               strokeWidth={2}
@@ -343,37 +383,42 @@ export default function Register() {
                 Applied
               </div>
             )}
-          </div>
+          </motion.div>
 
           {/* Create Account Button */}
-          <div>
-            <button
+          <motion.div variants={itemVariants}>
+            <motion.button
               type="submit"
               className="bl-btn-primary mt-2"
-              disabled={loading"
+              disabled={loading}
+              whileHover={{ scale: loading ? 1 : 1.02 }}
+              whileTap={{ scale: loading ? 1 : 0.98 }}
               data-testid="register-submit-btn"
             >
               {loading ? (
-                <div
-                  className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full"}
+                <motion.div
+                  className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                 />
               ) : (
                 "Create Account"
               )}
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
         </form>
 
         {/* Footer - Sign In Link */}
-        <p 
+        <motion.p 
           className="text-center mt-8 bl-text-body"
+          variants={itemVariants}
         >
           Already have an account?{" "}
           <Link to="/login" className="bl-link">
             Sign in
           </Link>
-        </p>
-      </div>
+        </motion.p>
+      </motion.div>
     </div>
   );
 }
