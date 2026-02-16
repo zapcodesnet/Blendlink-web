@@ -4,30 +4,35 @@
 
 ---
 
-## LATEST SESSION: Remove Email Verification (Feb 16, 2026)
+## LATEST SESSION: Touch Scroll Fix + Hero Card Removal (Feb 16, 2026)
 
-### What Was REMOVED:
-- `create_verification_token()` function
-- `send_verification_email()` function  
-- `GET /api/auth/verify-email` endpoint
-- `POST /api/auth/resend-verification` endpoint
-- `POST /api/auth/resend-verification-public` endpoint
-- `email_verified` / `email_verified_at` fields from registration
-- Verification check from login flow
-- "Resend Verification Email" button from Login page
-- Verification confirmation screen from Register page
-- `EmailVerificationPending` component from ProtectedRoute
-- `/verify-email` route from App.js
+### Root Cause of Scroll Issues:
+`.bl-premium-bg` in `premium-design-system.css` had `overflow: hidden` — this class is used on Login, Register, and other pages. It completely blocked vertical scrolling.
 
-### New Flow:
-- **Register**: Create user → auto-login (token issued) → redirect to `/profile`
-- **Login**: Email + password → redirect to `/profile`
-- **No verification** of any kind — instant full access
+### Fixes Applied:
+
+| Fix | File | What Changed |
+|-----|------|-------------|
+| **`.bl-premium-bg` overflow** | `premium-design-system.css` | Changed `overflow: hidden` → `overflow-y: auto; overflow-x: hidden` |
+| **Global touch-action rules** | `index.css` (bottom) | Added `touch-action: pan-y !important` on ALL card-like elements, grids, images, admin panels, subscription cards, wallet sections |
+| **Hero card removed** | `Landing.jsx` | Removed "Social, Shop, Play & Earn Rewards" section. Kept "Everything You Need" + icons below |
+
+### Pages Fixed:
+1. Register (/register) — now scrollable
+2. Landing (/) — cards scrollable, hero removed
+3. Marketplace (/marketplace) — card scroll fixed
+4. Minted Photos (/minted-photos) — photo cards scrollable
+5. Photo Game (/photo-game) — same
+6. Wallet (/wallet) — all sections scrollable
+7. Games (/games) — arena/casino cards scrollable
+8. Profile (/profile) — minted/post sections scrollable
+9. Subscriptions (/subscriptions) — tier cards scrollable
+10. Member Pages (/pages, /[slug]) — all cards scrollable
+11. Admin Panel (/admin/*) — all pages scrollable
 
 ### Test Results:
-- Backend: **100% (13/13)**
-- Frontend: **100% (6/6)**
-- Report: `/app/test_reports/iteration_170.json`
+- Frontend: **100% (16/16)**
+- Report: `/app/test_reports/iteration_171.json`
 
 ---
 
@@ -36,7 +41,6 @@
 |------|-------|----------|
 | Test User | tester@blendlink.net | BlendLink2024! |
 | User | vinwebs0@gmail.com | Mikaela2021! |
-| Admin | blendlinknet@gmail.com | Blend!Admin2026Link |
 
 ---
 *Last Updated: February 16, 2026*
