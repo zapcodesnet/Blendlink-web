@@ -55,31 +55,6 @@ export default function Login() {
     api.auth.googleAuth();
   };
 
-  // Ultra-smooth animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.07,
-        delayChildren: 0.15,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 24 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        type: "spring",
-        stiffness: 220,
-        damping: 22,
-      },
-    },
-  };
-
   return (
     <div className="bl-premium-bg min-h-screen flex flex-col items-center justify-center px-6 py-16 bl-safe-top bl-safe-bottom relative">
       {/* Extra ambient glow orbs */}
