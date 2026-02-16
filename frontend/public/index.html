@@ -57,6 +57,50 @@
     <body>
         <noscript>You need to enable JavaScript to run this app.</noscript>
         <div id="root"></div>
+        
+        <!-- GLOBAL TOUCH SCROLL FIX: Forces passive touch listeners to prevent JS from blocking scroll -->
+        <script>
+        (function() {
+            // Force all touchmove events on document to be passive
+            // This prevents framer-motion and other JS libs from calling preventDefault on scroll
+            document.addEventListener('touchmove', function(){}, { passive: true });
+            document.addEventListener('touchstart', function(){}, { passive: true });
+            
+            // Monkey-patch addEventListener to force passive on touch events
+            // This is the nuclear option that ensures NO library can block touch scrolling
+            var origAdd = EventTarget.prototype.addEventListener;
+            EventTarget.prototype.addEventListener = function(type, fn, opts) {
+                if (type === 'touchmove' || type === 'touchstart') {
+                    if (typeof opts === 'object') {
+                        opts.passive = true;
+                    } else if (typeof opts === 'boolean' || opts === undefined) {
+                        opts = { capture: !!opts, passive: true };
+                    }
+                }
+                return origAdd.call(this, type, fn, opts);
+            };
+            
+            // Also ensure html/body never get overflow:hidden from JS
+            var observer = new MutationObserver(function(mutations) {
+                var html = document.documentElement;
+                var body = document.body;
+                if (html && html.style.overflow === 'hidden') html.style.overflow = '';
+                if (body && body.style.overflow === 'hidden') body.style.overflow = '';
+                if (html && html.style.overflowY === 'hidden') html.style.overflowY = '';
+                if (body && body.style.overflowY === 'hidden') body.style.overflowY = '';
+            });
+            
+            if (document.body) {
+                observer.observe(document.body, { attributes: true, attributeFilter: ['style'] });
+                observer.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] });
+            } else {
+                document.addEventListener('DOMContentLoaded', function() {
+                    observer.observe(document.body, { attributes: true, attributeFilter: ['style'] });
+                    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] });
+                });
+            }
+        })();
+        </script>
         <!--
       This HTML file is a template.
       If you open it directly in the browser, you will see an empty page.
