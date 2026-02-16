@@ -568,20 +568,6 @@ async def login(data: UserLogin, response: Response):
         else:
             raise HTTPException(status_code=403, detail=f"Your account has been suspended indefinitely. Reason: {user.get('suspension_reason', 'N/A')}")
     
-    # Check email verification status
-    # Existing users (registered before email verification was added) are grandfathered in
-    email_verified = user.get("email_verified", True)  # Default True for existing users
-    
-    if not email_verified:
-        # Still issue a token so they can access verification-related endpoints
-        token = create_token(user["user_id"])
-        return {
-            "token": token,
-            "user": {**{k: v for k, v in user.items() if k != "password_hash"}, "email_verified": False},
-            "email_verified": False,
-            "message": "Please verify your email address to access all features."
-        }
-    
     token = create_token(user["user_id"])
     response.set_cookie(
         key="session_token",
