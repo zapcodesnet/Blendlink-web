@@ -69,9 +69,6 @@ export default function Register() {
     await submitRegistration();
   };
 
-  const [registrationComplete, setRegistrationComplete] = useState(false);
-  const [registeredEmail, setRegisteredEmail] = useState("");
-
   const submitRegistration = async () => {
     setLoading(true);
     try {
@@ -84,15 +81,9 @@ export default function Register() {
         disclaimer_accepted: true,
       });
       
-      // Show verification confirmation screen
-      if (response.email_verified === false) {
-        setRegisteredEmail(form.email);
-        setRegistrationComplete(true);
-      } else {
-        const bonus = response.bl_coins_bonus || 50000;
-        toast.success(`Account created! You earned ${bonus.toLocaleString()} BL Coins!`);
-        navigate("/feed");
-      }
+      const bonus = response.bl_coins_bonus || 50000;
+      toast.success(`Account created! You earned ${bonus.toLocaleString()} BL Coins!`);
+      navigate("/profile");
     } catch (error) {
       toast.error(error.message || "Registration failed");
     } finally {
