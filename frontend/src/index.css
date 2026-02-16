@@ -1164,553 +1164,67 @@ a,
   animation-duration: 0.5s !important;
 }
 
+
 /* ==============================================
-   LANDING PAGE SCROLL FIX - BULLETPROOF SOLUTION
+   UNIVERSAL SCROLL FIX - CLEAN MINIMAL APPROACH
    ==============================================
-   This is a dedicated fix for the landing page scroll issue.
-   The key principles:
-   1. The container must be the scroll parent
-   2. No fixed/sticky elements can block touch
-   3. All touch events pass through to browser
+   REPLACES all previous scroll fix versions (v3-v6).
+   Principle: LESS IS MORE. Remove conflicting rules.
+   Let the browser's default scroll behavior work.
+   Only override what's absolutely necessary.
 */
 
-.landing-page-scroll-container {
-  /* Make this the scroll container */
-  min-height: 100vh;
-  min-height: 100dvh; /* Dynamic viewport height for mobile */
-  width: 100%;
-  background: hsl(var(--background));
-  
-  /* CRITICAL: Enable scrolling */
-  overflow-x: hidden !important;
-  overflow-y: scroll !important;
-  -webkit-overflow-scrolling: touch !important;
-  
-  /* CRITICAL: Allow touch to scroll - use auto for maximum compatibility */
-  touch-action: manipulation !important;
-  
-  /* Ensure smooth momentum scrolling on iOS */
-  scroll-behavior: auto;
-  overscroll-behavior-y: auto;
-  
-  /* Prevent any transform or will-change that could create new stacking context */
-  transform: none !important;
-  will-change: auto !important;
-  
-  /* Ensure no height constraint blocks scrolling */
-  height: auto !important;
-  max-height: none !important;
-}
-
-/* Reset touch-action on all children to allow inheritance */
-.landing-page-scroll-container *:not(button):not(a):not([role="button"]):not(input):not(select):not(textarea) {
-  touch-action: manipulation !important;
-}
-
-/* Only buttons should capture taps - use manipulation instead of none */
-.landing-page-scroll-container button,
-.landing-page-scroll-container a,
-.landing-page-scroll-container [role="button"],
-.landing-page-scroll-container input,
-.landing-page-scroll-container select,
-.landing-page-scroll-container textarea {
-  touch-action: manipulation !important;
-}
-
-/* Images MUST not block scroll - this is critical */
-.landing-page-scroll-container img,
-.landing-page-scroll-container video,
-.landing-page-scroll-container svg,
-.landing-page-scroll-container picture {
-  pointer-events: none !important;
-  touch-action: manipulation !important;
-  -webkit-user-drag: none !important;
-  user-select: none !important;
-}
-
-/* Ensure the sticky header doesn't break scrolling on iOS */
-.landing-page-scroll-container header.sticky,
-.landing-page-scroll-container .sticky,
-.marketplace-scroll-container header.sticky,
-.marketplace-scroll-container .sticky,
-.minted-photos-scroll-container header.sticky,
-.minted-photos-scroll-container .sticky,
-.photo-game-scroll-container header.sticky,
-.photo-game-scroll-container .sticky {
-  touch-action: manipulation !important;
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-}
-
-/* ==============================================
-   MARKETPLACE PAGE SCROLL FIX
-   ============================================== */
-.marketplace-scroll-container {
-  min-height: 100vh;
-  min-height: 100dvh;
-  width: 100%;
-  background: hsl(var(--background));
-  padding-bottom: 5rem;
-  overflow-x: hidden !important;
-  overflow-y: scroll !important;
-  -webkit-overflow-scrolling: touch !important;
-  touch-action: manipulation !important;
-  transform: none !important;
-  will-change: auto !important;
-}
-
-.marketplace-scroll-container *:not(button):not(a):not([role="button"]):not(input):not(select):not(textarea) {
-  touch-action: manipulation !important;
-}
-
-.marketplace-scroll-container button,
-.marketplace-scroll-container a,
-.marketplace-scroll-container [role="button"],
-.marketplace-scroll-container input {
-  touch-action: manipulation !important;
-}
-
-.marketplace-scroll-container img,
-.marketplace-scroll-container video,
-.marketplace-scroll-container svg {
-  pointer-events: none !important;
-  touch-action: manipulation !important;
-  -webkit-user-drag: none !important;
-  user-select: none !important;
-}
-
-/* ==============================================
-   MINTED PHOTOS PAGE SCROLL FIX
-   ============================================== */
-.minted-photos-scroll-container {
-  min-height: 100vh;
-  min-height: 100dvh;
-  width: 100%;
-  background: rgb(17 24 39);
-  padding-bottom: 6rem;
-  /* SCROLL FIX v6: Let body scroll instead of creating inner scroll container */
-  overflow: visible !important;
-  -webkit-overflow-scrolling: touch !important;
-  touch-action: manipulation !important;
-}
-
-/* ALL elements inside container must allow touch passthrough */
-.minted-photos-scroll-container * {
-  touch-action: manipulation !important;
-}
-
-/* Cards and images should not block scrolling */
-.minted-photos-scroll-container img,
-.minted-photos-scroll-container video {
-  pointer-events: none !important;
-  touch-action: manipulation !important;
-  user-select: none !important;
-  -webkit-user-select: none !important;
-  -webkit-touch-callout: none !important;
-}
-
-/* ==============================================
-   PHOTO GAME PAGE SCROLL FIX
-   ============================================== */
+/* 1. All page wrapper classes - just ensure they don't block scroll */
+.landing-page-scroll-container,
+.marketplace-scroll-container,
+.minted-photos-scroll-container,
 .photo-game-scroll-container {
   min-height: 100vh;
   min-height: 100dvh;
-  width: 100%;
-  background: rgb(17 24 39);
-  padding-bottom: 6rem;
-  /* SCROLL FIX v6: Let body scroll instead of creating inner scroll container */
   overflow: visible !important;
-  -webkit-overflow-scrolling: touch !important;
+  touch-action: auto !important;
+  transform: none !important;
+  will-change: auto !important;
+}
+
+/* 2. Universal: ALL elements allow vertical touch pan */
+*:not(input):not(textarea):not(select) {
+  touch-action: pan-y pan-x pinch-zoom !important;
+}
+
+/* 3. Buttons/interactive: use manipulation for responsiveness */
+button, a, [role="button"], input, textarea, select {
   touch-action: manipulation !important;
 }
 
-/* ALL elements inside container must allow touch passthrough */
-.photo-game-scroll-container * {
-  touch-action: manipulation !important;
-}
-
-/* Cards and images should not block scrolling */
-.photo-game-scroll-container img,
-.photo-game-scroll-container video {
-  pointer-events: none !important;
-  touch-action: manipulation !important;
-  user-select: none !important;
-  -webkit-user-select: none !important;
-  -webkit-touch-callout: none !important;
-}
-
-.photo-game-scroll-container button,
-.photo-game-scroll-container a,
-.photo-game-scroll-container [role="button"],
-.photo-game-scroll-container input {
-  touch-action: manipulation !important;
-}
-
-.photo-game-scroll-container img,
-.photo-game-scroll-container video,
-.photo-game-scroll-container svg {
-  pointer-events: none !important;
-  touch-action: manipulation !important;
-  -webkit-user-drag: none !important;
-  user-select: none !important;
-}
-
-/* ==============================================
-   GLOBAL SCROLLING FIX v5 - SINGLE FINGER FIX
-   ============================================== 
-   
-   CRITICAL: The difference between single-finger and two-finger scrolling
-   is that browsers may interpret single-finger as a potential tap/click.
-   
-   SOLUTION: Use touch-action: manipulation (NOT auto) to tell the browser
-   "this element only supports vertical panning - handle it immediately,
-   don't wait to see if it's a tap"
-   
-   RULES:
-   1. Cards and all children: touch-action: manipulation
-   2. Only interactive buttons: touch-action: manipulation
-   3. Images: pointer-events: none (pass through)
-   4. No transform that creates new stacking context should block touch
-*/
-
-/* Root scrolling setup */
-html {
-  overflow-x: hidden !important;
-  overflow-y: scroll !important;
-  -webkit-overflow-scrolling: touch !important;
-  touch-action: manipulation !important;
-  height: auto !important;
-}
-
-body {
-  overflow-x: hidden !important;
-  overflow-y: scroll !important;
-  -webkit-overflow-scrolling: touch !important;
-  overscroll-behavior-y: auto !important;
-  touch-action: manipulation !important;
-  min-height: 100vh;
-  min-height: 100dvh;
-}
-
-/* Make all containers scroll-friendly */
-#root {
-  touch-action: manipulation !important;
-  overflow: visible !important;
-  height: auto !important;
-  min-height: 100vh;
-  min-height: 100dvh;
-}
-
-main, .min-h-screen, section, article {
-  touch-action: manipulation !important;
-}
-
-/* CRITICAL: Images must not capture touch events */
-img, video, svg, picture, canvas {
-  pointer-events: none !important;
-  touch-action: manipulation !important;
-  user-select: none !important;
-  -webkit-user-drag: none !important;
-}
-
-/* Re-enable pointer events on images that need interaction */
-img[data-interactive="true"],
-video[controls],
-canvas[data-interactive="true"] {
+/* 4. Images: never block scroll */
+img, video, svg, canvas, picture {
+  touch-action: pan-y pan-x !important;
+  -webkit-user-drag: none;
   pointer-events: auto;
 }
 
-/* Grid and flex containers - allow vertical scroll */
-.grid, .flex, .flex-wrap {
-  touch-action: manipulation !important;
+/* 5. Framer-motion animated elements: allow scroll passthrough */
+[style*="transform"],
+[style*="opacity"],
+[class*="animate"] {
+  touch-action: pan-y pan-x !important;
 }
 
-/* ==============================================
-   UNIFIED PHOTO CARD - SINGLE FINGER SCROLL FIX v5
-   ==============================================
-   CRITICAL: Use pan-y to enable immediate single-finger scrolling
-   The browser won't wait to determine if it's a tap vs scroll
-*/
-
-/* Photo card wrapper - MUST use pan-y for single finger scroll */
-[data-testid^="photo-card-"] {
-  touch-action: manipulation !important;
+/* 6. Sticky headers: don't block scroll */
+.sticky, [class*="sticky"] {
+  touch-action: pan-y pan-x !important;
 }
 
-/* All card children - pan-y for scroll passthrough */
-[data-testid^="photo-card-"] * {
-  touch-action: manipulation !important;
-}
-
-/* ONLY buttons should have manipulation (tap response without scroll delay) */
-[data-testid^="photo-card-"] button,
-[data-testid^="photo-card-"] a,
-[data-testid^="photo-card-"] [role="button"] {
-  touch-action: manipulation !important;
-}
-
-/* Images are completely non-interactive */
-[data-testid^="photo-card-"] img {
-  pointer-events: none !important;
-  touch-action: manipulation !important;
-}
-
-/* ONLY interactive controls should block pan (use manipulation) */
-button, 
-a, 
-input, 
-textarea, 
-select, 
-[role="button"],
-[data-testid*="btn"],
-[data-testid*="button"] {
-  touch-action: manipulation;
-}
-
-/* Scrollable containers (modals with overflow-y-auto) */
-.overflow-y-auto,
-.overflow-y-scroll,
-[style*="overflow-y: auto"],
-[style*="overflow-y: scroll"] {
-  -webkit-overflow-scrolling: touch;
-  touch-action: manipulation;
-}
-
-/* Horizontal scrollers need pan-x but also pan-y for page scroll */
-.overflow-x-auto,
-.overflow-x-scroll,
-.hide-scrollbar {
-  touch-action: pan-x pan-y;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* ==============================================
-   UNIFIED PHOTO CARD CSS ANIMATIONS
-   (Replaces framer-motion to fix touch scrolling)
-   ============================================== */
-
-/* Golden sparkle animation for Level 60 frames */
-@keyframes golden-sparkle-float {
-  0%, 100% {
-    transform: translateY(0) scale(1);
-    opacity: 0;
-  }
-  20% {
-    opacity: 1;
-  }
-  50% {
-    transform: translateY(-50px) scale(1.2);
-    opacity: 1;
-  }
-  80% {
-    opacity: 1;
-  }
-}
-
-.golden-sparkle {
-  animation: golden-sparkle-float 3s ease-in-out infinite;
-}
-
-/* Golden frame pulse animation */
-@keyframes golden-pulse {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(250,204,21,0.4), inset 0 0 15px rgba(250,204,21,0.2);
-  }
-  50% {
-    box-shadow: 0 0 35px rgba(250,204,21,0.6), inset 0 0 25px rgba(250,204,21,0.3);
-  }
-}
-
-.golden-pulse-border {
-  animation: golden-pulse 2s ease-in-out infinite;
-}
-
-/* XP bar fill transition */
-.xp-bar-fill {
-  transition: width 0.8s ease-out;
-}
-
-/* XP bar shimmer effect */
-@keyframes xp-shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-.xp-shimmer {
-  animation: xp-shimmer 2s linear infinite;
-}
-
-/* Seniority MAX glow animation */
-@keyframes seniority-glow {
-  0%, 100% {
-    text-shadow: 0 0 4px rgba(250,204,21,0.4);
-  }
-  50% {
-    text-shadow: 0 0 12px rgba(250,204,21,0.8);
-  }
-}
-
-.seniority-glow {
-  animation: seniority-glow 2s ease-in-out infinite;
-}
-
-/* Card flip animation using pure CSS (no framer-motion) */
-.photo-card-flipper {
-  transition: transform 0.5s ease-in-out;
-  transform-style: preserve-3d;
-  /* CRITICAL: pan-y allows single-finger vertical scrolling */
-  touch-action: manipulation !important;
-}
-
-.photo-card-flipper.flipped {
-  transform: rotateY(180deg);
-}
-
-.photo-card-front,
-.photo-card-back {
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  /* CRITICAL: pan-y on card faces for scroll passthrough */
-  touch-action: manipulation !important;
-}
-
-.photo-card-back {
-  transform: rotateY(180deg);
-}
-
-/* ==============================================
-   UNIFIED PHOTO CARD - SINGLE FINGER TOUCH v5
-   ==============================================
-   Ensure all card elements allow vertical scrolling
-*/
-
-/* Photo card wrapper - pan-y for single finger */
-[data-testid^="photo-card-"] {
-  touch-action: manipulation !important;
-}
-
-/* All descendants - pan-y */
-[data-testid^="photo-card-"] * {
-  touch-action: manipulation !important;
-}
-
-/* Only buttons need manipulation for tap without delay */
-[data-testid^="photo-card-"] button,
-[data-testid^="photo-card-"] a,
-[data-testid^="photo-card-"] [role="button"] {
-  touch-action: manipulation !important;
-}
-
-/* Images completely non-interactive */
-[data-testid^="photo-card-"] img {
-  pointer-events: none !important;
-  touch-action: manipulation !important;
-}
-
-/* Perspective container - pan-y */
+/* 7. Photo cards specifically */
 .perspective-1000,
-[class*="perspective"] {
-  touch-action: manipulation !important;
-}
-
-/* Golden frame wrapper - pan-y */
+[class*="perspective"],
 .golden-frame-container,
 .golden-frame-container * {
+  touch-action: pan-y pan-x !important;
+}
+
+/* 8. Game arena - only manipulation needed for tapping */
+.tapping-arena, .tap-zone {
   touch-action: manipulation !important;
 }
-
-
-/* ==================== GLOBAL TOUCH SCROLL FIX v4 ==================== */
-/* Ensures single-finger vertical scrolling works on ALL pages and cards */
-
-/* Root scroll containers must allow vertical scroll */
-#root,
-#root > div,
-.pb-20,
-.min-h-screen,
-main {
-  overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch !important;
-  touch-action: pan-y pinch-zoom !important;
-}
-
-/* ALL card-like elements must allow vertical scroll passthrough */
-.bg-card,
-.bg-white,
-.rounded-xl,
-.rounded-2xl,
-.rounded-lg,
-[class*="card"],
-[class*="Card"],
-.border,
-.shadow,
-.shadow-sm,
-.shadow-md,
-.shadow-lg {
-  touch-action: pan-y !important;
-}
-
-/* Grid and flex containers that hold cards */
-.grid,
-[class*="grid-cols"],
-.flex,
-.flex-col,
-.flex-wrap,
-.space-y-2,
-.space-y-3,
-.space-y-4,
-.space-y-6,
-.gap-2,
-.gap-3,
-.gap-4,
-.gap-6 {
-  touch-action: pan-y !important;
-}
-
-/* Images and media must not block scroll */
-img,
-video,
-picture,
-svg,
-canvas,
-[class*="thumbnail"],
-[class*="photo"],
-[class*="minted"] {
-  touch-action: pan-y !important;
-  -webkit-user-drag: none;
-}
-
-/* Admin panel scroll fix */
-[class*="admin"],
-[class*="Admin"],
-.overflow-auto,
-.overflow-y-auto,
-.overflow-y-scroll {
-  -webkit-overflow-scrolling: touch !important;
-  touch-action: pan-y pinch-zoom !important;
-}
-
-/* Ensure motion/framer-motion animated divs don't block scroll */
-[style*="transform"],
-[style*="opacity"] {
-  touch-action: pan-y !important;
-}
-
-/* Wallet page sections */
-[data-testid*="section"],
-[data-testid*="membership"],
-[data-testid*="topup"],
-[data-testid*="withdraw"] {
-  touch-action: pan-y !important;
-}
-
-/* Subscription tier cards */
-[data-testid*="tier-card"],
-[data-testid*="subscribe"] {
-  touch-action: pan-y !important;
-}
-
