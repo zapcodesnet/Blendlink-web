@@ -12,7 +12,6 @@
 
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { toast } from "sonner";
 import api from "../services/api";
 import { Eye, EyeOff, Mail, Lock, User, Check } from "lucide-react";
