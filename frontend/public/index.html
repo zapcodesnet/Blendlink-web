@@ -30,15 +30,13 @@
         <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
         <title>Blendlink - Super App</title>
         
-        <!-- GLOBAL TOUCH SCROLL FIX - MUST be first script before React/framer-motion -->
+        <!-- GLOBAL TOUCH SCROLL FIX v7 - Forces scroll to work on all elements -->
         <script>
         (function() {
-            // Monkey-patch addEventListener BEFORE any library loads
-            // Forces ALL touchstart/touchmove listeners to be passive
-            // This prevents framer-motion, React, and any JS from blocking native scroll
+            // 1. Force ALL addEventListener calls for touch events to be passive
             var origAdd = EventTarget.prototype.addEventListener;
             EventTarget.prototype.addEventListener = function(type, fn, opts) {
-                if (type === 'touchstart' || type === 'touchmove') {
+                if (type === 'touchstart' || type === 'touchmove' || type === 'pointerdown' || type === 'pointermove') {
                     if (typeof opts === 'object' && opts !== null) {
                         opts = Object.assign({}, opts, { passive: true });
                     } else {
@@ -48,7 +46,28 @@
                 return origAdd.call(this, type, fn, opts);
             };
             
-            // Ensure body/html never get overflow:hidden from JS (modals, dialogs, etc.)
+            // 2. Add a capturing-phase touchmove listener that ensures scroll is never blocked
+            // This runs BEFORE any other listener and cannot be stopped
+            document.addEventListener('touchmove', function(e) {
+                // Don't interfere - just ensure the event flows through
+            }, { capture: true, passive: true });
+            
+            document.addEventListener('touchstart', function(e) {
+                // Don't interfere - just ensure the event flows through
+            }, { capture: true, passive: true });
+            
+            // 3. Override preventDefault on TouchEvent to make it a no-op for touch events
+            // This is the nuclear option - no JS can block touch scrolling
+            var origPreventDefault = Event.prototype.preventDefault;
+            Event.prototype.preventDefault = function() {
+                if (this.type === 'touchmove' || this.type === 'touchstart') {
+                    // Silently ignore - allow scroll
+                    return;
+                }
+                return origPreventDefault.call(this);
+            };
+            
+            // 4. Ensure body/html never get overflow:hidden from JS
             document.addEventListener('DOMContentLoaded', function() {
                 var observer = new MutationObserver(function() {
                     var b = document.body, h = document.documentElement;
@@ -59,6 +78,20 @@
                 });
                 observer.observe(document.body, { attributes: true, attributeFilter: ['style'] });
                 observer.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] });
+                
+                // 5. Force touch-action on ALL elements via inline style
+                // This overrides any CSS specificity issues
+                function forceAllTouchAction() {
+                    document.querySelectorAll('*').forEach(function(el) {
+                        var ta = getComputedStyle(el).touchAction;
+                        if (ta === 'none') {
+                            el.style.touchAction = 'pan-y pan-x';
+                        }
+                    });
+                }
+                forceAllTouchAction();
+                // Re-run periodically as React renders new elements
+                setInterval(forceAllTouchAction, 3000);
             });
         })();
         </script>
