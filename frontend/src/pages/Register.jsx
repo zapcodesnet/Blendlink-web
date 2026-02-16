@@ -6,7 +6,6 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import api from "../services/api";
 import { Eye, EyeOff, Mail, Lock, User, UserPlus, Gift, AlertTriangle, CheckCircle2, ArrowLeft, Check } from "lucide-react";
