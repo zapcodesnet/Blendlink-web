@@ -1622,3 +1622,95 @@ select,
 .golden-frame-container * {
   touch-action: manipulation !important;
 }
+
+
+/* ==================== GLOBAL TOUCH SCROLL FIX v4 ==================== */
+/* Ensures single-finger vertical scrolling works on ALL pages and cards */
+
+/* Root scroll containers must allow vertical scroll */
+#root,
+#root > div,
+.pb-20,
+.min-h-screen,
+main {
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pinch-zoom !important;
+}
+
+/* ALL card-like elements must allow vertical scroll passthrough */
+.bg-card,
+.bg-white,
+.rounded-xl,
+.rounded-2xl,
+.rounded-lg,
+[class*="card"],
+[class*="Card"],
+.border,
+.shadow,
+.shadow-sm,
+.shadow-md,
+.shadow-lg {
+  touch-action: pan-y !important;
+}
+
+/* Grid and flex containers that hold cards */
+.grid,
+[class*="grid-cols"],
+.flex,
+.flex-col,
+.flex-wrap,
+.space-y-2,
+.space-y-3,
+.space-y-4,
+.space-y-6,
+.gap-2,
+.gap-3,
+.gap-4,
+.gap-6 {
+  touch-action: pan-y !important;
+}
+
+/* Images and media must not block scroll */
+img,
+video,
+picture,
+svg,
+canvas,
+[class*="thumbnail"],
+[class*="photo"],
+[class*="minted"] {
+  touch-action: pan-y !important;
+  -webkit-user-drag: none;
+}
+
+/* Admin panel scroll fix */
+[class*="admin"],
+[class*="Admin"],
+.overflow-auto,
+.overflow-y-auto,
+.overflow-y-scroll {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pinch-zoom !important;
+}
+
+/* Ensure motion/framer-motion animated divs don't block scroll */
+[style*="transform"],
+[style*="opacity"] {
+  touch-action: pan-y !important;
+}
+
+/* Wallet page sections */
+[data-testid*="section"],
+[data-testid*="membership"],
+[data-testid*="topup"],
+[data-testid*="withdraw"] {
+  touch-action: pan-y !important;
+}
+
+/* Subscription tier cards */
+[data-testid*="tier-card"],
+[data-testid*="subscribe"] {
+  touch-action: pan-y !important;
+}
+
