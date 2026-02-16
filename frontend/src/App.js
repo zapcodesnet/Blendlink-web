@@ -97,7 +97,6 @@ import BottomNav from "./components/BottomNav";
 import BackToGroupFAB from "./components/BackToGroupFAB";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import LanguageSelector from "./components/LanguageSelector";
-import EmailVerificationPending from "./components/EmailVerificationPending";
 import LanguageTour, { useLanguageTour } from "./components/LanguageTour";
 import { getApiUrl } from "./utils/runtimeConfig";
 
