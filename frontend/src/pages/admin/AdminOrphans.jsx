@@ -139,8 +139,8 @@ export default function AdminOrphans() {
   useEffect(() => {
     loadOrphans();
     loadStats();
-    // Also load potential parents on initial load for manual assignment modal
     loadPotentialParents();
+    loadRerunToggle();
   }, [loadOrphans]);
 
   useEffect(() => {
