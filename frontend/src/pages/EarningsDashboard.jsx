@@ -135,7 +135,8 @@ export default function EarningsDashboard() {
           </div>
         </div>
 
-        {/* Referral Code Card */}
+        {/* Referral Code Card - Hidden: content managed elsewhere */}
+        {false && (
         <div className="bg-card rounded-2xl border border-border overflow-hidden">
           <div className="p-4 border-b border-border bg-muted/30">
             <h3 className="font-semibold flex items-center gap-2">
@@ -163,6 +164,7 @@ export default function EarningsDashboard() {
             </p>
           </div>
         </div>
+        )}
 
         {/* Network Stats */}
         <div className="bg-card rounded-2xl border border-border overflow-hidden">
