@@ -708,6 +708,186 @@ async def get_user_orphan_details(
         }
     }
 
+# ============== RE-RUN AUTO-ASSIGN TOGGLE ==============
+
+@admin_orphans_router.get("/rerun-toggle-status")
+async def get_rerun_toggle_status(current_user: dict = Depends(get_current_user)):
+    """Get the current state of the Re-run Auto-Assign toggle"""
+    config = await db.admin_config.find_one({"key": "orphan_rerun_auto_assign"}, {"_id": 0})
+    return {
+        "enabled": config.get("enabled", False) if config else False,
+        "last_changed_by": config.get("last_changed_by") if config else None,
+        "last_changed_at": config.get("last_changed_at") if config else None,
+    }
+
+
+@admin_orphans_router.post("/rerun-toggle")
+async def toggle_rerun_auto_assign(
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """Toggle Re-run Auto-Assign on/off. Restricted to Super Admin, Co-Admin, Moderator."""
+    body = await request.json()
+    enabled = body.get("enabled", False)
+    
+    now = datetime.now(timezone.utc).isoformat()
+    admin_id = current_user.get("user_id", "")
+    admin_name = current_user.get("name", current_user.get("username", ""))
+    
+    await db.admin_config.update_one(
+        {"key": "orphan_rerun_auto_assign"},
+        {"$set": {
+            "key": "orphan_rerun_auto_assign",
+            "enabled": enabled,
+            "last_changed_by": admin_id,
+            "last_changed_by_name": admin_name,
+            "last_changed_at": now,
+        }},
+        upsert=True
+    )
+    
+    # Log the toggle action
+    await db.orphan_admin_logs.insert_one({
+        "action": "toggle_rerun_on" if enabled else "toggle_rerun_off",
+        "admin_id": admin_id,
+        "admin_name": admin_name,
+        "timestamp": now,
+        "orphans_processed": 0,
+    })
+    
+    return {"success": True, "enabled": enabled, "message": f"Re-run Auto-Assign {'enabled' if enabled else 'disabled'}"}
+
+
+@admin_orphans_router.post("/rerun-execute")
+async def execute_rerun_auto_assign(current_user: dict = Depends(get_current_user)):
+    """Execute re-run of auto-assignment for all unassigned orphans. Requires toggle to be ON."""
+    # Check toggle is enabled
+    config = await db.admin_config.find_one({"key": "orphan_rerun_auto_assign"}, {"_id": 0})
+    if not config or not config.get("enabled"):
+        raise HTTPException(status_code=403, detail="Re-run Auto-Assign is currently disabled. Enable the toggle first.")
+    
+    from orphan_assignment_system import batch_auto_assign_orphans
+    result = await batch_auto_assign_orphans(limit=500)
+    
+    now = datetime.now(timezone.utc).isoformat()
+    admin_id = current_user.get("user_id", "")
+    admin_name = current_user.get("name", current_user.get("username", ""))
+    
+    # Log the re-run execution
+    await db.orphan_admin_logs.insert_one({
+        "action": "rerun_executed",
+        "admin_id": admin_id,
+        "admin_name": admin_name,
+        "timestamp": now,
+        "orphans_processed": result.get("total_processed", 0),
+        "successful": result.get("successful", 0),
+        "failed": result.get("failed", 0),
+    })
+    
+    return {
+        "success": True,
+        "result": result,
+        "message": f"Re-run complete: {result.get('successful', 0)} assigned, {result.get('failed', 0)} failed"
+    }
+
+
+# ============== UNASSIGN USER ==============
+
+@admin_orphans_router.post("/unassign/{user_id}")
+async def unassign_orphan(
+    user_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Unassign an orphan from their current upline(s).
+    - Removes L1 and L2 parent links
+    - Stops future commissions to previous uplines
+    - Preserves the orphan's entire downline subtree for future reassignment
+    - Makes the orphan eligible for re-assignment
+    """
+    orphan = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+    if not orphan:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    previous_l1_parent = orphan.get("referred_by")
+    if not previous_l1_parent:
+        raise HTTPException(status_code=400, detail="User has no assigned upline to disconnect")
+    
+    # Find L2 parent (the L1 parent's upline)
+    l1_parent = await db.users.find_one({"user_id": previous_l1_parent}, {"referred_by": 1, "_id": 0})
+    previous_l2_parent = l1_parent.get("referred_by") if l1_parent else None
+    
+    now = datetime.now(timezone.utc).isoformat()
+    admin_id = current_user.get("user_id", "")
+    admin_name = current_user.get("name", current_user.get("username", ""))
+    
+    # Disconnect orphan from L1 parent
+    await db.users.update_one(
+        {"user_id": user_id},
+        {"$set": {
+            "referred_by": None,
+            "is_orphan_assigned": False,
+            "orphan_unassigned_at": now,
+            "orphan_unassigned_by": admin_id,
+            "orphan_previous_l1": previous_l1_parent,
+            "orphan_previous_l2": previous_l2_parent,
+        }}
+    )
+    
+    # Decrement the previous L1 parent's orphan count and direct referral count
+    await db.users.update_one(
+        {"user_id": previous_l1_parent},
+        {"$inc": {"orphans_assigned_count": -1, "direct_referrals": -1}}
+    )
+    
+    # Remove referral relationship records
+    await db.referral_relationships.delete_many({
+        "referred_id": user_id,
+        "$or": [
+            {"referrer_id": previous_l1_parent},
+            {"referrer_id": previous_l2_parent} if previous_l2_parent else {"referrer_id": "NONE"}
+        ]
+    })
+    
+    # If L2 parent exists, decrement their indirect referral count
+    if previous_l2_parent:
+        await db.users.update_one(
+            {"user_id": previous_l2_parent},
+            {"$inc": {"indirect_referrals": -1}}
+        )
+    
+    # Log the unassignment
+    await db.orphan_admin_logs.insert_one({
+        "action": "unassign_user",
+        "admin_id": admin_id,
+        "admin_name": admin_name,
+        "timestamp": now,
+        "orphan_user_id": user_id,
+        "previous_l1_parent": previous_l1_parent,
+        "previous_l2_parent": previous_l2_parent,
+        "downline_preserved": True,
+        "note": "Full downline subtree preserved for future reassignment",
+    })
+    
+    # Log in main assignment log too
+    await db.orphan_assignments.insert_one({
+        "orphan_id": user_id,
+        "action": "unassigned",
+        "previous_assigned_to": previous_l1_parent,
+        "previous_l2_parent": previous_l2_parent,
+        "unassigned_by": admin_id,
+        "created_at": now,
+    })
+    
+    return {
+        "success": True,
+        "message": f"User {user_id} unassigned from upline. Downline subtree preserved.",
+        "previous_l1_parent": previous_l1_parent,
+        "previous_l2_parent": previous_l2_parent,
+        "downline_preserved": True,
+    }
+
+
 # ============== DIAMOND LEADER MANAGEMENT ==============
 
 @admin_diamonds_router.get("")
