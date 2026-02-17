@@ -492,20 +492,20 @@ export default function Landing() {
                   <Coins className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                 </div>
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
-                  Earn <span className="text-green-500">Real Cash</span> and <span className="bl-coin-text">BL Coins</span>
+                  Earn <span className="text-green-500">Real Cash</span> & <span className="bl-coin-text">BL Coins</span> Rewards
                 </h2>
                 <p className="text-muted-foreground mb-4 sm:mb-6 text-sm sm:text-base">
-                  Get rewarded for everything you do. Sell in Marketplace to earn real cash. 
-                  Post content, like, share, comment, create page, invite friends, play games, 
-                  and complete tasks to earn BL Coins you can spend in-app.
+                  Earn real cash selling in marketplace and member's business page. 
+                  Get rewarded for everything you do. Post content, like, share, comment, 
+                  invite friends, play games, and complete tasks to earn BL Coins you can spend in-app.
                 </p>
                 <ul className="space-y-2 sm:space-y-3">
                   {[
                     "50,000 BL Coins welcome bonus",
-                    "50,000 BL Coins when you invite a friend and joined",
-                    "2,000+ BL Coins daily login rewards",
-                    "3% - 4% per Level 1 referral",
-                    "1% - 2% per Level 2 referral"
+                    "50,000 BL Coins when you invite and joined",
+                    "2,000+ BL Coins free daily claim",
+                    "2% - 4% commission from direct referral sales",
+                    "1% - 3% commission from indirect referral sales"
                   ].map((item, i) => (
                     <li key={i} className="flex items-center gap-2 sm:gap-3 text-sm sm:text-base">
                       <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
