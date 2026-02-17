@@ -1,15 +1,14 @@
 # BlendLink Platform - PRD
 
-## Latest: Orphans Page Update (Feb 17, 2026)
+## Latest: Landing Page Update (Feb 17, 2026)
 
-### Changes (confined to /admin/orphans only):
-- Blocked self-assignment for newly registered orphans
-- Added Re-run Auto-Assign toggle (restricted to Super Admin, Authorized Co-Admin, Authorized Moderator)
-- Added Unassign User action with complete upline disconnection, commission stoppage, downline preservation, and real-time My Team page updates
+### Changes to Landing.jsx only:
+1. Removed "Social, Shop, Play & Earn Rewards" hero section entirely
+2. "Everything You Need" section preserved 100% unchanged
+3. Referrals card text: "No recruiting needed. We auto-assign your upline sponsor for you & earn together"
+4. Earn section: Title → "Earn Real Cash & BL Coins Rewards", updated bullet points with exact copy
 
-### Test Results:
-- Backend: 14/15 passed (1 expected skip)
-- Report: /app/test_reports/iteration_172.json
+### No other pages, backend, mobile app, or features touched.
 
 ---
 *Last Updated: February 17, 2026*
