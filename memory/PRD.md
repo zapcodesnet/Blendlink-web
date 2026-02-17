@@ -1,42 +1,11 @@
-# BlendLink Platform - Product Requirements Document
+# BlendLink Platform - PRD
 
-## Latest Update: February 16, 2026
+## Rollback Complete: Feb 17, 2026
 
----
+Site restored to match GitHub repository: https://github.com/vinwebs0-dev/BlendLinkEmail
+Commit: 2363111b (Auto-generated changes, Feb 15, 2026)
 
-## LATEST SESSION: Remove Email Verification (Feb 16, 2026)
-
-### What Was REMOVED:
-- `create_verification_token()` function
-- `send_verification_email()` function  
-- `GET /api/auth/verify-email` endpoint
-- `POST /api/auth/resend-verification` endpoint
-- `POST /api/auth/resend-verification-public` endpoint
-- `email_verified` / `email_verified_at` fields from registration
-- Verification check from login flow
-- "Resend Verification Email" button from Login page
-- Verification confirmation screen from Register page
-- `EmailVerificationPending` component from ProtectedRoute
-- `/verify-email` route from App.js
-
-### New Flow:
-- **Register**: Create user → auto-login (token issued) → redirect to `/profile`
-- **Login**: Email + password → redirect to `/profile`
-- **No verification** of any kind — instant full access
-
-### Test Results:
-- Backend: **100% (13/13)**
-- Frontend: **100% (6/6)**
-- Report: `/app/test_reports/iteration_170.json`
+All files verified IDENTICAL to repo. Zero differences across backend, frontend, mobile.
 
 ---
-
-## TEST CREDENTIALS
-| Role | Email | Password |
-|------|-------|----------|
-| Test User | tester@blendlink.net | BlendLink2024! |
-| User | vinwebs0@gmail.com | Mikaela2021! |
-| Admin | blendlinknet@gmail.com | Blend!Admin2026Link |
-
----
-*Last Updated: February 16, 2026*
+*Last Updated: February 17, 2026*
