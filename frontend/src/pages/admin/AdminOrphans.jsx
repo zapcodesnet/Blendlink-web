@@ -590,10 +590,26 @@ export default function AdminOrphans() {
                       
                       <div className="flex items-center gap-2">
                         {orphan.is_orphan_assigned ? (
-                          <div className="text-right">
-                            <p className="text-sm text-slate-400">Assigned to:</p>
-                            <p className="text-white font-medium">{orphan.assigned_to_username || 'Unknown'}</p>
-                            <p className="text-xs text-slate-500">{formatTimeAgo(orphan.orphan_assigned_at)}</p>
+                          <div className="flex items-center gap-3">
+                            <div className="text-right">
+                              <p className="text-sm text-slate-400">Assigned to:</p>
+                              <p className="text-white font-medium">{orphan.assigned_to_username || 'Unknown'}</p>
+                              <p className="text-xs text-slate-500">{formatTimeAgo(orphan.orphan_assigned_at)}</p>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleUnassignUser(orphan.user_id, orphan.username)}
+                              disabled={unassigning === orphan.user_id}
+                              className="border-red-500/50 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                              data-testid={`unassign-${orphan.user_id}`}
+                            >
+                              {unassigning === orphan.user_id ? (
+                                <RefreshCw className="w-3 h-3 animate-spin" />
+                              ) : (
+                                <><UserMinus className="w-3 h-3 mr-1" /> Unassign</>
+                              )}
+                            </Button>
                           </div>
                         ) : (
                           <>
