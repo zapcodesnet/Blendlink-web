@@ -11,7 +11,7 @@ Enhanced with:
 - Batch auto-assignment
 """
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request
 from datetime import datetime, timezone, timedelta
 from typing import Optional, List, Dict, Any
 import uuid
