@@ -77,6 +77,9 @@ export default function AdminOrphans() {
   const [auditLogs, setAuditLogs] = useState([]);
   const [batchRunning, setBatchRunning] = useState(false);
   const [batchResults, setBatchResults] = useState(null);
+  const [rerunEnabled, setRerunEnabled] = useState(false);
+  const [rerunLoading, setRerunLoading] = useState(false);
+  const [unassigning, setUnassigning] = useState(null);
   const [activeTab, setActiveTab] = useState('queue'); // 'queue', 'parents', 'audit'
   
   const [stats, setStats] = useState({
