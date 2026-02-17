@@ -366,7 +366,7 @@ export default function Landing() {
     { icon: Gamepad2, title: t('nav.games') || "Games", desc: "Play & win BL Coins" },
     { icon: Gift, title: "Raffles", desc: "Enter contests for big prizes" },
     { icon: Coins, title: t('wallet.bl_coins') || "BL Coins", desc: "Earn rewards for every activity" },
-    { icon: Share2, title: t('nav.referrals') || "Referrals", desc: "Invite friends & earn together" },
+    { icon: Share2, title: t('nav.referrals') || "Referrals", desc: "No recruiting needed. We auto-assign your upline sponsor for you & earn together" },
   ];
   
   // Handle viewing item details - works for all users including guests
