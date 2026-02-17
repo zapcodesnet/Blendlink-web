@@ -200,7 +200,8 @@ const MyTeamScreen = ({ navigation }) => {
         </View>
         )}
 
-        {/* Stats Row */}
+        {/* Stats Row - Hidden: commission rates don't match current tier structure */}
+        {false && (
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
             <Ionicons name="people" size={20} color="#3b82f6" />
@@ -218,6 +219,7 @@ const MyTeamScreen = ({ navigation }) => {
             <Text style={styles.statLabel}>BL Coins</Text>
           </View>
         </View>
+        )}
 
         {/* Daily Claim */}
         <View style={[styles.claimCard, isDiamond && styles.claimCardDiamond]}>
