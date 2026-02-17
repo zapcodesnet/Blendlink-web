@@ -1,14 +1,17 @@
 # BlendLink Platform - PRD
 
-## Latest: Landing Page Update (Feb 17, 2026)
+## Latest: Earnings Page Section Hiding (Feb 17, 2026)
 
-### Changes to Landing.jsx only:
-1. Removed "Social, Shop, Play & Earn Rewards" hero section entirely
-2. "Everything You Need" section preserved 100% unchanged
-3. Referrals card text: "No recruiting needed. We auto-assign your upline sponsor for you & earn together"
-4. Earn section: Title → "Earn Real Cash & BL Coins Rewards", updated bullet points with exact copy
+### 3 sections hidden on Earnings/My Team screens (web + mobile sync):
+1. **Referral Code card** — Hidden via `{false && (...)}` in both EarningsDashboard.jsx and MyTeamScreen.js
+2. **Your Network / Stats Row** — Hidden: commission rates displayed don't match current tier structure
+3. **Diamond Leader Status** — Hidden via `{false && (...)}` in both files
 
-### No other pages, backend, mobile app, or features touched.
+### Files changed (ONLY these 2):
+- `frontend/src/pages/EarningsDashboard.jsx` — 3x `{false && (...)}`
+- `mobile/src/screens/MyTeamScreen.js` — 3x `{false && (...)}`
+
+### No other pages, backend, APIs, or functionality touched.
 
 ---
 *Last Updated: February 17, 2026*
