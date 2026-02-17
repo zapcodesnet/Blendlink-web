@@ -194,14 +194,20 @@ export default function AdminOrphans() {
   };
 
   const runBatchAssignment = async () => {
+    if (!rerunEnabled) {
+      toast.error("Re-run Auto-Assign is disabled. Enable the toggle first.");
+      return;
+    }
+    if (!confirm(`Are you sure you want to enable Re-run Auto-Assign and process ${stats.unassigned} unassigned orphans now?`)) return;
+    
     setBatchRunning(true);
     setBatchResults(null);
     try {
-      const data = await safeFetch(`${API_BASE}/api/admin/orphans/batch-assign?limit=100`, {
+      const data = await safeFetch(`${API_BASE}/api/admin/orphans/rerun-execute`, {
         method: 'POST'
       });
-      setBatchResults(data);
-      toast.success(`Batch complete: ${data.successful}/${data.total_processed} assigned`);
+      setBatchResults(data.result || data);
+      toast.success(data.message || `Batch complete`);
       loadOrphans();
       loadStats();
       loadPotentialParents();
@@ -210,6 +216,53 @@ export default function AdminOrphans() {
       toast.error(error.message || "Batch assignment failed");
     } finally {
       setBatchRunning(false);
+    }
+  };
+
+  const loadRerunToggle = async () => {
+    try {
+      const data = await safeFetch(`${API_BASE}/api/admin/orphans/rerun-toggle-status`);
+      setRerunEnabled(data.enabled || false);
+    } catch (error) {
+      console.error("Failed to load rerun toggle:", error);
+    }
+  };
+
+  const toggleRerun = async (newState) => {
+    const action = newState ? "enable" : "disable";
+    if (!confirm(`Are you sure you want to ${action} Re-run Auto-Assign?`)) return;
+    
+    setRerunLoading(true);
+    try {
+      const data = await safeFetch(`${API_BASE}/api/admin/orphans/rerun-toggle`, {
+        method: 'POST',
+        body: JSON.stringify({ enabled: newState })
+      });
+      setRerunEnabled(data.enabled);
+      toast.success(data.message);
+    } catch (error) {
+      toast.error(error.message || "Failed to toggle");
+    } finally {
+      setRerunLoading(false);
+    }
+  };
+
+  const handleUnassignUser = async (userId, username) => {
+    if (!confirm(`Are you sure you want to unassign ${username || userId} from their current upline(s)? This action cannot be undone.`)) return;
+    
+    setUnassigning(userId);
+    try {
+      const data = await safeFetch(`${API_BASE}/api/admin/orphans/unassign/${userId}`, {
+        method: 'POST'
+      });
+      toast.success(data.message || "User unassigned successfully");
+      loadOrphans();
+      loadStats();
+      loadAuditLog();
+    } catch (error) {
+      toast.error(error.message || "Failed to unassign user");
+    } finally {
+      setUnassigning(null);
     }
   };
 
