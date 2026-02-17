@@ -216,7 +216,8 @@ export default function EarningsDashboard() {
         </div>
         )}
 
-        {/* Diamond Leader Progress */}
+        {/* Diamond Leader Progress - Hidden */}
+        {false && (
         <div className="bg-gradient-to-br from-amber-500/10 to-yellow-500/5 rounded-2xl border border-amber-500/20 overflow-hidden">
           <div className="p-4 border-b border-amber-500/20 bg-amber-500/5">
             <h3 className="font-semibold flex items-center gap-2">
@@ -275,6 +276,7 @@ export default function EarningsDashboard() {
             )}
           </div>
         </div>
+        )}
 
         {/* Recent Commissions */}
         <div className="bg-card rounded-2xl border border-border overflow-hidden">
