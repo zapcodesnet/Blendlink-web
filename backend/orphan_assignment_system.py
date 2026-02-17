@@ -482,7 +482,7 @@ async def assign_orphan_to_recipient(
     )
 
 async def auto_assign_single_orphan(orphan_user_id: str) -> AssignmentResult:
-    """Auto-assign a single orphan to the best eligible recipient"""
+    """Auto-assign a single orphan to the best eligible recipient (never themselves)"""
     recipient = await find_eligible_recipient()
     
     if not recipient:
@@ -491,6 +491,22 @@ async def auto_assign_single_orphan(orphan_user_id: str) -> AssignmentResult:
             orphan_user_id=orphan_user_id,
             message="No eligible recipients available in any tier"
         )
+    
+    # HARD BLOCK: Skip self-assignment and try next eligible
+    if recipient["user_id"] == orphan_user_id:
+        logger.warning(f"Self-assignment blocked for orphan {orphan_user_id}, finding next recipient")
+        # Try to find another recipient (up to 10 attempts)
+        for _ in range(10):
+            next_recipient = await find_eligible_recipient()
+            if next_recipient and next_recipient["user_id"] != orphan_user_id:
+                recipient = next_recipient
+                break
+        else:
+            return AssignmentResult(
+                success=False,
+                orphan_user_id=orphan_user_id,
+                message="No eligible recipients available (self-assignment blocked)"
+            )
     
     return await assign_orphan_to_recipient(
         orphan_user_id=orphan_user_id,
