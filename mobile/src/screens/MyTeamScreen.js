@@ -180,7 +180,8 @@ const MyTeamScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Referral Code Card */}
+        {/* Referral Code Card - Hidden */}
+        {false && (
         <View style={styles.referralCard}>
           <Text style={styles.referralLabel}>Your Referral Code</Text>
           <View style={styles.referralCodeRow}>
@@ -197,6 +198,7 @@ const MyTeamScreen = ({ navigation }) => {
           </TouchableOpacity>
           <Text style={styles.shareNote}>Both you and your friend receive 50,000 BL coins!</Text>
         </View>
+        )}
 
         {/* Stats Row */}
         <View style={styles.statsRow}>
