@@ -166,7 +166,8 @@ export default function EarningsDashboard() {
         </div>
         )}
 
-        {/* Network Stats */}
+        {/* Network Stats - Hidden: commission rates displayed here don't match current tier structure */}
+        {false && (
         <div className="bg-card rounded-2xl border border-border overflow-hidden">
           <div className="p-4 border-b border-border bg-muted/30">
             <h3 className="font-semibold flex items-center gap-2">
@@ -213,6 +214,7 @@ export default function EarningsDashboard() {
             )}
           </div>
         </div>
+        )}
 
         {/* Diamond Leader Progress */}
         <div className="bg-gradient-to-br from-amber-500/10 to-yellow-500/5 rounded-2xl border border-amber-500/20 overflow-hidden">
