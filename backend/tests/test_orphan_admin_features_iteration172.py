@@ -32,7 +32,7 @@ class TestOrphanAdminFeatures:
         self.session.headers.update({"Content-Type": "application/json"})
         
         # Login to get token
-        login_response = self.session.post(f"{BASE_URL}/api/login", json={
+        login_response = self.session.post(f"{BASE_URL}/api/auth/login", json={
             "email": TEST_EMAIL,
             "password": TEST_PASSWORD
         })
