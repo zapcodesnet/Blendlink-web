@@ -265,7 +265,8 @@ const MyTeamScreen = ({ navigation }) => {
           )}
         </View>
 
-        {/* Diamond Status */}
+        {/* Diamond Status - Hidden */}
+        {false && (
         <View style={[styles.diamondCard, isDiamond && styles.diamondCardActive]}>
           <View style={styles.diamondHeader}>
             <Ionicons name="diamond" size={20} color={isDiamond ? '#eab308' : '#6b7280'} />
@@ -300,6 +301,7 @@ const MyTeamScreen = ({ navigation }) => {
             </View>
           )}
         </View>
+        )}
 
         {/* Withdrawal Section */}
         {withdrawalStatus && (
