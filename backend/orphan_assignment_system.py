@@ -343,7 +343,17 @@ async def assign_orphan_to_recipient(
     IMPORTANT: Per requirements:
     - Assigned uplines do NOT receive BL coin bonuses for orphan assignments
     - The orphan still receives their 50,000 BL signup bonus (handled at registration)
+    - Self-assignment is STRICTLY PROHIBITED
     """
+    # HARD BLOCK: Prevent self-assignment under ALL circumstances
+    if orphan_user_id == recipient_id:
+        logger.warning(f"BLOCKED self-assignment attempt: orphan {orphan_user_id} cannot be assigned to themselves")
+        return AssignmentResult(
+            success=False,
+            orphan_user_id=orphan_user_id,
+            message="Self-assignment is prohibited. An orphan cannot be assigned to their own account."
+        )
+    
     # Verify orphan exists and is unassigned
     orphan = await db.users.find_one({"user_id": orphan_user_id})
     if not orphan:
