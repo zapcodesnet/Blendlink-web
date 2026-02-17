@@ -1,20 +1,42 @@
-# BlendLink Platform - PRD
+# BlendLink Platform - Product Requirements Document
 
-## Latest: Touch Scroll Fix v7 (Feb 16, 2026)
+## Latest Update: February 16, 2026
 
-### Approach: 5-layer defense against scroll blocking
+---
 
-1. **index.html HEAD script**: Patches `addEventListener` to force passive on ALL touch/pointer events
-2. **index.html HEAD script**: Overrides `Event.prototype.preventDefault` to no-op for touchmove/touchstart
-3. **index.html HEAD script**: MutationObserver prevents overflow:hidden on body/html
-4. **index.html HEAD script**: Periodic scan forces `touch-action: pan-y` on any element with `touch-action: none`
-5. **CSS (index.css)**: Universal `* { touch-action: pan-y pan-x pinch-zoom !important; }` rule
+## LATEST SESSION: Remove Email Verification (Feb 16, 2026)
 
-### Specific fixes:
-- Register.jsx: `overflow-hidden` → `overflow-x-hidden overflow-y-auto` on main wrapper
-- premium-design-system.css: `.bl-premium-bg` → `overflow-y: auto; overflow-x: hidden`
-- MintedPhotos.jsx: `touchAction: 'none'` → `touchAction: 'pan-y'`
-- index.css: Removed 550 lines of conflicting scroll-fix CSS, replaced with clean minimal set
+### What Was REMOVED:
+- `create_verification_token()` function
+- `send_verification_email()` function  
+- `GET /api/auth/verify-email` endpoint
+- `POST /api/auth/resend-verification` endpoint
+- `POST /api/auth/resend-verification-public` endpoint
+- `email_verified` / `email_verified_at` fields from registration
+- Verification check from login flow
+- "Resend Verification Email" button from Login page
+- Verification confirmation screen from Register page
+- `EmailVerificationPending` component from ProtectedRoute
+- `/verify-email` route from App.js
+
+### New Flow:
+- **Register**: Create user → auto-login (token issued) → redirect to `/profile`
+- **Login**: Email + password → redirect to `/profile`
+- **No verification** of any kind — instant full access
+
+### Test Results:
+- Backend: **100% (13/13)**
+- Frontend: **100% (6/6)**
+- Report: `/app/test_reports/iteration_170.json`
+
+---
+
+## TEST CREDENTIALS
+| Role | Email | Password |
+|------|-------|----------|
+| Test User | tester@blendlink.net | BlendLink2024! |
+| User | vinwebs0@gmail.com | Mikaela2021! |
+| Admin | blendlinknet@gmail.com | Blend!Admin2026Link |
 
 ---
 *Last Updated: February 16, 2026*
