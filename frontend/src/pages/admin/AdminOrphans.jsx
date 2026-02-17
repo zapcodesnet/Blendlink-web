@@ -309,11 +309,23 @@ export default function AdminOrphans() {
           </h1>
           <p className="text-slate-400">11-tier priority assignment with round-robin distribution</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          {/* Re-run Auto-Assign Toggle */}
+          <div className="flex items-center gap-2 mr-2">
+            <span className="text-xs text-slate-400">Re-run Auto-Assign</span>
+            <button
+              onClick={() => toggleRerun(!rerunEnabled)}
+              disabled={rerunLoading}
+              className={`relative w-11 h-6 rounded-full transition-colors ${rerunEnabled ? 'bg-green-500' : 'bg-slate-600'}`}
+              data-testid="rerun-toggle"
+            >
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${rerunEnabled ? 'translate-x-5' : ''}`} />
+            </button>
+          </div>
           <Button 
             onClick={runBatchAssignment} 
-            disabled={batchRunning || stats.unassigned === 0}
-            className="bg-green-600 hover:bg-green-700"
+            disabled={batchRunning || stats.unassigned === 0 || !rerunEnabled}
+            className={`${rerunEnabled ? 'bg-green-600 hover:bg-green-700' : 'bg-slate-600 cursor-not-allowed'}`}
           >
             {batchRunning ? (
               <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Running...</>
