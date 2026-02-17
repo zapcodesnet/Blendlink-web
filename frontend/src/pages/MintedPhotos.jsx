@@ -119,7 +119,7 @@ const ImageLightbox = ({ photo: initialPhoto, isOpen, onClose, onSetProfilePic, 
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-[100] bg-black"
-        style={{ touchAction: 'pan-y' }}
+        style={{ touchAction: 'none' }}
       >
         <AnimatePresence mode="wait">
           {!showBack ? (

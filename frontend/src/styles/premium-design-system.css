@@ -79,8 +79,7 @@
   min-height: 100vh;
   min-height: 100dvh;
   position: relative;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 /* Animated subtle light flares (performance-friendly) */

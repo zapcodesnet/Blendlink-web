@@ -457,6 +457,41 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Hero Section - Mobile Optimized */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-20 relative">
+          <div className="text-center max-w-3xl mx-auto animate-slide-up">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4 sm:mb-6 leading-tight">
+              {t('landing.hero_title') || 'Social, Shop, Play &'}<br />
+              <span className="bl-coin-text">{t('landing.hero_highlight') || 'Earn Rewards'}</span>
+            </h1>
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-2">
+              {t('landing.hero_subtitle') || 'Connect with friends, buy & sell items, find rentals, hire services, play games, and earn BL Coins — all in one app.'}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4 sm:px-0">
+              <Button 
+                size="lg" 
+                className="rounded-full text-base sm:text-lg px-6 sm:px-8 shadow-lg shadow-primary/25 w-full sm:w-auto"
+                onClick={() => navigate("/register")}
+                data-testid="hero-cta-btn"
+              >
+                {t('landing.start_earning') || 'Start Earning Today'}
+                <ChevronRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
+              </Button>
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="rounded-full text-base sm:text-lg px-6 sm:px-8 w-full sm:w-auto"
+                onClick={() => navigate("/login")}
+                data-testid="have-account-btn"
+              >
+                I Have an Account
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Features Grid - Mobile Optimized */}
       <section className="py-12 sm:py-20 px-4">
