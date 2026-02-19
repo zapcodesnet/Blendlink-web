@@ -177,7 +177,7 @@ const RefundModal = ({ order, onClose, onSuccess }) => {
             <span className="font-bold text-orange-700">${refundAmount.toFixed(2)}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Platform Fee Credit (8%)</span>
+            <span className="text-gray-600">Platform Fee Credit (10%)</span>
             <span className="font-medium text-green-600">+${platformFee.toFixed(2)}</span>
           </div>
           <div className="pt-2 border-t border-orange-200 flex justify-between">
