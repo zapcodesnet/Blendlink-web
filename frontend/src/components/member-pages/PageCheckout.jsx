@@ -313,7 +313,7 @@ export default function PageCheckout({
                     </div>
                   )}
                   <div className="flex justify-between text-gray-600">
-                    <span>Tax (8%)</span>
+                    <span>Platform Fee (10%)</span>
                     <span>{currencySymbol}{tax.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-lg font-bold text-gray-900 pt-2 border-t border-gray-100">
