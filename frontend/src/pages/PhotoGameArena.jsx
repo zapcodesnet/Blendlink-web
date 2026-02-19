@@ -1744,7 +1744,7 @@ const PhotoGameArena = () => {
       api.get('/photo-game/battle-photos').then(res => setBattlePhotos(res.data.photos || [])).catch(() => {}),
       api.get('/auth/me').then(res => setUserBalance(res.data?.bl_coins || 0)).catch(() => {})
     ]).then(() => {
-    });
+    }).catch(() => {});
   }, []);
   
   // Handle Bot Battle start from main menu's BotDifficultySelector
