@@ -591,7 +591,7 @@ export default function ListingDetail() {
     // Add to cart first, then go to checkout
     handleAddToCart().then(() => {
       navigate("/checkout", { state: { buyNow: true, listingId: id } });
-    });
+    }).catch(() => {});
   };
 
   if (loading) {
