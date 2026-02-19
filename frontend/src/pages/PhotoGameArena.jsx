@@ -1840,14 +1840,6 @@ const PhotoGameArena = () => {
     // Priority: incomingPvpRoomId > gameData.pvp_room_id > gameData.active_session_id (fallback)
     const resolvedPvpRoomId = incomingPvpRoomId || gameData?.pvp_room_id || gameData?.active_session_id || sessionId;
     
-      sessionId,
-      incomingPvpRoomId,
-      gameDataPvpRoomId: gameData?.pvp_room_id,
-      resolvedPvpRoomId,
-      amICreator,
-      opponentId,
-    });
-    
     // CRITICAL FIX: Set pvpRoomId BEFORE setting gameState to ensure it's available on first render
     // We also store it in session object for redundancy - include player1_id for isPlayer1 determination
     const fullSession = { 
