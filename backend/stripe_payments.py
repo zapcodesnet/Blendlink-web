@@ -725,7 +725,7 @@ async def get_subscription_status(session_id: str):
     Check the status of a subscription checkout session.
     Called after customer returns from Stripe.
     """
-    api_key = "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"
+    api_key = LIVE_STRIPE_SECRET_KEY
     if not api_key:
         raise HTTPException(status_code=500, detail="Stripe not configured")
     
@@ -779,7 +779,7 @@ async def cancel_subscription(request: CancelSubscriptionRequest):
     """
     Cancel a customer's subscription.
     """
-    api_key = "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"
+    api_key = LIVE_STRIPE_SECRET_KEY
     if not api_key:
         raise HTTPException(status_code=500, detail="Stripe not configured")
     
