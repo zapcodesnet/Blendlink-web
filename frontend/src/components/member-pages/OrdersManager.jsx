@@ -70,7 +70,7 @@ const RefundModal = ({ order, onClose, onSuccess }) => {
   const [isFullRefund, setIsFullRefund] = useState(true);
   const [processing, setProcessing] = useState(false);
 
-  const platformFee = (refundAmount / order.total) * (order.platform_fee || order.total * 0.08);
+  const platformFee = (refundAmount / order.total) * (order.platform_fee || order.total * 0.10);
 
   const handleRefund = async () => {
     if (!refundReason.trim()) {
