@@ -59,7 +59,7 @@ export default function PageCheckout({
   // Calculate totals
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const deliveryFee = orderType === "delivery" ? 5.00 : 0; // Flat delivery fee
-  const tax = subtotal * 0.08; // 8% tax
+  const tax = subtotal * 0.10; // 10% platform fee
   const total = subtotal + deliveryFee + tax;
 
   const updateQuantity = (itemId, delta) => {
