@@ -98,7 +98,7 @@ const ManualEntryModal = ({ show, onClose, onAdd, manualItem, setManualItem }) =
                 <span>${parseFloat(manualItem.price || 0).toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-gray-600">
-                <span>Platform Fee (8%):</span>
+                <span>Platform Fee (10%):</span>
                 <span>${(parseFloat(manualItem.price || 0) * 0.08).toFixed(2)}</span>
               </div>
             </div>
