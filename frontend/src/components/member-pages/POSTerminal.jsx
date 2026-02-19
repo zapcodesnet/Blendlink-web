@@ -1392,7 +1392,7 @@ export default function POSTerminal({ pageId, pageType, pageName, items = [] }) 
         {/* Platform Fee Notice */}
         <div className="mb-4 p-3 bg-amber-50 rounded-xl border border-amber-200 text-sm">
           <div className="flex justify-between text-amber-800">
-            <span>Platform Fee (8%)</span>
+            <span>Platform Fee (10%)</span>
             <span className="font-bold">${(total * 0.08).toFixed(2)}</span>
           </div>
           <p className="text-xs text-amber-600 mt-1">
