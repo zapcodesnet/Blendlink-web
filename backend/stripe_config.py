@@ -5,14 +5,19 @@ All Stripe API keys are loaded from environment variables.
 NEVER hardcode keys in any other file — import from here.
 
 Usage:
-    from stripe_config import STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, init_stripe
+    from stripe_config import STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, init_stripe, get_stripe_key
     init_stripe()  # Sets stripe.api_key globally
 """
 import os
 import stripe
 import logging
+from dotenv import load_dotenv
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+# Force load .env with override=True to beat system env vars (like STRIPE_API_KEY=sk_test_emergent)
+load_dotenv(Path(__file__).parent / '.env', override=True)
 
 # Load from environment variables ONLY — never hardcode
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
