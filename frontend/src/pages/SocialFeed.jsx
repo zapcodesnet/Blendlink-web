@@ -1236,7 +1236,7 @@ export default function SocialFeed() {
   const handleRetry = useCallback(() => {
     setIsLoading(true);
     setFeedError(null);
-    loadFeed().then(() => setIsLoading(false));
+    loadFeed().then(() => setIsLoading(false)).catch(() => setIsLoading(false));
     loadStories();
   }, [loadFeed, loadStories]);
   
