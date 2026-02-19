@@ -549,8 +549,8 @@ async def get_current_user(request: Request) -> dict:
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-# Platform fee rate (8% on all transactions)
-PLATFORM_FEE_RATE = 0.08  # 8%
+# Platform fee rate (10% on all transactions — distributed to uplines L1/L2 based on membership)
+PLATFORM_FEE_RATE = 0.10  # 10%
 
 async def verify_page_owner(page_id: str, user_id: str):
     """Verify user is the page owner"""
