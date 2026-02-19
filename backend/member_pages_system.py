@@ -631,6 +631,85 @@ async def apply_platform_fee(page_id: str, transaction_total: float, payment_met
     
     return fee_amount
 
+
+async def distribute_sale_commissions(seller_user_id: str, transaction_total: float, order_id: str = ""):
+    """
+    Distribute commissions from the 10% platform fee to the seller's L1 and L2 uplines.
+    Commission rates depend on the upline's membership tier:
+    - Free: 2% L1, 1% L2
+    - Bronze ($4.99/mo): 3% L1, 2% L2
+    - Silver ($9.99/mo): 3% L1, 2% L2
+    - Gold ($14.99/mo): 3% L1, 2% L2
+    - Diamond ($29.99/mo): 4% L1, 3% L2
+    """
+    COMMISSION_RATES = {
+        "free": {"l1": 0.02, "l2": 0.01},
+        "bronze": {"l1": 0.03, "l2": 0.02},
+        "silver": {"l1": 0.03, "l2": 0.02},
+        "gold": {"l1": 0.03, "l2": 0.02},
+        "diamond": {"l1": 0.04, "l2": 0.03},
+    }
+    
+    seller = await db.users.find_one({"user_id": seller_user_id}, {"referred_by": 1, "_id": 0})
+    if not seller or not seller.get("referred_by"):
+        return
+    
+    l1_parent_id = seller.get("referred_by")
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # L1 commission
+    l1_parent = await db.users.find_one({"user_id": l1_parent_id}, {"_id": 0, "subscription_tier": 1, "referred_by": 1, "name": 1})
+    if l1_parent:
+        tier = (l1_parent.get("subscription_tier") or "free").lower()
+        rates = COMMISSION_RATES.get(tier, COMMISSION_RATES["free"])
+        l1_commission = transaction_total * rates["l1"]
+        
+        if l1_commission > 0:
+            # Credit L1 upline
+            await db.users.update_one(
+                {"user_id": l1_parent_id},
+                {"$inc": {"usd_balance": l1_commission, "total_commission_earned": l1_commission}}
+            )
+            await db.transactions.insert_one({
+                "transaction_id": f"comm_{uuid.uuid4().hex[:12]}",
+                "user_id": l1_parent_id,
+                "type": "l1_commission",
+                "amount": l1_commission,
+                "description": f"L1 commission ({rates['l1']*100}%) from sale by downline",
+                "source_user_id": seller_user_id,
+                "order_id": order_id,
+                "tier": tier,
+                "created_at": now,
+            })
+            logger.info(f"L1 commission ${l1_commission:.2f} ({tier} {rates['l1']*100}%) to {l1_parent_id}")
+        
+        # L2 commission
+        l2_parent_id = l1_parent.get("referred_by")
+        if l2_parent_id:
+            l2_parent = await db.users.find_one({"user_id": l2_parent_id}, {"_id": 0, "subscription_tier": 1})
+            if l2_parent:
+                l2_tier = (l2_parent.get("subscription_tier") or "free").lower()
+                l2_rates = COMMISSION_RATES.get(l2_tier, COMMISSION_RATES["free"])
+                l2_commission = transaction_total * l2_rates["l2"]
+                
+                if l2_commission > 0:
+                    await db.users.update_one(
+                        {"user_id": l2_parent_id},
+                        {"$inc": {"usd_balance": l2_commission, "total_commission_earned": l2_commission}}
+                    )
+                    await db.transactions.insert_one({
+                        "transaction_id": f"comm_{uuid.uuid4().hex[:12]}",
+                        "user_id": l2_parent_id,
+                        "type": "l2_commission",
+                        "amount": l2_commission,
+                        "description": f"L2 commission ({l2_rates['l2']*100}%) from sale by indirect downline",
+                        "source_user_id": seller_user_id,
+                        "order_id": order_id,
+                        "tier": l2_tier,
+                        "created_at": now,
+                    })
+                    logger.info(f"L2 commission ${l2_commission:.2f} ({l2_tier} {l2_rates['l2']*100}%) to {l2_parent_id}")
+
 # ============== SLUG VALIDATION SYSTEM ==============
 
 # Reserved slugs that cannot be used for member pages
