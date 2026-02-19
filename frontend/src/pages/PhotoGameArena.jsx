@@ -1819,11 +1819,6 @@ const PhotoGameArena = () => {
     // Determine which photos are mine and which are the opponent's
     const amICreator = sessionData?.player1_id === user?.user_id || gameData?.creator_id === user?.user_id;
     
-      player1_id: sessionData?.player1_id,
-      userId: user?.user_id,
-      creator_id: gameData?.creator_id,
-    });
-    
     // Get photos from session data (session object has player1_photos, player2_photos)
     const myPhotos = amICreator 
       ? (sessionData?.player1_photos || gameData?.creator_photos || selectedPhotosData || [])
