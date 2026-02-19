@@ -50,13 +50,11 @@ logger = logging.getLogger(__name__)
 # Platform fee rate - UPDATED to 10% as per business requirement
 PLATFORM_FEE_RATE = 0.10  # 10%
 
-# FORCE LIVE STRIPE KEYS - Hardcoded to prevent system env override (STRIPE_API_KEY=sk_test_emergent)
-LIVE_STRIPE_SECRET_KEY = "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"
-LIVE_STRIPE_PUBLISHABLE_KEY = "pk_live_51SkM5vRv11guK54QJjH0t5IreOJB2sQCqjcxWGUKZbt9taHJ3AtSSejzi2ksQvU9aoq6KKIlA9nmGy48qJr08cm400a7cEoEpf"
+# Load Stripe keys from shared config (environment variables)
+from stripe_config import STRIPE_SECRET_KEY as LIVE_STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY as LIVE_STRIPE_PUBLISHABLE_KEY, init_stripe
 stripe_api_key = LIVE_STRIPE_SECRET_KEY
 stripe_pub_key = LIVE_STRIPE_PUBLISHABLE_KEY
-logger.info(f"✅ STRIPE LIVE MODE FORCED - Key: {LIVE_STRIPE_SECRET_KEY[:12]}...")
-print(f"✅ STRIPE LIVE MODE FORCED - Key: {LIVE_STRIPE_SECRET_KEY[:12]}...")
+init_stripe()
 
 # Router
 stripe_router = APIRouter(prefix="/payments/stripe", tags=["Stripe Payments"])
