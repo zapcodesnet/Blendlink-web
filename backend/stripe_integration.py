@@ -19,13 +19,10 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-# FORCE LIVE STRIPE KEYS - Hardcoded to prevent system env override
-STRIPE_SECRET_KEY = "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"
-STRIPE_PUBLISHABLE_KEY = "pk_live_51SkM5vRv11guK54QJjH0t5IreOJB2sQCqjcxWGUKZbt9taHJ3AtSSejzi2ksQvU9aoq6KKIlA9nmGy48qJr08cm400a7cEoEpf"
+# Load Stripe keys from shared config (environment variables)
+from stripe_config import STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, init_stripe
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
-stripe.api_key = STRIPE_SECRET_KEY
-logger.info(f"✅ STRIPE INTEGRATION: LIVE MODE FORCED - {STRIPE_SECRET_KEY[:12]}...")
-print(f"✅ STRIPE INTEGRATION: LIVE MODE FORCED - {STRIPE_SECRET_KEY[:12]}...")
+init_stripe()
 
 # Get MongoDB from server
 from server import db, get_current_user
