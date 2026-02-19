@@ -292,7 +292,7 @@ async def charge_stripe_customer(user_id: str, amount: float, tier: str, subscri
     """Charge customer's Stripe account"""
     import stripe
     
-    stripe.api_key = "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"
+    stripe.api_key = get_stripe_key()
     
     # Get user's Stripe customer ID
     user = await db.users.find_one({"user_id": user_id})
@@ -333,7 +333,7 @@ async def charge_saved_payment_method(user_id: str, payment_method: dict, amount
     """Charge using user's saved payment method"""
     import stripe
     
-    stripe.api_key = "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"
+    stripe.api_key = get_stripe_key()
     
     stripe_payment_method_id = payment_method.get("stripe_payment_method_id")
     
@@ -383,7 +383,7 @@ async def charge_bank_account(user_id: str, bank_account: dict, amount: float, t
     """Charge using user's verified bank account (ACH)"""
     import stripe
     
-    stripe.api_key = "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"
+    stripe.api_key = get_stripe_key()
     
     stripe_bank_account_id = bank_account.get("stripe_payment_method_id")
     

@@ -691,7 +691,7 @@ async def create_checkout_session(offer_id: str, request: Request):
     origin_url = body.get("origin_url", str(request.base_url).rstrip("/"))
     
     # FORCE LIVE STRIPE KEY - bypass system env override
-    api_key = "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"
+    api_key = get_stripe_key()
     
     if not api_key:
         raise HTTPException(status_code=500, detail="Stripe API key not configured")
@@ -762,7 +762,7 @@ async def get_payment_status(session_id: str, request: Request):
         )
     
     # FORCE LIVE STRIPE KEY
-    api_key = "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"
+    api_key = get_stripe_key()
     
     if not api_key:
         raise HTTPException(status_code=500, detail="Stripe not configured")

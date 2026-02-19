@@ -938,7 +938,7 @@ async def create_pos_checkout_session(
     order.pop("_id", None)
     
     # FORCE LIVE STRIPE KEY
-    api_key = "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"
+    api_key = get_stripe_key()
     
     if not api_key:
         raise HTTPException(status_code=500, detail="Stripe not configured")
@@ -1031,7 +1031,7 @@ async def get_pos_checkout_status(
     from emergentintegrations.payments.stripe.checkout import StripeCheckout
     
     # FORCE LIVE STRIPE KEY
-    api_key = "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"
+    api_key = get_stripe_key()
     
     if not api_key:
         raise HTTPException(status_code=500, detail="Stripe not configured")

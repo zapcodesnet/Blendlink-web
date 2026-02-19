@@ -464,7 +464,7 @@ async def process_checkout(data: CheckoutRequest, request: Request):
     # Try Stripe checkout
     try:
         # FORCE LIVE STRIPE KEY
-        stripe.api_key = "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"
+        stripe.api_key = get_stripe_key()
         
         # Use request origin for redirect URLs (handles preview AND production correctly)
         origin = request.headers.get("origin") or request.headers.get("referer", "").rstrip("/") or "https://blendlink.net"

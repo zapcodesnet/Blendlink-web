@@ -20,7 +20,7 @@ import json
 logger = logging.getLogger(__name__)
 
 # Initialize Stripe - FORCE LIVE KEY
-stripe.api_key = "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"
+stripe.api_key = get_stripe_key()
 
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "https://blendlink.net")
 

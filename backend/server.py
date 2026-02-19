@@ -2070,7 +2070,7 @@ async def guest_checkout(data: GuestCheckoutRequest, request: Request):
     try:
         import stripe
         # FORCE LIVE STRIPE KEY
-        stripe.api_key = "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"
+        stripe.api_key = get_stripe_key()
         
         # Use request origin for dynamic redirect URLs
         origin = request.headers.get("origin") or "https://blendlink.net"
@@ -2914,7 +2914,7 @@ async def stripe_webhook(request: Request):
     import os
     
     # FORCE LIVE STRIPE KEY
-    api_key = "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"
+    api_key = get_stripe_key()
     
     # Ensure live key is used - read from environment only
     if not api_key:
