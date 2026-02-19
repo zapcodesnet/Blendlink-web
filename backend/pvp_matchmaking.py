@@ -232,12 +232,23 @@ class PvPGameService:
         """Start matchmaking for a player"""
         from photo_game import PhotoGameService
         
-        # Verify player has enough stamina and BL coins
-        game_service = PhotoGameService(self.db)
-        stats = await game_service.get_player_stats(user_id)
-        
-        if stats.get("stamina", 0) < 4:  # STAMINA_PER_BATTLE
-            return {"success": False, "error": "Not enough stamina"}
+        # Verify player has stamina — check from photo if provided, else from stats
+        if photo_id:
+            photo = await self.db.minted_photos.find_one(
+                {"mint_id": photo_id, "user_id": user_id},
+                {"_id": 0, "stamina": 1, "mint_id": 1}
+            )
+            if not photo:
+                return {"success": False, "error": "Photo not found or not owned by you"}
+            
+            photo_stamina = photo.get("stamina", 100)
+            if photo_stamina <= 0:
+                return {"success": False, "error": "This photo has no stamina left. Wait for it to regenerate."}
+        else:
+            game_service = PhotoGameService(self.db)
+            stats = await game_service.get_player_stats(user_id)
+            if stats.get("stamina", 24) < 1:
+                return {"success": False, "error": "Not enough stamina"}
         
         if bet_amount > 0:
             user = await self.db.users.find_one({"user_id": user_id}, {"bl_coins": 1})
