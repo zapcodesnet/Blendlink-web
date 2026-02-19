@@ -952,15 +952,6 @@ const MintPhotoDialog = ({ isOpen, onClose, onMint, mintStatus, onMintSuccess })
         photoName: name,
       });
       
-        name,
-        description,
-        is_private: isPrivate,
-        file: selectedFile?.name,
-        fileSize: selectedFile?.size,
-        fileType: selectedFile?.type,
-        isTransformed: !!transformedImage,
-      });
-      
       const response = await api.post('/minting/photo/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 120000, // 2 minute timeout for large files + AI analysis
