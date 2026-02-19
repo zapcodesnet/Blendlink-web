@@ -44,7 +44,7 @@ db = client[db_name]
 logger = logging.getLogger(__name__)
 
 # Platform fee constants (mirrored from member_pages_system to avoid circular import)
-PLATFORM_FEE_RATE = 0.08  # 8%
+PLATFORM_FEE_RATE = 0.10  # 10%
 
 async def apply_platform_fee(page_id: str, transaction_total: float, payment_method: str):
     """
