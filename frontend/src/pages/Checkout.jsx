@@ -334,7 +334,16 @@ export default function Checkout() {
         })
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        data = {};
+      }
+
+      if (!response.ok) {
+        throw new Error(data.detail || "Checkout failed");
+      }
 
       if (data.payment_url) {
         // Clear cart before redirecting
