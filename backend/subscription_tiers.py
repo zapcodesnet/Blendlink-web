@@ -17,12 +17,13 @@ from pydantic import BaseModel, Field
 from fastapi import APIRouter, HTTPException, Depends, Request
 from fastapi.responses import RedirectResponse, JSONResponse
 from dotenv import load_dotenv
+from stripe_config import get_stripe_key, init_stripe
 
 load_dotenv()
 logger = logging.getLogger(__name__)
 
 # Initialize Stripe - FORCE LIVE KEY
-stripe.api_key = "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"
+stripe.api_key = get_stripe_key()
 logger.info(f"✅ SUBSCRIPTION_TIERS: STRIPE LIVE MODE FORCED")
 
 # ============== SUBSCRIPTION TIERS ==============
@@ -391,7 +392,7 @@ class SubscriptionService:
             raise HTTPException(status_code=400, detail=f"Tier configuration not found for: {tier}")
         
         # Force live Stripe key before any API calls
-        stripe.api_key = "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"
+        stripe.api_key = get_stripe_key()
         
         # Create dynamic price for subscription
         try:
@@ -1045,7 +1046,7 @@ async def verify_subscription_session(session_id: str, current_user: dict = Depe
     Called by the frontend after successful Stripe payment redirect.
     This is the PRIMARY activation path (webhooks are backup).
     """
-    stripe.api_key = "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"
+    stripe.api_key = get_stripe_key()
     
     try:
         session = stripe.checkout.Session.retrieve(session_id)
@@ -1101,7 +1102,7 @@ async def verify_latest_subscription(current_user: dict = Depends(get_current_us
     Verify and activate the latest Stripe checkout session for the user.
     Called by the frontend after redirect from Stripe payment.
     """
-    stripe.api_key = "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"
+    stripe.api_key = get_stripe_key()
     
     user_id = current_user["user_id"]
     service = get_subscription_service()
