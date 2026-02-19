@@ -190,7 +190,7 @@ class MemberPage(BaseModel):
     currency: str = "USD"
     currency_symbol: str = "$"
     # POS fee tracking
-    platform_fees_owed: float = 0.0  # Accumulated 8% fees from cash sales
+    platform_fees_owed: float = 0.0  # Accumulated 10% fees from cash sales
     platform_fees_paid: float = 0.0  # Total fees paid
     last_fee_billing_date: Optional[str] = None
     # Contact info for public display
