@@ -353,20 +353,24 @@ function AppRouter() {
   );
 }
 
+import ErrorBoundary from "./components/ErrorBoundary";
+
 function App() {
   const { showTour, tourLanguage, closeTour } = useLanguageTour();
   
   return (
-    <BrowserRouter>
-      <AppRouter />
-      <Toaster position="top-center" richColors />
-      <PWAInstallPrompt />
-      <LanguageTour 
-        isOpen={showTour} 
-        onClose={closeTour} 
-        newLanguage={tourLanguage} 
-      />
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AppRouter />
+        <Toaster position="top-center" richColors />
+        <PWAInstallPrompt />
+        <LanguageTour 
+          isOpen={showTour} 
+          onClose={closeTour} 
+          newLanguage={tourLanguage} 
+        />
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 
