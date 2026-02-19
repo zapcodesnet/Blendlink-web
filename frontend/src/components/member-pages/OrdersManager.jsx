@@ -328,7 +328,7 @@ const OrderDetailModal = ({ order, onClose, onUpdateStatus }) => {
             )}
             {order.tax > 0 && (
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Tax</span>
+                <span className="text-gray-500">Platform Fee</span>
                 <span className="text-gray-700">${order.tax?.toFixed(2)}</span>
               </div>
             )}
