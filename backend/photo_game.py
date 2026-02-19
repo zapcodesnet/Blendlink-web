@@ -934,13 +934,25 @@ class PhotoGameService:
             bet_amount = 0
             opponent_id = "bot"
         
-        # Check player stamina (skip in practice mode)
-        if not practice_mode:
-            stats = await self.get_player_stats(player_id)
-            if stats.get("stamina", 0) < STAMINA_PER_BATTLE:
+        # Check player stamina via photo (skip in practice mode)
+        if not practice_mode and player_photo_id:
+            photo_for_check = await self.db.minted_photos.find_one(
+                {"mint_id": player_photo_id, "user_id": player_id},
+                {"_id": 0, "stamina": 1}
+            )
+            photo_stamina = photo_for_check.get("stamina", 100) if photo_for_check else 0
+            if photo_stamina <= 0:
                 return {
                     "success": False,
-                    "error": f"Insufficient stamina. Need {STAMINA_PER_BATTLE:.1f}%, have {stats.get('stamina', 0):.1f}%",
+                    "error": f"Photo has no stamina left. Wait for regeneration.",
+                    "stamina": photo_stamina,
+                }
+        elif not practice_mode and not player_photo_id:
+            stats = await self.get_player_stats(player_id)
+            if stats.get("stamina", 24) < 1:
+                return {
+                    "success": False,
+                    "error": "Not enough stamina to battle.",
                     "stamina": stats.get("stamina", 0),
                 }
         
