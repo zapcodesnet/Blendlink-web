@@ -1828,13 +1828,6 @@ const PhotoGameArena = () => {
       ? (sessionData?.player2_photos || gameData?.opponent_photos || [])
       : (sessionData?.player1_photos || gameData?.creator_photos || []);
     
-      amICreator,
-      myPhotosCount: myPhotos?.length,
-      theirPhotosCount: theirPhotos?.length,
-      myPhotos: myPhotos?.map(p => p?.mint_id),
-      theirPhotos: theirPhotos?.map(p => p?.mint_id),
-    });
-    
     const opponentId = amICreator
       ? (sessionData?.player2_id || gameData?.opponent_id)
       : (sessionData?.player1_id || gameData?.creator_id);
