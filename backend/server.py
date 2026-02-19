@@ -43,7 +43,17 @@ def get_mongo_connection():
         test_client.admin.command('ping')
         test_client.close()
         print(f"✅ Connected to MongoDB Atlas: {db_name}")
-        return AsyncIOMotorClient(mongo_url), db_name
+        # Optimized connection pool for Flex tier
+        return AsyncIOMotorClient(
+            mongo_url,
+            maxPoolSize=50,
+            minPoolSize=5,
+            maxIdleTimeMS=30000,
+            serverSelectionTimeoutMS=10000,
+            connectTimeoutMS=10000,
+            retryWrites=True,
+            retryReads=True,
+        ), db_name
     except Exception as e:
         print(f"⚠️ Atlas connection failed ({e}), falling back to local MongoDB")
         print(f"✅ Connected to Local MongoDB: {db_name}")
