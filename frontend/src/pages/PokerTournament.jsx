@@ -526,7 +526,6 @@ export default function PokerTournament() {
       wsRef.current = new WebSocket(wsUrl);
       
       wsRef.current.onopen = () => {
-        console.log("Poker WebSocket connected");
         reconnectAttempts.current = 0;
       };
       
@@ -536,7 +535,6 @@ export default function PokerTournament() {
       };
       
       wsRef.current.onclose = () => {
-        console.log("Poker WebSocket disconnected");
         // Attempt reconnect
         if (reconnectAttempts.current < 5) {
           reconnectAttempts.current++;
@@ -606,7 +604,6 @@ export default function PokerTournament() {
         break;
       
       default:
-        console.log("Unknown message type:", data.type);
     }
   };
 

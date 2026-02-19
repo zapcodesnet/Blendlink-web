@@ -1216,7 +1216,6 @@ export default function SellerDashboard() {
       });
       toast.success("AI analysis complete!");
       // Show results in a modal or expand the listing
-      console.log(result);
     } catch (error) {
       toast.error(error.message);
     }
@@ -1523,7 +1522,6 @@ export default function SellerDashboard() {
             <CardContent>
               <AIListingGenerator 
                 onComplete={(data) => {
-                  console.log("Listing data:", data);
                   toast.success("Listing ready! Redirecting to create page...");
                   // In production, navigate to listing creation form with pre-filled data
                 }}

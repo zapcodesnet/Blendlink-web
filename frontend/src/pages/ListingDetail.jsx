@@ -263,7 +263,6 @@ const ShippingEstimator = ({ listing }) => {
               toast.success("Location detected automatically");
             }
           } catch (err) {
-            console.log("Geocoding failed, user can enter manually");
           }
           setAutoDetecting(false);
         },

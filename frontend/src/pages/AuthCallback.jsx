@@ -16,7 +16,6 @@ export default function AuthCallback() {
 
     const processSession = async () => {
       const hash = location.hash;
-      console.log("AuthCallback: Processing hash:", hash);
       
       const sessionIdMatch = hash.match(/session_id=([^&]+)/);
       
@@ -29,7 +28,6 @@ export default function AuthCallback() {
       }
 
       const sessionId = sessionIdMatch[1];
-      console.log("AuthCallback: Found session_id:", sessionId.substring(0, 10) + "...");
       setStatus("Verifying your Google account...");
 
       try {

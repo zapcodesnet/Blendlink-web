@@ -18,7 +18,6 @@ const apiRequest = async (endpoint, options = {}) => {
   const token = getToken();
   const url = `${API_BASE}/api${endpoint}`;
   
-  console.log(`[WalletAPI] Request: ${url}`);
   
   let response;
   try {
@@ -31,7 +30,6 @@ const apiRequest = async (endpoint, options = {}) => {
       },
       cache: 'no-store',
     });
-    console.log(`[WalletAPI] Status: ${response.status}`);
   } catch (networkError) {
     console.error("[WalletAPI] Network error:", networkError);
     throw new Error(`Network error: ${networkError.message}`);
@@ -257,9 +255,7 @@ export default function AdminWalletManagement() {
     setSearchError(null);
     
     try {
-      console.log("[Search] Starting search for:", searchQuery);
       const data = await adminAPI.searchUsers({ query: searchQuery, limit: 15 });
-      console.log("[Search] Results:", data);
       
       const users = data.users || data || [];
       setSearchResults(Array.isArray(users) ? users : []);
@@ -297,7 +293,6 @@ export default function AdminWalletManagement() {
       const data = await apiRequest("/admin/finance/recent-adjustments?limit=25");
       setRecentTransactions(data.transactions || []);
     } catch (error) {
-      console.log("Could not load recent transactions:", error.message);
     } finally {
       setLoadingHistory(false);
     }
@@ -321,7 +316,6 @@ export default function AdminWalletManagement() {
         setSelectedUser(userData.user);
       }
     } catch (error) {
-      console.log("Could not refresh user data:", error.message);
     }
   };
 

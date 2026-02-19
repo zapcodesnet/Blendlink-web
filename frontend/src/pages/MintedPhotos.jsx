@@ -952,7 +952,6 @@ const MintPhotoDialog = ({ isOpen, onClose, onMint, mintStatus, onMintSuccess })
         photoName: name,
       });
       
-      console.log('Minting photo with FormData:', {
         name,
         description,
         is_private: isPrivate,
@@ -1516,11 +1515,9 @@ const MintedPhotos = () => {
     
     // Start polling
     const pollInterval = setInterval(pollStats, POLL_INTERVAL);
-    console.log('[MintedPhotos] Started real-time stat polling (every 5s)');
     
     return () => {
       clearInterval(pollInterval);
-      console.log('[MintedPhotos] Stopped stat polling');
     };
   }, []);
   

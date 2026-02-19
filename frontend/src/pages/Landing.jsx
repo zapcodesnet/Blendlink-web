@@ -135,7 +135,6 @@ const FeaturedListingsCarousel = ({ onViewDetails }) => {
         
         setItems(interleaved.length > 0 ? interleaved : generateSampleItems());
       } catch (err) {
-        console.log('Using sample data:', err);
         setItems(generateSampleItems());
       }
     };

@@ -1632,7 +1632,6 @@ const PhotoGameArena = () => {
           });
           
           if (hasChanges) {
-            console.log('[PhotoGame] Stats updated via polling');
           }
           return hasChanges ? newPhotos : prevPhotos;
         });
@@ -1642,7 +1641,6 @@ const PhotoGameArena = () => {
     };
     
     const pollInterval = setInterval(pollBattlePhotoStats, POLL_INTERVAL);
-    console.log('[PhotoGameArena] Started real-time stat polling (every 5s)');
     
     return () => {
       clearInterval(pollInterval);
@@ -1711,13 +1709,11 @@ const PhotoGameArena = () => {
         }
         
         // Log the bot win tracking
-        console.log(`Bot battle recorded: ${botDifficulty}, won=${winner === 'player'}, ${botDifficulty}_wins=${response.data[`${botDifficulty}_wins`]}`);
         
         // CRITICAL FIX: Refresh bot win stats to update unlock progress UI
         try {
           const botStatsRes = await api.get('/photo-game/bot-battle/stats');
           setBotWinStats(botStatsRes.data || {});
-          console.log('Bot stats refreshed:', botStatsRes.data);
         } catch (statsErr) {
           console.error('Failed to refresh bot stats:', statsErr);
         }
@@ -1748,7 +1744,6 @@ const PhotoGameArena = () => {
       api.get('/photo-game/battle-photos').then(res => setBattlePhotos(res.data.photos || [])).catch(() => {}),
       api.get('/auth/me').then(res => setUserBalance(res.data?.bl_coins || 0)).catch(() => {})
     ]).then(() => {
-      console.log('[PhotoGame] Stats refreshed after battle exit');
     });
   }, []);
   
@@ -1824,7 +1819,6 @@ const PhotoGameArena = () => {
     // Determine which photos are mine and which are the opponent's
     const amICreator = sessionData?.player1_id === user?.user_id || gameData?.creator_id === user?.user_id;
     
-    console.log('[PhotoGameArena] handleGameStart - amICreator:', amICreator, {
       player1_id: sessionData?.player1_id,
       userId: user?.user_id,
       creator_id: gameData?.creator_id,
@@ -1839,7 +1833,6 @@ const PhotoGameArena = () => {
       ? (sessionData?.player2_photos || gameData?.opponent_photos || [])
       : (sessionData?.player1_photos || gameData?.creator_photos || []);
     
-    console.log('[PhotoGameArena] Photos assignment:', {
       amICreator,
       myPhotosCount: myPhotos?.length,
       theirPhotosCount: theirPhotos?.length,
@@ -1859,7 +1852,6 @@ const PhotoGameArena = () => {
     // Priority: incomingPvpRoomId > gameData.pvp_room_id > gameData.active_session_id (fallback)
     const resolvedPvpRoomId = incomingPvpRoomId || gameData?.pvp_room_id || gameData?.active_session_id || sessionId;
     
-    console.log('[PhotoGameArena] handleGameStart called with:', {
       sessionId,
       incomingPvpRoomId,
       gameDataPvpRoomId: gameData?.pvp_room_id,
@@ -1899,8 +1891,6 @@ const PhotoGameArena = () => {
       }));
     }
     
-    console.log('[PhotoGameArena] Setting pvpRoomId:', resolvedPvpRoomId);
-    console.log('[PhotoGameArena] Full session with player1_id:', fullSession?.player1_id);
     
     // Use PVP battle arena for real-time sync
     setGameState('pvp_battle');
@@ -2198,7 +2188,6 @@ const PhotoGameArena = () => {
                 <TopLikedPhotosLeaderboard 
                   onPhotoClick={(photo) => {
                     // Could open lightbox or navigate to photo details
-                    console.log('Photo clicked:', photo);
                   }}
                 />
               </div>

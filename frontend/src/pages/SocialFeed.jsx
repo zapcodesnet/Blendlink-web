@@ -1299,7 +1299,6 @@ export default function SocialFeed() {
   
   // Handle AI generation
   const handleAIGenerate = (result) => {
-    console.log('AI Generated:', result);
     // Could show preview modal here
   };
   

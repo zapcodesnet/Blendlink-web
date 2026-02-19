@@ -62,7 +62,6 @@ const adminApiRequest = async (endpoint, options = {}) => {
   }
   
   const url = `${API_BASE}/api${endpoint}`;
-  console.log(`[AdminAPI] Fetching: ${url}`);
   
   let response;
   try {
@@ -72,7 +71,6 @@ const adminApiRequest = async (endpoint, options = {}) => {
       // Ensure we don't use cached responses
       cache: 'no-store',
     });
-    console.log(`[AdminAPI] Response status: ${response.status}`);
   } catch (networkError) {
     console.error('[AdminAPI] Network error:', networkError);
     throw new Error(`Network error: ${networkError.message || 'Unable to connect to server'}`);
@@ -81,7 +79,6 @@ const adminApiRequest = async (endpoint, options = {}) => {
   // Check if response has a body
   const contentLength = response.headers.get('content-length');
   const contentType = response.headers.get('content-type');
-  console.log(`[AdminAPI] Content-Type: ${contentType}, Content-Length: ${contentLength}`);
   
   // Handle empty responses
   if (contentLength === '0' || response.status === 204) {
@@ -95,7 +92,6 @@ const adminApiRequest = async (endpoint, options = {}) => {
   let rawText = '';
   try {
     rawText = await response.text();
-    console.log(`[AdminAPI] Raw response (first 200 chars):`, rawText?.substring(0, 200));
   } catch (readError) {
     console.error('[AdminAPI] Failed to read response body:', readError);
     // If we can't read the body but response was OK, return empty
@@ -348,7 +344,6 @@ export default function AdminLayout() {
       // Set new timer
       inactivityTimer = setTimeout(() => {
         // Auto-logout due to inactivity
-        console.log('Admin auto-logout due to inactivity');
         localStorage.removeItem('blendlink_token');
         localStorage.removeItem('blendlink_user');
         localStorage.removeItem('admin_last_activity');
@@ -739,7 +734,6 @@ function AdminDashboardHome({ realtimeMetrics, wsConnected }) {
       } catch (error) {
         if (!isCancelled) {
           // Silently ignore errors - dashboard will still render
-          console.log("Dashboard stats load failed:", error.message);
         }
       } finally {
         if (!isCancelled) {

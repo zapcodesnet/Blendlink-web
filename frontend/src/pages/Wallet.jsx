@@ -152,20 +152,17 @@ export default function Wallet() {
       const wsUrl = API_BASE.replace('https://', 'wss://').replace('http://', 'ws://');
       const wsEndpoint = `${wsUrl}/api/referral/ws/earnings/${user.user_id}?token=${token}`;
       
-      console.log('Connecting to wallet WebSocket...');
       
       try {
         wsRef.current = new WebSocket(wsEndpoint);
         
         wsRef.current.onopen = () => {
-          console.log('Wallet WebSocket connected');
           setWsConnected(true);
         };
         
         wsRef.current.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
-            console.log('Wallet WS message:', data.type);
             
             if (data.type === 'connected') {
               // Initial connection confirmed
@@ -212,7 +209,6 @@ export default function Wallet() {
         };
         
         wsRef.current.onclose = () => {
-          console.log('Wallet WebSocket disconnected');
           setWsConnected(false);
           
           // Attempt reconnection after 5 seconds
