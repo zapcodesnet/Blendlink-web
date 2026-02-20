@@ -154,17 +154,45 @@ async def mint_photo(
 async def mint_photo_upload(
     name: str = Form(...),
     description: str = Form(""),
-    is_private: str = Form("false"),  # Accept as string, convert below
-    show_in_feed: str = Form("true"),  # Accept as string, convert below
+    is_private: str = Form("false"),
+    show_in_feed: str = Form("true"),
     album_id: Optional[str] = Form(None),
     file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user_from_request)
 ):
     """
-    Mint a photo from file upload
+    Mint a photo from file upload — enforces daily mint limit per subscription tier
     """
     if not _minting_service:
         raise HTTPException(status_code=500, detail="Minting service not initialized")
+    
+    # === ENFORCE DAILY MINT LIMIT (server-side, resets at midnight UTC) ===
+    from subscription_tiers import SUBSCRIPTION_TIERS
+    user_id = current_user["user_id"]
+    
+    # Get user's subscription tier
+    sub = await _db.subscriptions.find_one({"user_id": user_id}, {"_id": 0, "tier": 1})
+    user_obj = await _db.users.find_one({"user_id": user_id}, {"_id": 0, "subscription_tier": 1})
+    tier = (sub.get("tier") if sub else None) or (user_obj.get("subscription_tier") if user_obj else None) or "free"
+    tier_info = SUBSCRIPTION_TIERS.get(tier, SUBSCRIPTION_TIERS["free"])
+    daily_limit = tier_info.get("daily_mint_limit", 5)
+    
+    # Count mints today (since midnight UTC)
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc)
+    midnight_utc = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    mints_today = await _db.minted_photos.count_documents({
+        "user_id": user_id,
+        "created_at": {"$gte": midnight_utc.isoformat()}
+    })
+    
+    if mints_today >= daily_limit:
+        limit_display = "unlimited" if daily_limit >= 999999 else str(daily_limit)
+        raise HTTPException(
+            status_code=429,
+            detail=f"Daily minting limit reached ({mints_today}/{limit_display}). Resets at midnight UTC. Upgrade your membership for more mints!"
+        )
     
     # Convert string booleans to actual booleans
     is_private_bool = str(is_private).lower() in ('true', '1', 'yes')
