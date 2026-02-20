@@ -58,14 +58,16 @@ const MEMBERSHIP_TIERS = {
     commission_l2: 2,
     daily_mint: 50,
     xp_multiplier: 3,
-    daily_bl_bonus: 40000,
+    daily_bl_bonus: 80000,
     max_pages: 10,
+    monthly_listings: 10000,
     description: "Earn 3% commission from direct recruits (level 1) and 2% from indirect recruits (level 2) on each successful sale by downlines.",
     benefits: [
       "Mint up to 50 photos per day",
       "Gain x3 experience (XP) per round of the minted photo game",
-      "Claim 40,000 free BL coins daily",
-      "Create a maximum of 10 member's pages (blendlink.net/[slug])"
+      "Claim 80,000 free BL coins daily",
+      "Create a maximum of 10 member's pages (blendlink.net/[slug])",
+      "10,000 listings per month (marketplace + pages)"
     ],
     idealFor: "Perfect for active users who want significantly higher minting capacity and stronger daily coin rewards."
   },
