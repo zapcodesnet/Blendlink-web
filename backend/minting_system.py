@@ -58,17 +58,18 @@ SUBSCRIPTION_TIERS = {
     },
 }
 
-# Legacy compatibility
-DAILY_MINT_LIMIT = 10
+# Daily mint limits per subscription tier — MUST match subscription_tiers.py SUBSCRIPTION_TIERS
+DAILY_MINT_LIMIT = 5  # Free tier default
 SUBSCRIPTION_LIMITS = {
-    "free": 10,  # 10 FREE mints per day for regular users
+    "free": 5,
     "bronze": 20,
     "silver": 50,
-    "gold": 100,
-    "platinum": 999999,
+    "gold": 150,
+    "diamond": 999999,  # Unlimited
     # Legacy names
     "basic": 20,
     "premium": 50,
+    "platinum": 999999,
 }
 
 # Scenery types and their strength/weakness relationships
