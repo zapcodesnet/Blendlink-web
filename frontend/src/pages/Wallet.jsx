@@ -40,9 +40,10 @@ const MEMBERSHIP_TIERS = {
     commission_l2: 2,
     daily_mint: 20,
     xp_multiplier: 2,
-    daily_bl_bonus: 15000,
+    daily_bl_bonus: 20000,
     max_pages: 3,
-    features: ['3% L1 Commission', '2% L2 Commission', '20 daily mints', 'x2 XP bonus', '15,000 daily BL coins', '3 member pages']
+    monthly_listings: 2000,
+    features: ['3% L1 / 2% L2 Commission', '20 daily mints', 'x2 XP bonus', '20,000 daily BL coins', '3 member pages', '2,000 listings/month']
   },
   silver: {
     name: 'Silver',
@@ -54,9 +55,10 @@ const MEMBERSHIP_TIERS = {
     commission_l2: 2,
     daily_mint: 50,
     xp_multiplier: 3,
-    daily_bl_bonus: 40000,
+    daily_bl_bonus: 80000,
     max_pages: 10,
-    features: ['3% L1 Commission', '2% L2 Commission', '50 daily mints', 'x3 XP bonus', '40,000 daily BL coins', '10 member pages']
+    monthly_listings: 10000,
+    features: ['3% L1 / 2% L2 Commission', '50 daily mints', 'x3 XP bonus', '80,000 daily BL coins', '10 member pages', '10,000 listings/month']
   },
   gold: {
     name: 'Gold',
@@ -70,7 +72,8 @@ const MEMBERSHIP_TIERS = {
     xp_multiplier: 4,
     daily_bl_bonus: 200000,
     max_pages: 25,
-    features: ['3% L1 Commission', '2% L2 Commission', '150 daily mints', 'x4 XP bonus', '200,000 daily BL coins', '25 member pages']
+    monthly_listings: 25000,
+    features: ['3% L1 / 2% L2 Commission', '150 daily mints', 'x4 XP bonus', '200,000 daily BL coins', '25 member pages', '25,000 listings/month']
   },
   diamond: {
     name: 'Diamond',
@@ -84,7 +87,8 @@ const MEMBERSHIP_TIERS = {
     xp_multiplier: 5,
     daily_bl_bonus: 500000,
     max_pages: 999999,
-    features: ['4% L1 Commission', '3% L2 Commission', 'Unlimited mints', 'x5 XP bonus', '500,000 daily BL coins', 'Unlimited pages']
+    monthly_listings: 999999,
+    features: ['4% L1 / 3% L2 Commission', 'Unlimited mints', 'x5 XP bonus', '500,000 daily BL coins', 'Unlimited pages', 'Unlimited listings']
   }
 };
 
