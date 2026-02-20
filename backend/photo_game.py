@@ -1410,8 +1410,9 @@ class PhotoGameService:
             "success": True,
             "battle_result": battle_result,
             "phase": next_phase,
-            "stage1_winner": "player1" if stage1_winner == session["player1_id"] else "player2",
-            "stage2_winner": battle_result["winner"],
+            "player1_match_wins": p1_match_wins,
+            "player2_match_wins": p2_match_wins,
+            "match_round": match_round,
             "overall_winner": "player1" if overall_winner == session["player1_id"] else ("player2" if overall_winner else None),
             "session": updated_session,
         }
