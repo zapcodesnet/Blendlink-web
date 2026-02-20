@@ -1015,7 +1015,11 @@ class PhotoGameService:
         session_dict["created_at"] = session_dict["created_at"].isoformat()
         session_dict["player1_photo"] = player_photo
         session_dict["player2_photo"] = opponent_photo
-        session_dict["practice_mode"] = practice_mode  # Track practice mode
+        session_dict["practice_mode"] = practice_mode
+        # Initialize alternating round tracking
+        session_dict["match_round"] = 1  # R1=RPS, R2=Tapping, R3=RPS, R4=Tapping, R5=RPS
+        session_dict["player1_match_wins"] = 0
+        session_dict["player2_match_wins"] = 0
         
         await self.db.game_sessions.insert_one(session_dict)
         
