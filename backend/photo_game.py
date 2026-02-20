@@ -100,14 +100,22 @@ BOT_HOUSE_FEE = 0.05  # 5% house fee on winnings
 # Formula: XP_needed(N) = XP_needed(N-1) * 1.5 (rounded)
 XP_PER_ROUND = 1  # +1 XP per round (win or loss)
 
-# Subscription XP multipliers
+# Subscription XP multipliers — must match SUBSCRIPTION_TIERS
 SUBSCRIPTION_XP_MULTIPLIERS = {
     "free": 1,
     "bronze": 2,
     "silver": 3,
     "gold": 4,
-    "platinum": 5,
+    "diamond": 5,
 }
+
+
+async def get_user_xp_multiplier(db, user_id: str) -> int:
+    """Get XP multiplier based on user's subscription tier"""
+    sub = await db.subscriptions.find_one({"user_id": user_id}, {"_id": 0, "tier": 1})
+    user = await db.users.find_one({"user_id": user_id}, {"_id": 0, "subscription_tier": 1})
+    tier = (sub.get("tier") if sub else None) or (user.get("subscription_tier") if user else None) or "free"
+    return SUBSCRIPTION_XP_MULTIPLIERS.get(tier, 1)
 
 # Pre-calculate level thresholds (up to level 60)
 def calculate_level_thresholds():
