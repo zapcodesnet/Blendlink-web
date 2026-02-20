@@ -694,14 +694,16 @@ export default function Wallet() {
 
   const isDiamond = dailyClaimStatus?.is_diamond || user?.is_diamond_leader || user?.subscription_tier === 'diamond';
   
-  // Calculate claim amount based on subscription tier
+  // Calculate claim amount based on subscription tier — matches backend SUBSCRIPTION_TIERS
   const getTierClaimAmount = () => {
+    // Prefer the server-returned claim_amount (most accurate)
+    if (dailyClaimStatus?.claim_amount) return dailyClaimStatus.claim_amount;
     const tier = user?.subscription_tier;
     if (tier === 'diamond') return 500000;
     if (tier === 'gold') return 200000;
-    if (tier === 'silver') return 40000;
-    if (tier === 'bronze') return 15000;
-    return isDiamond ? 5000 : 2000; // Legacy diamond leader or free tier
+    if (tier === 'silver') return 80000;
+    if (tier === 'bronze') return 20000;
+    return 2000; // Free tier
   };
   
   const claimAmount = getTierClaimAmount();
