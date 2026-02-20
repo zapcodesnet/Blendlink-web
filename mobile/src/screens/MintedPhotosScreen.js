@@ -678,7 +678,7 @@ export default function MintedPhotosScreen() {
         <View style={[styles.statCard, { backgroundColor: colors.cardSecondary }]}>
           <Text style={[styles.statIcon, { color: colors.textMuted }]}>📊</Text>
           <Text style={[styles.statValue, { color: colors.text }]}>
-            {mintStatus?.mints_today || 0}/{mintStatus?.daily_limit || 3}
+            {mintStatus?.mints_today || 0}/{mintStatus?.daily_limit || 5}
           </Text>
           <Text style={[styles.statLabel, { color: colors.textMuted }]}>Today</Text>
         </View>
