@@ -918,17 +918,17 @@ class MintingService:
         self.db = db
     
     async def check_can_mint(self, user_id: str) -> Dict[str, Any]:
-        """Check if user can mint today"""
+        """Check if user can mint today — uses subscription tier for limits"""
         user = await self.db.users.find_one({"user_id": user_id}, {"_id": 0})
         if not user:
             return {"can_mint": False, "reason": "User not found"}
         
-        # Get user's BL coins (for info only - minting is FREE)
         bl_coins = user.get("bl_coins", 0)
         
-        # Check daily limit
-        subscription = user.get("subscription_tier", "free")
-        daily_limit = SUBSCRIPTION_LIMITS.get(subscription, 10)  # Default 10 for free users
+        # Get subscription tier from both collections for accuracy
+        sub = await self.db.subscriptions.find_one({"user_id": user_id}, {"_id": 0, "tier": 1})
+        subscription = (sub.get("tier") if sub else None) or user.get("subscription_tier", "free") or "free"
+        daily_limit = SUBSCRIPTION_LIMITS.get(subscription, 5)  # Default 5 for free tier
         
         # Fix: Use string comparison properly for ISO dates stored as strings
         today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
