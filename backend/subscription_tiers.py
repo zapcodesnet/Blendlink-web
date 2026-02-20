@@ -589,16 +589,15 @@ class SubscriptionService:
                     "remaining_seconds": int(remaining)
                 }
         
-        # Calculate streak bonus
+        # Calculate streak bonus (claimed within 48 hours = streak continues)
         streak = sub.get("bonus_streak", 0)
-        yesterday_start = today_start - timedelta(days=1)
         
         if last_claimed_str:
             last_claimed = datetime.fromisoformat(last_claimed_str.replace("Z", "+00:00"))
-            if last_claimed >= yesterday_start:
+            if (now - last_claimed).total_seconds() <= 48 * 3600:
                 streak += 1
             else:
-                streak = 1  # Reset streak
+                streak = 1
         else:
             streak = 1
         
