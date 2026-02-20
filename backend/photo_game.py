@@ -1315,9 +1315,11 @@ class PhotoGameService:
         if session["player2_id"] != "bot":
             p2_stats = await self.get_player_stats(session["player2_id"])
         
-        # Calculate battle values
-        p1_value = calculate_photo_battle_value(p1_photo, p2_photo, p1_stats)
-        p2_value = calculate_photo_battle_value(p2_photo, p1_photo, p2_stats)
+        # Calculate battle values (returns dict with effective_value)
+        p1_result = calculate_photo_battle_value(p1_photo, p2_photo, p1_stats)
+        p2_result = calculate_photo_battle_value(p2_photo, p1_photo, p2_stats)
+        p1_value = p1_result.get("effective_value", 1000000)
+        p2_value = p2_result.get("effective_value", 1000000)
         
         # Determine winner
         if p1_value > p2_value:
