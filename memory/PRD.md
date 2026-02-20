@@ -1,31 +1,25 @@
 # BlendLink Platform - PRD
 
-## Latest: Full Codebase Audit Fixes (Feb 17, 2026)
+## Latest: Membership Tiers + Daily Claim Fix (Feb 20, 2026)
 
-### P0: Stripe Key Security (COMPLETED)
-- Created `stripe_config.py` — single source of truth for ALL Stripe keys
-- Updated .env with NEW Stripe secret key: `sk_live_51SkM5v...cIn`
-- Removed **20 hardcoded keys** from 10 backend files
-- All files now import from `stripe_config.py` which loads from .env with `override=True`
-- **ZERO hardcoded keys remain in codebase**
+### Tier Values Updated (backend SUBSCRIPTION_TIERS):
+| Tier | Price | BL Daily | Mints | Pages | Listings/mo | L1/L2 | XP |
+|------|-------|----------|-------|-------|-------------|-------|-----|
+| Free | $0 | 2,000 | 5 | 1 | 300 | 2%/1% | x1 |
+| Bronze | $4.99 | 20,000 | 20 | 3 | 2,000 | 3%/2% | x2 |
+| Silver | $9.99 | 80,000 | 50 | 10 | 10,000 | 3%/2% | x3 |
+| Gold | $14.99 | 200,000 | 150 | 25 | 25,000 | 3%/2% | x4 |
+| Diamond | $29.99 | 500,000 | Unlimited | Unlimited | Unlimited | 4%/3% | x5 |
 
-### P1: React ErrorBoundary (COMPLETED)
-- Created `ErrorBoundary.jsx` component with error UI and refresh button
-- Wrapped entire App with `<ErrorBoundary>` in App.js
-- Prevents full-page white screen crashes
-
-### P2: Dead Code Removed (COMPLETED)
-- Deleted `VerifyEmail.jsx` (unused since email verification was removed)
-- Deleted `EmailVerificationPending.jsx` (unused)
-- Stripe key consolidated into `stripe_config.py` module
-
-### P3: Code Quality (COMPLETED)
-- Removed **all console.log** statements from production page code
-- Added `.catch()` to unhandled promise chains in SocialFeed, ListingDetail, PhotoGameArena
-
-### Stripe Keys (Current Active):
-- Secret: `sk_live_51SkM5vRv11guK54QSCre1z...` (in .env only)
-- Publishable: `pk_live_51SkM5vRv11guK54QJjH0t5...` (in .env + frontend .env)
+### Changes:
+- Bronze BL daily: 15,000 → 20,000
+- Silver BL daily: 40,000 → 80,000
+- Added monthly_listing_limit field to all tiers
+- Free tier daily claim now works (was blocked before)
+- Cooldown: 24-hour rolling (not midnight reset)
+- Daily claim status endpoint returns tier + claim_amount from server
+- Frontend uses server-returned claim_amount (not hardcoded)
+- Countdown displays hours + minutes
 
 ---
-*Last Updated: February 17, 2026*
+*Last Updated: February 20, 2026*
