@@ -1184,33 +1184,54 @@ class PhotoGameService:
             }
         }
         
-        # Check if Stage 1 (or tiebreaker) is complete
-        stage_winner = None
+        # Check if this RPS round has a winner (single round = 1 win needed to advance)
+        # Match uses alternating rounds: R1=RPS, R2=Tapping, R3=RPS, R4=Tapping, R5=RPS
+        # Track overall match score (not just RPS sub-wins)
+        match_round = session.get("match_round", 1)
+        p1_match_wins = session.get("player1_match_wins", 0)
+        p2_match_wins = session.get("player2_match_wins", 0)
+        
+        if round_winner == "player1":
+            p1_match_wins += 1
+        elif round_winner == "player2":
+            p2_match_wins += 1
+        
+        updates["$set"]["player1_match_wins"] = p1_match_wins
+        updates["$set"]["player2_match_wins"] = p2_match_wins
+        
+        round_data["match_round"] = match_round
+        round_data["player1_match_wins"] = p1_match_wins
+        round_data["player2_match_wins"] = p2_match_wins
+        
+        # Determine next phase based on match score and round sequence
         next_phase = session.get("phase")
+        match_over = False
         
-        if p1_wins >= 3:
-            stage_winner = session["player1_id"]
-        elif p2_wins >= 3:
-            stage_winner = session["player2_id"]
-        
-        if stage_winner:
-            stage_num = session.get("stage_number", 1)
+        if p1_match_wins >= 3 or p2_match_wins >= 3:
+            # Match over — one player reached 3 wins
+            match_over = True
+            overall_winner = session["player1_id"] if p1_match_wins >= 3 else session["player2_id"]
+            updates["$set"]["phase"] = "completed"
+            updates["$set"]["winner_id"] = overall_winner
+            updates["$set"]["completed_at"] = datetime.now(timezone.utc).isoformat()
+            round_data["overall_winner"] = "player1" if overall_winner == session["player1_id"] else "player2"
+            next_phase = "completed"
+        elif round_winner != "tie":
+            # Advance to next round — alternate RPS ↔ Tapping
+            # Odd rounds (1,3,5) = RPS, Even rounds (2,4) = Tapping
+            next_round = match_round + 1
+            updates["$set"]["match_round"] = next_round
             
-            if stage_num == 1:
-                # Stage 1 complete - move to photo battle
-                updates["$set"]["stage1_winner"] = stage_winner
+            if next_round % 2 == 0:
+                # Even round = Photo Auction Bidding (tapping)
                 updates["$set"]["phase"] = "photo_battle"
                 updates["$set"]["stage_number"] = 2
-                round_data["stage_winner"] = "player1" if stage_winner == session["player1_id"] else "player2"
                 round_data["next_phase"] = "photo_battle"
                 next_phase = "photo_battle"
-            elif stage_num == 3:
-                # Tiebreaker complete - determine overall winner
-                updates["$set"]["phase"] = "completed"
-                updates["$set"]["winner_id"] = stage_winner
-                updates["$set"]["completed_at"] = datetime.now(timezone.utc).isoformat()
-                round_data["overall_winner"] = "player1" if stage_winner == session["player1_id"] else "player2"
-                next_phase = "completed"
+            else:
+                # Odd round = RPS (stays in rps_auction)
+                next_phase = "rps_auction"
+                round_data["next_phase"] = "rps_auction"
         
         await self.db.game_sessions.update_one({"session_id": session_id}, updates)
         
