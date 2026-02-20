@@ -16,8 +16,8 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-# Force load .env with override=True to beat system env vars (like STRIPE_API_KEY=sk_test_emergent)
-load_dotenv(Path(__file__).parent / '.env', override=True)
+# Load .env file (override=False so Kubernetes env vars take precedence in production)
+load_dotenv(Path(__file__).parent / '.env', override=False)
 
 # Load from environment variables ONLY — never hardcode
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
