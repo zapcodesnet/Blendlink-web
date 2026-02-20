@@ -574,17 +574,19 @@ class SubscriptionService:
         
         # Check cooldown (24 hours since last claim)
         now = datetime.now(timezone.utc)
-        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
         
         last_claimed_str = sub.get("last_bonus_claimed")
         if last_claimed_str:
             last_claimed = datetime.fromisoformat(last_claimed_str.replace("Z", "+00:00"))
-            if last_claimed >= today_start:
+            cooldown_end = last_claimed + timedelta(hours=24)
+            if now < cooldown_end:
+                remaining = (cooldown_end - now).total_seconds()
                 return {
                     "success": False,
-                    "message": "Already claimed today's bonus!",
+                    "message": "Daily bonus already claimed. Come back later!",
                     "can_claim": False,
-                    "next_claim": (today_start + timedelta(days=1)).isoformat()
+                    "next_claim": cooldown_end.isoformat(),
+                    "remaining_seconds": int(remaining)
                 }
         
         # Calculate streak bonus
