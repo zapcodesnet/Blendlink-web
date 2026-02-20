@@ -1970,7 +1970,17 @@ const PhotoGameArena = () => {
       setPhotoBattleResult(response.data.battle_result);
       
       setTimeout(() => {
-        if (response.data.phase === 'tiebreaker') {
+        if (response.data.phase === 'rps_auction') {
+          // Next round is RPS — advance back to RPS
+          setGameState('rps_auction');
+          setPlayerBankroll(STARTING_BANKROLL);
+          setOpponentBankroll(STARTING_BANKROLL);
+          setPhotoBattleResult(null);
+          // Update match wins
+          if (response.data.player1_match_wins !== undefined) {
+            setRpsWins({ player: response.data.player1_match_wins, opponent: response.data.player2_match_wins });
+          }
+        } else if (response.data.phase === 'tiebreaker') {
           setGameState('tiebreaker');
           setPlayerBankroll(STARTING_BANKROLL);
           setOpponentBankroll(STARTING_BANKROLL);
