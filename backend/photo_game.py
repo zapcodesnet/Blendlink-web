@@ -1489,10 +1489,18 @@ class PhotoGameService:
                     details={"opponent": winner_id}
                 )
             
+            # Add XP to loser's photo too (multiplied by subscription tier)
             if session.get("player1_photo_id") and loser_id == session["player1_id"]:
+                xp_mult = await get_user_xp_multiplier(self.db, loser_id)
                 await self.db.minted_photos.update_one(
                     {"mint_id": session["player1_photo_id"]},
-                    {"$inc": {"xp": 1, "battles_lost": 1}}
+                    {"$inc": {"xp": XP_PER_ROUND * xp_mult, "battles_lost": 1}}
+                )
+            elif session.get("player2_photo_id") and loser_id == session.get("player2_id"):
+                xp_mult = await get_user_xp_multiplier(self.db, loser_id)
+                await self.db.minted_photos.update_one(
+                    {"mint_id": session["player2_photo_id"]},
+                    {"$inc": {"xp": XP_PER_ROUND * xp_mult, "battles_lost": 1}}
                 )
         
         # Mark winnings as distributed
