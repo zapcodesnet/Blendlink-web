@@ -822,28 +822,32 @@ async def claim_daily_bl(current_user: dict = Depends(get_current_user)) -> Dail
 
 @referral_router.get("/daily-claim/status")
 async def get_daily_claim_status(current_user: dict = Depends(get_current_user)):
-    """Get current daily claim status"""
+    """Get current daily claim status based on subscription tier"""
     user = await db.users.find_one(
         {"user_id": current_user["user_id"]},
-        {"daily_claim_last": 1, "rank": 1, "bl_coins": 1}
+        {"_id": 0, "daily_claim_last": 1, "bl_coins": 1, "subscription_tier": 1}
     )
     
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
+    # Get claim amount from subscription tier
+    from subscription_tiers import SUBSCRIPTION_TIERS
+    sub = await db.subscriptions.find_one({"user_id": current_user["user_id"]}, {"_id": 0, "tier": 1, "last_bonus_claimed": 1})
+    tier = (sub.get("tier") if sub else None) or (user.get("subscription_tier")) or "free"
+    tier_info = SUBSCRIPTION_TIERS.get(tier, SUBSCRIPTION_TIERS["free"])
+    claim_amount = tier_info.get("daily_bl_bonus", 2000)
+    
     now = datetime.now(timezone.utc)
-    last_claim = user.get("daily_claim_last")
-    rank = UserRank(user.get("rank", "regular"))
-    is_diamond = rank == UserRank.DIAMOND_LEADER
-    claim_amount = DIAMOND_DAILY_CLAIM_BL if is_diamond else REGULAR_DAILY_CLAIM_BL
+    last_claim = user.get("daily_claim_last") or (sub.get("last_bonus_claimed") if sub else None)
     
     can_claim = True
     seconds_remaining = 0
     next_claim_at = now.isoformat()
     
     if last_claim:
-        last_claim_dt = datetime.fromisoformat(last_claim.replace("Z", "+00:00"))
-        cooldown_end = last_claim_dt + timedelta(hours=DAILY_CLAIM_COOLDOWN_HOURS)
+        last_claim_dt = datetime.fromisoformat(str(last_claim).replace("Z", "+00:00"))
+        cooldown_end = last_claim_dt + timedelta(hours=24)
         
         if now < cooldown_end:
             can_claim = False
@@ -855,7 +859,8 @@ async def get_daily_claim_status(current_user: dict = Depends(get_current_user))
         "claim_amount": claim_amount,
         "seconds_remaining": seconds_remaining,
         "next_claim_at": next_claim_at,
-        "is_diamond": is_diamond,
+        "tier": tier,
+        "tier_name": tier_info.get("name", "Free"),
         "current_balance": user.get("bl_coins", 0),
     }
 
