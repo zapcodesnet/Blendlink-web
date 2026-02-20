@@ -1333,6 +1333,8 @@ class PhotoGameService:
         battle_result = {
             "player1_value": p1_value,
             "player2_value": p2_value,
+            "player1_details": p1_result,
+            "player2_details": p2_result,
             "player1_photo": {
                 "name": p1_photo.get("name"),
                 "scenery_type": p1_photo.get("scenery_type"),
