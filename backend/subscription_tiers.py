@@ -44,16 +44,16 @@ SUBSCRIPTION_TIERS = {
         "matchmaking_priority": 0,
         "can_create_tournaments": False,
         "max_member_pages": 1,
+        "monthly_listing_limit": 300,
         "exclusive_badges": [],
-        # Commission rates (percentage of 10% platform fee)
-        "commission_l1_rate": 0.02,  # 2% from direct recruits
-        "commission_l2_rate": 0.01,  # 1% from indirect recruits
+        "commission_l1_rate": 0.02,
+        "commission_l2_rate": 0.01,
         "features": [
             "5 photo mints per day",
             "2,000 BL daily claim",
             "1x XP per round",
-            "Basic matchmaking",
             "1 member page",
+            "300 listings per month",
             "2% L1 / 1% L2 commissions"
         ]
     },
@@ -62,7 +62,7 @@ SUBSCRIPTION_TIERS = {
         "price_monthly": 4.99,
         "stripe_price_id": os.environ.get("STRIPE_BRONZE_PRICE_ID"),
         "daily_mint_limit": 20,
-        "daily_bl_bonus": 15_000,
+        "daily_bl_bonus": 20_000,
         "xp_multiplier": 2,
         "bonus_streak_multiplier": 1.25,
         "marketplace_fee_discount": 1,
@@ -70,18 +70,17 @@ SUBSCRIPTION_TIERS = {
         "matchmaking_priority": 1,
         "can_create_tournaments": False,
         "max_member_pages": 3,
+        "monthly_listing_limit": 2_000,
         "exclusive_badges": ["bronze_supporter"],
-        # Commission rates (percentage of 10% platform fee)
-        "commission_l1_rate": 0.03,  # 3% from direct recruits
-        "commission_l2_rate": 0.02,  # 2% from indirect recruits
+        "commission_l1_rate": 0.03,
+        "commission_l2_rate": 0.02,
         "features": [
             "20 photo mints per day",
-            "15,000 BL daily claim",
+            "20,000 BL daily claim",
             "2x XP per round",
-            "Priority matchmaking",
             "3 member pages",
-            "3% L1 / 2% L2 commissions",
-            "Bronze supporter badge"
+            "2,000 listings per month",
+            "3% L1 / 2% L2 commissions"
         ]
     },
     "silver": {
@@ -89,7 +88,7 @@ SUBSCRIPTION_TIERS = {
         "price_monthly": 9.99,
         "stripe_price_id": os.environ.get("STRIPE_SILVER_PRICE_ID"),
         "daily_mint_limit": 50,
-        "daily_bl_bonus": 40_000,
+        "daily_bl_bonus": 80_000,
         "xp_multiplier": 3,
         "bonus_streak_multiplier": 1.5,
         "marketplace_fee_discount": 2,
@@ -97,19 +96,17 @@ SUBSCRIPTION_TIERS = {
         "matchmaking_priority": 2,
         "can_create_tournaments": True,
         "max_member_pages": 10,
-        "exclusive_badges": ["silver_supporter", "tournament_host"],
-        # Commission rates (percentage of 10% platform fee)
-        "commission_l1_rate": 0.03,  # 3% from direct recruits
-        "commission_l2_rate": 0.02,  # 2% from indirect recruits
+        "monthly_listing_limit": 10_000,
+        "exclusive_badges": ["silver_supporter"],
+        "commission_l1_rate": 0.03,
+        "commission_l2_rate": 0.02,
         "features": [
             "50 photo mints per day",
-            "40,000 BL daily claim",
+            "80,000 BL daily claim",
             "3x XP per round",
-            "VIP matchmaking queue",
             "10 member pages",
-            "3% L1 / 2% L2 commissions",
-            "Create tournaments",
-            "Silver & Tournament badges"
+            "10,000 listings per month",
+            "3% L1 / 2% L2 commissions"
         ]
     },
     "gold": {
@@ -125,26 +122,24 @@ SUBSCRIPTION_TIERS = {
         "matchmaking_priority": 3,
         "can_create_tournaments": True,
         "max_member_pages": 25,
-        "exclusive_badges": ["gold_supporter", "tournament_host", "vip"],
-        # Commission rates (percentage of 10% platform fee)
-        "commission_l1_rate": 0.03,  # 3% from direct recruits
-        "commission_l2_rate": 0.02,  # 2% from indirect recruits
+        "monthly_listing_limit": 25_000,
+        "exclusive_badges": ["gold_supporter"],
+        "commission_l1_rate": 0.03,
+        "commission_l2_rate": 0.02,
         "features": [
             "150 photo mints per day",
             "200,000 BL daily claim",
             "4x XP per round",
-            "VIP matchmaking queue",
             "25 member pages",
-            "3% L1 / 2% L2 commissions",
-            "Create tournaments",
-            "Gold, Tournament & VIP badges"
+            "25,000 listings per month",
+            "3% L1 / 2% L2 commissions"
         ]
     },
     "diamond": {
         "name": "Diamond",
         "price_monthly": 29.99,
         "stripe_price_id": os.environ.get("STRIPE_DIAMOND_PRICE_ID"),
-        "daily_mint_limit": 999999,  # Unlimited
+        "daily_mint_limit": 999999,
         "daily_bl_bonus": 500_000,
         "xp_multiplier": 5,
         "bonus_streak_multiplier": 2.0,
@@ -152,20 +147,18 @@ SUBSCRIPTION_TIERS = {
         "stamina_regen_boost": 2.0,
         "matchmaking_priority": 4,
         "can_create_tournaments": True,
-        "max_member_pages": 999999,  # Unlimited
-        "exclusive_badges": ["diamond_supporter", "tournament_host", "vip", "elite"],
-        # Commission rates (percentage of 10% platform fee)
-        "commission_l1_rate": 0.04,  # 4% from direct recruits
-        "commission_l2_rate": 0.03,  # 3% from indirect recruits
+        "max_member_pages": 999999,
+        "monthly_listing_limit": 999999,
+        "exclusive_badges": ["diamond_supporter"],
+        "commission_l1_rate": 0.04,
+        "commission_l2_rate": 0.03,
         "features": [
             "Unlimited photo mints",
             "500,000 BL daily claim",
             "5x XP per round",
-            "Elite matchmaking queue",
             "Unlimited member pages",
-            "4% L1 / 3% L2 commissions",
-            "Create unlimited tournaments",
-            "All exclusive badges"
+            "Unlimited listings",
+            "4% L1 / 3% L2 commissions"
         ]
     }
 }
