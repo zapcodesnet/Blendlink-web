@@ -570,15 +570,9 @@ class SubscriptionService:
         tier = sub.get("tier", "free")
         tier_info = SUBSCRIPTION_TIERS.get(tier, SUBSCRIPTION_TIERS["free"])
         
-        daily_bonus = tier_info.get("daily_bl_bonus", 0)
-        if daily_bonus == 0:
-            return {
-                "success": False,
-                "message": "Free tier doesn't include daily bonus. Upgrade to Basic or Premium!",
-                "can_claim": False
-            }
+        daily_bonus = tier_info.get("daily_bl_bonus", 2000)
         
-        # Check if already claimed today
+        # Check cooldown (24 hours since last claim)
         now = datetime.now(timezone.utc)
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
         
