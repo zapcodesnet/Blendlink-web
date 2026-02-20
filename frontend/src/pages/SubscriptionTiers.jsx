@@ -114,12 +114,14 @@ const MEMBERSHIP_TIERS = {
     xp_multiplier: 5,
     daily_bl_bonus: 500000,
     max_pages: "Unlimited",
+    monthly_listings: "Unlimited",
     description: "Earn 4% commission from direct recruits (level 1) and 3% from indirect recruits (level 2) on each successful sale by downlines.",
     benefits: [
       "Unlimited photo minting per day",
       "Gain x5 experience (XP) per round of the minted photo game",
       "Claim 500,000 free BL coins daily",
-      "Create unlimited member's pages (blendlink.net/[slug])"
+      "Create unlimited member's pages (blendlink.net/[slug])",
+      "Unlimited listings per month"
     ],
     idealFor: "The premium tier for top performers seeking maximum earnings, unlimited creation power, and elite benefits."
   }
