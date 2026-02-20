@@ -794,7 +794,12 @@ export default function Wallet() {
             {canClaim ? (
               <>Claim Daily {claimAmount.toLocaleString()} BL</>
             ) : (
-              <>Next claim in {Math.ceil((dailyClaimStatus?.seconds_remaining || 0) / 3600)}h</>
+              <>Next claim in {(() => {
+                const s = dailyClaimStatus?.seconds_remaining || 0;
+                const h = Math.floor(s / 3600);
+                const m = Math.floor((s % 3600) / 60);
+                return h > 0 ? `${h}h ${m}m` : `${m}m`;
+              })()}</>
             )}
           </Button>
           
