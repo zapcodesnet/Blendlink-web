@@ -217,7 +217,7 @@ export default function AdminMembershipTiers() {
         <div>
           <h2 className="text-2xl font-bold text-white">Membership Tiers</h2>
           <p className="text-slate-400 mt-1">
-            Manage tier benefits, commission rates, and pricing
+            Manage tier benefits, pricing, and individual user memberships
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -225,7 +225,7 @@ export default function AdminMembershipTiers() {
             <p className="text-sm text-slate-400">Total Active Subscribers</p>
             <p className="text-2xl font-bold text-white">{stats.total.toLocaleString()}</p>
           </div>
-          <Button onClick={fetchTiers} variant="outline" size="sm">
+          <Button onClick={activeTab === 'tiers' ? fetchTiers : () => searchUsers()} variant="outline" size="sm">
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
           </Button>
