@@ -3,7 +3,7 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
 import { toast } from "sonner";
-import { adminAPI } from "./AdminLayout";
+// adminAPI not used here - using adminFetch for direct API calls
 import { getApiUrl } from "../../utils/runtimeConfig";
 import {
   Crown, Users, DollarSign, Coins, Gift, Edit2, Save, X,
