@@ -69,6 +69,73 @@ export default function AdminMembershipTiers() {
     fetchTiers();
   }, [fetchTiers]);
 
+  // === Per-User Management Functions ===
+  const searchUsers = useCallback(async (search = userSearch, page = 1) => {
+    setUserLoading(true);
+    try {
+      const data = await adminAPI(`${API_BASE}/api/admin/membership/users?search=${encodeURIComponent(search)}&page=${page}&limit=15`);
+      setUserResults(data.users || []);
+      setUserTotal(data.total || 0);
+      setUserPage(page);
+    } catch (e) {
+      toast.error("Failed to search users");
+    } finally {
+      setUserLoading(false);
+    }
+  }, [userSearch]);
+
+  const handleChangeTier = async () => {
+    if (!editingUser) return;
+    if (!confirm(`Change ${editingUser.email}'s tier to ${userEditForm.tier}?`)) return;
+    setUserSaving(true);
+    try {
+      const data = await adminAPI(`${API_BASE}/api/admin/membership/users/${editingUser.user_id}/change-tier`, {
+        method: 'POST',
+        body: JSON.stringify({
+          tier: userEditForm.tier,
+          custom_price: userEditForm.custom_price ? parseFloat(userEditForm.custom_price) : null,
+          validity_type: userEditForm.validity_type || null,
+          validity_value: userEditForm.validity_value || null,
+          reason: userEditForm.reason,
+        })
+      });
+      toast.success(data.message || "Tier changed successfully");
+      setEditingUser(null);
+      searchUsers(userSearch, userPage);
+    } catch (e) {
+      toast.error(e.message || "Failed to change tier");
+    } finally {
+      setUserSaving(false);
+    }
+  };
+
+  const handleCancelSubscription = async (userId, email) => {
+    const immediately = confirm(`Cancel ${email}'s subscription IMMEDIATELY?\n\nOK = Cancel now\nCancel = Cancel at end of billing period`);
+    const reason = prompt("Reason for cancellation (optional):");
+    try {
+      const data = await adminAPI(`${API_BASE}/api/admin/membership/users/${userId}/cancel`, {
+        method: 'POST',
+        body: JSON.stringify({ immediately, reason: reason || "" })
+      });
+      toast.success(data.message);
+      searchUsers(userSearch, userPage);
+    } catch (e) {
+      toast.error(e.message || "Failed to cancel");
+    }
+  };
+
+  const openEditUser = (user) => {
+    setEditingUser(user);
+    setUserEditForm({
+      tier: user.subscription_tier || 'free',
+      custom_price: user.custom_price || '',
+      validity_type: user.validity_type || '',
+      validity_value: user.validity_value || '',
+      reason: '',
+      immediately: true,
+    });
+  };
+
   const handleEdit = (tier) => {
     setEditingTier(tier.tier_id);
     setEditForm({
