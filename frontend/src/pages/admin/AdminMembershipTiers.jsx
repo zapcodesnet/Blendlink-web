@@ -494,6 +494,154 @@ export default function AdminMembershipTiers() {
           );
         })}
       </div>
+      </>
+      )}
+
+      {/* Tab: Manage User Memberships */}
+      {activeTab === 'users' && (
+      <div className="space-y-4">
+        {/* Search */}
+        <div className="flex gap-2">
+          <Input
+            placeholder="Search by email, username, name, or user ID..."
+            value={userSearch}
+            onChange={(e) => setUserSearch(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && searchUsers(userSearch, 1)}
+            className="bg-slate-800 border-slate-700 text-white"
+          />
+          <Button onClick={() => searchUsers(userSearch, 1)} disabled={userLoading}>
+            {userLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Search'}
+          </Button>
+        </div>
+
+        {/* Results */}
+        <div className="bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-700 text-slate-400">
+                  <th className="px-4 py-3 text-left">User</th>
+                  <th className="px-4 py-3 text-left">Tier</th>
+                  <th className="px-4 py-3 text-left">Status</th>
+                  <th className="px-4 py-3 text-left">Price</th>
+                  <th className="px-4 py-3 text-left">Expires</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {userResults.map((u) => {
+                  const tc = TIER_CONFIG[u.subscription_tier] || TIER_CONFIG.free;
+                  return (
+                    <tr key={u.user_id} className="border-b border-slate-700/50 hover:bg-slate-700/30">
+                      <td className="px-4 py-3">
+                        <p className="text-white font-medium">{u.name || u.username}</p>
+                        <p className="text-slate-400 text-xs">{u.email}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge className={`bg-gradient-to-r ${tc.color} text-white border-0`}>{tc.label}</Badge>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`text-xs px-2 py-1 rounded ${u.subscription_status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-slate-600/50 text-slate-400'}`}>
+                          {u.subscription_status || 'none'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-slate-300">{u.custom_price ? `$${u.custom_price}` : 'Default'}</td>
+                      <td className="px-4 py-3 text-slate-300 text-xs">{u.expires_at ? new Date(u.expires_at).toLocaleDateString() : '—'}</td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex gap-1 justify-end">
+                          <Button size="sm" variant="outline" onClick={() => openEditUser(u)} className="text-xs h-7">
+                            <Edit2 className="w-3 h-3 mr-1" /> Edit
+                          </Button>
+                          {u.subscription_tier !== 'free' && (
+                            <Button size="sm" variant="outline" onClick={() => handleCancelSubscription(u.user_id, u.email)} className="text-xs h-7 border-red-500/50 text-red-400 hover:bg-red-500/10">
+                              <X className="w-3 h-3 mr-1" /> Cancel
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {userResults.length === 0 && !userLoading && (
+                  <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-400">No users found. Search above.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          {/* Pagination */}
+          {userTotal > 15 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t border-slate-700">
+              <span className="text-sm text-slate-400">Page {userPage} of {Math.ceil(userTotal / 15)}</span>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" disabled={userPage <= 1} onClick={() => searchUsers(userSearch, userPage - 1)}>Prev</Button>
+                <Button size="sm" variant="outline" disabled={userPage >= Math.ceil(userTotal / 15)} onClick={() => searchUsers(userSearch, userPage + 1)}>Next</Button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Edit User Modal */}
+        {editingUser && (
+          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setEditingUser(null)}>
+            <div className="bg-slate-800 rounded-2xl border border-slate-700 max-w-md w-full p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+              <h3 className="text-lg font-bold text-white">Edit Membership — {editingUser.name || editingUser.email}</h3>
+              <p className="text-sm text-slate-400">{editingUser.email} ({editingUser.user_id})</p>
+              
+              {/* Tier Select */}
+              <div>
+                <label className="block text-sm text-slate-300 mb-1">Membership Tier</label>
+                <select value={userEditForm.tier} onChange={(e) => setUserEditForm({...userEditForm, tier: e.target.value})} className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white">
+                  <option value="free">Free</option>
+                  <option value="bronze">Bronze ($4.99/mo)</option>
+                  <option value="silver">Silver ($9.99/mo)</option>
+                  <option value="gold">Gold ($14.99/mo)</option>
+                  <option value="diamond">Diamond ($29.99/mo)</option>
+                </select>
+              </div>
+              
+              {/* Custom Price */}
+              <div>
+                <label className="block text-sm text-slate-300 mb-1">Custom Price (USD, optional)</label>
+                <Input type="number" min="0" step="0.01" placeholder="Leave blank for default" value={userEditForm.custom_price} onChange={(e) => setUserEditForm({...userEditForm, custom_price: e.target.value})} className="bg-slate-700 border-slate-600 text-white" />
+              </div>
+              
+              {/* Validity */}
+              <div>
+                <label className="block text-sm text-slate-300 mb-1">Validity</label>
+                <select value={userEditForm.validity_type} onChange={(e) => setUserEditForm({...userEditForm, validity_type: e.target.value, validity_value: ''})} className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white mb-2">
+                  <option value="">Default (monthly recurring)</option>
+                  <option value="months"># of Months</option>
+                  <option value="years"># of Years</option>
+                  <option value="forever">Forever (Lifetime)</option>
+                  <option value="date">Until Specific Date</option>
+                </select>
+                {(userEditForm.validity_type === 'months' || userEditForm.validity_type === 'years') && (
+                  <Input type="number" min="1" placeholder={userEditForm.validity_type === 'months' ? 'Number of months' : 'Number of years'} value={userEditForm.validity_value} onChange={(e) => setUserEditForm({...userEditForm, validity_value: e.target.value})} className="bg-slate-700 border-slate-600 text-white" />
+                )}
+                {userEditForm.validity_type === 'date' && (
+                  <Input type="date" value={userEditForm.validity_value} onChange={(e) => setUserEditForm({...userEditForm, validity_value: e.target.value})} className="bg-slate-700 border-slate-600 text-white" />
+                )}
+              </div>
+              
+              {/* Reason */}
+              <div>
+                <label className="block text-sm text-slate-300 mb-1">Reason (for audit log)</label>
+                <Input placeholder="Optional reason" value={userEditForm.reason} onChange={(e) => setUserEditForm({...userEditForm, reason: e.target.value})} className="bg-slate-700 border-slate-600 text-white" />
+              </div>
+              
+              {/* Actions */}
+              <div className="flex gap-2 pt-2">
+                <Button onClick={handleChangeTier} disabled={userSaving} className="flex-1 bg-blue-600 hover:bg-blue-700">
+                  {userSaving ? <RefreshCw className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                  Save Changes
+                </Button>
+                <Button onClick={() => setEditingUser(null)} variant="outline" className="flex-1">Cancel</Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+      )}
     </div>
   );
 }
