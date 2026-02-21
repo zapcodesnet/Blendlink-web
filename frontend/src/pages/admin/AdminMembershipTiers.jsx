@@ -127,7 +127,7 @@ export default function AdminMembershipTiers() {
     const immediately = confirm(`Cancel ${email}'s subscription IMMEDIATELY?\n\nOK = Cancel now\nCancel = Cancel at end of billing period`);
     const reason = prompt("Reason for cancellation (optional):");
     try {
-      const data = await adminAPI(`${API_BASE}/api/admin/membership/users/${userId}/cancel`, {
+      const data = await adminFetch(`/admin/membership/users/${userId}/cancel`, {
         method: 'POST',
         body: JSON.stringify({ immediately, reason: reason || "" })
       });
