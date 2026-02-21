@@ -23,6 +23,7 @@ const TIER_CONFIG = {
 };
 
 export default function AdminMembershipTiers() {
+  const [activeTab, setActiveTab] = useState('tiers'); // 'tiers' | 'users'
   const [tiers, setTiers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingTier, setEditingTier] = useState(null);
@@ -30,6 +31,18 @@ export default function AdminMembershipTiers() {
   const [saving, setSaving] = useState(false);
   const [expandedTier, setExpandedTier] = useState(null);
   const [stats, setStats] = useState({ total: 0 });
+  
+  // Per-user management state
+  const [userSearch, setUserSearch] = useState('');
+  const [userResults, setUserResults] = useState([]);
+  const [userTotal, setUserTotal] = useState(0);
+  const [userPage, setUserPage] = useState(1);
+  const [userLoading, setUserLoading] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [userEditForm, setUserEditForm] = useState({
+    tier: 'free', custom_price: '', validity_type: '', validity_value: '', reason: '', immediately: true
+  });
+  const [userSaving, setUserSaving] = useState(false);
 
   const fetchTiers = useCallback(async () => {
     setLoading(true);
