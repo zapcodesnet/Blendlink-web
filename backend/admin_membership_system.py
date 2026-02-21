@@ -1204,7 +1204,7 @@ async def search_membership_users(
     search: str = "",
     page: int = 1,
     limit: int = 20,
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_admin_user)
 ):
     """Search users for membership management"""
     skip = (page - 1) * limit
@@ -1249,7 +1249,7 @@ async def search_membership_users(
 
 
 @admin_membership_router.get("/users/{user_id}")
-async def get_user_membership_detail(user_id: str, current_user: dict = Depends(get_current_user)):
+async def get_user_membership_detail(user_id: str, current_user: dict = Depends(get_admin_user)):
     """Get detailed membership info for a specific user"""
     user = await db.users.find_one({"user_id": user_id}, {"_id": 0, "password_hash": 0})
     if not user:
@@ -1268,7 +1268,7 @@ async def get_user_membership_detail(user_id: str, current_user: dict = Depends(
 async def change_user_tier(
     user_id: str,
     request: Request,
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_admin_user)
 ):
     """Change a user's membership tier (admin override)"""
     body = await request.json()
@@ -1360,7 +1360,7 @@ async def change_user_tier(
 async def cancel_user_subscription(
     user_id: str,
     request: Request,
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_admin_user)
 ):
     """Cancel a user's subscription"""
     body = await request.json()
@@ -1405,7 +1405,7 @@ async def cancel_user_subscription(
 async def get_membership_audit_log(
     page: int = 1,
     limit: int = 50,
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_admin_user)
 ):
     """Get membership change audit log (Super Admin only)"""
     skip = (page - 1) * limit
