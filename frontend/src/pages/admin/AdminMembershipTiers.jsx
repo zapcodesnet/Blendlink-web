@@ -232,6 +232,19 @@ export default function AdminMembershipTiers() {
         </div>
       </div>
 
+      {/* Tab Navigation */}
+      <div className="flex gap-2 border-b border-slate-700 pb-2">
+        <button onClick={() => setActiveTab('tiers')} className={`px-4 py-2 rounded-t-lg font-medium text-sm transition-colors ${activeTab === 'tiers' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}`}>
+          <Crown className="w-4 h-4 inline mr-2" />Tier Configuration
+        </button>
+        <button onClick={() => { setActiveTab('users'); if (userResults.length === 0) searchUsers('', 1); }} className={`px-4 py-2 rounded-t-lg font-medium text-sm transition-colors ${activeTab === 'users' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}`}>
+          <Users className="w-4 h-4 inline mr-2" />Manage User Memberships
+        </button>
+      </div>
+
+      {/* Tab: Tier Configuration */}
+      {activeTab === 'tiers' && (
+      <>
       {/* Tier Cards */}
       <div className="grid gap-4">
         {tiers.map((tier) => {
