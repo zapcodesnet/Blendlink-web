@@ -87,7 +87,7 @@ export default function AdminMembershipTiers() {
   const searchUsers = useCallback(async (search = userSearch, page = 1) => {
     setUserLoading(true);
     try {
-      const data = await adminAPI(`${API_BASE}/api/admin/membership/users?search=${encodeURIComponent(search)}&page=${page}&limit=15`);
+      const data = await adminFetch(`/admin/membership/users?search=${encodeURIComponent(search)}&page=${page}&limit=15`);
       setUserResults(data.users || []);
       setUserTotal(data.total || 0);
       setUserPage(page);
