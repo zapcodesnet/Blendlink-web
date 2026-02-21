@@ -103,7 +103,7 @@ export default function AdminMembershipTiers() {
     if (!confirm(`Change ${editingUser.email}'s tier to ${userEditForm.tier}?`)) return;
     setUserSaving(true);
     try {
-      const data = await adminAPI(`${API_BASE}/api/admin/membership/users/${editingUser.user_id}/change-tier`, {
+      const data = await adminFetch(`/admin/membership/users/${editingUser.user_id}/change-tier`, {
         method: 'POST',
         body: JSON.stringify({
           tier: userEditForm.tier,
