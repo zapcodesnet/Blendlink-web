@@ -1313,7 +1313,7 @@ async def change_user_tier(
         "tier": new_tier,
         "status": "active" if new_tier != "free" else "none",
         "admin_override": True,
-        "admin_override_by": current_user.get("user_id"),
+        "admin_override_by": admin.get("user_id"),
         "admin_override_at": now.isoformat(),
         "updated_at": now.isoformat(),
     }
@@ -1336,8 +1336,8 @@ async def change_user_tier(
     # Audit log
     await db.admin_audit_log.insert_one({
         "action": "change_user_tier",
-        "admin_id": current_user.get("user_id"),
-        "admin_email": current_user.get("email"),
+        "admin_id": admin.get("user_id"),
+        "admin_email": admin.get("email"),
         "target_user_id": user_id,
         "old_tier": old_tier,
         "new_tier": new_tier,
@@ -1378,19 +1378,19 @@ async def cancel_user_subscription(
         await db.users.update_one({"user_id": user_id}, {"$set": {"subscription_tier": "free"}})
         await db.subscriptions.update_one(
             {"user_id": user_id},
-            {"$set": {"status": "canceled", "tier": "free", "canceled_at": now.isoformat(), "canceled_by": current_user.get("user_id")}}
+            {"$set": {"status": "canceled", "tier": "free", "canceled_at": now.isoformat(), "canceled_by": admin.get("user_id")}}
         )
     else:
         await db.subscriptions.update_one(
             {"user_id": user_id},
-            {"$set": {"status": "cancel_at_period_end", "canceled_at": now.isoformat(), "canceled_by": current_user.get("user_id")}}
+            {"$set": {"status": "cancel_at_period_end", "canceled_at": now.isoformat(), "canceled_by": admin.get("user_id")}}
         )
     
     # Audit log
     await db.admin_audit_log.insert_one({
         "action": "cancel_user_subscription",
-        "admin_id": current_user.get("user_id"),
-        "admin_email": current_user.get("email"),
+        "admin_id": admin.get("user_id"),
+        "admin_email": admin.get("email"),
         "target_user_id": user_id,
         "old_tier": old_tier,
         "immediately": cancel_immediately,
