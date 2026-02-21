@@ -100,7 +100,7 @@ class CommissionRateOverrideRequest(BaseModel):
 # ============== AUTH HELPER ==============
 
 async def get_admin_user(request: Request) -> dict:
-    """Extract and verify admin user from request"""
+    """Extract and verify admin user from request - checks both users and admin_admins collections"""
     from jose import jwt, JWTError
     
     JWT_SECRET = os.environ.get('JWT_SECRET')
@@ -117,30 +117,42 @@ async def get_admin_user(request: Request) -> dict:
     
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        user_id = payload.get("user_id")
+        user_id = payload.get("user_id") or payload.get("sub")
         if not user_id:
             raise HTTPException(status_code=401, detail="Invalid token")
         
-        user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
-        if not user:
-            raise HTTPException(status_code=401, detail="User not found")
+        # Try finding in users collection first
+        user = await db.users.find_one({"user_id": user_id}, {"_id": 0, "password_hash": 0})
         
-        # Check if user is admin (check users collection + admin_admins collection)
-        is_admin = user.get("is_admin") or user.get("role") in ["admin", "superadmin", "super_admin", "co_admin", "moderator"]
+        # If user found in users collection, check admin status
+        if user:
+            is_admin = user.get("is_admin") or user.get("role") in ["admin", "superadmin", "super_admin", "co_admin", "moderator"]
+            if not is_admin:
+                # Check admin_admins collection by email
+                admin_record = await db.admin_admins.find_one(
+                    {"email": user.get("email"), "is_active": True},
+                    {"_id": 0, "role": 1}
+                )
+                if admin_record and admin_record.get("role") in ["super_admin", "co_admin", "moderator"]:
+                    is_admin = True
+            if is_admin:
+                return user
         
-        if not is_admin:
-            # Also check admin_admins collection
-            admin_record = await db.admin_admins.find_one(
-                {"email": user.get("email"), "is_active": True},
-                {"_id": 0, "role": 1}
-            )
-            if admin_record and admin_record.get("role") in ["super_admin", "co_admin", "moderator"]:
-                is_admin = True
+        # If not found in users, try admin_admins collection directly (admin-specific accounts)
+        admin_user = await db.admin_admins.find_one(
+            {"$or": [{"user_id": user_id}, {"admin_id": user_id}], "is_active": True},
+            {"_id": 0}
+        )
+        if admin_user:
+            return {
+                "user_id": admin_user.get("user_id") or admin_user.get("admin_id") or user_id,
+                "email": admin_user.get("email"),
+                "name": admin_user.get("name", "Admin"),
+                "role": admin_user.get("role", "admin"),
+                "is_admin": True,
+            }
         
-        if not is_admin:
-            raise HTTPException(status_code=403, detail="Admin access required")
-        
-        return user
+        raise HTTPException(status_code=403, detail="Admin access required")
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
