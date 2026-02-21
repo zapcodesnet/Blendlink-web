@@ -125,8 +125,19 @@ async def get_admin_user(request: Request) -> dict:
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
         
-        # Check if user is admin
-        if not user.get("is_admin") and user.get("role") not in ["admin", "superadmin"]:
+        # Check if user is admin (check users collection + admin_admins collection)
+        is_admin = user.get("is_admin") or user.get("role") in ["admin", "superadmin", "super_admin", "co_admin", "moderator"]
+        
+        if not is_admin:
+            # Also check admin_admins collection
+            admin_record = await db.admin_admins.find_one(
+                {"email": user.get("email"), "is_active": True},
+                {"_id": 0, "role": 1}
+            )
+            if admin_record and admin_record.get("role") in ["super_admin", "co_admin", "moderator"]:
+                is_admin = True
+        
+        if not is_admin:
             raise HTTPException(status_code=403, detail="Admin access required")
         
         return user
