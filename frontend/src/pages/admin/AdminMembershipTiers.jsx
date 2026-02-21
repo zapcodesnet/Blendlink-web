@@ -13,6 +13,20 @@ import {
 
 const API_BASE = getApiUrl();
 
+// Admin-authenticated fetch that sends the user's JWT token
+const adminFetch = async (endpoint, options = {}) => {
+  const token = localStorage.getItem('blendlink_token');
+  const headers = { 'Content-Type': 'application/json', ...options.headers };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  
+  const response = await fetch(`${API_BASE}/api${endpoint}`, { ...options, headers, cache: 'no-store' });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ detail: 'Request failed' }));
+    throw new Error(err.detail || `HTTP ${response.status}`);
+  }
+  return response.json();
+};
+
 // Tier colors and icons
 const TIER_CONFIG = {
   free: { color: "from-gray-500 to-gray-600", icon: Users, label: "Free" },
