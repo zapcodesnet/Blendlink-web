@@ -1195,3 +1195,225 @@ async def get_subscription_analytics(
         "daily_signups_trend": daily_signups,
         "churn_rate": round(churned / max(new_subscriptions, 1) * 100, 2)
     }
+
+
+# ============== PER-USER MEMBERSHIP MANAGEMENT ==============
+
+@admin_membership_router.get("/users")
+async def search_membership_users(
+    search: str = "",
+    page: int = 1,
+    limit: int = 20,
+    current_user: dict = Depends(get_current_user)
+):
+    """Search users for membership management"""
+    skip = (page - 1) * limit
+    
+    query = {}
+    if search:
+        query = {"$or": [
+            {"email": {"$regex": search, "$options": "i"}},
+            {"username": {"$regex": search, "$options": "i"}},
+            {"name": {"$regex": search, "$options": "i"}},
+            {"user_id": {"$regex": search, "$options": "i"}},
+        ]}
+    
+    total = await db.users.count_documents(query)
+    users = await db.users.find(
+        query,
+        {"_id": 0, "password_hash": 0}
+    ).sort("created_at", -1).skip(skip).limit(limit).to_list(length=limit)
+    
+    # Enrich with subscription data
+    results = []
+    for u in users:
+        sub = await db.subscriptions.find_one({"user_id": u["user_id"]}, {"_id": 0})
+        results.append({
+            "user_id": u.get("user_id"),
+            "email": u.get("email"),
+            "name": u.get("name"),
+            "username": u.get("username"),
+            "subscription_tier": u.get("subscription_tier") or "free",
+            "subscription_status": sub.get("status", "none") if sub else "none",
+            "stripe_customer_id": sub.get("stripe_customer_id") if sub else None,
+            "custom_price": sub.get("custom_price") if sub else None,
+            "custom_validity": sub.get("custom_validity") if sub else None,
+            "validity_type": sub.get("validity_type") if sub else None,
+            "expires_at": sub.get("current_period_end") or sub.get("expires_at") if sub else None,
+            "started_at": sub.get("current_period_start") or sub.get("created_at") if sub else None,
+            "created_at": u.get("created_at"),
+            "bl_coins": u.get("bl_coins", 0),
+        })
+    
+    return {"users": results, "total": total, "page": page, "limit": limit}
+
+
+@admin_membership_router.get("/users/{user_id}")
+async def get_user_membership_detail(user_id: str, current_user: dict = Depends(get_current_user)):
+    """Get detailed membership info for a specific user"""
+    user = await db.users.find_one({"user_id": user_id}, {"_id": 0, "password_hash": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    sub = await db.subscriptions.find_one({"user_id": user_id}, {"_id": 0})
+    
+    return {
+        "user": user,
+        "subscription": sub,
+        "current_tier": user.get("subscription_tier") or "free",
+    }
+
+
+@admin_membership_router.post("/users/{user_id}/change-tier")
+async def change_user_tier(
+    user_id: str,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """Change a user's membership tier (admin override)"""
+    body = await request.json()
+    new_tier = body.get("tier", "free")
+    custom_price = body.get("custom_price")
+    validity_type = body.get("validity_type")  # months, years, forever, date
+    validity_value = body.get("validity_value")  # number or date string
+    cancel_immediately = body.get("cancel_immediately", False)
+    reason = body.get("reason", "")
+    
+    valid_tiers = ["free", "bronze", "silver", "gold", "diamond"]
+    if new_tier not in valid_tiers:
+        raise HTTPException(status_code=400, detail=f"Invalid tier: {new_tier}")
+    
+    user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    old_tier = user.get("subscription_tier") or "free"
+    now = datetime.now(timezone.utc)
+    
+    # Calculate expiry
+    expires_at = None
+    if validity_type == "months" and validity_value:
+        expires_at = (now + timedelta(days=int(validity_value) * 30)).isoformat()
+    elif validity_type == "years" and validity_value:
+        expires_at = (now + timedelta(days=int(validity_value) * 365)).isoformat()
+    elif validity_type == "forever":
+        expires_at = "2099-12-31T23:59:59+00:00"  # Lifetime
+    elif validity_type == "date" and validity_value:
+        expires_at = validity_value  # ISO date string from date picker
+    
+    # Update user's tier
+    await db.users.update_one(
+        {"user_id": user_id},
+        {"$set": {"subscription_tier": new_tier}}
+    )
+    
+    # Update subscription record
+    sub_update = {
+        "user_id": user_id,
+        "tier": new_tier,
+        "status": "active" if new_tier != "free" else "none",
+        "admin_override": True,
+        "admin_override_by": current_user.get("user_id"),
+        "admin_override_at": now.isoformat(),
+        "updated_at": now.isoformat(),
+    }
+    
+    if custom_price is not None:
+        sub_update["custom_price"] = float(custom_price)
+    if expires_at:
+        sub_update["expires_at"] = expires_at
+        sub_update["current_period_end"] = expires_at
+    if validity_type:
+        sub_update["validity_type"] = validity_type
+        sub_update["validity_value"] = validity_value
+    
+    await db.subscriptions.update_one(
+        {"user_id": user_id},
+        {"$set": sub_update},
+        upsert=True
+    )
+    
+    # Audit log
+    await db.admin_audit_log.insert_one({
+        "action": "change_user_tier",
+        "admin_id": current_user.get("user_id"),
+        "admin_email": current_user.get("email"),
+        "target_user_id": user_id,
+        "old_tier": old_tier,
+        "new_tier": new_tier,
+        "custom_price": custom_price,
+        "validity_type": validity_type,
+        "validity_value": validity_value,
+        "reason": reason,
+        "timestamp": now.isoformat(),
+    })
+    
+    return {
+        "success": True,
+        "message": f"User {user_id} tier changed from {old_tier} to {new_tier}",
+        "old_tier": old_tier,
+        "new_tier": new_tier,
+    }
+
+
+@admin_membership_router.post("/users/{user_id}/cancel")
+async def cancel_user_subscription(
+    user_id: str,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """Cancel a user's subscription"""
+    body = await request.json()
+    cancel_immediately = body.get("immediately", False)
+    reason = body.get("reason", "")
+    
+    user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    old_tier = user.get("subscription_tier") or "free"
+    now = datetime.now(timezone.utc)
+    
+    if cancel_immediately:
+        await db.users.update_one({"user_id": user_id}, {"$set": {"subscription_tier": "free"}})
+        await db.subscriptions.update_one(
+            {"user_id": user_id},
+            {"$set": {"status": "canceled", "tier": "free", "canceled_at": now.isoformat(), "canceled_by": current_user.get("user_id")}}
+        )
+    else:
+        await db.subscriptions.update_one(
+            {"user_id": user_id},
+            {"$set": {"status": "cancel_at_period_end", "canceled_at": now.isoformat(), "canceled_by": current_user.get("user_id")}}
+        )
+    
+    # Audit log
+    await db.admin_audit_log.insert_one({
+        "action": "cancel_user_subscription",
+        "admin_id": current_user.get("user_id"),
+        "admin_email": current_user.get("email"),
+        "target_user_id": user_id,
+        "old_tier": old_tier,
+        "immediately": cancel_immediately,
+        "reason": reason,
+        "timestamp": now.isoformat(),
+    })
+    
+    return {"success": True, "message": f"Subscription canceled for user {user_id}", "immediately": cancel_immediately}
+
+
+@admin_membership_router.get("/audit-log")
+async def get_membership_audit_log(
+    page: int = 1,
+    limit: int = 50,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get membership change audit log (Super Admin only)"""
+    skip = (page - 1) * limit
+    total = await db.admin_audit_log.count_documents({"action": {"$in": ["change_user_tier", "cancel_user_subscription"]}})
+    logs = await db.admin_audit_log.find(
+        {"action": {"$in": ["change_user_tier", "cancel_user_subscription"]}},
+        {"_id": 0}
+    ).sort("timestamp", -1).skip(skip).limit(limit).to_list(length=limit)
+    
+    return {"logs": logs, "total": total, "page": page}
+
