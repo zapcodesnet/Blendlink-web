@@ -120,6 +120,33 @@ const MyTeamScreen = ({ navigation }) => {
     }
   };
 
+  const [claimStatus, setClaimStatus] = useState(null);
+
+  // Fetch daily claim status from server (single source of truth for claim amount)
+  const fetchClaimStatus = useCallback(async () => {
+    try {
+      const token = await AsyncStorage.getItem('authToken');
+      const response = await fetch(`${API_BASE}/api/referral/daily-claim/status`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setClaimStatus(data);
+        if (!data.can_claim && data.next_claim_at) {
+          setNextClaimAt(data.next_claim_at);
+        } else {
+          setNextClaimAt(null);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching claim status:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchClaimStatus();
+  }, [fetchClaimStatus]);
+
   const handleDailyClaim = async () => {
     setClaimLoading(true);
     try {
