@@ -648,7 +648,7 @@ export default function Wallet() {
       
       toast.success(
         <div className="flex items-center gap-2">
-          {isDiamond && <Crown className="w-5 h-5 text-yellow-400" />}
+          {tierIsDiamond && <Crown className="w-5 h-5 text-yellow-400" />}
           <span>Claimed {claimedAmount.toLocaleString()} BL Coins!</span>
         </div>
       );
