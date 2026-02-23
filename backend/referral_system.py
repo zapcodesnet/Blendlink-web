@@ -124,8 +124,10 @@ SIGNUP_BONUS_BL = 50000
 REFERRAL_BONUS_BL = 50000
 
 # Daily claims based on tier (legacy - use subscription_tiers.py)
-REGULAR_DAILY_CLAIM_BL = 2000
-DIAMOND_DAILY_CLAIM_BL = 500000
+# Daily claim constants - DEPRECATED, use SUBSCRIPTION_TIERS instead
+# Kept only for backward compatibility with old code that references them
+REGULAR_DAILY_CLAIM_BL = 2000  # Not used in claim logic - SUBSCRIPTION_TIERS is the source of truth
+DIAMOND_DAILY_CLAIM_BL = 500000  # Not used in claim logic - SUBSCRIPTION_TIERS is the source of truth
 DAILY_CLAIM_COOLDOWN_HOURS = 24
 
 # Diamond Leader requirements
