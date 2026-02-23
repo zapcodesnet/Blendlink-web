@@ -643,7 +643,8 @@ export default function Wallet() {
       const result = await api.post("/referral/daily-claim");
       const data = result.data;
       const claimedAmount = data.amount || 0;
-      const isDiamond = data.is_diamond;
+      // Diamond status is determined by subscription tier only
+      const tierIsDiamond = data.subscription_tier === 'diamond';
       
       toast.success(
         <div className="flex items-center gap-2">
