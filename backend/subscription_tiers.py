@@ -153,6 +153,7 @@ SUBSCRIPTION_TIERS = {
         "can_create_tournaments": True,
         "max_member_pages": 999999,
         "monthly_listing_limit": 999999,
+        "monthly_transactions_limit": 999999,
         "exclusive_badges": ["diamond_supporter"],
         "commission_l1_rate": 0.04,
         "commission_l2_rate": 0.03,
