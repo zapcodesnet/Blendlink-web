@@ -170,7 +170,7 @@ async def notify_diamond_promotion(user_id: str):
         user_id=user_id,
         notification_type=NotificationType.DIAMOND_PROMOTION,
         title="Diamond Leader! 💎👑",
-        body="Congratulations! You've qualified as a Diamond Leader! Enjoy enhanced commission rates and 5,000 daily BL coins!",
+        body="Congratulations! You've qualified as a Diamond Leader! Enjoy enhanced commission rates and 500,000 daily BL coins!",
         data={},
         priority=NotificationPriority.HIGH,
     )
