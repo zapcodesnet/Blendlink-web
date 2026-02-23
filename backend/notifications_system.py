@@ -278,8 +278,13 @@ async def check_and_send_daily_reminders():
     for user in users_needing_claim_reminder:
         prefs = user.get("notification_preferences", {})
         if prefs.get("daily_claim_reminder", True):
-            is_diamond = user.get("rank") == "diamond_leader"
-            amount = 5000 if is_diamond else 2000
+            # Get claim amount from subscription tier (single source of truth)
+            from subscription_tiers import SUBSCRIPTION_TIERS
+            sub = await db.subscriptions.find_one({"user_id": user["user_id"]}, {"_id": 0, "tier": 1})
+            tier = (sub.get("tier") if sub else None) or user.get("subscription_tier") or "free"
+            tier_info = SUBSCRIPTION_TIERS.get(tier, SUBSCRIPTION_TIERS["free"])
+            amount = tier_info.get("daily_bl_bonus", 2000)
+            is_diamond = tier == "diamond"
             await notify_daily_claim_ready(user["user_id"], amount, is_diamond)
     
     # Find users whose last spin was 24+ hours ago
