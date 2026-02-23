@@ -824,13 +824,6 @@ export default function Wallet() {
               {user.subscription_tier.charAt(0).toUpperCase() + user.subscription_tier.slice(1)} Member: {claimAmount.toLocaleString()} BL daily
             </p>
           )}
-          
-          {isDiamond && !user?.subscription_tier && (
-            <p className="text-center text-yellow-200/70 text-xs mt-2 flex items-center justify-center gap-1">
-              <Sparkles className="w-3 h-3" />
-              Diamond Leader Bonus: +3,000 BL daily
-            </p>
-          )}
         </div>
 
         {/* Stats */}
