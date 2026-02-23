@@ -700,7 +700,8 @@ export default function Wallet() {
     return `${Math.floor(seconds / 86400)}d ago`;
   };
 
-  const isDiamond = dailyClaimStatus?.is_diamond || user?.is_diamond_leader || user?.subscription_tier === 'diamond';
+  // Diamond status based ONLY on subscription tier (not old diamond_leader rank)
+  const isDiamond = dailyClaimStatus?.tier === 'diamond' || user?.subscription_tier === 'diamond';
   
   // Calculate claim amount — ALWAYS prefer server-returned value
   const getTierClaimAmount = () => {
