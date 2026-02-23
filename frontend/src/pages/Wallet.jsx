@@ -811,8 +811,14 @@ export default function Wallet() {
             )}
           </Button>
           
-          {/* Subscription tier bonus indicator */}
-          {user?.subscription_tier && user?.subscription_tier !== 'free' && (
+          {/* Subscription tier bonus indicator - ALWAYS uses server-returned data */}
+          {dailyClaimStatus?.tier && dailyClaimStatus.tier !== 'free' && (
+            <p className="text-center text-white/70 text-xs mt-2 flex items-center justify-center gap-1">
+              <Sparkles className="w-3 h-3" />
+              {dailyClaimStatus.tier_name || dailyClaimStatus.tier.charAt(0).toUpperCase() + dailyClaimStatus.tier.slice(1)} Member: {(dailyClaimStatus.claim_amount || claimAmount).toLocaleString()} BL daily
+            </p>
+          )}
+          {(!dailyClaimStatus?.tier || dailyClaimStatus?.tier === 'free') && user?.subscription_tier && user.subscription_tier !== 'free' && (
             <p className="text-center text-white/70 text-xs mt-2 flex items-center justify-center gap-1">
               <Sparkles className="w-3 h-3" />
               {user.subscription_tier.charAt(0).toUpperCase() + user.subscription_tier.slice(1)} Member: {claimAmount.toLocaleString()} BL daily
