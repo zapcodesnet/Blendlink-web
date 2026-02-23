@@ -179,9 +179,15 @@ const MyTeamScreen = ({ navigation }) => {
 
   const level1 = genealogy.filter((m) => m.level === 1);
   const level2 = genealogy.filter((m) => m.level === 2);
-  const canClaim = !nextClaimAt;
-  const isDiamond = diamondStatus?.is_diamond;
-  const claimAmount = isDiamond ? 5000 : 2000;
+  const canClaim = claimStatus ? claimStatus.can_claim : !nextClaimAt;
+  const isDiamond = diamondStatus?.is_diamond || user?.subscription_tier === 'diamond';
+  // Use server-returned claim amount (single source of truth) — never hardcode
+  const claimAmount = claimStatus?.claim_amount || (() => {
+    // Fallback only if server hasn't responded yet — must match backend SUBSCRIPTION_TIERS
+    const tier = user?.subscription_tier || 'free';
+    const amounts = { free: 2000, bronze: 20000, silver: 80000, gold: 200000, diamond: 500000 };
+    return amounts[tier] || 2000;
+  })();
 
   if (loading) {
     return (
