@@ -34,13 +34,15 @@ const MEMBERSHIP_TIERS = {
     daily_bl_bonus: 20000,
     max_pages: 3,
     monthly_listings: 2000,
+    monthly_transactions: 500,
     description: "Earn 3% commission from direct recruits (level 1 downlines) and 2% from indirect recruits (level 2 downlines) on each successful sale of products, services, digital goods, rentals, foods, etc., listed by downlines in the marketplace (blendlink.net/marketplace) or on member's pages (blendlink.net/[slug]).",
     benefits: [
       "Mint up to 20 photos per day",
       "Gain x2 experience (XP) per round of the minted photo game",
       "Claim 20,000 free BL coins daily",
       "Create a maximum of 3 member's pages (blendlink.net/[slug])",
-      "2,000 listings per month (marketplace + pages)"
+      "2,000 listings per month (marketplace + pages)",
+      "500 sales transactions per month"
     ],
     idealFor: "Ideal for users looking to moderately boost referral earnings and daily rewards."
   },
