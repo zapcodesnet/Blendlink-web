@@ -91,7 +91,8 @@ const MEMBERSHIP_TIERS = {
     daily_bl_bonus: 500000,
     max_pages: 999999,
     monthly_listings: 999999,
-    features: ['4% L1 / 3% L2 Commission', 'Unlimited mints', 'x5 XP bonus', '500,000 daily BL coins', 'Unlimited pages', 'Unlimited listings']
+    monthly_transactions: 999999,
+    features: ['4% L1 / 3% L2 Commission', 'Unlimited mints', 'x5 XP bonus', '500,000 daily BL coins', 'Unlimited pages', 'Unlimited listings', 'Unlimited transactions']
   }
 };
 
