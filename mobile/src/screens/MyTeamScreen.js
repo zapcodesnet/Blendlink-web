@@ -161,6 +161,7 @@ const MyTeamScreen = ({ navigation }) => {
         Alert.alert('Success!', `Claimed ${result.amount.toLocaleString()} BL Coins!`);
         setNextClaimAt(result.next_claim_at);
         fetchData();
+        fetchClaimStatus(); // Refresh claim status to get updated timer and amount
       } else {
         Alert.alert('Error', result.detail || 'Failed to claim');
       }
