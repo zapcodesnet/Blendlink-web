@@ -111,6 +111,7 @@ SUBSCRIPTION_TIERS = {
             "3x XP per round",
             "10 member pages",
             "10,000 listings per month",
+            "2,000 sales transactions per month",
             "3% L1 / 2% L2 commissions"
         ]
     },
