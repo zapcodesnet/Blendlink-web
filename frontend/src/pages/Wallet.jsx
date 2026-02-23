@@ -59,7 +59,8 @@ const MEMBERSHIP_TIERS = {
     daily_bl_bonus: 80000,
     max_pages: 10,
     monthly_listings: 10000,
-    features: ['3% L1 / 2% L2 Commission', '50 daily mints', 'x3 XP bonus', '80,000 daily BL coins', '10 member pages', '10,000 listings/month']
+    monthly_transactions: 2000,
+    features: ['3% L1 / 2% L2 Commission', '50 daily mints', 'x3 XP bonus', '80,000 daily BL coins', '10 member pages', '10,000 listings/month', '2,000 transactions/month']
   },
   gold: {
     name: 'Gold',
