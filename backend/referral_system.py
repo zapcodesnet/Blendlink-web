@@ -788,10 +788,13 @@ async def claim_daily_bl(current_user: dict = Depends(get_current_user)) -> Dail
                 }
             )
     
-    # Determine claim amount based on rank
-    rank = UserRank(user.get("rank", "regular"))
-    is_diamond = rank == UserRank.DIAMOND_LEADER
-    claim_amount = DIAMOND_DAILY_CLAIM_BL if is_diamond else REGULAR_DAILY_CLAIM_BL
+    # Determine claim amount based on SUBSCRIPTION TIER (not old rank system)
+    from subscription_tiers import SUBSCRIPTION_TIERS
+    sub = await db.subscriptions.find_one({"user_id": user_id}, {"_id": 0, "tier": 1})
+    tier = (sub.get("tier") if sub else None) or user.get("subscription_tier") or "free"
+    tier_info = SUBSCRIPTION_TIERS.get(tier, SUBSCRIPTION_TIERS["free"])
+    claim_amount = tier_info.get("daily_bl_bonus", 2000)
+    is_diamond = tier == "diamond"
     
     # Process claim
     await record_transaction(
@@ -799,7 +802,7 @@ async def claim_daily_bl(current_user: dict = Depends(get_current_user)) -> Dail
         transaction_type=TransactionType.DAILY_CLAIM,
         currency=Currency.BL,
         amount=claim_amount,
-        details={"rank": rank.value, "is_diamond": is_diamond}
+        details={"tier": tier, "is_diamond": is_diamond}
     )
     
     # Update last claim time
