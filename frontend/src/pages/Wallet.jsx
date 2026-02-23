@@ -843,11 +843,12 @@ export default function Wallet() {
                   -{(balance.total_spent || 0).toLocaleString()} BL
                 </span>
               </div>
-              {isDiamond && (
+              {/* Show subscription tier status if subscribed */}
+              {user?.subscription_tier && user.subscription_tier !== 'free' && (
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Status</span>
-                  <span className="font-medium text-yellow-500 flex items-center gap-1">
-                    <Crown className="w-4 h-4" /> Diamond Leader
+                  <span className="text-muted-foreground">Membership</span>
+                  <span className="font-medium text-primary flex items-center gap-1">
+                    <Crown className="w-4 h-4" /> {user.subscription_tier.charAt(0).toUpperCase() + user.subscription_tier.slice(1)} Member
                   </span>
                 </div>
               )}
